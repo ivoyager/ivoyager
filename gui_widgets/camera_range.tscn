@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/camera_range.gd" type="Script" id=1]
+
+
+[node name="CameraRange" type="Label"]
+margin_right = 40.0
+margin_bottom = 14.0
+text = "0000 km"
+script = ExtResource( 1 )

@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/selection_data.gd" type="Script" id=1]
+
+
+[node name="SelectionData" type="GridContainer"]
+margin_right = 180.0
+margin_bottom = 200.0
+rect_min_size = Vector2( 200, 200 )
+size_flags_vertical = 0
+columns = 2
+script = ExtResource( 1 )
+
+[node name="Labels" type="Label" parent="."]
+margin_right = 98.0
+margin_bottom = 31.0
+size_flags_horizontal = 3
+text = "Mass
+Escape Vel."
+valign = 2
+clip_text = true
+
+[node name="Values" type="Label" parent="."]
+margin_left = 102.0
+margin_right = 200.0
+margin_bottom = 31.0
+size_flags_horizontal = 3
+text = "2 x 10^24 kg
+2.5 km/s"
+clip_text = true

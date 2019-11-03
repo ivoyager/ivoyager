@@ -1,0 +1,158 @@
+# cached_items_manager.gd
+# This file is part of I, Voyager
+# https://ivoyager.dev
+# *****************************************************************************
+# Copyright (c) 2017-2019 Charlie Whitfield
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# *****************************************************************************
+#
+# Abstract base class for managing user cached items.
+# Subclasses: SettingsManager, InputMapManager
+
+extends Reference
+class_name CachedItemsManager
+
+
+# project vars - set in subclass _init(); project can modify at init
+var cache_dir := "user://cache"
+var cache_file_name := "generic_item.vbinary" # change in subclass
+var defaults: Dictionary # subclass defines in _init()
+var current: Dictionary # subclass makes or references an existing dict
+
+# private
+var _is_references := false # subclass change in _init() if needed
+
+
+func change_current(item_name: String, value, suppress_caching := false) -> void:
+	# If suppress_caching = true, then be sure to call cache_now() later.
+	_about_to_change_current(item_name)
+	current[item_name] = value.duplicate(true) if _is_references else value
+	_on_change_current(item_name)
+	if !suppress_caching:
+		cache_now()
+
+func cache_now() -> void:
+	_write_cache()
+
+func is_default(item_name: String) -> bool:
+	return _is_equal(current[item_name], defaults[item_name])
+
+func is_all_defaults() -> bool:
+	for item_name in defaults:
+		if !_is_equal(current[item_name], defaults[item_name]):
+			return false
+	return true
+
+func get_cached_value(item_name: String, cached_values: Dictionary): # unknown type
+	# If cache doesn't have it, we treat default as cached
+	if cached_values.has(item_name):
+		return cached_values[item_name]
+	return defaults[item_name]
+	
+func is_cached(item_name: String, cached_values: Dictionary) -> bool:
+	if cached_values.has(item_name):
+		return _is_equal(current[item_name], cached_values[item_name])
+	return _is_equal(current[item_name], defaults[item_name])
+
+func get_cached_values() -> Dictionary:
+	var file := _get_file(File.READ)
+	return file.get_var() if file else {}
+
+func restore_default(item_name: String, suppress_caching := false) -> void:
+	if !is_default(item_name):
+		change_current(item_name, defaults[item_name], suppress_caching)
+
+func restore_all_defaults(suppress_caching := false) -> void:
+	for item_name in defaults:
+		change_current(item_name, defaults[item_name], true)
+	if !suppress_caching:
+		cache_now()
+
+func is_cache_current() -> bool:
+	var cached_values := get_cached_values()
+	for item_name in defaults:
+		if !is_cached(item_name, cached_values):
+			return false
+	return true
+
+func restore_from_cache() -> void:
+	var cached_values := get_cached_values()
+	for item_name in defaults:
+		if !is_cached(item_name, cached_values):
+			var cached_value = get_cached_value(item_name, cached_values)
+			change_current(item_name, cached_value, true)
+
+
+func _init() -> void:
+	_on_init()
+	
+func _on_init() -> void:
+	pass
+
+func project_init() -> void:
+	var dir = Directory.new()
+	if dir.open(cache_dir) != OK:
+		dir.make_dir(cache_dir)
+	for item_name in defaults:
+		var default = defaults[item_name] # unknown type
+		current[item_name] = default.duplicate(true) if _is_references else default
+	_read_cache()
+
+func _about_to_change_current(_item_name: String) -> void:
+	# subclass logic
+	pass
+
+func _on_change_current(_item_name: String) -> void:
+	# subclass logic
+	pass
+
+func _is_equal(value1, value2) -> bool:
+	return value1 == value2 # or supply subclass logic
+
+func _read_cache() -> void:
+	var file := _get_file(File.READ)
+	if !file:
+		return
+	var cached_values: Dictionary = file.get_var()
+	for item_name in cached_values:
+		if current.has(item_name): # possibly old verson obsoleted item_name
+			current[item_name] = cached_values[item_name] # reference ok
+
+func _write_cache() -> void:
+	var file := _get_file(File.WRITE)
+	if !file:
+		return
+	var cached_values := {}
+	for item_name in defaults:
+		if !_is_equal(current[item_name], defaults[item_name]): # cache non-default values
+			cached_values[item_name] = current[item_name] # reference ok
+	file.store_var(cached_values)
+
+func _get_file(flags: int) -> File:
+	var file_path := cache_dir.plus_file(cache_file_name)
+	var file := File.new()
+	if file.open(file_path, flags) != OK:
+		if flags == File.WRITE:
+			print("ERROR! Could not open ", file_path, " for write!")
+		else:
+			print("Could not open ", file_path, " for read (maybe no changes yet)")
+		return null
+	return file
+

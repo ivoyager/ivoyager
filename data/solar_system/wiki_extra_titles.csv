@@ -1,0 +1,6 @@
+﻿# This file provides keys for wiki lookup not included in other Master files.,
+# Spaces and underscores will be appropriately converted.,
+key,wiki_en
+Data_Type,STRING
+Default_Value,
+SYSTEM_SOLAR_SYSTEM,Solar System

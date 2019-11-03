@@ -1,0 +1,5 @@
+Licensing information for files in the I, Voyager repository.
+
+Godot Engine
+Copyright (c) 2007-2019 Juan Linietsky, Ariel Manzur.
+Copyright (c) 2014-2019 Godot Engine contributors.

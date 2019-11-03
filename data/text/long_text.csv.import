@@ -1,0 +1,16 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+
+[deps]
+
+files=[ "res://ivoyager/data/text/long_text.en.translation" ]
+
+source_file="res://ivoyager/data/text/long_text.csv"
+dest_files=[ "res://ivoyager/data/text/long_text.en.translation" ]
+
+[params]
+
+compress=true
+delimiter=0

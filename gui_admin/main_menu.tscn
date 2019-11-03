@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_admin/main_menu.gd" type="Script" id=1]
+
+[node name="MainMenu" type="VBoxContainer"]
+visible = false
+margin_left = 35.0
+margin_top = 35.0
+margin_right = 40.0
+margin_bottom = 40.0
+script = ExtResource( 1 )

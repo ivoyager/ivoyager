@@ -1,0 +1,23 @@
+﻿"# Graphics attributes need attention! Columns can be added here, then implemented in the Model class.",,,,,,,,
+"# The aesthetic for base I, Voyager is ""harsh realism"". E.g., see videos of Musk's roadster in space. NOT cartoony!",,,,,,,,
+#,,,,,,,,
+#,,,,,,,,
+#,,,,,,,,
+#,,# Graphics ---->,,,,,,
+key,spheroid,unshaded,shadow,metallic,roughness,rim_enabled,rim,rim_tint
+Data_Type,BOOL,BOOL,BOOL,REAL,REAL,BOOL,REAL,REAL
+Default_Value,TRUE,FALSE,TRUE,0.1,0.6,TRUE,0.003,0.9
+Unit_Conversion,,,,,,,,
+BODY_STAR,,TRUE,FALSE,,,,,
+BODY_ROCKY_WORLD,,,,,,,,
+BODY_CONTINENTAL_WORLD,,,,,,,,
+BODY_THICK_ATMOSPHERE_WORLD,,,,,,,,
+BODY_DESERT_WORLD,,,,,,,,
+BODY_ICE_WORLD,,,,,,,,
+BODY_GAS_GIANT,,,,,,,,
+BODY_ICE_GIANT,,,,,,,,
+BODY_SMALL_C_TYPE,FALSE,,,,,,,
+BODY_SMALL_S_TYPE,FALSE,,,,,,,
+BODY_SMALL_M_TYPE,FALSE,,,,,,,
+BODY_COMET,FALSE,,,,,,,
+BODY_SPACECRAFT,FALSE,,,,,,,
