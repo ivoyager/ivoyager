@@ -43,7 +43,7 @@ var size_compensation_exponent := 0.2 # < 0.0 is "full" compensation; 1.0 is non
 var system_radius_multiplier_top := 1.5
 
 # dependencies
-var _scale: float = Global.SCALE
+var _scale: float = Global.scale
 var _enums: Dictionary = Global.enums
 var _registrar: Registrar
 var _SelectionItem_: Script

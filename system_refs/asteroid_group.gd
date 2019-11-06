@@ -168,7 +168,7 @@ func clear_for_import() -> void:
 # ************************** PRIVATE FUNCTIONS ********************************
 
 func _fix_binary_keplerian_elements() -> void:
-	var scale: float = Global.SCALE
+	var scale: float = Global.scale
 	var mu := star.GM
 	var index := 0
 	while index < _index:
@@ -199,7 +199,7 @@ func _fix_binary_keplerian_elements() -> void:
 		index += 1
 
 func _fix_binary_trojan_elements() -> void:
-	var scale: float = Global.SCALE
+	var scale: float = Global.scale
 	var lagrange_a: float = lagrange_point.dynamic_elements[0]
 	var index := 0
 	while index < _index:
@@ -250,7 +250,7 @@ func _verbose_print() -> void:
 	print("%s group %s asteroids loaded from binaries" % [_load_count, group_name])
 	if !is_trojans:
 		print(" a,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.SCALE), _math.km2au(_maxes[0] / Global.SCALE)])
+				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
 		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
 		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
 		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])
@@ -259,7 +259,7 @@ func _verbose_print() -> void:
 		print(" n,  min/max: %s / %s" % [_mins[6], _maxes[6]])
 	else:
 		print(" d,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.SCALE), _math.km2au(_maxes[0] / Global.SCALE)])
+				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
 		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
 		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
 		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])

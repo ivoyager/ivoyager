@@ -33,7 +33,7 @@ const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
 const DPRINT := false
 
-var _scale: float = Global.SCALE
+var _scale: float = Global.scale
 var _dynamic_orbits: bool = Global.dynamic_orbits
 var _math: Math
 var _Orbit_: Script
@@ -47,7 +47,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
-	#  [0] a,  semimajor axis (in km * SCALE) [TODO: allow negative for hyperbolic!]
+	#  [0] a,  semimajor axis (in km * scale) [TODO: allow negative for hyperbolic!]
 	#  [1] e,  eccentricity (0.0 - 1.0)
 	#  [2] i,  inclination (rad)
 	#  [3] Om, longitude of the ascending node (rad)

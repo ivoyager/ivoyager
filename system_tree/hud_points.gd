@@ -34,7 +34,7 @@ const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMA
 		& VisualServer.ARRAY_FORMAT_COLOR
 
 var group: AsteroidGroup
-var color: Color
+var color: Color # read only
 
 var _timekeeper: Timekeeper = Global.objects.Timekeeper
 var _orbit_points := ShaderMaterial.new()
@@ -44,9 +44,9 @@ func init(group_: AsteroidGroup, color_: Color) -> void:
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_orbit_points.shader = Global.orbit_points_shader
+		_orbit_points.shader = Global.shaders.orbit_points
 	else:
-		_orbit_points.shader = Global.orbit_points_lagrangian_shader
+		_orbit_points.shader = Global.shaders.orbit_points_lagrangian
 	material_override = _orbit_points
 
 func draw_points() -> void:
@@ -82,6 +82,7 @@ func hide() -> void:
 	.hide()
 
 func _ready() -> void:
+	Global.connect("setting_changed", self, "_settings_listener")
 	hide()
 
 func _timekeeper_process(time: float, _delta: float) -> void:
@@ -93,3 +94,9 @@ func _timekeeper_process(time: float, _delta: float) -> void:
 		_orbit_points.set_shader_param("frame_data", Vector3(time, lagrange_a, lagrange_L))
 	else:
 		_orbit_points.set_shader_param("time", time)
+
+func _settings_listener(setting: String, value) -> void:
+	if setting == "asteroid_point_color":
+		color = value
+		_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		

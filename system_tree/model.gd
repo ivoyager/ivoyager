@@ -41,7 +41,7 @@ func init(body_type: int, file_prefix: String) -> void:
 		var globe_wraps_dir: String = Global.globe_wraps_dir
 		var albedo_texture: Texture = FileHelper.find_resource(globe_wraps_dir, file_prefix + ".albedo")
 		if !albedo_texture:
-			albedo_texture = Global.fallback_globe_wrap
+			albedo_texture = Global.assets.fallback_globe_wrap
 		surface.albedo_texture = albedo_texture
 	else: # TODO: Model import
 		assert(false)

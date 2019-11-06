@@ -213,6 +213,7 @@ func instantiate_and_index() -> void:
 	emit_signal("project_objects_instantiated")
 
 func init_project() -> void:
+	Global.project_init()
 	for dict in [program_references, program_nodes, gui_top_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
