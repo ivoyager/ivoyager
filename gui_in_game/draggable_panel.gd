@@ -91,10 +91,10 @@ func _on_enter_tree():
 	Global.connect("game_load_finished", self, "_reposition_to_anchor")
 	Global.connect("gui_refresh_requested", self, "_fit_to_viewport")
 	Global.objects.root.connect("size_changed", self, "finish_move")
-	Global.emit_signal("run_gui_entered_tree", self)
+	Global.emit_signal("gui_entered_tree", self)
 
 func _on_ready() -> void:
-	Global.call_deferred("emit_signal", "run_gui_ready", self)
+	Global.call_deferred("emit_signal", "gui_ready", self)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("about_to_free_procedural_nodes", self, "_prepare_to_free")

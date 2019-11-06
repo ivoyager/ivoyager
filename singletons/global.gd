@@ -48,8 +48,8 @@ signal run_state_changed(is_running)
 
 # object broadcasts
 signal setting_changed(setting, value)
-signal run_gui_entered_tree(control)
-signal run_gui_ready(control)
+signal gui_entered_tree(control)
+signal gui_ready(control)
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal require_stop_requested(object)
