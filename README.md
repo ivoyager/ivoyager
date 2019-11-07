@@ -1,33 +1,30 @@
-I, Voyager
+# I, Voyager (submodule)
+Homepage: https://ivoyager.dev
 
-test
+### What is I, Voyager?
+I, Voyager is
+1. an open-source software planetarium, featuring dynamic orbits of planets, moons and asteroids, and 
+2. a development platform for creating games and educational software in a realistic Solar System.
 
-# README #
+It is designed to be improved, modified and extended by the community. I, Voyager runs on the open-source [Godot Engine](https://godotengine.org) and primarily uses Godot’s easy-to-learn [GDScript](http://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html#doc-gdscript) (similar to Python). It can be extended into an independent free-standing project (a game or other software product) using GDScript, C# or C++.
 
-This README would normally document whatever steps are necessary to get your application up and running.
+### What does I, Voyager cost?
+I, Voyager is free to use and distribute under the permissive MIT License (the same used by Godot). Projects built with I, Voyager are owned by their creators. You can sell what you make. There are no royalties or fees, and license compliance is [relatively simple](https://en.wikipedia.org/wiki/MIT_License).
 
-### What is this repository for? ###
+### How do I contribute?
+Please join the I, Voyager Forum at https://ivoyager.dev/forum. This is the best place to exchange ideas and to give and receive help related to I, Voyager development. For coders, a getting started tutorial can be found [here](https://ivoyager.dev/forum/index.php?p=/discussion/20/how-to-make-a-new-project-from-the-project-template). Bugs and astronomical inaccuracies should be reported by opening issues [here](https://github.com/ivoyager/ivoyager-bugs/issues) and [here](https://github.com/ivoyager/ivoyager-astronomical-inaccuracies/issues). I, Voyager code repositories are maintained at https://github.com/ivoyager.
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+### How can I support this effort financially?
+An announcement will be made on our [news page](https://ivoyager.dev) a couple weeks after launch. Please sign up to [our newsletter](https://ivoyager.dev/newsletter/) to stay informed.
 
-### How do I get set up? ###
+### Where did I, Voyager come from?
+Creator and lead programmer Charlie Whitfield stumbled into the Godot Engine in November, 2017, not quite aware of the existence or meaning of the term "game engine." By December there were TestCubes orbiting bigger TestCubes orbiting one really big TestCube*. The name "I, Voyager" popped into Charlie's head in the summer of 2019 while he was pondering the **[Pale Blue Dot](https://www.planetary.org/explore/space-topics/earth/pale-blue-dot.html)**. The name is a play on Voyager 1 (the spacecraft that took that image) and in honor of the Voyager Program. I, Voyager became an open-source project on Carl Sagan's birthday, November 9, 2019.
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+(* Godot devs, bring back the [TestCube](https://docs.godotengine.org/en/2.1/classes/class_testcube.html)!)
 
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+### Authors, credits and legal
+Copyright (c) 2017-2019 Charlie Whitfield. Full authors, credits and license information can be found in the "ivoyager" subdirectory of derived software projects and in the "ivoyager" submodule repository at https://github.com/ivoyager/ivoyager:
+* AUTHORS.md contains a full list of contributors to I, Voyager code and assets.
+* CREDITS.md contains a full list of the sources of code and assets used and distributed in I, Voyager.  
+* LICENSE.txt contains the I, Voyager license.
+* COPYRIGHT.txt contains comprehensive copyright and license information for code and assets used and distributed in I, Voyager.
