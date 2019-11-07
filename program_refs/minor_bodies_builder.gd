@@ -76,7 +76,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 
 func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void:
 	var hud_points: HUDPoints = _file_helper.make_object_or_scene(_HUDPoints_)
-	hud_points.init(asteroid_group, _settings.minor_point_color)
+	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
 	_points_manager.register_points_group(hud_points, group_name)
 	_points_manager.register_points_group_in_category(group_name, "all_asteroids")

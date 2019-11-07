@@ -64,7 +64,7 @@ func init(orbit: Orbit, color: Color, orbit_mesh_arrays: Array) -> void:
 	hide()
 	_orbit = orbit
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	_orbit_graphic.shader = Global.orbit_ellipse_shader
+	_orbit_graphic.shader = Global.shaders.orbit_ellipse
 	material_override = _orbit_graphic
 	_orbit_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP, orbit_mesh_arrays, [], ARRAY_FLAGS)
 	mesh = _orbit_mesh

@@ -156,29 +156,29 @@ func mass(x: float, short: bool) -> String:
 
 func distance(x: float, short: bool) -> String:
 	if USE_LARGE_NAMES:
-		x *= 1000.0 / Global.SCALE
+		x *= 1000.0 / Global.scale
 		var unit = "m" if short else "meters"
 		return get_num_and_prefix_string(x, short) + unit
 	else:
-		return scientific(x / Global.SCALE) + " km"
+		return scientific(x / Global.scale) + " km"
 
 func area(x: float, short: bool) -> String:
 	if USE_LARGE_NAMES:
-		x = sqrt(x) * 1000.0 / Global.SCALE
+		x = sqrt(x) * 1000.0 / Global.scale
 		var result = get_num_and_prefix_table(x, short)
 		x = result[0] * result[0]
 		var unit_sq = " sq " + result[1] + "m"
 		return String(x * x) + unit_sq
 	else:
-		return scientific(x / Global.SCALE / Global.SCALE) + " km"
+		return scientific(x / Global.scale / Global.scale) + " km"
 
 func velocity_per_second(x: float, short: bool) -> String:
 	if USE_LARGE_NAMES:
 		var unit = "m/s" if short else "meters per second"
-		x = x / Global.SCALE * 86.4 # m/s
+		x = x / Global.scale * 86.4 # m/s
 		return get_num_and_prefix_string(x, short) + unit
 	else:
-		x = x / Global.SCALE * 86400 # km/s
+		x = x / Global.scale * 86400 # km/s
 		return scientific(x) + " km/s"
 
 

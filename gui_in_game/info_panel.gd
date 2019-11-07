@@ -45,7 +45,7 @@ const PERSIST_OBJ_PROPERTIES_2 := ["selection_manager"]
 
 # ***************************** UNPERSISTED ***********************************
 
-# project var - modify on "run_gui_entered_tree" signal
+# project var - modify on "gui_entered_tree" signal
 var subpanel_classes := [
 	InfoSubpanelWiki,
 ]

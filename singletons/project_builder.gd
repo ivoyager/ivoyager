@@ -42,7 +42,7 @@
 #    the "objects" dictionary.
 # 4. Modify init values in InGameGUI (following instruction #3) to remove or
 #    add individual GUI scenes. (Or make your own GUI parent.)
-# 5. Hook up to Global signal "run_gui_entered_tree" to modify init values of
+# 5. Hook up to Global signal "gui_entered_tree" to modify init values of
 #    individual GUI scenes (not defined here) before their _ready() call.  
 #
 # TODO: Move version control comments to README.md.
@@ -108,7 +108,6 @@ var program_references := {
 	_FileHelper_ = FileHelper,
 	_StringMaker_ = StringMaker,
 	_Math_ = Math,
-	_TestClass_ = TestClass,
 }
 
 var program_nodes := {
@@ -185,7 +184,7 @@ func init_extensions() -> void:
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
-						and "EXTENSION_YMD_INT" in extension_script:
+						and "EXTENSION_VERSION_YMD" in extension_script:
 					var extension: Object = FileHelper.make_object_or_scene(extension_script)
 					extensions.append(extension)
 		dir_name = dir.get_next()
@@ -213,6 +212,7 @@ func instantiate_and_index() -> void:
 	emit_signal("project_objects_instantiated")
 
 func init_project() -> void:
+	Global.project_init()
 	for dict in [program_references, program_nodes, gui_top_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")

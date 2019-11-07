@@ -33,8 +33,8 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 var _texture_2d_dir: String = Global.texture_2d_dir
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _scale: float = Global.SCALE
-var _g: float = Global.G
+var _scale: float = Global.scale
+var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _enums: Dictionary = Global.enums
@@ -90,9 +90,9 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 	body.mass = data.mass if data.has("mass") else 0.0
 	body.GM = data.GM * _scale * _scale * _scale if data.has("GM") else 0.0
 	if body.mass == 0.0:
-		body.mass = body.GM / _g
+		body.mass = body.GM / _gravitational_constant
 	elif body.GM == 0.0:
-		body.GM = body.mass * _g
+		body.GM = body.mass * _gravitational_constant
 	if body.is_moon and body.GM < _major_moon_gm and !data.has("force_major"):
 		body.is_minor_moon = true
 	body.rotation_period = data.rotation if data.has("rotation") else 0.0
@@ -255,9 +255,9 @@ func _build_unpersisted(body: Body) -> void:
 	var hud_icon: HUDIcon = _file_helper.make_object_or_scene(_HUDIcon_)
 	var fallback_icon_texture: Texture
 	if body.is_moon:
-		fallback_icon_texture = Global.generic_moon_icon
+		fallback_icon_texture = Global.assets.generic_moon_icon
 	else:
-		fallback_icon_texture = Global.fallback_icon
+		fallback_icon_texture = Global.assets.fallback_icon
 	hud_icon.init(file_prefix, fallback_icon_texture)
 	body.hud_icon = hud_icon
 	body.add_child(hud_icon)
@@ -270,12 +270,12 @@ func _build_unpersisted(body: Body) -> void:
 	# 2D selection textures
 	body.texture_2d = _file_helper.find_resource(_texture_2d_dir, file_prefix)
 	if !body.texture_2d:
-		body.texture_2d = Global.fallback_texture_2d
+		body.texture_2d = Global.assets.fallback_texture_2d
 	if body.is_star:
 		var slice_name = file_prefix + "_slice"
 		body.texture_slice_2d = _file_helper.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
-			body.texture_slice_2d = Global.fallback_star_slice
+			body.texture_slice_2d = Global.assets.fallback_star_slice
 
 # DEPRECIATE - move to SelectionBuilder for SelectionItem
 func _get_classification(body: Body) -> String:

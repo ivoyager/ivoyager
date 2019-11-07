@@ -35,8 +35,8 @@ var _action: String
 var _index: int
 var _layout: Array
 var _input_event_key: InputEventKey
-var _in_use_color: Color = Global.danger_text_color
-var _ok_color: Color = Global.normal_text_color
+var _in_use_color: Color = Global.colors.danger
+var _ok_color: Color = Global.colors.normal
 onready var _key_label: Label = $HBox/KeyLabel
 onready var _delete: Button = $HBox/Delete
 onready var _ok_button: Button = get_ok()

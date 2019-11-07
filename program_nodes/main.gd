@@ -62,22 +62,15 @@ var _was_paused := false
 var _nodes_requiring_stop := []
 var _active_threads := []
 
-# DEPRECIATE
-var _threads := []
-
 # *************************** PUBLIC FUNCTIONS ********************************
 # Multithreading note: Godot's SceneTree and all I, Voyager public functions
 # run in the main thread. Use call_defered() to invoke any function from
 # another thread unless the function is guaranteed to be thread-safe (e.g,
 # read-only). Most functions are NOT thread safe!
 
-func add_thread(thread: Thread) -> void: # DEPRECIATE
-	# Add non-main threads here. We wait_to_finish() on active threads at
-	# simulator stop (eg, before save/load, exit, etc.).
-	_threads.append(thread)
-
 func add_active_thread(thread: Thread) -> void:
-	# add before thread.start()
+	# Add before thread.start() if you want certain functions (e.g., save/load)
+	# to wait until these are removed.
 	_active_threads.append(thread)
 
 func remove_active_thread(thread: Thread) -> void:
@@ -93,7 +86,7 @@ func test_active_threads() -> void:
 
 func require_stop(who: Object) -> void:
 	# "Stopped" means the game is paused, the player is locked out from most
-	# input, and non-main threads have finished. In most cases you should yield
+	# input, and non-main threads have finished. In many cases you should yield
 	# to "threads_finished" after calling this function before proceeding.
 	assert(DPRINT and prints("require_stop", who) or true)
 	assert(DPRINT and prints("signal finish_threads_requested") or true)
@@ -145,7 +138,7 @@ func quick_save() -> void:
 		Global.emit_signal("save_dialog_requested")
 
 func save_game(path: String) -> void:
-	if path == "":
+	if !path:
 		Global.emit_signal("save_dialog_requested")
 		return
 	print("Saving " + path)
@@ -215,12 +208,6 @@ func quit(quit_now: bool) -> void:
 	yield(self, "threads_finished")
 	assert(!print_stray_nodes())
 	print("Quitting...")
-	
-	# DEPRECIATE
-	for thread in _threads:
-		thread.wait_to_finish()
-	
-	
 	_tree.quit()
 
 func save_quit() -> void:
@@ -259,10 +246,12 @@ func _on_ready() -> void:
 	prints("I, Voyager", ivoyager_version, project_version)
 
 func _import_table_data() -> void:
+	yield(_tree, "idle_frame")
 	_table_reader.import_table_data()
 	Global.emit_signal("table_data_imported")
 
 func _finish_init() -> void:
+	yield(_tree, "idle_frame")
 	_state.is_inited = true
 	Global.emit_signal("main_inited")
 	if Global.skip_splash_screen:

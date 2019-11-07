@@ -64,22 +64,8 @@ func _on_init():
 		moon_orbit_color = Color(0.2, 0.2, 0.8), # Color(0.4,0.4,0.8) # dark blue
 		minor_moon_orbit_color = Color(0.2, 0.05, 0.2), # Color(0.4,0.4,0.8) # dark purple
 		default_orbit_color = Color(0.25, 0.25, 0.25), # Color(0.4,0.4,0.8) # grey
+		asteroid_point_color = Color("008800"),
 	
-	
-		# text
-		color_great = Color(0.0, 1.0, 1.0),
-		color_good = Color(0.0, 1.0, 0.0),
-		color_ok = Color(1.0, 1.0, 1.0),
-		color_warning = Color(1.0, 1.0, 0.0),
-		color_danger = Color(1.0, 0.5, 0.5),
-	
-		# TODO: Implement these
-		planet_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
-		moon_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
-		minor_orbit_color = Color(0.8, 0.0, 0.0),
-		minor_point_color = Color("008800"),
-	
-		
 		# misc
 		toggle_real_time_not_pause = false,
 		mouse_action_releases_gui_focus = true,
@@ -87,6 +73,11 @@ func _on_init():
 		# cached but not in base OptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
+		
+		# TODO:
+#		planet_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
+#		moon_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
+#		minor_orbit_color = Color(0.8, 0.0, 0.0),
 		}
 	
 	# read-only

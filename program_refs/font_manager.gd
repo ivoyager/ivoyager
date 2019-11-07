@@ -41,10 +41,11 @@ var gui_large_sizes := [22, 24, 28]  # there are more sensible default values.
 # private
 var _fonts: Dictionary = Global.fonts
 var _settings: Dictionary = Global.settings
-var _primary_font_data: DynamicFontData = Global.primary_font_data
+var _primary_font_data: DynamicFontData
 
 func project_init() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
+	_primary_font_data = Global.assets.primary_font_data
 	for key in fixed_sizes:
 		var dynamic_font = DynamicFont.new()
 		dynamic_font.font_data = _primary_font_data

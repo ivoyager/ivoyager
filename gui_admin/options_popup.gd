@@ -46,7 +46,7 @@ onready var _settings_manager: SettingsManager = Global.objects.SettingsManager
 
 
 func _on_init():
-	# Edit layout directly or use CachedItemsPopup functions at project init.
+	# Edit layout directly or use parent class functions at project init.
 	layout = [
 		[ # column 1; each dict is a subpanel
 			{
@@ -62,11 +62,12 @@ func _on_init():
 		],
 		[ # column 2
 			{
-				header = "Orbit Colors",
-				planet_orbit_color = "Planets",
-				dwarf_planet_orbit_color = "Dwarf Planets",
-				moon_orbit_color = "Moons",
-				minor_moon_orbit_color = "Minor Moons",
+				header = "Orbit/Point Colors",
+				planet_orbit_color = "Planet Orbits",
+				dwarf_planet_orbit_color = "Dwarf Planet Orbits",
+				moon_orbit_color = "Major Moon Orbits",
+				minor_moon_orbit_color = "Minor Moon Orbits",
+				asteroid_point_color = "Asteroid Points",
 			},
 			{
 				header = "GUI & HUD",
