@@ -99,7 +99,7 @@ Files: */globe_wraps/Jupiter.albedo.new.BjornJonsson.4096.jpg
  */2d_bodies/Jupiter.256.png
 Comment: Merged Cassini and Juno global map of Jupiter
 Copyright: 2018, Björn Jónsson
-Licence CC-BY-3.0
+Licence: CC-BY-3.0
 
 Files: */globe_wraps/Neptune.albedo.BjornJonsson.CWreprocessed.4096.jpg
  */globe_wraps/Venus.albedo.BjornJonsson.CWreprocessed.4096.jpg

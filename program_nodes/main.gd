@@ -31,8 +31,9 @@ signal threads_finished()
 
 # ******************************* PERSISTED ***********************************
 
+# TODO: Move these to Global!
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "dev"
+var ivoyager_version := "0.0.1"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
