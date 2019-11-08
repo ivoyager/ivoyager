@@ -1,8 +1,8 @@
 # Licensing information for files in the I, Voyager repositories.
 # ==============================================================================
 #
-# The aim of this file is to document copyright and licence of every file
-# distributed from repositores
+# The aim of this file is to document copyright and licence information for
+# every file distributed from repositores:
 #     https://github.com/ivoyager/ivoyager
 #     https://github.com/ivoyager/ivoyager_planetarium
 #     https://github.com/ivoyager/ivoyager_project_template
@@ -11,7 +11,9 @@
 # "ivoyager", "ivoyager_assets" (or "ivoyager_assets_mobile") and/or other
 # subdirectories matching the pattern "ivoyager_*".
 #
-# This file uses globbing patterns to identify copyrighted/licensed files.
+# This file uses globbing patterns to identify files based on their names or
+# directories within repositories and/or project software distributions.
+#
 # It is intended to become a machine readable file (format:
 # https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/) but this
 # is not likely to be the case in its present form.
@@ -32,7 +34,7 @@ Source: https://github.com/ivoyager/ivoyager
  https://github.com/ivoyager/ivoyager_planetarium
  https://github.com/ivoyager/ivoyager_project_template
 
-Files: *.exe
+Files: godot*.exe
 Comment: Godot Engine
  Godot Engine executables are distributed in repository "releases".
  A list of Godot Engine contributors is at:
@@ -49,7 +51,7 @@ Comment: I, Voyager code files
 Copyright: 2017-2019, Charlie Whitfield
 Licence: Apache-2.0
 
-Files: */data/solar_system/*.csv
+Files: */solar_system/*.csv
  */asteroid_binaries/*.vbinary
 Comment: I, Voyager Solar System data files
  Data were assembled from a variety of public domain sources. Large body orbit
@@ -59,7 +61,7 @@ Comment: I, Voyager Solar System data files
 Copyright: 2017-2019, Charlie Whitfield
 Licence: Apache-2.0
 
-Files: */wiki_text.csv
+Files: */text/wiki_text.csv
 Comment: Wikipedia text excerpts
  Attribution of text excerpts is in accordance with
  https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content
@@ -67,14 +69,43 @@ Comment: Wikipedia text excerpts
 Copyright: 2019, Wikipedia contributors
 Licence: CC-BY-3.0
 
-Files: */Jupiter.albedo.new.BjornJonsson.4096.jpg
+Files: */fonts/Roboto-Regular.ttf
+Comment: Roboto TrueType font
+Copyright: 2011, Google Inc.
+Licence: Apache-2.0
+
+File: */misc/pale_blue_dot.P36254.nasa_jpl-caltech.png
+Comment: NASA Solar System Exploration
+ Voyager 1's Pale Blue Dot
+ Modified by Charlie Whitfield
+ Usage: https://www.nasa.gov/multimedia/guidelines/index.html
+Licence: public-domain
+
+Files: */starfields/starmap_16k.jpg
+Comment: NASA/Goddard Space Flight Center Scientific Visualization Studio
+ Deep Star Maps
+ Modified by Charlie Whitfield
+ Usage: https://www.nasa.gov/multimedia/guidelines/index.html
+Licence: public-domain
+
+Files: */globe_wraps/Earth.albedo.nasa.land_ocean_ice_cloud_4k.jpg
+ */2d_bodies/Earth.256.png
+Comment: NASA Visible Earth
+ The Blue Marble: Land Surface, Ocean Color, Sea Ice and Clouds
+ Usage: https://www.nasa.gov/multimedia/guidelines/index.html
+Licence: public-domain
+
+Files: */globe_wraps/Jupiter.albedo.new.BjornJonsson.4096.jpg
+ */2d_bodies/Jupiter.256.png
 Comment: Merged Cassini and Juno global map of Jupiter
 Copyright: 2018, Björn Jónsson
 Licence CC-BY-3.0
 
-Files: */Neptune.albedo.BjornJonsson.CWreprocessed.4096.jpg
- */Venus.albedo.BjornJonsson.CWreprocessed.4096.jpg
- */saturn_rings.png
+Files: */globe_wraps/Neptune.albedo.BjornJonsson.CWreprocessed.4096.jpg
+ */globe_wraps/Venus.albedo.BjornJonsson.CWreprocessed.4096.jpg
+ */2d_bodies/Neptune.256.png
+ */2d_bodies/Venus.256.png
+ */planet_rings/saturn_rings.png
 Comment: Björn Jónsson planetary maps
  https://bjj.mmedia.is/data/planetary_maps.html
  Planet color adjustments by Charlie Whitfield. Saturn Rings were processed
@@ -82,30 +113,69 @@ Comment: Björn Jónsson planetary maps
 Copyright: 1998-2011, 2012, Björn Jónsson
 Licence: website-notice-1
 
-Files: */Sun.albedo.JHT.CWreprocessed.4096.jpg
+Files: */globe_wraps/Sun.albedo.JHT.CWreprocessed.4096.jpg
+ */2d_bodies/Sun.256.png
+ */2d_bodies/Sun_slice.256.png
 Comment: James Hastings-Trew sun map
  http://planetpixelemporium.com/planets.html
  Modified by Charlie Whitfield
 Copyright: 2006, James Hastings-Trew
 Licence: website-notice-2
 
-Files: */starmap_16k.jpg
-Comment: NASA/Goddard Space Flight Center Scientific Visualization Studio
- Deep Star Maps
- Modified by Charlie Whitfield
- Usage: https://www.nasa.gov/multimedia/guidelines/index.html
-Licence: public-domain
-
-Files: */Earth.albedo.nasa.land_ocean_ice_cloud_4k.jpg
-Comment: NASA Visible Earth "The Blue Marble: Land Surface, Ocean Color, Sea Ice and Clouds"
- Usage: https://www.nasa.gov/multimedia/guidelines/index.html
-Licence: public-domain
-
-Files:
+Files: *globe_wraps/Ariel.albedo.partial.noaa.2048.jpg
+ */globe_wraps/Callisto.albedo.noaa.2400.jpg
+ */globe_wraps/Ceres.albedo.noaa.CWcolored.4096.jpg
+ */globe_wraps/Charon.albedo.partial.noaa.4096.jpg
+ */globe_wraps/Dione.albedo.noaa.4096.jpg
+ */globe_wraps/Enceladus.albedo.noaa.4096.jpg
+ */globe_wraps/Europa.albedo.noaa.4096.jpg
+ */globe_wraps/Ganymede.albedo.noaa.4096.jpg
+ */globe_wraps/Iapetus.albedo.noaa.4096.jpg
+ */globe_wraps/Io.albedo.noaa.4096.jpg
+ */globe_wraps/Mars.albedo.noaa.CWreprocessed.4096.jpg
+ */globe_wraps/Mercury.albedo.GlobalColor2017.CWreprocessed.4096.jpg
+ */globe_wraps/Mimas.albedo.noaa.4096.jpg
+ */globe_wraps/Miranda.albedo.partial.2048.jpg
+ */globe_wraps/Moon.albedo.noaa.4096.jpg
+ */globe_wraps/Oberon.albedo.partial.noaa.2048.jpg
+ */globe_wraps/Phoebe.albedo.partial.noaa.4096.jpg
+ */globe_wraps/Pluto.albedo.partial.noaa.4096.jpg
+ */globe_wraps/Rhea.albedo.noaa.4096.jpg
+ */globe_wraps/Saturn.albedo.noaa.2880.jpg
+ */globe_wraps/Tethys.albedo.noaa.4096.jpg
+ */globe_wraps/Titan.albedo.noaa.2k.jpg
+ */globe_wraps/Titania.albedo.partial.noaa.2048.jpg
+ */globe_wraps/Triton.albedo.incomplete.noaa.4096.jpg
+ */globe_wraps/Umbriel.albedo.partial.noaa.3600.jpg
+ */globe_wraps/Uranus.albedo.noaa.1024.jpg
+ */globe_wraps/Vesta.albedo.noaa.4096.jpg
+ */2d_bodies/Ariel.256.png
+ */2d_bodies/Callisto.256.png
+ */2d_bodies/Ceres.256.png
+ */2d_bodies/Charon.256.png
+ */2d_bodies/Dione.256.png
+ */2d_bodies/Enceladus.256.png
+ */2d_bodies/Europa.256.png
+ */2d_bodies/Ganymede.256.png
+ */2d_bodies/Iapetus.256.png
+ */2d_bodies/Io.256.png
+ */2d_bodies/Mars.256.png
+ */2d_bodies/Mercury.256.png
+ */2d_bodies/Miranda.256.png
+ */2d_bodies/Moon.256.png
+ */2d_bodies/Oberon.256.png
+ */2d_bodies/Pluto.256.png
+ */2d_bodies/Rhea.256.png
+ */2d_bodies/Saturn.256.png
+ */2d_bodies/Tethys.256.png
+ */2d_bodies/Titan.256.png
+ */2d_bodies/Titania.256.png
+ */2d_bodies/Triton.256.png
+ */2d_bodies/Umbriel.256.png
+ */2d_bodies/Uranus.256.png
 Comment: NOAA Science On a Sphere planet and moon maps
  Usage: https://sos.noaa.gov/copyright-information
 Licence: public-domain
-
 
 
 Licence: Apache-2.0
