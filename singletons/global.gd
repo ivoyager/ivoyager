@@ -130,7 +130,7 @@ var shaders := {
 	orbit_ellipse = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
 	orbit_points = preload("res://ivoyager/shaders/orbit_points.shader"),
 	orbit_points_lagrangian = preload("res://ivoyager/shaders/orbit_points_lagrangian.shader"),
-	# TODO: a rings shader!
+	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 	}
 
 # *****************************************************************************

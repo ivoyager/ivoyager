@@ -1,23 +1,22 @@
 # I, Voyager Credits
 
-I, Voyager is built on the open-source Godot Engine (godotengine.org) and is possible due to Godot's creators and contributors. Other source material used in I, Voyager are listed below. 
+I, Voyager would not be possible without public interest in space exploration, expressed via funding of NASA, NOAA, ESA and other government agencies and the scientists and engineers they employ. I, Voyager also owes a special debt of gratidute to Godot Engine's creators and contributors. 
 
 ## Godot Engine
     Juan Linietsky, Ariel Manzur, and Godot Engine contributors.
-	https://github.com/godotengine/godot/blob/master/AUTHORS.md
-
-## Images
-
-    NASA - Most Solar System images
-    NOAA - ??? Composite planet and moon "world maps"
-	NASA/Goddard Space Flight Center Scientific Visualization Studio - Starfields
 
 ## Astronomical Data
+    Large body orbits - NASA.
+    Asteroid orbits - Asteroids Dynamic Site (AstDyS-2).
 
-    NASA
-    AstDyS-2 (Asteroids Dynamic Site; https://newton.spacedys.com/astdys/) - Asteroid orbits
+## Images
+    Starfield - NASA/Goddard Space Flight Center Scientific Visualization Studio
+	Sun - Modified from James Hastings-Trew
+	Venus, Neptune, Jupiter, rings of Saturn - Modified from Björn Jónsson
+	Earth (Blue Marble) - NASA Goddard Space Flight Center, image by Reto Stöckli
+	Other planets and moons - NOAA Science On a Sphere. Some images were modified including fictional colorization of Ceres and substantial color adjustments for Mercury, Mars, Uranus and Neptune. 
 
 ##
-Images have been modified from source. Copyright information in COPYRIGHT.md.
+Comprehensive copyright and licence information in ./ivoyagere/COPYRIGHT.txt.
 
 
