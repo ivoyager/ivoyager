@@ -22,9 +22,10 @@
 #
 # To modify and extend I, Voyager:
 # 1. Create a extension init file with path "res://<name>/<name>.gd" where
-#    <name> is the name of your project or addon. This file must have an init()
-#    function and can extend Reference or Node (if the latter, init file can
-#    specify a scene; see addon examples). Instructions 2-5 refer to this file.
+#    <name> is the name of your project or addon. This file must have an
+#    extension_init() function and can extend Reference or Node (if the latter, 
+#    init file can specify a scene; see addon examples). Instructions 2-5 refer
+#    to this file.
 # 2. Use init() to:
 #     a. modify "project init" values in Global singleton.
 #     b. modify this node's dictionaries to extend (i.e., subclass) and replace
@@ -37,15 +38,6 @@
 #    add individual GUI scenes. (Or make your own GUI parent.)
 # 5. Hook up to Global signal "gui_entered_tree" to modify init values of
 #    individual GUI scenes (not defined here) before their _ready() call.  
-#
-# TODO: Move version control comments to README.md.
-# I, Voyager is maintained as a Git submodule and "standalone project":
-#    https://github.com/charliewhitfield/ivoyager_submodule
-#    https://github.com/charliewhitfield/ivoyager_standalone
-# You can use ivoyager_standalone as template to build your own project (with
-# its own repository) that includes the ivoyager submodule. It's then possible
-# to conduct version control of your project and the ivoyager submodule in
-# parallel.
 
 extends Node
 
@@ -170,14 +162,29 @@ func init_extensions() -> void:
 	dir.open("res://")
 	dir.list_dir_begin()
 	var dir_name := dir.get_next()
+#	print("Searching for potential extension files...")
 	while dir_name:
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-			if file.file_exists(path):
+#			print(path)
+			
+			# debug
+#			var dir2 := Directory.new()
+#			dir2.open("res://" + dir_name)
+#			dir2.list_dir_begin()
+#			var file_name := dir2.get_next()
+#			while file_name:
+#				if !dir2.current_is_dir():
+#					print("file: ", file_name)
+#				file_name = dir2.get_next()
+			
+			if file.file_exists(path) or file.file_exists(path + "c"): # "c" needed in export
+#				print("Found extension file!?")
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
 						and "EXTENSION_VERSION_YMD" in extension_script:
+#					print("Loading extension ", dir_name + ".gd")
 					var extension: Object = FileHelper.make_object_or_scene(extension_script)
 					extensions.append(extension)
 		dir_name = dir.get_next()
