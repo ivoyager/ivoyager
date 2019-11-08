@@ -9,7 +9,7 @@ I, Voyager is
 It is designed to be improved, modified and extended by the community. I, Voyager runs on the open-source [Godot Engine](https://godotengine.org) and primarily uses Godot’s easy-to-learn [GDScript](http://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html#doc-gdscript) (similar to Python). It can be extended into an independent free-standing project (a game or other software product) using GDScript, C# or C++.
 
 ### What does I, Voyager cost?
-I, Voyager is free to use and distribute under the permissive [Apache-2.0 License](https://en.wikipedia.org/wiki/Apache_License). Projects built with I, Voyager are owned by their creators. You can sell what you make. There are no royalties or fees.
+I, Voyager is free to use and distribute under the permissive [Apache License 2.0](https://en.wikipedia.org/wiki/Apache_License). Projects built with I, Voyager are owned by their creators. You can sell what you make. There are no royalties or fees.
 
 ### How do I contribute to I, Voyager development?
 Join the [I, Voyager Forum!](https://ivoyager.dev/forum) This is the best place to exchange ideas and to give and receive help. Report bugs and astronomical inaccuracies [here](https://github.com/ivoyager/ivoyager-bugs/issues) and [here](https://github.com/ivoyager/ivoyager-astronomical-inaccuracies/issues) (respectively). Contribute to code via pull requests at our repositories: https://github.com/ivoyager.
@@ -24,7 +24,7 @@ Creator and lead programmer Charlie Whitfield stumbled into the Godot Engine in 
 
 ### Authors, credits and legal
 Copyright (c) 2017-2019 Charlie Whitfield. A list of authors, credits, and license information can be found in the "ivoyager" subdirectory of derived software projects and in the "ivoyager" submodule repository at https://github.com/ivoyager/ivoyager:
-* AUTHORS.md contains a full list of contributors to I, Voyager code and assets.
-* CREDITS.md contains a full list of the sources of code and assets used and distributed in I, Voyager.  
+* AUTHORS.md contains a list of contributors to I, Voyager code and assets.
+* CREDITS.md contains a list of the sources of code and assets used and distributed in I, Voyager.  
 * LICENSE.txt contains the I, Voyager license.
-* COPYRIGHT.txt contains comprehensive copyright and license information for code and assets used and distributed in I, Voyager.
+* COPYRIGHT.txt contains copyright and license information for code and assets used and distributed in I, Voyager.

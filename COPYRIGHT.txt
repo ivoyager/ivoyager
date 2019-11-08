@@ -1,5 +1,77 @@
-Licensing information for files in the I, Voyager repository.
+Licensing information for files in the I, Voyager repositories.
+================================================================================
 
-Godot Engine
-Copyright (c) 2007-2019 Juan Linietsky, Ariel Manzur.
-Copyright (c) 2014-2019 Godot Engine contributors.
+The aim of this file is to document the copyright and licence of every file
+distributed from
+    https://github.com/ivoyager/ivoyager
+    https://github.com/ivoyager/ivoyager_planetarium
+    https://github.com/ivoyager/ivoyager_project_template
+including binary and asset files distributed via repository "releases". In
+typical code distributions, these files will be found in directories "ivoyager",
+"ivoyager_assets" and/or other directories begining with "ivoyager_".
+ 
+Licenses are given with their debian/copyright short name (or SPDX identifier
+if no standard short name exists) and are all included in plain text at the
+end of this file (in alphabetical order).
+
+Files: (Binary executables)
+Comment: Godot Engine
+Copyright: 2007-2019, Juan Linietsky, Ariel Manzur.
+ 2014-2019, Godot Engine contributors.
+License: Expat
+
+Files: ./ivoyager/*
+Comment: I, Voyager
+Copyright: 2017-2019, Charlie Whitfield.
+Licence: Apache-2.0
+
+Files: ./ivoyager/data/text/wiki_text.csv
+Comment: Wikipedia text excerpts
+ Attribution of text excerpts is in accordance with
+ https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content
+ by including URL to source Wikipedia pages where text excerpts are presented
+ to the software user.
+Licence: CC-BY-SA
+ Licencing Notice: "Each copy or modified version that you distribute must
+ include a licensing notice stating that the work is released under CC-BY-SA and
+ either a) a hyperlink or URL to the text of the license or b) a copy of the
+ license. For this purpose, a suitable URL is:
+ http://creativecommons.org/licenses/by-sa/3.0/"
+
+
+
+Licence: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ .
+     http://www.apache.org/licenses/LICENSE-2.0
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+Licence: CC-BY-SA
+ http://creativecommons.org/licenses/by-sa/3.0/
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining
+ a copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+ .
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
