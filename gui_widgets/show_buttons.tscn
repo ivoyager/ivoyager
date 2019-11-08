@@ -2,7 +2,6 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/show_buttons.gd" type="Script" id=1]
 
-
 [node name="ShowButtons" type="VBoxContainer"]
 margin_right = 40.0
 margin_bottom = 40.0
@@ -38,6 +37,7 @@ toggle_mode = true
 text = "Labels"
 
 [node name="HBox2" type="HBoxContainer" parent="."]
+visible = false
 margin_top = 24.0
 margin_right = 238.0
 margin_bottom = 44.0

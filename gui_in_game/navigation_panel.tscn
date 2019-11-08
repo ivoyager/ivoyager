@@ -4,8 +4,6 @@
 [ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=3]
 
-
-
 [node name="NavigationPanel" type="PanelContainer"]
 anchor_left = 1.0
 anchor_top = 1.0
@@ -58,7 +56,7 @@ text = "Lock Camera"
 
 [node name="BottomVBox" type="VBoxContainer" parent="."]
 margin_left = 7.0
-margin_top = 237.0
+margin_top = 257.0
 margin_right = 543.0
 margin_bottom = 333.0
 size_flags_vertical = 8
@@ -66,13 +64,12 @@ custom_constants/separation = 6
 alignment = 2
 
 [node name="OverAstBox" type="HBoxContainer" parent="BottomVBox"]
-editor/display_folded = true
-margin_left = 475.0
+margin_left = 536.0
 margin_right = 536.0
-margin_bottom = 20.0
 size_flags_horizontal = 8
 
 [node name="Comets" type="Button" parent="BottomVBox/OverAstBox"]
+visible = false
 margin_right = 61.0
 margin_bottom = 20.0
 size_flags_horizontal = 8
@@ -80,9 +77,9 @@ text = "Comets"
 
 [node name="AstGroupBox" type="HBoxContainer" parent="BottomVBox"]
 margin_left = 9.0
-margin_top = 26.0
+margin_top = 6.0
 margin_right = 536.0
-margin_bottom = 70.0
+margin_bottom = 50.0
 rect_min_size = Vector2( 0, 38 )
 size_flags_horizontal = 8
 
@@ -256,9 +253,9 @@ valign = 1
 
 [node name="BottomHBox" type="HBoxContainer" parent="BottomVBox"]
 margin_left = 385.0
-margin_top = 76.0
+margin_top = 56.0
 margin_right = 536.0
-margin_bottom = 96.0
+margin_bottom = 76.0
 size_flags_horizontal = 8
 
 [node name="Hotkeys" type="Button" parent="BottomVBox/BottomHBox"]
