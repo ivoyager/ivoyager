@@ -157,34 +157,21 @@ func init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
 	# (where <name> != "ivoyager" and does not start with ".") and then calls
 	# their extension_init() function.
+#	print("is_debug_build = ", OS.is_debug_build())
+#	print("Files in top dir...")
 	var dir := Directory.new()
-	var file := File.new()
 	dir.open("res://")
 	dir.list_dir_begin()
 	var dir_name := dir.get_next()
-#	print("Searching for potential extension files...")
 	while dir_name:
+#		print(dir_name)
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-#			print(path)
-			
-			# debug
-#			var dir2 := Directory.new()
-#			dir2.open("res://" + dir_name)
-#			dir2.list_dir_begin()
-#			var file_name := dir2.get_next()
-#			while file_name:
-#				if !dir2.current_is_dir():
-#					print("file: ", file_name)
-#				file_name = dir2.get_next()
-			
-			if file.file_exists(path) or file.file_exists(path + "c"): # "c" needed in export
-#				print("Found extension file!?")
+			if FileHelper.exists(path):
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
 						and "EXTENSION_VERSION_YMD" in extension_script:
-#					print("Loading extension ", dir_name + ".gd")
 					var extension: Object = FileHelper.make_object_or_scene(extension_script)
 					extensions.append(extension)
 		dir_name = dir.get_next()
