@@ -94,6 +94,7 @@ func _on_popup_hide():
 func _build_content() -> bool:
 	var file := File.new()
 	if file.open(file_path, File.READ) != OK:
+		print("ERROR: Could not open for read: ", file_path)
 		return false
 	_current_container = _content
 	var code := -1
