@@ -44,7 +44,6 @@ var _state: Dictionary = Global.state
 onready var _tree: SceneTree = get_tree()
 onready var _root: Viewport = _tree.get_root()
 onready var _registrar: Registrar = Global.objects.Registrar
-onready var _file_helper: FileHelper = Global.objects.FileHelper
 onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 
 
@@ -73,7 +72,7 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 		var start_selection: SelectionItem = _registrar.selection_items[Global.start_body_name]
 		selection_manager.select(start_selection)
 		for key in run_gui_classes:
-			var gui_panel: Control = _file_helper.make_object_or_scene(run_gui_classes[key])
+			var gui_panel: Control = SaverLoader.make_object_or_scene(run_gui_classes[key])
 			gui_panel.init(draggable_panels, gui_panels, selection_manager)
 			gui_panels.append(gui_panel)
 			add_child(gui_panel)

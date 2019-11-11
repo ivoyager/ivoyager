@@ -42,16 +42,17 @@
 #    2. All ancester nodes up to root must also be persist nodes.
 #    3. A non-procedural node cannot be child of a procedural node.
 #    4. Non-procedural nodes must have stable names (path cannot change).
-#    5. For references, PERSIST_AS_PROCEDURAL_OBJECT = true
-#    6. Virtual method _init() cannot have any args.
+#    5. Inner classes can't be persist objects
+#    6. For references, PERSIST_AS_PROCEDURAL_OBJECT = true
+#    7. Virtual method _init() cannot have any args.
 # Warnings:
-#    1. A table or dict persisted in two places will become two upon load.
+#    1. A single table or dict persisted in two places will become two on load
 #    2. Persisted strings cannot begin with object_tag.
 
 extends Reference
 class_name SaverLoader
 
-const DPRINT := false
+const DPRINT := false # true for debug print
 
 # ****************************** SIGNALS **************************************
 
@@ -59,10 +60,11 @@ signal finished() # yield to this after calling save_game() or load_game()
 
 # **************************** PUBLIC VARS ************************************
 
-var progress := 0
+var progress := 0 # read-only! (for an external progress bar)
 
 # project settings
-var progress_multiplier := 95
+var use_thread := true # true allows prog bar to work; false helps debugging
+var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
 var properties_arrays := [
 	"PERSIST_PROPERTIES",
 	"PERSIST_PROPERTIES_2",
@@ -73,7 +75,7 @@ var obj_properties_arrays := [
 	"PERSIST_OBJ_PROPERTIES_2",
 	"PERSIST_OBJ_PROPERTIES_3",
 	]
-var object_tag := "@!~`#"
+var object_tag := "@!~`#" # persisted strings must not start with this
 
 # debug printing/logging
 var debug_log_persist_nodes := true
@@ -83,8 +85,6 @@ var debug_print_tree := false
 
 # **************************** PRIVATE VARS ***********************************
 
-var _use_thread: bool = Global.use_threads
-var _file_helper: FileHelper
 var _tree: SceneTree
 var _root: Viewport
 var _thread: Thread
@@ -110,22 +110,37 @@ var _log_count_by_class := {}
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
-func project_init():
-	_file_helper = Global.objects.FileHelper
-	_tree = Global.get_tree()
-	_root = _tree.get_root()
+static func make_object_or_scene(script: Script) -> Object:
+	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
+		return script.new()
+	# It's a scene if the script or an extended script has member "SCENE" or
+	# "SCENE_OVERRIDE". We create the scene and return the root node.
+	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
+	var pkd_scene: PackedScene = load(scene_path)
+	var root_node: Node = pkd_scene.instance()
+	if root_node.script != script: # root_node.script may be parent class
+		root_node.set_script(script)
+	return root_node
 
-func save_game(save_file: File) -> void: # Assumes save_file already open
+func project_init():
+	# Ignore; required for I, Voyager compatibility
+	pass
+
+func save_game(save_file: File, tree: SceneTree) -> void: # Assumes save_file already open
+	_tree = tree
+	_root = _tree.get_root()
 	_current_scene = _tree.get_current_scene()
 	progress = 0
 	_prog_serialized = 0
-	if _use_thread:
+	if use_thread:
 		_thread = Thread.new()
 		_thread.start(self, "_threaded_save", save_file)
 	else:
 		_threaded_save(save_file)
 
-func load_game(save_file: File) -> void:
+func load_game(save_file: File, tree: SceneTree) -> void:
+	_tree = tree
+	_root = _tree.get_root()
 	_tag_size = object_tag.length()
 	progress = 0
 	_prog_deserialized = 0
@@ -139,7 +154,7 @@ func load_game(save_file: File) -> void:
 	# using print_stray_nodes(), but it fails to report nodes that are still
 	# alive and responding to signals.) The goal here was to avoid need for 
 	# "destructor" methods with extensive disconnect() statements in our
-	# procedural nodes; however, after much pain I still recommend manual
+	# procedural nodes; however, after much pain I still recommend explicit
 	# disconnection of signals in procedural objects about to be deleted.
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")
@@ -147,7 +162,7 @@ func load_game(save_file: File) -> void:
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")
-	if _use_thread:
+	if use_thread:
 		_thread = Thread.new()
 		_thread.start(self, "_threaded_load", save_file)
 	else:
@@ -157,7 +172,7 @@ func free_procedural_nodes(node: Node, is_root := true) -> void:
 	# call with node = root
 	if !is_root:
 		if node.PERSIST_AS_PROCEDURAL_OBJECT:
-			node.queue_free() # children will also be freed
+			node.queue_free() # children will also be freed!
 			return
 	else:
 		assert(node is Viewport)
@@ -246,7 +261,7 @@ func _threaded_save(save_file: File) -> void:
 	call_deferred("_finish_save")
 
 func _finish_save() -> void:
-	if _use_thread:
+	if use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
 	print("Objects saved: ", _sfile_n_objects)
@@ -268,10 +283,10 @@ func _threaded_load(save_file: File) -> void:
 	call_deferred("_finish_load")
 	
 func _finish_load() -> void:
-	if _use_thread:
+	if use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-	_build_tree() # TODO?: build in thread and then attach
+	_build_tree()
 	_set_current_scene()
 	print("Objects loaded: ", _sfile_n_objects)
 	_clear()
@@ -318,7 +333,7 @@ func _register_and_instance_load_objects() -> void:
 			assert(DPRINT and prints(save_id, node, node.name) or true)
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
-			node = _file_helper.make_object_or_scene(script)
+			node = make_object_or_scene(script)
 			assert(DPRINT and prints(save_id, node, script_id, _sfile_script_paths[script_id]) or true)
 		assert(node)
 		_objects[save_id] = node
@@ -385,7 +400,7 @@ func _serialize_node(node: Node):
 	progress = progress_multiplier * _prog_serialized / _sfile_n_objects
 
 func _register_and_serialize_reference(reference: Reference) -> int:
-	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT)
+	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
 	var save_id := _sfile_n_objects
 	_sfile_n_objects += 1
 	_ids[reference] = save_id
@@ -500,7 +515,7 @@ func _get_serialized_objects_array(objects_array: Array) -> Array:
 func _get_serialized_objects_dict(objects_dict: Dictionary) -> Dictionary:
 	var serialized_objects_dict := {}
 	for key in objects_dict:
-		var item = objects_dict[key] # not static type!
+		var item = objects_dict[key] # dynamic type!
 		match typeof(item):
 			TYPE_OBJECT:
 				serialized_objects_dict[key] = _encode_object(item)
@@ -516,7 +531,7 @@ func _deserialize_objects_array(objects_array: Array) -> void:
 	var n_items := objects_array.size()
 	var index := 0
 	while index < n_items:
-		var item = objects_array[index] # not static type!
+		var item = objects_array[index] # dynamic type!
 		match typeof(item):
 			TYPE_STRING:
 				var object := _decode_object(item)
@@ -534,7 +549,7 @@ func _deserialize_objects_array(objects_array: Array) -> void:
 
 func _deserialize_objects_dict(objects_dict: Dictionary) -> void:
 	for key in objects_dict:
-		var item = objects_dict[key] # not static type!
+		var item = objects_dict[key] # dynamic type!
 		match typeof(item):
 			TYPE_STRING:
 				var object := _decode_object(item)
@@ -569,7 +584,7 @@ func _encode_object(object: Object) -> String:
 
 func _decode_object(test_string: String) -> Object:
 	if test_string.substr(0, _tag_size) != object_tag:
-		return null
+		return null # it's just a string!
 	if test_string.substr(_tag_size, 1) == "w": # weak ref
 		var save_id := int(test_string.substr(_tag_size + 1, test_string.length() - _tag_size - 1))
 		if save_id == -1: # weak ref to dead object

@@ -34,7 +34,6 @@ var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
 var _registrar: Registrar
-var _file_helper: FileHelper
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 
@@ -46,7 +45,6 @@ func project_init() -> void:
 	_minor_bodies_manager = Global.objects.MinorBodiesManager
 	_points_manager = Global.objects.PointsManager
 	_registrar = Global.objects.Registrar
-	_file_helper = Global.objects.FileHelper
 	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
 	_HUDPoints_ = Global.script_classes._HUDPoints_
 	
@@ -68,7 +66,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 			_init_hud_points(asteroid_group, group_name)
 
 func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void:
-	var hud_points: HUDPoints = _file_helper.make_object_or_scene(_HUDPoints_)
+	var hud_points: HUDPoints = SaverLoader.make_object_or_scene(_HUDPoints_)
 	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
 	_points_manager.register_points_group(hud_points, group_name)
@@ -91,7 +89,7 @@ func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_p
 	var lagrange_point: LagrangePoint
 	# make the AsteroidGroup
 	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
-#	var asteroid_group: AsteroidGroup = _file_helper.make_object_or_scene(_AsteroidGroup_)
+#	var asteroid_group: AsteroidGroup = SaverLoader.make_object_or_scene(_AsteroidGroup_)
 	if !is_trojans:
 		asteroid_group.init(star, group)
 	else:

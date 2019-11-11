@@ -116,7 +116,7 @@ func _toggle_subpanels(button_pressed, index) -> void:
 			_subpanel_buttons[i].disabled = false
 			_subpanel_buttons[i].pressed = true
 			if not _subpanels[i] is Node: # instance this subpanel
-				_subpanels[i] = FileHelper.make_object_or_scene(subpanel_classes[i])
+				_subpanels[i] = SaverLoader.make_object_or_scene(subpanel_classes[i])
 				_subpanels[i].rect_min_size = SUBPANEL_SIZE
 				_subpanel_container.add_child(_subpanels[i])
 				_subpanels[i].owner = self

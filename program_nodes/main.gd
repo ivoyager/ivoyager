@@ -146,7 +146,7 @@ func save_game(path: String) -> void:
 	_state.last_save_path = path
 	_main_prog_bar.start(_saver_loader)
 	Global.emit_signal("game_save_started")
-	_saver_loader.save_game(save_file)
+	_saver_loader.save_game(save_file, _tree)
 	yield(_saver_loader, "finished")
 	Global.emit_signal("game_save_finished")
 	_main_prog_bar.stop()
@@ -177,7 +177,7 @@ func load_game(path: String) -> void:
 	_main_prog_bar.start(_saver_loader)
 	Global.emit_signal("about_to_free_procedural_nodes")
 	Global.emit_signal("game_load_started")
-	_saver_loader.load_game(save_file)
+	_saver_loader.load_game(save_file, _tree)
 	yield(_saver_loader, "finished")
 	Global.emit_signal("game_load_finished")
 	_main_prog_bar.stop()
