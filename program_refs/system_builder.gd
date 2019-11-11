@@ -36,7 +36,6 @@ var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
-var _file_helper: FileHelper
 var _WorldEnvironment_: Script
 var _VoyagerCamera_: Script
 var _Body_: Script
@@ -61,7 +60,6 @@ func project_init():
 	_body_builder = Global.objects.BodyBuilder
 	_registrar = Global.objects.Registrar
 	_minor_bodies_builder = Global.objects.MinorBodiesBuilder
-	_file_helper = Global.objects.FileHelper
 	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
 	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
 	_Body_ = Global.script_classes._Body_
@@ -72,8 +70,8 @@ func _build_on_thread(_dummy: int) -> void:
 	_add_bodies(_table_data.moon_data, _enums.DATA_TABLE_MOON)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
-	_starfield = _file_helper.make_object_or_scene(_WorldEnvironment_)
-	_camera = _file_helper.make_object_or_scene(_VoyagerCamera_)
+	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
+	_camera = SaverLoader.make_object_or_scene(_VoyagerCamera_)
 	call_deferred("_finish_build")
 
 func _finish_build() -> void:
@@ -93,7 +91,7 @@ func _finish_build() -> void:
 
 func _add_bodies(data_table: Array, data_table_type: int) -> void:
 	for data in data_table:
-		var body: Body = _file_helper.make_object_or_scene(_Body_)
+		var body: Body = SaverLoader.make_object_or_scene(_Body_)
 		var parent: Body
 		if data.parent != "is_top":
 			parent = _registrar.bodies_by_name[data.parent]
