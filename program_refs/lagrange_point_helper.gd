@@ -36,7 +36,7 @@ func get_or_make_lagrange_point(body: Body, l_point: int) -> LagrangePoint:
 	else:
 		body.lagrange_points.resize(5)
 	if !lagrange_point:
-		lagrange_point = FileHelper.make_object_or_scene(_LagrangePoint_)
+		lagrange_point = SaverLoader.make_object_or_scene(_LagrangePoint_)
 		lagrange_point.init(body.orbit, l_point)
 		body.get_parent().add_child(lagrange_point)
 		body.lagrange_points[l_point - 1] = lagrange_point

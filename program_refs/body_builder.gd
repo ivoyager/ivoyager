@@ -36,7 +36,6 @@ var _hud_2d_control: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
-var _file_helper: FileHelper
 var _math: Math
 var _Body_: Script
 var _HUDOrbit_: Script
@@ -168,7 +167,6 @@ func project_init() -> void:
 	_registrar = Global.objects.Registrar
 	_selection_builder = Global.objects.SelectionBuilder
 	_orbit_builder = Global.objects.OrbitBuilder
-	_file_helper = Global.objects.FileHelper
 	_math = Global.objects.Math
 	_Body_ = Global.script_classes._Body_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
@@ -199,7 +197,7 @@ func _build_unpersisted(body: Body) -> void:
 	var body_type: int = body.body_type
 	# model
 	if body.body_type != -1:
-		var model: Model = _file_helper.make_object_or_scene(_Model_)
+		var model: Model = SaverLoader.make_object_or_scene(_Model_)
 		model.init(body_type, file_prefix)
 		var too_far: float = body.m_radius * model.TOO_FAR_RADIUS_MULTIPLIER
 		body.set_model(model, too_far)
@@ -207,7 +205,7 @@ func _build_unpersisted(body: Body) -> void:
 	if body.rings_info:
 		var rings_file: String = body.rings_info[0]
 		var rings_radius: float = body.rings_info[1]
-		var rings: Spatial = _file_helper.make_object_or_scene(_Rings_)
+		var rings: Spatial = SaverLoader.make_object_or_scene(_Rings_)
 		rings.init(rings_file, rings_radius)
 		var rings_tilt_axis := Vector3(0, 0, 1).cross(body.north_pole).normalized() # z-axis is up for rings graphic
 		var rings_tilt_angle := Vector3(0, 0, 1).angle_to(body.north_pole)
@@ -217,7 +215,7 @@ func _build_unpersisted(body: Body) -> void:
 	# starlight
 	var starlight: Starlight
 	if body.starlight_type != -1:
-		starlight = _file_helper.make_object_or_scene(_Starlight_)
+		starlight = SaverLoader.make_object_or_scene(_Starlight_)
 		var starlight_data: Dictionary = _table_data.starlight_data[body.starlight_type]
 		starlight.init(starlight_data)
 		body.add_child(starlight)
@@ -239,13 +237,13 @@ func _build_unpersisted(body: Body) -> void:
 		elif body.is_planet:
 			orbit_color = _settings.planet_orbit_color
 		if orbit_color:
-			hud_orbit = _file_helper.make_object_or_scene(_HUDOrbit_)
+			hud_orbit = SaverLoader.make_object_or_scene(_HUDOrbit_)
 			hud_orbit.init(body.orbit, orbit_color, _orbit_mesh_arrays)
 			body.hud_orbit = hud_orbit
 			var parent: Body = body.get_parent()
 			parent.call_deferred("add_child", hud_orbit)
 	# HUDIcon
-	var hud_icon: HUDIcon = _file_helper.make_object_or_scene(_HUDIcon_)
+	var hud_icon: HUDIcon = SaverLoader.make_object_or_scene(_HUDIcon_)
 	var fallback_icon_texture: Texture
 	if body.is_moon:
 		fallback_icon_texture = Global.assets.generic_moon_icon
@@ -255,18 +253,18 @@ func _build_unpersisted(body: Body) -> void:
 	body.hud_icon = hud_icon
 	body.add_child(hud_icon)
 	# HUDLabel
-	var hud_label: HUDLabel = _file_helper.make_object_or_scene(_HUDLabel_)
+	var hud_label: HUDLabel = SaverLoader.make_object_or_scene(_HUDLabel_)
 	hud_label.init(tr(body.name))
 	body.hud_label = hud_label
 	_hud_2d_control.add_child(hud_label)
 
 	# 2D selection textures
-	body.texture_2d = _file_helper.find_resource(_texture_2d_dir, file_prefix)
+	body.texture_2d = FileHelper.find_resource(_texture_2d_dir, file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
 	if body.is_star:
 		var slice_name = file_prefix + "_slice"
-		body.texture_slice_2d = _file_helper.find_resource(_texture_2d_dir, slice_name)
+		body.texture_slice_2d = FileHelper.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = Global.assets.fallback_star_slice
 

@@ -148,10 +148,6 @@ func _on_input(event: InputEvent) -> void:
 func _input_for_splash_screen(event: InputEvent) -> void:
 	if _allow_dev_tools and event.is_action_pressed("write_debug_logs_now"):
 		Debug.force_logging()
-#	elif _allow_dev_tools and event.is_action_pressed("open_asteroid_importer"):
-#		_file_helper.make_or_get_child_node($"/root/GUITop", _script_classes._AsteroidImporter_)
-#	elif _allow_dev_tools and event.is_action_pressed("open_wiki_bot"):
-#		_file_helper.make_or_get_child_node($"/root/GUITop", _script_classes._WikiBot_)
 	elif event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
 		_main.load_game("")
 	elif event.is_action_pressed("toggle_options"):

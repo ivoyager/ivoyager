@@ -129,7 +129,7 @@ func project_init() -> void:
 func _on_ready():
 	._on_ready()
 	_header.text = "Hotkeys"
-	_hotkey_dialog = FileHelper.make_object_or_scene(HotkeyDialog)
+	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 
