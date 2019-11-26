@@ -49,8 +49,8 @@ signal require_stop_requested(object)
 signal allow_run_requested(object)
 
 # camera/UI requests
-signal move_camera_to_selection_requested(selection_item, viewpoint, instant_move)
-signal move_camera_to_body_requested(body, viewpoint, instant_move)
+signal move_camera_to_selection_requested(selection_item, viewpoint, rotations, instant_move)
+signal move_camera_to_body_requested(body, viewpoint, rotations, instant_move)
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)
