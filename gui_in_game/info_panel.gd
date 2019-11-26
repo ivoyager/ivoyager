@@ -95,6 +95,7 @@ func _start_sim(_is_new_game: bool) -> void:
 func _toggle_subpanels(button_pressed, index) -> void:
 	var header_text := ""
 	var minimize := true
+	var bottom_edge := rect_position.y + rect_size.y
 	if !button_pressed:
 		index = -1
 		subpanel_index = -1
@@ -129,15 +130,17 @@ func _toggle_subpanels(button_pressed, index) -> void:
 		if hide_subpanel and _subpanels[i] is Node:
 			_subpanels[i].hide()
 	if minimize:
-		_subpanel_container.rect_min_size = Vector2(0, 0)
+		_subpanel_container.rect_min_size = Vector2.ZERO
 		_subpanel_container.hide()
-		_subpanel_container.rect_size = Vector2(0, 0)
+		_subpanel_container.rect_size = Vector2.ZERO
 		$VBox/SelectedBox.hide()
-		rect_size = Vector2(0, 0)
+		rect_size = Vector2.ZERO # causes immediate size update
+		rect_position.y = bottom_edge - rect_size.y
 	else:
 		_subpanel_container.rect_min_size = SUBPANEL_SIZE
 		_subpanel_container.show()
 		$VBox/SelectedBox.show()
+		finish_move()
 	if header_text:
 		$VBox/SelectedBox/Selected.text = header_text
 	else:

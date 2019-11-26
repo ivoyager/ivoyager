@@ -2,7 +2,6 @@
 
 [ext_resource path="res://ivoyager/gui_in_game/info_panel.gd" type="Script" id=1]
 
-
 [node name="InfoPanel" type="PanelContainer"]
 anchor_left = 0.5
 anchor_top = 1.0
