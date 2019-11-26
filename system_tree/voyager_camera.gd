@@ -16,21 +16,6 @@
 # limitations under the License.
 # *****************************************************************************
 #
-# The camera has three modes [planned]:
-#   Inward - looking at spatial; move around and in/out
-#   [TODO] Outward - looking out from surface of body; zoom changes focal-length
-#   [TODO] Free - free to move anywhere; nearby bodies determine scale
-#
-# INWARD MODE
-# The camera is bound to a spatial object such as a star, planet, moon, minor
-# body or spacecraft. User can move about the object or in/out keeping
-# object always in center view. The camera will reorient on its own to
-# system ecliptic (when far) or a nearby object's equatorial plane.
-# Default key control:
-#   arrows - up, down, left, right around spatial maintaining pointing
-#   z, x - move camera away or tosward object
-# OUTWARD MODE - TODO
-# FREE MODE - TODO
 
 extends Camera
 class_name VoyagerCamera
@@ -70,6 +55,7 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
 const NULL_DRAG := Vector2.ZERO
+const NULL_ROTATIONS := Vector3(-INF, -INF, -INF)
 
 # ******************************* PERSISTED ***********************************
 
@@ -84,13 +70,13 @@ var focal_length_index: int # use init_focal_length_index below
 
 # private
 var _transform := Transform(Basis(), Vector3.ONE) # "working" value
-var _rotation := Basis() # relative to pointing at parent, north up
+var _rotations := Vector3.ZERO # relative to pointing at parent, north up
 var _viewpoint_memory := viewpoint
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "viewpoint", "is_camera_lock", "focal_length", "focal_length_index",
-	"_transform", "_rotation", "_viewpoint_memory"]
+	"_transform", "_rotations", "_viewpoint_memory"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
@@ -101,10 +87,15 @@ var init_focal_length_index := 2
 var ease_exponent := 5.0
 var move_radially_rate := 0.7
 var move_in_out_rate := 3.0
+var key_rotate_rate := 1.0
 var follow_orbit: float = 4e7 * Global.scale # km after dividing by fov
 var orient_to_local_pole: float = 5e7 * Global.scale # must be > follow_orbit
 var orient_to_ecliptic: float = 5e10 * Global.scale # must be > orient_to_local_pole
-var mouse_drag_incr := PI / 8.0
+var mouse_move_effect := 0.4
+var mouse_rotate_xy_effect := 0.1 
+var mouse_rotate_z_effect := 0.3
+var mouse_rotate_min_z_at_offcenter := 0.2
+var mouse_rotate_max_z_at_offcenter := 0.7
 var mouse_wheel_halflife_x2 := 0.25 # sec
 var mouse_wheel_effect := 100 # int!
 
@@ -127,10 +118,15 @@ var _orient_to_local_pole_sq: float
 var _orient_to_ecliptic_sq: float
 var _mouse_wheel_accumulator := 0
 var _move_action_pressed := Vector3.ZERO
+var _rotate_action_pressed := Vector3.ZERO
 
-var _drag_start := NULL_DRAG
-var _drag_segment_start := NULL_DRAG
-var _drag_current := NULL_DRAG
+var _drag_lb_start := NULL_DRAG
+var _drag_lb_segment_start := NULL_DRAG
+var _drag_lb_current := NULL_DRAG
+var _drag_rb_start := NULL_DRAG
+var _drag_rb_segment_start := NULL_DRAG
+var _drag_rb_current := NULL_DRAG
+#var _drag_is_z_rotate := false
 # move
 var _move_seconds: float
 var _move_progress: float
@@ -140,6 +136,7 @@ var _move_spatial: Spatial
 var _move_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
 var _from_viewpoint := VIEWPOINT_ZOOM
+var _from_rotations := Vector3.ZERO
 var _pre_move_view_position := Vector3.ONE
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
@@ -147,6 +144,8 @@ var _move_longitude_remap := LONGITUDE_REMAP_INIT
 # **************************** PUBLIC FUNCTIONS *******************************
 
 static func get_view_position(translation_: Vector3, north: Vector3, ref_longitude: float) -> Vector3:
+	# FIXME: This should be way simpler than the way I did it here!
+	#
 	# "view_position" is a standardized Vector3 where:
 	#    x is longitude angle relative to ref_longitude
 	#    y is latitude angle
@@ -175,6 +174,7 @@ static func get_view_position(translation_: Vector3, north: Vector3, ref_longitu
 
 static func convert_view_position(view_position: Vector3, north: Vector3, ref_longitude: float) -> Vector3:
 	# inverse of above function
+	# FIXME: This should be way simpler than the way I did it here!
 	if ref_longitude == -INF:
 		ref_longitude = 0.0
 	var longitude := view_position[0]
@@ -194,15 +194,15 @@ static func convert_view_position(view_position: Vector3, north: Vector3, ref_lo
 	translation_ *= -radius
 	return translation_
 
-func move(selection_item_: SelectionItem, to_viewpoint := -1, instant_move := false) -> void:
-	# Use selection_item_ = null and/or to_viewpoint = -1 if we don't want to change
-	assert(DPRINT and prints("move", selection_item_, to_viewpoint, instant_move) or true)
+func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
+	# Use to_selection_item = null and/or to_viewpoint = -1 if we don't want to change
+	assert(DPRINT and prints("move", to_selection_item, to_viewpoint, instant_move) or true)
 	_from_selection_item = selection_item
 	_from_spatial = spatial
 	_from_viewpoint = viewpoint
-	if selection_item_ and selection_item_.spatial:
-		selection_item = selection_item_
-		_to_spatial = selection_item_.spatial
+	if to_selection_item and to_selection_item.spatial:
+		selection_item = to_selection_item
+		_to_spatial = to_selection_item.spatial
 		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if to_viewpoint != -1:
 		viewpoint = to_viewpoint
@@ -211,6 +211,9 @@ func move(selection_item_: SelectionItem, to_viewpoint := -1, instant_move := fa
 		var north := _get_north(_from_selection_item, dist_sq)
 		var orbit_anomaly := _get_orbit_anomaly(_from_selection_item, dist_sq)
 		_pre_move_view_position = get_view_position(translation, north, orbit_anomaly)
+	if to_rotations != NULL_ROTATIONS:
+		_from_rotations = _rotations
+		_rotations = to_rotations
 	_move_seconds = _settings.camera_move_seconds
 	if !is_moving:
 		_move_progress = 0.0
@@ -227,10 +230,10 @@ func move(selection_item_: SelectionItem, to_viewpoint := -1, instant_move := fa
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("viewpoint_changed", viewpoint)
 
-func move_to_body(to_body: Body, to_viewpoint := -1, instant_move := false) -> void:
+func move_to_body(to_body: Body, to_viewpoint := -1, to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_viewpoint, instant_move) or true)
-	var selection_item_ := _registrar.get_selection_for_body(to_body)
-	move(selection_item_, to_viewpoint, instant_move)
+	var to_selection_item := _registrar.get_selection_for_body(to_body)
+	move(to_selection_item, to_viewpoint, to_rotations, instant_move)
 
 func increment_focal_length(increment: int) -> void:
 	var new_fl_index = focal_length_index + increment
@@ -250,7 +253,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
 	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, true)
+		move(null, -1, NULL_ROTATIONS, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -308,7 +311,7 @@ func _set_run_state(is_running: bool) -> void:
 	set_process_unhandled_input(is_running)
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, true)
+	move(null, -1, NULL_ROTATIONS, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("run_state_changed", self, "_set_run_state")
@@ -326,18 +329,18 @@ func _process(delta: float) -> void:
 	_on_process(delta)
 
 func _on_process(delta: float):
-	var dist_change := false
+	var is_dist_change := false
 	if is_moving:
 		_move_progress += delta
 		if _move_progress < _move_seconds:
 			_process_moving()
 		else: # end the move
 			is_moving = false
-			dist_change = true
+			is_dist_change = true
 			if spatial != _to_spatial:
 				_do_camera_handoff()
 	if !is_moving:
-		_process_not_moving(delta, dist_change)
+		_process_not_moving(delta, is_dist_change)
 	if CENTER_ORIGIN_SHIFTING:
 		_top_body.translation -= spatial.global_transform.origin
 	transform = _transform
@@ -357,8 +360,8 @@ func _process_moving() -> void:
 	# common spatial of the move. E.g., we move around Jupiter (not through it
 	# if going from Io to Europa. Basis is interpolated more straightforwardly
 	# using transform.basis.
-	var from_transform := _get_viewpoint_transform(_from_selection_item, _from_viewpoint)
-	var to_transform := _get_viewpoint_transform(selection_item, viewpoint)
+	var from_transform := _get_viewpoint_transform(_from_selection_item, _from_viewpoint, _from_rotations)
+	var to_transform := _get_viewpoint_transform(selection_item, viewpoint, _rotations)
 	var global_common_translation := _move_spatial.global_transform.origin
 #	var common_north = _move_spatial.north_pole # FIXME
 	var from_common_translation := from_transform.origin \
@@ -388,11 +391,6 @@ func _process_moving() -> void:
 	_transform.origin = interpolated_common_translation + global_common_translation - spatial.global_transform.origin
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, ease_progress)
 
-
-#	var true_global_transform := from_transform.interpolate_with(to_transform, ease_progress)
-#	_transform.basis = true_global_transform.basis
-#	_transform.origin = true_global_transform.origin - spatial.global_transform.origin
-
 	var distance_for_gui: float
 	if spatial == _to_spatial:
 		distance_for_gui = translation.length()
@@ -407,17 +405,31 @@ func _do_camera_handoff() -> void:
 	emit_signal("parent_changed", spatial)
 
 # warning-ignore:unused_argument
-func _process_not_moving(delta: float, dist_change := false) -> void:
-	var camera_bump := false
-	var look_at := false
-	_transform = _get_viewpoint_transform(selection_item, viewpoint)
+func _process_not_moving(delta: float, is_dist_change := false) -> void:
+	var is_camera_bump := false
+	var is_rotation_change := false
+	_transform = _get_viewpoint_transform(selection_item, viewpoint, _rotations)
 	var move_vector := Vector3.ZERO
+	var rotate_vector := Vector3.ZERO
 	# mouse drag movement
-	if _drag_segment_start and _drag_segment_start != _drag_current:
-		var mouse_move := (_drag_current - _drag_segment_start) * delta * mouse_drag_incr
-		_drag_segment_start = _drag_current
+	if _drag_lb_segment_start and _drag_lb_segment_start != _drag_lb_current:
+		var mouse_move := (_drag_lb_current - _drag_lb_segment_start) * delta * mouse_move_effect
+		_drag_lb_segment_start = _drag_lb_current
 		move_vector.x = -mouse_move.x
 		move_vector.y = mouse_move.y
+	if _drag_rb_segment_start and _drag_rb_segment_start != _drag_rb_current:
+		var mouse_rotate := (_drag_rb_current - _drag_rb_segment_start) * delta
+		_drag_rb_segment_start = _drag_rb_current
+		# Mouse offset from center at start of drag determines amount of z-rotation vs xy-rotation
+		var z_proportion := (2.0 * _drag_rb_start - _viewport.size).length() / _viewport.size.x
+		z_proportion -= mouse_rotate_min_z_at_offcenter
+		z_proportion /= mouse_rotate_max_z_at_offcenter - mouse_rotate_min_z_at_offcenter
+		z_proportion = clamp(z_proportion, 0.0, 1.0)
+		var center_to_mouse := (_drag_rb_segment_start - _viewport.size / 2.0).normalized()
+		rotate_vector.z = center_to_mouse.cross(mouse_rotate) * mouse_rotate_z_effect * z_proportion
+		mouse_rotate *= mouse_rotate_xy_effect * (1.0 - z_proportion)
+		rotate_vector.x = mouse_rotate.y
+		rotate_vector.y = mouse_rotate.x
 	# mouse wheel zooming
 	if _mouse_wheel_accumulator != 0:
 		var use_now := int(_mouse_wheel_accumulator * delta / mouse_wheel_halflife_x2)
@@ -428,35 +440,57 @@ func _process_not_moving(delta: float, dist_change := false) -> void:
 	# key control
 	if _move_action_pressed:
 		move_vector += _move_action_pressed * delta
-
-	if move_vector:
-		_move_camera_origin(move_vector)
-		dist_change = true
-		look_at = true
-		camera_bump = true
+	if _rotate_action_pressed:
+		rotate_vector += _rotate_action_pressed * delta
+	if move_vector.z:
+		_move_camera_radially(move_vector.z)
+		is_dist_change = true
+		is_camera_bump = true
+	if move_vector.x or move_vector.y:
+		_move_camera_tangentially(move_vector)
+		is_rotation_change = true
+		is_camera_bump = true
+	if rotate_vector:
+		_rotate_camera(rotate_vector)
+		is_rotation_change = true
+		is_camera_bump = true
 	
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
-	if camera_bump and viewpoint != VIEWPOINT_BUMPED_POINTING:
+	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED_POINTING:
 		viewpoint = VIEWPOINT_BUMPED_POINTING
 		emit_signal("viewpoint_changed", viewpoint)
-	if dist_change:
+	if is_dist_change:
 		var dist := sqrt(dist_sq)
 		emit_signal("range_changed", dist)
 		if dist < ADJUST_NEAR_BELOW:
 			near = dist * NEAR_REDUCTION
 		else:
 			near = ADJUST_NEAR_BELOW * NEAR_REDUCTION
-		look_at = true
-	if look_at:
+		is_rotation_change = true
+	if is_rotation_change:
 		var north := _get_north(selection_item, dist_sq)
 		_transform = _transform.looking_at(-_transform.origin, north)
+		_transform.basis *= Basis(_rotations)
 
-func _move_camera_origin(move_vector: Vector3) -> void:
-	move_vector = _rotation * move_vector
+func _move_camera_radially(radial_movement: float) -> void:
 	var origin := _transform.origin
 	var dist_sq := origin.length_squared()
-	# radial
+	dist_sq *= 1.0 + radial_movement * move_in_out_rate
+	if dist_sq > _max_dist_sq:
+		dist_sq = _max_dist_sq
+	elif dist_sq < _min_dist_sq:
+		dist_sq = _min_dist_sq
+	origin = origin.normalized() * sqrt(dist_sq)
+	_transform.origin = origin
+
+func _move_camera_tangentially(move_vector: Vector3) -> void:
+	# We're only interested in tangental compenents (x & y) but we need a
+	# Vector3 for 3D rotations.
+	move_vector.z = 0.0
+	move_vector = Basis(_rotations) * move_vector # any resulting z is ignored
+	var origin := _transform.origin
+	var dist_sq := origin.length_squared()
 	var north := _get_north(selection_item, dist_sq)
 	var angle_to_pole := origin.angle_to(north)
 	var old_angle_to_pole := angle_to_pole
@@ -468,18 +502,16 @@ func _move_camera_origin(move_vector: Vector3) -> void:
 	var x_axis := north.cross(origin).normalized()
 	origin = origin.rotated(x_axis, angle_to_pole - old_angle_to_pole)
 	origin = origin.rotated(north, move_vector.x * move_radially_rate)
-	# in-out
-	dist_sq *= 1.0 + move_vector.z * move_in_out_rate
-	if dist_sq > _max_dist_sq:
-		dist_sq = _max_dist_sq
-	elif dist_sq < _min_dist_sq:
-		dist_sq = _min_dist_sq
-	origin = origin.normalized() * sqrt(dist_sq) # FIXME optimize
-	
 	_transform.origin = origin
 
+func _rotate_camera(delta_rotations: Vector3) -> void:
+	var basis := Basis(_rotations)
+	basis = basis.rotated(basis.x, delta_rotations.x)
+	basis = basis.rotated(basis.y, delta_rotations.y)
+	basis = basis.rotated(basis.z, delta_rotations.z)
+	_rotations = basis.get_euler()
 
-func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, view_position := Vector3.ZERO) -> Transform:
+func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, rotations_: Vector3, view_position := Vector3.ZERO) -> Transform:
 	if !view_position:
 		view_position = _get_viewpoint_view_position(selection_item_, viewpoint_)
 	var dist := view_position.z
@@ -495,7 +527,9 @@ func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, v
 	else:
 		viewpoint_translation = convert_view_position(view_position, north, orbit_anomaly)
 	_last_anomaly = orbit_anomaly
-	return Transform(Basis(), viewpoint_translation).looking_at(-viewpoint_translation, north)
+	var viewpoint_transform := Transform(Basis(), viewpoint_translation).looking_at(-viewpoint_translation, north)
+	viewpoint_transform.basis *= Basis(rotations_)
+	return viewpoint_transform
 
 func _get_viewpoint_view_position(selection_item_: SelectionItem, viewpoint_: int) -> Vector3:
 	# Longitude & latitude offsets are NOT calculated for bumped/not moving!
@@ -567,31 +601,48 @@ func _on_unhandled_input(event: InputEvent) -> void:
 		# start/stop mouse drag or process a mouse click
 		elif event.button_index == BUTTON_LEFT:
 			if event.pressed:
-				_drag_start = _viewport.get_mouse_position()
-				_drag_segment_start = _drag_start
-				_drag_current = _drag_start
+				_drag_lb_start = _viewport.get_mouse_position()
+				_drag_lb_segment_start = _drag_lb_start
+				_drag_lb_current = _drag_lb_start
 			else:
-				if _drag_start == _drag_current: # it was a mouse click, not drag movement
+				if _drag_lb_start == _drag_lb_current: # it was a mouse click, not drag movement
 					Global.emit_signal("mouse_clicked_viewport_at", event.position, self, true)
-				_drag_start = NULL_DRAG
-				_drag_segment_start = NULL_DRAG
+				_drag_lb_start = NULL_DRAG
+				_drag_lb_segment_start = NULL_DRAG
 			is_handled = true
 		elif event.button_index == BUTTON_RIGHT:
-			Global.emit_signal("mouse_clicked_viewport_at", event.position, self, false)
+			if event.pressed:
+				_drag_rb_start = _viewport.get_mouse_position()
+				_drag_rb_segment_start = _drag_rb_start
+				_drag_rb_current = _drag_rb_start
+#				var offcenter_length := (_drag_rb_start - _viewport.size / 2.0).length()
+#				if offcenter_length / _viewport.size.y > mouse_rotate_z_at_screen_proportion:
+#					_drag_is_z_rotate = true
+			else:
+				if _drag_rb_start == _drag_rb_current: # it was a mouse click, not drag movement
+					Global.emit_signal("mouse_clicked_viewport_at", event.position, self, false)
+				_drag_rb_start = NULL_DRAG
+				_drag_rb_segment_start = NULL_DRAG
+#				_drag_is_z_rotate = false
 			is_handled = true
 	elif event is InputEventMouseMotion:
 		# accumulate mouse drag motion
-		if _drag_segment_start:
-			_drag_current = _viewport.get_mouse_position()
+		if _drag_lb_segment_start:
+			_drag_lb_current = _viewport.get_mouse_position()
+			is_handled = true
+		if _drag_rb_segment_start:
+			_drag_rb_current = _viewport.get_mouse_position()
 			is_handled = true
 	elif event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
-				move(null, VIEWPOINT_ZOOM, false)
+				move(null, VIEWPOINT_ZOOM, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_45_view"):
-				move(null, VIEWPOINT_45, false)
+				move(null, VIEWPOINT_45, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_top_view"):
-				move(null, VIEWPOINT_TOP, false)
+				move(null, VIEWPOINT_TOP, Vector3.ZERO, false)
+			elif event.is_action_pressed("recenter"):
+				move(null, -1, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_left"):
 				_move_action_pressed.x = -1.0
 			elif event.is_action_pressed("camera_right"):
@@ -604,6 +655,18 @@ func _on_unhandled_input(event: InputEvent) -> void:
 				_move_action_pressed.z = -1.0
 			elif event.is_action_pressed("camera_out"):
 				_move_action_pressed.z = 1.0
+			elif event.is_action_pressed("pitch_up"):
+				_rotate_action_pressed.x = key_rotate_rate
+			elif event.is_action_pressed("pitch_down"):
+				_rotate_action_pressed.x = -key_rotate_rate
+			elif event.is_action_pressed("yaw_left"):
+				_rotate_action_pressed.y = key_rotate_rate
+			elif event.is_action_pressed("yaw_right"):
+				_rotate_action_pressed.y = -key_rotate_rate
+			elif event.is_action_pressed("roll_left"):
+				_rotate_action_pressed.z = -key_rotate_rate
+			elif event.is_action_pressed("roll_right"):
+				_rotate_action_pressed.z = key_rotate_rate
 			else:
 				return  # no input handled
 		else: # key release
@@ -619,6 +682,18 @@ func _on_unhandled_input(event: InputEvent) -> void:
 				_move_action_pressed.z = 0.0
 			elif event.is_action_released("camera_out"):
 				_move_action_pressed.z = 0.0
+			elif event.is_action_released("pitch_up"):
+				_rotate_action_pressed.x = 0.0
+			elif event.is_action_released("pitch_down"):
+				_rotate_action_pressed.x = 0.0
+			elif event.is_action_released("yaw_left"):
+				_rotate_action_pressed.y = 0.0
+			elif event.is_action_released("yaw_right"):
+				_rotate_action_pressed.y = 0.0
+			elif event.is_action_released("roll_left"):
+				_rotate_action_pressed.z = 0.0
+			elif event.is_action_released("roll_right"):
+				_rotate_action_pressed.z = 0.0
 			else:
 				return  # no input handled
 		is_handled = true

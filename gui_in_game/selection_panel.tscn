@@ -90,24 +90,23 @@ margin_right = 67.0
 margin_bottom = 20.0
 
 [node name="TRBox" type="VBoxContainer" parent="."]
-margin_left = 305.0
+margin_left = 343.0
 margin_top = 7.0
 margin_right = 543.0
-margin_bottom = 268.0
+margin_bottom = 244.0
 size_flags_horizontal = 8
 size_flags_vertical = 0
 custom_constants/separation = 17
 alignment = 1
 
 [node name="ShowButtons" parent="TRBox" instance=ExtResource( 5 )]
-margin_right = 238.0
-margin_bottom = 44.0
+margin_right = 160.0
+margin_bottom = 20.0
 
 [node name="SelectionData" parent="TRBox" instance=ExtResource( 6 )]
-margin_left = 19.0
-margin_top = 61.0
-margin_right = 219.0
-margin_bottom = 261.0
+margin_top = 37.0
+margin_right = 200.0
+margin_bottom = 237.0
 size_flags_horizontal = 4
 
 [node name="FOVBox" type="VBoxContainer" parent="."]

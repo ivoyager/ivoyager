@@ -48,7 +48,7 @@ func select(selection_item_: SelectionItem) -> void:
 		return
 	selection_item = selection_item_
 	if !_supress_camera_move and _connected_camera and _connected_camera.is_camera_lock:
-		_connected_camera.move(selection_item)
+		_connected_camera.move(selection_item, -1, Vector3.ZERO)
 	_supress_camera_move = false
 	_add_history()
 	emit_signal("selection_changed")
@@ -151,7 +151,7 @@ func _process_camera_move(to_body: Body, is_camera_lock: bool) -> void:
 
 func _process_camera_lock_change(is_camera_lock: bool) -> void:
 	if is_camera_lock and _connected_camera.spatial != selection_item.spatial:
-		_connected_camera.move(selection_item)
+		_connected_camera.move(selection_item, -1, Vector3.ZERO)
 
 func _add_history() -> void:
 	if _supress_history:
