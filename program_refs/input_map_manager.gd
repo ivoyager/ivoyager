@@ -254,8 +254,6 @@ func _on_init() -> void:
 		save_quit = [{event_class = "InputEventKey", scancode = KEY_Q, alt = true}],
 		
 		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
-		open_asteroid_importer = [{event_class = "InputEventKey", scancode = KEY_A, control = true, shift = true}],
-		open_wiki_bot = [{event_class = "InputEventKey", scancode = KEY_W, control = true, shift = true}],
 	}
 
 	current = {}

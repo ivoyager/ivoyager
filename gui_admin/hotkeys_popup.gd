@@ -112,8 +112,6 @@ func _on_init():
 			{
 				header = "Developer",
 				write_debug_logs_now = "Force log print",
-				open_asteroid_importer = "AsteroidImporter",
-				open_wiki_bot = "WikiBot",
 			}
 		],
 	]
