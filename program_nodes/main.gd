@@ -43,6 +43,7 @@ const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
+var _enable_save_load: bool = Global.enable_save_load
 var _tree: SceneTree
 var _gui_top: GUITop
 var _table_reader: TableReader
@@ -111,7 +112,7 @@ func build_system_tree() -> void:
 	Global.emit_signal("gui_refresh_requested")
 
 func exit(exit_now: bool) -> void:
-	if !exit_now:
+	if !exit_now and _enable_save_load:
 		OneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
 		return
 	require_stop(self)
@@ -195,7 +196,7 @@ func load_game(path: String) -> void:
 	Global.emit_signal("gui_refresh_requested")
 	
 func quit(quit_now: bool) -> void:
-	if !quit_now and !_state.is_splash_screen:
+	if !quit_now and !_state.is_splash_screen and _enable_save_load:
 		OneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
 		return
 	require_stop(self)
