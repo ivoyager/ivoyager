@@ -217,26 +217,26 @@ func _verbose_reset_mins_maxes() -> void:
 			_maxes[i] = 0.0
 			_mins[i] = INF
 
-func _verbose_min_max_tally(a_e_i_: Vector3, Om_w_M0_n: Color, s_g := Vector2(0.0, 0.0)) -> void:
+func _verbose_min_max_tally(a_e_i_: Vector3, Om_w_M0_n_: Color, s_g_ := Vector2(0.0, 0.0)) -> void:
 	# works for trojan, just substitue trojan args
 	_maxes[0] = max(_maxes[0], a_e_i_[0])
 	_maxes[1] = max(_maxes[1], a_e_i_[1])
 	_maxes[2] = max(_maxes[2], a_e_i_[2])
-	_maxes[3] = max(_maxes[3], Om_w_M0_n[0])
-	_maxes[4] = max(_maxes[4], Om_w_M0_n[1])
-	_maxes[5] = max(_maxes[5], Om_w_M0_n[2])
-	_maxes[6] = max(_maxes[6], Om_w_M0_n[3])
-	_maxes[7] = max(_maxes[7], s_g[0])
-	_maxes[8] = max(_maxes[8], s_g[1])
+	_maxes[3] = max(_maxes[3], Om_w_M0_n_[0])
+	_maxes[4] = max(_maxes[4], Om_w_M0_n_[1])
+	_maxes[5] = max(_maxes[5], Om_w_M0_n_[2])
+	_maxes[6] = max(_maxes[6], Om_w_M0_n_[3])
+	_maxes[7] = max(_maxes[7], s_g_[0])
+	_maxes[8] = max(_maxes[8], s_g_[1])
 	_mins[0] = min(_mins[0], a_e_i_[0])
 	_mins[1] = min(_mins[1], a_e_i_[1])
 	_mins[2] = min(_mins[2], a_e_i_[2])
-	_mins[3] = min(_mins[3], Om_w_M0_n[0])
-	_mins[4] = min(_mins[4], Om_w_M0_n[1])
-	_mins[5] = min(_mins[5], Om_w_M0_n[2])
-	_mins[6] = min(_mins[6], Om_w_M0_n[3])
-	_mins[7] = min(_mins[7], s_g[0])
-	_mins[8] = min(_mins[8], s_g[1])
+	_mins[3] = min(_mins[3], Om_w_M0_n_[0])
+	_mins[4] = min(_mins[4], Om_w_M0_n_[1])
+	_mins[5] = min(_mins[5], Om_w_M0_n_[2])
+	_mins[6] = min(_mins[6], Om_w_M0_n_[3])
+	_mins[7] = min(_mins[7], s_g_[0])
+	_mins[8] = min(_mins[8], s_g_[1])
 	_load_count += 1
 	
 func _verbose_print() -> void:
