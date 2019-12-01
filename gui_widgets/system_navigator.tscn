@@ -1,0 +1,7 @@
+[gd_scene format=2]
+
+[node name="SystemNavigator" type="HBoxContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 543.0
+margin_bottom = 333.0
