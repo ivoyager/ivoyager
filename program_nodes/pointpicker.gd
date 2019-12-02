@@ -16,9 +16,14 @@
 # limitations under the License.
 # *****************************************************************************
 #
-# WIP
-# This is all moot if we can somehow get vertex translations out of GPU. Can we
-# get data as a texture???
+# WIP - NOT USED AND NOT CURRENTLY FUNCTINAL!!! This is an early attempt to
+# allow selection of asteroid points. It's quite a challenge because the points
+# aren't objects and their current coordinates are known only by the GPU. There
+# are two possible approaches: 1) get data from GPU (via textures?) or 2)
+# encode hidden data in the point color (low bits) identifying the asteroid.
+#
+# Comments and code below are old and possibly nonsensical...
+#
 # The PointPicker class lets us select a screen object based on an id hidden in
 # its color low bits. This is necessary in particular for asteroids where
 # current locations (of up to 600,000+) are known only by their vertex shaders.
