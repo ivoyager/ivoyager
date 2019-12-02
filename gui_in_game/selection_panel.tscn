@@ -1,11 +1,15 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://ivoyager/gui_in_game/selection_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/camera_range.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager_assets/2d_bodies/Earth.256.png" type="Texture" id=3]
-[ext_resource path="res://ivoyager/gui_widgets/selection_buttons.tscn" type="PackedScene" id=4]
-[ext_resource path="res://ivoyager/gui_widgets/show_buttons.tscn" type="PackedScene" id=5]
-[ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.gd" type="Script" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/selection_buttons.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/show_buttons.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=8]
+
+
 
 [node name="SelectionPanel" type="PanelContainer"]
 anchor_top = 1.0
@@ -51,31 +55,8 @@ size_flags_vertical = 0
 texture = ExtResource( 3 )
 stretch_mode = 4
 
-[node name="ViewButtons" type="HBoxContainer" parent="ImageBox"]
-margin_top = 302.0
-margin_right = 370.0
-margin_bottom = 322.0
-size_flags_horizontal = 4
-
-[node name="Zoom" type="Button" parent="ImageBox/ViewButtons"]
-margin_right = 114.0
-margin_bottom = 20.0
-toggle_mode = true
-text = "BUTTON_ZOOM"
-
-[node name="FortyFive" type="Button" parent="ImageBox/ViewButtons"]
-margin_left = 118.0
-margin_right = 268.0
-margin_bottom = 20.0
-toggle_mode = true
-text = "BUTTON_45_DEGREES"
-
-[node name="Top" type="Button" parent="ImageBox/ViewButtons"]
-margin_left = 272.0
-margin_right = 370.0
-margin_bottom = 20.0
-toggle_mode = true
-text = "BUTTON_TOP"
+[node name="ViewpointControl" parent="ImageBox" instance=ExtResource( 4 )]
+script = ExtResource( 5 )
 
 [node name="TLBox" type="CenterContainer" parent="."]
 margin_left = 7.0
@@ -85,7 +66,7 @@ margin_bottom = 27.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
-[node name="SelectionButtons" parent="TLBox" instance=ExtResource( 4 )]
+[node name="SelectionButtons" parent="TLBox" instance=ExtResource( 6 )]
 margin_right = 67.0
 margin_bottom = 20.0
 
@@ -99,11 +80,11 @@ size_flags_vertical = 0
 custom_constants/separation = 17
 alignment = 1
 
-[node name="ShowButtons" parent="TRBox" instance=ExtResource( 5 )]
+[node name="ShowButtons" parent="TRBox" instance=ExtResource( 7 )]
 margin_right = 160.0
 margin_bottom = 20.0
 
-[node name="SelectionData" parent="TRBox" instance=ExtResource( 6 )]
+[node name="SelectionData" parent="TRBox" instance=ExtResource( 8 )]
 margin_top = 37.0
 margin_right = 200.0
 margin_bottom = 237.0

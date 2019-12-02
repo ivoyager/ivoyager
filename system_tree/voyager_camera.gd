@@ -36,7 +36,7 @@ enum {
 	VIEWPOINT_ZOOM,
 	VIEWPOINT_45,
 	VIEWPOINT_TOP,
-	VIEWPOINT_BUMPED_POINTING
+	VIEWPOINT_BUMPED
 }
 
 enum {
@@ -206,7 +206,7 @@ func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := 
 		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if to_viewpoint != -1:
 		viewpoint = to_viewpoint
-	if viewpoint == VIEWPOINT_BUMPED_POINTING or _from_viewpoint == VIEWPOINT_BUMPED_POINTING:
+	if viewpoint == VIEWPOINT_BUMPED or _from_viewpoint == VIEWPOINT_BUMPED:
 		var dist_sq := translation.length_squared()
 		var north := _get_north(_from_selection_item, dist_sq)
 		var orbit_anomaly := _get_orbit_anomaly(_from_selection_item, dist_sq)
@@ -261,7 +261,7 @@ func change_camera_lock(new_lock: bool) -> void:
 		is_camera_lock = new_lock
 		emit_signal("camera_lock_changed", new_lock)
 		if new_lock:
-			if viewpoint == VIEWPOINT_BUMPED_POINTING:
+			if viewpoint == VIEWPOINT_BUMPED:
 				viewpoint = _viewpoint_memory
 
 func change_move_time(new_move_time: float) -> void:
@@ -457,8 +457,8 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
-	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED_POINTING:
-		viewpoint = VIEWPOINT_BUMPED_POINTING
+	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED:
+		viewpoint = VIEWPOINT_BUMPED
 		emit_signal("viewpoint_changed", viewpoint)
 	if is_dist_change:
 		var dist := sqrt(dist_sq)
@@ -519,7 +519,7 @@ func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, r
 	var north := _get_north(selection_item_, dist_sq)
 	var orbit_anomaly := _get_orbit_anomaly(selection_item_, dist_sq)
 	var viewpoint_translation: Vector3
-	if !is_moving and viewpoint_ == VIEWPOINT_BUMPED_POINTING:
+	if !is_moving and viewpoint_ == VIEWPOINT_BUMPED:
 		var delta_anomaly := 0.0
 		if orbit_anomaly != -INF and _last_anomaly != -INF:
 			delta_anomaly = orbit_anomaly - _last_anomaly
@@ -544,7 +544,7 @@ func _get_viewpoint_view_position(selection_item_: SelectionItem, viewpoint_: in
 		VIEWPOINT_TOP:
 			view_position = selection_item_.view_position_top
 			view_position.z /= fov
-		VIEWPOINT_BUMPED_POINTING:
+		VIEWPOINT_BUMPED:
 			if is_moving:
 				view_position = _pre_move_view_position
 			else:
