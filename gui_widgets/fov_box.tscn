@@ -1,0 +1,30 @@
+[gd_scene format=2]
+
+[node name="FOVBox" type="VBoxContainer"]
+margin_left = 7.0
+margin_top = 295.0
+margin_right = 57.0
+margin_bottom = 333.0
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="FOVLabel" type="Label" parent="."]
+margin_right = 50.0
+margin_bottom = 14.0
+text = "FOV: 00"
+
+[node name="FOVButtons" type="HBoxContainer" parent="."]
+margin_top = 18.0
+margin_right = 50.0
+margin_bottom = 38.0
+
+[node name="Minus" type="Button" parent="FOVButtons"]
+margin_right = 17.0
+margin_bottom = 20.0
+text = "-"
+
+[node name="Plus" type="Button" parent="FOVButtons"]
+margin_left = 21.0
+margin_right = 41.0
+margin_bottom = 20.0
+text = "+"

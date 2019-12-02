@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://ivoyager/gui_in_game/selection_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/camera_range.tscn" type="PackedScene" id=2]
@@ -8,8 +8,8 @@
 [ext_resource path="res://ivoyager/gui_widgets/selection_buttons.tscn" type="PackedScene" id=6]
 [ext_resource path="res://ivoyager/gui_widgets/show_buttons.tscn" type="PackedScene" id=7]
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=8]
-
-
+[ext_resource path="res://ivoyager/gui_widgets/fov_box.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ivoyager/gui_widgets/fov_box.gd" type="Script" id=10]
 
 [node name="SelectionPanel" type="PanelContainer"]
 anchor_top = 1.0
@@ -90,34 +90,8 @@ margin_right = 200.0
 margin_bottom = 237.0
 size_flags_horizontal = 4
 
-[node name="FOVBox" type="VBoxContainer" parent="."]
-margin_left = 7.0
-margin_top = 295.0
-margin_right = 57.0
-margin_bottom = 333.0
-size_flags_horizontal = 0
-size_flags_vertical = 8
-
-[node name="FOVLabel" type="Label" parent="FOVBox"]
-margin_right = 50.0
-margin_bottom = 14.0
-text = "FOV: 00"
-
-[node name="FOVButtons" type="HBoxContainer" parent="FOVBox"]
-margin_top = 18.0
-margin_right = 50.0
-margin_bottom = 38.0
-
-[node name="Minus" type="Button" parent="FOVBox/FOVButtons"]
-margin_right = 17.0
-margin_bottom = 20.0
-text = "-"
-
-[node name="Plus" type="Button" parent="FOVBox/FOVButtons"]
-margin_left = 21.0
-margin_right = 41.0
-margin_bottom = 20.0
-text = "+"
+[node name="FOVBox" parent="." instance=ExtResource( 9 )]
+script = ExtResource( 10 )
 
 [node name="CRBox" type="CenterContainer" parent="."]
 margin_left = 543.0
