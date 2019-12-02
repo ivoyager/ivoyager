@@ -1,4 +1,4 @@
-# fov_box.gd
+# focal_length_box.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -20,18 +20,18 @@
 # "focal_lengths" and function "increment_focal_length".
 
 extends VBoxContainer
-class_name FOVBox
-const SCENE := "res://ivoyager/gui_widgets/fov_box.tscn"
+class_name FocalLengthBox
+const SCENE := "res://ivoyager/gui_widgets/focal_length_box.tscn"
 
 var _camera: Camera
-onready var _fov_label: Label = $FOVLabel
-onready var _fov_decr: Button = $FOVButtons/Minus
-onready var _fov_incr: Button = $FOVButtons/Plus
+onready var _fl_label: Label = $FLLabel
+onready var _fl_decr: Button = $FLButtons/Minus
+onready var _fl_incr: Button = $FLButtons/Plus
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
-	_fov_decr.connect("pressed", self, "_increment_focal_length", [-1])
-	_fov_incr.connect("pressed", self, "_increment_focal_length", [1])
+	_fl_decr.connect("pressed", self, "_increment_focal_length", [-1])
+	_fl_incr.connect("pressed", self, "_increment_focal_length", [1])
 	_connect_camera(get_viewport().get_camera())
 
 func _connect_camera(camera: Camera) -> void:
@@ -46,10 +46,10 @@ func _disconnect_camera() -> void:
 		_camera = null
 
 func _update_focal_length(focal_length: float) -> void:
-	_fov_label.text = "%.f mm" % focal_length
+	_fl_label.text = "%.f mm" % focal_length
 	var focal_lengths: Array = _camera.focal_lengths
-	_fov_decr.disabled = focal_length <= focal_lengths[0]
-	_fov_incr.disabled = focal_length >= focal_lengths[-1]
+	_fl_decr.disabled = focal_length <= focal_lengths[0]
+	_fl_incr.disabled = focal_length >= focal_lengths[-1]
 
 func _increment_focal_length(increment: int) -> void:
 	_camera.increment_focal_length(increment)
