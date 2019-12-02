@@ -1,0 +1,27 @@
+[gd_scene format=2]
+
+[node name="ViewpointBox" type="HBoxContainer"]
+margin_top = 302.0
+margin_right = 370.0
+margin_bottom = 322.0
+size_flags_horizontal = 4
+
+[node name="Zoom" type="Button" parent="."]
+margin_right = 114.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "BUTTON_ZOOM"
+
+[node name="FortyFive" type="Button" parent="."]
+margin_left = 118.0
+margin_right = 268.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "BUTTON_45_DEGREES"
+
+[node name="Top" type="Button" parent="."]
+margin_left = 272.0
+margin_right = 370.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "BUTTON_TOP"
