@@ -1,4 +1,4 @@
-# camera_range.gd
+# range_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -16,10 +16,12 @@
 # limitations under the License.
 # *****************************************************************************
 #
+# Visible when camera "locked". This widget expects camera signals
+# "range_changed" and "camera_lock_changed".
 
 extends Label
-class_name CameraRange
-const SCENE := "res://ivoyager/gui_widgets/camera_range.tscn"
+class_name RangeLabel
+const SCENE := "res://ivoyager/gui_widgets/range_label.tscn"
 
 onready var _string_maker: StringMaker = Global.objects.StringMaker
 var _camera: Camera
@@ -32,13 +34,17 @@ func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("range_changed", self, "_update")
+		_camera.connect("range_changed", self, "_on_range_changed")
+		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
 	if _camera:
 		_camera.disconnect("range_changed", self, "_update")
+		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
 		_camera = null
 
-func _update(new_range: float) -> void:
+func _on_range_changed(new_range: float) -> void:
 	text = _string_maker.get_str(new_range, _string_maker.DISPLAY_LENGTH)
 
+func _on_camera_lock_changed(is_locked: bool) -> void:
+	visible = is_locked

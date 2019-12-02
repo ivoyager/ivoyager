@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://ivoyager/gui_in_game/selection_panel.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_widgets/camera_range.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager_assets/2d_bodies/Earth.256.png" type="Texture" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.gd" type="Script" id=5]
@@ -41,7 +41,7 @@ size_flags_vertical = 0
 text = "Earth"
 align = 1
 
-[node name="CameraRange" parent="ImageBox/NameBox" instance=ExtResource( 2 )]
+[node name="RangeLabel" parent="ImageBox/NameBox" instance=ExtResource( 2 )]
 margin_left = 36.0
 margin_right = 92.0
 
