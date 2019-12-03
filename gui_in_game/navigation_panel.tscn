@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://ivoyager/gui_in_game/navigation_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.gd" type="Script" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/camera_lock.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/camera_lock.gd" type="Script" id=7]
 
 [node name="NavigationPanel" type="PanelContainer"]
 anchor_left = 1.0
@@ -44,14 +46,8 @@ margin_top = 0.0
 margin_right = 124.0
 margin_bottom = 20.0
 
-[node name="CameraLock" type="Button" parent="."]
-margin_left = 7.0
-margin_top = 7.0
-margin_right = 100.0
-margin_bottom = 27.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
-text = "Lock Camera"
+[node name="CameraLock" parent="." instance=ExtResource( 6 )]
+script = ExtResource( 7 )
 
 [node name="BottomVBox" type="VBoxContainer" parent="."]
 margin_left = 7.0

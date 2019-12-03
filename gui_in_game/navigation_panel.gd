@@ -17,7 +17,7 @@
 # *****************************************************************************
 #
 # We have a mix of procedural and hard-coded generation here. TODO: make this
-# fully procedural (from data tables). That's going to be hard!
+# fully procedural from data tables. That's going to be hard!
 
 extends DraggablePanel
 class_name NavigationPanel
@@ -27,8 +27,6 @@ const DDPRINT := false
 
 var _asteroid_buttons := {}
 var _points_manager: PointsManager
-var _connected_camera: VoyagerCamera
-
 
 func _on_ready() -> void:
 	._on_ready()
@@ -41,10 +39,6 @@ func _on_ready() -> void:
 	_asteroid_buttons.JT5 = $BottomVBox/AstGroupBox/Trojans/L5
 	_asteroid_buttons.CE = $BottomVBox/AstGroupBox/Centaurs
 	_asteroid_buttons.TN = $BottomVBox/AstGroupBox/TransNeptune
-	Global.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
-	$CameraLock.toggle_mode = true
-	$CameraLock.connect("toggled", self, "_toggle_camera_lock")
 	$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
 	$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
 	for key in _asteroid_buttons:
@@ -53,21 +47,7 @@ func _on_ready() -> void:
 	
 func _prepare_for_deletion() -> void:
 	._prepare_for_deletion()
-	Global.disconnect("system_tree_ready", self, "_build_navigation_tree")
-	Global.disconnect("camera_ready", self, "_connect_camera")
-	_disconnect_camera()
 	_points_manager.disconnect("show_points_changed", self, "_update_asteroids_selected")
-
-func _connect_camera(camera: Camera) -> void:
-	if _connected_camera != camera:
-		_disconnect_camera()
-		_connected_camera = camera
-		_connected_camera.connect("camera_lock_changed", self, "_update_camera_lock")
-
-func _disconnect_camera() -> void:
-	if _connected_camera:
-		_connected_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
-		_connected_camera = null
 
 func _select_asteroids(pressed: bool, group_or_category: String) -> void:
 	# only select one group or all groups or none
@@ -85,9 +65,3 @@ func _update_asteroids_selected(group_or_category: String, is_show: bool) -> voi
 	_asteroid_buttons[group_or_category].pressed = is_show
 	if !is_show:
 		_asteroid_buttons.all_asteroids.pressed = false
-	
-func _update_camera_lock(is_locked: bool) -> void:
-	$CameraLock.pressed = is_locked
-	
-func _toggle_camera_lock(button_pressed: bool) -> void:
-	_connected_camera.change_camera_lock(button_pressed)
