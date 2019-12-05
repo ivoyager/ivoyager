@@ -64,6 +64,8 @@ var _table_data: Dictionary = Global.table_data
 var _enums: Dictionary = Global.enums
 var _math: Math
 var _wiki_keys := {} # wiki keys indexed by object keys
+var _wiki_titles := {}
+
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
@@ -85,6 +87,7 @@ func import_table_data():
 				assert(!_enums.has(key))
 				_enums[key] = import_enum[key]
 	_table_data.wiki_keys = _wiki_keys
+	_table_data.wiki_titles = _wiki_titles
 
 func get_wikibot_base_titles():
 	var titles := {}
@@ -218,7 +221,7 @@ func _read_data_file(data_array: Array, import_enum: Dictionary, make_wiki_keys:
 					var wiki_key = "WIKI_" + line_dict.key
 					if wiki_key != tr(wiki_key): # a wiki entry exists!
 						_wiki_keys[line_dict.key] = wiki_key
-				
+						_wiki_titles[line_dict.key] = line_dict.wiki_en
 				# Append the completed dictionary for this item
 				data_array.append(line_dict)
 				row_count += 1

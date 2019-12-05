@@ -34,7 +34,7 @@ var _allow_dev_tools := Global.allow_dev_tools
 var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
-var _in_game_gui: InGameGUI
+var _in_game_gui: Control
 var _timekeeper: Timekeeper
 var _file_helper: FileHelper
 var _suppressors := []

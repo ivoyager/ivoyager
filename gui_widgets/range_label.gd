@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Visible when camera "locked". This widget expects camera signals
+# GUI widget. Visible when camera "locked". Expects camera signals
 # "range_changed" and "camera_lock_changed".
 
 extends Label

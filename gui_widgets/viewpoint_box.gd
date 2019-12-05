@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# This widget expects the camera to have "viewpoint_changed" signal and to use
+# GUI widget. Expects the camera to have "viewpoint_changed" signal and to use
 # VoyagerCamera VIEWPOINT_ enums.
 
 extends HBoxContainer

@@ -15,9 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# UI widget. On _ready(), searches up tree for first ancestor with "selection_manager"
-# member.
+# GUI widget. Requires Control ancestor with member "selection_manager".
 
 extends GridContainer
 class_name SelectionData
@@ -45,14 +43,17 @@ onready var _labels: Label = $Labels
 onready var _values: Label = $Values
 
 func _ready():
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+
+func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	var ancestor: Node = get_parent()
 	while not "selection_manager" in ancestor:
 		ancestor = ancestor.get_parent()
 	_selection_manager = ancestor.selection_manager
-	_selection_manager.connect("selection_changed", self, "_update")
-	_update()
+	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_on_selection_changed()
 
-func _update() -> void:
+func _on_selection_changed() -> void:
 	var selection_item := _selection_manager.selection_item
 	if !selection_item:
 		return

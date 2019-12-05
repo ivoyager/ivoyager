@@ -15,14 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
+# GUI widget
 
 extends ConfirmationDialog
 class_name HotkeyDialog
 const SCENE := "res://ivoyager/gui_widgets/hotkey_dialog.tscn"
 
 signal hotkey_confirmed(action, scancode, control, alt, shift, meta)
-
 
 var _action: String
 var _index: int

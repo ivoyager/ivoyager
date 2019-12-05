@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# This widget expects the camera to have signal "focal_length_changed", member
+# GUI widget. Expects the camera to have signal "focal_length_changed", member
 # "focal_lengths" and function "increment_focal_length".
 
 extends VBoxContainer

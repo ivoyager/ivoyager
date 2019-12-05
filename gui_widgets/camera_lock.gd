@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# This widget expects the camera to have signal "camera_lock_changed" and
+# GUI widget. Expects the camera to have signal "camera_lock_changed" and
 # function "change_camera_lock".
 
 extends Button
