@@ -1,4 +1,6 @@
-[gd_scene format=2]
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/camera_lock.gd" type="Script" id=1]
 
 [node name="CameraLock" type="Button"]
 margin_left = 7.0
@@ -9,3 +11,4 @@ size_flags_horizontal = 0
 size_flags_vertical = 0
 toggle_mode = true
 text = "Lock Camera"
+script = ExtResource( 1 )
