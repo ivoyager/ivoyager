@@ -119,7 +119,7 @@ func exit(exit_now: bool) -> void:
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
-	_saver_loader.free_procedural_nodes(_tree.get_root())
+	SaverLoader.free_procedural_nodes(_tree.get_root())
 	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
 	Global.emit_signal("simulator_exited")
@@ -234,7 +234,7 @@ func project_init() -> void:
 	_tree = Global.objects.tree
 	_gui_top = Global.objects.GUITop
 	_table_reader = Global.objects.TableReader
-	_saver_loader = Global.objects.SaverLoader
+	_saver_loader = Global.objects.get("SaverLoader")
 	_main_prog_bar = Global.objects.get("MainProgBar")
 	_system_builder = Global.objects.SystemBuilder
 	_timekeeper = Global.objects.Timekeeper
