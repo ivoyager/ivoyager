@@ -21,7 +21,7 @@ extends HBoxContainer
 class_name SystemNavigator
 const SCENE := "res://ivoyager/gui_widgets/system_navigator.tscn"
 
-const DPRINT := true
+const DPRINT := false
 
 var size_proportions_exponent := 0.4 # 1.0 is "true" proportions
 var horizontal_expansion := 550.0 # affects growth to right

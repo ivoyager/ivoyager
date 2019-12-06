@@ -32,7 +32,7 @@ var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _enums: Dictionary = Global.enums
 var _global_time_array: Array = Global.time_array
-var _hud_2d_control: Control
+var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
@@ -163,7 +163,7 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_hud_2d_control = Global.objects.HUD2dControl
+	_hud_2d_surface = Global.objects.HUD2dSurface
 	_registrar = Global.objects.Registrar
 	_selection_builder = Global.objects.SelectionBuilder
 	_orbit_builder = Global.objects.OrbitBuilder
@@ -256,7 +256,7 @@ func _build_unpersisted(body: Body) -> void:
 	var hud_label: HUDLabel = SaverLoader.make_object_or_scene(_HUDLabel_)
 	hud_label.init(tr(body.name))
 	body.hud_label = hud_label
-	_hud_2d_control.add_child(hud_label)
+	_hud_2d_surface.add_child(hud_label)
 
 	# 2D selection textures
 	body.texture_2d = FileHelper.find_resource(_texture_2d_dir, file_prefix)

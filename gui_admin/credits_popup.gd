@@ -62,8 +62,9 @@ func project_init():
 	connect("popup_hide", self, "_on_popup_hide")
 	_main = Global.objects.Main
 	Global.connect("credits_requested", self, "_open")
-	var main_menu: MainMenu = Global.objects.MainMenu
-	main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
+	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	if main_menu:
+		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
 
 func _on_ready() -> void:
 	set_process_unhandled_key_input(false)
