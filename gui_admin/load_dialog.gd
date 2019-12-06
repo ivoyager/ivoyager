@@ -51,7 +51,7 @@ func _open() -> void:
 	_main.require_stop(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir := FileHelper.get_save_dir_path(_main.is_modded, Global.settings.save_dir)
+	var save_dir := FileHelper.get_save_dir_path(Global.is_modded, Global.settings.save_dir)
 	current_dir = save_dir
 	if _state.last_save_path:
 		current_path = _state.last_save_path

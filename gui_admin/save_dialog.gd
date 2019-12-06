@@ -54,7 +54,7 @@ func _open() -> void:
 	_main.require_stop(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir = _file_helper.get_save_dir_path(_main.is_modded, _settings.save_dir)
+	var save_dir = _file_helper.get_save_dir_path(Global.is_modded, _settings.save_dir)
 	var date_string: String = _timekeeper.get_current_date_string("-") if _settings.append_date_to_save else ""
 	current_path = _file_helper.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_items()

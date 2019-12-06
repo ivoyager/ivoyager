@@ -83,6 +83,7 @@ var icon_quad_mesh := QuadMesh.new() # shared by HUDIcons; scaled by TreeManager
 var globe_mesh := SphereMesh.new() # shared by spheroid Models
 
 # project vars - modify at project init (see ProjectBuilder)
+var project_name := "I, Voyager"
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
@@ -116,7 +117,7 @@ var rings_dir := "res://ivoyager_assets/planet_rings"
 var texture_2d_dir := "res://ivoyager_assets/2d_bodies"
 var hud_icons_dir := "res://ivoyager_assets/icons/hud_icons"
 
-# Avoid preload to ivoyager_assets since that could be replaced (eg, in a mobile build)
+# Avoid preload to ivoyager_assets directory since that could be replaced
 var asset_paths := {
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
@@ -133,13 +134,30 @@ var shaders := {
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 	}
 
-# *****************************************************************************
+# ******************************* PERSISTED ***********************************
+
+var project_version := "" # external project can set for save debuging
+var ivoyager_version := "v0.0.2+ dev"
+var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
+const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
+
+# *****************************************************************************
+
+var _project_version := project_version
+var _ivoyager_version := ivoyager_version
 
 func project_init() -> void:
+	prints(project_name, ivoyager_version, project_version)
 	for asset_name in asset_paths:
 		assets[asset_name] = load(asset_paths[asset_name])
+
+func check_load_version() -> void:
+	if _project_version != project_version or _ivoyager_version != ivoyager_version:
+		print("WARNING! Loaded game was created with a different version...")
+		prints("Present running version:      ", _ivoyager_version, _project_version)
+		prints("Save created originally with: ", ivoyager_version, project_version)
 
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS
