@@ -47,7 +47,8 @@ var _starfield: WorldEnvironment
 
 func build() -> void:
 	print("Building solar system...")
-	_main_prog_bar.start(self)
+	if _main_prog_bar:
+		_main_prog_bar.start(self)
 	if _use_thread:
 		_thread = Thread.new()
 		_thread.start(self, "_build_on_thread", 0)
@@ -56,7 +57,7 @@ func build() -> void:
 
 
 func project_init():
-	_main_prog_bar = Global.objects.MainProgBar
+	_main_prog_bar = Global.objects.get("MainProgBar")
 	_body_builder = Global.objects.BodyBuilder
 	_registrar = Global.objects.Registrar
 	_minor_bodies_builder = Global.objects.MinorBodiesBuilder
@@ -86,7 +87,8 @@ func _finish_build() -> void:
 	start_body.add_child(_camera)
 	top_body.pause_mode = Node.PAUSE_MODE_PROCESS
 	_thread = null
-	_main_prog_bar.stop()
+	if _main_prog_bar:
+		_main_prog_bar.stop()
 	emit_signal("finished")
 
 func _add_bodies(data_table: Array, data_table_type: int) -> void:

@@ -39,8 +39,14 @@ func _on_ready() -> void:
 	_asteroid_buttons.JT5 = $BottomVBox/AstGroupBox/Trojans/L5
 	_asteroid_buttons.CE = $BottomVBox/AstGroupBox/Centaurs
 	_asteroid_buttons.TN = $BottomVBox/AstGroupBox/TransNeptune
-	$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
-	$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
+	if Global.objects.has("MainMenu"):
+		$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
+	else:
+		$BottomVBox/BottomHBox/MainMenu.hide()
+	if Global.objects.has("HotkeysPopup"):
+		$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
+	else:
+		$BottomVBox/BottomHBox/Hotkeys.hide()
 	for key in _asteroid_buttons:
 		_asteroid_buttons[key].connect("toggled", self, "_select_asteroids", [key])
 	_points_manager.connect("show_points_changed", self, "_update_asteroids_selected")
