@@ -15,9 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Maintains high-level simulator state. Non-main thread starts/finishes should
-# coordinate with signals and methods here. 
+# Maintains high-level simulator state. Non-main threads should coordinate with
+# signals and functions here. 
 
 extends Node
 class_name Main
@@ -28,16 +27,6 @@ const DPRINT := false
 signal active_threads_allowed()
 signal finish_threads_requested()
 signal threads_finished()
-
-# ******************************* PERSISTED ***********************************
-
-# TODO: Move these to Global!
-var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.1"
-var is_modded := false # this is aspirational
-
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 # ****************************** UNPERSISTED **********************************
 
@@ -119,7 +108,7 @@ func exit(exit_now: bool) -> void:
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
-	_saver_loader.free_procedural_nodes(_tree.get_root())
+	SaverLoader.free_procedural_nodes(_tree.get_root())
 	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
 	Global.emit_signal("simulator_exited")
@@ -183,6 +172,7 @@ func load_game(path: String) -> void:
 	Global.emit_signal("game_load_started")
 	_saver_loader.load_game(save_file, _tree)
 	yield(_saver_loader, "finished")
+	Global.check_load_version()
 	Global.emit_signal("game_load_finished")
 	if _main_prog_bar:
 		_main_prog_bar.stop()
@@ -234,7 +224,7 @@ func project_init() -> void:
 	_tree = Global.objects.tree
 	_gui_top = Global.objects.GUITop
 	_table_reader = Global.objects.TableReader
-	_saver_loader = Global.objects.SaverLoader
+	_saver_loader = Global.objects.get("SaverLoader")
 	_main_prog_bar = Global.objects.get("MainProgBar")
 	_system_builder = Global.objects.SystemBuilder
 	_timekeeper = Global.objects.Timekeeper
@@ -242,7 +232,6 @@ func project_init() -> void:
 
 func _on_ready() -> void:
 	require_stop(self)
-	prints("I, Voyager", ivoyager_version, project_version)
 
 func _import_table_data() -> void:
 	yield(_tree, "idle_frame")

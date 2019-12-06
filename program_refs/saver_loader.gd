@@ -122,6 +122,18 @@ static func make_object_or_scene(script: Script) -> Object:
 		root_node.set_script(script)
 	return root_node
 
+static func free_procedural_nodes(node: Node, is_root := true) -> void:
+	# call with node = root
+	if !is_root:
+		if node.PERSIST_AS_PROCEDURAL_OBJECT:
+			node.queue_free() # children will also be freed!
+			return
+	else:
+		assert(node is Viewport)
+	for child in node.get_children():
+		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+			free_procedural_nodes(child, false)
+
 func project_init():
 	# Ignore; required for I, Voyager compatibility
 	pass
@@ -167,18 +179,6 @@ func load_game(save_file: File, tree: SceneTree) -> void:
 		_thread.start(self, "_threaded_load", save_file)
 	else:
 		_threaded_load(save_file)
-
-func free_procedural_nodes(node: Node, is_root := true) -> void:
-	# call with node = root
-	if !is_root:
-		if node.PERSIST_AS_PROCEDURAL_OBJECT:
-			node.queue_free() # children will also be freed!
-			return
-	else:
-		assert(node is Viewport)
-	for child in node.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			free_procedural_nodes(child, false)
 
 func debug_log(str_message: String, tree: SceneTree) -> bool:
 	# Call before and after ALL external save/load stuff completed. Wrap in

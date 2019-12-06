@@ -25,6 +25,7 @@ var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
 var _main_menu: MainMenu
 var _copyright: Label
+var _version: Label
 var _pbd_caption: Label
 
 func project_init():
@@ -38,6 +39,7 @@ func _on_ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("simulator_exited", self, "show")
 	_copyright = $Copyright
+	_version = $Version
 	_pbd_caption = $PBDCaption
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
@@ -48,9 +50,12 @@ func _on_ready():
 		hide()
 
 func _on_project_builder_finished() -> void:
-	_copyright.margin_left = _main_menu.margin_left if _main_menu else 0.0
-	_copyright.margin_top = _main_menu.rect_position.y + _main_menu.rect_size.y + 40 if _main_menu else 0.0
+	_copyright.margin_left = _main_menu.margin_left if _main_menu else 35.0
+	_copyright.margin_top = _main_menu.rect_position.y + _main_menu.rect_size.y + 40.0 if _main_menu else 100.0
 	_copyright.show()
+	_version.text = Global.ivoyager_version
+	_version.margin_left = _main_menu.margin_left if _main_menu else 35.0
+	_version.show()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	hide()

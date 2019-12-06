@@ -28,6 +28,14 @@ text = "I, Voyager
 (c) 2017-2019
 Charlie Whitfield"
 
+[node name="Version" type="Label" parent="."]
+visible = false
+margin_left = 35.0
+margin_top = 823.0
+margin_right = 120.0
+margin_bottom = 837.0
+text = "v0.0.0"
+
 [node name="PBDCaption" type="Label" parent="."]
 anchor_left = 0.8
 anchor_top = 0.8
