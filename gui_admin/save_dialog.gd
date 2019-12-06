@@ -36,10 +36,11 @@ func project_init() -> void:
 	_timekeeper = Global.objects.Timekeeper
 	_file_helper = Global.objects.FileHelper
 	_main = Global.objects.Main
-	var main_menu: MainMenu = Global.objects.MainMenu
-	main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _main, "save_game", [""])
-	if add_quick_save_button:
-		main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _main, "quick_save")
+	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	if main_menu:
+		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _main, "save_game", [""])
+		if add_quick_save_button:
+			main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _main, "quick_save")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
 	connect("file_selected", self, "_save_file")

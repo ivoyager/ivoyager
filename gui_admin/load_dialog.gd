@@ -31,10 +31,11 @@ func project_init():
 	if !Global.enable_save_load:
 		return
 	_main = Global.objects.Main
-	var main_menu: MainMenu = Global.objects.MainMenu
-	main_menu.make_button("BUTTON_LOAD_FILE", 700, true, true, _main, "load_game", [""])
-	if add_quick_load_button:
-		_quick_load_button = main_menu.make_button("BUTTON_QUICK_LOAD", 600, false, true, _main, "quick_load")
+	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	if main_menu:
+		main_menu.make_button("BUTTON_LOAD_FILE", 700, true, true, _main, "load_game", [""])
+		if add_quick_load_button:
+			_quick_load_button = main_menu.make_button("BUTTON_QUICK_LOAD", 600, false, true, _main, "quick_load")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("load_dialog_requested", self, "_open")
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")

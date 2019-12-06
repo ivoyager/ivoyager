@@ -1,4 +1,4 @@
-# hud_2d_control.gd
+# hud_2d_surface.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -19,7 +19,7 @@
 # Parent control for HUDLabel or similar 2D objects.
 
 extends Control
-class_name HUD2dControl
+class_name HUD2dSurface
 
 func project_init():
 	connect("ready", self, "_on_ready")

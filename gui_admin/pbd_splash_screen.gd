@@ -30,7 +30,7 @@ var _pbd_caption: Label
 func project_init():
 	connect("ready", self, "_on_ready")
 	_settings_manager = Global.objects.SettingsManager
-	_main_menu = Global.objects.MainMenu
+	_main_menu = Global.objects.get("MainMenu")
 	theme = Global.themes.splash_screen
 
 func _on_ready():
@@ -48,8 +48,8 @@ func _on_ready():
 		hide()
 
 func _on_project_builder_finished() -> void:
-	_copyright.margin_left = _main_menu.margin_left
-	_copyright.margin_top = _main_menu.rect_position.y + _main_menu.rect_size.y + 40
+	_copyright.margin_left = _main_menu.margin_left if _main_menu else 0.0
+	_copyright.margin_top = _main_menu.rect_position.y + _main_menu.rect_size.y + 40 if _main_menu else 0.0
 	_copyright.show()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:

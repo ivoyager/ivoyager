@@ -110,17 +110,19 @@ var program_nodes := {
 var gui_top_nodes := {
 	# ProjectBuilder will instance one of each and add as child to GUITop. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted. Last in list
-	# is "on top" for viewing and 1st for input processing.
-	_HUD2dControl_ = HUD2dControl, # Control ok
-	_InGameGUI_ = InGameGUI, # Control ok; builder & parent for in-game GUIs
-	_SplashScreen_ = PBDSplashScreen, # Control ok
-	_MainMenu_ = MainMenu, # before other admin so Esc capture is last
-	_LoadDialog_ = LoadDialog,
-	_SaveDialog_ = SaveDialog,
-	_OptionsPopup_ = OptionsPopup,
-	_CreditsPopup_ = CreditsPopup,
-	_HotkeysPopup_ = HotkeysPopup,
-	_MainProgBar_ = MainProgBar,
+	# is "on top" for viewing and 1st for input processing. (Since you can't
+	# "insert" into dictionary, you might need to erase/add elements to order
+	# as needed.)
+	_HUD2dSurface_ = HUD2dSurface, # Control ok
+	_InGameGUI_ = InGameGUI, # Control ok (must have selection_manager)
+	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
+	_MainMenu_ = MainMenu, # safe to remove
+	_LoadDialog_ = LoadDialog, # safe to remove
+	_SaveDialog_ = SaveDialog, # safe to remove
+	_OptionsPopup_ = OptionsPopup, # safe to remove
+	_CreditsPopup_ = CreditsPopup, # safe to remove
+	_HotkeysPopup_ = HotkeysPopup, # safe to remove
+	_MainProgBar_ = MainProgBar, # safe to remove
 }
 
 var procedural_classes := {

@@ -145,12 +145,14 @@ func save_game(path: String) -> void:
 	var save_file := File.new()
 	save_file.open(path, File.WRITE)
 	_state.last_save_path = path
-	_main_prog_bar.start(_saver_loader)
+	if _main_prog_bar:
+		_main_prog_bar.start(_saver_loader)
 	Global.emit_signal("game_save_started")
 	_saver_loader.save_game(save_file, _tree)
 	yield(_saver_loader, "finished")
 	Global.emit_signal("game_save_finished")
-	_main_prog_bar.stop()
+	if _main_prog_bar:
+		_main_prog_bar.stop()
 	_has_been_saved = true
 	allow_run(self)
 
@@ -175,13 +177,15 @@ func load_game(path: String) -> void:
 	yield(self, "threads_finished")
 	_state.is_loaded_game = true
 	save_file.open(path, File.READ)
-	_main_prog_bar.start(_saver_loader)
+	if _main_prog_bar:
+		_main_prog_bar.start(_saver_loader)
 	Global.emit_signal("about_to_free_procedural_nodes")
 	Global.emit_signal("game_load_started")
 	_saver_loader.load_game(save_file, _tree)
 	yield(_saver_loader, "finished")
 	Global.emit_signal("game_load_finished")
-	_main_prog_bar.stop()
+	if _main_prog_bar:
+		_main_prog_bar.stop()
 	_was_paused = _settings.loaded_game_is_paused or _timekeeper.is_paused
 	Global.emit_signal("system_tree_built_or_loaded", false)
 	yield(_tree, "idle_frame")
@@ -231,7 +235,7 @@ func project_init() -> void:
 	_gui_top = Global.objects.GUITop
 	_table_reader = Global.objects.TableReader
 	_saver_loader = Global.objects.SaverLoader
-	_main_prog_bar = Global.objects.MainProgBar
+	_main_prog_bar = Global.objects.get("MainProgBar")
 	_system_builder = Global.objects.SystemBuilder
 	_timekeeper = Global.objects.Timekeeper
 	_file_helper = Global.objects.FileHelper
