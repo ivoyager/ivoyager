@@ -34,6 +34,7 @@ var _points_groups := {}
 var _points_categories := {} # holds arrays of group names
 
 func show_points(group_or_category: String, is_show: bool) -> void:
+	assert(DPRINT and prints("show_points", group_or_category, is_show) or true)
 	if !_show_points.has(group_or_category):
 		return # without error for skip_asteroids = true
 	_show_points[group_or_category] = is_show
