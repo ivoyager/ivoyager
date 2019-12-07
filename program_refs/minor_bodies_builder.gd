@@ -36,6 +36,7 @@ var _points_manager: PointsManager
 var _registrar: Registrar
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
+var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 # ************************ PUBLIC FUNCTIONS ***********************************
 
@@ -99,7 +100,9 @@ func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_p
 		assert(lagrange_point)
 		asteroid_group.init_trojans(star, group, lagrange_point)
 	var mag_cutoff := 100.0
-	if group_data.has("mag_cutoff"):
+	if _asteroid_mag_cutoff_override != INF:
+		mag_cutoff = _asteroid_mag_cutoff_override
+	elif group_data.has("mag_cutoff"):
 		mag_cutoff = group_data.mag_cutoff
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:

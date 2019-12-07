@@ -184,8 +184,8 @@ func _fix_binary_keplerian_elements() -> void:
 		M0_J2000 = fposmod(M0_J2000, TAU)
 		Om_w_M0_n[index][2] = M0_J2000
 		# apoapsis
-		var e: float = a_e_i[index][0]
-		var apoapsis := e * (1.0 + e)
+		var e: float = a_e_i[index][1]
+		var apoapsis := a * (1.0 + e)
 		if max_apoapsis < apoapsis:
 			max_apoapsis = apoapsis
 		assert(VPRINT and _verbose_min_max_tally(a_e_i[index], Om_w_M0_n[index]) or true)

@@ -1,4 +1,4 @@
-# orbit_points.gd
+# hud_points.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -74,9 +74,11 @@ func hide() -> void:
 		_timekeeper.disconnect("processed", self, "_timekeeper_process")
 	.hide()
 
+func _init():
+	hide()
+
 func _ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
-	hide()
 
 func _timekeeper_process(time: float, _delta: float) -> void:
 	if group.lagrange_point:
