@@ -22,9 +22,7 @@ extends HBoxContainer
 class_name TimeControl
 const SCENE := "res://ivoyager/gui_widgets/time_control.tscn"
 
-var show_game_speed := true
-var show_pause := true
-var show_real_time_toggle := false
+var forward_color: Color = Global.colors.normal
 var reverse_color: Color = Global.colors.danger
 
 onready var _tree: SceneTree = get_tree()
@@ -43,19 +41,18 @@ func _ready() -> void:
 	_reverse.connect("toggled", self, "_set_reverse_time")
 	_real.connect("toggled", self, "_change_real_time")
 	_pause.connect("toggled", self, "_change_paused")
-	_game_speed.visible = show_game_speed
-	_pause.visible = show_pause
-	_real.visible = show_real_time_toggle
 	_reverse.visible = Global.allow_time_reversal
+	_real.visible = Global.toggle_real_time_not_pause
+	_pause.visible = !Global.toggle_real_time_not_pause
 
 func _on_speed_changed(speed_str: String) -> void:
 	_game_speed.text = speed_str
 	if speed_str.begins_with("-"):
 		_reverse.pressed = true
-		_set_color(reverse_color)
+		_game_speed.set("custom_colors/font_color", reverse_color)
 	else:
 		_reverse.pressed = false
-		_set_color(Color.white)
+		_game_speed.set("custom_colors/font_color", forward_color)
 	_pause.pressed = _tree.paused
 	if _tree.paused:
 		_real.pressed = false
@@ -65,12 +62,6 @@ func _on_speed_changed(speed_str: String) -> void:
 		_plus.disabled = !_timekeeper.can_incr_speed()
 		_minus.disabled = !_timekeeper.can_decr_speed()
 		_real.pressed = _timekeeper.is_real_time()
-
-func _set_color(color: Color) -> void:
-	yield(get_tree(), "idle_frame")
-	for control in [_game_speed, _minus, _plus, _reverse, _real, _pause]:
-		# FIXME: doesn't change color of pressed $Reverse button! Godot bug?
-		control.set("custom_colors/font_color", color)
 
 func _increment_speed(increment: int) -> void:
 	_timekeeper.increment_speed(increment)

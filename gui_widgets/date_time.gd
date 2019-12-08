@@ -21,5 +21,17 @@ extends Label
 class_name DateTime
 const SCENE := "res://ivoyager/gui_widgets/date_time.tscn"
 
+var forward_color: Color = Global.colors.normal
+var reverse_color: Color = Global.colors.danger
+
 func _ready() -> void:
-	Global.objects.Timekeeper.connect("display_date_time_changed", self, "set_text")
+	var timekeeper: Timekeeper = Global.objects.Timekeeper
+	timekeeper.connect("display_date_time_changed", self, "set_text")
+	timekeeper.connect("speed_changed", self, "_on_speed_changed")
+
+func _on_speed_changed(speed_str: String) -> void:
+	if speed_str.begins_with("-"):
+		set("custom_colors/font_color", reverse_color)
+	else:
+		set("custom_colors/font_color", forward_color)
+

@@ -69,11 +69,9 @@ func _on_init():
 				viewport_icon_size = "Icon size",
 				hide_hud_when_close = "Hide HUDs when close",
 			},
-			{
-				header = "Misc",
-				toggle_real_time_not_pause = "Toggle real-time",
-				
-			}
+#			{
+#				header = "Misc",
+#			}
 		]
 	]
 
