@@ -30,7 +30,8 @@ class_name InputHandler
 var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
 var _script_classes: Dictionary = Global.script_classes
-var _allow_dev_tools := Global.allow_dev_tools
+var _allow_dev_tools: bool = Global.allow_dev_tools
+var _toggle_real_time_not_pause: bool = Global.toggle_real_time_not_pause
 var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
@@ -99,7 +100,7 @@ func _on_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("save_quit"):
 		_main.save_quit()
 	elif event.is_action_pressed("toggle_pause_or_real_time"):
-		if _settings.toggle_real_time_not_pause:
+		if _toggle_real_time_not_pause:
 			_timekeeper.set_real_time(!_timekeeper.is_real_time())
 		else:
 			_tree.paused = !_tree.paused

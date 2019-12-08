@@ -60,7 +60,6 @@ func _on_init():
 		asteroid_point_color = Color("008800"),
 	
 		# misc
-		toggle_real_time_not_pause = false,
 		mouse_action_releases_gui_focus = true,
 
 		# cached but not in base OptionsPopup

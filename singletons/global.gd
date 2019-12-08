@@ -96,6 +96,7 @@ var allow_dev_tools := true
 var start_body_name := "PLANET_EARTH"
 var start_time: float = -3608.0 # days from J2000 epoch (=2000-01-01 12:00)
 var allow_time_reversal := true
+var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 3e10 # km
 var scale := 1e-9 # Godot length per km; check graphics at close/far extremes!
