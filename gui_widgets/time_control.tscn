@@ -2,7 +2,6 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/time_control.gd" type="Script" id=1]
 
-
 [node name="TimeControl" type="HBoxContainer"]
 margin_left = 395.0
 margin_top = 7.0
@@ -30,16 +29,23 @@ margin_right = 70.0
 margin_bottom = 20.0
 text = "+"
 
-[node name="Real" type="Button" parent="."]
+[node name="Reverse" type="Button" parent="."]
 margin_left = 74.0
 margin_right = 94.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "<"
+
+[node name="Real" type="Button" parent="."]
+margin_left = 98.0
+margin_right = 118.0
 margin_bottom = 20.0
 toggle_mode = true
 text = "*"
 
 [node name="Pause" type="Button" parent="."]
-margin_left = 98.0
-margin_right = 124.0
+margin_left = 122.0
+margin_right = 148.0
 margin_bottom = 20.0
 toggle_mode = true
 text = "||"

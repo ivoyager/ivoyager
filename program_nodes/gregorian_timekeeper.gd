@@ -57,7 +57,6 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 
 # ****************************** UNPERSISTED **********************************
 
-
 var _tree: SceneTree
 var _allow_time_reversal: bool = Global.allow_time_reversal
 var _h_m := [-1, -1] # only updated when clock displayed!
@@ -80,26 +79,24 @@ func increment_speed(increment: int) -> void:
 	if _tree.paused: # unpause instead
 		_tree.paused = false
 		return
-	var new_speed_index := speed_index + increment
+	var time_direction := 1 if speed_index > 0 else -1
+	var new_speed_index := speed_index + increment * time_direction
 	var n_speeds := speeds.size()
 	if new_speed_index >= n_speeds:
 		new_speed_index = n_speeds - 1
 	elif new_speed_index <= -n_speeds:
 		new_speed_index = -n_speeds + 1
-	elif new_speed_index == 0: # jump over 0
-		new_speed_index += increment
-	if !_allow_time_reversal and new_speed_index < 0:
+	elif new_speed_index == 0:
+		new_speed_index = time_direction
+	if !_allow_time_reversal and new_speed_index < 1:
 		new_speed_index = 1
 	change_speed(new_speed_index)
 
 func can_incr_speed() -> bool:
-	return speed_index < speeds.size() - 1
+	return speed_index < speeds.size() - 1 and speed_index > 1 - speeds.size()
 
 func can_decr_speed() -> bool:
-	if _allow_time_reversal:
-		return speed_index > -speeds.size() + 1
-	else:
-		return speed_index > 1
+	return speed_index > 1 or speed_index < -1
 
 func is_real_time() -> bool:
 	return speed_index == realtime_speed
@@ -112,6 +109,10 @@ func set_real_time(is_real_time: bool) -> void:
 
 func reverse_time():
 	if _allow_time_reversal:
+		change_speed(-speed_index)
+
+func set_reverse_time(is_reverse: bool):
+	if _allow_time_reversal and is_reverse == (speed_index > 0):
 		change_speed(-speed_index)
 
 func change_speed(new_speed_index: int) -> void:
