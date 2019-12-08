@@ -22,35 +22,40 @@ extends HBoxContainer
 class_name TimeControl
 const SCENE := "res://ivoyager/gui_widgets/time_control.tscn"
 
+var show_game_speed := true
+var show_pause := true
+var show_real_time_toggle := false
+var reverse_color: Color = Global.colors.danger
+
 onready var _tree: SceneTree = get_tree()
 onready var _timekeeper: Timekeeper = Global.objects.Timekeeper
-onready var _plus: Button = $Plus
 onready var _minus: Button = $Minus
+onready var _plus: Button = $Plus
+onready var _reverse: Button = $Reverse
 onready var _real: Button = $Real
 onready var _pause: Button = $Pause
 onready var _game_speed: Label = $GameSpeed
 
 func _ready() -> void:
-	_timekeeper.connect("speed_changed", self, "_update")
-	_plus.connect("pressed", self, "_increment_speed", [1])
+	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
+	_plus.connect("pressed", self, "_increment_speed", [1])
+	_reverse.connect("toggled", self, "_set_reverse_time")
 	_real.connect("toggled", self, "_change_real_time")
 	_pause.connect("toggled", self, "_change_paused")
+	_game_speed.visible = show_game_speed
+	_pause.visible = show_pause
+	_real.visible = show_real_time_toggle
+	_reverse.visible = Global.allow_time_reversal
 
-func _update(speed_str: String) -> void:
+func _on_speed_changed(speed_str: String) -> void:
 	_game_speed.text = speed_str
 	if speed_str.begins_with("-"):
-		_game_speed.set("custom_colors/font_color", Color(1.0, 0.5, 0.5))
-		_plus.set("custom_colors/font_color", Color(1.0, 0.5, 0.5))
-		_minus.set("custom_colors/font_color", Color(1.0, 0.5, 0.5))
-		_real.set("custom_colors/font_color", Color(1.0, 0.5, 0.5))
-		_pause.set("custom_colors/font_color", Color(1.0, 0.5, 0.5))
+		_reverse.pressed = true
+		_set_color(reverse_color)
 	else:
-		_game_speed.set("custom_colors/font_color", Color.white)
-		_plus.set("custom_colors/font_color", Color.white)
-		_minus.set("custom_colors/font_color", Color.white)
-		_real.set("custom_colors/font_color", Color.white)
-		_pause.set("custom_colors/font_color", Color.white)
+		_reverse.pressed = false
+		_set_color(Color.white)
 	_pause.pressed = _tree.paused
 	if _tree.paused:
 		_real.pressed = false
@@ -61,8 +66,17 @@ func _update(speed_str: String) -> void:
 		_minus.disabled = !_timekeeper.can_decr_speed()
 		_real.pressed = _timekeeper.is_real_time()
 
+func _set_color(color: Color) -> void:
+	yield(get_tree(), "idle_frame")
+	for control in [_game_speed, _minus, _plus, _reverse, _real, _pause]:
+		# FIXME: doesn't change color of pressed $Reverse button! Godot bug?
+		control.set("custom_colors/font_color", color)
+
 func _increment_speed(increment: int) -> void:
 	_timekeeper.increment_speed(increment)
+
+func _set_reverse_time(button_pressed: bool) -> void:
+	_timekeeper.set_reverse_time(button_pressed)
 
 func _change_real_time(button_pressed: bool) -> void:
 	_timekeeper.set_real_time(button_pressed)
