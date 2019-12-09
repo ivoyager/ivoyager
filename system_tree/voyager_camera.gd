@@ -48,8 +48,8 @@ enum {
 
 const DPRINT := false
 const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
-const ADJUST_NEAR_BELOW := 0.0016
-const NEAR_REDUCTION := 1.0 / 256.0
+const NEAR_DIST_MULTIPLIER := 0.1 
+const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude 
 const MIN_ANGLE_TO_POLE := PI / 80.0
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
@@ -287,8 +287,9 @@ func _on_ready():
 	Global.connect("move_camera_to_selection_requested", self, "move")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	transform = _transform
-	near = ADJUST_NEAR_BELOW
-	far = 2e7
+	var dist := _transform.origin.length_squared()
+	near = dist * NEAR_DIST_MULTIPLIER
+	far = dist * FAR_DIST_MULTIPLIER
 	pause_mode = PAUSE_MODE_PROCESS
 	spatial = get_parent()
 	_to_spatial = spatial
@@ -454,7 +455,6 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		_rotate_camera(rotate_vector)
 		is_rotation_change = true
 		is_camera_bump = true
-	
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
 	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED:
@@ -463,10 +463,8 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	if is_dist_change:
 		var dist := sqrt(dist_sq)
 		emit_signal("range_changed", dist)
-		if dist < ADJUST_NEAR_BELOW:
-			near = dist * NEAR_REDUCTION
-		else:
-			near = ADJUST_NEAR_BELOW * NEAR_REDUCTION
+		near = dist * NEAR_DIST_MULTIPLIER
+		far = dist * FAR_DIST_MULTIPLIER
 		is_rotation_change = true
 	if is_rotation_change:
 		var north := _get_north(selection_item, dist_sq)
