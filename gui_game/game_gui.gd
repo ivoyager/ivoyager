@@ -1,4 +1,4 @@
-# in_game_gui.gd
+# game_gui.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Constructor and parent for in-game GUIs.
+# Constructor and parent for game-style GUIs.
 
 extends Control
-class_name InGameGUI
+class_name GameGUI
 
 # project vars - modify on "objects_instantiated" signal
 var draggable_panels := true

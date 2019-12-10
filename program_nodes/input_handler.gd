@@ -19,7 +19,7 @@
 # I, Voyager handles input in these ways:
 #   - here as _input()
 #   - VoyagerCamera as _unhandled_input() [various mouse & key actions]
-#   - InGameGUI as _input()
+#   - GameGUI as _input()
 #   - MainMenu & popups as _unhandled_key_input() [to capture ESC]
 #   - UIs as _gui_input
 # Actions can be defined or modified in InputMapManager.
@@ -35,9 +35,9 @@ var _toggle_real_time_not_pause: bool = Global.toggle_real_time_not_pause
 var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
-var _in_game_gui: Control
 var _timekeeper: Timekeeper
 var _file_helper: FileHelper
+var _selection_manager: SelectionManager
 var _suppressors := []
 
 func suppress(object: Object) -> void:
@@ -55,12 +55,17 @@ func make_action(action: String, is_pressed := true) -> void:
 	_tree.input_event(event)
 
 func project_init():
+	Global.connect("system_tree_ready", self, "_on_system_ready")
 	_tree = Global.objects.tree
 	_main = Global.objects.Main
 	_tree_manager = Global.objects.TreeManager
-	_in_game_gui = Global.objects.InGameGUI
 	_timekeeper = Global.objects.Timekeeper
 	_file_helper = Global.objects.FileHelper
+
+func _on_system_ready(_is_new_game: bool) -> void:
+	var project_gui = Global.objects.ProjectGUI
+	if "selection_manager" in project_gui:
+		_selection_manager = project_gui.selection_manager
 
 func _input(event: InputEvent) -> void:
 	_on_input(event)
@@ -116,34 +121,38 @@ func _on_input(event: InputEvent) -> void:
 		_tree_manager.set_show_icons(!_tree_manager.show_icons)
 	elif event.is_action_pressed("toggle_labels"):
 		_tree_manager.set_show_labels(!_tree_manager.show_labels)
-#	elif event.is_action_pressed("select_system"):
-#		pass
-#	elif event.is_action_pressed("previous_star"):
-#		_in_game_gui.selection_manager.toggle_type(-1, Global.SYSTEM_STAR)
-#	elif event.is_action_pressed("next_star"):
-#		_in_game_gui.selection_manager.toggle_type(1, Global.SYSTEM_STAR)
-#	elif event.is_action_pressed("previous_planet"):
-#		_in_game_gui.selection_manager.toggle_type(-1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
-#	elif event.is_action_pressed("next_planet"):
-#		_in_game_gui.selection_manager.toggle_type(1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
-#	elif event.is_action_pressed("previous_moon"):
-#		_in_game_gui.selection_manager.toggle_type(-1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
-#	elif event.is_action_pressed("next_moon"):
-#		_in_game_gui.selection_manager.toggle_type(1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
-	elif event.is_action_pressed("select_forward"):
-		pass
-	elif event.is_action_pressed("select_back"):
-		pass
-	elif event.is_action_pressed("select_left"):
-		_in_game_gui.selection_manager.toggle(-1)
-	elif event.is_action_pressed("select_right"):
-		_in_game_gui.selection_manager.toggle(1)
-	elif event.is_action_pressed("select_up"):
-		_in_game_gui.selection_manager.up()
-	elif event.is_action_pressed("select_down"):
-		_in_game_gui.selection_manager.down()
 	else:
-		return
+		if _selection_manager:
+		#	elif event.is_action_pressed("select_system"):
+		#		pass
+		#	elif event.is_action_pressed("previous_star"):
+		#		_selection_manager.toggle_type(-1, Global.SYSTEM_STAR)
+		#	elif event.is_action_pressed("next_star"):
+		#		_selection_manager.toggle_type(1, Global.SYSTEM_STAR)
+		#	elif event.is_action_pressed("previous_planet"):
+		#		_selection_manager.toggle_type(-1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
+		#	elif event.is_action_pressed("next_planet"):
+		#		_selection_manager.toggle_type(1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
+		#	elif event.is_action_pressed("previous_moon"):
+		#		_selection_manager.toggle_type(-1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
+		#	elif event.is_action_pressed("next_moon"):
+		#		_selection_manager.toggle_type(1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
+			if event.is_action_pressed("select_forward"):
+				pass
+			elif event.is_action_pressed("select_back"):
+				pass
+			elif event.is_action_pressed("select_left"):
+				_selection_manager.toggle(-1)
+			elif event.is_action_pressed("select_right"):
+				_selection_manager.toggle(1)
+			elif event.is_action_pressed("select_up"):
+				_selection_manager.up()
+			elif event.is_action_pressed("select_down"):
+				_selection_manager.down()
+			else:
+				return
+		else:
+			return
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:

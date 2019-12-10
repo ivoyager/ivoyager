@@ -34,8 +34,8 @@
 #    values of nodes before they are added to tree or references before they
 #    are used. Nodes and references can be accessed after instantiation in
 #    the "objects" dictionary.
-# 4. Modify init values in InGameGUI (following instruction #3) to remove or
-#    add individual GUI scenes. (Or make your own GUI parent.)
+# 4. Modify init values in GameGUI (following instruction #3) to remove or
+#    add individual GUI scenes. (Or make your own ProjectGUI.)
 # 5. Hook up to Global signal "gui_entered_tree" to modify init values of
 #    individual GUI scenes (not defined here) before their _ready() call.  
 
@@ -114,7 +114,7 @@ var gui_top_nodes := {
 	# "insert" into dictionary, you might need to erase/add elements to order
 	# as needed.)
 	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_InGameGUI_ = InGameGUI, # Control ok (must have selection_manager)
+	_ProjectGUI_ = GameGUI, # Control ok
 	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
 	_MainMenu_ = MainMenu, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove

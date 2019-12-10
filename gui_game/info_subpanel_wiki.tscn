@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://ivoyager/gui_in_game/info_subpanel_wiki.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_game/info_subpanel_wiki.gd" type="Script" id=1]
+
 
 
 

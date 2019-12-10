@@ -1,10 +1,9 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://ivoyager/gui_planetarium/gui_selection.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/selection.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=2]
 
-
-[node name="GUISelection" type="HBoxContainer"]
+[node name="Selection" type="HBoxContainer"]
 anchor_left = 0.5
 anchor_right = 0.5
 margin_left = -207.0
