@@ -58,20 +58,20 @@ static func get_save_path(save_dir: String, base_name: String, date_string := ""
 		path += "." + Global.save_file_extension
 	return path
 
-static func exists(file_path : String) -> bool:
+static func exists(file_path: String) -> bool:
 	var file := File.new()
 	if file_path.ends_with(".gd"):
 		# export changes ".gd" to ".gdc"
 		return file.file_exists(file_path) or file.file_exists(file_path + "c")
 	return file.file_exists(file_path)
 
-static func is_valid_dir(dir_path : String) -> bool:
+static func is_valid_dir(dir_path: String) -> bool:
 	if dir_path == "":
 		return false
 	var dir := Directory.new()
 	return dir.open(dir_path) == OK
 
-static func make_dir_if_doesnt_exist(dir_path : String, recursive := true) -> void:
+static func make_dir_if_doesnt_exist(dir_path: String, recursive := true) -> void:
 	var dir := Directory.new()
 	if !dir.dir_exists(dir_path):
 		if recursive:
@@ -79,7 +79,7 @@ static func make_dir_if_doesnt_exist(dir_path : String, recursive := true) -> vo
 		else:
 			dir.make_dir(dir_path)
 
-static func make_or_clear_dir(dir_path : String) -> void:
+static func make_or_clear_dir(dir_path: String) -> void:
 	var dir := Directory.new()
 	if dir.dir_exists(dir_path):
 		assert(dir.open(dir_path) == OK)
@@ -94,7 +94,7 @@ static func make_or_clear_dir(dir_path : String) -> void:
 
 # loading assets & data files
 
-static func find_resource(dir_path : String, file_prefix : String) -> Resource:
+static func find_resource(dir_path: String, file_prefix: String) -> Resource:
 	# Searches for file in the given directory path that begins with file_prefix
 	# followed by dot. Returns loaded file resource if it exists. We expect to
 	# find file with .import extension (this is the *only* file in exported
