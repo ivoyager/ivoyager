@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://ivoyager/gui_planetarium/planetarium_gui.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/gui_time.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_planetarium/gui_selection.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_planetarium/gui_home.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_planetarium/gui_navigation.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ivoyager/gui_planetarium/gui_options.tscn" type="PackedScene" id=6]
+
+
+
+
+
+
+
+
+[node name="WebGUI" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource( 1 )
+
+[node name="GUITime" parent="." instance=ExtResource( 2 )]
+margin_top = 4.0
+
+[node name="GUISelection" parent="." instance=ExtResource( 3 )]
+margin_left = -204.0
+margin_top = 7.0
+margin_right = 240.0
+margin_bottom = 64.0
+alignment = 1
+
+[node name="GUIHome" parent="." instance=ExtResource( 4 )]
+margin_left = -167.0
+margin_top = 7.0
+margin_bottom = 40.0
+bbcode_text = "[right][url]Hints[/url]   [url]I, Voyager[/url][/right]   "
+text = "Hints   I, Voyager   "
+
+[node name="GUINavigation" parent="." instance=ExtResource( 5 )]
+margin_top = -173.0
+margin_right = 430.0
+margin_bottom = 0.0
+
+[node name="GUIOptions" parent="." instance=ExtResource( 6 )]
+margin_left = -91.0
+margin_top = -172.0
