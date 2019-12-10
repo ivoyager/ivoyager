@@ -26,7 +26,7 @@ var selection_manager: SelectionManager
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
-
+	
 func _ready() -> void:
 #	theme = Global.themes.global
 	pass
@@ -37,12 +37,11 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var registrar: Registrar = Global.objects.Registrar
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
-
+	show()
+	
 	# debug
 #	var gui_panel: Control = SaverLoader.make_object_or_scene(NavigationPanel)
 #	gui_panel.init(true, gui_panels, selection_manager)
 #	gui_panels.append(gui_panel)
 #	add_child(gui_panel)
-
-
 
