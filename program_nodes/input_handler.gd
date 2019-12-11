@@ -56,6 +56,7 @@ func make_action(action: String, is_pressed := true) -> void:
 
 func project_init():
 	Global.connect("system_tree_ready", self, "_on_system_ready")
+	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
 	_tree = Global.objects.tree
 	_main = Global.objects.Main
 	_tree_manager = Global.objects.TreeManager
@@ -66,6 +67,9 @@ func _on_system_ready(_is_new_game: bool) -> void:
 	var project_gui = Global.objects.ProjectGUI
 	if "selection_manager" in project_gui:
 		_selection_manager = project_gui.selection_manager
+
+func _on_about_to_free_procedural_nodes() -> void:
+	_selection_manager = null
 
 func _input(event: InputEvent) -> void:
 	_on_input(event)

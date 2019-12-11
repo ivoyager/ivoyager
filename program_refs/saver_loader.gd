@@ -48,6 +48,9 @@
 # Warnings:
 #    1. A single table or dict persisted in two places will become two on load
 #    2. Persisted strings cannot begin with object_tag.
+#    3. Be careful not to have both pesist and non-persist references to the
+#       same object. The old (pre-load) object will still be there in the non-
+#       persist reference after load.
 
 extends Reference
 class_name SaverLoader
