@@ -19,7 +19,7 @@
 
 extends DraggablePanel
 class_name InfoPanel
-const SCENE := "res://ivoyager/gui_in_game/info_panel.tscn"
+const SCENE := "res://ivoyager/gui_game/info_panel.tscn"
 
 signal selection_connected(selection_manager)
 

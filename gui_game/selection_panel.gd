@@ -18,7 +18,7 @@
 
 extends DraggablePanel
 class_name SelectionPanel
-const SCENE := "res://ivoyager/gui_in_game/selection_panel.tscn"
+const SCENE := "res://ivoyager/gui_game/selection_panel.tscn"
 
 var _selection_name: Label
 var _selection_image: TextureRect

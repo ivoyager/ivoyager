@@ -19,7 +19,7 @@
 
 extends InfoSubpanel
 class_name InfoSubpanelWiki
-const SCENE := "res://ivoyager/gui_in_game/info_subpanel_wiki.tscn"
+const SCENE := "res://ivoyager/gui_game/info_subpanel_wiki.tscn"
 
 const BUTTON_TEXT := "BUTTON_WIKI"
 

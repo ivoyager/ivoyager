@@ -21,7 +21,7 @@
 
 extends DraggablePanel
 class_name NavigationPanel
-const SCENE := "res://ivoyager/gui_in_game/navigation_panel.tscn"
+const SCENE := "res://ivoyager/gui_game/navigation_panel.tscn"
 
 const DDPRINT := false
 

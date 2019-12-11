@@ -38,8 +38,8 @@ func project_init() -> void:
 	var splash_screen_theme := Theme.new()
 	splash_screen_theme.default_font = _fonts.medium
 	_themes.splash_screen = splash_screen_theme
-	var in_game_theme := Theme.new()
-	_themes.in_game = in_game_theme
+	var game_theme := Theme.new()
+	_themes.game = game_theme
 
 #func _on_project_builder_finished() -> void:
 #	var main_theme: Theme = _themes.main

@@ -140,6 +140,9 @@ func _connect_camera(camera: Camera) -> void:
 func _disconnect_camera() -> void:
 	if !_connected_camera:
 		return
+	# If you're getting a "previously freed object" error here on game load, it
+	# is likely that you are keeping a reference to an old SelectionManager
+	# somewhere that isn't persisted.
 	_connected_camera.disconnect("move_started", self, "_process_camera_move")
 	_connected_camera.disconnect("camera_lock_changed", self, "_process_camera_lock_change")
 	_connected_camera = null

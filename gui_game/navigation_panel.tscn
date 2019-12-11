@@ -1,12 +1,13 @@
 [gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://ivoyager/gui_in_game/navigation_panel.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_game/navigation_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.gd" type="Script" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=5]
 [ext_resource path="res://ivoyager/gui_widgets/camera_lock.tscn" type="PackedScene" id=6]
 [ext_resource path="res://ivoyager/gui_widgets/camera_lock.gd" type="Script" id=7]
+
 
 [node name="NavigationPanel" type="PanelContainer"]
 anchor_left = 1.0
