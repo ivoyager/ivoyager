@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://ivoyager/gui_planetarium/navigation.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
+
+[node name="Navigation" type="Control"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_top = -4.0
+margin_bottom = -4.0
+script = ExtResource( 1 )
+
+[node name="SystemNavigator" parent="." instance=ExtResource( 2 )]
+margin_left = 0.0
+margin_top = 158.0
+margin_right = 325.0
+margin_bottom = 158.0

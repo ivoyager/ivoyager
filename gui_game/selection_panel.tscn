@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=2]
 
-[ext_resource path="res://ivoyager/gui_in_game/selection_panel.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_game/selection_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager_assets/2d_bodies/Earth.256.png" type="Texture" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.tscn" type="PackedScene" id=4]
@@ -9,6 +9,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/show_buttons.tscn" type="PackedScene" id=7]
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=8]
 [ext_resource path="res://ivoyager/gui_widgets/focal_length_box.tscn" type="PackedScene" id=9]
+
 
 [node name="SelectionPanel" type="PanelContainer"]
 anchor_top = 1.0
