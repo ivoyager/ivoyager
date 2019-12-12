@@ -15,8 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-//
-// Duplicates orbital math in utilities/orbits.gd.
+// Duplicates orbital math in system_refs/orbit.gd.
 
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
@@ -42,16 +41,23 @@ void vertex() {
 	float E = M + e * sin(M);
 	float dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
 	E -= dE;
-	int steps = 1;
-	while (abs(dE) > 1e-5 && steps < 10) {
-		// Some TNOs never converge w/ threshold 1e-6. I think they get close in
-		// several steps and then flip between two values outside the threshold,
-		// perhaps due to single-precision floats.
+	// A while loop here breaks WebGL1 export. 5 steps is enough.
+	if (abs(dE) > 1e-5){
 		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
 		E -= dE;
-		steps += 1;
+		if (abs(dE) > 1e-5){
+			dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+			E -= dE;
+			if (abs(dE) > 1e-5){
+				dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+				E -= dE;
+				if (abs(dE) > 1e-5){
+					dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+					E -= dE;
+				}
+			}
+		}
 	}
-	
 	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0));
 	float r = a * (1.0 - e * cos(E));
 	float cos_i = cos(i);
@@ -64,13 +70,9 @@ void vertex() {
 	float z = r * sin(i) * sin_w_nu;
 	
 	VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
-
-	// For fun, set POINT_SIZE = float(steps)
 	POINT_SIZE = point_size;
-//	test_color = color;
 }
 
 void fragment() {
-	
     ALBEDO = color;
 }
