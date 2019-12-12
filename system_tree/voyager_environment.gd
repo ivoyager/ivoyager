@@ -15,11 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Replace this class with another WorldEnvironment.
+# Project can replace this class with another WorldEnvironment. We build the
+# environment by code to allow web depoloyment (uses different assets dir) and
+# for future modding capability via text files.
 
 extends WorldEnvironment
 class_name VoyagerEnvironment
-const SCENE := "res://ivoyager/system_tree/voyager_environment.tscn"
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
+
+func _ready():
+	var panorama_sky := PanoramaSky.new()
+	panorama_sky.panorama = Global.assets.starfield
+	var env = Environment.new()
+	env.background_mode = Environment.BG_SKY
+	env.background_sky = panorama_sky
+	env.background_energy = 5.0
+	env.ambient_light_color = Color.white
+	env.ambient_light_energy = 0.02 # adjust up for web?
+	env.ambient_light_sky_contribution = 0.0
+	environment = env
