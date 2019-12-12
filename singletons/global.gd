@@ -119,13 +119,14 @@ var planetary_system_dir := "res://ivoyager/data/solar_system"
 var asset_replacement_dir := "" 
 var asset_paths := {
 	# If the element name does not end in "_dir", it is assumed to be an asset
-	# file and is loaded into assets a project_init().
+	# file and is loaded into assets at project_init().
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	models_dir = "res://ivoyager_assets/models",
 	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
 	rings_dir = "res://ivoyager_assets/planet_rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
+	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/grid_only_globe.jpg",
