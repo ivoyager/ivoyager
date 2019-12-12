@@ -34,4 +34,5 @@ func _ready():
 	env.ambient_light_color = Color.white
 	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
+	Global.emit_signal("about_to_add_environment", env, true)
 	environment = env

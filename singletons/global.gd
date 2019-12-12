@@ -47,6 +47,7 @@ signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal require_stop_requested(object)
 signal allow_run_requested(object)
+signal about_to_add_environment(environment, is_world_env)
 
 # camera/UI requests
 signal move_camera_to_selection_requested(selection_item, viewpoint, rotations, instant_move)
