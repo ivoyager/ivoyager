@@ -33,7 +33,7 @@ var _icon_material := SpatialMaterial.new()
 
 func init(file_prefix: String, fallback_icon_texture: Texture) -> void:
 	_icon_quad_mesh = Global.icon_quad_mesh
-	var icon_texture: Texture = FileHelper.find_resource(Global.hud_icons_dir, file_prefix)
+	var icon_texture: Texture = FileHelper.find_resource(Global.asset_paths.hud_icons_dir, file_prefix)
 	if !icon_texture:
 		icon_texture = fallback_icon_texture
 	_icon_material.albedo_texture = icon_texture

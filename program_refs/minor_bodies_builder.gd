@@ -36,6 +36,7 @@ var _points_manager: PointsManager
 var _registrar: Registrar
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
+var _asteroid_binaries_dir: String
 var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 # ************************ PUBLIC FUNCTIONS ***********************************
@@ -48,6 +49,7 @@ func project_init() -> void:
 	_registrar = Global.objects.Registrar
 	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
 	_HUDPoints_ = Global.script_classes._HUDPoints_
+	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
 	
 func build() -> void:
 	if Global.skip_asteroids:
@@ -119,7 +121,7 @@ func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_p
 
 func _load_binary(asteroid_group: AsteroidGroup, group: String, mag_str: String) -> void:
 	var binary_name := group + "." + mag_str + ".vbinary"
-	var path: String = Global.asteroid_binaries_dir.plus_file(binary_name)
+	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
 	var binary := File.new()
 	if binary.open(path, File.READ) != OK: # skip if file doesn't exist
 		return

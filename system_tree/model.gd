@@ -31,7 +31,7 @@ func init(body_type: int, file_prefix: String) -> void:
 	is_spheroid = data.spheroid
 	if is_spheroid:
 		mesh = Global.globe_mesh
-		var globe_wraps_dir: String = Global.globe_wraps_dir
+		var globe_wraps_dir: String = Global.asset_paths.globe_wraps_dir
 		var albedo_texture: Texture = FileHelper.find_resource(globe_wraps_dir, file_prefix + ".albedo")
 		if !albedo_texture:
 			albedo_texture = Global.assets.fallback_globe_wrap

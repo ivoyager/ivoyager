@@ -112,15 +112,20 @@ var colors := { # user settable are in SettingsManager
 	}
 
 var planetary_system_dir := "res://ivoyager/data/solar_system"
-var asteroid_binaries_dir := "res://ivoyager_assets/asteroid_binaries"
-var models_dir := "res://ivoyager_assets/models"
-var globe_wraps_dir := "res://ivoyager_assets/globe_wraps"
-var rings_dir := "res://ivoyager_assets/planet_rings"
-var texture_2d_dir := "res://ivoyager_assets/2d_bodies"
-var hud_icons_dir := "res://ivoyager_assets/icons/hud_icons"
 
-# Avoid preload to ivoyager_assets directory since that could be replaced
+# The ivoyager_assets directory may be replaced by project or in specific
+# deployments. E.g., we set asset_replacement_dir = "ivoyager_assets_web" for
+# web deployment of the Planetarium.
+var asset_replacement_dir := "" 
 var asset_paths := {
+	# If the element name does not end in "_dir", it is assumed to be an asset
+	# file and is loaded into assets a project_init().
+	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
+	models_dir = "res://ivoyager_assets/models",
+	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
+	rings_dir = "res://ivoyager_assets/planet_rings",
+	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
+	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/grid_only_globe.jpg",
@@ -151,9 +156,13 @@ var _project_version := project_version
 var _ivoyager_version := ivoyager_version
 
 func project_init() -> void:
+	# This is the first of all project_init() calls.
 	prints(project_name, ivoyager_version, project_version)
 	for asset_name in asset_paths:
-		assets[asset_name] = load(asset_paths[asset_name])
+		if asset_replacement_dir:
+			asset_paths[asset_name] = asset_paths[asset_name].replace("ivoyager_assets", asset_replacement_dir)
+		if !asset_name.ends_with("_dir"):
+			assets[asset_name] = load(asset_paths[asset_name])
 
 func check_load_version() -> void:
 	if _project_version != project_version or _ivoyager_version != ivoyager_version:
