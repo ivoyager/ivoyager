@@ -15,12 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-//
 // NORMAL.x holds the unchanging eccentric anomaly (E) for this vertex, which is
 // an angle from 0 to TAU. NORMAL.y & z hold cached values for nu and e so that
 // we recaluclate nu only when e changes.
+
 shader_type spatial;
-render_mode unshaded, cull_disabled; //, skip_vertex_transform;
+render_mode unshaded, cull_disabled;
 
 uniform vec2 shape = vec2(1.0, 0.0); // a, e
 uniform vec3 rotation = vec3(0.0, 0.0, 0.0); // i, Om, w
@@ -61,10 +61,6 @@ void vertex() {
 		vec3 R = vec3(x, y, z);
 		VERTEX = R * cos_th + cross(k, R) * sin_th + k * dot(k, R) * (1.0 - cos_th);
 	}
-	
-	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
-	// POINT_SIZE = 4.0;
-	// VERTEX = vec3(x, y, z);
 }
 
 void fragment() {

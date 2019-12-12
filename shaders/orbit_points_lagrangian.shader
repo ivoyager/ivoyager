@@ -16,7 +16,8 @@
 // limitations under the License.
 // *****************************************************************************
 // For trojans, a & M are determined by trojan elements d, D, f & th0 together
-// with a and M of the influencing orbital body. 
+// with a and M of the influencing orbital body.
+
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
@@ -50,11 +51,22 @@ void vertex() {
 	float E = M + e * sin(M);
 	float dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
 	E -= dE;
-	int steps = 1;
-	while (abs(dE) > 1e-5 && steps < 10) {
+	// A while loop here breaks WebGL1 export. 5 steps is enough.
+	if (abs(dE) > 1e-5){
 		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
 		E -= dE;
-		steps += 1;
+		if (abs(dE) > 1e-5){
+			dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+			E -= dE;
+			if (abs(dE) > 1e-5){
+				dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+				E -= dE;
+				if (abs(dE) > 1e-5){
+					dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
+					E -= dE;
+				}
+			}
+		}
 	}
 	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0));
 	float r = a * (1.0 - e * cos(E));
