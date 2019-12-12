@@ -25,7 +25,6 @@ var draggable_panels := true
 var run_gui_classes := {
 	selection_panel = SelectionPanel,
 	navigation_panel = NavigationPanel,
-	info_panel = InfoPanel,
 	}
 
 # persisted
