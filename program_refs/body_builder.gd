@@ -24,7 +24,6 @@ const DPRINT := false
 const MAJOR_MOON_GM := 4.0 * 7.46496e9 # eg, Miranda is 4.4 in _Moon_Master.xlsm
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
-var _texture_2d_dir: String = Global.texture_2d_dir
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _scale: float = Global.scale
 var _gravitational_constant: float = Global.gravitational_constant
@@ -44,11 +43,28 @@ var _HUDLabel_: Script
 var _Model_: Script
 var _Rings_: Script
 var _Starlight_: Script
+var _texture_2d_dir: String
 
 var _major_moon_gm: float = MAJOR_MOON_GM * _scale * _scale * _scale
 var _satellite_indexes := {} # passed to & shared by Body instances
 var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
 
+func project_init() -> void:
+	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_hud_2d_surface = Global.objects.HUD2dSurface
+	_registrar = Global.objects.Registrar
+	_selection_builder = Global.objects.SelectionBuilder
+	_orbit_builder = Global.objects.OrbitBuilder
+	_math = Global.objects.Math
+	_Body_ = Global.script_classes._Body_
+	_HUDOrbit_ = Global.script_classes._HUDOrbit_
+	_HUDIcon_ = Global.script_classes._HUDIcon_
+	_HUDLabel_ = Global.script_classes._HUDLabel_
+	_Model_ = Global.script_classes._Model_
+	_Rings_ = Global.script_classes._Rings_
+	_Starlight_ = Global.script_classes._Starlight_
+	_texture_2d_dir = Global.asset_paths.texture_2d_dir
+	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
 func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> void:
 	assert(DPRINT and prints("build", tr(data.key)) or true)
@@ -159,23 +175,6 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 		_registrar.register_top_body(body)
 	_registrar.register_body(body)
 	_selection_builder.build_from_body(body, parent)
-
-
-func project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_hud_2d_surface = Global.objects.HUD2dSurface
-	_registrar = Global.objects.Registrar
-	_selection_builder = Global.objects.SelectionBuilder
-	_orbit_builder = Global.objects.OrbitBuilder
-	_math = Global.objects.Math
-	_Body_ = Global.script_classes._Body_
-	_HUDOrbit_ = Global.script_classes._HUDOrbit_
-	_HUDIcon_ = Global.script_classes._HUDIcon_
-	_HUDLabel_ = Global.script_classes._HUDLabel_
-	_Model_ = Global.script_classes._Model_
-	_Rings_ = Global.script_classes._Rings_
-	_Starlight_ = Global.script_classes._Starlight_
-	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	_satellite_indexes.clear()
