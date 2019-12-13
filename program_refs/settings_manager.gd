@@ -52,11 +52,11 @@ func _on_init():
 		hide_hud_when_close = true, # restart or load required
 	
 		# graphics
-		planet_orbit_color = Color(0.3, 0.4, 0.1), # Color(0.5,0.7,0.4) # dark green w/ yellow
-		dwarf_planet_orbit_color = Color(0.0, 0.4, 0.2), # Color(0.5,0.7,0.4) # dark green
-		moon_orbit_color = Color(0.2, 0.2, 0.8), # Color(0.4,0.4,0.8) # dark blue
-		minor_moon_orbit_color = Color(0.2, 0.05, 0.2), # Color(0.4,0.4,0.8) # dark purple
-		default_orbit_color = Color(0.25, 0.25, 0.25), # Color(0.4,0.4,0.8) # grey
+		planet_orbit_color =  Color(0.5,0.5,0.1),
+		dwarf_planet_orbit_color = Color(0.1,0.8,0.2),
+		moon_orbit_color = Color(0.3,0.3,0.9),
+		minor_moon_orbit_color = Color(0.35,0.1,0.35),
+		default_orbit_color = Color(0.4,0.4,0.8),
 		asteroid_point_color = Color("008800"),
 	
 		# misc
