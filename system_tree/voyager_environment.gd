@@ -30,7 +30,7 @@ func _ready():
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
-	env.background_energy = 5.0
+	env.background_energy = 1.0
 	env.ambient_light_color = Color.white
 	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
