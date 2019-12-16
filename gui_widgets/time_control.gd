@@ -19,8 +19,6 @@
 # UI widget.
 
 extends HBoxContainer
-class_name TimeControl
-const SCENE := "res://ivoyager/gui_widgets/time_control.tscn"
 
 var forward_color: Color = Global.colors.normal
 var reverse_color: Color = Global.colors.danger

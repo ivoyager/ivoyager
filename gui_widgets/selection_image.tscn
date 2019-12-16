@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/selection_image.gd" type="Script" id=1]
+
+[node name="SelectionImage" type="TextureRect"]
+margin_top = 18.0
+margin_right = 280.0
+margin_bottom = 298.0
+rect_min_size = Vector2( 280, 280 )
+size_flags_horizontal = 0
+size_flags_vertical = 0
+stretch_mode = 4
+script = ExtResource( 1 )

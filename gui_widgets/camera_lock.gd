@@ -19,8 +19,6 @@
 # function "change_camera_lock".
 
 extends Button
-class_name CameraLock
-const SCENE := "res://ivoyager/gui_widgets/camera_lock.tscn"
 
 var _camera: Camera
 

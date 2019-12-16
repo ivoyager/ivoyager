@@ -19,8 +19,6 @@
 # VoyagerCamera VIEWPOINT_ enums.
 
 extends HBoxContainer
-class_name ViewpointBox
-const SCENE := "res://ivoyager/gui_widgets/viewpoint_box.tscn"
 
 var _camera: Camera
 onready var _zoom_view: Button = $Zoom

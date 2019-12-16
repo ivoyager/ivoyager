@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://ivoyager/gui_planetarium/selection.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/selection_label.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=3]
 
 [node name="Selection" type="HBoxContainer"]
 anchor_left = 0.5
@@ -48,13 +49,11 @@ size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "BUTTON_TOP"
 
-[node name="SelectionLabel" type="Label" parent="."]
+[node name="SelectionLabel" parent="." instance=ExtResource( 2 )]
 margin_right = 32.0
-margin_bottom = 14.0
 size_flags_vertical = 0
-text = "Earth"
 
-[node name="RangeLabel" parent="." instance=ExtResource( 2 )]
+[node name="RangeLabel" parent="." instance=ExtResource( 3 )]
 margin_left = 47.0
 margin_right = 103.0
 size_flags_vertical = 0

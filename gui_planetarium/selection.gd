@@ -20,7 +20,6 @@ extends HBoxContainer
 
 var _selection_manager: SelectionManager
 var _wiki_titles: Dictionary
-onready var _selection: Label = $SelectionLabel
 
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
@@ -38,18 +37,11 @@ func _ready() -> void:
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_wiki_titles = Global.table_data.wiki_titles
 	_selection_manager = get_parent().selection_manager
-	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-	_on_selection_changed()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	get_parent().register_mouse_trigger_guis(self, [$Controls, $Links])
 
-func _on_selection_changed() -> void:
-	_selection.text = _selection_manager.get_name()
-
 func _on_meta_clicked(meta: String) -> void:
-#	if meta == "Recenter":
-#		Global.emit_signal("move_camera_to_selection_requested", null, VoyagerCamera.VIEWPOINT_ZOOM, Vector3.ZERO)
 	if meta == "Wikipedia":
 		var object_key: String = _selection_manager.get_name()
 		if _wiki_titles.has(object_key):

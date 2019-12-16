@@ -1,15 +1,15 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://ivoyager/gui_game/selection_panel.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=2]
-[ext_resource path="res://ivoyager_assets/2d_bodies/Earth.256.png" type="Texture" id=3]
-[ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.tscn" type="PackedScene" id=4]
-[ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.gd" type="Script" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/selection_label.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_widgets/selection_image.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/viewpoint_box.tscn" type="PackedScene" id=5]
 [ext_resource path="res://ivoyager/gui_widgets/selection_buttons.tscn" type="PackedScene" id=6]
 [ext_resource path="res://ivoyager/gui_widgets/show_buttons.tscn" type="PackedScene" id=7]
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=8]
-[ext_resource path="res://ivoyager/gui_widgets/focal_length_box.tscn" type="PackedScene" id=9]
-
+[ext_resource path="res://ivoyager/gui_widgets/focal_length_label.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ivoyager/gui_widgets/focal_length_buttons.tscn" type="PackedScene" id=10]
 
 [node name="SelectionPanel" type="PanelContainer"]
 anchor_top = 1.0
@@ -33,32 +33,19 @@ margin_bottom = 14.0
 size_flags_horizontal = 4
 size_flags_vertical = 0
 
-[node name="ObjName" type="Label" parent="ImageBox/NameBox"]
+[node name="SelectionLabel" parent="ImageBox/NameBox" instance=ExtResource( 2 )]
 margin_right = 32.0
-margin_bottom = 14.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
-text = "Earth"
-align = 1
 
-[node name="RangeLabel" parent="ImageBox/NameBox" instance=ExtResource( 2 )]
+[node name="RangeLabel" parent="ImageBox/NameBox" instance=ExtResource( 3 )]
 margin_left = 36.0
 margin_right = 92.0
 
-[node name="ObjImage" type="TextureRect" parent="ImageBox"]
-margin_top = 18.0
-margin_right = 280.0
-margin_bottom = 298.0
-rect_min_size = Vector2( 280, 280 )
-size_flags_horizontal = 0
-size_flags_vertical = 0
-texture = ExtResource( 3 )
-stretch_mode = 4
+[node name="SelectionImage" parent="ImageBox" instance=ExtResource( 4 )]
 
-[node name="ViewpointControl" parent="ImageBox" instance=ExtResource( 4 )]
-script = ExtResource( 5 )
+[node name="ViewpointControl" parent="ImageBox" instance=ExtResource( 5 )]
 
 [node name="TLBox" type="CenterContainer" parent="."]
+editor/display_folded = true
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 74.0
@@ -71,6 +58,7 @@ margin_right = 67.0
 margin_bottom = 20.0
 
 [node name="TRBox" type="VBoxContainer" parent="."]
+editor/display_folded = true
 margin_left = 343.0
 margin_top = 7.0
 margin_right = 543.0
@@ -90,4 +78,17 @@ margin_right = 200.0
 margin_bottom = 237.0
 size_flags_horizontal = 4
 
-[node name="FocalLengthBox" parent="." instance=ExtResource( 9 )]
+[node name="BLBox" type="VBoxContainer" parent="."]
+editor/display_folded = true
+margin_left = 7.0
+margin_top = 295.0
+margin_right = 53.0
+margin_bottom = 333.0
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="FocalLengthLabel" parent="BLBox" instance=ExtResource( 9 )]
+margin_right = 46.0
+
+[node name="FocalLengthButtons" parent="BLBox" instance=ExtResource( 10 )]
+margin_right = 46.0

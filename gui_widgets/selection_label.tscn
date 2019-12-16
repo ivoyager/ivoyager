@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/selection_label.gd" type="Script" id=1]
+
+[node name="SelectionLabel" type="Label"]
+margin_right = 40.0
+margin_bottom = 14.0
+text = "Earth"
+script = ExtResource( 1 )

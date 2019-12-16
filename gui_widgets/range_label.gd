@@ -19,8 +19,6 @@
 # "range_changed" and "camera_lock_changed".
 
 extends Label
-class_name RangeLabel
-const SCENE := "res://ivoyager/gui_widgets/range_label.tscn"
 
 onready var _string_maker: StringMaker = Global.objects.StringMaker
 var _camera: Camera

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget
+# GUI widget.
 
 extends ConfirmationDialog
 class_name HotkeyDialog

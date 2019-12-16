@@ -1,4 +1,4 @@
-# selection_buttons.gd
+# selection_image.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -15,34 +15,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget.
+# GUI widget. An ancestor Control must have member selection_manager.
 
-extends HBoxContainer
+extends TextureRect
 
 var _selection_manager: SelectionManager
-onready var _back: Button = $Back
-onready var _forward: Button = $Forward
-onready var _up: Button = $Up
 
-func _ready():
+func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	var ancestor: Node = get_parent()
-	while ancestor is Control:
-		if "selection_manager" in ancestor:
-			_selection_manager = ancestor.selection_manager
-			break
+	while not "selection_manager" in ancestor:
 		ancestor = ancestor.get_parent()
-	assert(_selection_manager)
-	_selection_manager.connect("selection_changed", self, "_update_buttons")
-	_back.connect("pressed", _selection_manager, "back")
-	_forward.connect("pressed", _selection_manager, "forward")
-	_up.connect("pressed", _selection_manager, "up")
-	_update_buttons()
+	_selection_manager = ancestor.selection_manager
+	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_on_selection_changed()
 
-func _update_buttons() -> void:
-	_back.disabled = !_selection_manager.can_go_back()
-	_forward.disabled = !_selection_manager.can_go_forward()
-	_up.disabled = !_selection_manager.can_go_up()
-	
+func _on_selection_changed() -> void:
+	var texture_2d := _selection_manager.get_texture_2d()
+	if texture_2d:
+		texture = _selection_manager.get_texture_2d()
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
+		Global.emit_signal("move_camera_to_selection_requested", _selection_manager.selection_item, -1, Vector3.ZERO)

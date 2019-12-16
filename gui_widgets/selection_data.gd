@@ -18,8 +18,6 @@
 # GUI widget. Requires Control ancestor with member "selection_manager".
 
 extends GridContainer
-class_name SelectionData
-const SCENE := "res://ivoyager/gui_widgets/selection_data.tscn"
 
 onready var _string_maker: StringMaker = Global.objects.StringMaker
 var _selection_manager: SelectionManager

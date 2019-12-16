@@ -1,4 +1,4 @@
-# date_time.gd
+# selection_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -15,21 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget.
+# GUI widget. An ancestor Control must have member selection_manager.
 
 extends Label
 
-var forward_color: Color = Global.colors.normal
-var reverse_color: Color = Global.colors.danger
+var _selection_manager: SelectionManager
 
 func _ready() -> void:
-	var timekeeper: Timekeeper = Global.objects.Timekeeper
-	timekeeper.connect("display_date_time_changed", self, "set_text")
-	timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 
-func _on_speed_changed(speed_str: String) -> void:
-	if speed_str.begins_with("-"):
-		set("custom_colors/font_color", reverse_color)
-	else:
-		set("custom_colors/font_color", forward_color)
+func _on_system_tree_ready(_is_loaded_game: bool) -> void:
+	var ancestor: Node = get_parent()
+	while not "selection_manager" in ancestor:
+		ancestor = ancestor.get_parent()
+	_selection_manager = ancestor.selection_manager
+	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_on_selection_changed()
 
+func _on_selection_changed() -> void:
+	var selection_item := _selection_manager.selection_item
+	if !selection_item:
+		return
+	text = selection_item.name
