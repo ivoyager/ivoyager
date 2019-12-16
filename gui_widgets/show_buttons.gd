@@ -18,7 +18,6 @@
 # GUI widget.
 
 extends VBoxContainer
-class_name ShowButtons
 
 onready var _tree_manager: TreeManager = Global.objects.TreeManager
 onready var _orbits_button: Button = $HBox1/Orbits

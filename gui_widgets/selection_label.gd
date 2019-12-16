@@ -1,4 +1,4 @@
-# navigation.gd
+# selection_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -15,21 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# GUI widget. An ancestor Control must have member selection_manager.
 
-extends Control
+extends Label
 
-const NAV_OFFSET := Vector2(-30.0, -10.0)
-onready var _system_navigator: HBoxContainer = $SystemNavigator
-onready var _viewport := get_viewport()
-var _is_mouse_button_pressed := false
+var _selection_manager: SelectionManager
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	_system_navigator.rect_min_size = Vector2(0.0, 185.0)
-	_system_navigator.rect_position += NAV_OFFSET
-	_system_navigator.size_proportions_exponent = 0.5
-	_system_navigator.horizontal_expansion = 550.0
-	_system_navigator.min_width = 10.0
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	get_parent().register_mouse_trigger_guis(self, [self])
+func _on_system_tree_ready(_is_loaded_game: bool) -> void:
+	var ancestor: Node = get_parent()
+	while not "selection_manager" in ancestor:
+		ancestor = ancestor.get_parent()
+	_selection_manager = ancestor.selection_manager
+	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_on_selection_changed()
+
+func _on_selection_changed() -> void:
+	var selection_item := _selection_manager.selection_item
+	if !selection_item:
+		return
+	text = selection_item.name

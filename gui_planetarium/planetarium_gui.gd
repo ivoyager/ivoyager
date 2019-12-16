@@ -23,10 +23,16 @@ const SCENE := "res://ivoyager/gui_planetarium/planetarium_gui.tscn"
 
 onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 var selection_manager: SelectionManager
+onready var _viewport := get_viewport()
+var _mouse_trigger_guis := []
+var _is_mouse_button_pressed := false
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
-	
+
+func register_mouse_trigger_guis(mouse_trigger: Control, guis: Array) -> void:
+	_mouse_trigger_guis.append([mouse_trigger, guis])
+
 func _ready() -> void:
 #	theme = Global.themes.global
 	pass
@@ -38,7 +44,23 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
 	show()
-	
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		if _is_mouse_button_pressed:
+			return
+		var mouse_pos := _viewport.get_mouse_position()
+		for mouse_trigger_gui in _mouse_trigger_guis:
+			var mouse_trigger: Control = mouse_trigger_gui[0]
+			var guis: Array = mouse_trigger_gui[1]
+			var is_visible := mouse_trigger.get_rect().has_point(mouse_pos)
+			if is_visible != guis[0].visible:
+				for gui in guis:
+					gui.visible = is_visible
+					gui.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
+	elif event is InputEventMouseButton:
+		_is_mouse_button_pressed = event.pressed
+
 	# debug
 #	var gui_panel: Control = SaverLoader.make_object_or_scene(NavigationPanel)
 #	gui_panel.init(true, gui_panels, selection_manager)

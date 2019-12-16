@@ -18,8 +18,6 @@
 # GUI widget
 
 extends HBoxContainer
-class_name SystemNavigator
-const SCENE := "res://ivoyager/gui_widgets/system_navigator.tscn"
 
 const DPRINT := false
 

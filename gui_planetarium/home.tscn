@@ -3,12 +3,7 @@
 [ext_resource path="res://ivoyager/gui_planetarium/home.gd" type="Script" id=1]
 
 [node name="Home" type="RichTextLabel"]
-anchor_left = 1.0
-anchor_right = 1.0
-margin_left = -138.0
-margin_top = 4.0
-margin_right = 4.0
-margin_bottom = 33.0
+rect_min_size = Vector2( 100, 20 )
 bbcode_enabled = true
 bbcode_text = "[right][url]I, Voyager[/url][/right]"
 text = "I, Voyager"

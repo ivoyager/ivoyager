@@ -18,8 +18,6 @@
 # GUI widget.
 
 extends Label
-class_name DateTime
-const SCENE := "res://ivoyager/gui_widgets/date_time.tscn"
 
 var forward_color: Color = Global.colors.normal
 var reverse_color: Color = Global.colors.danger

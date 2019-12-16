@@ -1,0 +1,180 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/asteroid_group_buttons.gd" type="Script" id=1]
+
+[node name="AsteroidGroupButtons" type="HBoxContainer"]
+margin_left = 9.0
+margin_top = 6.0
+margin_right = 536.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 0, 38 )
+size_flags_horizontal = 8
+script = ExtResource( 1 )
+
+[node name="AllAsteroids" type="Button" parent="."]
+margin_right = 80.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 80, 0 )
+toggle_mode = true
+
+[node name="AllAsteroids" type="Label" parent="AllAsteroids"]
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+margin_left = -31.0
+margin_top = -7.2
+margin_right = 30.0
+margin_bottom = 23.8
+custom_constants/line_spacing = -1
+text = "All
+Asteroids"
+align = 1
+valign = 1
+
+[node name="Spacer0" type="Control" parent="."]
+margin_left = 84.0
+margin_right = 86.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 2, 0 )
+
+[node name="NearEarth" type="Button" parent="."]
+margin_left = 90.0
+margin_right = 140.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 50, 0 )
+toggle_mode = true
+
+[node name="NearEarth" type="Label" parent="NearEarth"]
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+margin_left = -20.0
+margin_top = -7.2
+margin_right = 20.0
+margin_bottom = 23.8
+custom_constants/line_spacing = -1
+text = "Near
+Earth"
+align = 1
+valign = 1
+
+[node name="Spacer1" type="Control" parent="."]
+margin_left = 144.0
+margin_right = 144.0
+margin_bottom = 44.0
+
+[node name="MarsCros" type="Button" parent="."]
+margin_left = 148.0
+margin_right = 188.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 40, 0 )
+toggle_mode = true
+
+[node name="MarsCros" type="Label" parent="MarsCros"]
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+margin_left = -20.0
+margin_top = -6.7
+margin_right = 20.0
+margin_bottom = 24.3
+custom_constants/line_spacing = -1
+text = "Mars
+Cros."
+align = 1
+valign = 1
+
+[node name="Spacer2" type="Control" parent="."]
+margin_left = 192.0
+margin_right = 192.0
+margin_bottom = 44.0
+
+[node name="MainBelt" type="Button" parent="."]
+margin_left = 196.0
+margin_right = 236.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 40, 10 )
+toggle_mode = true
+
+[node name="MainBelt" type="Label" parent="MainBelt"]
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+margin_left = -20.0
+margin_top = -6.7
+margin_right = 20.0
+margin_bottom = 24.3
+size_flags_horizontal = 4
+custom_constants/line_spacing = -1
+text = "Main
+Belt"
+align = 1
+valign = 1
+
+[node name="Spacer3" type="Control" parent="."]
+margin_left = 240.0
+margin_right = 240.0
+margin_bottom = 44.0
+
+[node name="Trojans" type="VBoxContainer" parent="."]
+margin_left = 244.0
+margin_right = 303.0
+margin_bottom = 44.0
+
+[node name="L4" type="Button" parent="Trojans"]
+margin_right = 59.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "Troj. L4"
+
+[node name="L5" type="Button" parent="Trojans"]
+margin_top = 24.0
+margin_right = 59.0
+margin_bottom = 44.0
+toggle_mode = true
+text = "Troj. L5"
+
+[node name="Spacer4" type="Control" parent="."]
+margin_left = 307.0
+margin_right = 337.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 30, 0 )
+
+[node name="Centaurs" type="Button" parent="."]
+margin_left = 341.0
+margin_right = 409.0
+margin_bottom = 44.0
+toggle_mode = true
+text = "Centaurs"
+
+[node name="Spacer5" type="Control" parent="."]
+margin_left = 413.0
+margin_right = 443.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 30, 0 )
+
+[node name="TransNeptune" type="Button" parent="."]
+margin_left = 447.0
+margin_right = 527.0
+margin_bottom = 44.0
+rect_min_size = Vector2( 80, 0 )
+toggle_mode = true
+
+[node name="TransNeptune" type="Label" parent="TransNeptune"]
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+margin_left = -27.5
+margin_top = -6.7
+margin_right = 27.5
+margin_bottom = 24.3
+custom_constants/line_spacing = -1
+text = "Trans-
+Neptune"
+align = 1
+valign = 1

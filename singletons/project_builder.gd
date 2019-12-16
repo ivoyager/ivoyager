@@ -122,6 +122,7 @@ var gui_top_nodes := {
 	_OptionsPopup_ = OptionsPopup, # safe to remove
 	_CreditsPopup_ = CreditsPopup, # safe to remove
 	_HotkeysPopup_ = HotkeysPopup, # safe to remove
+	_RichTextPopup_ = RichTextPopup, # safe to remove
 	_MainProgBar_ = MainProgBar, # safe to remove
 }
 

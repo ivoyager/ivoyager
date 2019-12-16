@@ -9,25 +9,12 @@ margin_right = 179.0
 margin_bottom = 20.0
 script = ExtResource( 1 )
 
-[node name="MetaControls" type="RichTextLabel" parent="."]
-visible = false
-margin_right = 60.0
-margin_bottom = 20.0
-rect_min_size = Vector2( 60, 15 )
-bbcode_enabled = true
-bbcode_text = "[right][url]-[/url]  [url]+[/url]  [url]<[/url]  [/right]"
-text = "-  +  <  "
-scroll_active = false
-
 [node name="TimeControl" parent="." instance=ExtResource( 2 )]
+visible = false
 margin_left = 0.0
 margin_top = 0.0
 margin_right = 148.0
 margin_bottom = 20.0
 
 [node name="DateTime" parent="." instance=ExtResource( 3 )]
-margin_left = 152.0
-margin_top = 3.0
-margin_right = 286.0
-margin_bottom = 17.0
-size_flags_vertical = 4
+margin_right = 134.0

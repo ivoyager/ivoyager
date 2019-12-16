@@ -33,16 +33,16 @@ enum DataTableTypes {
 # ************************** PUBLIC PROJECT VARS ******************************
 
 var import := {
-	# <Global.table_data key> = [<Global.enums key>, make_wiki_keys, path]
+	# <Global.table_data key> = [<Global.enums key>, path]
 	# <Global.enums key> can be "" to not save the import enum.
-	star_data = ["StarTypes", true, "res://ivoyager/data/solar_system/star_data.csv"],
-	planet_data = ["PlanetTypes", true, "res://ivoyager/data/solar_system/planet_data.csv"],
-	moon_data = ["MoonTypes", true, "res://ivoyager/data/solar_system/moon_data.csv"],
-	asteroid_group_data = ["AsteroidGroupTypes", true, "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
-	body_data = ["BodyTypes", true, "res://ivoyager/data/solar_system/body_data.csv"],
-	starlight_data = ["StarlightTypes", false, "res://ivoyager/data/solar_system/starlight_data.csv"],
-	environment_data = ["", false, "res://ivoyager/data/solar_system/environment_data.csv"],
-	wiki_extra_titles = ["", true, "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
+	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
+	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
+	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
+	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
+	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
+	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
+	environment_data = ["", "res://ivoyager/data/solar_system/environment_data.csv"],
+	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
 	}
 
 var wikibot_title_sources := [
@@ -63,9 +63,7 @@ const WRITE_WIKI_EXTENDED_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/
 var _table_data: Dictionary = Global.table_data
 var _enums: Dictionary = Global.enums
 var _math: Math
-var _wiki_keys := {} # wiki keys indexed by object keys
 var _wiki_titles := {}
-
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
@@ -74,11 +72,10 @@ func import_table_data():
 	for data_name in import:
 		var info: Array = import[data_name]
 		var enum_name: String = info[0]
-		var make_wiki_keys: bool = info[1]
-		var path: String = info[2]
+		var path: String = info[1]
 		var data := []
 		var import_enum := {}
-		_read_data_file(data, import_enum, make_wiki_keys, path)
+		_read_data_file(data, import_enum, path)
 		_table_data[data_name] = data
 		if enum_name:
 			assert(!_enums.has(enum_name))
@@ -86,14 +83,13 @@ func import_table_data():
 			for key in import_enum:
 				assert(!_enums.has(key))
 				_enums[key] = import_enum[key]
-	_table_data.wiki_keys = _wiki_keys
 	_table_data.wiki_titles = _wiki_titles
 
 func get_wikibot_base_titles():
 	var titles := {}
 	for path in wikibot_title_sources:
 		var data_table := []
-		_read_data_file(data_table, {}, false, path)
+		_read_data_file(data_table, {}, path)
 		for data in data_table:
 			if data.has("wiki_en"):
 				titles[data.key] = data.wiki_en
@@ -113,7 +109,7 @@ func get_wikibot_extended_titles():
 func project_init():
 	_math = Global.objects.Math
 
-func _read_data_file(data_array: Array, import_enum: Dictionary, make_wiki_keys: bool, path: String) -> void:
+func _read_data_file(data_array: Array, import_enum: Dictionary, path: String) -> void:
 	assert(DPRINT and prints("Reading", path) or true)
 	var file := File.new()
 	if file.open(path, file.READ) != OK:
@@ -213,15 +209,9 @@ func _read_data_file(data_array: Array, import_enum: Dictionary, make_wiki_keys:
 			if is_defaults_line:
 				default_values = line_dict
 			else:
-				# Add "type" field matching enum integer
-				line_dict.type = row_count
-				
-				# Link Wiki entry if there is one
-				if make_wiki_keys:
-					var wiki_key = "WIKI_" + line_dict.key
-					if wiki_key != tr(wiki_key): # a wiki entry exists!
-						_wiki_keys[line_dict.key] = wiki_key
-						_wiki_titles[line_dict.key] = line_dict.wiki_en
+				line_dict.type = row_count # type is row integer
+				if line_dict.has("wiki_en"): # TODO: non-English Wikipedias
+					_wiki_titles[line_dict.key] = line_dict.wiki_en
 				# Append the completed dictionary for this item
 				data_array.append(line_dict)
 				row_count += 1
