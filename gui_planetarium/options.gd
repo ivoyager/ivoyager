@@ -45,10 +45,13 @@ func _ready() -> void:
 #	set_anchors_and_margins_preset(PRESET_BOTTOM_RIGHT, PRESET_MODE_MINSIZE)
 	_hypertext.bbcode_text = "[url]%s[/url]\n[url]%s[/url]\n[url]%s[/url]\n[url]%s[/url]" \
 			% [_tr_help, _tr_options, _tr_hotkeys, _tr_credits]
+	get_parent().register_mouse_trigger_guis(self, [self])
 	hide()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	get_parent().register_mouse_trigger_guis(self, [self])
+	set_anchors_and_margins_preset(PRESET_BOTTOM_RIGHT, PRESET_MODE_MINSIZE)
+	rect_position.x -= 10
+	rect_position.y -= 10
 	show()
 
 func _on_meta_clicked(meta: String) -> void:
