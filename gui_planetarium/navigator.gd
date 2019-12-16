@@ -16,18 +16,21 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends VBoxContainer
+extends Control
 
 onready var _system_navigator: HBoxContainer = $SystemNavigator
 onready var _viewport := get_viewport()
 
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	get_parent().register_mouse_trigger_guis(self, [self])
+	get_parent().register_mouse_trigger_guis($SystemNavigator, [self])
+	$SystemNavigator.horizontal_expansion = 590.0
 	hide()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
-	rect_position.x += 10
-	rect_position.y -= 10
+	$SystemNavigator.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
+	$SystemNavigator.rect_position.y -= 80
+	$AsteroidGroupButtons.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
+	$AsteroidGroupButtons.rect_position.x += 10
+	$AsteroidGroupButtons.rect_position.y -= 10
 	show()

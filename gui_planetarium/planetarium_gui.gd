@@ -53,7 +53,7 @@ func _input(event: InputEvent) -> void:
 		for mouse_trigger_gui in _mouse_trigger_guis:
 			var mouse_trigger: Control = mouse_trigger_gui[0]
 			var guis: Array = mouse_trigger_gui[1]
-			var is_visible := mouse_trigger.get_rect().has_point(mouse_pos)
+			var is_visible := mouse_trigger.get_global_rect().has_point(mouse_pos)
 			if is_visible != guis[0].visible:
 				for gui in guis:
 					gui.visible = is_visible

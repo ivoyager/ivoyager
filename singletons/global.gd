@@ -94,7 +94,9 @@ var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # != INF overrides asteroid_group_data.csv
 var skip_splash_screen := false
-var allow_dev_tools := true
+var disable_exit := false
+var disable_quit := false
+var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = -3608.0 # days from J2000 epoch (=2000-01-01 12:00)
 var allow_time_reversal := true
