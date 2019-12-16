@@ -57,11 +57,11 @@ var _current_label: Label
 var _text := ""
 
 
-func project_init():
+func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
-	_main = Global.objects.Main
 	Global.connect("credits_requested", self, "_open")
+	_main = Global.objects.Main
 	var main_menu: MainMenu = Global.objects.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
@@ -74,7 +74,7 @@ func _on_ready() -> void:
 	_close_button.connect("pressed", self, "hide")
 	$VBox/Scroll.rect_min_size = scroll_size
 
-func _open():
+func _open() -> void:
 	set_process_unhandled_key_input(true)
 	_main.require_stop(self)
 	if !_build_content():
@@ -83,7 +83,7 @@ func _open():
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
-func _on_popup_hide():
+func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)
 	_current_container = null
 	_current_label = null

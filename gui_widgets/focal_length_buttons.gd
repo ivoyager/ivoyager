@@ -1,4 +1,4 @@
-# focal_length_box.gd
+# focal_length_buttons.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -18,14 +18,11 @@
 # GUI widget. Expects the camera to have signal "focal_length_changed", member
 # "focal_lengths" and function "increment_focal_length".
 
-extends VBoxContainer
-class_name FocalLengthBox
-const SCENE := "res://ivoyager/gui_widgets/focal_length_box.tscn"
+extends HBoxContainer
 
 var _camera: Camera
-onready var _fl_label: Label = $FLLabel
-onready var _fl_decr: Button = $FLButtons/Minus
-onready var _fl_incr: Button = $FLButtons/Plus
+onready var _fl_decr: Button = $Minus
+onready var _fl_incr: Button = $Plus
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
@@ -45,7 +42,6 @@ func _disconnect_camera() -> void:
 		_camera = null
 
 func _update_focal_length(focal_length: float) -> void:
-	_fl_label.text = "%.f mm" % focal_length
 	var focal_lengths: Array = _camera.focal_lengths
 	_fl_decr.disabled = focal_length <= focal_lengths[0]
 	_fl_incr.disabled = focal_length >= focal_lengths[-1]

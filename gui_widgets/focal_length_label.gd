@@ -1,4 +1,4 @@
-# navigation.gd
+# focal_length_box.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -15,21 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# GUI widget. Expects the camera to have signal "focal_length_changed".
 
-extends Control
+extends Label
 
-const NAV_OFFSET := Vector2(-30.0, -10.0)
-onready var _system_navigator: HBoxContainer = $SystemNavigator
-onready var _viewport := get_viewport()
-var _is_mouse_button_pressed := false
+var _camera: Camera
 
-func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	_system_navigator.rect_min_size = Vector2(0.0, 185.0)
-	_system_navigator.rect_position += NAV_OFFSET
-	_system_navigator.size_proportions_exponent = 0.5
-	_system_navigator.horizontal_expansion = 550.0
-	_system_navigator.min_width = 10.0
+func _ready():
+	Global.connect("camera_ready", self, "_connect_camera")
+	_connect_camera(get_viewport().get_camera())
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	get_parent().register_mouse_trigger_guis(self, [self])
+func _connect_camera(camera: Camera) -> void:
+	if _camera != camera:
+		_disconnect_camera()
+		_camera = camera
+		_camera.connect("focal_length_changed", self, "_update_focal_length")
+
+func _disconnect_camera() -> void:
+	if _camera:
+		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
+		_camera = null
+
+func _update_focal_length(focal_length: float) -> void:
+	text = "%2.f mm" % focal_length

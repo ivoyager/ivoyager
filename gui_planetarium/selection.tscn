@@ -12,7 +12,43 @@ margin_bottom = 44.0
 custom_constants/separation = 15
 script = ExtResource( 1 )
 
-[node name="Selection" type="Label" parent="."]
+[node name="Controls" type="HBoxContainer" parent="."]
+visible = false
+margin_right = 508.0
+margin_bottom = 44.0
+
+[node name="Recenter" type="Button" parent="Controls"]
+margin_right = 134.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "BUTTON_RECENTER"
+
+[node name="Zoom" type="Button" parent="Controls"]
+margin_left = 138.0
+margin_right = 252.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "BUTTON_ZOOM"
+
+[node name="FortyFive" type="Button" parent="Controls"]
+margin_left = 256.0
+margin_right = 406.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "BUTTON_45_DEGREES"
+
+[node name="Top" type="Button" parent="Controls"]
+margin_left = 410.0
+margin_right = 508.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "BUTTON_TOP"
+
+[node name="SelectionLabel" type="Label" parent="."]
 margin_right = 32.0
 margin_bottom = 14.0
 size_flags_vertical = 0
@@ -24,11 +60,12 @@ margin_right = 103.0
 size_flags_vertical = 0
 
 [node name="Links" type="RichTextLabel" parent="."]
+visible = false
 margin_left = 118.0
-margin_right = 318.0
+margin_right = 218.0
 margin_bottom = 44.0
-rect_min_size = Vector2( 200, 15 )
+rect_min_size = Vector2( 100, 0 )
 bbcode_enabled = true
-bbcode_text = "[url]Recenter[/url]   [url]Wikipedia[/url]"
-text = "Recenter   Wikipedia"
+bbcode_text = "[url]Wikipedia[/url]"
+text = "Wikipedia"
 scroll_active = false

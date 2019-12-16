@@ -1,4 +1,4 @@
-# navigation.gd
+# navigator.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -16,12 +16,11 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Control
+extends VBoxContainer
 
 const NAV_OFFSET := Vector2(-30.0, -10.0)
 onready var _system_navigator: HBoxContainer = $SystemNavigator
 onready var _viewport := get_viewport()
-var _is_mouse_button_pressed := false
 
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
@@ -33,3 +32,4 @@ func _ready() -> void:
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	get_parent().register_mouse_trigger_guis(self, [self])
+	set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)

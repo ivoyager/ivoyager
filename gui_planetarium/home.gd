@@ -19,7 +19,11 @@
 extends RichTextLabel
 
 func _ready() -> void:
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	connect("meta_clicked", self, "_on_meta_clicked")
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	get_parent().register_mouse_trigger_guis(self, [self])
 
 func _on_meta_clicked(_meta: String) -> void:
 	OS.shell_open("https://ivoyager.dev")
