@@ -23,7 +23,6 @@ var _wiki_titles: Dictionary
 
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	$Controls/Recenter.connect("pressed", Global, "emit_signal",
 		["move_camera_to_selection_requested", null, -1, Vector3.ZERO])
 	$Controls/Zoom.connect("pressed", Global, "emit_signal",
@@ -33,13 +32,11 @@ func _ready() -> void:
 	$Controls/Top.connect("pressed", Global, "emit_signal",
 		["move_camera_to_selection_requested", null, VoyagerCamera.VIEWPOINT_TOP, Vector3.ZERO])
 	$Links.connect("meta_clicked", self, "_on_meta_clicked")
+	get_parent().register_mouse_trigger_guis(self, [$Controls, $Links])
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_wiki_titles = Global.table_data.wiki_titles
 	_selection_manager = get_parent().selection_manager
-
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	get_parent().register_mouse_trigger_guis(self, [$Controls, $Links])
 
 func _on_meta_clicked(meta: String) -> void:
 	if meta == "Wikipedia":

@@ -19,9 +19,6 @@
 extends HBoxContainer
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	$TimeControl/GameSpeed.visible = false
 	$TimeControl/Pause.visible = false
-
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	get_parent().register_mouse_trigger_guis(self, [$TimeControl])
