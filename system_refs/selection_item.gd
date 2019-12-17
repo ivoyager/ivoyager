@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Reference
 class_name SelectionItem
@@ -42,13 +41,15 @@ enum SelectionType {
 	SELECTION_COMMET,
 	SELECTION_SPACECRAFT
 	}
+const PLANET_TYPES := [SelectionType.SELECTION_PLANET, SelectionType.SELECTION_DWARF_PLANET]
+const MOON_TYPES := [SelectionType.SELECTION_MOON, SelectionType.SELECTION_MINOR_MOON]
 
 # persisted - read only
 var name: String # Registrar guaranties these are unique
 var selection_type: int
 var classification: String
 var is_body: bool
-var up_selection_name := ""
+var up_selection_name := "" # top selection (only) doesn't have one
 var non_body_texture_2d_path := "" # not used if is_body
 # UI data
 var n_stars := -1

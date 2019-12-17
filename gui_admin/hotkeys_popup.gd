@@ -75,18 +75,19 @@ func _on_init():
 				select_right = "Next",
 				select_forward = "Select Forward",
 				select_back = "Select Back",
-				next_system = "Select System",
 				next_star = "Select Sun",
 				next_planet = "Next Planet",
 				previous_planet = "Last Planet",
 				next_moon = "Next Moon",
 				previous_moon = "Last Moon",
-				next_asteroid = "Next Asteroid",
-				previous_asteroid = "Last Asteroid",
-				next_comet = "Next Comet",
-				previous_comet = "Last Comet",
-				next_spacecraft = "Next Spacecraft",
-				previous_spacecraft = "Last Spacecraft",
+				# Below waiting for new code features
+#				next_system = "Select System",
+#				next_asteroid = "Next Asteroid",
+#				previous_asteroid = "Last Asteroid",
+#				next_comet = "Next Comet",
+#				previous_comet = "Last Comet",
+#				next_spacecraft = "Next Spacecraft",
+#				previous_spacecraft = "Last Spacecraft",
 			},
 		],
 		[ # column 3
@@ -123,6 +124,14 @@ func project_init() -> void:
 		remove_item("reverse_time")
 	if !Global.allow_dev_tools:
 		remove_subpanel("Developer")
+	if !Global.enable_save_load:
+		remove_item("load_game")
+		remove_item("quick_load")
+		remove_item("save_as")
+		remove_item("quick_save")
+		remove_item("save_quit")
+	if Global.disable_quit:
+		remove_item("quit")
 
 func _on_ready():
 	._on_ready()

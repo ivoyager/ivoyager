@@ -37,9 +37,10 @@ const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
 var body_id := -1
 var is_star := false
 var is_planet := false # true for dwarf planets
-var is_moon := false
+var is_moon := false # true for minor moons
 var is_spacecraft := false
 var body_type := -1 # stays -1 for non-physical barycenters & lagrange points
+var selection_type := -1
 var starlight_type := -1
 var classification := "" # move to SelectionItem
 var is_top := false
@@ -73,8 +74,8 @@ var lagrange_points := [] # instanced when needed
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon",
-	"is_spacecraft",
-	"body_type", "starlight_type", "classification", "is_top", "is_star_orbiting",
+	"is_spacecraft", "body_type", "selection_type",
+	"starlight_type", "classification", "is_top", "is_star_orbiting",
 	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
 	"has_atmosphere", "tidally_locked", "mass", "GM",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",

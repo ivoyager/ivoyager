@@ -212,8 +212,8 @@ func _on_init() -> void:
 		select_down = [{event_class = "InputEventKey", scancode = KEY_DOWN, shift = true}],
 		select_left = [{event_class = "InputEventKey", scancode = KEY_LEFT, shift = true}],
 		select_right = [{event_class = "InputEventKey", scancode = KEY_RIGHT, shift = true}],
-		select_forward = [{event_class = "InputEventKey", scancode = KEY_GREATER}],
-		select_back = [{event_class = "InputEventKey", scancode = KEY_LESS}],
+		select_forward = [{event_class = "InputEventKey", scancode = KEY_PERIOD}],
+		select_back = [{event_class = "InputEventKey", scancode = KEY_COMMA}],
 		
 		next_system = [{event_class = "InputEventKey", scancode = KEY_Y}],
 		previous_system = [{event_class = "InputEventKey", scancode = KEY_Y, shift = true}],

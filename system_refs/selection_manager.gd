@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Wraps currently selected item and keeps selection history.
 
 extends Reference
@@ -95,9 +94,8 @@ func forward() -> void:
 		forward()
 	
 func up() -> void:
-	var new_selection_name := selection_item.up_selection_name
-	if new_selection_name:
-		var new_selection: SelectionItem = _registrar.selection_items[new_selection_name]
+	if selection_item.up_selection_name:
+		var new_selection: SelectionItem = _registrar.selection_items[selection_item.up_selection_name]
 		select(new_selection)
 
 func can_go_back() -> bool:
@@ -110,13 +108,74 @@ func can_go_up() -> bool:
 	return selection_item and selection_item.up_selection_name
 
 func down() -> void:
-	pass
+	var body: Body = selection_item.body
+	if body and body.satellites:
+		select_body(body.satellites[0])
 
-func toggle(_incr: int) -> void:
-	pass
-
-func toggle_type(_incr: int, _selection_type: int, _and_selection_type := -1) -> void:
-	pass
+func next_last(incr: int, selection_type := -1) -> void:
+	# This is messy, but each selection_type is a special case. See logic
+	# for supported types.
+	if selection_type == SelectionItem.SelectionType.SELECTION_STAR:
+		var sun: Body = _registrar.top_body # TODO: code for multistar systems
+		select_body(sun)
+		return
+	var alt_selection_type := -1
+	if selection_type == SelectionItem.SelectionType.SELECTION_PLANET:
+		alt_selection_type = SelectionItem.SelectionType.SELECTION_DWARF_PLANET
+	elif selection_type == SelectionItem.SelectionType.SELECTION_MOON:
+		alt_selection_type = SelectionItem.SelectionType.SELECTION_MINOR_MOON
+	var current_type := selection_item.selection_type
+	if selection_type == -1:
+		selection_type = current_type
+	var current_body := selection_item.body # could be null
+	var iteration_array: Array
+	var index := -1
+	if current_type == selection_type or current_type == alt_selection_type:
+		var up_body := _registrar.get_body_above_selection(selection_item)
+		iteration_array = up_body.satellites
+		index = iteration_array.find(current_body)
+	elif selection_type == SelectionItem.SelectionType.SELECTION_PLANET:
+		var star := _registrar.get_selection_star(selection_item)
+		if !star:
+			return
+		iteration_array = star.satellites
+		var planet := _registrar.get_selection_planet(selection_item)
+		if planet:
+			index = iteration_array.find(planet)
+			if incr == 1:
+				index -= 1
+	elif selection_type == SelectionItem.SelectionType.SELECTION_MOON:
+		var planet := _registrar.get_selection_planet(selection_item)
+		if !planet:
+			return
+		iteration_array = planet.satellites
+		var moon := _registrar.get_selection_moon(selection_item)
+		if moon:
+			index = iteration_array.find(moon)
+			if incr == 1:
+				index -= 1
+	elif selection_type == SelectionItem.SelectionType.SELECTION_SPACECRAFT:
+		if current_body:
+			iteration_array = current_body.satellites
+		else:
+			var up_body := _registrar.get_body_above_selection(selection_item)
+			iteration_array = up_body.satellites
+	if !iteration_array:
+		return
+	var array_size := iteration_array.size()
+	var count := 0
+	while count < array_size:
+		index += incr
+		if index < 0:
+			index = array_size - 1
+		elif index >= array_size:
+			index = 0
+		var body: Body = iteration_array[index]
+		var body_selection_type := body.selection_type
+		if body_selection_type == selection_type or body_selection_type == alt_selection_type:
+			select_body(body)
+			return
+		count += 1
 
 func _init() -> void:
 	_on_init()
