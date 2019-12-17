@@ -60,11 +60,6 @@ func _on_init():
 				toggle_labels = "Labels",
 				toggle_full_screen = "All GUI",
 			},
-			{
-				header = "GUI",
-				obtain_gui_focus = "Obtain GUI focus",
-				release_gui_focus = "Release GUI focus",
-			},
 		],
 		[ # column 2
 			{
@@ -88,6 +83,11 @@ func _on_init():
 #				previous_comet = "Last Comet",
 #				next_spacecraft = "Next Spacecraft",
 #				previous_spacecraft = "Last Spacecraft",
+			},
+			{
+				header = "GUI",
+				obtain_gui_focus = "Obtain GUI focus",
+				release_gui_focus = "Release GUI focus",
 			},
 		],
 		[ # column 3

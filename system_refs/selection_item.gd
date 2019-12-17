@@ -19,8 +19,8 @@
 extends Reference
 class_name SelectionItem
 
-const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
-enum SelectionType {
+const GLOBAL_ENUMS := ["SelectionTypes"]
+enum SelectionTypes {
 	# I, Voyager doesn't use the first three
 	SELECTION_UNIVERSE,
 	SELECTION_GALAXY,
@@ -41,8 +41,8 @@ enum SelectionType {
 	SELECTION_COMMET,
 	SELECTION_SPACECRAFT
 	}
-const PLANET_TYPES := [SelectionType.SELECTION_PLANET, SelectionType.SELECTION_DWARF_PLANET]
-const MOON_TYPES := [SelectionType.SELECTION_MOON, SelectionType.SELECTION_MINOR_MOON]
+
+const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # persisted - read only
 var name: String # Registrar guaranties these are unique
@@ -98,32 +98,32 @@ func get_orbit_anomaly_for_camera() -> float:
 func init(selection_type_: int) -> void:
 	selection_type = selection_type_
 	match selection_type_:
-		SelectionType.SELECTION_MOON:
+		SelectionTypes.SELECTION_MOON:
 			pass
-		SelectionType.SELECTION_PLANET, SelectionType.SELECTION_DWARF_PLANET:
+		SelectionTypes.SELECTION_PLANET, SelectionTypes.SELECTION_DWARF_PLANET:
 			n_moons = 0 # non -1 are valid for counting & UI display
-		SelectionType.SELECTION_STAR, SelectionType.SELECTION_STAR_SYSTEM:
+		SelectionTypes.SELECTION_STAR, SelectionTypes.SELECTION_STAR_SYSTEM:
 			n_planets = 0
 			n_dwarf_planets = 0
 			n_moons = 0
 			n_asteroids = 0
 			n_comets = 0
 			continue
-		SelectionType.SELECTION_STAR_SYSTEM:
+		SelectionTypes.SELECTION_STAR_SYSTEM:
 			n_stars = 0
 
 func change_count(change_selection_type: int, amount: int) -> void:
 	match change_selection_type:
-		SelectionType.SELECTION_MOON:
+		SelectionTypes.SELECTION_MOON:
 			if n_moons != -1:
 				n_moons += amount
-		SelectionType.SELECTION_PLANET:
+		SelectionTypes.SELECTION_PLANET:
 			if n_planets != -1:
 				n_planets += amount
-		SelectionType.SELECTION_DWARF_PLANET:
+		SelectionTypes.SELECTION_DWARF_PLANET:
 			if n_dwarf_planets != -1:
 				n_dwarf_planets += amount
-		SelectionType.SELECTION_STAR:
+		SelectionTypes.SELECTION_STAR:
 			if n_stars != -1:
 				n_stars += amount
 

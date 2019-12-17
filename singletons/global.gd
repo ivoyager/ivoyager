@@ -64,19 +64,19 @@ signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
 
-# shared containers - keep tight write-control! (ideally, 1 class only)
+# shared containers - keep tight write-control!
 var state := {} # see Main; keys include is_inited, is_running, etc.
 var time_array := [] # [0] always time; GregorianTimekeeper [time, year, month, day]
 var objects := {} # "small s singletons" populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
-var assets := {} # generic resources loaded from an assets directory
+var assets := {} # populated by this node _project_init()
 var settings := {} # maintained by SettingsManager
 var table_data := {} # populated by TableReader
 var themes := {} # see ThemeManager
 var fonts := {} # see FontManager
 var bodies := [] # indexed by body_id; maintained by Registrar
 var bodies_by_name := {} # maintained by Registrar
-var enums := {} # populated by EnumGlobalizer
+var enums := {} # populated by this node _project_init() & TableReader
 var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 
@@ -168,6 +168,19 @@ func project_init() -> void:
 			asset_paths[asset_name] = asset_paths[asset_name].replace("ivoyager_assets", asset_replacement_dir)
 		if !asset_name.ends_with("_dir"):
 			assets[asset_name] = load(asset_paths[asset_name])
+	# Classes can globalize enums using const GLOBAL_ENUMS or GLOBAL_ENUMS_2.
+	# Use GLOBAL_ENUMS_2 in subclass to extend parent class enum values.
+	for key in script_classes:
+		var script_class: Script = script_classes[key]
+		for const_name in ["GLOBAL_ENUMS", "GLOBAL_ENUMS_2"]:
+			if const_name in script_class:
+				for enum_name in script_class.GLOBAL_ENUMS:
+					var enum_dict: Dictionary = script_class[enum_name]
+					assert(!enums.has(enum_name))
+					enums[enum_name] = enum_dict
+					for enum_key in enum_dict:
+						assert(!enums.has(enum_key))
+						enums[enum_key] = enum_dict[enum_key]
 
 func check_load_version() -> void:
 	if _project_version != project_version or _ivoyager_version != ivoyager_version:

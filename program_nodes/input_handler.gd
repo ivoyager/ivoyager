@@ -30,6 +30,7 @@ class_name InputHandler
 var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
 var _script_classes: Dictionary = Global.script_classes
+var _enums: Dictionary = Global.enums
 var _allow_dev_tools: bool = Global.allow_dev_tools
 var _toggle_real_time_not_pause: bool = Global.toggle_real_time_not_pause
 var _tree: SceneTree
@@ -140,15 +141,15 @@ func _on_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("select_down"):
 				_selection_manager.down()
 			elif event.is_action_pressed("next_star"):
-				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_STAR)
+				_selection_manager.next_last(1, _enums.SELECTION_STAR)
 			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, SelectionItem.SelectionType.SELECTION_PLANET)
+				_selection_manager.next_last(-1, _enums.SELECTION_PLANET)
 			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_PLANET)
+				_selection_manager.next_last(1, _enums.SELECTION_PLANET)
 			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, SelectionItem.SelectionType.SELECTION_MOON)
+				_selection_manager.next_last(-1, _enums.SELECTION_MOON)
 			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_MOON)
+				_selection_manager.next_last(1, _enums.SELECTION_MOON)
 			else:
 				return
 		else:
