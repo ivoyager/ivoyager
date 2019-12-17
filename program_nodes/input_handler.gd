@@ -127,32 +127,28 @@ func _on_input(event: InputEvent) -> void:
 		_tree_manager.set_show_labels(!_tree_manager.show_labels)
 	else:
 		if _selection_manager:
-		#	elif event.is_action_pressed("select_system"):
-		#		pass
-		#	elif event.is_action_pressed("previous_star"):
-		#		_selection_manager.toggle_type(-1, Global.SYSTEM_STAR)
-		#	elif event.is_action_pressed("next_star"):
-		#		_selection_manager.toggle_type(1, Global.SYSTEM_STAR)
-		#	elif event.is_action_pressed("previous_planet"):
-		#		_selection_manager.toggle_type(-1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
-		#	elif event.is_action_pressed("next_planet"):
-		#		_selection_manager.toggle_type(1, Global.SYSTEM_PLANET, Global.SYSTEM_DWARF_PLANET)
-		#	elif event.is_action_pressed("previous_moon"):
-		#		_selection_manager.toggle_type(-1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
-		#	elif event.is_action_pressed("next_moon"):
-		#		_selection_manager.toggle_type(1, Global.SYSTEM_MOON, Global.SYSTEM_MINOR_MOON)
 			if event.is_action_pressed("select_forward"):
-				pass
+				_selection_manager.forward()
 			elif event.is_action_pressed("select_back"):
-				pass
+				_selection_manager.back()
 			elif event.is_action_pressed("select_left"):
-				_selection_manager.toggle(-1)
+				_selection_manager.next_last(-1)
 			elif event.is_action_pressed("select_right"):
-				_selection_manager.toggle(1)
+				_selection_manager.next_last(1)
 			elif event.is_action_pressed("select_up"):
 				_selection_manager.up()
 			elif event.is_action_pressed("select_down"):
 				_selection_manager.down()
+			elif event.is_action_pressed("next_star"):
+				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_STAR)
+			elif event.is_action_pressed("previous_planet"):
+				_selection_manager.next_last(-1, SelectionItem.SelectionType.SELECTION_PLANET)
+			elif event.is_action_pressed("next_planet"):
+				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_PLANET)
+			elif event.is_action_pressed("previous_moon"):
+				_selection_manager.next_last(-1, SelectionItem.SelectionType.SELECTION_MOON)
+			elif event.is_action_pressed("next_moon"):
+				_selection_manager.next_last(1, SelectionItem.SelectionType.SELECTION_MOON)
 			else:
 				return
 		else:

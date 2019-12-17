@@ -33,6 +33,43 @@ var bodies_by_name: Dictionary = Global.bodies_by_name # indexed by name
 
 var _removed_body_ids := []
 
+func get_body_above_selection(selection_item: SelectionItem) -> Body:
+	while selection_item.up_selection_name:
+		selection_item = selection_items[selection_item.up_selection_name]
+		if selection_item.body:
+			return selection_item.body
+	return top_body
+
+func get_selection_star(selection_item: SelectionItem) -> Body:
+	var star_type: int = SelectionItem.SelectionType.SELECTION_STAR
+	if selection_item.selection_type == star_type:
+		return selection_item.body
+	while selection_item.up_selection_name:
+		selection_item = selection_items[selection_item.up_selection_name]
+		if selection_item.selection_type == star_type:
+			return selection_item.body
+	return top_body # in case selection is Solar System; needs fix for multistar
+
+func get_selection_planet(selection_item: SelectionItem) -> Body:
+	var planet_types := SelectionItem.PLANET_TYPES
+	if planet_types.has(selection_item.selection_type):
+		return selection_item.body
+	while selection_item.up_selection_name:
+		selection_item = selection_items[selection_item.up_selection_name]
+		if planet_types.has(selection_item.selection_type):
+			return selection_item.body
+	return null
+
+func get_selection_moon(selection_item: SelectionItem) -> Body:
+	var moon_types := SelectionItem.MOON_TYPES
+	if moon_types.has(selection_item.selection_type):
+		return selection_item.body
+	while selection_item.up_selection_name:
+		selection_item = selection_items[selection_item.up_selection_name]
+		if moon_types.has(selection_item.selection_type):
+			return selection_item.body
+	return null
+
 func get_selection_for_body(body: Body) -> SelectionItem:
 	var name_ := body.name
 	return selection_items[name_]

@@ -15,11 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Reference
 class_name SelectionBuilder
-
 
 # project vars
 var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
@@ -49,6 +47,7 @@ func build_from_body(body: Body, parent_body: Body) -> SelectionItem:
 	# parent_body = null for top Body
 	var selection_item: SelectionItem = _SelectionItem_.new()
 	var selection_type := _get_selection_type_from_body(body)
+	body.selection_type = selection_type
 	selection_item.init(selection_type)
 	selection_item.is_body = true
 	selection_item.spatial = body
