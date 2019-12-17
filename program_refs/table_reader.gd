@@ -24,6 +24,7 @@ class_name TableReader
 
 const DPRINT := false
 
+const GLOBAL_ENUMS := ["DataTableTypes"]
 enum DataTableTypes {
 	DATA_TABLE_STAR,
 	DATA_TABLE_PLANET,

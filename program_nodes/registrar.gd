@@ -30,7 +30,7 @@ const PERSIST_OBJ_PROPERTIES := ["top_body", "selection_items"]
 # unpersisted - public are read-only!
 var bodies: Array = Global.bodies # indexed by body_id
 var bodies_by_name: Dictionary = Global.bodies_by_name # indexed by name
-
+var _enums: Dictionary = Global.enums
 var _removed_body_ids := []
 
 func get_body_above_selection(selection_item: SelectionItem) -> Body:
@@ -41,7 +41,7 @@ func get_body_above_selection(selection_item: SelectionItem) -> Body:
 	return top_body
 
 func get_selection_star(selection_item: SelectionItem) -> Body:
-	var star_type: int = SelectionItem.SelectionType.SELECTION_STAR
+	var star_type: int = _enums.SELECTION_STAR
 	if selection_item.selection_type == star_type:
 		return selection_item.body
 	while selection_item.up_selection_name:
@@ -51,22 +51,24 @@ func get_selection_star(selection_item: SelectionItem) -> Body:
 	return top_body # in case selection is Solar System; needs fix for multistar
 
 func get_selection_planet(selection_item: SelectionItem) -> Body:
-	var planet_types := SelectionItem.PLANET_TYPES
-	if planet_types.has(selection_item.selection_type):
+	var selection_type := selection_item.selection_type
+	if selection_type == _enums.SELECTION_PLANET or selection_type == _enums.SELECTION_DWARF_PLANET:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if planet_types.has(selection_item.selection_type):
+		selection_type = selection_item.selection_type
+		if selection_type == _enums.SELECTION_PLANET or selection_type == _enums.SELECTION_DWARF_PLANET:
 			return selection_item.body
 	return null
 
 func get_selection_moon(selection_item: SelectionItem) -> Body:
-	var moon_types := SelectionItem.MOON_TYPES
-	if moon_types.has(selection_item.selection_type):
+	var selection_type := selection_item.selection_type
+	if selection_type == _enums.SELECTION_MOON or selection_type == _enums.SELECTION_MINOR_MOON:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if moon_types.has(selection_item.selection_type):
+		selection_type = selection_item.selection_type
+		if selection_type == _enums.SELECTION_MOON or selection_type == _enums.SELECTION_MINOR_MOON:
 			return selection_item.body
 	return null
 

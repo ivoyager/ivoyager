@@ -78,7 +78,6 @@ var program_references := {
 	# ProjectBuilder instances one of each. No save/load persistence.
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
 	_InputMapManager_ = InputMapManager,
-	_EnumGlobalizer_ = EnumGlobalizer,
 	_TableReader_ = TableReader,
 	_SaverLoader_ = SaverLoader,
 	_FontManager_ = FontManager, # ok to replace
