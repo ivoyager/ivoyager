@@ -174,7 +174,7 @@ func project_init() -> void:
 		var script_class: Script = script_classes[key]
 		for const_name in ["GLOBAL_ENUMS", "GLOBAL_ENUMS_2"]:
 			if const_name in script_class:
-				for enum_name in script_class.GLOBAL_ENUMS:
+				for enum_name in script_class[const_name]:
 					var enum_dict: Dictionary = script_class[enum_name]
 					assert(!enums.has(enum_name))
 					enums[enum_name] = enum_dict
