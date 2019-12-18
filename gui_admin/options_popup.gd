@@ -89,7 +89,7 @@ func _on_ready():
 	._on_ready()
 	_header.text = "Options"
 	_aux_button.show()
-	_aux_button.text = "Hotkeys"
+	_aux_button.text = "BUTTON_HOTKEYS"
 	_aux_button.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
 	_spacer.show()
 

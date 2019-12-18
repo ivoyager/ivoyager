@@ -37,9 +37,9 @@ func _connect_camera(camera: Camera) -> void:
 		_camera.connect("focal_length_changed", self, "_update_focal_length")
 
 func _disconnect_camera() -> void:
-	if _camera:
+	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
-		_camera = null
+	_camera = null
 
 func _update_focal_length(focal_length: float) -> void:
 	var focal_lengths: Array = _camera.focal_lengths

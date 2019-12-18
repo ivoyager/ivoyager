@@ -104,12 +104,12 @@ func _connect_camera(camera: VoyagerCamera) -> void:
 		assert(DPRINT and prints("connected camera:", _camera) or true)
 
 func _disconnect_camera() -> void:
-	if _camera:
+	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("processed", self, "_camera_update")
 		_camera.disconnect("move_started", self, "_camera_move_started")
 		_camera.disconnect("parent_changed", self, "_camera_parent_changed")
 		assert(DPRINT and prints("disconnected camera:", _camera) or true)
-		_camera = null
+	_camera = null
 
 func _camera_update(camera_global_translation: Vector3, fov: float) -> void: # every frame
 	# fix icon QuadMesh if fov change

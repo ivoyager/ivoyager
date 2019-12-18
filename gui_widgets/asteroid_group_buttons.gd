@@ -38,19 +38,17 @@ func _ready() -> void:
 	_points_manager.connect("show_points_changed", self, "_update_asteroids_selected")
 
 func _select_asteroids(pressed: bool, group_or_category: String) -> void:
-	# select one group or all groups or none
-	if group_or_category == "all_asteroids":
-		_points_manager.show_points("all_asteroids", pressed)
-	else:
-		var is_show: bool = pressed or _asteroid_buttons.all_asteroids.pressed
-		if is_show:
-			for key in _asteroid_buttons:
-				_points_manager.show_points(key, key == group_or_category)
-		else:
-			_points_manager.show_points(group_or_category, false)
-		
+	_points_manager.show_points(group_or_category, pressed)
+
 func _update_asteroids_selected(group_or_category: String, is_show: bool) -> void:
 	_asteroid_buttons[group_or_category].pressed = is_show
+	if group_or_category == "all_asteroids":
+		return
 	if !is_show:
 		_asteroid_buttons.all_asteroids.pressed = false
-
+	else:
+		for key in _asteroid_buttons:
+			if key != "all_asteroids" and !_asteroid_buttons[key].pressed:
+				_asteroid_buttons.all_asteroids.pressed = false
+				return
+		_asteroid_buttons.all_asteroids.pressed = true

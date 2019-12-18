@@ -29,8 +29,6 @@ func _ready() -> void:
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	$SystemNavigator.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
-	$SystemNavigator.rect_position.y -= 80
-	$AsteroidGroupButtons.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
-	$AsteroidGroupButtons.rect_position.x += 10
-	$AsteroidGroupButtons.rect_position.y -= 10
+	$SystemNavigator.rect_position.x -= 54
+	$SystemNavigator.rect_position.y -= 20
 	show()
