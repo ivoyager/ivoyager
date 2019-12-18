@@ -76,8 +76,7 @@ func forget_points_category(category: String) -> void: # not needed for load
 	_show_points.erase(category)
 	_points_categories.erase(category)
 
-
-func project_init():
+func project_init() -> void:
 	Global.connect("gui_refresh_requested", self, "_refresh_gui")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
 

@@ -34,9 +34,9 @@ func _connect_camera(camera: Camera) -> void:
 		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
-	if _camera:
+	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
-		_camera = null
+	_camera = null
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	pressed = is_locked

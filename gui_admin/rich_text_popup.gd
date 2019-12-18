@@ -40,7 +40,7 @@ func _open(header_text: String, bbcode_text: String) -> void:
 	set_process_unhandled_key_input(true)
 	_main.require_stop(self)
 	_header.text = header_text
-	_rt_label.bbcode_text = bbcode_text
+	_rt_label.bbcode_text = tr(bbcode_text)
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 

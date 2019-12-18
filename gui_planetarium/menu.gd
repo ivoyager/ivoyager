@@ -1,4 +1,4 @@
-# home.gd
+# menu.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -16,11 +16,24 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends RichTextLabel
+extends VBoxContainer
 
 func _ready() -> void:
-	connect("meta_clicked", self, "_on_meta_clicked")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	$Homepage.connect("meta_clicked", self, "_on_homepage_clicked")
+	$Help.connect("pressed", Global, "emit_signal", ["rich_text_popup_requested", "LABEL_HELP", "LABEL_PLANETARIUM_HELP"])
+	$Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
+	$Options.connect("pressed", Global, "emit_signal", ["options_requested"])
+	$Credits.connect("pressed", Global, "emit_signal", ["credits_requested"])
 	get_parent().register_mouse_trigger_guis(self, [self])
+	set_anchors_and_margins_preset(PRESET_TOP_LEFT, PRESET_MODE_MINSIZE)
+	rect_position.x += 15
+	rect_position.y += 7
 
-func _on_meta_clicked(_meta: String) -> void:
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	var main: Main = Global.objects.Main
+	$Quit.connect("pressed", main, "quit", [true])
+
+func _on_homepage_clicked(_meta: String) -> void:
 	OS.shell_open("https://ivoyager.dev")
+

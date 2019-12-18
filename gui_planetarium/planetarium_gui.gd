@@ -29,13 +29,14 @@ var _is_mouse_button_pressed := false
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+	Global.connect("simulator_exited", self, "_on_simulator_exited")
 
 func register_mouse_trigger_guis(mouse_trigger: Control, guis: Array) -> void:
 	_mouse_trigger_guis.append([mouse_trigger, guis])
 
 func _ready() -> void:
-#	theme = Global.themes.global
 	pass
+#	theme = Global.themes.web
 
 func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	selection_manager = _SelectionManager_.new()
@@ -43,7 +44,6 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var registrar: Registrar = Global.objects.Registrar
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
-	show()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -60,10 +60,3 @@ func _input(event: InputEvent) -> void:
 					gui.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
 	elif event is InputEventMouseButton:
 		_is_mouse_button_pressed = event.pressed
-
-	# debug
-#	var gui_panel: Control = SaverLoader.make_object_or_scene(NavigationPanel)
-#	gui_panel.init(true, gui_panels, selection_manager)
-#	gui_panels.append(gui_panel)
-#	add_child(gui_panel)
-

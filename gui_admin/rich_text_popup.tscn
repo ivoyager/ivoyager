@@ -3,6 +3,7 @@
 [ext_resource path="res://ivoyager/gui_admin/rich_text_popup.gd" type="Script" id=1]
 
 [node name="RichTextPopup" type="PopupPanel"]
+visible = true
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -19,32 +20,31 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -250.0
+margin_left = -290.0
 margin_top = -347.0
-margin_right = 250.0
+margin_right = 290.0
 margin_bottom = 347.0
 custom_constants/separation = 5
 
 [node name="Header" type="Label" parent="VBox"]
-margin_right = 500.0
+margin_right = 700.0
 margin_bottom = 14.0
 rect_min_size = Vector2( 580, 0 )
 text = "Header"
 align = 1
 
 [node name="RTLabel" type="RichTextLabel" parent="VBox"]
-margin_left = 15.0
 margin_top = 19.0
-margin_right = 485.0
+margin_right = 700.0
 margin_bottom = 669.0
-rect_min_size = Vector2( 550, 650 )
+rect_min_size = Vector2( 700, 650 )
 size_flags_horizontal = 4
 bbcode_enabled = true
 
 [node name="Close" type="Button" parent="VBox"]
-margin_left = 194.0
+margin_left = 294.0
 margin_top = 674.0
-margin_right = 306.0
+margin_right = 406.0
 margin_bottom = 694.0
 size_flags_horizontal = 4
 text = "BUTTON_CLOSE"

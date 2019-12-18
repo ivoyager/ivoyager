@@ -35,10 +35,10 @@ func _connect_camera(camera: Camera) -> void:
 		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
-	if _camera:
+	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("range_changed", self, "_update")
 		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
-		_camera = null
+	_camera = null
 
 func _on_range_changed(new_range: float) -> void:
 	text = _string_maker.get_str(new_range, _string_maker.DISPLAY_LENGTH)
