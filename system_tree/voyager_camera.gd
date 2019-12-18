@@ -36,7 +36,8 @@ enum {
 	VIEWPOINT_ZOOM,
 	VIEWPOINT_45,
 	VIEWPOINT_TOP,
-	VIEWPOINT_BUMPED
+	VIEWPOINT_BUMPED_CENTERED,
+	VIEWPOINT_BUMPED_UNCENTERED
 }
 
 enum {
@@ -197,6 +198,11 @@ static func convert_view_position(view_position: Vector3, north: Vector3, ref_lo
 func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
 	# Use to_selection_item = null and/or to_viewpoint = -1 if we don't want to change
 	assert(DPRINT and prints("move", to_selection_item, to_viewpoint, instant_move) or true)
+	assert(to_viewpoint != VIEWPOINT_BUMPED_UNCENTERED) # use -1 for unspecified
+	if to_viewpoint != -1:
+		to_rotations = Vector3.ZERO
+	elif to_rotations == Vector3.ZERO and viewpoint == VIEWPOINT_BUMPED_UNCENTERED:
+		to_viewpoint = VIEWPOINT_BUMPED_CENTERED
 	_from_selection_item = selection_item
 	_from_spatial = spatial
 	_from_viewpoint = viewpoint
@@ -206,13 +212,13 @@ func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := 
 		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if to_viewpoint != -1:
 		viewpoint = to_viewpoint
-	if viewpoint == VIEWPOINT_BUMPED or _from_viewpoint == VIEWPOINT_BUMPED:
+	if viewpoint > VIEWPOINT_TOP or _from_viewpoint > VIEWPOINT_TOP:
 		var dist_sq := translation.length_squared()
 		var north := _get_north(_from_selection_item, dist_sq)
 		var orbit_anomaly := _get_orbit_anomaly(_from_selection_item, dist_sq)
 		_pre_move_view_position = get_view_position(translation, north, orbit_anomaly)
+	_from_rotations = _rotations
 	if to_rotations != NULL_ROTATIONS:
-		_from_rotations = _rotations
 		_rotations = to_rotations
 	_move_seconds = _settings.camera_move_seconds
 	if !is_moving:
@@ -261,7 +267,7 @@ func change_camera_lock(new_lock: bool) -> void:
 		is_camera_lock = new_lock
 		emit_signal("camera_lock_changed", new_lock)
 		if new_lock:
-			if viewpoint == VIEWPOINT_BUMPED:
+			if viewpoint > VIEWPOINT_TOP:
 				viewpoint = _viewpoint_memory
 
 func change_move_time(new_move_time: float) -> void:
@@ -457,9 +463,13 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		is_camera_bump = true
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
-	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED:
-		viewpoint = VIEWPOINT_BUMPED
-		emit_signal("viewpoint_changed", viewpoint)
+	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED_UNCENTERED:
+		if _rotations:
+			viewpoint = VIEWPOINT_BUMPED_UNCENTERED
+			emit_signal("viewpoint_changed", viewpoint)
+		elif viewpoint != VIEWPOINT_BUMPED_CENTERED:
+			viewpoint = VIEWPOINT_BUMPED_CENTERED
+			emit_signal("viewpoint_changed", viewpoint)
 	if is_dist_change:
 		var dist := sqrt(dist_sq)
 		emit_signal("range_changed", dist)
@@ -517,7 +527,7 @@ func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, r
 	var north := _get_north(selection_item_, dist_sq)
 	var orbit_anomaly := _get_orbit_anomaly(selection_item_, dist_sq)
 	var viewpoint_translation: Vector3
-	if !is_moving and viewpoint_ == VIEWPOINT_BUMPED:
+	if !is_moving and viewpoint_ > VIEWPOINT_TOP:
 		var delta_anomaly := 0.0
 		if orbit_anomaly != -INF and _last_anomaly != -INF:
 			delta_anomaly = orbit_anomaly - _last_anomaly
@@ -542,7 +552,7 @@ func _get_viewpoint_view_position(selection_item_: SelectionItem, viewpoint_: in
 		VIEWPOINT_TOP:
 			view_position = selection_item_.view_position_top
 			view_position.z /= fov
-		VIEWPOINT_BUMPED:
+		_:
 			if is_moving:
 				view_position = _pre_move_view_position
 			else:

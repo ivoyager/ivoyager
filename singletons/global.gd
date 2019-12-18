@@ -98,7 +98,7 @@ var disable_exit := false
 var disable_quit := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = -3608.0 # days from J2000 epoch (=2000-01-01 12:00)
+var start_time: float = 7305.0 # days from J2000 epoch (=2000-01-01 12:00)
 var allow_time_reversal := true
 var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
