@@ -9,8 +9,7 @@ Right-button* drag near screen center to pan left, right, up or down.
 Right-button* drag near screen edge to rotate.
 (*Cntr + mouse button on Mac.)[/indent]
 \n[b]Controls & Links[/b]
-[indent]
-Main Menu - Move mouse to upper left
+[indent]Main Menu - Move mouse to upper left
 Selection Options - Move mouse to upper middle
 Time Control - Move mouse to upper right
 Navigator - Move mouse to lower left
@@ -19,7 +18,7 @@ Settings - Move mouse to lower right[/indent]
 [indent]Shift-arrows, P, Shift-P, M, Shift-M - Change target body selection.
 Arrows, Page Up, Page down - Move the camera.
 Home, Delete, End - Change the viewpoint.
-+, -, Backspace - Change simulator speed or reverse time.
++, -, Backspace (or use [, ], \ on web browser) - Change speed or reverse time.
 Cntr-H - See or modify all hotkeys.[/indent]
 \n[b]Asteroids[/b]
 [indent]These are not (yet) selectable. The simulator shows all numbered

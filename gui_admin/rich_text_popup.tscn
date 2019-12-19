@@ -3,7 +3,6 @@
 [ext_resource path="res://ivoyager/gui_admin/rich_text_popup.gd" type="Script" id=1]
 
 [node name="RichTextPopup" type="PopupPanel"]
-visible = true
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -20,16 +19,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -290.0
+margin_left = -350.0
 margin_top = -347.0
-margin_right = 290.0
+margin_right = 350.0
 margin_bottom = 347.0
 custom_constants/separation = 5
 
 [node name="Header" type="Label" parent="VBox"]
 margin_right = 700.0
 margin_bottom = 14.0
-rect_min_size = Vector2( 580, 0 )
+rect_min_size = Vector2( 770, 0 )
 text = "Header"
 align = 1
 
@@ -37,7 +36,7 @@ align = 1
 margin_top = 19.0
 margin_right = 700.0
 margin_bottom = 669.0
-rect_min_size = Vector2( 700, 650 )
+rect_min_size = Vector2( 750, 750 )
 size_flags_horizontal = 4
 bbcode_enabled = true
 
