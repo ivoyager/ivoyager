@@ -21,9 +21,7 @@
 # modification via HotkeysPopup. Non-default actions are persisted in
 # <cache_dir>/<cache_file_name> (specified below).
 #
-# IMPORTANT! We enforce one unique InputEventKey per action within this node's
-# dictionaries (no InputEventKey is ok). This node and HotkeysPopup are totally
-# unaware of actions defined elsewhere (project.godot, override.cfg, etc.).
+# This node and HotkeysPopup are unaware of actions defined in project.godot.
 
 extends CachedItemsManager
 class_name InputMapManager
@@ -36,7 +34,7 @@ var event_classes := { # we'll expand this as needed
 	}
 
 # read-only!
-var actions_by_scancode_w_mods := {} # we enforce 1:1 (if action has scancode)
+var actions_by_scancode_w_mods := {}
 
 func set_action_event_dict(action: String, event_dict: Dictionary, event_class: String,
 		index: int, suppress_caching := false) -> void:
@@ -65,7 +63,6 @@ func get_event_array_index(action: String, event_class: String, index: int) -> i
 			class_index += 1
 		i += 1
 	return i # size of events_array
-	
 
 func get_event_dicts(action: String, event_class: String) -> Array:
 	var result := []
@@ -74,14 +71,6 @@ func get_event_dicts(action: String, event_class: String) -> Array:
 		if event_dict.event_class == event_class:
 			result.append(event_dict)
 	return result
-
-# DEPRECIATE
-#func get_event_key_dict(action: String) -> Dictionary:
-#	var events_array: Array = current[action]
-#	for event_dict in events_array:
-#		if event_dict.event_class == "InputEventKey":
-#			return event_dict
-#	return {}
 
 func remove_event_dict(action: String, event_class: String, index: int, suppress_caching := false) -> void:
 	# if index >= number of key dicts, nothing happens
@@ -105,7 +94,6 @@ func remove_event_dict(action: String, event_class: String, index: int, suppress
 	if !suppress_caching:
 		cache_now()
 
-
 func get_scancodes_with_modifiers(action: String) -> Array:
 	var scancodes := []
 	var events_array: Array = current[action]
@@ -124,23 +112,6 @@ func get_scancodes_with_modifiers(action: String) -> Array:
 			scancodes.append(scancode)
 	return scancodes
 
-# DEPRECIATE
-#func get_scancode_with_modifiers(action: String) -> int:
-#	var event_dict := get_event_key_dict(action)
-#	if not event_dict:
-#		return -1
-#	# logic below same as input_event.cpp
-#	var scancode: int = event_dict.scancode
-#	if event_dict.get("control"):
-#		scancode |= KEY_MASK_CTRL
-#	if event_dict.get("alt"):
-#		scancode |= KEY_MASK_ALT
-#	if event_dict.get("shift"):
-#		scancode |= KEY_MASK_SHIFT
-#	if event_dict.get("meta"):
-#		scancode |= KEY_MASK_META
-#	return scancode
-	
 static func strip_scancode_modifiers(scancode: int) -> int:
 	# Note: InputEventKey.scancode is already stripped.
 	scancode &= ~KEY_MASK_SHIFT
@@ -148,7 +119,6 @@ static func strip_scancode_modifiers(scancode: int) -> int:
 	scancode &= ~KEY_MASK_CTRL
 	scancode &= ~KEY_MASK_META
 	return scancode
-
 
 func _on_init() -> void:
 	# project vars - modify on ProjectBuilder signal "project_objects_instantiated"
@@ -236,10 +206,20 @@ func _on_init() -> void:
 		toggle_icons = [{event_class = "InputEventKey", scancode = KEY_I}],
 		toggle_labels = [{event_class = "InputEventKey", scancode = KEY_L}],
 		toggle_full_screen = [{event_class = "InputEventKey", scancode = KEY_F, shift = true}],
+		
 		toggle_pause_or_real_time = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
-		incr_speed = [{event_class = "InputEventKey", scancode = KEY_EQUAL}],
-		decr_speed = [{event_class = "InputEventKey", scancode = KEY_MINUS}],
-		reverse_time = [{event_class = "InputEventKey", scancode = KEY_BACKSPACE}],
+		incr_speed = [
+			{event_class = "InputEventKey", scancode = KEY_EQUAL},
+			{event_class = "InputEventKey", scancode = KEY_BRACERIGHT},
+			],
+		decr_speed = [
+			{event_class = "InputEventKey", scancode = KEY_MINUS},
+			{event_class = "InputEventKey", scancode = KEY_BRACELEFT},
+			],
+		reverse_time = [
+			{event_class = "InputEventKey", scancode = KEY_BACKSPACE},
+			{event_class = "InputEventKey", scancode = KEY_BACKSLASH},
+			],
 		
 		obtain_gui_focus = [{event_class = "InputEventKey", scancode = KEY_TAB}],
 		release_gui_focus = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT}],
