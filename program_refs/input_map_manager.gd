@@ -211,10 +211,12 @@ func _on_init() -> void:
 		incr_speed = [
 			{event_class = "InputEventKey", scancode = KEY_EQUAL},
 			{event_class = "InputEventKey", scancode = KEY_BRACERIGHT},
+			{event_class = "InputEventKey", scancode = KEY_BRACKETRIGHT}, # grrrr. Browsers!
 			],
 		decr_speed = [
 			{event_class = "InputEventKey", scancode = KEY_MINUS},
 			{event_class = "InputEventKey", scancode = KEY_BRACELEFT},
+			{event_class = "InputEventKey", scancode = KEY_BRACKETLEFT},
 			],
 		reverse_time = [
 			{event_class = "InputEventKey", scancode = KEY_BACKSPACE},
