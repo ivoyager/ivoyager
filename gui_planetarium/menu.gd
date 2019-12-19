@@ -25,14 +25,17 @@ func _ready() -> void:
 	$Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
 	$Options.connect("pressed", Global, "emit_signal", ["options_requested"])
 	$Credits.connect("pressed", Global, "emit_signal", ["credits_requested"])
+	if Global.disable_quit:
+		$Quit.hide()
 	get_parent().register_mouse_trigger_guis(self, [self])
 	set_anchors_and_margins_preset(PRESET_TOP_LEFT, PRESET_MODE_MINSIZE)
 	rect_position.x += 15
 	rect_position.y += 7
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	var main: Main = Global.objects.Main
-	$Quit.connect("pressed", main, "quit", [true])
+	if !Global.disable_quit:
+		var main: Main = Global.objects.Main
+		$Quit.connect("pressed", main, "quit", [true])
 
 func _on_homepage_clicked(_meta: String) -> void:
 	OS.shell_open("https://ivoyager.dev")
