@@ -254,3 +254,21 @@ margin_left = 198.0
 margin_top = 0.0
 margin_right = 239.0
 margin_bottom = 20.0
+
+[node name="FullScreen" type="HBoxContainer" parent="."]
+margin_top = 304.0
+margin_right = 239.0
+margin_bottom = 324.0
+
+[node name="Label" type="Label" parent="FullScreen"]
+margin_top = 3.0
+margin_right = 178.0
+margin_bottom = 17.0
+size_flags_horizontal = 3
+text = "LABEL_FULL_SCREEN"
+
+[node name="Button" type="Button" parent="FullScreen"]
+margin_left = 182.0
+margin_right = 239.0
+margin_bottom = 20.0
+text = "Expand"
