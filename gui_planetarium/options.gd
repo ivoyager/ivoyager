@@ -19,10 +19,13 @@
 extends VBoxContainer
 
 var _points_manager: PointsManager = Global.objects.PointsManager
+
 onready var _tree_manager: TreeManager = Global.objects.TreeManager
 onready var _orbits_checkbox: CheckBox = $Orbits/CheckBox
 onready var _labels_checkbox: CheckBox = $Labels/CheckBox
 onready var _icons_checkbox: CheckBox = $Icons/CheckBox
+onready var _fullscreen_button: Button = $FullScreen/Button
+
 onready var _asteroid_checkboxes := {
 	all_asteroids = $AllAsteroids/CheckBox,
 	NE = $NearEarth/CheckBox,
@@ -33,6 +36,7 @@ onready var _asteroid_checkboxes := {
 	CE = $Centaurs/CheckBox,
 	TN = $TransNeptunian/CheckBox
 }
+
 onready var _asteroid_labels := {
 	LABEL_ALL_ASTEROIDS = $AllAsteroids/RTLabel,
 	LABEL_NEAR_EARTH = $NearEarth/RTLabel,
@@ -45,9 +49,11 @@ onready var _asteroid_labels := {
 
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	get_viewport().connect("size_changed", self, "_on_viewport_size_changed")
 	_orbits_checkbox.connect("toggled", _tree_manager, "set_show_orbits")
 	_labels_checkbox.connect("toggled", _tree_manager, "set_show_labels")
 	_icons_checkbox.connect("toggled", _tree_manager, "set_show_icons")
+	_fullscreen_button.connect("pressed", self, "_change_fullscreen")
 	_tree_manager.connect("show_orbits_changed", self, "_update_show_orbits")
 	_tree_manager.connect("show_labels_changed", self, "_update_show_labels")
 	_tree_manager.connect("show_icons_changed", self, "_update_show_icons")
@@ -64,6 +70,12 @@ func _ready() -> void:
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_resize_and_reposition()
 	show()
+
+func _on_viewport_size_changed() -> void:
+	_fullscreen_button.text = "Shrink" if OS.window_fullscreen else "Expand"
+
+func _change_fullscreen() -> void:
+	OS.window_fullscreen = !OS.window_fullscreen
 
 func _update_show_orbits(is_show: bool) -> void:
 	_orbits_checkbox.pressed = is_show
@@ -83,12 +95,12 @@ func _update_asteroids_selected(group_or_category: String, is_show: bool) -> voi
 		return
 	if !is_show:
 		_asteroid_checkboxes.all_asteroids.pressed = false
-	else:
-		for key in _asteroid_checkboxes:
-			if key != "all_asteroids" and !_asteroid_checkboxes[key].pressed:
-				_asteroid_checkboxes.all_asteroids.pressed = false
-				return
-		_asteroid_checkboxes.all_asteroids.pressed = true
+		return
+	for key in _asteroid_checkboxes:
+		if key != "all_asteroids" and !_asteroid_checkboxes[key].pressed:
+			_asteroid_checkboxes.all_asteroids.pressed = false
+			return
+	_asteroid_checkboxes.all_asteroids.pressed = true
 
 func _on_meta_clicked(_meta: String, key: String) -> void:
 	var wiki_page: String
