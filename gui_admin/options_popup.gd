@@ -29,7 +29,7 @@ var setting_enums := {
 }
 
 var format_overrides := {
-	camera_move_seconds = {max_value = 10.0},
+	camera_transition_time = {max_value = 10.0},
 	viewport_label_size = {min_value = 4.0, max_value = 36.0},
 	viewport_icon_size = {min_value = 40.0, max_value = 300.0, step = 10.0},
 }
@@ -43,35 +43,40 @@ func _on_init():
 	layout = [
 		[ # column 1; each dict is a subpanel
 			{
-				header = "Save/Load",
-				save_base_name = "Base name",
-				append_date_to_save = "Append date",
-				loaded_game_is_paused = "Always pause on load",
+				header = "LABEL_SAVE_LOAD",
+				save_base_name = "LABEL_BASE_NAME",
+				append_date_to_save = "LABEL_APPEND_DATE",
+				loaded_game_is_paused = "LABEL_ALWAYS_PAUSE_ON_LOAD",
 			},
 			{
-				header = "Camera",
-				camera_move_seconds = "Move time (sec)",
+				header = "LABEL_CAMERA",
+				camera_transition_time = "LABEL_TRANSITION_TIME",
+				camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
+				camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
+				camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",
+				camera_mouse_roll_rate = "LABEL_MOUSE_RATE_ROLL",
+				camera_key_in_out_rate = "LABEL_KEY_RATE_IN_OUT",
+				camera_key_move_rate = "LABEL_KEY_RATE_TANGENTIAL",
+				camera_key_pitch_yaw_rate = "LABEL_KEY_RATE_PITCH_YAW",
+				camera_key_roll_rate = "LABEL_KEY_RATE_ROLL",
 			}
 		],
 		[ # column 2
 			{
-				header = "Orbit/Point Colors",
-				planet_orbit_color = "Planet Orbits",
-				dwarf_planet_orbit_color = "Dwarf Planet Orbits",
-				moon_orbit_color = "Major Moon Orbits",
-				minor_moon_orbit_color = "Minor Moon Orbits",
-				asteroid_point_color = "Asteroid Points",
+				header = "LABEL_ORBIT_POINT_COLORS",
+				planet_orbit_color = "LABEL_PLANET_ORBITS",
+				dwarf_planet_orbit_color = "LABEL_DWARF_PLANET_ORBITS",
+				moon_orbit_color = "LABEL_MAJOR_MOON_ORBITS",
+				minor_moon_orbit_color = "LABEL_MINOR_MOON_ORBITS",
+				asteroid_point_color = "LABEL_ASTEROID_POINTS",
 			},
 			{
-				header = "GUI & HUD",
-				gui_size = "GUI size",
-				viewport_label_size = "Label size",
-				viewport_icon_size = "Icon size",
-				hide_hud_when_close = "Hide HUDs when close",
+				header = "LABEL_GUI_AND_HUD",
+				gui_size = "LABEL_GUI_SIZE",
+				viewport_label_size = "LABEL_LABEL_SIZE",
+				viewport_icon_size = "LABEL_ICON_SIZE",
+				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
 			},
-#			{
-#				header = "Misc",
-#			}
 		]
 	]
 
@@ -83,14 +88,14 @@ func project_init() -> void:
 	Global.connect("options_requested", self, "_open")
 	Global.connect("setting_changed", self, "_settings_listener")
 	if !Global.enable_save_load:
-		remove_subpanel("Save/Load")
+		remove_subpanel("LABEL_SAVE_LOAD")
 
-func _on_ready():
+func _on_ready() -> void:
 	._on_ready()
-	_header.text = "Options"
+	_header.text = "LABEL_OPTIONS"
 	_aux_button.show()
 	_aux_button.text = "BUTTON_HOTKEYS"
-	_aux_button.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
+	_aux_button.connect("pressed", self, "_open_hotkeys")
 	_spacer.show()
 
 func _open() -> void:
@@ -198,6 +203,11 @@ func _on_confirm_changes() -> void:
 func _on_cancel_changes() -> void:
 	_settings_manager.restore_from_cache()
 	hide()
+
+func _open_hotkeys() -> void:
+	if !is_connected("popup_hide", Global, "emit_signal"):
+		connect("popup_hide", Global, "emit_signal", ["hotkeys_requested"], CONNECT_ONESHOT)
+	_on_cancel()
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":

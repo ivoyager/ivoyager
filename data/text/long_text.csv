@@ -1,8 +1,8 @@
 id,en
-LABEL_PBD_LONG,"Pale Blue Dot\nEarth as seen by Voyager 1 from more than 6.4 billion kilometers.\n\nLook again at that dot. That's here. That's home. That's us. On it everyone you love, everyone you know, everyone you ever heard of, every human being who ever was, lived out their lives. The aggregate of our joy and suffering, thousands of confident religions, ideologies, and economic doctrines, every hunter and forager, every hero and coward, every creator and destroyer of civilization, every king and peasant, every young couple in love, every mother and father, hopeful child, inventor and explorer, every teacher of morals, every corrupt politician, every superstar, every supreme leader, every saint and sinner in the history of our species lived there -- on a mote of dust suspended in a sunbeam.
+TXT_PBD_LONG,"Pale Blue Dot\nEarth as seen by Voyager 1 from more than 6.4 billion kilometers.\n\nLook again at that dot. That's here. That's home. That's us. On it everyone you love, everyone you know, everyone you ever heard of, every human being who ever was, lived out their lives. The aggregate of our joy and suffering, thousands of confident religions, ideologies, and economic doctrines, every hunter and forager, every hero and coward, every creator and destroyer of civilization, every king and peasant, every young couple in love, every mother and father, hopeful child, inventor and explorer, every teacher of morals, every corrupt politician, every superstar, every supreme leader, every saint and sinner in the history of our species lived there -- on a mote of dust suspended in a sunbeam.
      --Carl Sagan, 1994"
-LABEL_PBD_SHORT,Pale Blue Dot\nEarth as seen by Voyager 1 from more than 6.4 billion kilometers.
-LABEL_PLANETARIUM_HELP,"\n[b]Mouse
+TXT_PBD_SHORT,Pale Blue Dot\nEarth as seen by Voyager 1 from more than 6.4 billion kilometers.
+TXT_PLANETARIUM_HELP,"\n[b]Mouse
 [indent]Mouse-wheel moves closer/further from target object.
 Left-button drag to move around the target object.
 Right-button* drag near screen center to pan left, right, up or down.
@@ -25,3 +25,4 @@ Cntr-H - See or modify all hotkeys.[/indent]
 and multiposition asteroids filtered by magnitude. Note that magnitude
 filter for Near-Earth and Mars-Crossers is much less restrictive than all
 other groups. (We show only a tiny fraction of known Main Belt asteroids!)"
+TXT_WEB_PLANETARIUM_LOADING,Building the solar system and loading graphics...\n\nThis may take a while...

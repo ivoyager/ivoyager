@@ -43,8 +43,16 @@ func _on_init():
 	#	autosave_minutes = 30,
 	
 		# camera
-		camera_move_seconds = 1.0,
-		
+		camera_transition_time = 1.0,
+		camera_mouse_in_out_rate = 1.0,
+		camera_mouse_move_rate = 1.0,
+		camera_mouse_pitch_yaw_rate = 1.0,
+		camera_mouse_roll_rate = 1.0,
+		camera_key_in_out_rate = 1.0,
+		camera_key_move_rate = 1.0,
+		camera_key_pitch_yaw_rate = 1.0,
+		camera_key_roll_rate = 1.0,
+
 		# UI & HUD display
 		gui_size = GUISizes.GUI_MEDIUM,
 		viewport_label_size = 12,

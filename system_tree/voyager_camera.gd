@@ -52,6 +52,10 @@ const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
 const NEAR_DIST_MULTIPLIER := 0.1 
 const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude 
 const MIN_ANGLE_TO_POLE := PI / 80.0
+const MOUSE_MOVE_ADJ := 0.4
+const MOUSE_PITCH_YAW_ADJ := 0.1
+const MOUSE_ROLL_ADJ := 0.3
+const MOUSE_WHEEL_ADJ := 33.3
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
@@ -86,19 +90,14 @@ const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var move_radially_rate := 0.7
-var move_in_out_rate := 3.0
-var key_rotate_rate := 1.0
 var follow_orbit: float = 4e7 * Global.scale # km after dividing by fov
 var orient_to_local_pole: float = 5e7 * Global.scale # must be > follow_orbit
 var orient_to_ecliptic: float = 5e10 * Global.scale # must be > orient_to_local_pole
-var mouse_move_effect := 0.4
-var mouse_rotate_xy_effect := 0.1 
-var mouse_rotate_z_effect := 0.3
+var move_tangentially_rate := 0.7 # affects mouse & key
+var move_in_out_rate := 3.0 # affects mouse & key
 var mouse_rotate_min_z_at_offcenter := 0.2
 var mouse_rotate_max_z_at_offcenter := 0.7
-var mouse_wheel_halflife_x2 := 0.25 # sec
-var mouse_wheel_effect := 100 # int!
+var mouse_wheel_halflife_x2 := 0.1 # sec
 
 # public read-only
 var spatial: Spatial
@@ -111,9 +110,6 @@ var _math: Math = Global.objects.Math
 var _scale: float = Global.scale
 var _max_dist_sq: float = pow(Global.max_camera_distance * _scale, 2.0)
 var _min_dist_sq := 0.01 # set for parent body
-onready var _top_body: Body = _registrar.top_body
-onready var _viewport := get_viewport()
-onready var _tree := get_tree()
 var _follow_orbit_dist_sq: float
 var _orient_to_local_pole_sq: float
 var _orient_to_ecliptic_sq: float
@@ -127,9 +123,7 @@ var _drag_lb_current := NULL_DRAG
 var _drag_rb_start := NULL_DRAG
 var _drag_rb_segment_start := NULL_DRAG
 var _drag_rb_current := NULL_DRAG
-#var _drag_is_z_rotate := false
 # move
-var _move_seconds: float
 var _move_progress: float
 var _to_spatial: Spatial
 var _from_spatial: Spatial
@@ -141,6 +135,20 @@ var _from_rotations := Vector3.ZERO
 var _pre_move_view_position := Vector3.ONE
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
+
+onready var _top_body: Body = _registrar.top_body
+onready var _viewport := get_viewport()
+onready var _tree := get_tree()
+# settings
+onready var _transition_time: float = _settings.camera_transition_time
+onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate
+onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate
+onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate
+onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate
+onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate
+onready var _key_move_rate: float = _settings.camera_key_move_rate
+onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate
+onready var _key_roll_rate: float = _settings.camera_key_roll_rate
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
@@ -220,13 +228,12 @@ func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := 
 	_from_rotations = _rotations
 	if to_rotations != NULL_ROTATIONS:
 		_rotations = to_rotations
-	_move_seconds = _settings.camera_move_seconds
 	if !is_moving:
 		_move_progress = 0.0
 	else:
-		_move_progress = _move_seconds / 2.0 # move was in progress; user is in a hurry!
+		_move_progress = _transition_time / 2.0 # move was in progress; user is in a hurry!
 	if instant_move:
-		_move_progress = _move_seconds
+		_move_progress = _transition_time
 	_move_spatial = _get_common_spatial(_from_spatial, _to_spatial)
 	var from_north: Vector3 = _from_spatial.north_pole if "north_pole" in _from_spatial else ECLIPTIC_NORTH
 	var to_north: Vector3 = _to_spatial.north_pole if "north_pole" in _to_spatial else ECLIPTIC_NORTH
@@ -270,15 +277,6 @@ func change_camera_lock(new_lock: bool) -> void:
 			if viewpoint > VIEWPOINT_TOP:
 				viewpoint = _viewpoint_memory
 
-func change_move_time(new_move_time: float) -> void:
-	_move_seconds = new_move_time
-
-func change_radial_move_rate(new_rate: float) -> void:
-	move_radially_rate = new_rate
-
-func change_in_out_move_rate(new_rate: float) -> void:
-	move_in_out_rate = new_rate
-
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
 func _ready() -> void:
@@ -292,6 +290,7 @@ func _on_ready():
 	Global.connect("run_state_changed", self, "_set_run_state")
 	Global.connect("move_camera_to_selection_requested", self, "move")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
+	Global.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
 	var dist := _transform.origin.length_squared()
 	near = dist * NEAR_DIST_MULTIPLIER
@@ -339,7 +338,7 @@ func _on_process(delta: float):
 	var is_dist_change := false
 	if is_moving:
 		_move_progress += delta
-		if _move_progress < _move_seconds:
+		if _move_progress < _transition_time:
 			_process_moving()
 		else: # end the move
 			is_moving = false
@@ -359,7 +358,7 @@ func _on_process(delta: float):
 	emit_signal("processed", global_transform.origin, fov)
 
 func _process_moving() -> void:
-	var ease_progress := ease(_move_progress / _move_seconds, -ease_exponent)
+	var ease_progress := ease(_move_progress / _transition_time, -ease_exponent)
 	# Hand-off at halfway point avoids imprecision shakes at either end
 	if spatial != _to_spatial and ease_progress > 0.5:
 		_do_camera_handoff()
@@ -420,7 +419,7 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var rotate_vector := Vector3.ZERO
 	# mouse drag movement
 	if _drag_lb_segment_start and _drag_lb_segment_start != _drag_lb_current:
-		var mouse_move := (_drag_lb_current - _drag_lb_segment_start) * delta * mouse_move_effect
+		var mouse_move := (_drag_lb_current - _drag_lb_segment_start) * delta * _mouse_move_rate * MOUSE_MOVE_ADJ
 		_drag_lb_segment_start = _drag_lb_current
 		move_vector.x = -mouse_move.x
 		move_vector.y = mouse_move.y
@@ -433,8 +432,8 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		z_proportion /= mouse_rotate_max_z_at_offcenter - mouse_rotate_min_z_at_offcenter
 		z_proportion = clamp(z_proportion, 0.0, 1.0)
 		var center_to_mouse := (_drag_rb_segment_start - _viewport.size / 2.0).normalized()
-		rotate_vector.z = center_to_mouse.cross(mouse_rotate) * mouse_rotate_z_effect * z_proportion
-		mouse_rotate *= mouse_rotate_xy_effect * (1.0 - z_proportion)
+		rotate_vector.z = center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate * MOUSE_ROLL_ADJ
+		mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate * MOUSE_PITCH_YAW_ADJ
 		rotate_vector.x = mouse_rotate.y
 		rotate_vector.y = mouse_rotate.x
 	# mouse wheel zooming
@@ -502,14 +501,14 @@ func _move_camera_tangentially(move_vector: Vector3) -> void:
 	var north := _get_north(selection_item, dist_sq)
 	var angle_to_pole := origin.angle_to(north)
 	var old_angle_to_pole := angle_to_pole
-	angle_to_pole -= move_vector.y * move_radially_rate
+	angle_to_pole -= move_vector.y * move_tangentially_rate
 	if angle_to_pole < MIN_ANGLE_TO_POLE:
 		angle_to_pole = MIN_ANGLE_TO_POLE
 	elif angle_to_pole > PI - MIN_ANGLE_TO_POLE:
 		angle_to_pole = PI - MIN_ANGLE_TO_POLE
 	var x_axis := north.cross(origin).normalized()
 	origin = origin.rotated(x_axis, angle_to_pole - old_angle_to_pole)
-	origin = origin.rotated(north, move_vector.x * move_radially_rate)
+	origin = origin.rotated(north, move_vector.x * move_tangentially_rate)
 	_transform.origin = origin
 
 func _rotate_camera(delta_rotations: Vector3) -> void:
@@ -601,10 +600,10 @@ func _on_unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		# mouse-wheel accumulates and is spread out so zooming isn't jumpy
 		if event.button_index == BUTTON_WHEEL_UP:
-			_mouse_wheel_accumulator -= mouse_wheel_effect
+			_mouse_wheel_accumulator -= int(_mouse_in_out_rate * MOUSE_WHEEL_ADJ)
 			is_handled = true
 		elif event.button_index == BUTTON_WHEEL_DOWN:
-			_mouse_wheel_accumulator += mouse_wheel_effect
+			_mouse_wheel_accumulator += int(_mouse_in_out_rate * MOUSE_WHEEL_ADJ)
 			is_handled = true
 		# start/stop mouse drag or process a mouse click
 		elif event.button_index == BUTTON_LEFT:
@@ -652,29 +651,29 @@ func _on_unhandled_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("recenter"):
 				move(null, -1, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_left"):
-				_move_action_pressed.x = -1.0
+				_move_action_pressed.x = -_key_move_rate
 			elif event.is_action_pressed("camera_right"):
-				_move_action_pressed.x = 1.0
+				_move_action_pressed.x = _key_move_rate
 			elif event.is_action_pressed("camera_up"):
-				_move_action_pressed.y = 1.0
+				_move_action_pressed.y = _key_move_rate
 			elif event.is_action_pressed("camera_down"):
-				_move_action_pressed.y = -1.0
+				_move_action_pressed.y = -_key_move_rate
 			elif event.is_action_pressed("camera_in"):
-				_move_action_pressed.z = -1.0
+				_move_action_pressed.z = -_key_in_out_rate
 			elif event.is_action_pressed("camera_out"):
-				_move_action_pressed.z = 1.0
+				_move_action_pressed.z = _key_in_out_rate
 			elif event.is_action_pressed("pitch_up"):
-				_rotate_action_pressed.x = key_rotate_rate
+				_rotate_action_pressed.x = _key_pitch_yaw_rate
 			elif event.is_action_pressed("pitch_down"):
-				_rotate_action_pressed.x = -key_rotate_rate
+				_rotate_action_pressed.x = -_key_pitch_yaw_rate
 			elif event.is_action_pressed("yaw_left"):
-				_rotate_action_pressed.y = key_rotate_rate
+				_rotate_action_pressed.y = _key_pitch_yaw_rate
 			elif event.is_action_pressed("yaw_right"):
-				_rotate_action_pressed.y = -key_rotate_rate
+				_rotate_action_pressed.y = -_key_pitch_yaw_rate
 			elif event.is_action_pressed("roll_left"):
-				_rotate_action_pressed.z = -key_rotate_rate
+				_rotate_action_pressed.z = -_key_roll_rate
 			elif event.is_action_pressed("roll_right"):
-				_rotate_action_pressed.z = key_rotate_rate
+				_rotate_action_pressed.z = _key_roll_rate
 			else:
 				return  # no input handled
 		else: # key release
@@ -715,3 +714,24 @@ func _send_gui_refresh() -> void:
 	emit_signal("focal_length_changed", focal_length)
 	emit_signal("camera_lock_changed", is_camera_lock)
 	emit_signal("viewpoint_changed", viewpoint)
+
+func _settings_listener(setting: String, value) -> void:
+	match setting:
+		"camera_transition_time":
+			_transition_time = value
+		"camera_mouse_in_out_rate":
+			_mouse_in_out_rate = value
+		"camera_mouse_move_rate":
+			_mouse_move_rate = value
+		"camera_mouse_pitch_yaw_rate":
+			_mouse_pitch_yaw_rate = value
+		"camera_mouse_roll_rate":
+			_mouse_roll_rate = value
+		"camera_key_in_out_rate":
+			_key_in_out_rate = value
+		"camera_key_move_rate":
+			_key_move_rate = value
+		"camera_key_pitch_yaw_rate":
+			_key_pitch_yaw_rate = value
+		"camera_key_roll_rate":
+			_key_roll_rate = value

@@ -45,7 +45,7 @@ func _on_ready():
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
 	_pbd_caption.connect("gui_input", self, "_pbd_caption_input")
 	_pbd_caption.set("custom_colors/font_color", Color.lightskyblue)
-	_pbd_caption.text = "LABEL_PBD_LONG" if _settings.pbd_splash_caption_open else "LABEL_PBD_SHORT"
+	_pbd_caption.text = "TXT_PBD_LONG" if _settings.pbd_splash_caption_open else "TXT_PBD_SHORT"
 	if Global.skip_splash_screen:
 		hide()
 
@@ -70,4 +70,4 @@ func _pbd_caption_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
 		var is_open: bool = !_settings.pbd_splash_caption_open
 		_settings_manager.change_current("pbd_splash_caption_open", is_open)
-		_pbd_caption.text = "LABEL_PBD_LONG" if is_open else "LABEL_PBD_SHORT"
+		_pbd_caption.text = "TXT_PBD_LONG" if is_open else "TXT_PBD_SHORT"

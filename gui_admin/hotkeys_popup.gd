@@ -36,45 +36,45 @@ func _on_init():
 	layout = [
 		[ # column 1; each dict is a subpanel
 			{
-				header = "Admin",
-				toggle_options = "Options",
-				toggle_hotkeys = "Hotkeys",
-				load_game = "Load File",
-				quick_load = "Quick Load",
-				save_as = "Save As",
-				quick_save = "Quick Save",
-				quit = "Quit",
-				save_quit = "Save & Quit",
+				header = "LABEL_ADMIN",
+				toggle_options = "LABEL_OPTIONS",
+				toggle_hotkeys = "LABEL_HOTKEYS",
+				load_game = "LABEL_LOAD_FILE",
+				quick_load = "LABEL_QUICK_LOAD",
+				save_as = "LABEL_SAVE_AS",
+				quick_save = "LABEL_QUICK_SAVE",
+				quit = "LABEL_QUIT",
+				save_quit = "LABEL_SAVE_AND_QUIT",
 			},
 			{
-				header = "Time",
-				incr_speed = "Speed up",
-				decr_speed = "Slow down",
-				toggle_pause_or_real_time = "Pause (or real-time)",
-				reverse_time = "Reverse time",
+				header = "LABEL_TIME",
+				incr_speed = "LABEL_SPEED_UP",
+				decr_speed = "LABEL_SLOW_DOWN",
+				toggle_pause_or_real_time = "LABEL_PAUSE_OR_REAL_TIME",
+				reverse_time = "LABEL_REVERSE_TIME",
 			},
 			{
-				header = "Show/Hide",
-				toggle_orbits = "Orbits",
-				toggle_icons = "Icons",
-				toggle_labels = "Labels",
-				toggle_full_screen = "All GUI",
+				header = "LABEL_SHOW_HIDE",
+				toggle_orbits = "LABEL_ORBITS",
+				toggle_icons = "LABEL_ICONS",
+				toggle_labels = "LABEL_LABELS",
+				toggle_full_screen = "LABEL_ALL_GUI",
 			},
 		],
 		[ # column 2
 			{
-				header = "Selection",
-				select_up = "Up",
-				select_down = "Down",
-				select_left = "Last",
-				select_right = "Next",
-				select_forward = "Select Forward",
-				select_back = "Select Back",
-				next_star = "Select Sun",
-				next_planet = "Next Planet",
-				previous_planet = "Last Planet",
-				next_moon = "Next Moon",
-				previous_moon = "Last Moon",
+				header = "LABEL_SELECTION",
+				select_up = "LABEL_UP",
+				select_down = "LABEL_DOWN",
+				select_left = "LABEL_LAST",
+				select_right = "LABEL_NEXT",
+				select_forward = "LABEL_FORWARD",
+				select_back = "LABEL_BACK",
+				next_star = "LABEL_SELECT_SUN",
+				next_planet = "LABEL_NEXT_PLANET",
+				previous_planet = "LABEL_LAST_PLANET",
+				next_moon = "LABEL_NEXT_MOON",
+				previous_moon = "LABEL_LAST_MOON",
 				# Below waiting for new code features
 #				next_system = "Select System",
 #				next_asteroid = "Next Asteroid",
@@ -85,34 +85,34 @@ func _on_init():
 #				previous_spacecraft = "Last Spacecraft",
 			},
 			{
-				header = "GUI",
-				obtain_gui_focus = "Obtain GUI focus",
-				release_gui_focus = "Release GUI focus",
+				header = "LABEL_GUI",
+				obtain_gui_focus = "LABEL_OBTAIN_GUI_FOCUS",
+				release_gui_focus = "LABEL_RELEASE_GUI_FOCUS",
 			},
 		],
 		[ # column 3
 			{
-				header = "Camera",
-				camera_zoom_view = "Go to zoom view",
-				camera_45_view = "Go to 45 view",
-				camera_top_view = "Go to top view",
-				camera_up = "Move up",
-				camera_down = "Move down",
-				camera_left = "Move left",
-				camera_right = "Move right",
-				camera_in = "Move in",
-				camera_out = "Move out",
-				recenter = "Recenter",
-				pitch_up = "Pitch up",
-				pitch_down = "Pitch down",
-				yaw_left = "Yaw left",
-				yaw_right = "Yaw right",
-				roll_left = "Roll left",
-				roll_right = "Roll right",
+				header = "LABEL_CAMERA",
+				camera_zoom_view = "LABEL_ZOOM_VIEW",
+				camera_45_view = "LABEL_45_VIEW",
+				camera_top_view = "LABEL_TOP_VIEW",
+				camera_up = "LABEL_MOVE_UP",
+				camera_down = "LABEL_MOVE_DOWN",
+				camera_left = "LABEL_MOVE_LEFT",
+				camera_right = "LABEL_MOVE_RIGHT",
+				camera_in = "LABEL_MOVE_IN",
+				camera_out = "LABEL_MOVE_OUT",
+				recenter = "LABEL_RECENTER",
+				pitch_up = "LABEL_PITCH_UP",
+				pitch_down = "LABEL_PITCH_DOWN",
+				yaw_left = "LABEL_YAW_LEFT",
+				yaw_right = "LABEL_YAW_RIGHT",
+				roll_left = "LABEL_ROLL_LEFT",
+				roll_right = "LABEL_ROLL_RIGHT",
 			},
 			{
-				header = "Developer",
-				write_debug_logs_now = "Force log print",
+				header = "LABEL_DEVELOPER",
+				write_debug_logs_now = "LABEL_FORCE_LOG_PRINT",
 			}
 		],
 	]
@@ -123,7 +123,7 @@ func project_init() -> void:
 	if !Global.allow_time_reversal:
 		remove_item("reverse_time")
 	if !Global.allow_dev_tools:
-		remove_subpanel("Developer")
+		remove_subpanel("LABEL_DEVELOPER")
 	if !Global.enable_save_load:
 		remove_item("load_game")
 		remove_item("quick_load")
@@ -135,7 +135,11 @@ func project_init() -> void:
 
 func _on_ready():
 	._on_ready()
-	_header.text = "Hotkeys"
+	_header.text = "LABEL_HOTKEYS"
+	_aux_button.show()
+	_aux_button.text = "BUTTON_OPTIONS"
+	_aux_button.connect("pressed", self, "_open_options")
+	_spacer.show()
 	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
@@ -203,35 +207,7 @@ func _on_cancel_changes() -> void:
 	_input_map_manager.restore_from_cache()
 	hide()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+func _open_options() -> void:
+	if !is_connected("popup_hide", Global, "emit_signal"):
+		connect("popup_hide", Global, "emit_signal", ["options_requested"], CONNECT_ONESHOT)
+	_on_cancel()
