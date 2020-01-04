@@ -53,10 +53,22 @@ func _input(event: InputEvent) -> void:
 		for mouse_trigger_gui in _mouse_trigger_guis:
 			var mouse_trigger: Control = mouse_trigger_gui[0]
 			var guis: Array = mouse_trigger_gui[1]
-			var is_visible := mouse_trigger.get_global_rect().has_point(mouse_pos)
+			var is_visible := _is_visible(mouse_trigger, mouse_pos)
 			if is_visible != guis[0].visible:
 				for gui in guis:
 					gui.visible = is_visible
 					gui.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
 	elif event is InputEventMouseButton:
 		_is_mouse_button_pressed = event.pressed
+
+func _is_visible(trigger: Control, pos: Vector2) -> bool:
+	var rect := trigger.get_global_rect()
+	if trigger.anchor_left != ANCHOR_BEGIN and pos.x < rect.position.x:
+		return false
+	if trigger.anchor_right != ANCHOR_END and pos.x > rect.end.x:
+		return false
+	if trigger.anchor_top != ANCHOR_BEGIN and pos.y < rect.position.y:
+		return false
+	if trigger.anchor_bottom != ANCHOR_END and pos.y > rect.end.y:
+		return false
+	return true
