@@ -31,15 +31,10 @@ var _selection_manager: SelectionManager # get from ancestor selection_manager
 func _ready():
 	_registrar = Global.objects.Registrar
 	set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	var ancestor: Node = get_parent()
-	while ancestor is Control:
-		if "selection_manager" in ancestor:
-			_selection_manager = ancestor.selection_manager
-			break
-		ancestor = ancestor.get_parent()
+	_selection_manager = GUIHelper.get_selection_manager(self)
 	assert(_selection_manager)
 	_build_navigation_tree()
 

@@ -22,7 +22,7 @@ onready var _system_navigator: HBoxContainer = $SystemNavigator
 onready var _viewport := get_viewport()
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	get_parent().register_mouse_trigger_guis($SystemNavigator, [self])
 	$SystemNavigator.horizontal_expansion = 590.0
 	hide()

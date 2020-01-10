@@ -48,7 +48,7 @@ onready var _asteroid_labels := {
 }
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	get_viewport().connect("size_changed", self, "_on_viewport_size_changed")
 	_orbits_checkbox.connect("toggled", _tree_manager, "set_show_orbits")
 	_labels_checkbox.connect("toggled", _tree_manager, "set_show_labels")

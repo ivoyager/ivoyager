@@ -19,7 +19,7 @@
 extends VBoxContainer
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	$Homepage.connect("meta_clicked", self, "_on_homepage_clicked")
 	$Help.connect("pressed", Global, "emit_signal", ["rich_text_popup_requested", "LABEL_HELP", "TXT_PLANETARIUM_HELP"])
 	$Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])

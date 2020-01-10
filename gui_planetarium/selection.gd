@@ -28,7 +28,7 @@ func _ready() -> void:
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_wiki_titles = Global.table_data.wiki_titles
-	_selection_manager = get_parent().selection_manager
+	_selection_manager = GUIHelper.get_selection_manager(self)
 
 func _on_meta_clicked(meta: String) -> void:
 	if meta == "Wikipedia":

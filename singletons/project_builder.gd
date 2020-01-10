@@ -90,6 +90,7 @@ var program_references := {
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
 	_FileHelper_ = FileHelper,
+	_GUIHelper_ = GUIHelper,
 	_StringMaker_ = StringMaker,
 	_Math_ = Math,
 }

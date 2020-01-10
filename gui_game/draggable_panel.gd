@@ -30,7 +30,6 @@ const SNAP_DIST := 100.0
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["anchor_left", "anchor_right", "anchor_top", "anchor_bottom"]
-const PERSIST_OBJ_PROPERTIES := []
 
 enum {LEFT, RIGHT, UP, DOWN}
 
@@ -80,8 +79,8 @@ func _enter_tree():
 func _on_enter_tree():
 	connect("ready", self, "_on_ready")
 	connect("gui_input", self, "_on_gui_input")
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free")
-	Global.connect("game_load_finished", self, "_reposition_to_anchor")
+	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_fit_to_viewport")
 	Global.objects.root.connect("size_changed", self, "finish_move")
 	Global.emit_signal("gui_entered_tree", self)
@@ -90,10 +89,8 @@ func _on_ready() -> void:
 	Global.call_deferred("emit_signal", "gui_ready", self)
 
 func _prepare_to_free() -> void:
-	Global.disconnect("about_to_free_procedural_nodes", self, "_prepare_to_free")
-	Global.disconnect("game_load_finished", self, "_reposition_to_anchor")
 	Global.disconnect("gui_refresh_requested", self, "_fit_to_viewport")
-	get_tree().get_root().disconnect("size_changed", self, "finish_move")
+	Global.objects.root.disconnect("size_changed", self, "finish_move")
 
 func _on_gui_input(event: InputEvent) -> void:
 	if _disable_drag or !_draggable:
@@ -108,6 +105,9 @@ func _on_gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _drag_point:
 		accept_event()
 		rect_position = get_global_mouse_position() - _drag_point
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	_reposition_to_anchor()
 
 func _reposition_to_anchor() -> void:
 	assert(DPRINT and prints(name, "_reposition_to_anchor()") or true)

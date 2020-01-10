@@ -131,7 +131,7 @@ func _init() -> void:
 	_on_init()
 
 func _on_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:

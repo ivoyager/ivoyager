@@ -189,7 +189,7 @@ func _init() -> void:
 	_on_init()
 
 func _on_init() -> void:
-	Global.connect("system_tree_ready", self, "_hook_up_if_camera_selection")
+	Global.connect("system_tree_ready", self, "_hook_up_if_camera_selection", [], CONNECT_ONESHOT)
 
 func _hook_up_if_camera_selection(_is_new_game: bool) -> void:
 	if _is_camera_selection:

@@ -38,7 +38,7 @@ func project_init():
 	connect("ready", self, "_on_ready")
 	Global.connect("open_main_menu_requested", self, "_open")
 	Global.connect("close_main_menu_requested", self, "_close")
-	Global.connect("main_inited", self, "_on_main_inited")
+	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
 	Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
 	Global.connect("simulator_exited", self, "_set_splash_screen_config")
 	theme = Global.themes.main_menu
