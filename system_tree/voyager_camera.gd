@@ -344,7 +344,7 @@ func _on_process(delta: float):
 			is_moving = false
 			is_dist_change = true
 			if spatial != _to_spatial:
-				_do_camera_handoff()
+				_do_camera_handoff() # happened at halfway unless instant move
 	if !is_moving:
 		_process_not_moving(delta, is_dist_change)
 	if CENTER_ORIGIN_SHIFTING:
@@ -397,12 +397,12 @@ func _process_moving() -> void:
 	_transform.origin = interpolated_common_translation + global_common_translation - spatial.global_transform.origin
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, ease_progress)
 
-	var distance_for_gui: float
-	if spatial == _to_spatial:
-		distance_for_gui = translation.length()
-	else:
-		distance_for_gui = (global_transform.origin - _to_spatial.global_transform.origin).length()
-	emit_signal("range_changed", distance_for_gui)
+	var dist := _transform.origin.length()
+	near = dist * NEAR_DIST_MULTIPLIER
+	far = dist * FAR_DIST_MULTIPLIER
+	if spatial != _to_spatial: # use dist to target spatial for GUI
+		dist = (global_transform.origin - _to_spatial.global_transform.origin).length()
+	emit_signal("range_changed", dist)
 
 func _do_camera_handoff() -> void:
 	spatial.remove_child(self)
