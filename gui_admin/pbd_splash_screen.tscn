@@ -29,11 +29,12 @@ text = "I, Voyager
 Charlie Whitfield"
 
 [node name="Version" type="Label" parent="."]
-visible = false
+anchor_top = 1.0
+anchor_bottom = 1.0
 margin_left = 35.0
-margin_top = 823.0
+margin_top = -77.0
 margin_right = 120.0
-margin_bottom = 837.0
+margin_bottom = -63.0
 text = "v0.0.0"
 
 [node name="PBDCaption" type="Label" parent="."]

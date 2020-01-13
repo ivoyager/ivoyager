@@ -1,7 +1,7 @@
 # global.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -149,7 +149,7 @@ var shaders := {
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.4"
+var ivoyager_version := "dev 0.0.4+"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
