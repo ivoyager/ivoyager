@@ -1,7 +1,7 @@
 # project_builder.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ var program_references := {
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
 	_FileHelper_ = FileHelper,
+	_GUIHelper_ = GUIHelper,
 	_StringMaker_ = StringMaker,
 	_Math_ = Math,
 }

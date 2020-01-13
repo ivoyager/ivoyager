@@ -1,7 +1,7 @@
-# options.gd
+# plntrm_options.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ onready var _asteroid_labels := {
 }
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	get_viewport().connect("size_changed", self, "_on_viewport_size_changed")
 	_orbits_checkbox.connect("toggled", _tree_manager, "set_show_orbits")
 	_labels_checkbox.connect("toggled", _tree_manager, "set_show_labels")

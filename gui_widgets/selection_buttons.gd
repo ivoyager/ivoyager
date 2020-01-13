@@ -1,7 +1,7 @@
 # selection_buttons.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,16 +25,10 @@ onready var _forward: Button = $Forward
 onready var _up: Button = $Up
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	var ancestor: Node = get_parent()
-	while ancestor is Control:
-		if "selection_manager" in ancestor:
-			_selection_manager = ancestor.selection_manager
-			break
-		ancestor = ancestor.get_parent()
-	assert(_selection_manager)
+	_selection_manager = GUIHelper.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_buttons")
 	_back.connect("pressed", _selection_manager, "back")
 	_forward.connect("pressed", _selection_manager, "forward")

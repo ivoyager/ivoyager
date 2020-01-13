@@ -1,7 +1,7 @@
 # selection_image.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,13 +22,10 @@ extends TextureRect
 var _selection_manager: SelectionManager
 
 func _ready() -> void:
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	var ancestor: Node = get_parent()
-	while not "selection_manager" in ancestor:
-		ancestor = ancestor.get_parent()
-	_selection_manager = ancestor.selection_manager
+	_selection_manager = GUIHelper.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_on_selection_changed()
 

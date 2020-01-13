@@ -1,7 +1,7 @@
 # selection_manager.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -189,7 +189,7 @@ func _init() -> void:
 	_on_init()
 
 func _on_init() -> void:
-	Global.connect("system_tree_ready", self, "_hook_up_if_camera_selection")
+	Global.connect("system_tree_ready", self, "_hook_up_if_camera_selection", [], CONNECT_ONESHOT)
 
 func _hook_up_if_camera_selection(_is_new_game: bool) -> void:
 	if _is_camera_selection:

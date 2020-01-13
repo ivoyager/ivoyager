@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://ivoyager/gui_planetarium/navigator.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_navigator.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
 
-[node name="Navigator" type="Control"]
+[node name="PlntrmNavigator" type="Control"]
 margin_right = 40.0
 margin_bottom = 40.0
 script = ExtResource( 1 )

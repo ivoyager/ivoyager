@@ -1,7 +1,7 @@
 # main.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -221,8 +221,8 @@ func _on_init() -> void:
 
 func project_init() -> void:
 	connect("ready", self, "_on_ready")
-	Global.connect("project_builder_finished", self, "_import_table_data")
-	Global.connect("table_data_imported", self, "_finish_init")
+	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
+	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
 	Global.connect("require_stop_requested", self, "require_stop")
 	Global.connect("allow_run_requested", self, "allow_run")
 	_tree = Global.objects.tree

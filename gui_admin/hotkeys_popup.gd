@@ -1,7 +1,7 @@
 # hotkeys_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -119,6 +119,9 @@ func _on_init():
 
 func project_init() -> void:
 	.project_init()
+	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	if main_menu:
+		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
 	if !Global.allow_time_reversal:
 		remove_item("reverse_time")

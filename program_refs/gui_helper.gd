@@ -1,7 +1,7 @@
-# time.gd
+# gui_helper.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,16 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends HBoxContainer
+extends Reference
+class_name GUIHelper
 
-func _ready():
-	$TimeControl/GameSpeed.visible = false
-	$TimeControl/Pause.visible = false
-	get_parent().register_mouse_trigger_guis(self, [$TimeControl])
+func project_init() -> void:
+	pass
+
+static func get_selection_manager(control: Control) -> SelectionManager:
+	var ancestor: Node = control.get_parent()
+	while ancestor is Control:
+		if "selection_manager" in ancestor:
+			return ancestor.selection_manager
+		ancestor = ancestor.get_parent()
+	return null

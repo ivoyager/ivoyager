@@ -1,7 +1,7 @@
 # selection_item.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ func _init() -> void:
 	_on_init()
 
 func _on_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:

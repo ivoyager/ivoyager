@@ -1,7 +1,7 @@
 # pbd_splash_screen.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Control
 class_name PBDSplashScreen
@@ -35,7 +34,7 @@ func project_init():
 	theme = Global.themes.splash_screen
 
 func _on_ready():
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished")
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("simulator_exited", self, "show")
 	_copyright = $Copyright

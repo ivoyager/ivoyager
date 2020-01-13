@@ -1,7 +1,7 @@
 # planetarium_gui.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
-# Copyright (c) 2017-2019 Charlie Whitfield
+# Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,17 +26,26 @@ var selection_manager: SelectionManager
 onready var _viewport := get_viewport()
 var _mouse_trigger_guis := []
 var _is_mouse_button_pressed := false
+var _homepage_link := RichTextLabel.new()
 
 func project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
-	Global.connect("simulator_exited", self, "_on_simulator_exited")
+	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
 
 func register_mouse_trigger_guis(mouse_trigger: Control, guis: Array) -> void:
 	_mouse_trigger_guis.append([mouse_trigger, guis])
 
 func _ready() -> void:
-	pass
-#	theme = Global.themes.web
+	_homepage_link.bbcode_enabled = true
+	_homepage_link.bbcode_text = "[url]I, Voyager[/url]"
+	_homepage_link.meta_underlined = true
+	_homepage_link.scroll_active = false
+	_homepage_link.rect_min_size = Vector2(100.0, 35.0)
+	_homepage_link.connect("meta_clicked", self, "_on_homepage_clicked")
+	var main_menu: MainMenu = Global.objects.MainMenu
+	main_menu.add_child(_homepage_link)
+	main_menu.margin_top = 7.0
+	main_menu.margin_left = 14.0
+	register_mouse_trigger_guis(main_menu, [main_menu])
 
 func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	selection_manager = _SelectionManager_.new()
@@ -72,3 +81,6 @@ func _is_visible(trigger: Control, pos: Vector2) -> bool:
 	if trigger.anchor_bottom != ANCHOR_END and pos.y > rect.end.y:
 		return false
 	return true
+
+func _on_homepage_clicked(_meta: String) -> void:
+	OS.shell_open("https://ivoyager.dev")
