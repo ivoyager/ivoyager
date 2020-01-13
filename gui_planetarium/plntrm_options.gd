@@ -1,4 +1,4 @@
-# options.gd
+# plntrm_options.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield

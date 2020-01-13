@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
+
 extends VBoxContainer
 class_name MainMenu
 const SCENE := "res://ivoyager/gui_admin/main_menu.tscn"
 
+var planetarium_mode := false
 var button_infos := [] # shouldn't need but public just in case
 
 var _state: Dictionary = Global.state
@@ -28,6 +29,7 @@ var _main: Main
 func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
 		press_object: Object, press_method: String, press_args := []) -> Button:
 	# Highest priority is top.
+	# is_splash & is_running have no effect if planetarium_mode
 	var button := Button.new()
 	button.text = text
 	button.connect("pressed", press_object, press_method, press_args)
@@ -36,18 +38,22 @@ func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
 
 func project_init():
 	connect("ready", self, "_on_ready")
-	Global.connect("open_main_menu_requested", self, "_open")
-	Global.connect("close_main_menu_requested", self, "_close")
+	if !planetarium_mode:
+		Global.connect("open_main_menu_requested", self, "_open")
+		Global.connect("close_main_menu_requested", self, "_close")
+		Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
+		Global.connect("simulator_exited", self, "_set_splash_screen_config")
+		theme = Global.themes.main_menu
 	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
-	Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
-	Global.connect("simulator_exited", self, "_set_splash_screen_config")
-	theme = Global.themes.main_menu
 	_main = Global.objects.Main
-	make_button("BUTTON_START", 1000, true, false, self, "_on_start_pressed")
-	make_button("BUTTON_EXIT", 300, false, true, _main, "exit", [false])
-	make_button("BUTTON_QUIT", 200, true, true, _main, "quit", [false])
-	make_button("BUTTON_RESUME", 100, false, true, self, "_close")
-	# GUI's init their own buttons
+	if !Global.skip_splash_screen:
+		make_button("BUTTON_START", 1000, true, false, self, "_on_start_pressed")
+		make_button("BUTTON_EXIT", 300, false, true, _main, "exit", [false])
+	if !Global.disable_quit:
+		make_button("BUTTON_QUIT", 200, true, true, _main, "quit", [false])
+	if !planetarium_mode:
+		make_button("BUTTON_RESUME", 100, false, true, self, "_close")
+	# Other admin GUI's init their own buttons
 
 func _on_ready() -> void:
 	button_infos.sort_custom(self, "_sort_button_infos")
@@ -55,7 +61,10 @@ func _on_ready() -> void:
 		var button: Button = button_info[0]
 		button.disabled = true
 		add_child(button)
-	if Global.skip_splash_screen:
+	if planetarium_mode:
+		set_process_unhandled_key_input(false)
+		show()
+	elif Global.skip_splash_screen:
 		_set_running_config(true)
 	else:
 		_set_splash_screen_config()

@@ -1,11 +1,11 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://ivoyager/gui_planetarium/selection.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_selection.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/viewpoint_buttons.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/selection_label.tscn" type="PackedScene" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=4]
 
-[node name="Selection" type="HBoxContainer"]
+[node name="PlntrmSelection" type="HBoxContainer"]
 anchor_left = 0.5
 anchor_right = 0.5
 margin_left = -207.0

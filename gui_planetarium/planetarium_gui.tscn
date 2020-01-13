@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://ivoyager/gui_planetarium/planetarium_gui.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_planetarium/menu.tscn" type="PackedScene" id=2]
-[ext_resource path="res://ivoyager/gui_planetarium/selection.tscn" type="PackedScene" id=3]
-[ext_resource path="res://ivoyager/gui_planetarium/time.tscn" type="PackedScene" id=4]
-[ext_resource path="res://ivoyager/gui_planetarium/options.tscn" type="PackedScene" id=5]
-[ext_resource path="res://ivoyager/gui_planetarium/navigator.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_selection.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_time.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_options.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_navigator.tscn" type="PackedScene" id=5]
 
 [node name="PlanetariumGUI" type="Control"]
 anchor_right = 1.0
@@ -13,11 +12,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource( 1 )
 
-[node name="Menu" parent="." instance=ExtResource( 2 )]
-margin_left = 15.0
-margin_top = 7.0
-
-[node name="Selection" parent="." instance=ExtResource( 3 )]
+[node name="PlntrmSelection" parent="." instance=ExtResource( 2 )]
 margin_left = -350.0
 margin_top = 7.0
 margin_right = 350.0
@@ -25,7 +20,7 @@ margin_bottom = 80.0
 rect_min_size = Vector2( 700, 80 )
 alignment = 1
 
-[node name="Time" parent="." instance=ExtResource( 4 )]
+[node name="PlntrmTime" parent="." instance=ExtResource( 3 )]
 anchor_left = 1.0
 anchor_right = 1.0
 margin_left = -364.0
@@ -34,7 +29,7 @@ margin_right = -14.0
 margin_bottom = 87.0
 rect_min_size = Vector2( 350, 80 )
 
-[node name="Options" parent="." instance=ExtResource( 5 )]
+[node name="PlntrmOptions" parent="." instance=ExtResource( 4 )]
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -44,7 +39,7 @@ margin_top = -406.0
 margin_right = -13.0
 margin_bottom = -106.0
 
-[node name="Navigator" parent="." instance=ExtResource( 6 )]
+[node name="PlntrmNavigator" parent="." instance=ExtResource( 5 )]
 anchor_top = 1.0
 anchor_bottom = 1.0
 margin_top = -62.0

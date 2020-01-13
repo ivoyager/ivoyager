@@ -1,10 +1,11 @@
 [gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://ivoyager/gui_planetarium/time.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_time.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=3]
 
-[node name="Time" type="HBoxContainer"]
+
+[node name="PlntrmTime" type="HBoxContainer"]
 margin_right = 286.0
 margin_bottom = 20.0
 alignment = 2

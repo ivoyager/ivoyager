@@ -1,4 +1,4 @@
-# navigator.gd
+# plntrm_time.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2019 Charlie Whitfield
@@ -16,19 +16,9 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Control
+extends HBoxContainer
 
-onready var _system_navigator: HBoxContainer = $SystemNavigator
-onready var _viewport := get_viewport()
-
-func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
-	get_parent().register_mouse_trigger_guis($SystemNavigator, [self])
-	$SystemNavigator.horizontal_expansion = 590.0
-	hide()
-
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	$SystemNavigator.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
-	$SystemNavigator.rect_position.x -= 54
-	$SystemNavigator.rect_position.y -= 20
-	show()
+func _ready():
+	$TimeControl/GameSpeed.visible = false
+	$TimeControl/Pause.visible = false
+	get_parent().register_mouse_trigger_guis(self, [$TimeControl])
