@@ -21,8 +21,9 @@ extends Control
 class_name PlanetariumGUI
 const SCENE := "res://ivoyager/gui_planetarium/planetarium_gui.tscn"
 
-onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 var selection_manager: SelectionManager
+
+onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 onready var _viewport := get_viewport()
 var _mouse_trigger_guis := []
 var _is_mouse_button_pressed := false
@@ -55,7 +56,20 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	selection_manager.select(start_selection)
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion:
+	if event.is_action_type():
+		if event.is_pressed():
+			if event.is_action_pressed("toggle_full_screen"):
+				if visible:
+					hide()
+					for mouse_trigger_gui in _mouse_trigger_guis:
+						var guis: Array = mouse_trigger_gui[1]
+						for gui in guis:
+							gui.hide()
+				else:
+					show()
+			elif event.is_action_pressed("ui_cancel"):
+				show()
+	elif event is InputEventMouseMotion:
 		if _is_mouse_button_pressed:
 			return
 		var mouse_pos := _viewport.get_mouse_position()
