@@ -219,10 +219,7 @@ func _build_unpersisted(body: Body) -> void:
 		starlight.init(starlight_data)
 		body.add_child(starlight)
 	# HUDs
-	if _settings.hide_hud_when_close:
-		body.hud_too_close = body.m_radius * body.HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
-		if body.is_star:
-			body.hud_too_close *= body.HUD_TOO_CLOSE_STAR_MULTIPLIER
+	body.set_hud_too_close(_settings.hide_hud_when_close)
 	# HUDOrbit
 	var hud_orbit: HUDOrbit
 	if body.orbit:

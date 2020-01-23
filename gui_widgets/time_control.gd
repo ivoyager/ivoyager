@@ -36,9 +36,9 @@ func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
-	_reverse.connect("toggled", self, "_set_reverse_time")
-	_real.connect("toggled", self, "_change_real_time")
-	_pause.connect("toggled", self, "_change_paused")
+	_reverse.connect("pressed", self, "_set_reverse_time")
+	_real.connect("pressed", self, "_change_real_time")
+	_pause.connect("pressed", self, "_change_paused")
 	_reverse.visible = Global.allow_time_reversal
 	_real.visible = Global.toggle_real_time_not_pause
 	_pause.visible = !Global.toggle_real_time_not_pause
@@ -64,12 +64,12 @@ func _on_speed_changed(speed_str: String) -> void:
 func _increment_speed(increment: int) -> void:
 	_timekeeper.increment_speed(increment)
 
-func _set_reverse_time(button_pressed: bool) -> void:
-	_timekeeper.set_reverse_time(button_pressed)
+func _set_reverse_time() -> void:
+	_timekeeper.set_reverse_time(_reverse.pressed)
 
-func _change_real_time(button_pressed: bool) -> void:
-	_timekeeper.set_real_time(button_pressed)
+func _change_real_time() -> void:
+	_timekeeper.set_real_time(_real.pressed)
 	
-func _change_paused(button_pressed: bool) -> void:
-	_tree.paused = button_pressed
+func _change_paused() -> void:
+	_tree.paused = _pause.pressed
 	

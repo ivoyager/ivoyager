@@ -50,15 +50,15 @@ onready var _asteroid_labels := {
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	get_viewport().connect("size_changed", self, "_on_viewport_size_changed")
-	_orbits_checkbox.connect("toggled", _tree_manager, "set_show_orbits")
-	_labels_checkbox.connect("toggled", _tree_manager, "set_show_labels")
-	_icons_checkbox.connect("toggled", _tree_manager, "set_show_icons")
+	_orbits_checkbox.connect("pressed", self, "_show_hide_orbits")
+	_labels_checkbox.connect("pressed", self, "_show_hide_labels")
+	_icons_checkbox.connect("pressed", self, "_show_hide_icons")
 	_fullscreen_button.connect("pressed", self, "_change_fullscreen")
 	_tree_manager.connect("show_orbits_changed", self, "_update_show_orbits")
 	_tree_manager.connect("show_labels_changed", self, "_update_show_labels")
 	_tree_manager.connect("show_icons_changed", self, "_update_show_icons")
 	for key in _asteroid_checkboxes:
-		_asteroid_checkboxes[key].connect("toggled", self, "_select_asteroids", [key])
+		_asteroid_checkboxes[key].connect("pressed", self, "_select_asteroids", [key])
 	_points_manager.connect("show_points_changed", self, "_update_asteroids_selected")
 	for key in _asteroid_labels:
 		var rt_label: RichTextLabel = _asteroid_labels[key]
@@ -77,6 +77,15 @@ func _on_viewport_size_changed() -> void:
 func _change_fullscreen() -> void:
 	OS.window_fullscreen = !OS.window_fullscreen
 
+func _show_hide_orbits() -> void:
+	_tree_manager.set_show_orbits(_orbits_checkbox.pressed)
+
+func _show_hide_labels() -> void:
+	_tree_manager.set_show_labels(_labels_checkbox.pressed)
+
+func _show_hide_icons() -> void:
+	_tree_manager.set_show_icons(_icons_checkbox.pressed)
+
 func _update_show_orbits(is_show: bool) -> void:
 	_orbits_checkbox.pressed = is_show
 
@@ -86,7 +95,8 @@ func _update_show_labels(is_show: bool) -> void:
 func _update_show_icons(is_show: bool) -> void:
 	_icons_checkbox.pressed = is_show
 
-func _select_asteroids(pressed: bool, group_or_category: String) -> void:
+func _select_asteroids(group_or_category: String) -> void:
+	var pressed: bool = _asteroid_checkboxes[group_or_category].pressed
 	_points_manager.show_points(group_or_category, pressed)
 
 func _update_asteroids_selected(group_or_category: String, is_show: bool) -> void:

@@ -28,10 +28,10 @@ onready var _top_button: Button = $Top
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
-	_recenter_button.connect("toggled", self, "_recenter")
-	_zoom_button.connect("toggled", self, "_change_viewpoint", [VoyagerCamera.VIEWPOINT_ZOOM])
-	_fortyfive_button.connect("toggled", self, "_change_viewpoint", [VoyagerCamera.VIEWPOINT_45])
-	_top_button.connect("toggled", self, "_change_viewpoint", [VoyagerCamera.VIEWPOINT_TOP])
+	_recenter_button.connect("pressed", self, "_recenter")
+	_zoom_button.connect("pressed", self, "_zoom")
+	_fortyfive_button.connect("pressed", self, "_fortyfive")
+	_top_button.connect("pressed", self, "_top")
 	_connect_camera(get_viewport().get_camera())
 
 func _connect_camera(camera: Camera) -> void:
@@ -51,18 +51,34 @@ func _update_viewpoint(viewpoint: int) -> void:
 	_fortyfive_button.pressed = viewpoint == VoyagerCamera.VIEWPOINT_45
 	_top_button.pressed = viewpoint == VoyagerCamera.VIEWPOINT_TOP
 
-func _recenter(button_pressed: bool) -> void:
-	if button_pressed:
+func _recenter() -> void:
+	if !_camera:
+		return
+	if _recenter_button.pressed:
 		_camera.move(null, -1, Vector3.ZERO)
 	else:
 		_recenter_button.pressed = true
 
-func _change_viewpoint(button_pressed: bool, viewpoint: int) -> void:
-	if button_pressed:
-		_camera.move(null, viewpoint, Vector3.ZERO)
-	elif viewpoint == VoyagerCamera.VIEWPOINT_ZOOM:
+func _zoom() -> void:
+	if !_camera:
+		return
+	if _zoom_button.pressed:
+		_camera.move(null, VoyagerCamera.VIEWPOINT_ZOOM, Vector3.ZERO)
+	else:
 		_zoom_button.pressed = true
-	elif viewpoint == VoyagerCamera.VIEWPOINT_45:
+
+func _fortyfive() -> void:
+	if !_camera:
+		return
+	if _fortyfive_button.pressed:
+		_camera.move(null, VoyagerCamera.VIEWPOINT_45, Vector3.ZERO)
+	else:
 		_fortyfive_button.pressed = true
-	elif viewpoint == VoyagerCamera.VIEWPOINT_TOP:
+
+func _top() -> void:
+	if !_camera:
+		return
+	if _top_button.pressed:
+		_camera.move(null, VoyagerCamera.VIEWPOINT_TOP, Vector3.ZERO)
+	else:
 		_top_button.pressed = true
