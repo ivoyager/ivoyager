@@ -79,6 +79,8 @@ size_flags_horizontal = 8
 [node name="Hotkeys" type="Button" parent="BottomVBox/BottomHBox"]
 margin_right = 64.0
 margin_bottom = 20.0
+shortcut_in_tooltip = false
+action_mode = 0
 text = "Hotkeys"
 
 [node name="MainMenu" type="Button" parent="BottomVBox/BottomHBox"]
@@ -87,4 +89,6 @@ margin_right = 151.0
 margin_bottom = 20.0
 size_flags_horizontal = 8
 size_flags_vertical = 8
+shortcut_in_tooltip = false
+action_mode = 0
 text = "Main Menu"

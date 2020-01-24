@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Camera
 class_name VoyagerCamera
@@ -410,7 +409,6 @@ func _do_camera_handoff() -> void:
 	spatial = _to_spatial
 	emit_signal("parent_changed", spatial)
 
-# warning-ignore:unused_argument
 func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var is_camera_bump := false
 	var is_rotation_change := false

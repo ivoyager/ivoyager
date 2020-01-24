@@ -10,5 +10,10 @@ margin_bottom = 27.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "Lock Camera"
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

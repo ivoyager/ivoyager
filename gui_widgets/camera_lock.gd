@@ -24,7 +24,6 @@ var _camera: Camera
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
-	connect("toggled", self, "_on_toggled")
 	_connect_camera(get_viewport().get_camera())
 
 func _connect_camera(camera: Camera) -> void:
@@ -38,9 +37,9 @@ func _disconnect_camera() -> void:
 		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
 	_camera = null
 
+func _pressed() -> void:
+	if _camera:
+		_camera.change_camera_lock(pressed)
+
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	pressed = is_locked
-	
-func _on_toggled(button_pressed: bool) -> void:
-	if _camera:
-		_camera.change_camera_lock(button_pressed)

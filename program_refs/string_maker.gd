@@ -124,8 +124,7 @@ func get_num_and_prefix_table(x: float, short: bool) -> Array:
 	x = x / pow(10, 3 * (si_index + 1))
 	return [x, prefix_table[si_index]]
 
-#warning-ignore:unused_argument
-func currency(x: float, short: bool) -> String: # 1 = 1 M$
+func currency(x: float, _short: bool) -> String: # 1 = 1 M$
 	if USE_LARGE_NAMES:
 		x *= 1e6
 		return get_num_and_prefix_string(x, true) + "$"

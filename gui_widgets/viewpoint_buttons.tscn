@@ -14,6 +14,8 @@ script = ExtResource( 1 )
 margin_right = 134.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "BUTTON_RECENTER"
 
 [node name="Zoom" type="Button" parent="."]
@@ -21,6 +23,8 @@ margin_left = 138.0
 margin_right = 252.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "BUTTON_ZOOM"
 
 [node name="FortyFive" type="Button" parent="."]
@@ -28,6 +32,8 @@ margin_left = 256.0
 margin_right = 406.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "BUTTON_45_DEGREES"
 
 [node name="Top" type="Button" parent="."]
@@ -35,4 +41,6 @@ margin_left = 410.0
 margin_right = 508.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "BUTTON_TOP"

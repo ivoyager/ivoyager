@@ -34,13 +34,15 @@ func _ready() -> void:
 	_asteroid_buttons.CE = $Centaurs
 	_asteroid_buttons.TN = $TransNeptune
 	for key in _asteroid_buttons:
-		_asteroid_buttons[key].connect("toggled", self, "_select_asteroids", [key])
-	_points_manager.connect("show_points_changed", self, "_update_asteroids_selected")
+		var button: Button = _asteroid_buttons[key]
+		button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		button.connect("pressed", self, "_on_pressed", [key, button])
+	_points_manager.connect("show_points_changed", self, "_on_show_points_changed")
 
-func _select_asteroids(pressed: bool, group_or_category: String) -> void:
-	_points_manager.show_points(group_or_category, pressed)
+func _on_pressed(group_or_category: String, button: Button) -> void:
+	_points_manager.show_points(group_or_category, button.pressed)
 
-func _update_asteroids_selected(group_or_category: String, is_show: bool) -> void:
+func _on_show_points_changed(group_or_category: String, is_show: bool) -> void:
 	_asteroid_buttons[group_or_category].pressed = is_show
 	if group_or_category == "all_asteroids":
 		return

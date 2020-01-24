@@ -47,4 +47,5 @@ func _update_focal_length(focal_length: float) -> void:
 	_fl_incr.disabled = focal_length >= focal_lengths[-1]
 
 func _increment_focal_length(increment: int) -> void:
-	_camera.increment_focal_length(increment)
+	if _camera:
+		_camera.increment_focal_length(increment)

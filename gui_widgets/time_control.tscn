@@ -10,6 +10,9 @@ margin_bottom = 27.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="GameSpeed" type="Label" parent="."]
 margin_top = 3.0
@@ -21,12 +24,16 @@ text = "hr/s"
 margin_left = 29.0
 margin_right = 46.0
 margin_bottom = 20.0
+shortcut_in_tooltip = false
+action_mode = 0
 text = "-"
 
 [node name="Plus" type="Button" parent="."]
 margin_left = 50.0
 margin_right = 70.0
 margin_bottom = 20.0
+shortcut_in_tooltip = false
+action_mode = 0
 text = "+"
 
 [node name="Reverse" type="Button" parent="."]
@@ -34,6 +41,8 @@ margin_left = 74.0
 margin_right = 94.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "<"
 
 [node name="Real" type="Button" parent="."]
@@ -41,6 +50,8 @@ margin_left = 98.0
 margin_right = 118.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "*"
 
 [node name="Pause" type="Button" parent="."]
@@ -48,4 +59,6 @@ margin_left = 122.0
 margin_right = 148.0
 margin_bottom = 20.0
 toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
 text = "||"

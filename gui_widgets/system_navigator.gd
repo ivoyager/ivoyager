@@ -41,6 +41,7 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 func _build_navigation_tree() -> void:
 	assert(DPRINT and prints("_build_navigation_tree") or true)
 	# Navigation button/images are built at simulation start (new or loaded game).
+#	_button_group = ButtonGroup.new()
 	var total_size := 0.0
 	# calculate star "slice" relative size
 	var star := _registrar.top_body
@@ -116,13 +117,15 @@ class NavButton extends Button:
 		texture_box.rect_min_size = Vector2(image_size, image_size)
 		texture_box.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(texture_box)
-		connect("mouse_entered", self, "_mouse_entered")
-		connect("mouse_exited", self, "_mouse_exited")
-		
-	func _ready():
-		_selection_manager.connect("selection_changed", self, "_update_selection")
+		connect("mouse_entered", self, "_on_mouse_entered")
+		connect("mouse_exited", self, "_on_mouse_exited")
 
-	func _toggled(_button_pressed: bool) -> void:
+	func _ready():
+		Global.connect("gui_refresh_requested", self, "_update_selection")
+		_selection_manager.connect("selection_changed", self, "_update_selection")
+		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+
+	func _pressed() -> void:
 		_selection_manager.select(_selection_item)
 
 	func _update_selection() -> void:
@@ -130,12 +133,10 @@ class NavButton extends Button:
 		pressed = is_selected
 		flat = !is_selected and !_has_mouse
 
-	func _mouse_entered() -> void:
+	func _on_mouse_entered() -> void:
 		_has_mouse = true
 		flat = false
-		
-	func _mouse_exited() -> void:
+
+	func _on_mouse_exited() -> void:
 		_has_mouse = false
 		flat = !pressed
-
-

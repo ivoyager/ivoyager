@@ -460,8 +460,7 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 				objects_array.append(object.get(property))
 			var serialized_objects_array := _get_serialized_objects_array(objects_array)
 			serialized_object.append(serialized_objects_array)
-		
-# warning-ignore:unused_argument
+
 func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
 	# The order of persist properties must be exactly the same from game save
 	# to game load. However, if a newer version (loading an older save) has

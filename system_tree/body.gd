@@ -133,6 +133,14 @@ func set_label_text(text: String) -> void:
 	if hud_label:
 		hud_label.text = text
 
+func set_hud_too_close(hide_hud_when_close: bool) -> void:
+	if hide_hud_when_close:
+		hud_too_close = m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
+		if is_star:
+			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER
+	else:
+		hud_too_close = 0.0
+
 func tree_manager_process(time: float, show_orbits: bool, show_icons: bool, show_labels: bool,
 		camera_global_translation: Vector3, camera: Camera) -> void:
 	# TODO: Need viewport size correction
@@ -230,6 +238,8 @@ func _settings_listener(setting: String, value) -> void:
 		"minor_moon_orbit_color":
 			if is_minor_moon and hud_orbit:
 				hud_orbit.change_color(value)
+		"hide_hud_when_close":
+			set_hud_too_close(value)
 
 func _update_orbit_change():
 	if tidally_locked:
