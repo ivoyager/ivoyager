@@ -70,7 +70,7 @@ func _input(event: InputEvent) -> void:
 			elif event.is_action_pressed("ui_cancel"):
 				show()
 	elif event is InputEventMouseMotion:
-		if _is_mouse_button_pressed:
+		if _is_mouse_button_pressed or !visible:
 			return
 		var mouse_pos := _viewport.get_mouse_position()
 		for mouse_trigger_gui in _mouse_trigger_guis:
