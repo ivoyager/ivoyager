@@ -15,9 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # This node constitutes many (up to 100000s of) display points as shaders that
 # maintain their own orbit.
+
 extends MeshInstance
 class_name HUDPoints
 
@@ -29,8 +29,8 @@ const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMA
 var group: AsteroidGroup
 var color: Color # read only
 
-var _timekeeper: Timekeeper = Global.objects.Timekeeper
 var _orbit_points := ShaderMaterial.new()
+var _last_update_time := -INF
 
 func init(group_: AsteroidGroup, color_: Color) -> void:
 	group = group_
@@ -41,6 +41,8 @@ func init(group_: AsteroidGroup, color_: Color) -> void:
 	else:
 		_orbit_points.shader = Global.shaders.orbit_points_lagrangian
 	material_override = _orbit_points
+	var timekeeper: Timekeeper = Global.objects.Timekeeper
+	timekeeper.connect("processed", self, "_timekeeper_process")
 
 func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
@@ -63,24 +65,16 @@ func draw_points() -> void:
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_orbit_points.set_shader_param("point_size", 3.0)
 
-func show() -> void:
-	if !_timekeeper.is_connected("processed", self, "_timekeeper_process"):
-		_timekeeper.connect("processed", self, "_timekeeper_process")
-		_timekeeper_process(_timekeeper.time, 0.0)
-	.show()
-	
-func hide() -> void:
-	if _timekeeper.is_connected("processed", self, "_timekeeper_process"):
-		_timekeeper.disconnect("processed", self, "_timekeeper_process")
-	.hide()
-
 func _init():
 	hide()
 
 func _ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 
-func _timekeeper_process(time: float, _delta: float) -> void:
+func _timekeeper_process(time: float, _sim_delta: float, _engine_delta: float) -> void:
+	if !visible or time == _last_update_time:
+		return
+	_last_update_time = time
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
@@ -94,4 +88,3 @@ func _settings_listener(setting: String, value) -> void:
 	if setting == "asteroid_point_color":
 		color = value
 		_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-		

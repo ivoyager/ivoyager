@@ -41,14 +41,17 @@ var _global_time_array: Array = Global.time_array
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
+var _timekeeper: Timekeeper
 var _registrar: Registrar
 var _math: Math
 var _camera: VoyagerCamera
 var _at_local_star_orbiter: Body
 var _to_local_star_orbiter: Body
 var _skip_local_system := {}
-var _prev_fov := 50.0
+var _camera_fov := 50.0
 var _viewport_height := 0.0
+var _time: float
+var _camera_global_translation: Vector3
 
 
 func set_show_icons(is_show: bool) -> void:
@@ -77,9 +80,11 @@ func project_init() -> void:
 	Global.connect("gui_refresh_requested", self, "_gui_refresh")
 	Global.connect("setting_changed", self, "_settings_listener")
 	_root = Global.objects.root
+	_timekeeper = Global.objects.Timekeeper
 	_registrar = Global.objects.Registrar
 	_math = Global.objects.Math
 	_root.connect("size_changed", self, "_update_icon_size")
+	_timekeeper.connect("processed", self, "_timekeeper_process")
 	_viewport_height = _root.get_visible_rect().size.y
 
 func _clear_procedural() -> void:
@@ -98,29 +103,30 @@ func _connect_camera(camera: VoyagerCamera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("processed", self, "_camera_update")
 		_camera.connect("move_started", self, "_camera_move_started")
 		_camera.connect("parent_changed", self, "_camera_parent_changed")
 		assert(DPRINT and prints("connected camera:", _camera) or true)
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("processed", self, "_camera_update")
 		_camera.disconnect("move_started", self, "_camera_move_started")
 		_camera.disconnect("parent_changed", self, "_camera_parent_changed")
 		assert(DPRINT and prints("disconnected camera:", _camera) or true)
 	_camera = null
 
-func _camera_update(camera_global_translation: Vector3, fov: float) -> void: # every frame
-	# fix icon QuadMesh if fov change
-	if _prev_fov != fov:
-		_prev_fov = fov
+func _timekeeper_process(time: float, _sim_delta: float, engine_delta: float) -> void:
+	if !_camera:
+		return
+	_time = time
+	_camera.tree_manager_process(engine_delta)
+	if _camera_fov != _camera.fov:
+		_camera_fov = _camera.fov
 		_update_icon_size()
-	var time: float = _global_time_array[0]
-	_process_body(_registrar.top_body, camera_global_translation, time)
+	_camera_global_translation = _camera.global_transform.origin
+	_process_body_recursive(_registrar.top_body)
 
-func _process_body(body: Body, camera_global_translation: Vector3, time: float) -> void:
-	# barycenter mechanic expects children processed before parent
+func _process_body_recursive(body: Body) -> void:
+	# planned barycenter mechanic will expect children processed before parent
 	if body.satellites:
 		# skip over planet or planetoid systems we are not at or going to
 		if body.is_star_orbiting and !body.is_star and body != _at_local_star_orbiter and body != _to_local_star_orbiter:
@@ -131,8 +137,8 @@ func _process_body(body: Body, camera_global_translation: Vector3, time: float) 
 		else: # recursive process call
 			_skip_local_system[body] = false
 			for satellite in body.satellites:
-				_process_body(satellite, camera_global_translation, time)
-	body.tree_manager_process(time, show_orbits, show_icons, show_labels, camera_global_translation, _camera)
+				_process_body_recursive(satellite)
+	body.tree_manager_process(_time, _camera, _camera_global_translation, show_orbits, show_icons, show_labels)
 
 func _camera_move_started(to_body: Body, _is_camera_lock: bool) -> void:
 	_to_local_star_orbiter = _get_local_star_orbiter(to_body)

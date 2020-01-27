@@ -64,6 +64,7 @@ var _day_rollover := -INF
 var _minute_rollover := -INF
 var _second_rollover := -INF
 var _date_time_regex: RegEx
+var _is_started := false
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
@@ -252,6 +253,7 @@ func _on_init() -> void:
 	show_seconds_speed = 2
 
 func _init_after_load() -> void:
+	_is_started = false
 	_global_time_array[0] = time
 	_global_time_array[1] = year
 	_global_time_array[2] = month
@@ -284,11 +286,14 @@ func _on_process(delta: float) -> void:
 			is_paused = true
 			reset()
 			signal_speed_changed()
-		return
-	if is_paused:
+		if _is_started:
+			emit_signal("processed", time, 0.0, delta)
+			return
+	elif is_paused:
 		is_paused = false
 		reset()
 		signal_speed_changed()
+	_is_started = true
 	
 	# simulator time
 	time += delta * speed_multiplier # speed_multiplier < 0 for time reversal
@@ -369,4 +374,4 @@ func _on_process(delta: float) -> void:
 		emit_signal("year_changed", year)
 	var sim_delta := time - _last_process_time
 	_last_process_time = time
-	emit_signal("processed", time, sim_delta)
+	emit_signal("processed", time, sim_delta, delta)
