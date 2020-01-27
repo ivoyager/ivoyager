@@ -48,6 +48,10 @@ var _speed_memory := -1
 var _date_str := ""
 var _hour_str := ""
 var _seconds_str := ""
+var _is_year_changed := true
+var _is_quarter_changed := true
+var _is_month_changed := true
+var _is_day_changed := true
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
@@ -60,6 +64,7 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 var _tree: SceneTree
 var _allow_time_reversal: bool = Global.allow_time_reversal
 var _h_m := [-1, -1] # only updated when clock displayed!
+var _last_yqmd := [-1, -1, -1, -1]
 var _day_rollover := -INF
 var _minute_rollover := -INF
 var _second_rollover := -INF
@@ -267,6 +272,7 @@ func _on_ready() -> void:
 	Global.connect("run_state_changed", self, "_set_run_state")
 	time = Global.start_time
 	_global_time_array[0] = time
+	_update_yqmd(time)
 	_last_process_time = time
 	is_paused = _tree.paused
 	speed_index = default_speed
@@ -293,55 +299,19 @@ func _on_process(delta: float) -> void:
 		is_paused = false
 		reset()
 		signal_speed_changed()
+	if !_is_started:
+		print("starting Timekeeper")
 	_is_started = true
-	
 	# simulator time
 	time += delta * speed_multiplier # speed_multiplier < 0 for time reversal
 	_global_time_array[0] = time
-	
 	# display & caledar
-	var update_date_display := false
-	var update_time_display := false
-	var is_year_changed := false
-	var is_quarter_changed := false
-	var is_month_changed := false
-	var is_day_changed := false
+	var update_display := false
 	if time > _day_rollover or (speed_index < 0 and time < _day_rollover - 1.0):
-		var julian_day_number := int(floor(time + 0.5)) + 2451545
-		#warning-ignore:integer_division
-		#warning-ignore:integer_division
-		var f := julian_day_number + 1401 + ((((4 * julian_day_number + 274277) / 146097) * 3) / 4) - 38
-		var e := 4 * f + 3
-		#warning-ignore:integer_division
-		var g := ((e % 1461) / 4)
-		var h := 5 * g + 2
-		#warning-ignore:integer_division
-		day = ((h % 153) / 5) + 1
-		#warning-ignore:integer_division
-		month = (((h / 153) + 2) % 12) + 1
-		#warning-ignore:integer_division
-		#warning-ignore:integer_division
-		year = (e / 1461) - 4716 + ((14 - month) / 12)
-		if y_m_d[0] != year:
-			is_year_changed = true
-			y_m_d[0] = year
-			_global_time_array[1] = year
-		if y_m_d[1] != month:
-			is_month_changed = true
-			y_m_d[1] = month
-			_global_time_array[2] = month
-		if y_m_d[2] != day:
-			is_day_changed = true
-			y_m_d[2] = day
-			_global_time_array[3] = day
-		#warning-ignore:integer_division
-		var new_quarter: int = (month - 1) / 3 + 1
-		if quarter != new_quarter:
-			is_quarter_changed = true
-			quarter = new_quarter
+		_update_yqmd(time)
 		_day_rollover = ceil(time - 0.5) + 0.5
 		_date_str = "%s-%02d-%02d" % y_m_d
-		update_date_display = true
+		update_display = true
 	var show_clock := speed_index <= show_clock_speed and speed_index >= -show_clock_speed
 	if show_clock and (time > _minute_rollover or speed_index < 0):
 		var total_minutes := time * 1440.0
@@ -349,29 +319,67 @@ func _on_process(delta: float) -> void:
 		_h_m[1] = wrapi(int(floor(total_minutes)), 0, 60) # minute
 		_minute_rollover = ceil(total_minutes) / 1440.0
 		_hour_str = " %02d:%02d" % _h_m
-		update_time_display = true
+		update_display = true
 	var show_seconds := show_clock and speed_index <= show_seconds_speed and speed_index >= -show_seconds_speed
 	if show_seconds and (time > _second_rollover or speed_index < 0):
 		var total_seconds := time * 86400.0
 		var second := wrapi(int(floor(total_seconds)), 0, 60)
 		_second_rollover = ceil(total_seconds) / 86400.0
 		_seconds_str = ":%02d" % second
-		update_time_display = true
-	if update_date_display or update_time_display:
+		update_display = true
+	if update_display:
 		var date_time_str := _date_str
 		if show_clock:
 			date_time_str += _hour_str
 			if show_seconds:
 				date_time_str += _seconds_str
 		emit_signal("display_date_time_changed", date_time_str)
-	if is_day_changed:
+	if _is_day_changed:
+		_is_day_changed = false
 		emit_signal("day_changed", day)
-	if is_month_changed:
+	if _is_month_changed:
+		_is_month_changed = false
 		emit_signal("month_changed", month)
-	if is_quarter_changed:
+	if _is_quarter_changed:
+		_is_quarter_changed = false
 		emit_signal("quarter_changed", quarter)
-	if is_year_changed:
+	if _is_year_changed:
+		_is_year_changed = false
 		emit_signal("year_changed", year)
 	var sim_delta := time - _last_process_time
 	_last_process_time = time
 	emit_signal("processed", time, sim_delta, delta)
+
+func _update_yqmd(time: float) -> void:
+	var julian_day_number := int(floor(time + 0.5)) + 2451545
+	#warning-ignore:integer_division
+	#warning-ignore:integer_division
+	var f := julian_day_number + 1401 + ((((4 * julian_day_number + 274277) / 146097) * 3) / 4) - 38
+	var e := 4 * f + 3
+	#warning-ignore:integer_division
+	var g := ((e % 1461) / 4)
+	var h := 5 * g + 2
+	#warning-ignore:integer_division
+	day = ((h % 153) / 5) + 1
+	#warning-ignore:integer_division
+	month = (((h / 153) + 2) % 12) + 1
+	#warning-ignore:integer_division
+	#warning-ignore:integer_division
+	year = (e / 1461) - 4716 + ((14 - month) / 12)
+	if y_m_d[0] != year:
+		_is_year_changed = true
+		y_m_d[0] = year
+		_global_time_array[1] = year
+	if y_m_d[1] != month:
+		_is_month_changed = true
+		y_m_d[1] = month
+		_global_time_array[2] = month
+	if y_m_d[2] != day:
+		_is_day_changed = true
+		y_m_d[2] = day
+		_global_time_array[3] = day
+	#warning-ignore:integer_division
+	var new_quarter: int = (month - 1) / 3 + 1
+	if quarter != new_quarter:
+		_is_quarter_changed = true
+		quarter = new_quarter
