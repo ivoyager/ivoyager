@@ -58,13 +58,13 @@ func increment_speed(_increment: int) -> void:
 
 func set_real_time(_is_real_time: bool) -> void:
 	pass
-		
+
 func reset() -> void:
 	pass
 
 func get_current_date_string(_separator := "-") -> String:
 	return ""
-	
+
 static func get_date_time_string(_time_: float, _date_separator_ := "-", _time_units := 6) -> String:
 	return ""
 

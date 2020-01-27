@@ -179,6 +179,7 @@ func load_game(path: String) -> void:
 	if _main_prog_bar:
 		_main_prog_bar.stop()
 	_was_paused = _settings.loaded_game_is_paused or _timekeeper.is_paused
+	print("_was_paused = ", _was_paused)
 	Global.emit_signal("system_tree_built_or_loaded", false)
 	yield(_tree, "idle_frame")
 	Global.emit_signal("system_tree_ready", false)
@@ -262,8 +263,9 @@ func _run_simulator() -> void:
 	print("run simulator")
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
-	if !_was_paused:
-		_tree.paused = false
+	_tree.paused = _was_paused
+#	if !_was_paused:
+#		_tree.paused = false
 	_timekeeper.reset()
 	assert(DPRINT and prints("signal active_threads_allowed") or true)
 	emit_signal("active_threads_allowed")

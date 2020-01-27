@@ -69,7 +69,6 @@ func _set_reverse_time() -> void:
 
 func _change_real_time() -> void:
 	_timekeeper.set_real_time(_real.pressed)
-	
+
 func _change_paused() -> void:
 	_tree.paused = _pause.pressed
-	
