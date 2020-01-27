@@ -100,11 +100,6 @@ var aux_graphic_too_far: float
 var hud_too_close := 0.0
 
 # private
-var _was_visible := false
-var _was_model_visible := false
-var _was_orbit_visible := false
-var _was_icon_visible := false
-var _was_label_visible := false
 var _aux_graphic_process := false
 var _time_array: Array = Global.time_array
 
@@ -141,8 +136,8 @@ func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	else:
 		hud_too_close = 0.0
 
-func tree_manager_process(time: float, show_orbits: bool, show_icons: bool, show_labels: bool,
-		camera_global_translation: Vector3, camera: Camera) -> void:
+func tree_manager_process(time: float, camera: Camera, camera_global_translation: Vector3,
+		show_orbits: bool, show_icons: bool, show_labels: bool) -> void:
 	# TODO: Need viewport size correction
 	var global_translation := global_transform.origin
 	var camera_dist := global_translation.distance_to(camera_global_translation)
@@ -159,56 +154,33 @@ func tree_manager_process(time: float, show_orbits: bool, show_icons: bool, show
 	if orbit:
 		translation = orbit.get_position(time)
 	if model:
-		var is_model_visible := false
-		if camera_dist < model_too_far:
-			is_model_visible = true
+		if camera_dist < model_too_far or starlight_type != -1:
 			var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
 			model.transform.basis = reference_basis.rotated(north_pole, rotation_angle)
-		elif starlight_type != -1: # show but don't rotate
-			is_model_visible = true
-		assert(DPRINT and _debug_model_print(is_model_visible) or true)
-		if _was_model_visible != is_model_visible:
-			_was_model_visible = is_model_visible
-			model.visible = is_model_visible
+			model.visible = true
+		else:
+			model.visible = false
 	if aux_graphic:
 		if _aux_graphic_process:
 			aux_graphic.body_process(time)
 		aux_graphic.visible = camera_dist < aux_graphic_too_far
-	if _was_label_visible != is_label_visible:
-		_was_label_visible = is_label_visible
+	if hud_label:
 		hud_label.visible = is_label_visible
-	var is_orbit_visible := is_hud_dist_ok and show_orbits and hud_orbit
-	if _was_orbit_visible != is_orbit_visible:
-		_was_orbit_visible = is_orbit_visible
-		hud_orbit.visible = is_orbit_visible
-	var is_icon_visible := is_hud_dist_ok and show_icons and hud_icon
-	if _was_icon_visible != is_icon_visible:
-		_was_icon_visible = is_icon_visible
-		hud_icon.visible = is_icon_visible
-	if !_was_visible:
-		_was_visible = true
-		show()
+	if hud_orbit:
+		hud_orbit.visible = show_orbits and is_hud_dist_ok
+	if hud_icon:
+		hud_icon.visible = show_icons and is_hud_dist_ok
+	visible = true
 
 func hide_visuals() -> void:
-	if _was_visible:
-		_was_visible = false
-		hide() # hides Model, HUDLabel & all further node descendants
-	if _was_orbit_visible:
-		_was_orbit_visible = false
-		hud_orbit.hide()
-	if _was_label_visible:
-		_was_label_visible = false
-		hud_label.hide()
+	visible = false # hides all tree descendants (including model)
+	if hud_orbit:
+		hud_orbit.visible = false
+	if hud_label:
+		hud_label.visible = false
 	# TODO: We could add 2D labels in our tree-structure so visibility is
 	# inherited. I think something like "set_is_top" would prevent inheriting
 	# position. (Note: visibility is NOT inherited from 3D to 2D nodes!)
-
-func _debug_model_print(new_model_visible: bool):
-	if new_model_visible != model.visible:
-		if new_model_visible:
-			print("++ SHOW MODEL ", name, " ++")
-		else:
-			print("-- HIDE MODEL ", name, " --")
 
 # *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
@@ -223,6 +195,15 @@ func _on_ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 	if orbit:
 		orbit.connect("changed", self, "_update_orbit_change")
+
+func _update_orbit_change():
+	if tidally_locked:
+		var new_north_pole := orbit.get_normal(_time_array[0])
+		if axial_tilt != 0.0:
+			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
+			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)
+		north_pole = new_north_pole
+		# TODO: Adjust reference_basis
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
@@ -240,13 +221,3 @@ func _settings_listener(setting: String, value) -> void:
 				hud_orbit.change_color(value)
 		"hide_hud_when_close":
 			set_hud_too_close(value)
-
-func _update_orbit_change():
-	if tidally_locked:
-		var new_north_pole := orbit.get_normal(_time_array[0])
-		if axial_tilt != 0.0:
-			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)
-		north_pole = new_north_pole
-		# TODO: Adjust reference_basis
-		

@@ -138,7 +138,7 @@ func _process_body_recursive(body: Body) -> void:
 			_skip_local_system[body] = false
 			for satellite in body.satellites:
 				_process_body_recursive(satellite)
-	body.tree_manager_process(_time, show_orbits, show_icons, show_labels, _camera_global_translation, _camera)
+	body.tree_manager_process(_time, _camera, _camera_global_translation, show_orbits, show_icons, show_labels)
 
 func _camera_move_started(to_body: Body, _is_camera_lock: bool) -> void:
 	_to_local_star_orbiter = _get_local_star_orbiter(to_body)
