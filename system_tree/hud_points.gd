@@ -66,7 +66,7 @@ func draw_points() -> void:
 func show() -> void:
 	if !_timekeeper.is_connected("processed", self, "_timekeeper_process"):
 		_timekeeper.connect("processed", self, "_timekeeper_process")
-		_timekeeper_process(_timekeeper.time, 0.0)
+	yield(_timekeeper, "processed")
 	.show()
 	
 func hide() -> void:
@@ -80,7 +80,9 @@ func _init():
 func _ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 
-func _timekeeper_process(time: float, _delta: float) -> void:
+func _timekeeper_process(time: float, sim_delta: float, _engine_delta: float) -> void:
+	if sim_delta == 0.0:
+		return
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]

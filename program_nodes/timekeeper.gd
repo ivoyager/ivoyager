@@ -27,7 +27,7 @@
 extends Node
 class_name Timekeeper
 
-signal processed(time, sim_delta)
+signal processed(time, sim_delta, engine_delta)
 signal display_date_time_changed(date_time_str)
 signal speed_changed(speed_str) # includes pause change
 

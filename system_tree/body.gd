@@ -106,7 +106,7 @@ var _was_orbit_visible := false
 var _was_icon_visible := false
 var _was_label_visible := false
 var _aux_graphic_process := false
-var _global_time_array: Array = Global.time_array
+var _time_array: Array = Global.time_array
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
@@ -243,7 +243,7 @@ func _settings_listener(setting: String, value) -> void:
 
 func _update_orbit_change():
 	if tidally_locked:
-		var new_north_pole := orbit.get_normal(_global_time_array[0])
+		var new_north_pole := orbit.get_normal(_time_array[0])
 		if axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
 			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)

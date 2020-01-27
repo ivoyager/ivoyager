@@ -21,7 +21,6 @@ class_name VoyagerCamera
 
 # ********************************* SIGNALS ***********************************
 
-signal processed(global_translation, fov_)
 signal move_started(to_body, is_camera_lock)
 signal parent_changed(new_body)
 signal range_changed(new_range)
@@ -276,6 +275,23 @@ func change_camera_lock(new_lock: bool) -> void:
 			if viewpoint > VIEWPOINT_TOP:
 				viewpoint = _viewpoint_memory
 
+func tree_manager_process(engine_delta: float) -> void:
+	var is_dist_change := false
+	if is_moving:
+		_move_progress += engine_delta
+		if _move_progress < _transition_time:
+			_process_moving()
+		else: # end the move
+			is_moving = false
+			is_dist_change = true
+			if spatial != _to_spatial:
+				_do_camera_handoff() # happened at halfway unless instant move
+	if !is_moving:
+		_process_not_moving(engine_delta, is_dist_change)
+	if CENTER_ORIGIN_SHIFTING:
+		_top_body.translation -= spatial.global_transform.origin
+	transform = _transform
+
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
 func _ready() -> void:
@@ -329,32 +345,6 @@ func _prepare_to_free() -> void:
 	_from_spatial = null
 	_move_spatial = null
 	_top_body = null
-
-func _process(delta: float) -> void:
-	_on_process(delta)
-
-func _on_process(delta: float):
-	var is_dist_change := false
-	if is_moving:
-		_move_progress += delta
-		if _move_progress < _transition_time:
-			_process_moving()
-		else: # end the move
-			is_moving = false
-			is_dist_change = true
-			if spatial != _to_spatial:
-				_do_camera_handoff() # happened at halfway unless instant move
-	if !is_moving:
-		_process_not_moving(delta, is_dist_change)
-	if CENTER_ORIGIN_SHIFTING:
-		_top_body.translation -= spatial.global_transform.origin
-	transform = _transform
-	
-#	var S := _math.cartesian2spherical(translation)
-#	var error := (translation - _math.spherical2cartesian(S)).length() * 1e6
-#	print(error)
-	
-	emit_signal("processed", global_transform.origin, fov)
 
 func _process_moving() -> void:
 	var ease_progress := ease(_move_progress / _transition_time, -ease_exponent)

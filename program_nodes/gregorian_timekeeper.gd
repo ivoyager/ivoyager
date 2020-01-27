@@ -284,6 +284,7 @@ func _on_process(delta: float) -> void:
 			is_paused = true
 			reset()
 			signal_speed_changed()
+		emit_signal("processed", time, 0.0, delta)
 		return
 	if is_paused:
 		is_paused = false
@@ -369,4 +370,4 @@ func _on_process(delta: float) -> void:
 		emit_signal("year_changed", year)
 	var sim_delta := time - _last_process_time
 	_last_process_time = time
-	emit_signal("processed", time, sim_delta)
+	emit_signal("processed", time, sim_delta, delta)
