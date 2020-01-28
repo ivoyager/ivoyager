@@ -99,7 +99,7 @@ var program_nodes := {
 	# ProjectBuilder instances one of each and adds as child to Global. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted.
 	_Main_ = Main,
-	_Timekeeper_ = GregorianTimekeeper, # Timekeeper ok
+	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
 	_Registrar_ = Registrar,
 	_TreeManager_ = TreeManager,
