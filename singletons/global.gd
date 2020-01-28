@@ -66,7 +66,7 @@ signal gui_refresh_requested()
 
 # shared containers - keep tight write-control!
 var state := {} # see Main; keys include is_inited, is_running, etc.
-var time_array := [] # [0] always time; GregorianTimekeeper [time, year, month, day]
+var time_array := [] # Timekeeper [time: float, year, quarter, month, day]
 var objects := {} # "small s singletons" populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node _project_init()
