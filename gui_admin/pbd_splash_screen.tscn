@@ -25,7 +25,7 @@ margin_right = 176.0
 margin_bottom = 125.0
 text = "I, Voyager
 
-(c) 2017-2019
+(c) 2017-2020
 Charlie Whitfield"
 
 [node name="Version" type="Label" parent="."]
