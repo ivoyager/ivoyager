@@ -15,35 +15,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# TODO: body_type characteristic from external data table
 
-extends MeshInstance
+extends Spatial
 class_name Model
 
 const TOO_FAR_RADIUS_MULTIPLIER := 1e3
 
-var is_spheroid: bool # if so, shape defined by m_radius & e_radius only
-var surface := SpatialMaterial.new()
+var is_ellipsoidal: bool # if so, shape defined by m_radius & e_radius only
+var mesh_instance: MeshInstance
+var surface: SpatialMaterial
 
-func init(body_type: int, file_prefix: String) -> void:
+func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0, model_scale := 1.0) -> void:
+	# m_radius & e_radius used only for ellipsoidal.
+	# model_scale used for non-ellipsoidal; default 1.0 assumes model in km.
 	var data: Dictionary = Global.table_data.body_data[body_type]
-	is_spheroid = data.spheroid
-	if is_spheroid:
-		mesh = Global.globe_mesh
+	is_ellipsoidal = data.ellipsoidal
+	if is_ellipsoidal:
+		assert(m_radius > 0.0 and e_radius > 0.0)
+		var polar_radius = 3.0 * m_radius - 2.0 * e_radius
+		mesh_instance = MeshInstance.new()
+		mesh_instance.scale = Vector3(e_radius, polar_radius, e_radius)
+		mesh_instance.mesh = Global.globe_mesh
 		var globe_wraps_dir: String = Global.asset_paths.globe_wraps_dir
 		var albedo_texture: Texture = FileHelper.find_resource(globe_wraps_dir, file_prefix + ".albedo")
 		if !albedo_texture:
 			albedo_texture = Global.assets.fallback_globe_wrap
+		surface = SpatialMaterial.new()
+		mesh_instance.set_surface_material(0, surface)
 		surface.albedo_texture = albedo_texture
-	else: # TODO: Model import
-		assert(false)
-	surface.metallic = data.metallic
-	surface.roughness = data.roughness
-	surface.rim_enabled = data.rim_enabled
-	surface.rim = data.rim
-	surface.rim_tint = data.rim_tint
-	surface.flags_unshaded = data.unshaded
-	cast_shadow = SHADOW_CASTING_SETTING_ON if data.shadow else SHADOW_CASTING_SETTING_OFF
-	set_surface_material(0, surface)
+		surface.metallic = data.metallic
+		surface.roughness = data.roughness
+		surface.rim_enabled = data.rim_enabled
+		surface.rim = data.rim
+		surface.rim_tint = data.rim_tint
+		surface.flags_unshaded = data.unshaded
+		mesh_instance.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON if data.shadow \
+				else MeshInstance.SHADOW_CASTING_SETTING_OFF
+		add_child(mesh_instance)
+	else:
+		var models_dir: String = Global.asset_paths.models_dir
+		var pkd_scn: PackedScene = FileHelper.find_resource(models_dir, file_prefix)
+		if !pkd_scn:
+			pkd_scn = Global.assets.fallback_body_model
+		var model_spatial: Spatial = pkd_scn.instance()
+		model_spatial.scale = Vector3.ONE * model_scale * Global.scale
+		add_child(model_spatial)
 	hide()
