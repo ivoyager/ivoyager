@@ -82,7 +82,7 @@ var addon := {} # available for extension "addons"
 
 # shared resources
 var icon_quad_mesh := QuadMesh.new() # shared by HUDIcons; scaled by TreeManager
-var globe_mesh := SphereMesh.new() # shared by spheroid Models
+var globe_mesh := SphereMesh.new() # shared by ellipsoidal Models
 
 # project vars - modify at project init (see ProjectBuilder)
 var project_name := "I, Voyager"
@@ -127,14 +127,15 @@ var asset_paths := {
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	models_dir = "res://ivoyager_assets/models",
 	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
-	rings_dir = "res://ivoyager_assets/planet_rings",
+	rings_dir = "res://ivoyager_assets/rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
 	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
-	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/grid_only_globe.jpg",
-	fallback_texture_2d = "res://ivoyager_assets/fallbacks/grid_only_globe.256.png",
+	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
+	fallback_texture_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
+	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb",
 	fallback_star_slice = "res://ivoyager_assets/2d_bodies/Sun_slice.256.png",
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
 	}

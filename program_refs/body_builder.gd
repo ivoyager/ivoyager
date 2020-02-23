@@ -151,8 +151,6 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 		body.rotation_period = -body.rotation_period
 	
 	# reference basis
-	var polar_radius = 3.0 * body.m_radius - 2.0 * body.e_radius
-	body.reference_basis = body.reference_basis.scaled(Vector3(body.e_radius, polar_radius, body.e_radius))
 	var tilt_axis = Vector3(0.0, 1.0, 0.0).cross(body.north_pole).normalized() # up for model graphic is its y-axis
 	var tilt_angle = Vector3(0.0, 1.0, 0.0).angle_to(body.north_pole)
 	body.reference_basis = body.reference_basis.rotated(tilt_axis, tilt_angle)
@@ -197,7 +195,7 @@ func _build_unpersisted(body: Body) -> void:
 	# model
 	if body.body_type != -1:
 		var model: Model = SaverLoader.make_object_or_scene(_Model_)
-		model.init(body_type, file_prefix)
+		model.init(body_type, file_prefix, body.m_radius, body.e_radius)
 		var too_far: float = body.m_radius * model.TOO_FAR_RADIUS_MULTIPLIER
 		body.set_model(model, too_far)
 	# rings

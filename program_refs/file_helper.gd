@@ -94,31 +94,49 @@ static func make_or_clear_dir(dir_path: String) -> void:
 
 # loading assets & data files
 
-static func find_resource(dir_path: String, file_prefix: String) -> Resource:
+static func find_resource_file(dir_path: String, file_prefix: String) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
-	# followed by dot. Returns loaded file resource if it exists. We expect to
-	# find file with .import extension (this is the *only* file in exported
+	# followed by dot. Returns resource file if it exists. We expect to
+	# find file with .import extension (this is the ONLY file in an exported
 	# project), but ".import" must be removed from end to load it.
 	file_prefix = file_prefix + "."
 	var dir := Directory.new()
 	if dir.open(dir_path) != OK:
 		print("ERROR: Could not access directory: ", dir_path)
-		return null
+		return ""
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
 	while file_name:
 		if !dir.current_is_dir():
 			if file_name.begins_with(file_prefix):
 				if file_name.get_extension() == "import":
-					return load(dir_path.plus_file(file_name).get_basename())
+					return dir_path.plus_file(file_name).get_basename()
 		file_name = dir.get_next()
+	return ""
+
+static func find_resource(dir_path: String, file_prefix: String) -> Resource:
+	var path := find_resource_file(dir_path, file_prefix)
+	if path:
+		return load(path)
 	return null
+
+static func get_scale_from_file_path(path: String) -> float:
+	# File name ending in _1_1000 is has scale value 1.0.
+	var split := path.get_basename().split("_")
+	if split.size() < 2:
+		return 1.0
+	var numerator: String = split[-2]
+	if !numerator.is_valid_integer():
+		return 1.0
+	var denominator: String = split[-1]
+	if !denominator.is_valid_integer():
+		return 1.0
+	return 1000.0 / float(denominator) * float(numerator)
 
 static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")
 	return string
-
 
 func project_init():
 	pass
