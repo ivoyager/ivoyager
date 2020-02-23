@@ -25,7 +25,7 @@ var is_ellipsoidal: bool # if so, shape defined by m_radius & e_radius only
 var mesh_instance: MeshInstance
 var surface: SpatialMaterial
 
-func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0, model_scale := 1.0) -> void:
+func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0) -> void:
 	# m_radius & e_radius used only for ellipsoidal.
 	# model_scale used for non-ellipsoidal; default 1.0 assumes model in km.
 	var data: Dictionary = Global.table_data.body_data[body_type]
@@ -54,10 +54,19 @@ func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0,
 		add_child(mesh_instance)
 	else:
 		var models_dir: String = Global.asset_paths.models_dir
-		var pkd_scn: PackedScene = FileHelper.find_resource(models_dir, file_prefix)
-		if !pkd_scn:
-			pkd_scn = Global.assets.fallback_body_model
-		var model_spatial: Spatial = pkd_scn.instance()
-		model_spatial.scale = Vector3.ONE * model_scale * Global.scale
-		add_child(model_spatial)
+		var resource_file := FileHelper.find_resource_file(models_dir, file_prefix)
+		if !resource_file:
+			resource_file = Global.asset_paths.fallback_model
+		var resource: Resource = load(resource_file)
+		var model_scale := FileHelper.get_scale_from_file_path(resource_file)
+		if resource is PackedScene:
+			var model_spatial: Spatial = resource.instance()
+			model_spatial.scale = Vector3.ONE * model_scale * Global.scale
+			add_child(model_spatial)
+		# TODO: could we save resources by importing mesh without scene?...
+#		elif resource is ArrayMesh:
+#			var model_spatial := MeshInstance.new()
+#			model_spatial.mesh = resource
+#			model_spatial.scale = Vector3.ONE * model_scale * Global.scale
+#			add_child(model_spatial)	
 	hide()
