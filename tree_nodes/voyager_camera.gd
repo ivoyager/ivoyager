@@ -68,18 +68,18 @@ var is_camera_lock := true
 
 # public - read only!
 var selection_item: SelectionItem
+var rotations := Vector3.ZERO # relative to pointing at parent, north up
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
 # private
 var _transform := Transform(Basis(), Vector3.ONE) # "working" value
-var _rotations := Vector3.ZERO # relative to pointing at parent, north up
 var _viewpoint_memory := viewpoint
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "viewpoint", "is_camera_lock", "focal_length", "focal_length_index",
-	"_transform", "_rotations", "_viewpoint_memory"]
+const PERSIST_PROPERTIES := ["name", "viewpoint", "is_camera_lock", "rotations", "focal_length",
+	"focal_length_index", "_transform", "_viewpoint_memory"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
@@ -201,7 +201,8 @@ static func convert_view_position(view_position: Vector3, north: Vector3, ref_lo
 	translation_ *= -radius
 	return translation_
 
-func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
+func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := NULL_ROTATIONS,
+		instant_move := false) -> void:
 	# Use to_selection_item = null and/or to_viewpoint = -1 if we don't want to change
 	assert(DPRINT and prints("move", to_selection_item, to_viewpoint, instant_move) or true)
 	assert(to_viewpoint != VIEWPOINT_BUMPED_UNCENTERED) # use -1 for unspecified
@@ -223,9 +224,9 @@ func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := 
 		var north := _get_north(_from_selection_item, dist_sq)
 		var orbit_anomaly := _get_orbit_anomaly(_from_selection_item, dist_sq)
 		_pre_move_view_position = get_view_position(translation, north, orbit_anomaly)
-	_from_rotations = _rotations
+	_from_rotations = rotations
 	if to_rotations != NULL_ROTATIONS:
-		_rotations = to_rotations
+		rotations = to_rotations
 	if !is_moving:
 		_move_progress = 0.0
 	else:
@@ -356,7 +357,7 @@ func _process_moving() -> void:
 	# if going from Io to Europa. Basis is interpolated more straightforwardly
 	# using transform.basis.
 	var from_transform := _get_viewpoint_transform(_from_selection_item, _from_viewpoint, _from_rotations)
-	var to_transform := _get_viewpoint_transform(selection_item, viewpoint, _rotations)
+	var to_transform := _get_viewpoint_transform(selection_item, viewpoint, rotations)
 	var global_common_translation := _move_spatial.global_transform.origin
 #	var common_north = _move_spatial.north_pole # FIXME
 	var from_common_translation := from_transform.origin \
@@ -402,7 +403,7 @@ func _do_camera_handoff() -> void:
 func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var is_camera_bump := false
 	var is_rotation_change := false
-	_transform = _get_viewpoint_transform(selection_item, viewpoint, _rotations)
+	_transform = _get_viewpoint_transform(selection_item, viewpoint, rotations)
 	var move_vector := Vector3.ZERO
 	var rotate_vector := Vector3.ZERO
 	# mouse drag movement
@@ -451,7 +452,7 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
 	if is_camera_bump and viewpoint != VIEWPOINT_BUMPED_UNCENTERED:
-		if _rotations:
+		if rotations:
 			viewpoint = VIEWPOINT_BUMPED_UNCENTERED
 			emit_signal("viewpoint_changed", viewpoint)
 		elif viewpoint != VIEWPOINT_BUMPED_CENTERED:
@@ -466,7 +467,7 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	if is_rotation_change:
 		var north := _get_north(selection_item, dist_sq)
 		_transform = _transform.looking_at(-_transform.origin, north)
-		_transform.basis *= Basis(_rotations)
+		_transform.basis *= Basis(rotations)
 
 func _move_camera_radially(radial_movement: float) -> void:
 	var origin := _transform.origin
@@ -483,7 +484,7 @@ func _move_camera_tangentially(move_vector: Vector3) -> void:
 	# We're only interested in tangental compenents (x & y) but we need a
 	# Vector3 for 3D rotations.
 	move_vector.z = 0.0
-	move_vector = Basis(_rotations) * move_vector # any resulting z is ignored
+	move_vector = Basis(rotations) * move_vector # any resulting z is ignored
 	var origin := _transform.origin
 	var dist_sq := origin.length_squared()
 	var north := _get_north(selection_item, dist_sq)
@@ -500,11 +501,11 @@ func _move_camera_tangentially(move_vector: Vector3) -> void:
 	_transform.origin = origin
 
 func _rotate_camera(delta_rotations: Vector3) -> void:
-	var basis := Basis(_rotations)
+	var basis := Basis(rotations)
 	basis = basis.rotated(basis.x, delta_rotations.x)
 	basis = basis.rotated(basis.y, delta_rotations.y)
 	basis = basis.rotated(basis.z, delta_rotations.z)
-	_rotations = basis.get_euler()
+	rotations = basis.get_euler()
 
 func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, rotations_: Vector3, view_position := Vector3.ZERO) -> Transform:
 	if !view_position:

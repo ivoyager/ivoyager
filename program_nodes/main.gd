@@ -108,6 +108,7 @@ func exit(exit_now: bool) -> void:
 		return
 	require_stop(self)
 	yield(self, "threads_finished")
+	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
@@ -201,6 +202,7 @@ func quit(quit_now: bool) -> void:
 		return
 	require_stop(self)
 	yield(self, "threads_finished")
+	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
