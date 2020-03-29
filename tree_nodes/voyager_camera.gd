@@ -30,13 +30,11 @@ signal view_type_changed(view_type)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-enum {
-	VIEW_TYPE_ZOOM,
-	VIEW_TYPE_45,
-	VIEW_TYPE_TOP,
-	VIEW_TYPE_CENTERED,
-	VIEW_TYPE_UNCENTERED
-}
+const VIEW_TYPE_ZOOM = Enums.VIEW_TYPE_ZOOM
+const VIEW_TYPE_45 = Enums.VIEW_TYPE_45
+const VIEW_TYPE_TOP = Enums.VIEW_TYPE_TOP
+const VIEW_TYPE_CENTERED = Enums.VIEW_TYPE_CENTERED
+const VIEW_TYPE_UNCENTERED = Enums.VIEW_TYPE_UNCENTERED
 
 enum {
 	LONGITUDE_REMAP_INIT,
@@ -215,15 +213,16 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 	_from_view_type = view_type
 	_from_spherical_position = spherical_position
 	_from_camera_rotation = camera_rotation
-	if to_selection_item and to_selection_item.parent:
+	if to_selection_item and to_selection_item.spatial:
 		selection_item = to_selection_item
-		_to_spatial = to_selection_item.parent
+		_to_spatial = to_selection_item.spatial
 		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if to_view_type != -1:
 		view_type = to_view_type
 	match view_type:
 		VIEW_TYPE_ZOOM, VIEW_TYPE_45, VIEW_TYPE_TOP:
-			spherical_position = _get_spherical_position(selection_item, view_type)
+			spherical_position = selection_item.camera_spherical_positions[view_type]
+			spherical_position[2] /= fov
 			camera_rotation = Vector3.ZERO
 		VIEW_TYPE_CENTERED:
 			if to_spherical_position != Vector3.ZERO:
@@ -236,26 +235,10 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 				camera_rotation = to_rotations
 		_:
 			assert(false)
-	
-	
-#	if to_view_type != -1:
-#		to_rotations = Vector3.ZERO
-#	elif to_rotations == Vector3.ZERO and view_type == VIEW_TYPE_UNCENTERED:
-#		to_view_type = VIEW_TYPE_CENTERED
-#	if to_selection_item and to_selection_item.parent:
-#		selection_item = to_selection_item
-#		_to_spatial = to_selection_item.parent
-#		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
-#	if to_view_type != -1:
-#		view_type = to_view_type
-#	if view_type > VIEW_TYPE_TOP or _from_view_type > VIEW_TYPE_TOP:
-#		var dist_sq := translation.length_squared()
-#		var north := _get_north(_from_selection_item, dist_sq)
-#		var orbit_anomaly := _get_orbit_anomaly(_from_selection_item, dist_sq)
-#		_from_spherical_position = get_spherical_position(translation, north, orbit_anomaly)
-#	_from_camera_rotation = camera_rotation
-#	if to_rotations != NULL_ROTATIONS:
-#		camera_rotation = to_rotations
+	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
+	if spherical_position.z < min_dist:
+		spherical_position.z = min_dist
+
 	if is_instant_move:
 		_move_progress = _transition_time # finishes move on next frame
 	elif !is_moving:
@@ -546,8 +529,6 @@ func _rotate_camera(delta_rotations: Vector3) -> void:
 
 func _get_transform(selection_item_: SelectionItem, view_type_: int, spherical_position_: Vector3,
 		camera_rotation_: Vector3) -> Transform:
-#	if !spherical_position_:
-#		spherical_position_ = _get_spherical_position(selection_item_, view_type_)
 	var dist := spherical_position_.z
 	var dist_sq := dist * dist
 	var north := _get_north(selection_item_, dist_sq)
@@ -564,29 +545,6 @@ func _get_transform(selection_item_: SelectionItem, view_type_: int, spherical_p
 	var view_type_transform := Transform(Basis(), view_type_translation).looking_at(-view_type_translation, north)
 	view_type_transform.basis *= Basis(camera_rotation_)
 	return view_type_transform
-
-func _get_spherical_position(selection_item_: SelectionItem, view_type_: int) -> Vector3:
-	# Longitude & latitude offsets are NOT calculated for bumped/not moving!
-	var spherical_position_: Vector3
-	match view_type_:
-		VIEW_TYPE_ZOOM:
-			spherical_position_ = selection_item_.spherical_position_zoom
-			spherical_position_.z /= fov
-		VIEW_TYPE_45:
-			spherical_position_ = selection_item_.spherical_position_45
-			spherical_position_.z /= fov
-		VIEW_TYPE_TOP:
-			spherical_position_ = selection_item_.spherical_position_top
-			spherical_position_.z /= fov
-		_:
-			if is_moving:
-				spherical_position_ = _from_spherical_position
-			else:
-				spherical_position_ = Vector3(0.0, 0.0, translation.length())
-	var min_dist := selection_item_.view_min_distance * sqrt(50.0 / fov)
-	if spherical_position_.z < min_dist:
-		spherical_position_.z = min_dist
-	return spherical_position_
 
 func _get_orbit_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
 	if dist_sq < _follow_orbit_dist_sq:
