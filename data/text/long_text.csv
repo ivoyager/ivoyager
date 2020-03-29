@@ -17,7 +17,7 @@ Settings - Move mouse to lower right[/indent]
 \n[b]Hotkeys (a few to get started)[/b]
 [indent]Shift-arrows, P, Shift-P, M, Shift-M - Change target body selection.
 Arrows, Page Up, Page down - Move the camera.
-Home, Delete, End - Change the viewpoint.
+Home, Delete, End - Change the camera view position.
 +, -, Backspace (or use [, ], \ on web browser) - Change speed or reverse time.
 Cntr-H - See or modify all hotkeys.[/indent]
 \n[b]Asteroids[/b]

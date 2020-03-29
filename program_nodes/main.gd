@@ -227,8 +227,8 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
 	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
-	Global.connect("require_stop_requested", self, "require_stop")
-	Global.connect("allow_run_requested", self, "allow_run")
+	Global.connect("sim_stop_required", self, "require_stop")
+	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.objects.tree
 	_gui_top = Global.objects.GUITop
 	_table_reader = Global.objects.TableReader

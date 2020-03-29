@@ -21,4 +21,4 @@ class_name SelectionPanel
 const SCENE := "res://ivoyager/gui_game/selection_panel.tscn"
 
 func _ready():
-	$ImageBox/ViewpointButtons/Recenter.hide()
+	$ImageBox/ViewButtons/Recenter.hide()

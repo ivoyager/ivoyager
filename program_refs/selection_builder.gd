@@ -90,9 +90,9 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	
 	var view_dist_top := 400.0 * body.system_radius * system_radius_multiplier_top
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
-	selection_item.view_position_zoom = Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom)
-	selection_item.view_position_top = Vector3(x_offset_top, y_offset_top, view_dist_top)
-	selection_item.view_position_45 = Vector3(x_offset_45, y_offset_45, view_dist_45)
+	selection_item.spherical_position_zoom = Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom)
+	selection_item.spherical_position_top = Vector3(x_offset_top, y_offset_top, view_dist_top)
+	selection_item.spherical_position_45 = Vector3(x_offset_45, y_offset_45, view_dist_45)
 
 func _get_selection_type_from_body(body: Body) -> int:
 	if body.is_star:

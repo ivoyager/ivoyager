@@ -24,7 +24,7 @@
 
 extends Node
 
-# simulator state (broadcasts from Main)
+# sim state broadcasts (from ProjectBuilder & Main)
 signal project_builder_finished()
 signal table_data_imported()
 signal main_inited()
@@ -41,20 +41,23 @@ signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
 
-# object broadcasts
+# other object broadcasts
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)
 signal gui_ready(control)
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
-signal require_stop_requested(object)
-signal allow_run_requested(object)
 signal about_to_add_environment(environment, is_world_env)
 
+# sim state external control
+signal sim_stop_required(who) # see Main for external thread coordination
+signal sim_run_allowed(who)
+
 # camera/UI requests
-signal move_camera_to_selection_requested(selection_item, viewpoint, view_position, rotations,
-		instant_move)
-signal move_camera_to_body_requested(body, viewpoint, view_position, rotations, instant_move)
+signal move_camera_to_selection_requested(selection_item, view_type, spherical_position,
+		camera_rotation, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_to_body_requested(body, view_type, spherical_position, camera_rotation,
+		is_instant_move) # 1st arg can be null; all others optional
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)

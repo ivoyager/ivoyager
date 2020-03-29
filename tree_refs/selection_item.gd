@@ -61,9 +61,9 @@ var n_comets := -1
 # camera
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
-var view_position_zoom: Vector3
-var view_position_45: Vector3
-var view_position_top: Vector3
+var spherical_position_zoom: Vector3
+var spherical_position_45: Vector3
+var spherical_position_top: Vector3
 
 var spatial: Spatial # for camera parenting
 var body: Body # = spatial if is_body else null
@@ -72,7 +72,7 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "selection_type", "classification",
 	"is_body", "up_selection_name", "non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
-	"view_position_zoom", "view_position_45", "view_position_top"]
+	"spherical_position_zoom", "spherical_position_45", "spherical_position_top"]
 const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 
 # read-only

@@ -24,7 +24,7 @@ var _wiki_titles: Dictionary
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	$Links.connect("meta_clicked", self, "_on_meta_clicked")
-	get_parent().register_mouse_trigger_guis(self, [$ViewpointButtons, $Links])
+	get_parent().register_mouse_trigger_guis(self, [$ViewButtons, $Links])
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_wiki_titles = Global.table_data.wiki_titles
