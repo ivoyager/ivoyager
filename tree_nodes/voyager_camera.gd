@@ -62,12 +62,13 @@ const NULL_ROTATIONS := Vector3(-INF, -INF, -INF)
 
 # ******************************* PERSISTED ***********************************
 
-# public - project init vars
-var viewpoint := VIEWPOINT_ZOOM
+# public - read only except project init
 var is_camera_lock := true
 
 # public - read only!
 var selection_item: SelectionItem
+var viewpoint := VIEWPOINT_ZOOM
+var view_position := Vector3.ZERO # longitude, latitude, radius
 var rotations := Vector3.ZERO # relative to pointing at parent, north up
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
@@ -78,8 +79,8 @@ var _viewpoint_memory := viewpoint
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "viewpoint", "is_camera_lock", "rotations", "focal_length",
-	"focal_length_index", "_transform", "_viewpoint_memory"]
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "viewpoint", "view_position",
+	"rotations", "focal_length", "focal_length_index", "_transform", "_viewpoint_memory"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
@@ -129,8 +130,8 @@ var _move_spatial: Spatial
 var _move_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
 var _from_viewpoint := VIEWPOINT_ZOOM
-var _from_rotations := Vector3.ZERO
 var _pre_move_view_position := Vector3.ONE
+var _from_rotations := Vector3.ZERO
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 
@@ -153,7 +154,7 @@ onready var _key_roll_rate: float = _settings.camera_key_roll_rate
 static func get_view_position(translation_: Vector3, north: Vector3, ref_longitude: float) -> Vector3:
 	# FIXME: This should be way simpler than the way I did it here!
 	#
-	# "view_position" is a standardized Vector3 where:
+	# "view_position_" is a standardized Vector3 where:
 	#    x is longitude angle relative to ref_longitude
 	#    y is latitude angle
 	#    z is radius distance
@@ -179,14 +180,14 @@ static func get_view_position(translation_: Vector3, north: Vector3, ref_longitu
 	longitude = wrapf(longitude + PI / 2.0 - ref_longitude, -PI, PI)
 	return Vector3(longitude, latitude, radius)
 
-static func convert_view_position(view_position: Vector3, north: Vector3, ref_longitude: float) -> Vector3:
+static func convert_view_position(view_position_: Vector3, north: Vector3, ref_longitude: float) -> Vector3:
 	# inverse of above function
 	# FIXME: This should be way simpler than the way I did it here!
 	if ref_longitude == -INF:
 		ref_longitude = 0.0
-	var longitude := view_position[0]
-	var latitude := view_position[1]
-	var radius := view_position[2]
+	var longitude := view_position_[0]
+	var latitude := view_position_[1]
+	var radius := view_position_[2]
 	
 	# TODO: Use spherical coordinate conversions
 #	var spherical := Vector3(radius, PI / 2.0 - latitude, longitude - ref_longitude)
@@ -201,11 +202,25 @@ static func convert_view_position(view_position: Vector3, north: Vector3, ref_lo
 	translation_ *= -radius
 	return translation_
 
-func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := NULL_ROTATIONS,
-		instant_move := false) -> void:
-	# Use to_selection_item = null and/or to_viewpoint = -1 if we don't want to change
-	assert(DPRINT and prints("move", to_selection_item, to_viewpoint, instant_move) or true)
-	assert(to_viewpoint != VIEWPOINT_BUMPED_UNCENTERED) # use -1 for unspecified
+func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_view_position := Vector3.ZERO,
+		to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
+	# Null or null-equivilant args tell the camera to keep its current value.
+	assert(DPRINT and prints("move", to_selection_item, to_viewpoint, to_view_position,
+			to_rotations, instant_move) or true)
+	# Most viewpoint values override view_position & rotations.
+	match to_viewpoint:
+		VIEWPOINT_ZOOM, VIEWPOINT_45, VIEWPOINT_TOP:
+			to_rotations = Vector3.ZERO
+		VIEWPOINT_BUMPED_CENTERED:
+			to_rotations = Vector3.ZERO
+		VIEWPOINT_BUMPED_UNCENTERED:
+			pass
+		-1:
+			pass
+		_:
+			assert(false)
+	
+	
 	if to_viewpoint != -1:
 		to_rotations = Vector3.ZERO
 	elif to_rotations == Vector3.ZERO and viewpoint == VIEWPOINT_BUMPED_UNCENTERED:
@@ -242,10 +257,11 @@ func move(to_selection_item: SelectionItem, to_viewpoint := -1, to_rotations := 
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("viewpoint_changed", viewpoint)
 
-func move_to_body(to_body: Body, to_viewpoint := -1, to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
+func move_to_body(to_body: Body, to_viewpoint := -1, to_view_position := Vector3.ZERO,
+		to_rotations := NULL_ROTATIONS, instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_viewpoint, instant_move) or true)
 	var to_selection_item := _registrar.get_selection_for_body(to_body)
-	move(to_selection_item, to_viewpoint, to_rotations, instant_move)
+	move(to_selection_item, to_viewpoint, to_view_position, to_rotations, instant_move)
 
 func increment_focal_length(increment: int) -> void:
 	var new_fl_index = focal_length_index + increment
@@ -265,7 +281,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
 	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, NULL_ROTATIONS, true)
+		move(null, -1, Vector3.ZERO, NULL_ROTATIONS, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -333,7 +349,7 @@ func _set_run_state(is_running: bool) -> void:
 	set_process_unhandled_input(is_running)
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, NULL_ROTATIONS, true)
+	move(null, -1, Vector3.ZERO, NULL_ROTATIONS, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("run_state_changed", self, "_set_run_state")
@@ -352,7 +368,7 @@ func _process_moving() -> void:
 	# Hand-off at halfway point avoids imprecision shakes at either end
 	if spatial != _to_spatial and ease_progress > 0.5:
 		_do_camera_handoff()
-	# We interpolate position using our "view_position" coordinates for the
+	# We interpolate position using our "view_position_" coordinates for the
 	# common spatial of the move. E.g., we move around Jupiter (not through it
 	# if going from Io to Europa. Basis is interpolated more straightforwardly
 	# using transform.basis.
@@ -507,10 +523,11 @@ func _rotate_camera(delta_rotations: Vector3) -> void:
 	basis = basis.rotated(basis.z, delta_rotations.z)
 	rotations = basis.get_euler()
 
-func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, rotations_: Vector3, view_position := Vector3.ZERO) -> Transform:
-	if !view_position:
-		view_position = _get_viewpoint_view_position(selection_item_, viewpoint_)
-	var dist := view_position.z
+func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, rotations_: Vector3,
+		view_position_ := Vector3.ZERO) -> Transform:
+	if !view_position_:
+		view_position_ = _get_viewpoint_view_position(selection_item_, viewpoint_)
+	var dist := view_position_.z
 	var dist_sq := dist * dist
 	var north := _get_north(selection_item_, dist_sq)
 	var orbit_anomaly := _get_orbit_anomaly(selection_item_, dist_sq)
@@ -521,7 +538,7 @@ func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, r
 			delta_anomaly = orbit_anomaly - _last_anomaly
 		viewpoint_translation = _transform.origin.rotated(north, delta_anomaly)
 	else:
-		viewpoint_translation = convert_view_position(view_position, north, orbit_anomaly)
+		viewpoint_translation = convert_view_position(view_position_, north, orbit_anomaly)
 	_last_anomaly = orbit_anomaly
 	var viewpoint_transform := Transform(Basis(), viewpoint_translation).looking_at(-viewpoint_translation, north)
 	viewpoint_transform.basis *= Basis(rotations_)
@@ -529,26 +546,26 @@ func _get_viewpoint_transform(selection_item_: SelectionItem, viewpoint_: int, r
 
 func _get_viewpoint_view_position(selection_item_: SelectionItem, viewpoint_: int) -> Vector3:
 	# Longitude & latitude offsets are NOT calculated for bumped/not moving!
-	var view_position: Vector3
+	var view_position_: Vector3
 	match viewpoint_:
 		VIEWPOINT_ZOOM:
-			view_position = selection_item_.view_position_zoom
-			view_position.z /= fov
+			view_position_ = selection_item_.view_position_zoom
+			view_position_.z /= fov
 		VIEWPOINT_45:
-			view_position = selection_item_.view_position_45
-			view_position.z /= fov
+			view_position_ = selection_item_.view_position_45
+			view_position_.z /= fov
 		VIEWPOINT_TOP:
-			view_position = selection_item_.view_position_top
-			view_position.z /= fov
+			view_position_ = selection_item_.view_position_top
+			view_position_.z /= fov
 		_:
 			if is_moving:
-				view_position = _pre_move_view_position
+				view_position_ = _pre_move_view_position
 			else:
-				view_position = Vector3(0.0, 0.0, translation.length())
+				view_position_ = Vector3(0.0, 0.0, translation.length())
 	var min_dist := selection_item_.view_min_distance * sqrt(50.0 / fov)
-	if view_position.z < min_dist:
-		view_position.z = min_dist
-	return view_position
+	if view_position_.z < min_dist:
+		view_position_.z = min_dist
+	return view_position_
 
 func _get_orbit_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
 	if dist_sq < _follow_orbit_dist_sq:
@@ -632,13 +649,13 @@ func _on_unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
-				move(null, VIEWPOINT_ZOOM, Vector3.ZERO, false)
+				move(null, VIEWPOINT_ZOOM, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_45_view"):
-				move(null, VIEWPOINT_45, Vector3.ZERO, false)
+				move(null, VIEWPOINT_45, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_top_view"):
-				move(null, VIEWPOINT_TOP, Vector3.ZERO, false)
+				move(null, VIEWPOINT_TOP, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("recenter"):
-				move(null, -1, Vector3.ZERO, false)
+				move(null, -1, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_left"):
 				_move_action_pressed.x = -_key_move_rate
 			elif event.is_action_pressed("camera_right"):

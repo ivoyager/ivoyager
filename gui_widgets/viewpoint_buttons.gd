@@ -55,7 +55,7 @@ func _recenter() -> void:
 	if !_camera:
 		return
 	if _recenter_button.pressed:
-		_camera.move(null, -1, Vector3.ZERO)
+		_camera.move(null, -1, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_recenter_button.pressed = true
 
@@ -63,7 +63,7 @@ func _zoom() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_ZOOM, Vector3.ZERO)
+		_camera.move(null, VoyagerCamera.VIEWPOINT_ZOOM, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_zoom_button.pressed = true
 
@@ -71,7 +71,7 @@ func _fortyfive() -> void:
 	if !_camera:
 		return
 	if _fortyfive_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_45, Vector3.ZERO)
+		_camera.move(null, VoyagerCamera.VIEWPOINT_45, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_fortyfive_button.pressed = true
 
@@ -79,6 +79,6 @@ func _top() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_TOP, Vector3.ZERO)
+		_camera.move(null, VoyagerCamera.VIEWPOINT_TOP, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_top_button.pressed = true
