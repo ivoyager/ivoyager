@@ -56,7 +56,7 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
 const NULL_DRAG := Vector2.ZERO
-const NULL_ROTATIONS := Vector3(-INF, -INF, -INF)
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 # ******************************* PERSISTED ***********************************
 
@@ -203,7 +203,7 @@ static func convert_spherical_position(spherical_position_: Vector3, north: Vect
 	return translation_
 
 func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_position := Vector3.ZERO,
-		to_rotations := NULL_ROTATIONS, is_instant_move := false) -> void:
+		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override spherical_position & camera_rotation.
 	assert(DPRINT and prints("move", to_selection_item, to_view_type, to_spherical_position,
@@ -231,7 +231,7 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 		VIEW_UNCENTERED:
 			if to_spherical_position != Vector3.ZERO:
 				spherical_position = to_spherical_position
-			if to_rotations != NULL_ROTATIONS:
+			if to_rotations != NULL_ROTATION:
 				camera_rotation = to_rotations
 		_:
 			assert(false)
@@ -255,7 +255,7 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 	emit_signal("view_type_changed", view_type)
 
 func move_to_body(to_body: Body, to_view_type := -1, to_spherical_position := Vector3.ZERO,
-		to_rotations := NULL_ROTATIONS, is_instant_move := false) -> void:
+		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, is_instant_move) or true)
 	var to_selection_item := _registrar.get_selection_for_body(to_body)
 	move(to_selection_item, to_view_type, to_spherical_position, to_rotations, is_instant_move)
@@ -278,7 +278,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
 	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, Vector3.ZERO, NULL_ROTATIONS, true)
+		move(null, -1, Vector3.ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -346,7 +346,7 @@ func _set_run_state(is_running: bool) -> void:
 	set_process_unhandled_input(is_running)
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, Vector3.ZERO, NULL_ROTATIONS, true)
+	move(null, -1, Vector3.ZERO, NULL_ROTATION, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("run_state_changed", self, "_set_run_state")
