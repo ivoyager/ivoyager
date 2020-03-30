@@ -35,7 +35,6 @@ var system_radius_multiplier_top := 1.5
 
 # dependencies
 var _scale: float = Global.scale
-var _enums: Dictionary = Global.enums
 var _registrar: Registrar
 var _SelectionItem_: Script
 
@@ -89,20 +88,20 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	var view_dist_top := 400.0 * body.system_radius * system_radius_multiplier_top
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
 	selection_item.camera_spherical_positions = [ # camera will divide dist by fov
-		Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom), # VIEW_TYPE_ZOOM
-		Vector3(x_offset_45, y_offset_45, view_dist_45), # VIEW_TYPE_45
-		Vector3(x_offset_top, y_offset_top, view_dist_top) # VIEW_TYPE_TOP
+		Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom), # VIEW_ZOOM
+		Vector3(x_offset_45, y_offset_45, view_dist_45), # VIEW_45
+		Vector3(x_offset_top, y_offset_top, view_dist_top) # VIEW_TOP
 	]
 
 func _get_selection_type_from_body(body: Body) -> int:
 	if body.is_star:
-		return _enums.SELECTION_STAR
+		return Enums.SELECTION_STAR
 	if body.is_dwarf_planet:
-		return _enums.SELECTION_DWARF_PLANET
+		return Enums.SELECTION_DWARF_PLANET
 	if body.is_planet:
-		return _enums.SELECTION_PLANET
+		return Enums.SELECTION_PLANET
 	if body.is_moon:
-		return _enums.SELECTION_MOON
+		return Enums.SELECTION_MOON
 	return -1
 
 func _get_classification_from_body(body: Body) -> String:

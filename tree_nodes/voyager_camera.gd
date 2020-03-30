@@ -30,11 +30,11 @@ signal view_type_changed(view_type)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-const VIEW_TYPE_ZOOM = Enums.VIEW_TYPE_ZOOM
-const VIEW_TYPE_45 = Enums.VIEW_TYPE_45
-const VIEW_TYPE_TOP = Enums.VIEW_TYPE_TOP
-const VIEW_TYPE_CENTERED = Enums.VIEW_TYPE_CENTERED
-const VIEW_TYPE_UNCENTERED = Enums.VIEW_TYPE_UNCENTERED
+const VIEW_ZOOM = Enums.VIEW_ZOOM
+const VIEW_45 = Enums.VIEW_45
+const VIEW_TOP = Enums.VIEW_TOP
+const VIEW_CENTERED = Enums.VIEW_CENTERED
+const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
 
 enum {
 	LONGITUDE_REMAP_INIT,
@@ -65,7 +65,7 @@ var is_camera_lock := true
 
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
-var view_type := VIEW_TYPE_ZOOM
+var view_type := VIEW_ZOOM
 var spherical_position := Vector3.ZERO # longitude, latitude, radius
 var camera_rotation := Vector3.ZERO # relative to pointing at parent, north up
 var focal_length: float
@@ -127,7 +127,7 @@ var _from_spatial: Spatial
 var _move_spatial: Spatial
 var _move_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
-var _from_view_type := VIEW_TYPE_ZOOM
+var _from_view_type := VIEW_ZOOM
 var _from_spherical_position := Vector3.ONE
 var _from_camera_rotation := Vector3.ZERO
 var _last_anomaly := -INF # -INF is used as null value
@@ -220,15 +220,15 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 	if to_view_type != -1:
 		view_type = to_view_type
 	match view_type:
-		VIEW_TYPE_ZOOM, VIEW_TYPE_45, VIEW_TYPE_TOP:
+		VIEW_ZOOM, VIEW_45, VIEW_TOP:
 			spherical_position = selection_item.camera_spherical_positions[view_type]
 			spherical_position[2] /= fov
 			camera_rotation = Vector3.ZERO
-		VIEW_TYPE_CENTERED:
+		VIEW_CENTERED:
 			if to_spherical_position != Vector3.ZERO:
 				spherical_position = to_spherical_position
 			camera_rotation = Vector3.ZERO
-		VIEW_TYPE_UNCENTERED:
+		VIEW_UNCENTERED:
 			if to_spherical_position != Vector3.ZERO:
 				spherical_position = to_spherical_position
 			if to_rotations != NULL_ROTATIONS:
@@ -286,7 +286,7 @@ func change_camera_lock(new_lock: bool) -> void:
 		is_camera_lock = new_lock
 		emit_signal("camera_lock_changed", new_lock)
 		if new_lock:
-			if view_type > VIEW_TYPE_TOP:
+			if view_type > VIEW_TOP:
 				view_type = _view_type_memory
 
 func tree_manager_process(engine_delta: float) -> void:
@@ -468,12 +468,12 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		is_camera_bump = true
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
-	if is_camera_bump and view_type != VIEW_TYPE_UNCENTERED:
+	if is_camera_bump and view_type != VIEW_UNCENTERED:
 		if camera_rotation:
-			view_type = VIEW_TYPE_UNCENTERED
+			view_type = VIEW_UNCENTERED
 			emit_signal("view_type_changed", view_type)
-		elif view_type != VIEW_TYPE_CENTERED:
-			view_type = VIEW_TYPE_CENTERED
+		elif view_type != VIEW_CENTERED:
+			view_type = VIEW_CENTERED
 			emit_signal("view_type_changed", view_type)
 	if is_dist_change:
 		var dist := sqrt(dist_sq)
@@ -534,7 +534,7 @@ func _get_transform(selection_item_: SelectionItem, view_type_: int, spherical_p
 	var north := _get_north(selection_item_, dist_sq)
 	var orbit_anomaly := _get_orbit_anomaly(selection_item_, dist_sq)
 	var view_type_translation: Vector3
-	if !is_moving and view_type_ > VIEW_TYPE_TOP:
+	if !is_moving and view_type_ > VIEW_TOP:
 		var delta_anomaly := 0.0
 		if orbit_anomaly != -INF and _last_anomaly != -INF:
 			delta_anomaly = orbit_anomaly - _last_anomaly
@@ -628,11 +628,11 @@ func _on_unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
-				move(null, VIEW_TYPE_ZOOM, Vector3.ZERO, Vector3.ZERO, false)
+				move(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_45_view"):
-				move(null, VIEW_TYPE_45, Vector3.ZERO, Vector3.ZERO, false)
+				move(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_top_view"):
-				move(null, VIEW_TYPE_TOP, Vector3.ZERO, Vector3.ZERO, false)
+				move(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("recenter"):
 				move(null, -1, Vector3.ZERO, Vector3.ZERO, false)
 			elif event.is_action_pressed("camera_left"):

@@ -19,28 +19,22 @@
 extends Reference
 class_name SelectionItem
 
-const GLOBAL_ENUMS := ["SelectionTypes"]
-enum SelectionTypes {
-	# I, Voyager doesn't use the first three
-	SELECTION_UNIVERSE,
-	SELECTION_GALAXY,
-	SELECTION_STAR_COLLECTION,
-	SELECTION_STAR_SYSTEM, # used as generic term for Solar System (there isn't one!)
-	SELECTION_BARYCENTER,
-	SELECTION_LAGRANGE_POINT,
-	SELECTION_STAR,
-	SELECTION_PLANET,
-	SELECTION_DWARF_PLANET,
-	SELECTION_MOON,
-	SELECTION_MINOR_MOON, # arbitrary designation for display purposes
-	SELECTION_ASTEROIDS,
-	SELECTION_ASTEROID_GROUP,
-	SELECTION_COMMETS,
-	SELECTION_SPACECRAFTS,
-	SELECTION_ASTEROID,
-	SELECTION_COMMET,
-	SELECTION_SPACECRAFT
-	}
+
+const SELECTION_STAR_SYSTEM = Enums.SELECTION_STAR_SYSTEM
+const SELECTION_BARYCENTER = Enums.SELECTION_BARYCENTER
+const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
+const SELECTION_STAR = Enums.SELECTION_STAR
+const SELECTION_PLANET = Enums.SELECTION_PLANET
+const SELECTION_DWARF_PLANET = Enums.SELECTION_DWARF_PLANET
+const SELECTION_MOON = Enums.SELECTION_MOON
+const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
+const SELECTION_ASTEROIDS = Enums.SELECTION_ASTEROIDS
+const SELECTION_ASTEROID_GROUP = Enums.SELECTION_ASTEROID_GROUP
+const SELECTION_COMMETS = Enums.SELECTION_COMMETS
+const SELECTION_SPACECRAFTS = Enums.SELECTION_SPACECRAFTS
+const SELECTION_ASTEROID = Enums.SELECTION_ASTEROID
+const SELECTION_COMMET = Enums.SELECTION_COMMET
+const SELECTION_SPACECRAFT = Enums.SELECTION_SPACECRAFT
 
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
@@ -78,7 +72,7 @@ const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
 # private
-var _global_time_array: Array = Global.time_array
+var _global_time_array: Array = Global.time_date
 
 func get_north() -> Vector3:
 	if is_body:
@@ -97,32 +91,32 @@ func get_orbit_anomaly_for_camera() -> float:
 func init(selection_type_: int) -> void:
 	selection_type = selection_type_
 	match selection_type_:
-		SelectionTypes.SELECTION_MOON:
+		SELECTION_MOON:
 			pass
-		SelectionTypes.SELECTION_PLANET, SelectionTypes.SELECTION_DWARF_PLANET:
+		SELECTION_PLANET, SELECTION_DWARF_PLANET:
 			n_moons = 0 # non -1 are valid for counting & UI display
-		SelectionTypes.SELECTION_STAR, SelectionTypes.SELECTION_STAR_SYSTEM:
+		SELECTION_STAR, SELECTION_STAR_SYSTEM:
 			n_planets = 0
 			n_dwarf_planets = 0
 			n_moons = 0
 			n_asteroids = 0
 			n_comets = 0
 			continue
-		SelectionTypes.SELECTION_STAR_SYSTEM:
+		SELECTION_STAR_SYSTEM:
 			n_stars = 0
 
 func change_count(change_selection_type: int, amount: int) -> void:
 	match change_selection_type:
-		SelectionTypes.SELECTION_MOON:
+		SELECTION_MOON:
 			if n_moons != -1:
 				n_moons += amount
-		SelectionTypes.SELECTION_PLANET:
+		SELECTION_PLANET:
 			if n_planets != -1:
 				n_planets += amount
-		SelectionTypes.SELECTION_DWARF_PLANET:
+		SELECTION_DWARF_PLANET:
 			if n_dwarf_planets != -1:
 				n_dwarf_planets += amount
-		SelectionTypes.SELECTION_STAR:
+		SELECTION_STAR:
 			if n_stars != -1:
 				n_stars += amount
 

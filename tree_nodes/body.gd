@@ -101,7 +101,7 @@ var hud_too_close := 0.0
 
 # private
 var _aux_graphic_process := false
-var _time_array: Array = Global.time_array
+var _time_array: Array = Global.time_date
 
 # *************************** PUBLIC FUNCTIONS ********************************
 

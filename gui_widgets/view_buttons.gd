@@ -16,7 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 # GUI widget. Expects the camera to have "view_type_changed" signal and to use
-# VoyagerCamera VIEW_TYPE_ enums.
+# VIEW_TYPE_ enums.
 
 extends HBoxContainer
 
@@ -46,10 +46,10 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _update_view_type(view_type: int) -> void:
-	_recenter_button.pressed = view_type != VoyagerCamera.VIEW_TYPE_UNCENTERED
-	_zoom_button.pressed = view_type == VoyagerCamera.VIEW_TYPE_ZOOM
-	_fortyfive_button.pressed = view_type == VoyagerCamera.VIEW_TYPE_45
-	_top_button.pressed = view_type == VoyagerCamera.VIEW_TYPE_TOP
+	_recenter_button.pressed = view_type != Enums.VIEW_UNCENTERED
+	_zoom_button.pressed = view_type == Enums.VIEW_ZOOM
+	_fortyfive_button.pressed = view_type == Enums.VIEW_45
+	_top_button.pressed = view_type == Enums.VIEW_TOP
 
 func _recenter() -> void:
 	if !_camera:
@@ -63,7 +63,7 @@ func _zoom() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEW_TYPE_ZOOM, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_zoom_button.pressed = true
 
@@ -71,7 +71,7 @@ func _fortyfive() -> void:
 	if !_camera:
 		return
 	if _fortyfive_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEW_TYPE_45, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_45, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_fortyfive_button.pressed = true
 
@@ -79,6 +79,6 @@ func _top() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEW_TYPE_TOP, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_TOP, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_top_button.pressed = true

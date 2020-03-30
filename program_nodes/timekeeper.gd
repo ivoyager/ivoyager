@@ -83,7 +83,7 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 	"speed_multiplier", "is_paused", "year", "quarter", "month", "day", "ymd", "yqmd",
 	"_last_process_time", "_speed_memory", "_date_str", "_hour_str", "_seconds_str"]
 
-var _global_time_array: Array = Global.time_array
+var _global_time_array: Array = Global.time_date
 var _allow_time_reversal: bool = Global.allow_time_reversal
 var _tree: SceneTree
 var _hm := [-1, -1] # only updated when clock displayed!

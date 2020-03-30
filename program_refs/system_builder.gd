@@ -28,8 +28,7 @@ var progress_bodies_denominator := 267 # set to something greater than expected
 
 var progress := 0 # for MainProgBar
 var _use_thread: bool = Global.use_threads
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
+var _tables: Dictionary = Global.tables
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
 var _main_prog_bar: MainProgBar
@@ -66,9 +65,9 @@ func project_init():
 	_Body_ = Global.script_classes._Body_
 
 func _build_on_thread(_dummy: int) -> void:
-	_add_bodies(_table_data.star_data, _enums.DATA_TABLE_STAR)
-	_add_bodies(_table_data.planet_data, _enums.DATA_TABLE_PLANET)
-	_add_bodies(_table_data.moon_data, _enums.DATA_TABLE_MOON)
+	_add_bodies(_tables.star_data, Enums.TABLE_STARS)
+	_add_bodies(_tables.planet_data, Enums.TABLE_PLANETS)
+	_add_bodies(_tables.moon_data, Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
@@ -91,13 +90,13 @@ func _finish_build() -> void:
 		_main_prog_bar.stop()
 	emit_signal("finished")
 
-func _add_bodies(data_table: Array, data_table_type: int) -> void:
+func _add_bodies(data_table: Array, table_type: int) -> void:
 	for data in data_table:
 		var body: Body = SaverLoader.make_object_or_scene(_Body_)
 		var parent: Body
 		if data.parent != "is_top":
 			parent = _registrar.bodies_by_name[data.parent]
-		_body_builder.build(body, data_table_type, data, parent)
+		_body_builder.build(body, table_type, data, parent)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)

@@ -46,7 +46,7 @@ func init(focal_orbit_: Orbit, l_point_: int) -> void:
 	_update_elements()
 
 func _update_elements() -> void:
-	var new_dynamic_elements := focal_orbit.get_elements(Global.time_array[0]).duplicate()
+	var new_dynamic_elements := focal_orbit.get_elements(Global.time_date[0]).duplicate()
 	var new_elements_at_epoch := focal_orbit.elements_at_epoch.duplicate()
 	_offset_l_point(new_dynamic_elements)
 	_offset_l_point(new_elements_at_epoch)

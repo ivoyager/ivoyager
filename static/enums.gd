@@ -15,14 +15,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Program convention is to name associated vars "view_type", "table_type", etc.
 
 class_name Enums
 
-enum { # VoyagerCamera view_types
-	VIEW_TYPE_ZOOM,
-	VIEW_TYPE_45,
-	VIEW_TYPE_TOP,
-	VIEW_TYPE_CENTERED, # unspecified position
-	VIEW_TYPE_UNCENTERED # unspecified position & rotation
+enum {
+	VIEW_ZOOM,
+	VIEW_45,
+	VIEW_TOP,
+	VIEW_CENTERED, # unspecified spherical_position
+	VIEW_UNCENTERED # unspecified spherical_position & camera_rotation
+}
+
+enum {
+	TABLE_STARS,
+	TABLE_PLANETS,
+	TABLE_MOONS,
+}
+	
+enum {
+	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
+	SELECTION_GALAXY,
+	SELECTION_STAR_COLLECTION,
+	SELECTION_STAR_SYSTEM, # used as generic for Solar System (there isn't one!)
+	SELECTION_BARYCENTER,
+	SELECTION_LAGRANGE_POINT,
+	SELECTION_STAR,
+	SELECTION_PLANET,
+	SELECTION_DWARF_PLANET,
+	SELECTION_MOON,
+	SELECTION_MINOR_MOON, # non-official designation used for display purposes
+	SELECTION_ASTEROIDS,
+	SELECTION_ASTEROID_GROUP,
+	SELECTION_COMMETS,
+	SELECTION_SPACECRAFTS,
+	SELECTION_ASTEROID,
+	SELECTION_COMMET,
+	SELECTION_SPACECRAFT
 }
 

@@ -28,9 +28,9 @@ var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _scale: float = Global.scale
 var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
-var _global_time_array: Array = Global.time_array
+var _tables: Dictionary = Global.tables
+var _table_types: Dictionary = Global.table_types
+var _time_date: Array = Global.time_date
 var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
@@ -66,31 +66,31 @@ func project_init() -> void:
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
-func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> void:
+func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	assert(DPRINT and prints("build", tr(data.key)) or true)
 	body.name = data.key
 	if !parent:
 		body.is_top = true
-	match data_table_type:
-		_enums.DATA_TABLE_STAR:
+	match table_type:
+		Enums.TABLE_STARS:
 			body.is_star = true
-		_enums.DATA_TABLE_PLANET:
+		Enums.TABLE_PLANETS:
 			body.is_planet = true
 			body.is_dwarf_planet = data.has("dwarf")
 			body.has_minor_moons = data.has("minor_moons")
-		_enums.DATA_TABLE_MOON:
+		Enums.TABLE_MOONS:
 			body.is_moon = true
 	
 	body.is_gas_giant = data.has("gas_giant")
 	
-	var time: float = _global_time_array[0]
+	var time: float = _time_date[0]
 	var orbit: Orbit
 	if !body.is_top:
 		orbit = _orbit_builder.make_orbit_from_data(data, parent, parent.GM, time)
 		body.orbit = orbit
-	body.body_type = _enums.BodyTypes[data.body_type]
+	body.body_type = _table_types[data.body_type]
 	if data.has("starlight_type"):
-		body.starlight_type = _enums.StarlightTypes[data.starlight_type]
+		body.starlight_type = _table_types[data.starlight_type]
 	body.has_atmosphere = data.has("atmosphere")
 	body.m_radius = data.m_radius * _scale
 	body.e_radius = data.e_radius * _scale if data.has("e_radius") else body.m_radius
@@ -213,7 +213,7 @@ func _build_unpersisted(body: Body) -> void:
 	var starlight: Starlight
 	if body.starlight_type != -1:
 		starlight = SaverLoader.make_object_or_scene(_Starlight_)
-		var starlight_data: Dictionary = _table_data.starlight_data[body.starlight_type]
+		var starlight_data: Dictionary = _tables.starlight_data[body.starlight_type]
 		starlight.init(starlight_data)
 		body.add_child(starlight)
 	# HUDs

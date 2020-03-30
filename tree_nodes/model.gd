@@ -28,7 +28,7 @@ var surface: SpatialMaterial
 func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0) -> void:
 	# m_radius & e_radius used only for ellipsoidal.
 	# model_scale used for non-ellipsoidal; default 1.0 assumes model in km.
-	var data: Dictionary = Global.table_data.body_data[body_type]
+	var data: Dictionary = Global.tables.body_data[body_type]
 	is_ellipsoidal = data.ellipsoidal
 	if is_ellipsoidal:
 		assert(m_radius > 0.0 and e_radius > 0.0)

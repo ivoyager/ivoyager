@@ -43,7 +43,7 @@ const PERSIST_PROPERTIES := ["reference_normal", "elements_at_epoch", "element_r
 	"m_modifiers", "update_frequency"]
 const PERSIST_OBJ_PROPERTIES := []
 
-var _global_time_array: Array = Global.time_array
+var _time_date: Array = Global.time_date
 var _math: Math = Global.objects.Math
 var _present_time_index := -INF
 var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -122,7 +122,7 @@ func get_elements(time: float) -> Array:
 	var time_index := round(time * update_frequency) # rounded float!
 	if time_index == _present_time_index:
 		return _present_elements # this is the majority of calls
-	var present_time_index := round(_global_time_array[0] * update_frequency)
+	var present_time_index := round(_time_date[0] * update_frequency)
 	var is_present := time_index == present_time_index
 	if is_present:
 		_present_time_index = present_time_index

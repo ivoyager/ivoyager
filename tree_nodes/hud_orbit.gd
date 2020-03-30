@@ -27,7 +27,7 @@ const ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMA
 var _orbit: Orbit
 var _orbit_mesh := ArrayMesh.new()
 var _orbit_graphic := ShaderMaterial.new()
-var _global_time_array: Array = Global.time_array
+var _global_time_array: Array = Global.time_date
 
 # shader params
 var _reference_normal: Vector3

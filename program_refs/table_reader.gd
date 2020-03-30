@@ -15,27 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Reads external data tables (csv files) and adds data to Global.table_data and
-# imported "enums" to Global.enums.
+# Reads external data tables (csv files) and adds data to Global.tables and
+# table_types. Global.table_types holds row number for all individual table
+# keys and an enum-like dict for each table (e.g., PlanetTypes, MoonTypes,
+# etc.).
 
 extends Reference
 class_name TableReader
 
 const DPRINT := false
 
-const GLOBAL_ENUMS := ["DataTableTypes"]
-enum DataTableTypes {
-	DATA_TABLE_STAR,
-	DATA_TABLE_PLANET,
-	DATA_TABLE_MOON,
-	}
-
 # ************************** PUBLIC PROJECT VARS ******************************
 
 var import := {
-	# <Global.table_data key> = [<Global.enums key>, path]
-	# <Global.enums key> can be "" to not save the import enum.
+	# data_name = [type_name, path]
+	# if type_name != "" then row keys and type dicts added to Global.table_types
 	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
 	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
 	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
@@ -61,8 +55,8 @@ const WIKI_OVERRIDE_PACK := "user://wiki/ivoyager_wiki_pack.zip" # WIP
 const WRITE_WIKI_BASE_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_text.csv" # WIP
 const WRITE_WIKI_EXTENDED_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_extended_text.csv" # WIP
 
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
+var _tables: Dictionary = Global.tables
+var _table_types: Dictionary = Global.table_types
 var _math: Math
 var _wiki_titles := {}
 
@@ -72,19 +66,19 @@ func import_table_data():
 	print("Reading external data tables...")
 	for data_name in import:
 		var info: Array = import[data_name]
-		var enum_name: String = info[0]
+		var type_name: String = info[0]
 		var path: String = info[1]
 		var data := []
-		var import_enum := {}
-		_read_data_file(data, import_enum, path)
-		_table_data[data_name] = data
-		if enum_name:
-			assert(!_enums.has(enum_name))
-			_enums[enum_name] = import_enum
-			for key in import_enum:
-				assert(!_enums.has(key))
-				_enums[key] = import_enum[key]
-	_table_data.wiki_titles = _wiki_titles
+		var type_dict := {}
+		_read_data_file(data, type_dict, path)
+		_tables[data_name] = data
+		if type_name:
+			assert(!_table_types.has(type_name))
+			_table_types[type_name] = type_dict
+			for key in type_dict:
+				assert(!_table_types.has(key))
+				_table_types[key] = type_dict[key]
+	_tables.wiki_titles = _wiki_titles
 
 func get_wikibot_base_titles():
 	var titles := {}
@@ -110,7 +104,7 @@ func get_wikibot_extended_titles():
 func project_init():
 	_math = Global.objects.Math
 
-func _read_data_file(data_array: Array, import_enum: Dictionary, path: String) -> void:
+func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> void:
 	assert(DPRINT and prints("Reading", path) or true)
 	var file := File.new()
 	if file.open(path, file.READ) != OK:
@@ -161,9 +155,9 @@ func _read_data_file(data_array: Array, import_enum: Dictionary, path: String) -
 							assert(false)
 						if value == "Default_Value":
 							is_defaults_line = true
-						else:
+						else: # value is the row key
 							line_dict.key = value
-							import_enum[value] = row_count
+							type_dict[value] = row_count
 								
 					else: # regular data cell or default value
 						var data_type = data_types[i]

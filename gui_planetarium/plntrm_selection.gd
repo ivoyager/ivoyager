@@ -27,7 +27,7 @@ func _ready() -> void:
 	get_parent().register_mouse_trigger_guis(self, [$ViewButtons, $Links])
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
-	_wiki_titles = Global.table_data.wiki_titles
+	_wiki_titles = Global.tables.wiki_titles
 	_selection_manager = GUIHelper.get_selection_manager(self)
 
 func _on_meta_clicked(meta: String) -> void:

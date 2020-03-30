@@ -29,7 +29,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 # dependencies
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
+var _tables: Dictionary = Global.tables
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
@@ -78,7 +78,7 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	star.add_child(hud_points)
 
 func _load_binaries(star: Body) -> void:
-	for group_data in _table_data.asteroid_group_data:
+	for group_data in _tables.asteroid_group_data:
 		var table_group: String = group_data.group
 		if !group_data.has("trojan_of"):
 			_load_group_binaries(star, table_group, group_data)

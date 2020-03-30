@@ -37,7 +37,7 @@ const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
 
 # unpersisted
-var _global_time_array: Array = Global.time_array
+var _global_time_array: Array = Global.time_date
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
