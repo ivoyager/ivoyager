@@ -25,7 +25,6 @@ class_name MouseClickSelector
 const MOUSE_CLICK_RANGE_SQ := 500.0 # in viewport pixels
 
 var _registrar: Registrar
-var _math: Math
 var _mouse_position: Vector2
 var _camera: Camera
 var _camera_global_translation: Vector3
@@ -36,7 +35,6 @@ var _closest_dist_sq := INF
 func project_init() -> void:
 	Global.connect("mouse_clicked_viewport_at", self, "select_at")
 	_registrar = Global.objects.Registrar
-	_math = Global.objects.Math
 
 func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) -> void:
 	_mouse_position = mouse_position

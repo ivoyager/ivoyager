@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
+# Usage note: issue #37529 prevents localization of globals to classes using
+# "const math := Math". For now, use:
+# const math := preload("res://ivoyager/static/math.gd")
 
 extends Reference
 class_name Math
@@ -97,37 +99,6 @@ static func get_rotation_matrix(keplerian_elements: Array) -> Basis:
 			cos_i
 		)
 	)
-
-
-#static func get_circle_to_orbit_transform(keplerian_elements, fudge):
-#	# Returned transform applied to a unit circle makes it an orbit.
-#	# fudge pushes the vertecies out a bit to account for orbit granularity
-#	# so that body is roughly equally outside and inside of line segments.
-#	var a = keplerian_elements[0]
-#	var e = keplerian_elements[1]
-#	var b = a * sqrt(1.0 - e * e)
-#	var rot = get_rotation_matrix(keplerian_elements)
-#	var basis = Basis( # Strech to ellipse with semi-major, -minor = a, b
-#		Vector3(a * (fudge + 1.0), 0.0, 0.0),
-#		Vector3(0.0, b * (fudge + 1.0), 0.0),
-#		Vector3(0.0, 0.0, 1.0)
-#	)
-#	basis = rot * basis # Rotate for i, Om, w
-#	var origin = rot * Vector3(-a * e, 0.0, 0.0) # Shift from center to focus
-#	return Transform(basis, origin)
-
-
-
-static func batch_interval(max_interval: float, batch_size: int, total_size: int) -> float:
-	# Div up max_interval such that total_size can be done in batch_size
-	# items without violating max_interval for any item.
-	# Expects max_interval float; others int.
-	if total_size > batch_size:
-		#warning-ignore:integer_division
-		return max_interval / ((total_size - 1) / batch_size + 1)
-	else:
-		return max_interval
-
 
 # Obliquity of the ecliptic (=23.439 deg) is rotation around the x-axis
 static func get_x_rotation_matrix(th: float) -> Basis:
@@ -251,46 +222,4 @@ static func conv_si_speed(x: float) -> float:
 	# 86400/1e6 = 0.0864
 	return x * 0.0864
 
-
-# Simple linear regression
-static func get_annual_estimate(yrs, yr_fraction):
-	# Assumes yrs is array with element [0] being current partial year and additional elements being
-	# past years going back in time. Discard older elements if you don't want them used in estimates.
-	# https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
-	var n = yrs.size() - 1
-	var sum_x = 0
-	var sum_x_sq = 0
-	var sum_y = 0
-	var sum_x_y = 0
-	for x in range(n):
-		sum_x += x
-		sum_x_sq += x * x
-		sum_y += yrs[n - x] # from oldest element [size - 1] to last full year [1]
-		sum_x_y += x * yrs[n - x]
-	var slope = (n * sum_x_y - sum_x * sum_y) / (n * sum_x_sq - sum_x * sum_x)
-	var offset = (sum_y - slope * sum_x) / n
-	var trend_prediction = slope * (n + 1) + offset
-	# suppliment current partial year by predition based on time left in year
-	var estimate = yrs[0] + trend_prediction * (1.0 - yr_fraction)
-	return [sum_y / n, estimate] # [ave of past years, current yr estimate]
-
-
-static func get_quarter_estimate(qtrs, fraction_of_quarter):
-	# Assumes qtrs is array with elements [1-4] being past quarters going back in time
-	# and [0] being the current, partial quarter
-	# simple linear regression with x= 0,1,2,3; calculate at x=4
-	# https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
-	# n = 4
-	# sum(x) = 6
-	# sum(x^2) = 14
-	# sum(x)^2 = 36
-	# n sum(x^2) - sum(x)^2 = 4 * 14 - 36 = 20
-	var sum_y = qtrs[4] + qtrs[3] + qtrs[2] + qtrs[1]
-	var slope = (4.0 * (qtrs[3] + 2.0 * qtrs[2] + 3.0 * qtrs[1]) - 6.0 * sum_y) / 20.0
-	var offset = (sum_y - slope * 6.0) / 4.0
-	var trend_prediction = slope * 4.0 + offset
-	# suppliment current partial quarter by predition based on time left in quarter
-	var estimate = 4.0 * (qtrs[0] + trend_prediction * (1.0 - fraction_of_quarter))
-
-	return [sum_y, estimate]
 

@@ -36,6 +36,8 @@
 
 extends Node
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 var _VPTexture
 var _point_size
 var _lookup_array
@@ -81,7 +83,7 @@ func _get_object(x, y):
 		# linear to sRGB. To match exactly the color set in in the shader
 		# fragment ALBEDO, they need to be converted back to linear and
 		# then incremented by 1 (the latter was empirically observed).
-		var linear_argb32 = Math.srgb2linear(color).to_argb32()
+		var linear_argb32 = math.srgb2linear(color).to_argb32()
 		var rgb24 = linear_argb32 & 0xFFFFFF
 		rgb24 += 0x010101 # increment +1 to get back shader ALBEDO
 		var low_bits = rgb24 & 0x030303

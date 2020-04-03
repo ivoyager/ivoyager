@@ -23,6 +23,7 @@
 extends Reference
 class_name TableReader
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 const DPRINT := false
 
 # ************************** PUBLIC PROJECT VARS ******************************
@@ -57,7 +58,6 @@ const WRITE_WIKI_EXTENDED_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/
 
 var _tables: Dictionary = Global.tables
 var _table_types: Dictionary = Global.table_types
-var _math: Math
 var _wiki_titles := {}
 
 # **************************** PUBLIC FUNCTIONS *******************************
@@ -102,7 +102,7 @@ func get_wikibot_extended_titles():
 
 
 func project_init():
-	_math = Global.objects.Math
+	pass
 
 func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> void:
 	assert(DPRINT and prints("Reading", path) or true)
@@ -191,7 +191,7 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 										if unit_conversions[i] == "deg2rad":
 											line_dict[header] = deg2rad(float(value))
 										elif unit_conversions[i] == "au2km":
-											line_dict[header] = _math.au2km(float(value))
+											line_dict[header] = math.au2km(float(value))
 										else:
 											line_dict[header] = float(value) * float(unit_conversions[i])
 								"STRING":

@@ -20,6 +20,8 @@
 extends Reference
 class_name OrbitBuilder
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 #const MIN_APSIDAL_OR_NODAL_PERIOD := 1.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
@@ -28,11 +30,9 @@ const DPRINT := false
 
 var _scale: float = Global.scale
 var _dynamic_orbits: bool = Global.dynamic_orbits
-var _math: Math
 var _Orbit_: Script
 
 func project_init() -> void:
-	_math = Global.objects.Math
 	_Orbit_ = Global.script_classes._Orbit_
 
 func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float) -> Orbit:
@@ -82,7 +82,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 		elements[6] = data.n
 	elif data.has("L_rate"): # planet tables (rad / century after load conversion)
 		# Note: "L_rate" is NOT an element rate! It's just n in disguise.
-		elements[6] = _math.day2year(data.L_rate) / 100.0
+		elements[6] = math.day2year(data.L_rate) / 100.0
 	else: # calculate n
 		elements[6] = sqrt(mu / pow(elements[0], 3)) # n = sqrt(mu/(a^3))
 	if data.has("M0"):
@@ -156,7 +156,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 		if data.ref_plane == "Equatorial":
 			orbit.reference_normal = parent.north_pole
 		elif data.ref_plane == "Laplace":
-			orbit.reference_normal = _math.convert_equatorial_coordinates(data.orbit_RA, data.orbit_dec)
+			orbit.reference_normal = math.convert_equatorial_coordinates(data.orbit_RA, data.orbit_dec)
 			orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 			orbit.reference_normal = orbit.reference_normal.normalized()
 		else:

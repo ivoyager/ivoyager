@@ -24,6 +24,8 @@
 extends Reference
 class_name Orbit
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 signal changed() # for graphics! (does not signal if no one is looking)
 
 const DPRINT := false
@@ -44,7 +46,6 @@ const PERSIST_PROPERTIES := ["reference_normal", "elements_at_epoch", "element_r
 const PERSIST_OBJ_PROPERTIES := []
 
 var _time_date: Array = Global.time_date
-var _math: Math = Global.objects.Math
 var _present_time_index := -INF
 var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _future_elements := {} # memoized by time_index
@@ -69,13 +70,13 @@ func get_normal(time: float) -> Vector3:
 	# Orbit normal is specified by "rotation" elements Om & i. This vector
 	# precesses around the reference_normal.
 	var elements := get_elements(time)
-	var relative_normal := _math.convert_equatorial_coordinates(
+	var relative_normal := math.convert_equatorial_coordinates(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
 	var orbit_normal: Vector3
 	if elements[2] > PI / 2.0: # retrograde
-		orbit_normal = -_math.rotate_vector_pole(relative_normal, reference_normal)
+		orbit_normal = -math.rotate_vector_pole(relative_normal, reference_normal)
 	else:
-		orbit_normal = _math.rotate_vector_pole(reference_normal, relative_normal)
+		orbit_normal = math.rotate_vector_pole(reference_normal, relative_normal)
 	return orbit_normal
 
 func get_mean_anomaly(time: float) -> float:
@@ -96,7 +97,7 @@ func get_position(time: float) -> Vector3:
 	var elements := get_elements(time)
 	var R := get_position_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
-		R = _math.rotate_vector_pole(R, reference_normal)
+		R = math.rotate_vector_pole(R, reference_normal)
 	return R
 
 func get_cartesian_vectors(time: float) -> Array:
@@ -104,8 +105,8 @@ func get_cartesian_vectors(time: float) -> Array:
 	var elements := get_elements(time)
 	var R_V := get_cartesian_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
-		R_V[0] = _math.rotate_vector_pole(R_V[0], reference_normal)
-		R_V[1] = _math.rotate_vector_pole(R_V[1], reference_normal)
+		R_V[0] = math.rotate_vector_pole(R_V[0], reference_normal)
+		R_V[1] = math.rotate_vector_pole(R_V[1], reference_normal)
 	return R_V # [translation, velocity_vector]
 
 func get_elements(time: float) -> Array:
@@ -294,6 +295,4 @@ static func get_elements_from_cartesian(R: Vector3, V: Vector3, mu: float, time:
 	var E := 2.0 * atan(sqrt((1.0 - e) / (1.0 + e)) * tan(nu / 2.0))
 	var M0 := E - e * sin(E) - n * time
 	return [a, e, i, Om, w, M0, n]
-
-
 

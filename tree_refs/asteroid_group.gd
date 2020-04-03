@@ -25,6 +25,8 @@
 extends Reference
 class_name AsteroidGroup
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
@@ -61,8 +63,6 @@ const PERSIST_OBJ_PROPERTIES := ["star", "lagrange_point"]
 
 # ************************** UNPERSISTED VARS *********************************
 
-var _math: Math = Global.objects.Math
-# verbose printing
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
 var _load_count := 0
@@ -240,10 +240,11 @@ func _verbose_min_max_tally(a_e_i_: Vector3, Om_w_M0_n_: Color, s_g_ := Vector2(
 	_load_count += 1
 	
 func _verbose_print() -> void:
+	var scale := Global.scale
 	print("%s group %s asteroids loaded from binaries" % [_load_count, group_name])
 	if !is_trojans:
 		print(" a,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
+				math.km2au(_mins[0] / scale), math.km2au(_maxes[0] / scale)])
 		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
 		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
 		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])
@@ -252,7 +253,7 @@ func _verbose_print() -> void:
 		print(" n,  min/max: %s / %s" % [_mins[6], _maxes[6]])
 	else:
 		print(" d,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
+				math.km2au(_mins[0] / scale), math.km2au(_maxes[0] / scale)])
 		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
 		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
 		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])

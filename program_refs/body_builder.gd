@@ -20,6 +20,8 @@
 extends Reference
 class_name BodyBuilder
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 const DPRINT := false
 const MAJOR_MOON_GM := 4.0 * 7.46496e9 # eg, Miranda is 4.4 in _Moon_Master.xlsm
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
@@ -35,7 +37,6 @@ var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
-var _math: Math
 var _Body_: Script
 var _HUDOrbit_: Script
 var _HUDIcon_: Script
@@ -55,7 +56,6 @@ func project_init() -> void:
 	_registrar = Global.objects.Registrar
 	_selection_builder = Global.objects.SelectionBuilder
 	_orbit_builder = Global.objects.OrbitBuilder
-	_math = Global.objects.Math
 	_Body_ = Global.script_classes._Body_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_HUDIcon_ = Global.script_classes._HUDIcon_
@@ -122,7 +122,7 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	# intentionally flipped.
 	if !body.tidally_locked:
 		assert(data.has("dec") and data.has("RA"))
-		body.north_pole = _ecliptic_rotation * _math.convert_equatorial_coordinates(body.right_ascension, body.declination)
+		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates(body.right_ascension, body.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).

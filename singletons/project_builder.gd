@@ -92,7 +92,6 @@ var program_references := {
 	_FileHelper_ = FileHelper,
 	_GUIHelper_ = GUIHelper,
 	_StringMaker_ = StringMaker,
-	_Math_ = Math,
 }
 
 var program_nodes := {

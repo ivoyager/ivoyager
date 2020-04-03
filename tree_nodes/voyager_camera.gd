@@ -19,6 +19,8 @@
 extends Camera
 class_name VoyagerCamera
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 # ********************************* SIGNALS ***********************************
 
 signal move_started(to_body, is_camera_lock)
@@ -103,7 +105,6 @@ var is_moving := false
 # private
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.objects.Registrar
-var _math: Math = Global.objects.Math
 var _scale: float = Global.scale
 var _max_dist_sq: float = pow(Global.max_camera_distance * _scale, 2.0)
 var _min_dist_sq := 0.01 # set for parent body
@@ -272,7 +273,7 @@ func increment_focal_length(increment: int) -> void:
 func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
-	fov = _math.get_fov_from_focal_length(focal_length)
+	fov = math.get_fov_from_focal_length(focal_length)
 	_orient_to_local_pole_sq = pow(orient_to_local_pole / fov, 2)
 	_orient_to_ecliptic_sq = pow(orient_to_ecliptic / fov, 2)
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
@@ -332,7 +333,7 @@ func _on_ready():
 	_from_selection_item = selection_item
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
-	fov = _math.get_fov_from_focal_length(focal_length)
+	fov = math.get_fov_from_focal_length(focal_length)
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
 	_orient_to_local_pole_sq = pow(orient_to_local_pole / fov, 2)
 	_orient_to_ecliptic_sq = pow(orient_to_ecliptic / fov, 2)
