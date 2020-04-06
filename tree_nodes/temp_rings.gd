@@ -21,12 +21,14 @@
 extends MeshInstance
 class_name TempRings
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 const TOO_FAR_RADIUS_MULTIPLIER := 2e3
 
 var _rings_material := SpatialMaterial.new()
 
 func init(rings_file: String, radius: float) -> void:
-	var texture: Texture = FileHelper.find_resource(Global.asset_paths.rings_dir, rings_file)
+	var texture: Texture = file_utils.find_resource(Global.asset_paths.rings_dir, rings_file)
 	assert(texture) # no fallback!
 	_rings_material.albedo_texture = texture
 	_rings_material.flags_transparent = true

@@ -99,7 +99,7 @@ func project_init() -> void:
 	Global.connect("gui_refresh_requested", self, "reset")
 	Global.connect("gui_refresh_requested", self, "_signal_speed_changed")
 	Global.connect("run_state_changed", self, "set_process")
-	_tree = Global.objects.tree
+	_tree = Global.program.tree
 	time = Global.start_time
 	_global_time_array.resize(5)
 	_global_time_array[0] = time

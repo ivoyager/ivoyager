@@ -22,11 +22,11 @@ const SCENE := "res://ivoyager/gui_game/navigation_panel.tscn"
 
 func _on_ready() -> void:
 	._on_ready()
-	if Global.objects.has("MainMenu"):
+	if Global.program.has("MainMenu"):
 		$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
 	else:
 		$BottomVBox/BottomHBox/MainMenu.hide()
-	if Global.objects.has("HotkeysPopup"):
+	if Global.program.has("HotkeysPopup"):
 		$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
 	else:
 		$BottomVBox/BottomHBox/Hotkeys.hide()

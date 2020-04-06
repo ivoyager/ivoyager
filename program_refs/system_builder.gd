@@ -56,10 +56,10 @@ func build() -> void:
 
 
 func project_init():
-	_main_prog_bar = Global.objects.get("MainProgBar")
-	_body_builder = Global.objects.BodyBuilder
-	_registrar = Global.objects.Registrar
-	_minor_bodies_builder = Global.objects.MinorBodiesBuilder
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_body_builder = Global.program.BodyBuilder
+	_registrar = Global.program.Registrar
+	_minor_bodies_builder = Global.program.MinorBodiesBuilder
 	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
 	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
 	_Body_ = Global.script_classes._Body_

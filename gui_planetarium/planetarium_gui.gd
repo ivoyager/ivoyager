@@ -42,7 +42,7 @@ func _ready() -> void:
 	_homepage_link.scroll_active = false
 	_homepage_link.rect_min_size = Vector2(100.0, 35.0)
 	_homepage_link.connect("meta_clicked", self, "_on_homepage_clicked")
-	var main_menu: MainMenu = Global.objects.MainMenu
+	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.add_child(_homepage_link)
 	main_menu.margin_top = 7.0
 	main_menu.margin_left = 14.0
@@ -51,7 +51,7 @@ func _ready() -> void:
 func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	selection_manager = _SelectionManager_.new()
 	selection_manager.init_as_camera_selection()
-	var registrar: Registrar = Global.objects.Registrar
+	var registrar: Registrar = Global.program.Registrar
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
 

@@ -33,8 +33,8 @@ const PERSIST_PROPERTIES := ["anchor_left", "anchor_right", "anchor_top", "ancho
 
 enum {LEFT, RIGHT, UP, DOWN}
 
-var _tree: SceneTree = Global.objects.tree
-var _viewport: Viewport = Global.objects.root
+var _tree: SceneTree = Global.program.tree
+var _viewport: Viewport = Global.program.root
 var _draggable: bool
 var _gui_panels: Array
 var _drag_point := Vector2.ZERO
@@ -82,7 +82,7 @@ func _on_enter_tree():
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_fit_to_viewport")
-	Global.objects.root.connect("size_changed", self, "finish_move")
+	Global.program.root.connect("size_changed", self, "finish_move")
 	Global.emit_signal("gui_entered_tree", self)
 
 func _on_ready() -> void:
@@ -90,7 +90,7 @@ func _on_ready() -> void:
 
 func _prepare_to_free() -> void:
 	Global.disconnect("gui_refresh_requested", self, "_fit_to_viewport")
-	Global.objects.root.disconnect("size_changed", self, "finish_move")
+	Global.program.root.disconnect("size_changed", self, "finish_move")
 
 func _on_gui_input(event: InputEvent) -> void:
 	if _disable_drag or !_draggable:

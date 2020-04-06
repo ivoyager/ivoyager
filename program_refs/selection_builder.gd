@@ -39,7 +39,7 @@ var _registrar: Registrar
 var _SelectionItem_: Script
 
 func project_init() -> void:
-	_registrar = Global.objects.Registrar
+	_registrar = Global.program.Registrar
 	_SelectionItem_ = Global.script_classes._SelectionItem_
 
 func build_from_body(body: Body, parent_body: Body) -> SelectionItem:

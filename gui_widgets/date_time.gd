@@ -23,7 +23,7 @@ var forward_color: Color = Global.colors.normal
 var reverse_color: Color = Global.colors.danger
 
 func _ready() -> void:
-	var timekeeper: Timekeeper = Global.objects.Timekeeper
+	var timekeeper: Timekeeper = Global.program.Timekeeper
 	timekeeper.connect("display_date_time_changed", self, "set_text")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
 

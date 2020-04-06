@@ -21,6 +21,8 @@
 extends Node
 class_name Main
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 # debug
 const DPRINT := false
 
@@ -40,7 +42,6 @@ var _saver_loader: SaverLoader
 var _main_prog_bar: MainProgBar
 var _system_builder: SystemBuilder
 var _timekeeper: Timekeeper
-var _file_helper: FileHelper
 var _has_been_saved := false
 var _was_paused := false
 var _nodes_requiring_stop := []
@@ -117,10 +118,10 @@ func exit(exit_now: bool) -> void:
 	Global.emit_signal("simulator_exited")
 
 func quick_save() -> void:
-	if _has_been_saved and _settings.save_base_name and _file_helper.is_valid_dir(_settings.save_dir):
+	if _has_been_saved and _settings.save_base_name and file_utils.is_valid_dir(_settings.save_dir):
 		Global.emit_signal("close_main_menu_requested")
 		var date_string: String = _timekeeper.get_current_date_string("-") if _settings.append_date_to_save else ""
-		save_game(_file_helper.get_save_path(_settings.save_dir, _settings.save_base_name, date_string, true))
+		save_game(file_utils.get_save_path(_settings.save_dir, _settings.save_base_name, date_string, true))
 	else:
 		Global.emit_signal("save_dialog_requested")
 
@@ -229,14 +230,13 @@ func project_init() -> void:
 	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
-	_tree = Global.objects.tree
-	_gui_top = Global.objects.GUITop
-	_table_reader = Global.objects.TableReader
-	_saver_loader = Global.objects.get("SaverLoader")
-	_main_prog_bar = Global.objects.get("MainProgBar")
-	_system_builder = Global.objects.SystemBuilder
-	_timekeeper = Global.objects.Timekeeper
-	_file_helper = Global.objects.FileHelper
+	_tree = Global.program.tree
+	_gui_top = Global.program.GUITop
+	_table_reader = Global.program.TableReader
+	_saver_loader = Global.program.get("SaverLoader")
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_system_builder = Global.program.SystemBuilder
+	_timekeeper = Global.program.Timekeeper
 
 func _on_ready() -> void:
 	require_stop(self)

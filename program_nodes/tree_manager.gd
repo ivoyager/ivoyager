@@ -80,9 +80,9 @@ func project_init() -> void:
 	Global.connect("camera_ready", self, "_connect_camera")
 	Global.connect("gui_refresh_requested", self, "_gui_refresh")
 	Global.connect("setting_changed", self, "_settings_listener")
-	_root = Global.objects.root
-	_timekeeper = Global.objects.Timekeeper
-	_registrar = Global.objects.Registrar
+	_root = Global.program.root
+	_timekeeper = Global.program.Timekeeper
+	_registrar = Global.program.Registrar
 	_root.connect("size_changed", self, "_update_icon_size")
 	_timekeeper.connect("processed", self, "_timekeeper_process")
 	_viewport_height = _root.get_visible_rect().size.y

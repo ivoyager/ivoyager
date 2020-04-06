@@ -19,7 +19,7 @@
 
 extends GridContainer
 
-onready var _string_maker: StringMaker = Global.objects.StringMaker
+onready var _qty_strs: QtyStrs = Global.program.QtyStrs
 var _selection_manager: SelectionManager
 
 onready var _show_data := [
@@ -27,8 +27,8 @@ onready var _show_data := [
 	# We look first in SelectionItem, then Body if SelectionItem.is_body
 	# Integer value -1 is not displayed.
 	["classification", "LABEL_CLASSIFICATION"],
-	["mass", "LABEL_MASS", _string_maker.DISPLAY_MASS],
-	["esc_vel", "LABEL_ESCAPE_VELOCITY", _string_maker.DISPLAY_VELOCITY],
+	["mass", "LABEL_MASS", _qty_strs.FUNC_MASS],
+	["esc_vel", "LABEL_ESCAPE_VELOCITY", _qty_strs.FUNC_VELOCITY],
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],
 	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],
@@ -76,7 +76,7 @@ func _on_selection_changed() -> void:
 					value = str(value_variant)
 			TYPE_REAL:
 				var display_type: int = show_datum[2]
-				value = _string_maker.get_str(value_variant, display_type)
+				value = _qty_strs.get_str(value_variant, display_type)
 			TYPE_STRING:
 				value = tr(value_variant)
 		if value:

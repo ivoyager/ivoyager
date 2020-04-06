@@ -31,7 +31,7 @@ func project_init() -> void:
 	var global_theme := Theme.new()
 	global_theme.default_font = _fonts.gui_main
 	_themes.global = global_theme
-	Global.objects.GUITop.theme = global_theme # all other Controls set their own
+	Global.program.GUITop.theme = global_theme # all other Controls set their own
 	var main_menu_theme := Theme.new()
 	main_menu_theme.default_font = _fonts.large
 	_themes.main_menu = main_menu_theme

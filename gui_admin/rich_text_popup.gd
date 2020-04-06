@@ -30,7 +30,7 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("rich_text_popup_requested", self, "_open")
-	_main = Global.objects.Main
+	_main = Global.program.Main
 
 func _on_ready() -> void:
 	set_process_unhandled_key_input(false)

@@ -36,7 +36,6 @@ var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
 var _timekeeper: Timekeeper
-var _file_helper: FileHelper
 var _selection_manager: SelectionManager
 var _suppressors := []
 
@@ -57,14 +56,13 @@ func make_action(action: String, is_pressed := true) -> void:
 func project_init():
 	Global.connect("system_tree_ready", self, "_on_system_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
-	_tree = Global.objects.tree
-	_main = Global.objects.Main
-	_tree_manager = Global.objects.TreeManager
-	_timekeeper = Global.objects.Timekeeper
-	_file_helper = Global.objects.FileHelper
+	_tree = Global.program.tree
+	_main = Global.program.Main
+	_tree_manager = Global.program.TreeManager
+	_timekeeper = Global.program.Timekeeper
 
 func _on_system_ready(_is_new_game: bool) -> void:
-	var project_gui = Global.objects.ProjectGUI
+	var project_gui = Global.program.ProjectGUI
 	if "selection_manager" in project_gui:
 		_selection_manager = project_gui.selection_manager
 

@@ -21,6 +21,7 @@ extends Reference
 class_name BodyBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 const DPRINT := false
 const MAJOR_MOON_GM := 4.0 * 7.46496e9 # eg, Miranda is 4.4 in _Moon_Master.xlsm
@@ -52,10 +53,10 @@ var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_hud_2d_surface = Global.objects.HUD2dSurface
-	_registrar = Global.objects.Registrar
-	_selection_builder = Global.objects.SelectionBuilder
-	_orbit_builder = Global.objects.OrbitBuilder
+	_hud_2d_surface = Global.program.HUD2dSurface
+	_registrar = Global.program.Registrar
+	_selection_builder = Global.program.SelectionBuilder
+	_orbit_builder = Global.program.OrbitBuilder
 	_Body_ = Global.script_classes._Body_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_HUDIcon_ = Global.script_classes._HUDIcon_
@@ -107,8 +108,10 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	body.right_ascension = data.RA if data.has("RA") else -INF
 	body.declination = data.dec if data.has("dec") else -INF
 	body.axial_tilt = data.axial_tilt if data.has("axial_tilt") else 0.0
-	body.esc_vel = data.esc_vel * _scale if data.has("esc_vel") else 0.0
-
+	if data.has("esc_vel"):
+		body.esc_vel = data.esc_vel # km/s
+	else:
+		body.esc_vel = sqrt(2.0 * body.GM / body.m_radius) * 86400.0 # km/d -> km/s
 	# orbit and axis
 	if parent and parent.is_star:
 		body.is_star_orbiting = true
@@ -253,12 +256,12 @@ func _build_unpersisted(body: Body) -> void:
 	_hud_2d_surface.add_child(hud_label)
 
 	# 2D selection textures
-	body.texture_2d = FileHelper.find_resource(_texture_2d_dir, file_prefix)
+	body.texture_2d = file_utils.find_resource(_texture_2d_dir, file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
 	if body.is_star:
 		var slice_name = file_prefix + "_slice"
-		body.texture_slice_2d = FileHelper.find_resource(_texture_2d_dir, slice_name)
+		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = Global.assets.fallback_star_slice
 

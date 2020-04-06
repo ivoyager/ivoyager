@@ -34,7 +34,7 @@ var _closest_dist_sq := INF
 
 func project_init() -> void:
 	Global.connect("mouse_clicked_viewport_at", self, "select_at")
-	_registrar = Global.objects.Registrar
+	_registrar = Global.program.Registrar
 
 func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) -> void:
 	_mouse_position = mouse_position

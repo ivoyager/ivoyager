@@ -19,6 +19,8 @@
 extends Spatial
 class_name Model
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 const TOO_FAR_RADIUS_MULTIPLIER := 1e3
 
 var is_ellipsoidal: bool # if so, shape defined by m_radius & e_radius only
@@ -37,7 +39,7 @@ func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0)
 		mesh_instance.scale = Vector3(e_radius, polar_radius, e_radius)
 		mesh_instance.mesh = Global.globe_mesh
 		var globe_wraps_dir: String = Global.asset_paths.globe_wraps_dir
-		var albedo_texture: Texture = FileHelper.find_resource(globe_wraps_dir, file_prefix + ".albedo")
+		var albedo_texture: Texture = file_utils.find_resource(globe_wraps_dir, file_prefix + ".albedo")
 		if !albedo_texture:
 			albedo_texture = Global.assets.fallback_globe_wrap
 		surface = SpatialMaterial.new()
@@ -54,11 +56,11 @@ func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0)
 		add_child(mesh_instance)
 	else:
 		var models_dir: String = Global.asset_paths.models_dir
-		var resource_file := FileHelper.find_resource_file(models_dir, file_prefix)
+		var resource_file := file_utils.find_resource_file(models_dir, file_prefix)
 		if !resource_file:
 			resource_file = Global.asset_paths.fallback_model
 		var resource: Resource = load(resource_file)
-		var model_scale := FileHelper.get_scale_from_file_path(resource_file)
+		var model_scale := file_utils.get_scale_from_file_path(resource_file)
 		if resource is PackedScene:
 			var model_spatial: Spatial = resource.instance()
 			model_spatial.scale = Vector3.ONE * model_scale * Global.scale

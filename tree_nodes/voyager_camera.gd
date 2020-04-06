@@ -104,7 +104,7 @@ var is_moving := false
 
 # private
 var _settings: Dictionary = Global.settings
-var _registrar: Registrar = Global.objects.Registrar
+var _registrar: Registrar = Global.program.Registrar
 var _scale: float = Global.scale
 var _max_dist_sq: float = pow(Global.max_camera_distance * _scale, 2.0)
 var _min_dist_sq := 0.01 # set for parent body

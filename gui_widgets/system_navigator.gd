@@ -29,7 +29,7 @@ var _registrar: Registrar
 var _selection_manager: SelectionManager # get from ancestor selection_manager
 
 func _ready():
-	_registrar = Global.objects.Registrar
+	_registrar = Global.program.Registrar
 	set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 

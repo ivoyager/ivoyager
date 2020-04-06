@@ -47,7 +47,7 @@ const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # private
 var _root: Viewport = Global.get_tree().get_root()
-var _registrar: Registrar = Global.objects.Registrar
+var _registrar: Registrar = Global.program.Registrar
 var _history := [] # weakrefs
 var _history_index := -1
 var _supress_history := false

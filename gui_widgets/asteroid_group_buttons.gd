@@ -24,7 +24,7 @@ var _points_manager: PointsManager
 var _asteroid_buttons := {}
 
 func _ready() -> void:
-	_points_manager = Global.objects.PointsManager
+	_points_manager = Global.program.PointsManager
 	_asteroid_buttons.all_asteroids = $AllAsteroids
 	_asteroid_buttons.NE = $NearEarth
 	_asteroid_buttons.MC = $MarsCros

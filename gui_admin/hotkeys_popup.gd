@@ -26,7 +26,7 @@ const DPRINT := true
 
 var key_box_min_size_x := 300
 
-onready var _input_map_manager: InputMapManager = Global.objects.InputMapManager
+onready var _input_map_manager: InputMapManager = Global.program.InputMapManager
 onready var _actions: Dictionary = _input_map_manager.current
 var _hotkey_dialog: HotkeyDialog
 
@@ -119,7 +119,7 @@ func _on_init():
 
 func project_init() -> void:
 	.project_init()
-	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")

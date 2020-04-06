@@ -69,15 +69,15 @@ signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
 
-# shared containers - object with write authority is indicated
+# shared containers - safe to keep reference (writting object is indicated)
 var state := {} # Main; keys include is_inited, is_running, etc.
 var time_date := [] # Timekeeper; [time: float, year: int, quarter, month, day]
-var objects := {} # "small s singletons" populated by ProjectBuilder
+var program := {} # program nodes and refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node _project_init()
 var settings := {} # SettingsManager
 var tables := {} # TableReader; imported csv tables from data directory
-var table_types := {} # TableReader; row numbers by item key
+var table_types := {} # TableReader; enum-like ints by key & single table dicts
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
@@ -109,7 +109,7 @@ var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 3e10 # km
 var scale := 1e-9 # Godot length per km; check graphics at close/far extremes!
-var gravitational_constant := 4.982174e-10 * scale * scale * scale # km^3/(days^2 x tonnes)
+var gravitational_constant := 4.982174e-10 * pow(scale, 3.0) # km^3/(days^2 x tonnes)
 var obliquity_of_the_ecliptic := deg2rad(23.439)
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 
@@ -118,7 +118,7 @@ var colors := { # user settable are in SettingsManager
 	good = Color.green,
 	warning = Color.yellow,
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to see
-	}
+}
 
 var planetary_system_dir := "res://ivoyager/data/solar_system"
 
@@ -143,14 +143,14 @@ var asset_paths := {
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb",
 	fallback_star_slice = "res://ivoyager_assets/2d_bodies/Sun_slice.256.png",
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
-	}
+}
 
 var shaders := {
 	orbit_ellipse = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
 	orbit_points = preload("res://ivoyager/shaders/orbit_points.shader"),
 	orbit_points_lagrangian = preload("res://ivoyager/shaders/orbit_points_lagrangian.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
-	}
+}
 
 # ******************************* PERSISTED ***********************************
 
@@ -163,6 +163,7 @@ const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 # *****************************************************************************
 
+# public project_version & ivoyager_version will be from save file after load
 var _project_version := project_version
 var _ivoyager_version := ivoyager_version
 
@@ -171,15 +172,18 @@ func project_init() -> void:
 	prints(project_name, ivoyager_version, project_version)
 	for asset_name in asset_paths:
 		if asset_replacement_dir:
-			asset_paths[asset_name] = asset_paths[asset_name].replace("ivoyager_assets", asset_replacement_dir)
+			var old_path: String = asset_paths[asset_name]
+			var new_path := old_path.replace("ivoyager_assets", asset_replacement_dir)
+			asset_paths[asset_name] = new_path
 		if !asset_name.ends_with("_dir"):
-			assets[asset_name] = load(asset_paths[asset_name])
+			var path: String = asset_paths[asset_name]
+			assets[asset_name] = load(path)
 
 func check_load_version() -> void:
 	if _project_version != project_version or _ivoyager_version != ivoyager_version:
 		print("WARNING! Loaded game was created with a different version...")
-		prints("Present running version:      ", _ivoyager_version, _project_version)
-		prints("Save created originally with: ", ivoyager_version, project_version)
+		prints("Present running version: ", _ivoyager_version, _project_version)
+		prints("Loaded game started as:  ", ivoyager_version, project_version)
 
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS

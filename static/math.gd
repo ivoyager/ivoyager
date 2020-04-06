@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Usage note: issue #37529 prevents localization of globals to classes using
-# "const math := Math". For now, use:
+# Usage note: issue #37529 prevents localization of global class_name to const.
+# For now, use:
 # const math := preload("res://ivoyager/static/math.gd")
 
 extends Reference

@@ -41,6 +41,8 @@
 
 extends Node
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 signal extentions_inited()
 signal project_objects_instantiated()
 signal project_inited()
@@ -72,7 +74,7 @@ var init_sequence := [
 # item at runtime might be a project-specific subclass (or in some cases
 # replacement) for the original class. For objects instantiated by
 # ProjectBuilder, edge underscores are removed to form keys in the
-# Global.objects dictionary and node names.
+# Global.program dictionary and node names.
 
 var program_references := {
 	# ProjectBuilder instances one of each. No save/load persistence.
@@ -89,9 +91,8 @@ var program_references := {
 	_MinorBodiesBuilder_ = MinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
-	_FileHelper_ = FileHelper,
 	_GUIHelper_ = GUIHelper,
-	_StringMaker_ = StringMaker,
+	_QtyStrs_ = QtyStrs,
 }
 
 var program_nodes := {
@@ -148,7 +149,7 @@ var procedural_classes := {
 }
 
 var extensions := []
-var objects: Dictionary = Global.objects
+var objects: Dictionary = Global.program
 var script_classes: Dictionary = Global.script_classes
 
 onready var gui_top: Control = get_node("/root/GUITop") # start scene & UI parent
@@ -169,7 +170,7 @@ func init_extensions() -> void:
 #		print(dir_name)
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-			if FileHelper.exists(path):
+			if file_utils.exists(path):
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \

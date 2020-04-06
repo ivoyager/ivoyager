@@ -43,10 +43,10 @@ var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_l_point_builder = Global.objects.LPointBuilder
-	_minor_bodies_manager = Global.objects.MinorBodiesManager
-	_points_manager = Global.objects.PointsManager
-	_registrar = Global.objects.Registrar
+	_l_point_builder = Global.program.LPointBuilder
+	_minor_bodies_manager = Global.program.MinorBodiesManager
+	_points_manager = Global.program.PointsManager
+	_registrar = Global.program.Registrar
 	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
 	_HUDPoints_ = Global.script_classes._HUDPoints_
 	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir

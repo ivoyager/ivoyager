@@ -20,23 +20,23 @@ extends FileDialog
 class_name SaveDialog
 const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 # project var
 var add_quick_save_button := false
 
 var _settings: Dictionary = Global.settings
 var _main: Main
-var _settings_manager: SettingsManager = Global.objects.SettingsManager
-var _timekeeper: Timekeeper = Global.objects.Timekeeper
-var _file_helper: FileHelper = Global.objects.FileHelper
+var _settings_manager: SettingsManager = Global.program.SettingsManager
+var _timekeeper: Timekeeper = Global.program.Timekeeper
 
 func project_init() -> void:
 	if !Global.enable_save_load:
 		return
-	_settings_manager = Global.objects.SettingsManager
-	_timekeeper = Global.objects.Timekeeper
-	_file_helper = Global.objects.FileHelper
-	_main = Global.objects.Main
-	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	_settings_manager = Global.program.SettingsManager
+	_timekeeper = Global.program.Timekeeper
+	_main = Global.program.Main
+	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _main, "save_game", [""])
 		if add_quick_save_button:
@@ -54,14 +54,14 @@ func _open() -> void:
 	_main.require_stop(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir = _file_helper.get_save_dir_path(Global.is_modded, _settings.save_dir)
+	var save_dir = file_utils.get_save_dir_path(Global.is_modded, _settings.save_dir)
 	var date_string: String = _timekeeper.get_current_date_string("-") if _settings.append_date_to_save else ""
-	current_path = _file_helper.get_save_path(save_dir, _settings.save_base_name, date_string, false)
+	current_path = file_utils.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_items()
 	
 func _save_file(path: String) -> void:
 	var cache_settings := false
-	var save_base_name := _file_helper.get_base_file_name(current_file)
+	var save_base_name := file_utils.get_base_file_name(current_file)
 	if save_base_name != _settings.save_base_name:
 		_settings_manager.change_current("save_base_name", save_base_name, true)
 		cache_settings = true

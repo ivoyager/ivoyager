@@ -24,7 +24,7 @@ var forward_color: Color = Global.colors.normal
 var reverse_color: Color = Global.colors.danger
 
 onready var _tree: SceneTree = get_tree()
-onready var _timekeeper: Timekeeper = Global.objects.Timekeeper
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
 onready var _reverse: Button = $Reverse

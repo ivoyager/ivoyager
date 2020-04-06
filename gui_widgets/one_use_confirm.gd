@@ -31,7 +31,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	_stop_sim = stop_sim
 	if _stop_sim:
 		Global.emit_signal("sim_stop_required", self)
-	Global.objects.GUITop.add_child(self)
+	Global.program.GUITop.add_child(self)
 	popup_centered()
 
 func _on_hide() -> void:

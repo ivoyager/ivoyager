@@ -18,9 +18,9 @@
 
 extends VBoxContainer
 
-var _points_manager: PointsManager = Global.objects.PointsManager
+var _points_manager: PointsManager = Global.program.PointsManager
 
-onready var _tree_manager: TreeManager = Global.objects.TreeManager
+onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_checkbox: CheckBox = $Orbits/CheckBox
 onready var _labels_checkbox: CheckBox = $Labels/CheckBox
 onready var _icons_checkbox: CheckBox = $Icons/CheckBox

@@ -19,7 +19,7 @@
 
 extends VBoxContainer
 
-onready var _tree_manager: TreeManager = Global.objects.TreeManager
+onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_button: Button = $HBox/Orbits
 onready var _icons_button: Button = $HBox/Icons
 onready var _labels_button: Button = $HBox/Labels

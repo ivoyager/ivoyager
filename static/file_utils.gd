@@ -1,4 +1,4 @@
-# file_helper.gd
+# file_utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,10 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Usage note: issue #37529 prevents localization of global class_name to const.
+# For now, use:
+# const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-extends Reference
-class_name FileHelper
-
+class_name FileUtils
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
 	var save_dir := override_dir
@@ -137,6 +138,3 @@ static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")
 	return string
-
-func project_init():
-	pass
