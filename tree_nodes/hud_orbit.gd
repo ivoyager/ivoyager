@@ -62,7 +62,7 @@ func init(orbit: Orbit, color: Color, orbit_mesh_arrays: Array) -> void:
 	_orbit_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP, orbit_mesh_arrays, [], ARRAY_FLAGS)
 	mesh = _orbit_mesh
 	_orbit_graphic.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit.connect("changed", self, "_draw_orbit")
+	_orbit.connect("changed_for_graphics", self, "_draw_orbit")
 	_draw_orbit()
 
 func change_color(new_color: Color) -> void:

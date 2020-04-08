@@ -2,5 +2,5 @@
 # Spaces and underscores will be appropriately converted.,
 key,wiki_en
 Data_Type,STRING
-Default_Value,
+Defaults,
 SYSTEM_SOLAR_SYSTEM,Solar System

@@ -103,14 +103,14 @@ var disable_exit := false
 var disable_quit := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 7305.0 # days from J2000 epoch (=2000-01-01 12:00)
+var start_time: float = 20.0 * Conv.YEAR # from J2000 epoch (time in s)
 var allow_time_reversal := true
 var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 3e10 # km
-var scale := 1e-9 # Godot length per km; check graphics at close/far extremes!
-var gravitational_constant := 4.982174e-10 * pow(scale, 3.0) # km^3/(days^2 x tonnes)
-var obliquity_of_the_ecliptic := deg2rad(23.439)
+var scale := 1e-9 # engine length per km; check graphics at close/far extremes!
+var gravitational_constant := 0.0667430 # km^3/(kg s^2)
+var obliquity_of_the_ecliptic := 23.439 * Conv.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 
 var colors := { # user settable are in SettingsManager

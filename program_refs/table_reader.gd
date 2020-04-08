@@ -23,7 +23,9 @@
 extends Reference
 class_name TableReader
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+#const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const conv := preload("res://ivoyager/static/conv.gd")
+
 const DPRINT := false
 
 # ************************** PUBLIC PROJECT VARS ******************************
@@ -114,8 +116,8 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 	var is_header_line := true
 	var headers : Array
 	var data_types : Array
-	var unit_conversions : Array
-	var default_values := {}
+	var units : Array
+	var defaults := {}
 	var row_count := 0
 	var line := file.get_line()
 	while !file.eof_reached():
@@ -134,9 +136,9 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 		elif line_array[0] == "Data_Type":
 			data_types = line_array
 #
-		# Store data conv, if any
-		elif line_array[0] == "Unit_Conversion":
-			unit_conversions = line_array
+		# Store units, if any
+		elif line_array[0] == "Units":
+			units = line_array
 
 		# Handle defaults line or regular data line
 		else:
@@ -153,7 +155,7 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 							# there is a weird destructive character in your comments section.
 							# E.g., Excel turns "..." into a sort of improvised explosive glyph.
 							assert(false)
-						if value == "Default_Value":
+						if value == "Defaults":
 							is_defaults_line = true
 						else: # value is the row key
 							line_dict.key = value
@@ -162,11 +164,11 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 					else: # regular data cell or default value
 						var data_type = data_types[i]
 						if value == "":
-							if is_defaults_line or !default_values.has(header):
+							if is_defaults_line or !defaults.has(header):
 								pass
 #								value = null # won't be entered into dictionary
 							else:
-								line_dict[header] = default_values[header]
+								line_dict[header] = defaults[header]
 						else:
 							match data_type:
 								"X":
@@ -186,23 +188,21 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 								"INT":
 									line_dict[header] = int(value)
 								"REAL":
-									line_dict[header] = float(value)
-									if unit_conversions and unit_conversions[i]:
-										if unit_conversions[i] == "deg2rad":
-											line_dict[header] = deg2rad(float(value))
-										elif unit_conversions[i] == "au2km":
-											line_dict[header] = math.au2km(float(value))
-										else:
-											line_dict[header] = float(value) * float(unit_conversions[i])
+									var real := float(value)
+									if units and units[i]:
+										var unit_symbol: String = units[i]
+										line_dict[header] = conv.from(real, unit_symbol)
+									else:
+										line_dict[header] = real
 								"STRING":
 									line_dict[header] = strip_quotes(value)
 								_:
 									print("ERROR: Unknown data type: ", data_type)
 									print(path)
 									assert(false)
-
+			
 			if is_defaults_line:
-				default_values = line_dict
+				defaults = line_dict
 			else:
 				line_dict.type = row_count # type is row integer
 				if line_dict.has("wiki_en"): # TODO: non-English Wikipedias

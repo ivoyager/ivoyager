@@ -1,12 +1,14 @@
 ﻿"# Keplarian elements and rates for approximate position calculation from 3000BC to 3000AD from https://ssd.jpl.nasa.gov/?planet_pos. ""Earth"" is really Earth-Moon barycenter.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-# Hack note: I reversed polarity of Uranus & Pluto rotation (- to +) so they rotate with moon orbits. It may be moon orbits that are wrong instead.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,# GM system,
+# Hack note: I reversed polarity of Uranus & Pluto rotation (- to +) so they rotate with moon orbits. It may be moon orbits that are wrong instead.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 "# Ceres was added using AstDyS-2 proper elements a, e, sin(i), n and non-proper Om, w & M0",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-#,,,,,,,,,,,,,,# The 6 orbital elements; we'll convert L0->M0 and w_hat->w.,,,,,,,,,# Per century adjustments to elements from J2000,,,,,,,,,,,# RA/dec at J2018,,# 7 params from https://ssd.jpl.nasa.gov/?planet_phys_par,,,,,,,86400^2,
-#,,# spaces ok,,,,,km,,,,,,,AU,,deg.,deg.,deg.,deg.,,,deg/d,# (deal with century in code),,,,,,# Four M adjustments for Jupiter to Pluto,,,,,deg.,deg.,km,km,x10^24 kg,g/cm^3,days,,km/s,km^3/s^2 -> km^3/d^2,
+"# Units are optional when using sim standard units: s, km, kg, radians and their derivations (km/s, etc.). See ivoyager/static/conv.gd for allowed symbols.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+# Units can also be a valid float; value x float is expected to give standard sim units.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#,,,,,,,,,,,,,,# The 6 orbital elements; we'll convert L0->M0 and w_hat->w.,,,,,,,,,# Per century adjustments to elements from J2000,,,,,,,,,,,# RA/dec at J2018,,# 7 params from https://ssd.jpl.nasa.gov/?planet_phys_par,,,,,,,# system GM,
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,# Four M adjustments for Jupiter to Pluto,,,,,,,,,,,,,,,
 key,file_prefix,wiki_en,parent,body_type,rotate_adj,rings,rings_outer_radius,first_jovian,dwarf,barycenter_counterbalanced,atmosphere,gas_giant,minor_moons,a,e,i,L0,w_hat,Om,M0,w,n,a_rate,e_rate,i_rate,L_rate,w_rate,Om_rate,M_adj_b,M_adj_c,M_adj_s,M_adj_f,is_tidally_locked,RA,dec,e_radius,m_radius,mass,density,rotation,albedo,esc_vel,GM,GM_planet
 Data_Type,STRING,STRING,STRING,STRING,REAL,STRING,REAL,X,X,X,X,X,X,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,BOOL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL
-Default_Value,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,,,,,,,
-Unit_Conversion,,,,,deg2rad,,,,,,,,,au2km,,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,au2km,,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,deg2rad,,deg2rad,deg2rad,,,1.00E+24,,,,,7.46E+09,7.46E+09
+Defaults,,,,,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,,,,,,,
+Units,,,,,deg,,km,,,,,,,au,,deg,deg,deg,deg,deg,deg,deg/d,au/century,1/century,deg/century,deg/century,deg/century,deg/century,deg,deg,deg,deg,,deg,deg,km,km,10^24 kg,g/cm^3,d,,km/s,km^3/s^2,km^3/s^2
 PLANET_MERCURY,Mercury,Mercury (planet),STAR_SUN,BODY_ROCKY_WORLD,,,,,,,,,,0.38709843,0.20563661,7.00559432,252.2516672,77.45771895,48.33961819,,,,0,0.00002123,-0.00590158,149472.6749,0.15940013,-0.12214182,,,,,,281.0038,61.41342,2439.7,2439.7,0.330114,5.427,58.6462,0.106,4.25,,
 PLANET_VENUS,Venus,Venus,STAR_SUN,BODY_THICK_ATMOSPHERE_WORLD,,,,,,,x,,,0.72332102,0.00676399,3.39777545,181.9797085,131.7675571,76.67261496,,,,-0.00000026,-0.00005107,0.00043494,58517.8156,0.05679648,-0.27274174,,,,,,272.76,67.16,6051.8,6051.8,4.86747,5.243,-243.018,0.65,10.36,,
 PLANET_EARTH,Earth,Earth,STAR_SUN,BODY_CONTINENTAL_WORLD,180,,,,,,x,,,1.00000018,0.01673163,-0.00054346,100.4669157,102.9300589,-5.11260389,,,,-0.00000003,-0.00003661,-0.01337178,35999.37306,0.3179526,-0.24123856,,,,,,359.88462,89.89974,6378.14,6371,5.97237,5.5134,0.99726968,0.367,11.19,,

@@ -6,8 +6,8 @@
 #,,# Graphics ---->,,,,,,
 key,ellipsoidal,unshaded,shadow,metallic,roughness,rim_enabled,rim,rim_tint
 Data_Type,BOOL,BOOL,BOOL,REAL,REAL,BOOL,REAL,REAL
-Default_Value,TRUE,FALSE,TRUE,0.1,0.6,TRUE,0.003,0.9
-Unit_Conversion,,,,,,,,
+Defaults,TRUE,FALSE,TRUE,0.1,0.6,TRUE,0.003,0.9
+Units,,,,,,,,
 BODY_STAR,,TRUE,FALSE,,,,,
 BODY_ROCKY_WORLD,,,,,,,,
 BODY_CONTINENTAL_WORLD,,,,,,,,

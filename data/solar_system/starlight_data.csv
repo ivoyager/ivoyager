@@ -3,6 +3,6 @@
 #,
 key,omni_range
 Data_Type,REAL
-Default_Value,
-Unit_Conversion,au2km
+Defaults,
+Units,au
 STARLIGHT_SUN,40

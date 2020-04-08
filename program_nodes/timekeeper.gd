@@ -19,9 +19,9 @@
 # conversion functions. For calendar calculations see:
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
-# The sim must run on J2000. However, this class could be subclassed (overriding
-# appropriate functions) to provide alternative time display and calendar
-# signals, e.g., a Martian calendar/clock.
+# The sim runs in s from J2000 (=2000-01-01 12:00). However, this class could
+# be subclassed to provide alternative time display and calendar signals, for
+# example, a Martian calendar/clock.
 # Processes through pause; stops/starts processing on run_state_changed signals.
 
 extends Node
@@ -38,12 +38,12 @@ signal day_changed(day)
 # project vars
 var speeds := [
 		[], # 0-element not used
-		["GAME_SPEED_REAL_TIME", 1.0 / 86400.0],
-		["GAME_SPEED_MINUTE_PER_SECOND", 1.0 / 1440.0],
-		["GAME_SPEED_HOUR_PER_SECOND", 1.0 / 24.0],
-		["GAME_SPEED_DAY_PER_SECOND", 1.0], # time is days; Godot delta is seconds
-		["GAME_SPEED_WEEK_PER_SECOND", 7.0],
-		["GAME_SPEED_MONTH_PER_SECOND", 30.0]
+		["GAME_SPEED_REAL_TIME", 1.0],
+		["GAME_SPEED_MINUTE_PER_SECOND", 60.0],
+		["GAME_SPEED_HOUR_PER_SECOND", Conv.HOUR],
+		["GAME_SPEED_DAY_PER_SECOND", Conv.DAY],
+		["GAME_SPEED_WEEK_PER_SECOND", Conv.DAY * 7.0],
+		["GAME_SPEED_MONTH_PER_SECOND", Conv.DAY * 30.0]
 	]
 var default_speed := 3
 var realtime_speed := 1
@@ -55,7 +55,7 @@ var regexpr := "^(-?\\d+)(?:[\\.\\/\\-](\\d\\d))?(?:[\\.\\/\\-](\\d\\d))?(?: " \
 		+ "(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?$"
 
 # public persisted - read-only!
-var time: float # days from J2000 epoch
+var time: float # seconds from J2000 epoch
 var speed_index := 0 # negative if time reversed
 var speed_multiplier := 0.0 # negative if time reversed
 var is_paused := false # lags 1 frame behind actual tree pause
@@ -83,7 +83,7 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 	"speed_multiplier", "is_paused", "year", "quarter", "month", "day", "ymd", "yqmd",
 	"_last_process_time", "_speed_memory", "_date_str", "_hour_str", "_seconds_str"]
 
-var _global_time_array: Array = Global.time_date
+var _time_date: Array = Global.time_date
 var _allow_time_reversal: bool = Global.allow_time_reversal
 var _tree: SceneTree
 var _hm := [-1, -1] # only updated when clock displayed!
@@ -101,8 +101,8 @@ func project_init() -> void:
 	Global.connect("run_state_changed", self, "set_process")
 	_tree = Global.program.tree
 	time = Global.start_time
-	_global_time_array.resize(5)
-	_global_time_array[0] = time
+	_time_date.resize(5)
+	_time_date[0] = time
 	set_yqmd(time, yqmd)
 	_update_from_yqmd()
 	_last_process_time = time
@@ -114,17 +114,17 @@ func project_init() -> void:
 	_date_time_regex.compile(regexpr)
 
 static func get_hour(time_: float) -> int:
-	return wrapi(int(floor(time_ * 24.0 + 12.0)), 0, 24)
+	return wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
 
 static func get_hour_minute_second(time_: float) -> Array:
-	var h := wrapi(int(floor(time_ * 24.0 + 12.0)), 0, 24)
-	var m := wrapi(int(floor(time_ * 1440.0)), 0, 60)
-	var s := wrapi(int(floor(time_ * 86400.0)), 0, 60)
+	var h := wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
+	var m := wrapi(int(floor(time_ / 60.0)), 0, 60)
+	var s := wrapi(int(floor(time_)), 0, 60)
 	return [h, m, s]
 
 static func set_yqmd(time_: float, yqmd_: Array) -> void:
 	# Convert to Julian Day Number, then calendar integers.
-	var jdn := int(floor(time_ + 0.5)) + 2451545
+	var jdn := int(floor(time_ * 86400.0 + 0.5)) + 2451545
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -152,25 +152,25 @@ static func get_date_time_string(time_: float, sep := "-", n_elements := 6) -> S
 		return "%s%s%02d" % [yqmd_[0], sep, yqmd_[2]]
 	if n_elements == 3:
 		return "%s%s%02d%s%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3]]
-	var hour := wrapi(int(floor(time_ * 24.0 + 12.0)), 0, 24)
+	var hour := wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
 	if n_elements == 4:
 		return "%s%s%02d%s%02d %02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3], hour]
-	var minute := wrapi(int(floor(time_ * 1440.0)), 0, 60)
+	var minute := wrapi(int(floor(time_ / 60.0)), 0, 60)
 	if n_elements == 5:
 		return "%s%s%02d%s%02d %02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
 				hour, minute]
-	var second := wrapi(int(floor(time_ * 86400.0)), 0, 60)
+	var second := wrapi(int(floor(time_)), 0, 60)
 	if n_elements == 6:
 		return "%s%s%02d%s%02d %02d:%02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
 				hour, minute, second]
-	var sixtieth := wrapi(int(floor(time_ * 5184000.0)), 0, 60)
+	var sixtieth := wrapi(int(floor(time_ * 60.0)), 0, 60)
 	return "%s%s%02d%s%02d %02d:%02d:%02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
 			hour, minute, second, sixtieth] 
 
 func convert_date_time_string(string: String, min_elements := 1) -> float:
 	# Inverse of get_date_time_string(). Valid string must follow format
 	# "0000-00-00 00:00:00:00" where "/" or "." can substitute for "-" and
-	# string can be truncated after any time unit. E.g., "2000", "2000-06",
+	# string can be truncated after any element. E.g., "2000", "2000-06",
 	# "2000/06/01 12:12" are ok. A date without hour will be interpreted as
 	# 12:00, not 00:00! Thus, "2000" returns 0.0 (=J2000 epoch).
 	# Returns -INF if can't parse format or not provided min_elements (e.g.,
@@ -199,12 +199,12 @@ func convert_date_time_string(string: String, min_elements := 1) -> float:
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	jdn += -(3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075
-	return float(jdn - 2451545) + ((hour - 12.0) / 24.0) + (minute / 1440.0) \
-			+ (second / 86400.0) + (sixtieth / 5184000.0)
+	return float(jdn - 2451545) * 86400.0 + ((hour - 12.0) * 3600.0) \
+			+ (minute * 60.0) + second + (sixtieth / 60.0)
 
 func set_time(new_time: float) -> void:
 	time = new_time
-	_global_time_array[0] = new_time
+	_time_date[0] = new_time
 	_last_process_time = new_time
 	reset()
 
@@ -273,10 +273,10 @@ func get_current_date_string(sep := "-") -> String:
 
 func _init_after_load() -> void:
 	_is_started = false
-	_global_time_array[0] = time
-	_global_time_array[1] = year
-	_global_time_array[2] = month
-	_global_time_array[3] = day
+	_time_date[0] = time
+	_time_date[1] = year
+	_time_date[2] = month
+	_time_date[3] = day
 
 func _ready() -> void:
 	set_process(Global.state.is_running) # should be false
@@ -303,7 +303,7 @@ func _on_process(delta: float) -> void:
 		print("Starting Timekeeper")
 	# simulator time
 	time += delta * speed_multiplier # speed_multiplier < 0 for time reversal
-	_global_time_array[0] = time
+	_time_date[0] = time
 	_update_display_and_calendar()
 	var sim_delta := time - _last_process_time
 	_last_process_time = time
@@ -315,22 +315,21 @@ func _update_display_and_calendar() -> void:
 	if time > _day_rollover or (speed_index < 0 and time < _day_rollover - 1.0):
 		set_yqmd(time, yqmd)
 		_update_from_yqmd()
-		_day_rollover = ceil(time - 0.5) + 0.5
+		_day_rollover = ceil(time * 86400.0 - 0.5) + 0.5
 		_date_str = "%s-%02d-%02d" % ymd
 		update_display = true
 	var show_clock := speed_index <= show_clock_speed and speed_index >= -show_clock_speed
 	if show_clock and (time > _minute_rollover or speed_index < 0):
-		var total_minutes := time * 1440.0
-		_hm[0] = wrapi(int(floor(time * 24.0 + 12.0)), 0, 24) # hour
+		var total_minutes := time / 60.0
+		_hm[0] = wrapi(int(floor(time / 3600.0 + 12.0)), 0, 24) # hour
 		_hm[1] = wrapi(int(floor(total_minutes)), 0, 60) # minute
-		_minute_rollover = ceil(total_minutes) / 1440.0
+		_minute_rollover = ceil(total_minutes) * 60.0
 		_hour_str = " %02d:%02d" % _hm
 		update_display = true
 	var show_seconds := show_clock and speed_index <= show_seconds_speed and speed_index >= -show_seconds_speed
 	if show_seconds and (time > _second_rollover or speed_index < 0):
-		var total_seconds := time * 86400.0
-		var second := wrapi(int(floor(total_seconds)), 0, 60)
-		_second_rollover = ceil(total_seconds) / 86400.0
+		var second := wrapi(int(floor(time)), 0, 60)
+		_second_rollover = ceil(time)
 		_seconds_str = ":%02d" % second
 		update_display = true
 	if update_display:
@@ -357,21 +356,21 @@ func _update_from_yqmd() -> void:
 	if year != yqmd[0]:
 		year = yqmd[0]
 		ymd[0] = year
-		_global_time_array[1] = year
+		_time_date[1] = year
 		_is_year_changed = true
 	if quarter != yqmd[1]:
 		quarter = yqmd[1]
-		_global_time_array[2] = quarter
+		_time_date[2] = quarter
 		_is_quarter_changed = true
 	if month != yqmd[2]:
 		month = yqmd[2]
 		ymd[1] = month
-		_global_time_array[3] = month
+		_time_date[3] = month
 		_is_month_changed = true
 	if day != yqmd[3]:
 		day = yqmd[3]
 		ymd[2] = day
-		_global_time_array[4] = day
+		_time_date[4] = day
 		_is_day_changed = true
 	
 func _signal_speed_changed() -> void:

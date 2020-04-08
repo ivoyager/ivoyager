@@ -15,18 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
+# All length metrics in Orbit are adjusted for Global.scale (a, mu, etc.).
+# Otherwise, we follow sim-standard units: s, km, kg, rad. Note that
+# TableReader already converted data table values to sim-standard.
 
 extends Reference
 class_name OrbitBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
+const DPRINT := false
 #const MIN_APSIDAL_OR_NODAL_PERIOD := 1.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
-const DPRINT := false
+
 
 var _scale: float = Global.scale
 var _dynamic_orbits: bool = Global.dynamic_orbits
@@ -35,21 +38,21 @@ var _Orbit_: Script
 func project_init() -> void:
 	_Orbit_ = Global.script_classes._Orbit_
 
-func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float) -> Orbit:
-	assert(DPRINT and prints("make_orbit_from_data", tr(data.key), parent, mu, time) or true)
+func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
+	assert(DPRINT and prints("make_orbit_from_data", tr(data.key), parent, time) or true)
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
-	#  [0] a,  semimajor axis (in km * scale) [TODO: allow negative for hyperbolic!]
+	#  [0] a,  semimajor axis (km * scale) [TODO: allow negative for hyperbolic!]
 	#  [1] e,  eccentricity (0.0 - 1.0)
 	#  [2] i,  inclination (rad)
 	#  [3] Om, longitude of the ascending node (rad)
 	#  [4] w,  argument of periapsis (rad)
 	#  [5] M0, mean anomaly at epoch (rad)
-	#  [6] n,  mean motion (rad/day)
+	#  [6] n,  mean motion (rad/s)
 	#
 	# Elements 0-5 completely define an *unperturbed* orbit assuming we know mu
-	# (= G * Mass of parent body). Mean motion (n) is kept for convinience and
+	# (= GM of parent body). Mean motion (n) is kept for convinience and
 	# for cases where we have "proper orbits" (a synthetic orbit accounting
 	# for perturbations that is stable over millions of years).
 	#
@@ -65,6 +68,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
 	var orbit := _make_orbit()
+	var mu := parent.gm * _scale * _scale * _scale # km^3/s^2
 	var elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 	var element_rates: Array # optional
 	var m_modifiers: Array # optional
@@ -77,14 +81,14 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 	if data.has("w"):
 		elements[4] = data.w
 	else: # table must have w or w_hat
-		elements[4] = data.w_hat - data.Om
+		elements[4] = data.w_hat - elements[3] # w = w_hat - Om
 	if data.has("n"):
 		elements[6] = data.n
-	elif data.has("L_rate"): # planet tables (rad / century after load conversion)
+	elif data.has("L_rate"): # planet tables
 		# Note: "L_rate" is NOT an element rate! It's just n in disguise.
-		elements[6] = math.day2year(data.L_rate) / 100.0
+		elements[6] = data.L_rate
 	else: # calculate n
-		elements[6] = sqrt(mu / pow(elements[0], 3)) # n = sqrt(mu/(a^3))
+		elements[6] = sqrt(mu / pow(elements[0], 3.0)) # n = sqrt(mu/(a^3))
 	if data.has("M0"):
 		elements[5] = data.M0
 	elif data.has("L0"):
@@ -109,7 +113,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 			data.w_rate
 			]
 		# M modifiers are additional modifiers for Jupiter to Pluto.
-		if data.has("M_adj_b"):
+		if data.has("M_adj_b"): # must also have c, s, f
 			m_modifiers = [
 				data.M_adj_b,
 				data.M_adj_c,
@@ -131,8 +135,8 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 				0.0,
 				0.0,
 				0.0,
-				100.0 * TAU / Pnode if Pnode > 0.0 else 0.0, # Om_rate
-				100.0 * TAU / Pw if Pw > 0.0 else 0.0 # w_rate
+				TAU / Pnode if Pnode > 0.0 else 0.0, # Om_rate
+				TAU / Pw if Pw > 0.0 else 0.0 # w_rate
 				]
 	else: # no rates or format error
 		assert(format_test == 0)
@@ -140,14 +144,14 @@ func make_orbit_from_data(data: Dictionary, parent: Body, mu: float, time: float
 		
 	if element_rates and _dynamic_orbits:
 		# Set update_frequency based on fastest element rate. We normalize to
-		# values roughly meaning "parts per century".
-		var a_ppc: float = element_rates[0] / elements[0]
-		var e_ppc: float = element_rates[1]
-		var i_ppc: float = element_rates[2] / TAU
-		var Om_ppc: float = element_rates[3] / TAU
-		var w_ppc: float = element_rates[4] / TAU
-		var max_ppc = [a_ppc, e_ppc, i_ppc, Om_ppc, w_ppc].max()
-		orbit.update_frequency = max_ppc / (UPDATE_ORBIT_TOLERANCE * 36525.0) # per day (mostly << 1)
+		# values roughly meaning "parts per second".
+		var a_pps: float = element_rates[0] / elements[0]
+		var e_pps: float = element_rates[1] / 0.1 # arbitrary
+		var i_pps: float = element_rates[2] / TAU
+		var Om_pps: float = element_rates[3] / TAU
+		var w_pps: float = element_rates[4] / TAU
+		var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
+		orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
 #		if orbit.update_frequency > 1.0:
 #			prints("update_frequency", tr(data.key), orbit.update_frequency)
 		assert(DPRINT and prints("update_frequency", tr(data.key), orbit.update_frequency) or true)

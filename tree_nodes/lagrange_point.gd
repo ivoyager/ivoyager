@@ -42,7 +42,7 @@ const PERSIST_OBJ_PROPERTIES := ["focal_orbit"]
 func init(focal_orbit_: Orbit, l_point_: int) -> void:
 	focal_orbit = focal_orbit_
 	l_point = l_point_
-	focal_orbit.connect("changed", self, "_update_elements")
+	focal_orbit.connect("changed_for_graphics", self, "_update_elements")
 	_update_elements()
 
 func _update_elements() -> void:

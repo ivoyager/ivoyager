@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Reference
 class_name BodyBuilder
@@ -24,7 +23,7 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 const DPRINT := false
-const MAJOR_MOON_GM := 4.0 * 7.46496e9 # eg, Miranda is 4.4 in _Moon_Master.xlsm
+const IS_MAJOR_MOON_GM := 4.0 # eg, Miranda is 4.4 km^3/s^2
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
@@ -47,7 +46,6 @@ var _Rings_: Script
 var _Starlight_: Script
 var _texture_2d_dir: String
 
-var _major_moon_gm: float = MAJOR_MOON_GM * _scale * _scale * _scale
 var _satellite_indexes := {} # passed to & shared by Body instances
 var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
 
@@ -87,31 +85,31 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	var time: float = _time_date[0]
 	var orbit: Orbit
 	if !body.is_top:
-		orbit = _orbit_builder.make_orbit_from_data(data, parent, parent.GM, time)
+		orbit = _orbit_builder.make_orbit_from_data(data, parent, time)
 		body.orbit = orbit
 	body.body_type = _table_types[data.body_type]
 	if data.has("starlight_type"):
 		body.starlight_type = _table_types[data.starlight_type]
 	body.has_atmosphere = data.has("atmosphere")
-	body.m_radius = data.m_radius * _scale
+	body.m_radius = data.m_radius * _scale # FIXME
 	body.e_radius = data.e_radius * _scale if data.has("e_radius") else body.m_radius
 	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
 	body.mass = data.mass if data.has("mass") else 0.0
-	body.GM = data.GM * _scale * _scale * _scale if data.has("GM") else 0.0
+	body.gm = data.GM if data.has("GM") else 0.0
 	if body.mass == 0.0:
-		body.mass = body.GM / _gravitational_constant
-	elif body.GM == 0.0:
-		body.GM = body.mass * _gravitational_constant
-	if body.is_moon and body.GM < _major_moon_gm and !data.has("force_major"):
+		body.mass = body.gm / _gravitational_constant
+	if body.gm == 0.0:
+		body.gm = body.mass * _gravitational_constant
+	if body.is_moon and body.gm < IS_MAJOR_MOON_GM and !data.has("force_major"):
 		body.is_minor_moon = true
 	body.rotation_period = data.rotation if data.has("rotation") else 0.0
 	body.right_ascension = data.RA if data.has("RA") else -INF
 	body.declination = data.dec if data.has("dec") else -INF
 	body.axial_tilt = data.axial_tilt if data.has("axial_tilt") else 0.0
 	if data.has("esc_vel"):
-		body.esc_vel = data.esc_vel # km/s
+		body.esc_vel = data.esc_vel
 	else:
-		body.esc_vel = sqrt(2.0 * body.GM / body.m_radius) * 86400.0 # km/d -> km/s
+		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
 	# orbit and axis
 	if parent and parent.is_star:
 		body.is_star_orbiting = true

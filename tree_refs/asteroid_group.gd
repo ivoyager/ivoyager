@@ -162,7 +162,7 @@ func clear_for_import() -> void:
 
 func _fix_binary_keplerian_elements() -> void:
 	var scale: float = Global.scale
-	var mu := star.GM
+	var mu := star.gm * scale * scale * scale
 	var index := 0
 	while index < _index:
 		var a: float = a_e_i[index][0] * scale

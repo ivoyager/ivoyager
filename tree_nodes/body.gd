@@ -15,12 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Base class for spatial nodes that have an orbit or can be orbited, including
 # non-physical barycenters & lagrange points. The system tree is composed of
 # Body instances from top to bottom, each Body having its orbiting children
 # (other Body instances) and other spatial children that are visuals: Model,
 # Rings, HUDIcon, HUDOrbit, etc.
+#
+# All properties defined here use sim-standard units: s, km, kg, rad (and
+# thier derivitives: km/s, etc.). HOWEVER, engine properties, Orbit properties
+# and Orbit function returns involving length are adjusted for Global.scale!
+#
 # TODO: Make LagrangePoint into Body instances
 # TODO: barycenters
 
@@ -51,9 +55,9 @@ var is_minor_moon := false
 var has_atmosphere := false
 var tidally_locked := false
 var mass := 0.0
-var GM := 0.0
+var gm := 0.0
 var esc_vel := 0.0 # km/s
-var m_radius := 0.0
+var m_radius := 0.0 # TODO: unscale!!!
 var e_radius := 0.0
 var system_radius := 0.0 # widest orbiting satellite
 var rotation_period := 0.0
@@ -77,7 +81,7 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"is_spacecraft", "body_type", "selection_type",
 	"starlight_type", "classification", "is_top", "is_star_orbiting",
 	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
-	"has_atmosphere", "tidally_locked", "mass", "GM",
+	"has_atmosphere", "tidally_locked", "mass", "gm",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
 	"declination", "right_ascension", "density", "albedo",
 	"has_minor_moons", "reference_basis", "north_pole",
@@ -194,7 +198,7 @@ func _on_init() -> void:
 func _on_ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 	if orbit:
-		orbit.connect("changed", self, "_update_orbit_change")
+		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
 
 func _update_orbit_change():
 	if tidally_locked:
