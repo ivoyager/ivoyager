@@ -69,12 +69,12 @@ signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
 
-# shared containers - safe to keep reference (writting object is indicated)
+# containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
-var time_date := [] # Timekeeper; [time: float, year: int, quarter, month, day]
+var time_date := [] # Timekeeper [time, year, quarter, month, day] int except time
 var program := {} # program nodes and refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
-var assets := {} # populated by this node _project_init()
+var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
 var tables := {} # TableReader; imported csv tables from data directory
 var table_types := {} # TableReader; enum-like ints by key & single table dicts
@@ -103,15 +103,17 @@ var disable_exit := false
 var disable_quit := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 20.0 * Conv.YEAR # from J2000 epoch (time in s)
+var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_time_reversal := true
 var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
-var max_camera_distance: float = 3e10 # km
-var scale := 1e-9 # engine length per km; check graphics at close/far extremes!
-var gravitational_constant := 0.0667430 # km^3/(kg s^2)
-var obliquity_of_the_ecliptic := 23.439 * Conv.DEG
+var max_camera_distance: float = 3e10 * UnitDefs.KM
+var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")
+var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
+
+# DEPRECIATE
+var scale := 1.0 # engine length units per km
 
 var colors := { # user settable are in SettingsManager
 	normal = Color.white,
@@ -127,14 +129,14 @@ var planetary_system_dir := "res://ivoyager/data/solar_system"
 # web deployment of the Planetarium.
 var asset_replacement_dir := "" 
 var asset_paths := {
-	# If the element name does not end in "_dir", it is assumed to be an asset
-	# file and is loaded into assets at project_init().
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	models_dir = "res://ivoyager_assets/models",
 	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
 	rings_dir = "res://ivoyager_assets/rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
+}
+var asset_paths_for_load := { # project_init() will load these into assets
 	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
@@ -163,21 +165,22 @@ const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 # *****************************************************************************
 
-# public project_version & ivoyager_version will be from save file after load
+# these may differ after game load; see check_load_version()
 var _project_version := project_version
 var _ivoyager_version := ivoyager_version
 
 func project_init() -> void:
 	# This is the first of all project_init() calls.
 	prints(project_name, ivoyager_version, project_version)
-	for asset_name in asset_paths:
-		if asset_replacement_dir:
-			var old_path: String = asset_paths[asset_name]
-			var new_path := old_path.replace("ivoyager_assets", asset_replacement_dir)
-			asset_paths[asset_name] = new_path
-		if !asset_name.ends_with("_dir"):
-			var path: String = asset_paths[asset_name]
-			assets[asset_name] = load(path)
+	if asset_replacement_dir:
+		for dict in [asset_paths, asset_paths_for_load]:
+			for asset_name in dict:
+				var old_path: String = dict[asset_name]
+				var new_path := old_path.replace("ivoyager_assets", asset_replacement_dir)
+				dict[asset_name] = new_path
+	for asset_name in asset_paths_for_load:
+		var path: String = asset_paths_for_load[asset_name]
+		assets[asset_name] = load(path)
 
 func check_load_version() -> void:
 	if _project_version != project_version or _ivoyager_version != ivoyager_version:
@@ -186,4 +189,4 @@ func check_load_version() -> void:
 		prints("Loaded game started as:  ", ivoyager_version, project_version)
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"

@@ -1,0 +1,312 @@
+# qty_strings.gd
+# This file is part of I, Voyager
+# https://ivoyager.dev
+# Copyright (c) 2017-2020 Charlie Whitfield
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+# All functions assume sim-standard units defined in UnitDefs.
+
+class_name QtyStrings
+
+const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+
+enum { # case_type
+	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 kilohertz", "1.00 Megahertz"
+	CASE_LOWER, # does not modify exp_str
+	CASE_UPPER, # does not modify exp_str
+}
+
+enum { # option_type
+	# length
+	LENGTH_M_KM, # m if x < 1.0 km
+	LENGTH_KM_AU, # au if x > 0.1 au
+	LENGTH_M_KM_AU,
+	# mass
+	MASS_G_KG, # g if < 1.0 kg
+	MASS_G_KG_T, # g if < 1.0 kg; t if x >= 1000.0 kg 
+	MASS_G_KG_PREFIXED_T, # g, kg, t, kt, Mt, Gt, Tt, Pt etc.
+	# velocity
+	VELOCITY_MPS_KMPS, # km/s if >= 1.0 km/s
+	VELOCITY_MPS_KMPS_C, # km/s if >= 1.0 km/s; c if >= 0.1 c
+}
+
+
+const LOG_OF_10 := log(10)
+
+# project vars
+var multipliers := unit_defs.MULTIPLIERS
+var functions := unit_defs.FUNCTIONS
+var exp_str := "x10^" # e.g., set to "e", "E" or "x10^"
+var prefix_names := [
+	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"]
+var prefix_symbols := [ # must exactly correspond to prefix names
+	"", "k", "M", "G", "T", "P", "E", "Z", "Y"] # e3, e6, ... e24
+var prefix_offset := 0 # prefix index for e0 (unity)
+
+var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
+	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
+	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in project_init()
+
+var short_forms := {
+	# If missing here, we fallback to the unit string itself (which is usually
+	# the desired short form).
+	"century" : "TXT_CENTURIES",
+	"deg" : "TXT_DEG",
+	"degC" : "TXT_DEG_C",
+	"degF" : "TXT_DEG_F",
+	"deg/d" : "TXT_DEG_PER_DAY",
+	"deg/a" : "TXT_DEG_PER_YEAR",
+	"deg/century" : "DEG_PER_CENTURY",
+}
+
+var long_forms := {
+	# If missing here, we fallback to short_forms, then the unit string itself.
+	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
+	# using number_prefixed_unit(). We have commonly used already-prefixed here
+	# because it is common to want to display quantities such as: "3.00e9 km".
+	# time
+	"s" : "TXT_SECONDS",
+	"min" : "TXT_MINUTES",
+	"h" : "TXT_HOURS",
+	"d" : "TXT_DAYS",
+	"a" : "TXT_YEARS",
+	"yr" : "TXT_YEARS",
+	"century" : "TXT_CENTURIES",
+	# length
+	"mm" : "TXT_MILIMETERS",
+	"cm" : "TXT_CENTIMETERS",
+	"m" : "TXT_METERS",
+	"km" : "TXT_KILOMETER",
+	"au" : "TXT_ASTRONOMICAL_UNITS",
+	"pc" : "TXT_PARSECS",
+	"Mpc" : "TXT_MEGAPARSECS",
+	# mass
+	"g" : "TXT_GRAMS",
+	"kg" : "TXT_KILOGRAMS",
+	"t" : "TXT_TONNES",
+	# angle
+	"rad" : "TXT_RADIANS",
+	"deg" : "TXT_DEGREES",
+	# temperature
+	"K" : "TXT_KELVIN",
+	"degC" : "TXT_CENTIGRADE",
+	"degF" : "TXT_FAHRENHEIT",
+	# frequency
+	"Hz" : "TXT_HERTZ",
+	"1/d" : "TXT_PER_DAY",
+	"1/a" : "TXT_PER_YEAR",
+	"1/yr" : "TXT_PER_YEAR",
+	# area
+	"m^2" : "TXT_SQUARE_METERS",
+	"km^2" : "TXT_SQUARE_KILOMETERS",
+	"ha" : "TXT_HECTARES",
+	# volume
+	"m^3" : "TXT_CUBIC_METERS",
+	"km^3" : "TXT_CUBIC_KILOMETERS",
+	# velocity
+	"m/s" : "TXT_METERS_PER_SECOND",
+	"km/s" : "TXT_KILOMETERS_PER_SECOND",
+	"km/h" : "TXT_KILOMETERS_PER_HOUR",
+	"c" : "TXT_SPEED_OF_LIGHT",
+	# angular velocity
+	"deg/d" : "TXT_DEGREES_PER_DAY",
+	"deg/a" : "TXT_DEGREES_PER_YEAR",
+	"deg/century" : "DEGREES_PER_CENTURY",
+	# density
+	"g/cm^3" : "TXT_GRAMS_PER_CUBIC_CENTIMETER",
+	# mass rate
+	"kg/d" : "TXT_KILOGRAMS_PER_DAY",
+	"t/d" : "TXT_TONNES_PER_DAY",
+	# force
+	"N" : "TXT_NEWTONS",
+	# pressure
+	"Pa" : "TXT_PASCALS",
+	# energy
+	"J" : "TXT_JOULES",
+	"Wh" : "TXT_WATT_HOURS",
+	"kWh" : "TXT_KILOWATT_HOURS",
+	"MWh" : "TXT_MEGAWATT_HOURS",
+	# power
+	"W" : "TXT_WATTS",
+	"kW" : "TXT_KILOWATTS",
+	"MW" : "TXT_MEGAWATTS",
+}
+
+# private
+var _scale: float
+var _n_prefixes: int
+var _n_lg_numbers: int
+
+
+func project_init():
+	_scale = Global.scale
+	_n_prefixes = prefix_symbols.size()
+	_n_lg_numbers = large_numbers.size()
+	for i in range(_n_lg_numbers):
+		large_numbers[i] = tr(large_numbers[i])
+	assert(_n_prefixes == prefix_names.size())
+
+func get_tenth_power(x: float) -> int:
+	assert(x != 0.0)
+	return int(floor(log(abs(x)) / LOG_OF_10))
+
+func get_tenth_power_div_3(x: float) -> int:
+	assert(x != 0.0)
+	return int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
+
+func get_unit_str(unit: String, long_form := false) -> String:
+	if !unit:
+		return ""
+	if long_form and long_forms.has(unit):
+		return tr(long_forms[unit])
+	elif short_forms.has(unit):
+		return tr(short_forms[unit])
+	return unit
+
+func scientific(x: float, force_scientific := false) -> String:
+	# returns "0.0100" to "99999" as non-scientific unless force_scientific
+	# TODO: significant_digets (now = 3)
+	if x == 0.0:
+		return "0.00" + exp_str + "0" if force_scientific else "0"
+	var exponent := get_tenth_power(x)
+	if force_scientific or exponent > 4 or exponent < -2:
+		var divisor := pow(10.0, exponent)
+		x = x / divisor if !is_zero_approx(divisor) else 1.0
+		return "%.2f%s%s" % [x, exp_str, exponent] # e.g., 5.55e5
+	elif exponent > 1.0:
+		return "%.f" % x # 55555, 5555, or 555
+	elif exponent == 1.0:
+		return "%.1f" % x # 55.5
+	elif exponent == 0.0:
+		return "%.2f" % x # 5.55
+	elif exponent == -1.0:
+		return "%.3f" % x # 0.555
+	else: # -2.0
+		return "%.4f" % x # 0.0555
+
+func named_number(x: float, case_type := CASE_MIXED) -> String:
+	# returns integer string up to "999999", then "1.00 Million", etc.;
+	# you won't see scientific unless > 99999 Decillion.
+	if abs(x) < 1e6:
+		return "%.f" % x
+	var exp_div_3 := get_tenth_power_div_3(x)
+	var lg_num_index := exp_div_3 - 2
+	if lg_num_index < 0: # shouldn't happen but just in case
+		return "%.f" % x
+	if lg_num_index >= _n_lg_numbers:
+		lg_num_index = _n_lg_numbers - 1
+		exp_div_3 = lg_num_index + 2
+	x /= pow(10.0, exp_div_3 * 3)
+	var lg_number_str: String = large_numbers[lg_num_index]
+	if case_type == CASE_LOWER:
+		lg_number_str = lg_number_str.to_lower()
+	elif case_type == CASE_UPPER:
+		lg_number_str = lg_number_str.to_upper()
+	return scientific(x) + " " + lg_number_str
+
+func number_unit(x: float, unit: String, long_form := false, case_type := CASE_MIXED,
+		use_scientific := true, force_scientific := false) -> String:
+	# unit must be in multipliers or functions dicts (by default these are
+	# MULTIPLIERS and FUNCTIONS in ivoyager/static/unit_defs.gd)
+	x = unit_defs.conv(x, unit, true, false, multipliers, functions)
+	var number_str: String
+	if use_scientific:
+		number_str = scientific(x, force_scientific)
+	else:
+		number_str = String(x)
+	var unit_str := get_unit_str(unit, long_form)
+	if case_type == CASE_LOWER:
+		unit_str = unit_str.to_lower()
+	elif case_type == CASE_UPPER:
+		unit_str = unit_str.to_upper()
+	return number_str + " " + unit_str
+
+func number_prefixed_unit(x: float, unit: String, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	# unit = "" ok; otherwise, must be in multipliers or functions dicts.
+	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
+	# long_form = false or true, repspectively). Supplied unit should be
+	# unprefixed ("m" rather than "km") or you will get weird double
+	# prefixing. You won't see scientific notation unless the value falls
+	# outside of the prefixes range.
+	if unit:
+		x = unit_defs.conv(x, unit, true, false, multipliers, functions)
+	var exp_div_3 := get_tenth_power_div_3(x)
+	var si_index := exp_div_3 + prefix_offset
+	if si_index < 0:
+		si_index = 0
+		exp_div_3 = -prefix_offset
+	elif si_index >= _n_prefixes:
+		si_index = _n_prefixes - 1
+		exp_div_3 = si_index - prefix_offset
+	x /= pow(10.0, exp_div_3 * 3)
+	var unit_str: String
+	if long_form:
+		unit_str = prefix_names[si_index] + get_unit_str(unit, true)
+	else:
+		unit_str = prefix_symbols[si_index] + get_unit_str(unit, false)
+	if case_type == CASE_LOWER:
+		unit_str = unit_str.to_lower()
+	elif case_type == CASE_UPPER:
+		unit_str = unit_str.to_upper()
+	return scientific(x) + " " + unit_str
+
+func number_unit_options(x: float, option_type: int, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	match option_type:
+		LENGTH_M_KM: # m if x < 1.0 km
+			if x < unit_defs.KM:
+				return number_unit(x, "m", long_form, case_type)
+			return number_unit(x, "km", long_form, case_type)
+		LENGTH_KM_AU: # au if x > 0.1 au
+			if x < 0.1 * unit_defs.AU:
+				return number_unit(x, "km", long_form, case_type)
+			return number_unit(x, "au", long_form, case_type)
+		LENGTH_M_KM_AU:
+			if x < unit_defs.KM:
+				return number_unit(x, "m", long_form, case_type)
+			elif x < 0.1 * unit_defs.AU:
+				return number_unit(x, "km", long_form, case_type)
+			return number_unit(x, "au", long_form, case_type)
+		MASS_G_KG: # g if < 1.0 kg
+			if x < unit_defs.KG:
+				return number_unit(x, "g", long_form, case_type)
+			return number_unit(x, "kg", long_form, case_type)
+		MASS_G_KG_T: # g if < 1.0 kg; t if x >= 1000.0 kg 
+			if x < unit_defs.KG:
+				return number_unit(x, "g", long_form, case_type)
+			elif x < unit_defs.TONNE:
+				return number_unit(x, "kg", long_form, case_type)
+			return number_unit(x, "t", long_form, case_type)
+		MASS_G_KG_PREFIXED_T: # g, kg, t, kt, Mt, Gt, Tt, etc.
+			if x < unit_defs.KG:
+				return number_unit(x, "g", long_form, case_type)
+			elif x < unit_defs.TONNE:
+				return number_unit(x, "kg", long_form, case_type)
+			return number_prefixed_unit(x, "t", long_form, case_type)
+		VELOCITY_MPS_KMPS: # km/s if >= 1.0 km/s
+			if x < unit_defs.KM / unit_defs.SECOND:
+				return number_unit(x, "m/s", long_form, case_type)
+			return number_unit(x, "km/s", long_form, case_type)
+		VELOCITY_MPS_KMPS_C: # c if >= 0.1 c
+			if x < unit_defs.KM / unit_defs.SECOND:
+				return number_unit(x, "m/s", long_form, case_type)
+			elif x < 0.1 * unit_defs.C:
+				return number_unit(x, "c", long_form, case_type)
+			return number_unit(x, "km/s", long_form, case_type)
+	assert(false, "Unkknown option_type: " + option_type)
+	return String(x)
+
+
+

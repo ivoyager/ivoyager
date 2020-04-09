@@ -35,8 +35,8 @@ signal changed_for_graphics() # does not signal if no one is looking!
 const DPRINT := false
 const FLUSH_AT_N_MEMOIZED := 200
 const ECLIPTIC_UP := Vector3(0.0, 0.0, 1.0)
-const T_3000BCE := -50.0 * Conv.CENTURY # 3000 BCE
-const T_3000CE := 10.0 * Conv.CENTURY # 3000 CE
+const T_3000BCE := -50.0 * UnitDefs.CENTURY # 3000 BCE
+const T_3000CE := 10.0 * UnitDefs.CENTURY # 3000 CE
 
 # persisted
 var reference_normal := ECLIPTIC_UP # moons are often different

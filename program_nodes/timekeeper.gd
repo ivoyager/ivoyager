@@ -38,12 +38,12 @@ signal day_changed(day)
 # project vars
 var speeds := [
 		[], # 0-element not used
-		["GAME_SPEED_REAL_TIME", 1.0],
-		["GAME_SPEED_MINUTE_PER_SECOND", 60.0],
-		["GAME_SPEED_HOUR_PER_SECOND", Conv.HOUR],
-		["GAME_SPEED_DAY_PER_SECOND", Conv.DAY],
-		["GAME_SPEED_WEEK_PER_SECOND", Conv.DAY * 7.0],
-		["GAME_SPEED_MONTH_PER_SECOND", Conv.DAY * 30.0]
+		["GAME_SPEED_REAL_TIME", UnitDefs.SECOND],
+		["GAME_SPEED_MINUTE_PER_SECOND", UnitDefs.MINUTE],
+		["GAME_SPEED_HOUR_PER_SECOND", UnitDefs.HOUR],
+		["GAME_SPEED_DAY_PER_SECOND", UnitDefs.DAY],
+		["GAME_SPEED_WEEK_PER_SECOND", 7.0 * UnitDefs.DAY],
+		["GAME_SPEED_MONTH_PER_SECOND", 30.0 * UnitDefs.DAY]
 	]
 var default_speed := 3
 var realtime_speed := 1
@@ -124,7 +124,7 @@ static func get_hour_minute_second(time_: float) -> Array:
 
 static func set_yqmd(time_: float, yqmd_: Array) -> void:
 	# Convert to Julian Day Number, then calendar integers.
-	var jdn := int(floor(time_ * 86400.0 + 0.5)) + 2451545
+	var jdn := int(floor(time_ / 86400.0 + 0.5)) + 2451545
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -189,6 +189,7 @@ func convert_date_time_string(string: String, min_elements := 1) -> float:
 	var minute := float(strings[5]) if strings[5] else 0.0
 	var second := float(strings[6]) if strings[6] else 0.0
 	var sixtieth := float(strings[7]) if strings[7] else 0.0
+	# formula below is broken into three parts for the warning-ignore disables
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var jdn: int = (1461 * (y + 4800 + (m - 14) / 12)) / 4
@@ -315,7 +316,7 @@ func _update_display_and_calendar() -> void:
 	if time > _day_rollover or (speed_index < 0 and time < _day_rollover - 1.0):
 		set_yqmd(time, yqmd)
 		_update_from_yqmd()
-		_day_rollover = ceil(time * 86400.0 - 0.5) + 0.5
+		_day_rollover = ceil(time / 86400.0 - 0.5) + 0.5
 		_date_str = "%s-%02d-%02d" % ymd
 		update_display = true
 	var show_clock := speed_index <= show_clock_speed and speed_index >= -show_clock_speed

@@ -24,7 +24,7 @@ extends Reference
 class_name TableReader
 
 #const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const conv := preload("res://ivoyager/static/conv.gd")
+const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
 
@@ -191,7 +191,7 @@ func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> 
 									var real := float(value)
 									if units and units[i]:
 										var unit_symbol: String = units[i]
-										line_dict[header] = conv.from(real, unit_symbol)
+										line_dict[header] = unit_defs.conv(real, unit_symbol, false, true)
 									else:
 										line_dict[header] = real
 								"STRING":

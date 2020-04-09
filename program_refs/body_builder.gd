@@ -23,9 +23,12 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 const DPRINT := false
-const IS_MAJOR_MOON_GM := 4.0 # eg, Miranda is 4.4 km^3/s^2
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
+# project var
+var major_moon_gm := UnitDefs.conv(4.0, "km^3/s^2")  # eg, Miranda is 4.4 km^3/s^2
+
+# private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _scale: float = Global.scale
 var _gravitational_constant: float = Global.gravitational_constant
@@ -100,7 +103,7 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 		body.mass = body.gm / _gravitational_constant
 	if body.gm == 0.0:
 		body.gm = body.mass * _gravitational_constant
-	if body.is_moon and body.gm < IS_MAJOR_MOON_GM and !data.has("force_major"):
+	if body.is_moon and body.gm < major_moon_gm and !data.has("force_major"):
 		body.is_minor_moon = true
 	body.rotation_period = data.rotation if data.has("rotation") else 0.0
 	body.right_ascension = data.RA if data.has("RA") else -INF
