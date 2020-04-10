@@ -19,16 +19,16 @@
 
 extends GridContainer
 
-onready var _qty_strs: QtyStrs = Global.program.QtyStrs
+onready var _qty_strings: QtyStrings = Global.program.QtyStrings
 var _selection_manager: SelectionManager
 
 onready var _show_data := [
-	# [property, label, display_type]; only REAL values use 3rd element
+	# [property, label, option_type]; only REAL values use 3rd element
 	# We look first in SelectionItem, then Body if SelectionItem.is_body
 	# Integer value -1 is not displayed.
 	["classification", "LABEL_CLASSIFICATION"],
-	["mass", "LABEL_MASS", _qty_strs.FUNC_MASS],
-	["esc_vel", "LABEL_ESCAPE_VELOCITY", _qty_strs.FUNC_VELOCITY],
+	["mass", "LABEL_MASS", _qty_strings.MASS_G_KG],
+	["esc_vel", "LABEL_ESCAPE_VELOCITY", _qty_strings.VELOCITY_MPS_KMPS],
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],
 	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],
@@ -75,8 +75,8 @@ func _on_selection_changed() -> void:
 				if value_variant != -1:
 					value = str(value_variant)
 			TYPE_REAL:
-				var display_type: int = show_datum[2]
-				value = _qty_strs.get_str(value_variant, display_type)
+				var option_type: int = show_datum[2]
+				value = _qty_strings.number_unit_options(value_variant, option_type)
 			TYPE_STRING:
 				value = tr(value_variant)
 		if value:

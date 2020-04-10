@@ -27,7 +27,7 @@ enum { # case_type
 	CASE_UPPER, # does not modify exp_str
 }
 
-enum { # option_type
+enum { # option_type for number_unit_options()
 	# length
 	LENGTH_M_KM, # m if x < 1.0 km
 	LENGTH_KM_AU, # au if x > 0.1 au
@@ -57,6 +57,10 @@ var prefix_offset := 0 # prefix index for e0 (unity)
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
 	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in project_init()
+
+# Unit symbols in the next two dictionaries must also be present in multipliers
+# or functions dictionaries (by default, these are obtained from UnitDefs). The
+# converse is not true.
 
 var short_forms := {
 	# If missing here, we fallback to the unit string itself (which is usually
@@ -104,14 +108,16 @@ var long_forms := {
 	"degF" : "TXT_FAHRENHEIT",
 	# frequency
 	"Hz" : "TXT_HERTZ",
-	"1/d" : "TXT_PER_DAY",
-	"1/a" : "TXT_PER_YEAR",
-	"1/yr" : "TXT_PER_YEAR",
+	"d^-1" : "TXT_PER_DAY",
+	"a^-1" : "TXT_PER_YEAR",
+	"yr^-1" : "TXT_PER_YEAR",
 	# area
 	"m^2" : "TXT_SQUARE_METERS",
 	"km^2" : "TXT_SQUARE_KILOMETERS",
 	"ha" : "TXT_HECTARES",
 	# volume
+	"l" : "TXT_LITER",
+	"L" : "TXT_LITER",
 	"m^3" : "TXT_CUBIC_METERS",
 	"km^3" : "TXT_CUBIC_KILOMETERS",
 	# velocity
@@ -123,7 +129,9 @@ var long_forms := {
 	"deg/d" : "TXT_DEGREES_PER_DAY",
 	"deg/a" : "TXT_DEGREES_PER_YEAR",
 	"deg/century" : "DEGREES_PER_CENTURY",
-	# density
+	# particle density
+	"m^-3" : "TXT_PER_CUBIC_METER",
+	# mass density
 	"g/cm^3" : "TXT_GRAMS_PER_CUBIC_CENTIMETER",
 	# mass rate
 	"kg/d" : "TXT_KILOGRAMS_PER_DAY",
@@ -137,20 +145,32 @@ var long_forms := {
 	"Wh" : "TXT_WATT_HOURS",
 	"kWh" : "TXT_KILOWATT_HOURS",
 	"MWh" : "TXT_MEGAWATT_HOURS",
+	"eV" : "TXT_ELECTRONVOLTS",
 	# power
 	"W" : "TXT_WATTS",
 	"kW" : "TXT_KILOWATTS",
 	"MW" : "TXT_MEGAWATTS",
+	# luminous intensity / luminous flux
+	"cd" : "TXT_CANDELAS",
+	"lm" : "TXT_LUMENS",
+	# luminance
+	"cd/m^2" : "TXT_CANDELAS_PER_SQUARE_METER",
+	# electric potential
+	"V" : "TXT_VOLTS",
+	# electric charge
+	"C" :  "TXT_COULOMBS",
+	# magnetic flux
+	"Wb" : "TXT_WEBERS",
+	# magnetic flux density
+	"T" : "TXT_TESLAS",
 }
 
 # private
-var _scale: float
 var _n_prefixes: int
 var _n_lg_numbers: int
 
 
 func project_init():
-	_scale = Global.scale
 	_n_prefixes = prefix_symbols.size()
 	_n_lg_numbers = large_numbers.size()
 	for i in range(_n_lg_numbers):
@@ -170,9 +190,9 @@ func get_unit_str(unit: String, long_form := false) -> String:
 		return ""
 	if long_form and long_forms.has(unit):
 		return tr(long_forms[unit])
-	elif short_forms.has(unit):
+	if short_forms.has(unit):
 		return tr(short_forms[unit])
-	return unit
+	return unit # this is usually the result we want
 
 func scientific(x: float, force_scientific := false) -> String:
 	# returns "0.0100" to "99999" as non-scientific unless force_scientific
@@ -234,12 +254,13 @@ func number_unit(x: float, unit: String, long_form := false, case_type := CASE_M
 
 func number_prefixed_unit(x: float, unit: String, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	# unit = "" ok; otherwise, must be in multipliers or functions dicts.
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
-	# long_form = false or true, repspectively). Supplied unit should be
-	# unprefixed ("m" rather than "km") or you will get weird double
-	# prefixing. You won't see scientific notation unless the value falls
-	# outside of the prefixes range.
+	# long_form = false or true, repspectively). You won't see scientific
+	# notation unless the internal value falls outside of the prefixes range.
+	# WARNING: Don't try to prefix an already-prefixed unit (eg, km) or any
+	# composite unit where the first unit has a power other than 1 (eg, m^3).
+	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
+	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
 	if unit:
 		x = unit_defs.conv(x, unit, true, false, multipliers, functions)
 	var exp_div_3 := get_tenth_power_div_3(x)
@@ -302,7 +323,7 @@ func number_unit_options(x: float, option_type: int, long_form := false,
 		VELOCITY_MPS_KMPS_C: # c if >= 0.1 c
 			if x < unit_defs.KM / unit_defs.SECOND:
 				return number_unit(x, "m/s", long_form, case_type)
-			elif x < 0.1 * unit_defs.C:
+			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
 				return number_unit(x, "c", long_form, case_type)
 			return number_unit(x, "km/s", long_form, case_type)
 	assert(false, "Unkknown option_type: " + option_type)

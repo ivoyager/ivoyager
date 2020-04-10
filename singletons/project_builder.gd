@@ -97,7 +97,7 @@ var program_references := {
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
 	_GUIHelper_ = GUIHelper,
-	_QtyStrs_ = QtyStrs,
+	_QtyStrings_ = QtyStrings,
 }
 
 var program_nodes := {

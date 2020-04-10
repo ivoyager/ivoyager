@@ -31,7 +31,7 @@ class_name UnitDefs
 
 # SI base units
 const SECOND := 1.0 # Godot engine delta per second
-const METER := 1e-12 # Godot engine translation per meter
+const METER := 1e-9 # Godot engine translation per meter
 const KG := 1.0
 const AMPERE := 1.0
 const KELVIN := 1.0
@@ -51,11 +51,17 @@ const PARSEC := 648000.0 * AU / PI
 const GRAM := 1e-3 * KG
 const TONNE := 1e3 * KG
 const HECTARE := 1e4 * METER * METER
-const C := 299792458.0 * METER / SECOND
+const LITER := 1e-3 * METER * METER * METER
+const SPEED_OF_LIGHT := 299792458.0 * METER / SECOND
 const NEWTON := KG * METER / (SECOND * SECOND)
 const PASCAL := NEWTON / (METER * METER)
 const JOULE := NEWTON * METER
+const ELECTRONVOLT := 1.602176634e-19 * JOULE
 const WATT := NEWTON / SECOND
+const VOLT := WATT / AMPERE
+const COULOMB := SECOND * AMPERE
+const WEBER := VOLT * SECOND
+const TESLA := WEBER / (METER * METER)
 const DEG := PI / 180.0 # radians
 
 # Symbols below mostly follow:
@@ -88,11 +94,16 @@ const MULTIPLIERS := {
 	"K" : KELVIN,
 	# frequency
 	"Hz" : 1.0 / SECOND,
+	"d^-1" : 1.0 / DAY,
+	"a^-1" : 1.0 / YEAR,
+	"yr^-1" : 1.0 / YEAR,
 	# area
 	"m^2" : METER * METER,
 	"km^2" : KM * KM,
 	"ha" : HECTARE,
 	# volume
+	"l" : LITER,
+	"L" : LITER,
 	"m^3" : METER * METER * METER,
 	"km^3" : KM * KM * KM,
 	# velocity
@@ -101,12 +112,14 @@ const MULTIPLIERS := {
 	"km/h" : KM / HOUR,
 	"au/a" : AU / YEAR,
 	"au/century" : AU / CENTURY,
-	"c" : C,
+	"c" : SPEED_OF_LIGHT,
 	# angular velocity
 	"rad/s" : 1.0 / SECOND, 
 	"deg/d" : DEG / DAY,
 	"deg/a" : DEG / YEAR,
 	"deg/century" : DEG / CENTURY,
+	# particle density
+	"m^-3" : 1.0 / (METER * METER * METER),
 	# density
 	"kg/km^3" : KG / (KM * KM * KM),
 	"g/cm^3" : GRAM / (CM * CM * CM),
@@ -124,10 +137,24 @@ const MULTIPLIERS := {
 	"Wh" : WATT * HOUR,
 	"kWh" : 1e3 * WATT * HOUR,
 	"MWh" : 1e6 * WATT * HOUR,
+	"eV" : ELECTRONVOLT,
 	# power
 	"W" : WATT,
 	"kW" : 1e3 * WATT,
 	"MW" : 1e6 * WATT,
+	# luminous intensity / luminous flux
+	"cd" : CANDELA,
+	"lm" : CANDELA, # lumen (really cd * sr, but sr is dimentionless)
+	# luminance
+	"cd/m^2" : CANDELA / (METER * METER),
+	# electric potential
+	"V" : VOLT,
+	# electric charge
+	"C" :  COULOMB,
+	# magnetic flux
+	"Wb" : WEBER,
+	# magnetic flux density
+	"T" : TESLA,
 	# GM
 	"km^3/s^2" : KM * KM * KM / (SECOND * SECOND),
 	"m^3/s^2" : METER * METER * METER / (SECOND * SECOND),
@@ -144,43 +171,31 @@ const FUNCTIONS := {
 
 static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> float:
-	# unit can be any key in MULTIPLIERS or FUNCTIONS, or supplied replacement
-	# dictionaries. preprocess = true handles prefixes "10^x " or "1/".
-	# Valid examples: "1/century", "1/(km^3/s^2)", "10^24 kg".
-	if preprocess: # handle "10^XX " or "1/" prefix
-		var result := preprocess_unit(unit)
-		if result:
-			unit = result[0]
-			if result[1]: # reciprocol unit
-				to_unit = !to_unit
-			else:
-				x *= result[2]
+	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
+	# dictionaries); preprocess = true handles prefixes "10^x " or "1/".
+	# Valid examples: "1/century", "10^24 kg", "1/(10^3 yr)".
+	if preprocess: # mainly for table import
+		if unit.begins_with("1/"):
+			unit = unit.lstrip("1/")
+			if unit.begins_with("(") and unit.ends_with(")"):
+				unit = unit.lstrip("(").rstrip(")")
+			to_unit = !to_unit
+		if unit.begins_with("10^"):
+			var space_pos := unit.find(" ")
+			assert(space_pos > 3, "A space must follow '10^xx'")
+			var exponent_str := unit.substr(3, space_pos - 3)
+			var pre_multiplier := pow(10.0, int(exponent_str))
+			unit = unit.substr(space_pos + 1, 999)
+			x *= pre_multiplier
+	var multiplier: float = multipliers.get(unit, 0.0)
+	if multiplier:
+		return x / multiplier if to_unit else x * multiplier
 	if functions.has(unit):
 		# this is a hack until we have 1st class functions in 4.0
 		var unit_defs = load("res://ivoyager/static/unit_defs.gd")
 		return unit_defs.call(functions[unit], x, to_unit)
-	if multipliers.has(unit):
-		var multiplier: float = multipliers[unit]
-		return x / multiplier if to_unit else x * multiplier
 	assert(false, "Unknown unit symbol: " + unit)
 	return x
-
-const EMPTY_ARRAY := []
-
-static func preprocess_unit(unit: String) -> Array:
-	if unit.begins_with("10^"):
-		var space_pos := unit.find(" ")
-		assert(space_pos > 3, "A space must follow '10^xx'")
-		var exponent_str := unit.substr(3, space_pos - 3)
-		unit = unit.substr(space_pos + 1, 999)
-		var pre_multiplier := pow(10.0, int(exponent_str))
-		return [unit, false, pre_multiplier]
-	if unit.begins_with("1/"):
-		unit = unit.lstrip("1/")
-		if unit.begins_with("(") and unit.ends_with(")"):
-			unit = unit.lstrip("(").rstrip(")")
-		return [unit, true]
-	return EMPTY_ARRAY
 
 static func conv_centigrade(x: float, to := false) -> float:
 	return x - 273.15 if to else x + 273.15
