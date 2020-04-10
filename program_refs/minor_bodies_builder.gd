@@ -87,7 +87,8 @@ func _load_binaries(star: Body) -> void:
 				var l_group: String = table_group + str(l_point)
 				_load_group_binaries(star, l_group, group_data, l_point)
 	
-func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_point: int = -1) -> void:
+func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_point := -1) -> void:
+	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
 	var lagrange_point: LagrangePoint
 	# make the AsteroidGroup

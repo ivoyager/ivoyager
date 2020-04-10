@@ -26,11 +26,10 @@ const DPRINT := false
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # project var
-var major_moon_gm := UnitDefs.conv(4.0, "km^3/s^2")  # eg, Miranda is 4.4 km^3/s^2
+var major_moon_gm := 4.0 * UnitDefs.STANDARD_GM # eg, Miranda is 4.4 km^3/s^2
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _scale: float = Global.scale
 var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
 var _tables: Dictionary = Global.tables
@@ -94,8 +93,8 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	if data.has("starlight_type"):
 		body.starlight_type = _table_types[data.starlight_type]
 	body.has_atmosphere = data.has("atmosphere")
-	body.m_radius = data.m_radius * _scale # FIXME
-	body.e_radius = data.e_radius * _scale if data.has("e_radius") else body.m_radius
+	body.m_radius = data.m_radius
+	body.e_radius = data.e_radius if data.has("e_radius") else body.m_radius
 	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
 	body.mass = data.mass if data.has("mass") else 0.0
 	body.gm = data.GM if data.has("GM") else 0.0
@@ -164,7 +163,7 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	# file import info
 	body.file_prefix = data.file_prefix
 	if data.has("rings"):
-		body.rings_info = [data.rings, data.rings_outer_radius * _scale]
+		body.rings_info = [data.rings, data.rings_outer_radius]
 
 	body.classification = _get_classification(body)
 	# parent modifications

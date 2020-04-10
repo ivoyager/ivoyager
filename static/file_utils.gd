@@ -122,7 +122,7 @@ static func find_resource(dir_path: String, file_prefix: String) -> Resource:
 	return null
 
 static func get_scale_from_file_path(path: String) -> float:
-	# File name ending in _1_1000 is has scale value 1.0.
+	# File name ending in _1_1000 is scaled 1 length unit / 1000 m.
 	var split := path.get_basename().split("_")
 	if split.size() < 2:
 		return 1.0
@@ -132,7 +132,7 @@ static func get_scale_from_file_path(path: String) -> float:
 	var denominator: String = split[-1]
 	if !denominator.is_valid_integer():
 		return 1.0
-	return 1000.0 / float(denominator) * float(numerator)
+	return float(numerator) / float(denominator)
 
 static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")

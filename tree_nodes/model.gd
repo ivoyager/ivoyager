@@ -20,7 +20,8 @@ extends Spatial
 class_name Model
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
-const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+
+const METER := UnitDefs.METER
 
 const TOO_FAR_RADIUS_MULTIPLIER := 1e3
 
@@ -61,15 +62,15 @@ func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0)
 		if !resource_file:
 			resource_file = Global.asset_paths.fallback_model
 		var resource: Resource = load(resource_file)
-		var model_scale := file_utils.get_scale_from_file_path(resource_file)
+		var per_meter_scale := file_utils.get_scale_from_file_path(resource_file)
 		if resource is PackedScene:
 			var model_spatial: Spatial = resource.instance()
-			model_spatial.scale = Vector3.ONE * model_scale * unit_defs.KM
+			model_spatial.scale = Vector3.ONE * METER / per_meter_scale
 			add_child(model_spatial)
 		# TODO: could we save resources by importing mesh without scene?...
 #		elif resource is ArrayMesh:
 #			var model_spatial := MeshInstance.new()
 #			model_spatial.mesh = resource
-#			model_spatial.scale = Vector3.ONE * model_scale * Global.scale
+#			model_spatial.scale = Vector3.ONE * METER / per_meter_scale
 #			add_child(model_spatial)	
 	hide()

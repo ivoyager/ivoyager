@@ -112,9 +112,6 @@ var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 
-# DEPRECIATE
-var scale := 1.0 # engine length units per km
-
 var colors := { # user settable are in SettingsManager
 	normal = Color.white,
 	good = Color.green,

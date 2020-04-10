@@ -208,27 +208,3 @@ static func linear2srgb(x: float) -> float:
 	else:
 		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
 
-#static func au2km(x: float) -> float:
-#	return x * 149597870.0
-#
-#static func km2au(x: float) -> float:
-#	return x / 149597870.0
-#
-#static func au2megameter(x: float) -> float:
-#	return x * 149597.87
-#
-#static func second2day(x: float) -> float:
-#	return x / 86400.0
-#
-#static func year2day(x: float) -> float:
-#	return x * 365.25 # This is exactly correct for Julian year.
-#
-#static func day2year(x: float) -> float:
-#	return x / 365.25 # This is exactly correct for Julian year.
-#
-#static func conv_si_speed(x: float) -> float:
-#	# m/s to Mm/day
-#	# 86400/1e6 = 0.0864
-#	return x * 0.0864
-
-

@@ -89,9 +89,9 @@ const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var follow_orbit: float = 4e7 * Global.scale # km after dividing by fov
-var orient_to_local_pole: float = 5e7 * Global.scale # must be > follow_orbit
-var orient_to_ecliptic: float = 5e10 * Global.scale # must be > orient_to_local_pole
+var follow_orbit: float = 4e7 * UnitDefs.KM # km after dividing by fov
+var orient_to_local_pole: float = 5e7 * UnitDefs.KM # must be > follow_orbit
+var orient_to_ecliptic: float = 5e10 * UnitDefs.KM # must be > orient_to_local_pole
 var move_tangentially_rate := 0.7 # affects mouse & key
 var move_in_out_rate := 3.0 # affects mouse & key
 var mouse_rotate_min_z_at_offcenter := 0.2
@@ -105,8 +105,7 @@ var is_moving := false
 # private
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
-var _scale: float = Global.scale
-var _max_dist_sq: float = pow(Global.max_camera_distance * _scale, 2.0)
+var _max_dist_sq: float = pow(Global.max_camera_distance, 2.0)
 var _min_dist_sq := 0.01 # set for parent body
 var _follow_orbit_dist_sq: float
 var _orient_to_local_pole_sq: float

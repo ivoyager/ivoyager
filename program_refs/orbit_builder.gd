@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# All length metrics in Orbit are adjusted for Global.scale (a, mu, etc.).
-# Otherwise, we follow sim-standard units: s, km, kg, rad. Note that
-# TableReader already converted data table values to sim-standard.
 
 extends Reference
 class_name OrbitBuilder
@@ -30,8 +27,6 @@ const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
 
-
-var _scale: float = Global.scale
 var _dynamic_orbits: bool = Global.dynamic_orbits
 var _Orbit_: Script
 
@@ -43,7 +38,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
-	#  [0] a,  semimajor axis (km * scale) [TODO: allow negative for hyperbolic!]
+	#  [0] a,  semimajor axis (in UnitDef.KM) [TODO: allow negative for hyperbolic!]
 	#  [1] e,  eccentricity (0.0 - 1.0)
 	#  [2] i,  inclination (rad)
 	#  [3] Om, longitude of the ascending node (rad)
@@ -68,13 +63,13 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
 	var orbit := _make_orbit()
-	var mu := parent.gm * _scale * _scale * _scale # km^3/s^2
+	var mu := parent.gm
 	var elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 	var element_rates: Array # optional
 	var m_modifiers: Array # optional
 	
 	# Keplerian elements
-	elements[0] = data.a * _scale
+	elements[0] = data.a
 	elements[1] = data.e
 	elements[2] = data.i
 	elements[3] = data.Om
@@ -106,7 +101,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 			+ int(data.has("w_rate")) + int(data.has("Om_rate"))
 	if format_test == 5: # planet format
 		element_rates = [
-			data.a_rate * _scale,
+			data.a_rate,
 			data.e_rate,
 			data.i_rate,
 			data.Om_rate,

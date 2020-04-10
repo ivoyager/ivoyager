@@ -24,20 +24,22 @@
 # and GUI (see program_refs/qty_strings.gd for generating quantity strings).
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
-# CAUTION: Setting METER = 1.0 breaks the engine with AABB and other errors.
-# Small values 1e-9 to 1e-15 work fine as far as I can tell.
+# CAUTION! Setting METER = 1.0 breaks the engine with AABB and other errors.
+# Small values 1e-9 to 1e-15 work fine as far as I can tell, even when zoomed
+# up to asteroid-sized bodies.
 
 class_name UnitDefs
 
 # SI base units
-const SECOND := 1.0 # Godot engine delta per second
-const METER := 1e-9 # Godot engine translation per meter
+const SECOND := 1.0 # Godot engine delta per sim second
+const METER := 1e-9 # Godot engine translation per sim meter (scale)
 const KG := 1.0
 const AMPERE := 1.0
 const KELVIN := 1.0
 const CANDELA := 1.0
 
 # derived units
+const DEG := PI / 180.0 # radians
 const MINUTE := 60.0 * SECOND
 const HOUR := 3600.0 * SECOND
 const DAY := 86400.0 * SECOND # exact Julian day
@@ -48,11 +50,12 @@ const CM := 1e-2 * METER
 const KM := 1e3 * METER
 const AU := 149597870700.0 * METER
 const PARSEC := 648000.0 * AU / PI
+const SPEED_OF_LIGHT := 299792458.0 * METER / SECOND
+const LIGHT_YEAR := SPEED_OF_LIGHT * YEAR
 const GRAM := 1e-3 * KG
 const TONNE := 1e3 * KG
 const HECTARE := 1e4 * METER * METER
 const LITER := 1e-3 * METER * METER * METER
-const SPEED_OF_LIGHT := 299792458.0 * METER / SECOND
 const NEWTON := KG * METER / (SECOND * SECOND)
 const PASCAL := NEWTON / (METER * METER)
 const JOULE := NEWTON * METER
@@ -62,10 +65,13 @@ const VOLT := WATT / AMPERE
 const COULOMB := SECOND * AMPERE
 const WEBER := VOLT * SECOND
 const TESLA := WEBER / (METER * METER)
-const DEG := PI / 180.0 # radians
+const STANDARD_GM := KM * KM * KM / (SECOND * SECOND) # usually in these units
 
 # Symbols below mostly follow:
 # https://en.wikipedia.org/wiki/International_System_of_Units
+
+# TODO: yr -> y
+
 const MULTIPLIERS := {
 	# time
 	"s" : SECOND,
@@ -73,6 +79,7 @@ const MULTIPLIERS := {
 	"h" : HOUR,
 	"d" : DAY,
 	"a" : YEAR, # official Julian year symbol
+	"y" : YEAR,
 	"yr" : YEAR,
 	"century" : CENTURY,
 	# length
@@ -81,6 +88,8 @@ const MULTIPLIERS := {
 	"m" : METER,
 	"km" : KM,
 	"au" : AU,
+	"AU" : AU,
+	"ly" : LIGHT_YEAR,
 	"pc" : PARSEC,
 	"Mpc" : 1e6 * PARSEC,
 	# mass
@@ -96,6 +105,7 @@ const MULTIPLIERS := {
 	"Hz" : 1.0 / SECOND,
 	"d^-1" : 1.0 / DAY,
 	"a^-1" : 1.0 / YEAR,
+	"y^-1" : 1.0 / YEAR,
 	"yr^-1" : 1.0 / YEAR,
 	# area
 	"m^2" : METER * METER,
@@ -112,6 +122,7 @@ const MULTIPLIERS := {
 	"km/h" : KM / HOUR,
 	"au/a" : AU / YEAR,
 	"au/century" : AU / CENTURY,
+	"AU/century" : AU / CENTURY,
 	"c" : SPEED_OF_LIGHT,
 	# angular velocity
 	"rad/s" : 1.0 / SECOND, 
@@ -156,7 +167,7 @@ const MULTIPLIERS := {
 	# magnetic flux density
 	"T" : TESLA,
 	# GM
-	"km^3/s^2" : KM * KM * KM / (SECOND * SECOND),
+	"km^3/s^2" : STANDARD_GM,
 	"m^3/s^2" : METER * METER * METER / (SECOND * SECOND),
 	# gravitational constant
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),

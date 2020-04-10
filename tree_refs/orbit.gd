@@ -20,9 +20,7 @@
 # plane; many moons use the latter two); the "orbit normal" precesses around
 # the reference_normal. See orbit_builder.gd for construction.
 #
-# All length metrics in Orbit (and Orbit function returns) are adjusted for
-# Global.scale (a, mu, etc.). Otherwise, we follow sim-standard units: s, km,
-# kg, rad.
+# See static/unit_defs.gd for base units.
 #
 # This is our first candidate for porting to GDNative!
 

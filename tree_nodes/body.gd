@@ -21,9 +21,7 @@
 # (other Body instances) and other spatial children that are visuals: Model,
 # Rings, HUDIcon, HUDOrbit, etc.
 #
-# All properties defined here use sim-standard units: s, km, kg, rad (and
-# thier derivitives: km/s, etc.). HOWEVER, engine properties, Orbit properties
-# and Orbit function returns involving length are adjusted for Global.scale!
+# See static/unit_defs.gd for base units.
 #
 # TODO: Make LagrangePoint into Body instances
 # TODO: barycenters

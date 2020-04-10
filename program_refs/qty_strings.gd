@@ -85,6 +85,7 @@ var long_forms := {
 	"h" : "TXT_HOURS",
 	"d" : "TXT_DAYS",
 	"a" : "TXT_YEARS",
+	"y" : "TXT_YEARS",
 	"yr" : "TXT_YEARS",
 	"century" : "TXT_CENTURIES",
 	# length
@@ -93,6 +94,7 @@ var long_forms := {
 	"m" : "TXT_METERS",
 	"km" : "TXT_KILOMETER",
 	"au" : "TXT_ASTRONOMICAL_UNITS",
+	"ly" : "TXT_LIGHT_YEARS",
 	"pc" : "TXT_PARSECS",
 	"Mpc" : "TXT_MEGAPARSECS",
 	# mass
@@ -110,6 +112,7 @@ var long_forms := {
 	"Hz" : "TXT_HERTZ",
 	"d^-1" : "TXT_PER_DAY",
 	"a^-1" : "TXT_PER_YEAR",
+	"y^-1" : "TXT_PER_YEAR",
 	"yr^-1" : "TXT_PER_YEAR",
 	# area
 	"m^2" : "TXT_SQUARE_METERS",
