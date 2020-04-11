@@ -3,7 +3,7 @@
 # Units can also be a valid float; value x float is expected to give standard sim units.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #,,,,,,,,,,,,,,,,,,# apsidal precession,# nodal precession,,,,,,# to orbit plane,,,,,
 #,,,,,# J2000 facing,,,# TODO: implement!,,,,,,,,,,,,,,,,,,,,,V0 or R,
-key,file_prefix,wiki_en,parent,body_type,rotate_adj,atmosphere,force_major,epoch_txt,epoch,a,e,i,Om,w,M0,n,P,Pw,Pnode,ref_plane,orbit_RA,orbit_dec,orbit_tilt,tidally_locked,axial_tilt,GM,m_radius,m_density,magnitude,albedo
+key,file_prefix,wiki_en,parent,body_type,rotate_adj,atmosphere,force_major,epoch_txt,epoch,a,e,i,Om,w,M0,n,P,Pw,Pnode,ref_plane,orbit_RA,orbit_dec,orbit_tilt,tidally_locked,axial_tilt,GM,m_radius,density,magnitude,albedo
 Data_Type,STRING,STRING,STRING,STRING,REAL,X,X,STRING,STRING,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,STRING,REAL,REAL,REAL,BOOL,REAL,REAL,REAL,REAL,REAL,REAL
 Defaults,,,,BODY_ROCKY_WORLD,0,,,,0,,,,,,,,,,,,,,,TRUE,0,0,0,0,0,0
 Units,,,,,deg,,,,,km,,deg,deg,deg,deg,deg/d,d,a,a,,deg,deg,deg,,deg,km^3/s^2,km,g/cm^3,,

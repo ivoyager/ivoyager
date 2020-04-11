@@ -21,7 +21,8 @@
 # (other Body instances) and other spatial children that are visuals: Model,
 # Rings, HUDIcon, HUDOrbit, etc.
 #
-# See static/unit_defs.gd for base units.
+# See static/unit_defs.gd for base units. For float values, interpret -INF as
+# not applicable (NA) and +INF as unknown (?). 
 #
 # TODO: Make LagrangePoint into Body instances
 # TODO: barycenters
@@ -62,13 +63,20 @@ var rotation_period := 0.0
 var axial_tilt := 0.0
 var declination := 0.0
 var right_ascension := 0.0
-var density := 0.0
-var albedo := 0.0
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3()
 var file_prefix: String
 var rings_info: Array # [file_name, radius] if exists
+# optional characteristics
+var density := INF
+var albedo := INF
+var surf_pres := INF
+var surf_t := -INF # NA for gas giants
+var min_t := -INF
+var max_t := -INF
+var one_bar_t := -INF # venus, gas giants
+var tenth_bar_t := -INF # gas giants
 
 var orbit: Orbit
 var satellites := [] # Body instances
@@ -81,9 +89,10 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
 	"has_atmosphere", "tidally_locked", "mass", "gm",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
-	"declination", "right_ascension", "density", "albedo",
+	"declination", "right_ascension",
 	"has_minor_moons", "reference_basis", "north_pole",
-	"file_prefix", "rings_info"]
+	"file_prefix", "rings_info",
+	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t", "one_bar_t", "tenth_bar_t"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
 # ****************************** UNPERSISTED **********************************

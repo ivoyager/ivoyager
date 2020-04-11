@@ -160,6 +160,17 @@ func build(body: Body, table_type: int, data: Dictionary, parent: Body) -> void:
 	if data.has("rotate_adj") and data.rotate_adj != 0.0:
 		body.reference_basis = body.reference_basis.rotated(body.north_pole, data.rotate_adj)
 
+	# optional characteristics (-INF means NA; INF means ?)
+	body.density = data.density
+	body.albedo = data.albedo if data.has("albedo") else INF
+	body.surf_pres = data.surf_pres if data.has("surf_pres") else -INF
+	body.surf_t = data.surf_t if data.has("surf_t") else -INF
+	body.min_t = data.min_t if data.has("min_t") else -INF
+	body.max_t = data.max_t if data.has("max_t") else -INF
+	body.one_bar_t = data.one_bar_t if data.has("one_bar_t") else -INF
+	body.tenth_bar_t = data.tenth_bar_t if data.has("tenth_bar_t") else -INF
+	
+
 	# file import info
 	body.file_prefix = data.file_prefix
 	if data.has("rings"):

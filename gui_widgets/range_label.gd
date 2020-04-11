@@ -41,7 +41,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_range_changed(new_range: float) -> void:
-	text = _qty_strings.number_unit_options(new_range, _qty_strings.LENGTH_M_KM_AU)
+	text = _qty_strings.number_option(new_range, _qty_strings.LENGTH_M_KM_AU)
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	visible = is_locked

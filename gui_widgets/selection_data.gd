@@ -23,12 +23,21 @@ onready var _qty_strings: QtyStrings = Global.program.QtyStrings
 var _selection_manager: SelectionManager
 
 onready var _show_data := [
-	# [property, label, option_type]; only REAL values use 3rd element
+	# [property, label, option_type]; only REAL values use [2], [3] elements
 	# We look first in SelectionItem, then Body if SelectionItem.is_body
-	# Integer value -1 is not displayed.
+	# Integer value -1 and float value -INF are not displayed; float value INF
+	# displayed as "?".
 	["classification", "LABEL_CLASSIFICATION"],
 	["mass", "LABEL_MASS", _qty_strings.MASS_G_KG],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", _qty_strings.VELOCITY_MPS_KMPS],
+	["density", "LABEL_DENSITY", _qty_strings.UNIT, "g/cm^3"],
+	["albedo", "LABEL_ALBEDO"],
+	["surf_pres", "LABEL_SURFACE_PRESSURE", _qty_strings.UNIT, "bar"],
+	["surf_t", "LABEL_SURFACE_TEMP", _qty_strings.UNIT, "degC"],
+	["min_t", "LABEL_MIN_TEMP", _qty_strings.UNIT, "degC"],
+	["max_t", "LABEL_MAX_TEMP", _qty_strings.UNIT, "degC"],
+	["one_bar_t", "LABEL_ONE_BAR_TEMP", _qty_strings.UNIT, "degC"],
+	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", _qty_strings.UNIT, "degC"],
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],
 	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],
@@ -75,8 +84,16 @@ func _on_selection_changed() -> void:
 				if value_variant != -1:
 					value = str(value_variant)
 			TYPE_REAL:
-				var option_type: int = show_datum[2]
-				value = _qty_strings.number_unit_options(value_variant, option_type)
+				if value_variant == -INF:
+					pass
+				elif value_variant == INF:
+					value = "?"
+				elif show_datum.size() < 3:
+					value = str(value_variant)
+				else:
+					var option_type: int = show_datum[2]
+					var unit: String = show_datum[3] if show_datum.size() > 3 else ""
+					value = _qty_strings.number_option(value_variant, option_type, unit)
 			TYPE_STRING:
 				value = tr(value_variant)
 		if value:

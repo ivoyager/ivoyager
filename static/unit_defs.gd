@@ -58,6 +58,8 @@ const HECTARE := 1e4 * METER * METER
 const LITER := 1e-3 * METER * METER * METER
 const NEWTON := KG * METER / (SECOND * SECOND)
 const PASCAL := NEWTON / (METER * METER)
+const BAR := 1e5 * PASCAL
+const ATM := 101325.0 * PASCAL
 const JOULE := NEWTON * METER
 const ELECTRONVOLT := 1.602176634e-19 * JOULE
 const WATT := NEWTON / SECOND
@@ -143,6 +145,8 @@ const MULTIPLIERS := {
 	"N" : NEWTON,
 	# pressure
 	"Pa" : PASCAL,
+	"bar" : BAR,
+	"atm" : ATM,
 	# energy
 	"J" : JOULE,
 	"Wh" : WATT * HOUR,
