@@ -55,12 +55,13 @@ var multipliers := unit_defs.MULTIPLIERS
 var functions := unit_defs.FUNCTIONS
 var exp_str := "x10^" # or "e", "E"
 var prefix_names := [
+	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
 ] # e3, e6, ... e24
 var prefix_symbols := [
+	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ] # same indexing as above
-var prefix_offset := 0 # prefix index for e0 (unity)
 
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
@@ -179,12 +180,15 @@ var long_forms := {
 
 # private
 var _n_prefixes: int
+var _prefix_offset: int
 var _n_lg_numbers: int
 
 
 func project_init():
 	_n_prefixes = prefix_symbols.size()
 	assert(_n_prefixes == prefix_names.size())
+	_prefix_offset = prefix_symbols.find("")
+	assert(_prefix_offset == prefix_names.find(""))
 	_n_lg_numbers = large_numbers.size()
 	for i in range(_n_lg_numbers):
 		large_numbers[i] = tr(large_numbers[i])
@@ -333,13 +337,13 @@ func number_prefixed_unit(x: float, unit: String, long_form := false,
 	if unit:
 		x = unit_defs.conv(x, unit, true, false, multipliers, functions)
 	var exp_div_3 := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
-	var si_index := exp_div_3 + prefix_offset
+	var si_index := exp_div_3 + _prefix_offset
 	if si_index < 0:
 		si_index = 0
-		exp_div_3 = -prefix_offset
+		exp_div_3 = -_prefix_offset
 	elif si_index >= _n_prefixes:
 		si_index = _n_prefixes - 1
-		exp_div_3 = si_index - prefix_offset
+		exp_div_3 = si_index - _prefix_offset
 	x /= pow(10.0, exp_div_3 * 3)
 	var number_str: String
 	if use_scientific:

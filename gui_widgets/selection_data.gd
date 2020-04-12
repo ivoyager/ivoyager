@@ -32,7 +32,7 @@ onready var _show_data := [
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", _qty_strings.VELOCITY_MPS_KMPS],
 	["density", "LABEL_DENSITY", _qty_strings.UNIT, "g/cm^3"],
 	["albedo", "LABEL_ALBEDO"],
-	["surf_pres", "LABEL_SURFACE_PRESSURE", _qty_strings.UNIT, "bar"],
+	["surf_pres", "LABEL_SURFACE_PRESSURE", _qty_strings.PREFIXED_UNIT, "bar"],
 	["surf_t", "LABEL_SURFACE_TEMP", _qty_strings.UNIT, "degC"],
 	["min_t", "LABEL_MIN_TEMP", _qty_strings.UNIT, "degC"],
 	["max_t", "LABEL_MAX_TEMP", _qty_strings.UNIT, "degC"],

@@ -23,12 +23,9 @@
 extends Reference
 class_name TableReader
 
-#const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
-
-# ************************** PUBLIC PROJECT VARS ******************************
 
 var import := {
 	# data_name = [type_name, path]
@@ -43,26 +40,15 @@ var import := {
 	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
 	}
 
-var wikibot_title_sources := [
-	"res://ivoyager/data/solar_system/barycenter_data.csv",
-	"res://ivoyager/data/solar_system/star_data.csv",
-	"res://ivoyager/data/solar_system/planet_data.csv",
-	"res://ivoyager/data/solar_system/moon_data.csv",
-#	"res://ivoyager/data/solar_system/asteroid_data.txt",
-	"res://ivoyager/data/text/wiki_extra_titles.csv",
-	]
-
-# ************************* PUBLIC READ-ONLY VARS *****************************
-
-const WIKI_OVERRIDE_PACK := "user://wiki/ivoyager_wiki_pack.zip" # WIP
-const WRITE_WIKI_BASE_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_text.csv" # WIP
-const WRITE_WIKI_EXTENDED_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_extended_text.csv" # WIP
 
 var _tables: Dictionary = Global.tables
 var _table_types: Dictionary = Global.table_types
-var _wiki_titles := {}
+var _table_fields: Dictionary = Global.table_fields
+var _wiki_titles: Dictionary = Global.wiki_titles
 
-# **************************** PUBLIC FUNCTIONS *******************************
+
+func project_init():
+	pass
 
 func import_table_data():
 	print("Reading external data tables...")
@@ -80,31 +66,7 @@ func import_table_data():
 			for key in type_dict:
 				assert(!_table_types.has(key))
 				_table_types[key] = type_dict[key]
-	_tables.wiki_titles = _wiki_titles
 
-func get_wikibot_base_titles():
-	var titles := {}
-	for path in wikibot_title_sources:
-		var data_table := []
-		_read_data_file(data_table, {}, path)
-		for data in data_table:
-			if data.has("wiki_en"):
-				titles[data.key] = data.wiki_en
-	return titles
-
-# DEPRECIATE - WikiBot needs a workover
-func get_wikibot_extended_titles():
-	var titles := {}
-#	for path in extended_wiki_data_paths:
-#		var data_table := _read_data_file(path)
-#		for data in data_table:
-#			if data.has("wiki_en"):
-#				titles[data.key] = data.wiki_en
-	return titles
-
-
-func project_init():
-	pass
 
 func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> void:
 	assert(DPRINT and prints("Reading", path) or true)
