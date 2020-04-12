@@ -30,22 +30,45 @@ const DPRINT := false
 var import := {
 	# data_name = [type_name, path]
 	# if type_name != "" then row keys and type dicts added to Global.table_types
+#	StarData = ["StarTypes", "StarFields", "res://ivoyager/data/solar_system/star_data.csv"],
+#	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
+#	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
+	AsteroidGroupData = ["AsteroidGroupTypes", "AsteroidGroupFields",
+		"res://ivoyager/data/solar_system/asteroid_group_data.csv"],
+	BodyData = ["BodyTypes", "BodyFields", "res://ivoyager/data/solar_system/body_data.csv"],
+	StarlightData = ["StarlightTypes", "StarlightFields",
+		"res://ivoyager/data/solar_system/starlight_data.csv"],
+	WikiExtras = ["", "", "res://ivoyager/data/solar_system/wiki_extras.csv"],
+	}
+
+var import2 := {
 	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
 	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
 	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
-	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
-	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
-	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
-	environment_data = ["", "res://ivoyager/data/solar_system/environment_data.csv"],
-	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
-	}
+#	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
+#	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
+#	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
+#	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
+}
 
-
+# global dicts
 var _tables: Dictionary = Global.tables
 var _table_types: Dictionary = Global.table_types
 var _table_fields: Dictionary = Global.table_fields
 var _wiki_titles: Dictionary = Global.wiki_titles
 
+# current processing
+var _path: String
+var _data: Array
+var _types: Dictionary
+var _fields: Dictionary
+var _data_types: Array
+var _units: Array
+var _defaults: Array
+var _line_array: Array
+var _row_key: String
+var _field: String
+var _cell: String
 
 func project_init():
 	pass
@@ -53,7 +76,31 @@ func project_init():
 func import_table_data():
 	print("Reading external data tables...")
 	for data_name in import:
-		var info: Array = import[data_name]
+		var import_array: Array = import[data_name]
+		var types_name: String = import_array[0]
+		var fields_name: String = import_array[1]
+		_path = import_array[2]
+		_data = []
+		_types = {} # row index by item key
+		_fields = {} # column index by field name
+		_read_table()
+		# Global dict _wiki_titles was populated on the fly; otherwise, all
+		# global dicts are populated bellow...
+		_tables[data_name] = _data
+		if types_name:
+			assert(!_table_types.has(types_name))
+			_table_types[types_name] = _types
+			for key in _types:
+				assert(!_table_types.has(key))
+				_table_types[key] = _types[key]
+		if fields_name:
+			assert(!_table_fields.has(fields_name))
+			_table_fields[fields_name] = _fields
+			
+				
+	# REMOVING...
+	for data_name in import2:
+		var info: Array = import2[data_name]
 		var type_name: String = info[0]
 		var path: String = info[1]
 		var data := []
@@ -68,6 +115,114 @@ func import_table_data():
 				_table_types[key] = type_dict[key]
 
 
+func _read_table() -> void:
+	assert(DPRINT and prints("Reading", _path) or true)
+	var file := File.new()
+	if file.open(_path, file.READ) != OK:
+		print("ERROR: Could not open file: ", _path)
+		assert(false)
+	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
+	var is_fields_line := true
+	_data_types = []
+	_units = []
+	_defaults = []
+	var line := file.get_line()
+	while !file.eof_reached():
+		var commenter := line.find("#")
+		if commenter != -1 and commenter < 4: # skip comment line
+			line = file.get_line()
+			continue
+		_line_array = Array(line.split(delimiter, true))
+		if is_fields_line: # always the 1st non-comment line
+			_read_fields_line()
+			is_fields_line = false
+		elif _line_array[0] == "Data_Type":
+			_data_types = _line_array
+		elif _line_array[0] == "Units":
+			_units = _line_array
+		elif _line_array[0] == "Defaults":
+			_defaults = _line_array
+		else:
+			assert(_data_types) # required; Units & Defaults lines are optional
+			_read_data_line()
+		line = file.get_line()
+
+func _read_fields_line() -> void:
+	assert(_line_array[0] == "key")
+	var column = 0
+	for field in _line_array:
+		if field == "Comments":
+			break
+		_fields[field] = column
+		column += 1
+
+func _read_data_line() -> void:
+	var row := _data.size()
+	var row_data := []
+	row_data.resize(_fields.size())
+	_row_key = _line_array[0]
+	assert(!_types.has(_row_key))
+	_types[_row_key] = row
+	row_data[0] = _row_key
+	for field in _fields:
+		_field = field
+		if _field == "key":
+			continue
+		var column: int = _fields[_field]
+		_cell = _line_array[column]
+		if !_cell and _defaults and _defaults[column]: # impute default
+			_cell = _defaults[column]
+		var data_type: String = _data_types[column]
+		match data_type:
+			"X":
+				assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
+				assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
+				if _cell == "x":
+					row_data[column] = true
+				else:
+					assert(!_cell or _line_error("X type must be x or blank cell"))
+					row_data[column] = false
+			"BOOL":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
+				if _cell.matchn("true"): # case insensitive
+					row_data[column] = true
+				else:
+					assert(_cell.matchn("false") or _line_error("Expected BOOL (true/false)"))
+					row_data[column] = false
+			"INT":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for INT"))
+				assert(_cell.is_valid_integer() or _line_error("Expected INT"))
+				row_data[column] = int(_cell)
+			"REAL":
+				assert(_cell.is_valid_float() or _line_error("Expected REAL"))
+				var real := float(_cell)
+				if _units and _units[column]:
+					var unit: String = _units[column]
+					real = unit_defs.conv(real, unit, false, true)
+				row_data[column] = real
+			"STRING":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for STRING"))
+				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
+					_cell = _cell.substr(1, _cell.length() - 2)
+				row_data[column] = _cell
+				if _field == "wiki_en": # TODO: non-English Wikipedias
+					assert(!_wiki_titles.has(_row_key))
+					_wiki_titles[_row_key] = _cell
+	_data.append(row_data)
+#	print(row_data)
+
+func _line_error(msg := "") -> bool:
+	print("ERROR in _read_data_line...")
+	if msg:
+		print(msg)
+	print("cell value: ", _cell)
+	print("row key   : ", _row_key)
+	print("field     : ", _field)
+	print(_path)
+	return false
+
+
+# REMOVING...
 func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> void:
 	assert(DPRINT and prints("Reading", path) or true)
 	var file := File.new()

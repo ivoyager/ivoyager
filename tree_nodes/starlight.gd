@@ -21,5 +21,5 @@
 extends OmniLight
 class_name Starlight
 	
-func init(starlight_data: Dictionary):
-	omni_range = starlight_data.omni_range
+func init(data: Array, fields: Dictionary):
+	omni_range = data[fields.omni_range]

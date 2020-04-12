@@ -32,8 +32,9 @@ var surface: SpatialMaterial
 func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0) -> void:
 	# m_radius & e_radius used only for ellipsoidal.
 	# model_scale used for non-ellipsoidal; default 1.0 assumes model in km.
-	var data: Dictionary = Global.tables.body_data[body_type]
-	is_ellipsoidal = data.ellipsoidal
+	var data: Array = Global.tables.BodyData[body_type]
+	var fields: Dictionary = Global.table_fields.BodyFields
+	is_ellipsoidal = data[fields.ellipsoidal]
 	if is_ellipsoidal:
 		assert(m_radius > 0.0 and e_radius > 0.0)
 		var polar_radius = 3.0 * m_radius - 2.0 * e_radius
@@ -47,13 +48,13 @@ func init(body_type: int, file_prefix: String, m_radius := 0.0, e_radius := 0.0)
 		surface = SpatialMaterial.new()
 		mesh_instance.set_surface_material(0, surface)
 		surface.albedo_texture = albedo_texture
-		surface.metallic = data.metallic
-		surface.roughness = data.roughness
-		surface.rim_enabled = data.rim_enabled
-		surface.rim = data.rim
-		surface.rim_tint = data.rim_tint
-		surface.flags_unshaded = data.unshaded
-		mesh_instance.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON if data.shadow \
+		surface.metallic = data[fields.metallic]
+		surface.roughness = data[fields.roughness]
+		surface.rim_enabled = data[fields.rim_enabled]
+		surface.rim = data[fields.rim]
+		surface.rim_tint = data[fields.rim_tint]
+		surface.flags_unshaded = data[fields.unshaded]
+		mesh_instance.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON if data[fields.shadow] \
 				else MeshInstance.SHADOW_CASTING_SETTING_OFF
 		add_child(mesh_instance)
 	else:
