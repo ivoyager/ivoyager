@@ -55,19 +55,17 @@ var has_atmosphere := false
 var tidally_locked := false
 var mass := 0.0
 var gm := 0.0
-var esc_vel := 0.0 # km/s
-var m_radius := 0.0 # TODO: unscale!!!
+var esc_vel := 0.0
+var m_radius := 0.0
 var e_radius := 0.0
 var system_radius := 0.0 # widest orbiting satellite
 var rotation_period := 0.0
 var axial_tilt := 0.0
-var declination := 0.0
-var right_ascension := 0.0
+var right_ascension := -INF
+var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3()
-var file_prefix: String
-var rings_info: Array # [file_name, radius] if exists
 # optional characteristics
 var density := INF
 var albedo := INF
@@ -77,6 +75,9 @@ var min_t := -INF
 var max_t := -INF
 var one_bar_t := -INF # venus, gas giants
 var tenth_bar_t := -INF # gas giants
+# file reading
+var file_prefix: String
+var rings_info: Array # [file_name, radius] if exists
 
 var orbit: Orbit
 var satellites := [] # Body instances
@@ -89,10 +90,10 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
 	"has_atmosphere", "tidally_locked", "mass", "gm",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
-	"declination", "right_ascension",
+	"right_ascension", "declination",
 	"has_minor_moons", "reference_basis", "north_pole",
-	"file_prefix", "rings_info",
-	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t", "one_bar_t", "tenth_bar_t"]
+	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t", "one_bar_t", "tenth_bar_t",
+	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
 # ****************************** UNPERSISTED **********************************

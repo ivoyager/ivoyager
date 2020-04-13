@@ -72,13 +72,12 @@ signal gui_refresh_requested()
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
 var time_date := [] # Timekeeper [time, year, quarter, month, day] int except time
-var program := {} # program nodes and refs populated by ProjectBuilder
+var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
-var tables := {} # TableReader; imported csv tables from data directory
-var table_types := {} # TableReader; enum-like rows by item keys
-var table_fields := {} # TableReader
+var tables := {} # TableReader; table data (arrays of arrays) & field dicts
+var table_types := {} # TableReader; enum-like row keys (all) & table key dicts
 var wiki_titles := {} # TableReader; Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
@@ -96,6 +95,7 @@ var project_name := "I, Voyager"
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
+var enums: Script = Enums # replace w/ extended static class
 var use_threads := true # false for debugging (saver_loader.gd has its own)
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false

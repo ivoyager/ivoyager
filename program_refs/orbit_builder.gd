@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Be carful to test for table nulls explicitly! (0.0 != null)
 
 extends Reference
 class_name OrbitBuilder
@@ -27,14 +28,45 @@ const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
 
+var data_parser := { # property = table_field
+	a = "a",
+	e = "e",
+	i = "i",
+	Om = "Om",
+	w = "w",
+	w_hat = "w_hat",
+	M0 = "M0",
+	L0 = "L0",
+	T0 = "T0",
+	n = "n",
+	L_rate = "L_rate",
+#	a = "a",
+#	a = "a",
+#	a = "a",
+}
+var required_data := ["a", "e", "i", "Om"]
+
+# import data values
+var a := 0.0
+var e := 0.0
+var i := 0.0
+var Om := 0.0
+var w := -INF
+var w_hat := -INF
+var M0 := -INF
+var L0 := -INF
+var T0 := -INF
+
+var _resets := ["w", "w_hat", "M0", "L0", "T0", "", "", "", "", ""]
+
 var _dynamic_orbits: bool = Global.dynamic_orbits
 var _Orbit_: Script
 
 func project_init() -> void:
 	_Orbit_ = Global.script_classes._Orbit_
 
-func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
-	assert(DPRINT and prints("make_orbit_from_data", tr(data.key), parent, time) or true)
+func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, time: float) -> Orbit:
+	assert(DPRINT and prints("make_orbit_from_data", tr(row_data[0]), parent, time) or true)
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
@@ -69,62 +101,62 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 	var m_modifiers: Array # optional
 	
 	# Keplerian elements
-	elements[0] = data.a
-	elements[1] = data.e
-	elements[2] = data.i
-	elements[3] = data.Om
-	if data.has("w"):
-		elements[4] = data.w
+	elements[0] = row_data[fields.a]
+	elements[1] = row_data[fields.e]
+	elements[2] = row_data[fields.i]
+	elements[3] = row_data[fields.Om]
+	if fields.has("w") and row_data[fields.w] != null:
+		elements[4] = row_data[fields.w]
 	else: # table must have w or w_hat
-		elements[4] = data.w_hat - elements[3] # w = w_hat - Om
-	if data.has("n"):
-		elements[6] = data.n
-	elif data.has("L_rate"): # planet tables
+		elements[4] = row_data[fields.w_hat] - elements[3] # w = w_hat - Om
+	if fields.has("n") and row_data[fields.n] != null:
+		elements[6] = row_data[fields.n]
+	elif fields.has("L_rate") and row_data[fields.L_rate] != null: # planet tables
 		# Note: "L_rate" is NOT an element rate! It's just n in disguise.
-		elements[6] = data.L_rate
+		elements[6] = row_data[fields.L_rate]
 	else: # calculate n
 		elements[6] = sqrt(mu / pow(elements[0], 3.0)) # n = sqrt(mu/(a^3))
-	if data.has("M0"):
-		elements[5] = data.M0
-	elif data.has("L0"):
-		elements[5] = data.L0 - elements[4] - elements[3] # M0 = L0 - w - Om
+	if fields.has("M0") and row_data[fields.M0] != null:
+		elements[5] = row_data[fields.M0]
+	elif fields.has("L0") and row_data[fields.L0] != null:
+		elements[5] = row_data[fields.L0] - elements[4] - elements[3] # M0 = L0 - w - Om
 	else: # table must have "T0" if it doesn't have "M0" or "L0"
-		elements[5] = -elements[6] * data.T0 # M0 = -n * T0
+		elements[5] = -elements[6] * row_data[fields.T0] # M0 = -n * T0
 	
 	# Element rates are optional. For planets, we get these as "x_rate" for
 	# a, e, i, Om & w (but not "L_rate", which is just n).
 	# For moons, we get these as Pw (nodal period) and Pnode (apsidal period),
 	# corresponding to rotational period of Om & w, respectively [TODO: in
 	# asteroid data, these are g & s, I think...].
-	# We test that rate info (if given) matches one or the other format.
-	var format_test := int(data.has("a_rate")) + int(data.has("e_rate")) + int(data.has("i_rate")) \
-			+ int(data.has("w_rate")) + int(data.has("Om_rate"))
-	if format_test == 5: # planet format
+	# Rate info (if given) must matches one or the other format.
+	if fields.has("a_rate") and row_data[fields.a_rate] != null: # is planet w/ rates
 		element_rates = [
-			data.a_rate,
-			data.e_rate,
-			data.i_rate,
-			data.Om_rate,
-			data.w_rate
+			row_data[fields.a_rate],
+			row_data[fields.e_rate],
+			row_data[fields.i_rate],
+			row_data[fields.Om_rate],
+			row_data[fields.w_rate]
 			]
+		assert(element_rates.max() != null) # checks all rates present
 		# M modifiers are additional modifiers for Jupiter to Pluto.
-		if data.has("M_adj_b"): # must also have c, s, f
+		if fields.has("M_adj_b") and row_data[fields.M_adj_b]: # must also have c, s, f
 			m_modifiers = [
-				data.M_adj_b,
-				data.M_adj_c,
-				data.M_adj_s,
-				data.M_adj_f
+				row_data[fields.M_adj_b],
+				row_data[fields.M_adj_c],
+				row_data[fields.M_adj_s],
+				row_data[fields.M_adj_f]
 				]
-	elif data.has("Pw") and data.has("Pnode"): # moon format
+			assert(m_modifiers.max() != null)
+	elif fields.has("Pw") and fields.has("Pnode"): # moon format
 		# Some values are tiny leading to div/0 or excessive updating. These
 		# correspond to near-circular and/or non-inclined orbits (where Om & w
 		# are technically undefined and updates are irrelevant).
 		var Pnode := 0.0 # nodal precession
 		var Pw := 0.0 # apsidal precession
 		if elements[2] > MIN_I_FOR_NODAL_PRECESSION:
-			Pnode = data.Pnode
+			Pnode = row_data[fields.Pnode]
 		if elements[1] > MIN_E_FOR_APSIDAL_PRECESSION:
-			Pw = data.Pw
+			Pw = row_data[fields.Pw]
 		if Pw != 0.0 or Pnode != 0.0:
 			element_rates = [
 				0.0,
@@ -134,8 +166,7 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 				TAU / Pw if Pw > 0.0 else 0.0 # w_rate
 				]
 	else: # no rates or format error
-		assert(format_test == 0)
-		assert(!data.has("Pw") and !data.has("Pnode"))
+		assert(!fields.has("Pw") and !fields.has("Pnode"))
 		
 	if element_rates and _dynamic_orbits:
 		# Set update_frequency based on fastest element rate. We normalize to
@@ -147,19 +178,18 @@ func make_orbit_from_data(data: Dictionary, parent: Body, time: float) -> Orbit:
 		var w_pps: float = element_rates[4] / TAU
 		var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
 		orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
-#		if orbit.update_frequency > 1.0:
-#			prints("update_frequency", tr(data.key), orbit.update_frequency)
-		assert(DPRINT and prints("update_frequency", tr(data.key), orbit.update_frequency) or true)
+		assert(DPRINT and prints("update_frequency", tr(row_data[0]), orbit.update_frequency) or true)
 
-	if data.has("ref_plane"): # many moon orbits use non-ecliptic reference plane
-		if data.ref_plane == "Equatorial":
+	if fields.has("ref_plane") and row_data[fields.ref_plane] != null: # many moons
+		if row_data[fields.ref_plane] == "Equatorial":
 			orbit.reference_normal = parent.north_pole
-		elif data.ref_plane == "Laplace":
-			orbit.reference_normal = math.convert_equatorial_coordinates(data.orbit_RA, data.orbit_dec)
+		elif row_data[fields.ref_plane] == "Laplace":
+			orbit.reference_normal = math.convert_equatorial_coordinates(
+					row_data[fields.orbit_RA], row_data[fields.orbit_dec])
 			orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 			orbit.reference_normal = orbit.reference_normal.normalized()
 		else:
-			assert(data.ref_plane == "Ecliptic") # default
+			assert(row_data[fields.ref_plane] == "Ecliptic")
 
 	orbit.elements_at_epoch = elements
 	if element_rates and _dynamic_orbits:

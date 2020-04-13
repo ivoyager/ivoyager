@@ -19,6 +19,17 @@
 # table_types. Global.table_types holds row number for all individual table
 # keys and an enum-like dict for each table (e.g., PlanetTypes, MoonTypes,
 # etc.).
+#
+# Table construction:
+#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING. X-type will be
+#    converted to true (x) or false (blank). For all others, a blank cell
+#    without Defaults value will be converted to null (we use this to test
+#    for missing values!). BOOL is case insensitive. FLOAT converts "E" to
+#    "e" before attempting type cast.
+#  Default (optional; all types except X): If cell is blank, it will be
+#    replaced with this value.
+#  Units (optional; REAL only!). Reals will be converted from provided units
+#    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS.
 
 extends Reference
 class_name TableReader
@@ -27,12 +38,20 @@ const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
 
+enum { # str_type
+	AS_ENUM,
+	AS_TYPE,
+	AS_BODY
+}
+const EMPTY_ARRAY := []
+const EMPTY_DICT := {}
+
 var import := {
 	# data_name = [type_name, path]
 	# if type_name != "" then row keys and type dicts added to Global.table_types
-#	StarData = ["StarTypes", "StarFields", "res://ivoyager/data/solar_system/star_data.csv"],
-#	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
-#	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
+	StarData = ["StarTypes", "StarFields", "res://ivoyager/data/solar_system/star_data.csv"],
+	PlanetData = ["PlanetTypes", "PlanetFields", "res://ivoyager/data/solar_system/planet_data.csv"],
+	MoonData = ["MoonTypes", "MoonFields", "res://ivoyager/data/solar_system/moon_data.csv"],
 	AsteroidGroupData = ["AsteroidGroupTypes", "AsteroidGroupFields",
 		"res://ivoyager/data/solar_system/asteroid_group_data.csv"],
 	BodyData = ["BodyTypes", "BodyFields", "res://ivoyager/data/solar_system/body_data.csv"],
@@ -42,9 +61,9 @@ var import := {
 	}
 
 var import2 := {
-	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
-	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
-	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
+#	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
+#	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
+#	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
 #	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
 #	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
 #	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
@@ -54,7 +73,6 @@ var import2 := {
 # global dicts
 var _tables: Dictionary = Global.tables
 var _table_types: Dictionary = Global.table_types
-var _table_fields: Dictionary = Global.table_fields
 var _wiki_titles: Dictionary = Global.wiki_titles
 
 # current processing
@@ -72,6 +90,30 @@ var _cell: String
 
 func project_init():
 	pass
+
+static func build_object(object: Object, row_data: Array, fields: Dictionary,
+		data_parser: Dictionary, read_types := EMPTY_DICT, required_data := EMPTY_ARRAY) -> void:
+	# helper function for builder classes
+	var enums: Script = Global.enums
+	var types: Dictionary = Global.table_types
+	var bodies_by_name: Dictionary = Global.program.Registrar.bodies_by_name
+	for property in data_parser:
+		var field: String = data_parser[property]
+		var value = row_data[fields[field]] if fields.has(field) else null
+		if value == null:
+			assert(!required_data.has(property), "Missing required data: " + row_data[0] + " " + field)
+			continue
+		var read_type: int = read_types.get(property, -1)
+		assert(read_type == -1 or typeof(value) == TYPE_STRING)
+		match read_type:
+			-1:
+				object[property] = value
+			AS_ENUM:
+				object[property] = enums[value]
+			AS_TYPE:
+				object[property] = types[value]
+			AS_BODY:
+				object[property] = bodies_by_name[value]
 
 func import_table_data():
 	print("Reading external data tables...")
@@ -94,8 +136,8 @@ func import_table_data():
 				assert(!_table_types.has(key))
 				_table_types[key] = _types[key]
 		if fields_name:
-			assert(!_table_fields.has(fields_name))
-			_table_fields[fields_name] = _fields
+			assert(!_tables.has(fields_name))
+			_tables[fields_name] = _fields
 			
 				
 	# REMOVING...
@@ -148,8 +190,8 @@ func _read_table() -> void:
 		line = file.get_line()
 
 func _read_fields_line() -> void:
-	assert(_line_array[0] == "key")
-	var column = 0
+	assert(_line_array[0] == "key") # fields[0] is always key!
+	var column := 0
 	for field in _line_array:
 		if field == "Comments":
 			break
@@ -173,15 +215,16 @@ func _read_data_line() -> void:
 		if !_cell and _defaults and _defaults[column]: # impute default
 			_cell = _defaults[column]
 		var data_type: String = _data_types[column]
+		if !_cell: # for all types excpet "X", blank cell w/out default is null!
+			if data_type == "X":
+				row_data[column] = false
+			continue
 		match data_type:
 			"X":
 				assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
 				assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
-				if _cell == "x":
-					row_data[column] = true
-				else:
-					assert(!_cell or _line_error("X type must be x or blank cell"))
-					row_data[column] = false
+				assert(_cell == "x" or _line_error("X type must be x or blank cell"))
+				row_data[column] = true
 			"BOOL":
 				assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
 				if _cell.matchn("true"): # case insensitive
@@ -194,6 +237,7 @@ func _read_data_line() -> void:
 				assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 				row_data[column] = int(_cell)
 			"REAL":
+				_cell = _cell.replace("E", "e")
 				assert(_cell.is_valid_float() or _line_error("Expected REAL"))
 				var real := float(_cell)
 				if _units and _units[column]:

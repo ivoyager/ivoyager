@@ -44,6 +44,15 @@ var _camera: VoyagerCamera
 var _starfield: WorldEnvironment
 
 
+func project_init():
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_body_builder = Global.program.BodyBuilder
+	_registrar = Global.program.Registrar
+	_minor_bodies_builder = Global.program.MinorBodiesBuilder
+	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
+	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
+	_Body_ = Global.script_classes._Body_
+
 func build() -> void:
 	print("Building solar system...")
 	if _main_prog_bar:
@@ -54,20 +63,10 @@ func build() -> void:
 	else:
 		_build_on_thread(0)
 
-
-func project_init():
-	_main_prog_bar = Global.program.get("MainProgBar")
-	_body_builder = Global.program.BodyBuilder
-	_registrar = Global.program.Registrar
-	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
-	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
-	_Body_ = Global.script_classes._Body_
-
 func _build_on_thread(_dummy: int) -> void:
-	_add_bodies(_tables.star_data, Enums.TABLE_STARS)
-	_add_bodies(_tables.planet_data, Enums.TABLE_PLANETS)
-	_add_bodies(_tables.moon_data, Enums.TABLE_MOONS)
+	_add_bodies(_tables.StarData, _tables.StarFields, Enums.TABLE_STARS)
+	_add_bodies(_tables.PlanetData, _tables.PlanetFields, Enums.TABLE_PLANETS)
+	_add_bodies(_tables.MoonData, _tables.MoonFields, Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
@@ -90,13 +89,14 @@ func _finish_build() -> void:
 		_main_prog_bar.stop()
 	emit_signal("finished")
 
-func _add_bodies(data_table: Array, table_type: int) -> void:
-	for data in data_table:
+func _add_bodies(data: Array, fields: Dictionary, table_type: int) -> void:
+	for row_data in data:
 		var body: Body = SaverLoader.make_object_or_scene(_Body_)
 		var parent: Body
-		if data.parent != "is_top":
-			parent = _registrar.bodies_by_name[data.parent]
-		_body_builder.build(body, table_type, data, parent)
+		if !fields.has("top") or !row_data[fields.top]:
+			var parent_str: String = row_data[fields.parent] # required if not top
+			parent = _registrar.bodies_by_name[parent_str]
+		_body_builder.build(body, parent, row_data, fields, table_type)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
