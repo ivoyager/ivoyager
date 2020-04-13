@@ -56,13 +56,13 @@ var data_parser := { # property = table_field
 	tenth_bar_t = "tenth_bar_t",
 	file_prefix = "file_prefix",
 }
+var req_data := [
+	"name", "body_type", "m_radius", "file_prefix"
+]
 var read_types := {
 	body_type = TableReader.AS_TYPE,
 	starlight_type = TableReader.AS_TYPE,
 }
-var required_data := [
-	"name", "body_type", "m_radius", "file_prefix"
-]
 
 
 # private
@@ -108,7 +108,7 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 	if !parent:
 		body.is_top = true
 		assert(fields.has("top") and row_data[fields.top])
-	TableReader.build_object(body, row_data, fields, data_parser, read_types, required_data)
+	TableReader.build_object(body, row_data, fields, data_parser, req_data, read_types)
 	match table_type:
 		Enums.TABLE_STARS:
 			body.is_star = true

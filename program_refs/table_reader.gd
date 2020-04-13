@@ -92,7 +92,7 @@ func project_init():
 	pass
 
 static func build_object(object: Object, row_data: Array, fields: Dictionary,
-		data_parser: Dictionary, read_types := EMPTY_DICT, required_data := EMPTY_ARRAY) -> void:
+		data_parser: Dictionary, req_data := EMPTY_ARRAY, read_types := EMPTY_DICT) -> void:
 	# helper function for builder classes
 	var enums: Script = Global.enums
 	var types: Dictionary = Global.table_types
@@ -101,7 +101,7 @@ static func build_object(object: Object, row_data: Array, fields: Dictionary,
 		var field: String = data_parser[property]
 		var value = row_data[fields[field]] if fields.has(field) else null
 		if value == null:
-			assert(!required_data.has(property), "Missing required data: " + row_data[0] + " " + field)
+			assert(!req_data.has(property), "Missing required data: " + row_data[0] + " " + field)
 			continue
 		var read_type: int = read_types.get(property, -1)
 		assert(read_type == -1 or typeof(value) == TYPE_STRING)
