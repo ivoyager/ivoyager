@@ -61,8 +61,8 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("credits_requested", self, "_open")
-	_main = Global.objects.Main
-	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	_main = Global.program.Main
+	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
 

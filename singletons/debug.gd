@@ -21,6 +21,8 @@
 
 extends Node
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 # print settings
 #const PROFILER_UPDATE_SEC = 0 # 0 to disable
 const PRINT_FRAME_HANGS = false
@@ -44,7 +46,7 @@ var _logs_inited = false
 
 func _ready():
 	# Logs overwritten at startup.
-	FileHelper.make_dir_if_doesnt_exist(LOGS_PATH)
+	file_utils.make_dir_if_doesnt_exist(LOGS_PATH)
 	for key in _logs:
 		var log_name = _logs[key]
 		var log_path = LOGS_PATH.plus_file(log_name + LOGS_EXTENSION)

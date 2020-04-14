@@ -15,12 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Base class for spatial nodes that have an orbit or can be orbited, including
 # non-physical barycenters & lagrange points. The system tree is composed of
 # Body instances from top to bottom, each Body having its orbiting children
 # (other Body instances) and other spatial children that are visuals: Model,
 # Rings, HUDIcon, HUDOrbit, etc.
+#
+# See static/unit_defs.gd for base units. For float values, interpret -INF as
+# not applicable (NA) and +INF as unknown (?). 
+#
 # TODO: Make LagrangePoint into Body instances
 # TODO: barycenters
 
@@ -43,7 +46,7 @@ var body_type := -1 # stays -1 for non-physical barycenters & lagrange points
 var selection_type := -1
 var starlight_type := -1
 var classification := "" # move to SelectionItem
-var is_top := false
+var is_top := false # true for top spatial node only (the sun in I, Voyager)
 var is_star_orbiting := false
 var is_gas_giant := false
 var is_dwarf_planet := false
@@ -51,20 +54,28 @@ var is_minor_moon := false
 var has_atmosphere := false
 var tidally_locked := false
 var mass := 0.0
-var GM := 0.0
+var gm := 0.0
 var esc_vel := 0.0
 var m_radius := 0.0
 var e_radius := 0.0
 var system_radius := 0.0 # widest orbiting satellite
 var rotation_period := 0.0
 var axial_tilt := 0.0
-var declination := 0.0
-var right_ascension := 0.0
-var density := 0.0
-var albedo := 0.0
+var right_ascension := -INF
+var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3()
+# optional characteristics
+var density := INF
+var albedo := INF
+var surf_pres := INF
+var surf_t := -INF # NA for gas giants
+var min_t := -INF
+var max_t := -INF
+var one_bar_t := -INF # venus, gas giants
+var tenth_bar_t := -INF # gas giants
+# file reading
 var file_prefix: String
 var rings_info: Array # [file_name, radius] if exists
 
@@ -77,10 +88,11 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"is_spacecraft", "body_type", "selection_type",
 	"starlight_type", "classification", "is_top", "is_star_orbiting",
 	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
-	"has_atmosphere", "tidally_locked", "mass", "GM",
+	"has_atmosphere", "tidally_locked", "mass", "gm",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
-	"declination", "right_ascension", "density", "albedo",
+	"right_ascension", "declination",
 	"has_minor_moons", "reference_basis", "north_pole",
+	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t", "one_bar_t", "tenth_bar_t",
 	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
@@ -101,7 +113,7 @@ var hud_too_close := 0.0
 
 # private
 var _aux_graphic_process := false
-var _time_array: Array = Global.time_array
+var _time_array: Array = Global.time_date
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
@@ -194,7 +206,7 @@ func _on_init() -> void:
 func _on_ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 	if orbit:
-		orbit.connect("changed", self, "_update_orbit_change")
+		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
 
 func _update_orbit_change():
 	if tidally_locked:

@@ -16,30 +16,37 @@
 # limitations under the License.
 # *****************************************************************************
 #
-# Singleton "ProjectBuilder". Only extension init files should reference this
-# node. RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE! See
-# https://ivoyager.dev/forum for extension instructions and best practices.
+# Singleton "ProjectBuilder" builds the program (not the solar system!) and
+# makes program resources (program instances and classes) availible in Global
+# dictionaries.
+#
+# Only extension init files should reference this node.
+# RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
+# See https://ivoyager.dev/forum for extension instructions and best practices.
 #
 # To modify and extend I, Voyager:
-# 1. Create a extension init file with path "res://<name>/<name>.gd" where
+# 1. Create an extension init file with path "res://<name>/<name>.gd" where
 #    <name> is the name of your project or addon. This file must have an
 #    extension_init() function and can extend Reference or Node (if the latter, 
 #    init file can specify a scene; see addon examples). Instructions 2-5 refer
 #    to this file.
-# 2. Use init() to:
+# 2. Use extension_init() to:
 #     a. modify "project init" values in Global singleton.
 #     b. modify this node's dictionaries to extend (i.e., subclass) and replace
 #        existing classes, remove classes, or add new classes.
-# 3. Hook up to this node's "project_objects_instantiated" signal to modify init
-#    values of nodes before they are added to tree or references before they
-#    are used. Nodes and references can be accessed after instantiation in
-#    the "objects" dictionary.
+#     (Above happens before anything else is instantiated!)
+# 3. Hook up to this node's "project_objects_instantiated" signal to modify
+#    init values of instantiated nodes (before they are added to tree) or
+#    instantiated references (before they are used). Nodes and references can
+#    be accessed after instantiation in the "program" dictionary.
 # 4. Modify init values in GameGUI (following instruction #3) to remove or
 #    add individual GUI scenes. (Or make your own ProjectGUI.)
 # 5. Hook up to Global signal "gui_entered_tree" to modify init values of
 #    individual GUI scenes (not defined here) before their _ready() call.  
 
 extends Node
+
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 signal extentions_inited()
 signal project_objects_instantiated()
@@ -72,7 +79,7 @@ var init_sequence := [
 # item at runtime might be a project-specific subclass (or in some cases
 # replacement) for the original class. For objects instantiated by
 # ProjectBuilder, edge underscores are removed to form keys in the
-# Global.objects dictionary and node names.
+# Global.program dictionary (and name property for nodes).
 
 var program_references := {
 	# ProjectBuilder instances one of each. No save/load persistence.
@@ -89,15 +96,12 @@ var program_references := {
 	_MinorBodiesBuilder_ = MinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
-	_FileHelper_ = FileHelper,
-	_GUIHelper_ = GUIHelper,
-	_StringMaker_ = StringMaker,
-	_Math_ = Math,
+	_QtyStrings_ = QtyStrings,
 }
 
 var program_nodes := {
 	# ProjectBuilder instances one of each and adds as child to Global. Use
-	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted.
+	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
 	_Main_ = Main,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
@@ -114,7 +118,7 @@ var gui_top_nodes := {
 	# "insert" into dictionary, you might need to erase/add elements to order
 	# as needed.)
 	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_ProjectGUI_ = GameGUI, # Control ok
+	_ProjectGUI_ = GameGUI, # Control ok (planetarium replaces w/ PlanetariumGUI)
 	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
 	_MainMenu_ = MainMenu, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove
@@ -149,9 +153,8 @@ var procedural_classes := {
 }
 
 var extensions := []
-var objects: Dictionary = Global.objects
+var program: Dictionary = Global.program
 var script_classes: Dictionary = Global.script_classes
-
 onready var gui_top: Control = get_node("/root/GUITop") # start scene & UI parent
 
 # **************************** INIT SEQUENCE **********************************
@@ -170,7 +173,7 @@ func init_extensions() -> void:
 #		print(dir_name)
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-			if FileHelper.exists(path):
+			if file_utils.exists(path):
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
@@ -186,15 +189,15 @@ func instantiate_and_index() -> void:
 	for dict in [program_references, program_nodes, gui_top_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
-			assert(!objects.has(object_key))
+			assert(!program.has(object_key))
 			var object: Object = SaverLoader.make_object_or_scene(dict[key])
-			objects[object_key] = object
+			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	assert(!objects.has("GUITop") and !objects.has("tree") and !objects.has("root"))
-	objects.GUITop = gui_top
-	objects.tree = get_tree()
-	objects.root = get_tree().get_root()
+	assert(!program.has("GUITop") and !program.has("tree") and !program.has("root"))
+	program.GUITop = gui_top
+	program.tree = get_tree()
+	program.root = get_tree().get_root()
 	for dict in [program_references, program_nodes, gui_top_nodes, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
@@ -206,7 +209,7 @@ func init_project() -> void:
 	for dict in [program_references, program_nodes, gui_top_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
-			var object: Object = objects[object_key]
+			var object: Object = program[object_key]
 			object.project_init() # ProjectBuilder instantiated must have this method!
 	emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
@@ -215,10 +218,10 @@ func init_project() -> void:
 func add_project_nodes() -> void:
 	for key in program_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		Global.add_child(objects[object_key])
+		Global.add_child(program[object_key])
 	for key in gui_top_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		gui_top.add_child(objects[object_key])
+		gui_top.add_child(program[object_key])
 	emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")

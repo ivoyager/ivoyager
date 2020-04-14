@@ -20,6 +20,8 @@ extends FileDialog
 class_name LoadDialog
 const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 # project var
 var add_quick_load_button := false
 
@@ -30,8 +32,8 @@ var _quick_load_button: Button
 func project_init():
 	if !Global.enable_save_load:
 		return
-	_main = Global.objects.Main
-	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	_main = Global.program.Main
+	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_LOAD_FILE", 700, true, true, _main, "load_game", [""])
 		if add_quick_load_button:
@@ -51,7 +53,7 @@ func _open() -> void:
 	_main.require_stop(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir := FileHelper.get_save_dir_path(Global.is_modded, Global.settings.save_dir)
+	var save_dir := file_utils.get_save_dir_path(Global.is_modded, Global.settings.save_dir)
 	current_dir = save_dir
 	if _state.last_save_path:
 		current_path = _state.last_save_path

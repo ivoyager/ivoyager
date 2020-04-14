@@ -1,4 +1,4 @@
-# gui_helper.gd
+# gui_utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -16,11 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Reference
-class_name GUIHelper
-
-func project_init() -> void:
-	pass
+class_name GUIUtils
 
 static func get_selection_manager(control: Control) -> SelectionManager:
 	var ancestor: Node = control.get_parent()

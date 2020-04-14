@@ -22,6 +22,22 @@ class_name SelectionManager
 
 signal selection_changed()
 
+const SELECTION_STAR_SYSTEM = Enums.SELECTION_STAR_SYSTEM
+const SELECTION_BARYCENTER = Enums.SELECTION_BARYCENTER
+const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
+const SELECTION_STAR = Enums.SELECTION_STAR
+const SELECTION_PLANET = Enums.SELECTION_PLANET
+const SELECTION_DWARF_PLANET = Enums.SELECTION_DWARF_PLANET
+const SELECTION_MOON = Enums.SELECTION_MOON
+const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
+const SELECTION_ASTEROIDS = Enums.SELECTION_ASTEROIDS
+const SELECTION_ASTEROID_GROUP = Enums.SELECTION_ASTEROID_GROUP
+const SELECTION_COMMETS = Enums.SELECTION_COMMETS
+const SELECTION_SPACECRAFTS = Enums.SELECTION_SPACECRAFTS
+const SELECTION_ASTEROID = Enums.SELECTION_ASTEROID
+const SELECTION_COMMET = Enums.SELECTION_COMMET
+const SELECTION_SPACECRAFT = Enums.SELECTION_SPACECRAFT
+
 # persisted
 var selection_item: SelectionItem
 var _is_camera_selection := false
@@ -30,9 +46,8 @@ const PERSIST_PROPERTIES := ["_is_camera_selection"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # private
-var _enums: Dictionary = Global.enums
 var _root: Viewport = Global.get_tree().get_root()
-var _registrar: Registrar = Global.objects.Registrar
+var _registrar: Registrar = Global.program.Registrar
 var _history := [] # weakrefs
 var _history_index := -1
 var _supress_history := false
@@ -48,7 +63,7 @@ func select(selection_item_: SelectionItem) -> void:
 		return
 	selection_item = selection_item_
 	if !_supress_camera_move and _connected_camera and _connected_camera.is_camera_lock:
-		_connected_camera.move(selection_item, -1, Vector3.ZERO)
+		_connected_camera.move(selection_item, -1, Vector3.ZERO, Vector3.ZERO)
 	_supress_camera_move = false
 	_add_history()
 	emit_signal("selection_changed")
@@ -116,7 +131,7 @@ func down() -> void:
 func next_last(incr: int, selection_type := -1) -> void:
 	# This is messy, but each selection_type is a special case. See logic
 	# for supported types.
-	if selection_type == _enums.SELECTION_STAR:
+	if selection_type == SELECTION_STAR:
 		var sun: Body = _registrar.top_body # TODO: code for multistar systems
 		select_body(sun)
 		return
@@ -125,16 +140,16 @@ func next_last(incr: int, selection_type := -1) -> void:
 		selection_type = current_type
 	var alt_selection_type := -1
 	match selection_type:
-		_enums.SELECTION_PLANET:
-			alt_selection_type = _enums.SELECTION_DWARF_PLANET
-		_enums.SELECTION_DWARF_PLANET:
-			selection_type = _enums.SELECTION_PLANET
-			alt_selection_type = _enums.SELECTION_DWARF_PLANET
-		_enums.SELECTION_MOON:
-			alt_selection_type = _enums.SELECTION_MINOR_MOON
-		_enums.SELECTION_MINOR_MOON:
-			selection_type = _enums.SELECTION_MOON
-			alt_selection_type = _enums.SELECTION_MINOR_MOON
+		SELECTION_PLANET:
+			alt_selection_type = SELECTION_DWARF_PLANET
+		SELECTION_DWARF_PLANET:
+			selection_type = SELECTION_PLANET
+			alt_selection_type = SELECTION_DWARF_PLANET
+		SELECTION_MOON:
+			alt_selection_type = SELECTION_MINOR_MOON
+		SELECTION_MINOR_MOON:
+			selection_type = SELECTION_MOON
+			alt_selection_type = SELECTION_MINOR_MOON
 	var current_body := selection_item.body # could be null
 	var iteration_array: Array
 	var index := -1
@@ -142,7 +157,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 		var up_body := _registrar.get_body_above_selection(selection_item)
 		iteration_array = up_body.satellites
 		index = iteration_array.find(current_body)
-	elif selection_type == _enums.SELECTION_PLANET:
+	elif selection_type == SELECTION_PLANET:
 		var star := _registrar.get_selection_star(selection_item)
 		if !star:
 			return
@@ -152,7 +167,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 			index = iteration_array.find(planet)
 			if incr == 1:
 				index -= 1
-	elif selection_type == _enums.SELECTION_MOON:
+	elif selection_type == SELECTION_MOON:
 		var planet := _registrar.get_selection_planet(selection_item)
 		if !planet:
 			return
@@ -162,7 +177,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 			index = iteration_array.find(moon)
 			if incr == 1:
 				index -= 1
-	elif selection_type == _enums.SELECTION_SPACECRAFT:
+	elif selection_type == SELECTION_SPACECRAFT:
 		if current_body:
 			iteration_array = current_body.satellites
 		else:
@@ -216,8 +231,8 @@ func _process_camera_move(to_body: Body, is_camera_lock: bool) -> void:
 		select_body(to_body)
 
 func _process_camera_lock_change(is_camera_lock: bool) -> void:
-	if is_camera_lock and _connected_camera.spatial != selection_item.spatial:
-		_connected_camera.move(selection_item, -1, Vector3.ZERO)
+	if is_camera_lock and _connected_camera.parent != selection_item.spatial:
+		_connected_camera.move(selection_item, -1, Vector3.ZERO, Vector3.ZERO)
 
 func _add_history() -> void:
 	if _supress_history:

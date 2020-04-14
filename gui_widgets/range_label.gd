@@ -20,7 +20,7 @@
 
 extends Label
 
-onready var _string_maker: StringMaker = Global.objects.StringMaker
+onready var _qty_strings: QtyStrings = Global.program.QtyStrings
 var _camera: Camera
 
 func _ready():
@@ -41,7 +41,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_range_changed(new_range: float) -> void:
-	text = _string_maker.get_str(new_range, _string_maker.DISPLAY_LENGTH)
+	text = _qty_strings.number_option(new_range, _qty_strings.LENGTH_M_KM_AU)
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	visible = is_locked

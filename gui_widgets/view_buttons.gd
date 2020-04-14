@@ -1,4 +1,4 @@
-# viewpoint_buttons.gd
+# view_buttons.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Expects the camera to have "viewpoint_changed" signal and to use
-# VoyagerCamera VIEWPOINT_ enums.
+# GUI widget. Expects the camera to have "view_type_changed" signal and to use
+# VIEW_TYPE_ enums.
 
 extends HBoxContainer
 
@@ -38,24 +38,24 @@ func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("viewpoint_changed", self, "_update_viewpoint")
+		_camera.connect("view_type_changed", self, "_update_view_type")
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("viewpoint_changed", self, "_update_viewpoint")
+		_camera.disconnect("view_type_changed", self, "_update_view_type")
 	_camera = null
 
-func _update_viewpoint(viewpoint: int) -> void:
-	_recenter_button.pressed = viewpoint != VoyagerCamera.VIEWPOINT_BUMPED_UNCENTERED
-	_zoom_button.pressed = viewpoint == VoyagerCamera.VIEWPOINT_ZOOM
-	_fortyfive_button.pressed = viewpoint == VoyagerCamera.VIEWPOINT_45
-	_top_button.pressed = viewpoint == VoyagerCamera.VIEWPOINT_TOP
+func _update_view_type(view_type: int) -> void:
+	_recenter_button.pressed = view_type != Enums.VIEW_UNCENTERED
+	_zoom_button.pressed = view_type == Enums.VIEW_ZOOM
+	_fortyfive_button.pressed = view_type == Enums.VIEW_45
+	_top_button.pressed = view_type == Enums.VIEW_TOP
 
 func _recenter() -> void:
 	if !_camera:
 		return
 	if _recenter_button.pressed:
-		_camera.move(null, -1, Vector3.ZERO)
+		_camera.move(null, -1, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_recenter_button.pressed = true
 
@@ -63,7 +63,7 @@ func _zoom() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_ZOOM, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_zoom_button.pressed = true
 
@@ -71,7 +71,7 @@ func _fortyfive() -> void:
 	if !_camera:
 		return
 	if _fortyfive_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_45, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_45, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_fortyfive_button.pressed = true
 
@@ -79,6 +79,6 @@ func _top() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, VoyagerCamera.VIEWPOINT_TOP, Vector3.ZERO)
+		_camera.move(null, Enums.VIEW_TOP, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_top_button.pressed = true

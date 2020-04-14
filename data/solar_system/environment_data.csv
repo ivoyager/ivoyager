@@ -1,6 +1,6 @@
-﻿#,
+﻿# WIP - not implemented yet,
 #,
 key,dummy
 Data_Type,BOOL
-Default_Value,TRUE
+Defaults,TRUE
 ENVIRONMENT_IVOYAGER,

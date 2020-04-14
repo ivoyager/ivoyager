@@ -107,7 +107,7 @@ func _on_init():
 	pass
 
 func project_init() -> void:
-	_main = Global.objects.Main
+	_main = Global.program.Main
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 

@@ -41,7 +41,7 @@ var _settings: Dictionary = Global.settings
 var _state: Dictionary = Global.state
 onready var _tree: SceneTree = get_tree()
 onready var _root: Viewport = _tree.get_root()
-onready var _registrar: Registrar = Global.objects.Registrar
+onready var _registrar: Registrar = Global.program.Registrar
 onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 
 

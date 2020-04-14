@@ -35,7 +35,7 @@ var format_overrides := {
 }
 
 var _settings: Dictionary = Global.settings
-onready var _settings_manager: SettingsManager = Global.objects.SettingsManager
+onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 
 func _on_init():
@@ -82,7 +82,7 @@ func _on_init():
 
 func project_init() -> void:
 	.project_init()
-	var main_menu: MainMenu = Global.objects.get("MainMenu")
+	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_OPTIONS", 500, true, true, self, "_open")
 	Global.connect("options_requested", self, "_open")

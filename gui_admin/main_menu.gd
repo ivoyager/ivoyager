@@ -45,7 +45,7 @@ func project_init():
 		Global.connect("simulator_exited", self, "_set_splash_screen_config")
 		theme = Global.themes.main_menu
 	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
-	_main = Global.objects.Main
+	_main = Global.program.Main
 	if !Global.skip_splash_screen:
 		make_button("BUTTON_START", 1000, true, false, self, "_on_start_pressed")
 		make_button("BUTTON_EXIT", 300, false, true, _main, "exit", [false])

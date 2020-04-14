@@ -41,7 +41,7 @@ func init(group_: AsteroidGroup, color_: Color) -> void:
 	else:
 		_orbit_points.shader = Global.shaders.orbit_points_lagrangian
 	material_override = _orbit_points
-	var timekeeper: Timekeeper = Global.objects.Timekeeper
+	var timekeeper: Timekeeper = Global.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 
 func draw_points() -> void:

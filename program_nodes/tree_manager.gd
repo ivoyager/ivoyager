@@ -21,6 +21,8 @@
 extends Node
 class_name TreeManager
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 const DPRINT := false
 
 signal show_icons_changed(is_show)
@@ -37,13 +39,12 @@ const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
 
 # unpersisted
-var _global_time_array: Array = Global.time_array
+var _global_time_array: Array = Global.time_date
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
 var _timekeeper: Timekeeper
 var _registrar: Registrar
-var _math: Math
 var _camera: VoyagerCamera
 var _at_local_star_orbiter: Body
 var _to_local_star_orbiter: Body
@@ -79,10 +80,9 @@ func project_init() -> void:
 	Global.connect("camera_ready", self, "_connect_camera")
 	Global.connect("gui_refresh_requested", self, "_gui_refresh")
 	Global.connect("setting_changed", self, "_settings_listener")
-	_root = Global.objects.root
-	_timekeeper = Global.objects.Timekeeper
-	_registrar = Global.objects.Registrar
-	_math = Global.objects.Math
+	_root = Global.program.root
+	_timekeeper = Global.program.Timekeeper
+	_registrar = Global.program.Registrar
 	_root.connect("size_changed", self, "_update_icon_size")
 	_timekeeper.connect("processed", self, "_timekeeper_process")
 	_viewport_height = _root.get_visible_rect().size.y
@@ -157,7 +157,7 @@ func _get_local_star_orbiter(body: Body) -> Body:
 func _update_icon_size() -> void:
 	if !_camera:
 		return
-	var scaling_factor := _math.get_fov_scaling_factor(_camera.fov)
+	var scaling_factor := math.get_fov_scaling_factor(_camera.fov)
 	_viewport_height = _root.get_visible_rect().size.y
 	_icon_quad_mesh.size = Vector2.ONE * (_settings.viewport_icon_size * scaling_factor / _viewport_height)
 

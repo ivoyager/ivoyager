@@ -15,27 +15,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
+# Be carful to test for table nulls explicitly! (0.0 != null)
 
 extends Reference
 class_name BodyBuilder
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const file_utils := preload("res://ivoyager/static/file_utils.gd")
+
 const DPRINT := false
-const MAJOR_MOON_GM := 4.0 * 7.46496e9 # eg, Miranda is 4.4 in _Moon_Master.xlsm
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
+# project vars
+var major_moon_gm := 4.0 * UnitDefs.STANDARD_GM # eg, Miranda is 4.4 km^3/s^2
+var data_parser := {
+	# property = table_field
+	name = "key",
+	body_type = "body_type",
+	starlight_type = "starlight_type",
+	is_gas_giant = "gas_giant",
+	is_dwarf_planet = "dwarf",
+	has_minor_moons = "minor_moons",
+	has_atmosphere = "atmosphere",
+	m_radius = "m_radius",
+	e_radius = "e_radius", # set to m_radius if missing
+	mass = "mass", # can calculate from gm
+	gm = "GM", # can calculate fro mass
+	tidally_locked = "tidally_locked",
+	rotation_period = "rotation",
+	right_ascension = "RA",
+	declination = "dec",
+	axial_tilt = "axial_tilt",
+	esc_vel = "esc_vel",
+	density = "density",
+	albedo = "albedo",
+	surf_pres = "surf_pres",
+	surf_t = "surf_t",
+	min_t = "min_t",
+	max_t = "max_t",
+	one_bar_t = "one_bar_t",
+	tenth_bar_t = "tenth_bar_t",
+	file_prefix = "file_prefix",
+}
+var req_data := [
+	"name", "body_type", "m_radius", "file_prefix"
+]
+var read_types := {
+	body_type = TableUtils.AS_TYPE,
+	starlight_type = TableUtils.AS_TYPE,
+}
+
+# private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _scale: float = Global.scale
 var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
-var _global_time_array: Array = Global.time_array
+var _tables: Dictionary = Global.tables
+var _table_types: Dictionary = Global.table_types
+var _time_date: Array = Global.time_date
 var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
-var _math: Math
 var _Body_: Script
 var _HUDOrbit_: Script
 var _HUDIcon_: Script
@@ -44,18 +84,15 @@ var _Model_: Script
 var _Rings_: Script
 var _Starlight_: Script
 var _texture_2d_dir: String
-
-var _major_moon_gm: float = MAJOR_MOON_GM * _scale * _scale * _scale
 var _satellite_indexes := {} # passed to & shared by Body instances
 var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_hud_2d_surface = Global.objects.HUD2dSurface
-	_registrar = Global.objects.Registrar
-	_selection_builder = Global.objects.SelectionBuilder
-	_orbit_builder = Global.objects.OrbitBuilder
-	_math = Global.objects.Math
+	_hud_2d_surface = Global.program.HUD2dSurface
+	_registrar = Global.program.Registrar
+	_selection_builder = Global.program.SelectionBuilder
+	_orbit_builder = Global.program.OrbitBuilder
 	_Body_ = Global.script_classes._Body_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_HUDIcon_ = Global.script_classes._HUDIcon_
@@ -66,54 +103,39 @@ func project_init() -> void:
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
-func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> void:
-	assert(DPRINT and prints("build", tr(data.key)) or true)
-	body.name = data.key
+func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_type: int) -> void:
+	assert(DPRINT and prints("build", tr(row_data[fields.key])) or true)
 	if !parent:
 		body.is_top = true
-	match data_table_type:
-		_enums.DATA_TABLE_STAR:
+		assert(fields.has("top") and row_data[fields.top])
+	TableUtils.build_object(body, row_data, fields, data_parser, req_data, read_types)
+	match table_type:
+		Enums.TABLE_STARS:
 			body.is_star = true
-		_enums.DATA_TABLE_PLANET:
+		Enums.TABLE_PLANETS:
 			body.is_planet = true
-			body.is_dwarf_planet = data.has("dwarf")
-			body.has_minor_moons = data.has("minor_moons")
-		_enums.DATA_TABLE_MOON:
+		Enums.TABLE_MOONS:
 			body.is_moon = true
-	
-	body.is_gas_giant = data.has("gas_giant")
-	
-	var time: float = _global_time_array[0]
+	var time: float = _time_date[0]
 	var orbit: Orbit
 	if !body.is_top:
-		orbit = _orbit_builder.make_orbit_from_data(data, parent, parent.GM, time)
+		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, time)
 		body.orbit = orbit
-	body.body_type = _enums.BodyTypes[data.body_type]
-	if data.has("starlight_type"):
-		body.starlight_type = _enums.StarlightTypes[data.starlight_type]
-	body.has_atmosphere = data.has("atmosphere")
-	body.m_radius = data.m_radius * _scale
-	body.e_radius = data.e_radius * _scale if data.has("e_radius") else body.m_radius
+	if body.e_radius == 0.0:
+		body.e_radius = body.m_radius
 	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
-	body.mass = data.mass if data.has("mass") else 0.0
-	body.GM = data.GM * _scale * _scale * _scale if data.has("GM") else 0.0
 	if body.mass == 0.0:
-		body.mass = body.GM / _gravitational_constant
-	elif body.GM == 0.0:
-		body.GM = body.mass * _gravitational_constant
-	if body.is_moon and body.GM < _major_moon_gm and !data.has("force_major"):
+		body.mass = body.gm / _gravitational_constant
+	if body.gm == 0.0:
+		body.gm = body.mass * _gravitational_constant
+	if body.is_moon and body.gm < major_moon_gm and !row_data[fields.force_major]:
 		body.is_minor_moon = true
-	body.rotation_period = data.rotation if data.has("rotation") else 0.0
-	body.right_ascension = data.RA if data.has("RA") else -INF
-	body.declination = data.dec if data.has("dec") else -INF
-	body.axial_tilt = data.axial_tilt if data.has("axial_tilt") else 0.0
-	body.esc_vel = data.esc_vel * _scale if data.has("esc_vel") else 0.0
-
+	if body.esc_vel == 0.0:
+		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
 	# orbit and axis
 	if parent and parent.is_star:
 		body.is_star_orbiting = true
-	if data.has("tidally_locked") and data.tidally_locked: # almost all moons
-		body.tidally_locked = true
+	if body.tidally_locked:
 		body.rotation_period = TAU / orbit.get_mean_motion(time)
 
 	# We use definition of "axial tilt" as angle to a body's orbital plane
@@ -121,8 +143,9 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
 	if !body.tidally_locked:
-		assert(data.has("dec") and data.has("RA"))
-		body.north_pole = _ecliptic_rotation * _math.convert_equatorial_coordinates(body.right_ascension, body.declination)
+		assert(body.right_ascension != -INF and body.declination != -INF)
+		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates(
+				body.right_ascension, body.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).
@@ -146,7 +169,6 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 	body.north_pole = body.north_pole.normalized()
 	# Keep below print statement for additional "does this make sense?" tests.
 	# prints(body.name, rad2deg(body.axial_tilt), rad2deg(body.north_pole.angle_to(ECLIPTIC_NORTH)))
-	
 	if orbit and orbit.is_retrograde(time): # retrograde
 		body.rotation_period = -body.rotation_period
 	
@@ -154,13 +176,12 @@ func build(body: Body, data_table_type: int, data: Dictionary, parent: Body) -> 
 	var tilt_axis = Vector3(0.0, 1.0, 0.0).cross(body.north_pole).normalized() # up for model graphic is its y-axis
 	var tilt_angle = Vector3(0.0, 1.0, 0.0).angle_to(body.north_pole)
 	body.reference_basis = body.reference_basis.rotated(tilt_axis, tilt_angle)
-	if data.has("rotate_adj") and data.rotate_adj != 0.0:
-		body.reference_basis = body.reference_basis.rotated(body.north_pole, data.rotate_adj)
+	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skip if 0 or null
+		body.reference_basis = body.reference_basis.rotated(body.north_pole, row_data[fields.rotate_adj])
 
 	# file import info
-	body.file_prefix = data.file_prefix
-	if data.has("rings"):
-		body.rings_info = [data.rings, data.rings_outer_radius * _scale]
+	if fields.has("rings") and row_data[fields.rings]:
+		body.rings_info = [row_data[fields.rings], row_data[fields.rings_outer_radius]]
 
 	body.classification = _get_classification(body)
 	# parent modifications
@@ -213,8 +234,8 @@ func _build_unpersisted(body: Body) -> void:
 	var starlight: Starlight
 	if body.starlight_type != -1:
 		starlight = SaverLoader.make_object_or_scene(_Starlight_)
-		var starlight_data: Dictionary = _table_data.starlight_data[body.starlight_type]
-		starlight.init(starlight_data)
+		var starlight_data: Array = _tables.StarlightData[body.starlight_type]
+		starlight.init(starlight_data, _tables.StarlightFields)
 		body.add_child(starlight)
 	# HUDs
 	body.set_hud_too_close(_settings.hide_hud_when_close)
@@ -253,12 +274,12 @@ func _build_unpersisted(body: Body) -> void:
 	_hud_2d_surface.add_child(hud_label)
 
 	# 2D selection textures
-	body.texture_2d = FileHelper.find_resource(_texture_2d_dir, file_prefix)
+	body.texture_2d = file_utils.find_resource(_texture_2d_dir, file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
 	if body.is_star:
 		var slice_name = file_prefix + "_slice"
-		body.texture_slice_2d = FileHelper.find_resource(_texture_2d_dir, slice_name)
+		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = Global.assets.fallback_star_slice
 

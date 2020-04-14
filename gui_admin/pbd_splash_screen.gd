@@ -29,8 +29,8 @@ var _pbd_caption: Label
 
 func project_init():
 	connect("ready", self, "_on_ready")
-	_settings_manager = Global.objects.SettingsManager
-	_main_menu = Global.objects.get("MainMenu")
+	_settings_manager = Global.program.SettingsManager
+	_main_menu = Global.program.get("MainMenu")
 	theme = Global.themes.splash_screen
 
 func _on_ready():

@@ -29,18 +29,16 @@ var longitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly rig
 var latitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly above Moon
 var min_view_dist_radius_multiplier := 1.65
 
-var m_radius_fill_view_zoom := 7e5 # km; this size object fills the zoom view
+var m_radius_fill_view_zoom := 7e5 * UnitDefs.KM # this size object fills the zoom view
 var size_compensation_exponent := 0.2 # < 0.0 is "full" compensation; 1.0 is none
 var system_radius_multiplier_top := 1.5
 
 # dependencies
-var _scale: float = Global.scale
-var _enums: Dictionary = Global.enums
 var _registrar: Registrar
 var _SelectionItem_: Script
 
 func project_init() -> void:
-	_registrar = Global.objects.Registrar
+	_registrar = Global.program.Registrar
 	_SelectionItem_ = Global.script_classes._SelectionItem_
 
 func build_from_body(body: Body, parent_body: Body) -> SelectionItem:
@@ -84,25 +82,25 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	var m_radius := body.m_radius
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
 	var view_dist_zoom := 120.0 * m_radius
-	var adj_ratio := pow((m_radius_fill_view_zoom * _scale) / m_radius, size_compensation_exponent)
+	var adj_ratio := pow(m_radius_fill_view_zoom / m_radius, size_compensation_exponent)
 	view_dist_zoom *= adj_ratio
-	# TODO: size adjust
-	
 	var view_dist_top := 400.0 * body.system_radius * system_radius_multiplier_top
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
-	selection_item.view_position_zoom = Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom)
-	selection_item.view_position_top = Vector3(x_offset_top, y_offset_top, view_dist_top)
-	selection_item.view_position_45 = Vector3(x_offset_45, y_offset_45, view_dist_45)
+	selection_item.camera_spherical_positions = [ # camera will divide dist by fov
+		Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom), # VIEW_ZOOM
+		Vector3(x_offset_45, y_offset_45, view_dist_45), # VIEW_45
+		Vector3(x_offset_top, y_offset_top, view_dist_top) # VIEW_TOP
+	]
 
 func _get_selection_type_from_body(body: Body) -> int:
 	if body.is_star:
-		return _enums.SELECTION_STAR
+		return Enums.SELECTION_STAR
 	if body.is_dwarf_planet:
-		return _enums.SELECTION_DWARF_PLANET
+		return Enums.SELECTION_DWARF_PLANET
 	if body.is_planet:
-		return _enums.SELECTION_PLANET
+		return Enums.SELECTION_PLANET
 	if body.is_moon:
-		return _enums.SELECTION_MOON
+		return Enums.SELECTION_MOON
 	return -1
 
 func _get_classification_from_body(body: Body) -> String:

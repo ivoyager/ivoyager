@@ -25,6 +25,9 @@
 extends Reference
 class_name AsteroidGroup
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
@@ -61,8 +64,6 @@ const PERSIST_OBJ_PROPERTIES := ["star", "lagrange_point"]
 
 # ************************** UNPERSISTED VARS *********************************
 
-var _math: Math = Global.objects.Math
-# verbose printing
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
 var _load_count := 0
@@ -161,16 +162,19 @@ func clear_for_import() -> void:
 # ************************** PRIVATE FUNCTIONS ********************************
 
 func _fix_binary_keplerian_elements() -> void:
-	var scale: float = Global.scale
-	var mu := star.GM
+	var au := unit_defs.AU
+	var year := unit_defs.YEAR
+	var mu := star.gm
 	var index := 0
 	while index < _index:
-		var a: float = a_e_i[index][0] * scale
+		var a: float = a_e_i[index][0] * au # from au
 		a_e_i[index][0] = a
 		var n: float = Om_w_M0_n[index][3]
-		if n == 0.0:
-			n = sqrt(mu / a / a / a)
-			Om_w_M0_n[index][3] = n
+		if n != 0.0:
+			n /= year # from rad/year
+		else:
+			n = sqrt(mu / (a * a * a))
+		Om_w_M0_n[index][3] = n
 		# Fix M0 for different epoch.
 		# Currently, *.cat files have epoch MJD 58200. We need to check this
 		# whenever we download new source data and adjust code accordingly.
@@ -179,7 +183,7 @@ func _fix_binary_keplerian_elements() -> void:
 		# MJD = 58200
 		# JD = MJD + 2400000.5 = 2458200.5
 		# J2000 day = JD - 2451545 = 6655.5
-		var M0: float = Om_w_M0_n[index][2]
+		var M0: float = Om_w_M0_n[index][2] # already in rad
 		var M0_J2000: float = M0 - n * 6655.5 # J2000 was this many days before import epoch
 		M0_J2000 = fposmod(M0_J2000, TAU)
 		Om_w_M0_n[index][2] = M0_J2000
@@ -192,12 +196,15 @@ func _fix_binary_keplerian_elements() -> void:
 		index += 1
 
 func _fix_binary_trojan_elements() -> void:
-	var scale: float = Global.scale
+	var au := unit_defs.AU
+	var year := unit_defs.YEAR
 	var lagrange_a: float = lagrange_point.dynamic_elements[0]
 	var index := 0
 	while index < _index:
-		var d: float = d_e_i[index][0] * scale
+		var d: float = d_e_i[index][0] * au # from au
 		d_e_i[index][0] = d
+		Om_w_D_f[index][3] /= year # f; from rad/year
+		
 		# FIXME: We should be able to derived th0 from initial keplerian elements.
 		# Maybe someone smarter than me can figure out how.
 		# This isn't correct, but my guess is something like...
@@ -240,26 +247,27 @@ func _verbose_min_max_tally(a_e_i_: Vector3, Om_w_M0_n_: Color, s_g_ := Vector2(
 	_load_count += 1
 	
 func _verbose_print() -> void:
-	print("%s group %s asteroids loaded from binaries" % [_load_count, group_name])
+	var au := unit_defs.AU
+	var deg := unit_defs.DEG
+	var year := unit_defs.YEAR
+	print("%s group %s asteroids loaded from binaries (min/max)" % [_load_count, group_name])
 	if !is_trojans:
-		print(" a,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
-		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
-		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
-		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])
-		print(" w,  min/max: %s / %s" % [_mins[4], _maxes[4]])
-		print(" M0, min/max: %s / %s" % [_mins[5], _maxes[5]])
-		print(" n,  min/max: %s / %s" % [_mins[6], _maxes[6]])
+		print(" a  : %s / %s (AU)" % [_mins[0] / au, _maxes[0] / au])
+		print(" e  : %s / %s" % [_mins[1], _maxes[1]])
+		print(" i  : %s / %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
+		print(" Om : %s / %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
+		print(" w  : %s / %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
+		print(" M0 : %s / %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
+		print(" n  : %s / %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
 	else:
-		print(" d,  min/max: %s / %s (%s / %s AU)" % [_mins[0], _maxes[0],
-				_math.km2au(_mins[0] / Global.scale), _math.km2au(_maxes[0] / Global.scale)])
-		print(" e,  min/max: %s / %s" % [_mins[1], _maxes[1]])
-		print(" i,  min/max: %s / %s" % [_mins[2], _maxes[2]])
-		print(" Om, min/max: %s / %s" % [_mins[3], _maxes[3]])
-		print(" w,  min/max: %s / %s" % [_mins[4], _maxes[4]])
-		print(" D,  min/max: %s / %s" % [_mins[5], _maxes[5]])
-		print(" f,  min/max: %s / %s" % [_mins[6], _maxes[6]])
-		print(" th0,min/max: %s / %s" % [_mins[7], _maxes[7]])
+		print(" d,  min/max: %s / %s (AU)" % [_mins[0] / au, _maxes[0] / au])
+		print(" e  : %s / %s" % [_mins[1], _maxes[1]])
+		print(" i  : %s / %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
+		print(" Om : %s / %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
+		print(" w  : %s / %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
+		print(" D  : %s / %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
+		print(" f  : %s / %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
+		print(" th0: %s / %s (deg)" % [_mins[7] / deg, _maxes[7] / deg])
 		
 func _debug_print():
 	print(group_name, " _ready()")

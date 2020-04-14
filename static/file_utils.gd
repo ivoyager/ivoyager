@@ -1,4 +1,4 @@
-# file_helper.gd
+# file_utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,10 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Usage note: issue #37529 prevents localization of global class_name to const.
+# For now, use:
+# const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-extends Reference
-class_name FileHelper
-
+class_name FileUtils
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
 	var save_dir := override_dir
@@ -121,7 +122,7 @@ static func find_resource(dir_path: String, file_prefix: String) -> Resource:
 	return null
 
 static func get_scale_from_file_path(path: String) -> float:
-	# File name ending in _1_1000 is has scale value 1.0.
+	# File name ending in _1_1000 is scaled 1 length unit / 1000 m.
 	var split := path.get_basename().split("_")
 	if split.size() < 2:
 		return 1.0
@@ -131,12 +132,9 @@ static func get_scale_from_file_path(path: String) -> float:
 	var denominator: String = split[-1]
 	if !denominator.is_valid_integer():
 		return 1.0
-	return 1000.0 / float(denominator) * float(numerator)
+	return float(numerator) / float(denominator)
 
 static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")
 	return string
-
-func project_init():
-	pass

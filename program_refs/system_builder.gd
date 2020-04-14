@@ -28,8 +28,7 @@ var progress_bodies_denominator := 267 # set to something greater than expected
 
 var progress := 0 # for MainProgBar
 var _use_thread: bool = Global.use_threads
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
+var _tables: Dictionary = Global.tables
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
 var _main_prog_bar: MainProgBar
@@ -45,6 +44,15 @@ var _camera: VoyagerCamera
 var _starfield: WorldEnvironment
 
 
+func project_init():
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_body_builder = Global.program.BodyBuilder
+	_registrar = Global.program.Registrar
+	_minor_bodies_builder = Global.program.MinorBodiesBuilder
+	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
+	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
+	_Body_ = Global.script_classes._Body_
+
 func build() -> void:
 	print("Building solar system...")
 	if _main_prog_bar:
@@ -55,20 +63,10 @@ func build() -> void:
 	else:
 		_build_on_thread(0)
 
-
-func project_init():
-	_main_prog_bar = Global.objects.get("MainProgBar")
-	_body_builder = Global.objects.BodyBuilder
-	_registrar = Global.objects.Registrar
-	_minor_bodies_builder = Global.objects.MinorBodiesBuilder
-	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
-	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
-	_Body_ = Global.script_classes._Body_
-
 func _build_on_thread(_dummy: int) -> void:
-	_add_bodies(_table_data.star_data, _enums.DATA_TABLE_STAR)
-	_add_bodies(_table_data.planet_data, _enums.DATA_TABLE_PLANET)
-	_add_bodies(_table_data.moon_data, _enums.DATA_TABLE_MOON)
+	_add_bodies(_tables.StarData, _tables.StarFields, Enums.TABLE_STARS)
+	_add_bodies(_tables.PlanetData, _tables.PlanetFields, Enums.TABLE_PLANETS)
+	_add_bodies(_tables.MoonData, _tables.MoonFields, Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
@@ -91,13 +89,14 @@ func _finish_build() -> void:
 		_main_prog_bar.stop()
 	emit_signal("finished")
 
-func _add_bodies(data_table: Array, data_table_type: int) -> void:
-	for data in data_table:
+func _add_bodies(data: Array, fields: Dictionary, table_type: int) -> void:
+	for row_data in data:
 		var body: Body = SaverLoader.make_object_or_scene(_Body_)
 		var parent: Body
-		if data.parent != "is_top":
-			parent = _registrar.bodies_by_name[data.parent]
-		_body_builder.build(body, data_table_type, data, parent)
+		if !fields.has("top") or !row_data[fields.top]:
+			var parent_str: String = row_data[fields.parent] # required if not top
+			parent = _registrar.bodies_by_name[parent_str]
+		_body_builder.build(body, parent, row_data, fields, table_type)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)

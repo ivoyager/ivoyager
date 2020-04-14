@@ -15,224 +15,194 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Reads external data tables (csv files) and adds data to Global.tables and
+# table_types. Global.table_types holds row number for all individual table
+# keys and an enum-like dict for each table (e.g., PlanetTypes, MoonTypes,
+# etc.).
 #
-# Reads external data tables (csv files) and adds data to Global.table_data and
-# imported "enums" to Global.enums.
+# Table construction:
+#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING. X-type will be
+#    converted to true (x) or false (blank). For all others, a blank cell
+#    without Defaults value will be converted to null (we use this to test
+#    for missing values!). BOOL is case insensitive. FLOAT converts "E" to
+#    "e" before attempting type cast.
+#  Default (optional; all types except X): If cell is blank, it will be
+#    replaced with this value.
+#  Units (optional; REAL only!). Reals will be converted from provided units
+#    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS.
 
 extends Reference
 class_name TableReader
 
+const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+
 const DPRINT := false
 
-const GLOBAL_ENUMS := ["DataTableTypes"]
-enum DataTableTypes {
-	DATA_TABLE_STAR,
-	DATA_TABLE_PLANET,
-	DATA_TABLE_MOON,
-	}
-
-# ************************** PUBLIC PROJECT VARS ******************************
-
 var import := {
-	# <Global.table_data key> = [<Global.enums key>, path]
-	# <Global.enums key> can be "" to not save the import enum.
-	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
-	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
-	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
-	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
-	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
-	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
-	environment_data = ["", "res://ivoyager/data/solar_system/environment_data.csv"],
-	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
+	# data_name = [type_name, path]
+	# if type_name != "" then row keys and type dicts added to Global.table_types
+	StarData = ["StarTypes", "StarFields", "res://ivoyager/data/solar_system/star_data.csv"],
+	PlanetData = ["PlanetTypes", "PlanetFields", "res://ivoyager/data/solar_system/planet_data.csv"],
+	MoonData = ["MoonTypes", "MoonFields", "res://ivoyager/data/solar_system/moon_data.csv"],
+	AsteroidGroupData = ["AsteroidGroupTypes", "AsteroidGroupFields",
+		"res://ivoyager/data/solar_system/asteroid_group_data.csv"],
+	BodyData = ["BodyTypes", "BodyFields", "res://ivoyager/data/solar_system/body_data.csv"],
+	StarlightData = ["StarlightTypes", "StarlightFields",
+		"res://ivoyager/data/solar_system/starlight_data.csv"],
+	WikiExtras = ["", "", "res://ivoyager/data/solar_system/wiki_extras.csv"],
 	}
 
-var wikibot_title_sources := [
-	"res://ivoyager/data/solar_system/barycenter_data.csv",
-	"res://ivoyager/data/solar_system/star_data.csv",
-	"res://ivoyager/data/solar_system/planet_data.csv",
-	"res://ivoyager/data/solar_system/moon_data.csv",
-#	"res://ivoyager/data/solar_system/asteroid_data.txt",
-	"res://ivoyager/data/text/wiki_extra_titles.csv",
-	]
+# global dicts
+var _tables: Dictionary = Global.tables
+var _table_types: Dictionary = Global.table_types
+var _wiki_titles: Dictionary = Global.wiki_titles
 
-# ************************* PUBLIC READ-ONLY VARS *****************************
+# current processing
+var _path: String
+var _data: Array
+var _types: Dictionary
+var _fields: Dictionary
+var _data_types: Array
+var _units: Array
+var _defaults: Array
+var _line_array: Array
+var _row_key: String
+var _field: String
+var _cell: String
 
-const WIKI_OVERRIDE_PACK := "user://wiki/ivoyager_wiki_pack.zip" # WIP
-const WRITE_WIKI_BASE_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_text.csv" # WIP
-const WRITE_WIKI_EXTENDED_TEXT := "user://wiki/ivoyager_wiki_pack/ivoyager/data/text/wiki_extended_text.csv" # WIP
 
-var _table_data: Dictionary = Global.table_data
-var _enums: Dictionary = Global.enums
-var _math: Math
-var _wiki_titles := {}
-
-# **************************** PUBLIC FUNCTIONS *******************************
+func project_init():
+	pass
 
 func import_table_data():
 	print("Reading external data tables...")
 	for data_name in import:
-		var info: Array = import[data_name]
-		var enum_name: String = info[0]
-		var path: String = info[1]
-		var data := []
-		var import_enum := {}
-		_read_data_file(data, import_enum, path)
-		_table_data[data_name] = data
-		if enum_name:
-			assert(!_enums.has(enum_name))
-			_enums[enum_name] = import_enum
-			for key in import_enum:
-				assert(!_enums.has(key))
-				_enums[key] = import_enum[key]
-	_table_data.wiki_titles = _wiki_titles
+		var import_array: Array = import[data_name]
+		var types_name: String = import_array[0]
+		var fields_name: String = import_array[1]
+		_path = import_array[2]
+		_data = []
+		_types = {} # row index by item key
+		_fields = {} # column index by field name
+		_read_table()
+		# Global dict _wiki_titles was populated on the fly; otherwise, all
+		# global dicts are populated bellow...
+		_tables[data_name] = _data
+		if types_name:
+			assert(!_table_types.has(types_name))
+			_table_types[types_name] = _types
+			for key in _types:
+				assert(!_table_types.has(key))
+				_table_types[key] = _types[key]
+		if fields_name:
+			assert(!_tables.has(fields_name))
+			_tables[fields_name] = _fields
 
-func get_wikibot_base_titles():
-	var titles := {}
-	for path in wikibot_title_sources:
-		var data_table := []
-		_read_data_file(data_table, {}, path)
-		for data in data_table:
-			if data.has("wiki_en"):
-				titles[data.key] = data.wiki_en
-	return titles
-
-# DEPRECIATE - WikiBot needs a workover
-func get_wikibot_extended_titles():
-	var titles := {}
-#	for path in extended_wiki_data_paths:
-#		var data_table := _read_data_file(path)
-#		for data in data_table:
-#			if data.has("wiki_en"):
-#				titles[data.key] = data.wiki_en
-	return titles
-
-
-func project_init():
-	_math = Global.objects.Math
-
-func _read_data_file(data_array: Array, import_enum: Dictionary, path: String) -> void:
-	assert(DPRINT and prints("Reading", path) or true)
+func _read_table() -> void:
+	assert(DPRINT and prints("Reading", _path) or true)
 	var file := File.new()
-	if file.open(path, file.READ) != OK:
-		print("ERROR: Could not open file: ", path)
+	if file.open(_path, file.READ) != OK:
+		print("ERROR: Could not open file: ", _path)
 		assert(false)
-	var delimiter := "," if path.ends_with(".csv") else "\t" # legacy project support; use *.csv
-	var is_header_line := true
-	var headers : Array
-	var data_types : Array
-	var unit_conversions : Array
-	var default_values := {}
-	var row_count := 0
+	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
+	var is_fields_line := true
+	_data_types = []
+	_units = []
+	_defaults = []
 	var line := file.get_line()
 	while !file.eof_reached():
 		var commenter := line.find("#")
-		if commenter != -1 and commenter < 4:
+		if commenter != -1 and commenter < 4: # skip comment line
 			line = file.get_line()
 			continue
-		var line_array := Array(line.split(delimiter, true))
-		
-		# Store the header line
-		if is_header_line:
-			headers = line_array
-			is_header_line = false
-
-		# Store the data types
-		elif line_array[0] == "Data_Type":
-			data_types = line_array
-#
-		# Store data conv, if any
-		elif line_array[0] == "Unit_Conversion":
-			unit_conversions = line_array
-
-		# Handle defaults line or regular data line
+		_line_array = Array(line.split(delimiter, true))
+		if is_fields_line: # always the 1st non-comment line
+			_read_fields_line()
+			is_fields_line = false
+		elif _line_array[0] == "Data_Type":
+			_data_types = _line_array
+		elif _line_array[0] == "Units":
+			_units = _line_array
+		elif _line_array[0] == "Defaults":
+			_defaults = _line_array
 		else:
-			var line_dict := {}
-			var is_defaults_line := false
-			for i in range(headers.size()):
-				var header : String = headers[i]
-				if header != "Comments":
-					var value : String = line_array[i]
-					if i == 0:
-						if header != "key":
-							print("ERROR: ", path, " doesn't have \"key\" as 1st header")
-							# Debug note: If you think you shouldn't be here, there is a good chance
-							# there is a weird destructive character in your comments section.
-							# E.g., Excel turns "..." into a sort of improvised explosive glyph.
-							assert(false)
-						if value == "Default_Value":
-							is_defaults_line = true
-						else:
-							line_dict.key = value
-							import_enum[value] = row_count
-								
-					else: # regular data cell or default value
-						var data_type = data_types[i]
-						if value == "":
-							if is_defaults_line or !default_values.has(header):
-								pass
-#								value = null # won't be entered into dictionary
-							else:
-								line_dict[header] = default_values[header]
-						else:
-							match data_type:
-								"X":
-									line_dict[header] = true
-									if is_defaults_line:
-										print("ERROR: default value for \"X\" data type must be empty cell")
-										print(path)
-										assert(false)
-								"BOOL":
-#									# Excel quotes (or something) messes up bool(value)
-									if value.matchn("true"):
-										line_dict[header] = true
-									elif value.matchn("false"):
-										line_dict[header] = false
-									else:
-										assert(false)
-								"INT":
-									line_dict[header] = int(value)
-								"REAL":
-									line_dict[header] = float(value)
-									if unit_conversions and unit_conversions[i]:
-										if unit_conversions[i] == "deg2rad":
-											line_dict[header] = deg2rad(float(value))
-										elif unit_conversions[i] == "au2km":
-											line_dict[header] = _math.au2km(float(value))
-										else:
-											line_dict[header] = float(value) * float(unit_conversions[i])
-								"STRING":
-									line_dict[header] = strip_quotes(value)
-								_:
-									print("ERROR: Unknown data type: ", data_type)
-									print(path)
-									assert(false)
-
-			if is_defaults_line:
-				default_values = line_dict
-			else:
-				line_dict.type = row_count # type is row integer
-				if line_dict.has("wiki_en"): # TODO: non-English Wikipedias
-					_wiki_titles[line_dict.key] = line_dict.wiki_en
-				# Append the completed dictionary for this item
-				data_array.append(line_dict)
-				row_count += 1
+			assert(_data_types) # required; Units & Defaults lines are optional
+			_read_data_line()
 		line = file.get_line()
 
-# ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
+func _read_fields_line() -> void:
+	assert(_line_array[0] == "key") # fields[0] is always key!
+	var column := 0
+	for field in _line_array:
+		if field == "Comments":
+			break
+		_fields[field] = column
+		column += 1
 
-static func strip_quotes(string: String) -> String:
-	if string.begins_with("\"") and string.ends_with("\""):
-		return string.substr(1, string.length() - 2)
-	return string
+func _read_data_line() -> void:
+	var row := _data.size()
+	var row_data := []
+	row_data.resize(_fields.size())
+	_row_key = _line_array[0]
+	assert(!_types.has(_row_key))
+	_types[_row_key] = row
+	row_data[0] = _row_key
+	for field in _fields:
+		_field = field
+		if _field == "key":
+			continue
+		var column: int = _fields[_field]
+		_cell = _line_array[column]
+		if !_cell and _defaults and _defaults[column]: # impute default
+			_cell = _defaults[column]
+		var data_type: String = _data_types[column]
+		if !_cell: # for all types excpet "X", blank cell w/out default is null!
+			if data_type == "X":
+				row_data[column] = false
+			continue
+		match data_type:
+			"X":
+				assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
+				assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
+				assert(_cell == "x" or _line_error("X type must be x or blank cell"))
+				row_data[column] = true
+			"BOOL":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
+				if _cell.matchn("true"): # case insensitive
+					row_data[column] = true
+				else:
+					assert(_cell.matchn("false") or _line_error("Expected BOOL (true/false)"))
+					row_data[column] = false
+			"INT":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for INT"))
+				assert(_cell.is_valid_integer() or _line_error("Expected INT"))
+				row_data[column] = int(_cell)
+			"REAL":
+				_cell = _cell.replace("E", "e")
+				assert(_cell.is_valid_float() or _line_error("Expected REAL"))
+				var real := float(_cell)
+				if _units and _units[column]:
+					var unit: String = _units[column]
+					real = unit_defs.conv(real, unit, false, true)
+				row_data[column] = real
+			"STRING":
+				assert(!_units or !_units[column] or _line_error("Expected no Units for STRING"))
+				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
+					_cell = _cell.substr(1, _cell.length() - 2)
+				row_data[column] = _cell
+				if _field == "wiki_en": # TODO: non-English Wikipedias
+					assert(!_wiki_titles.has(_row_key))
+					_wiki_titles[_row_key] = _cell
+	_data.append(row_data)
+#	print(row_data)
 
-
-	# WIP: override base wiki text with updated text from user:// if exists.
-	# Currently broken by: https://github.com/godotengine/godot/issues/16798
-	# Work-around for now is to manually move wiki_text from
-	# user://wiki/ivoyager_wiki_pack/ivoyager/wiki
-	# to res://ivoyager/wiki
-	
-#	if File.new().file_exists(WIKI_OVERRIDE_PACK):
-#		ProjectSettings.load_resource_pack(WIKI_OVERRIDE_PACK)
-		
+func _line_error(msg := "") -> bool:
+	print("ERROR in _read_data_line...")
+	if msg:
+		print(msg)
+	print("cell value: ", _cell)
+	print("row key   : ", _row_key)
+	print("field     : ", _field)
+	print(_path)
+	return false
 

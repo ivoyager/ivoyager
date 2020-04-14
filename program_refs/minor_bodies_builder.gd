@@ -29,7 +29,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 # dependencies
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
+var _tables: Dictionary = Global.tables
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
@@ -43,10 +43,10 @@ var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_l_point_builder = Global.objects.LPointBuilder
-	_minor_bodies_manager = Global.objects.MinorBodiesManager
-	_points_manager = Global.objects.PointsManager
-	_registrar = Global.objects.Registrar
+	_l_point_builder = Global.program.LPointBuilder
+	_minor_bodies_manager = Global.program.MinorBodiesManager
+	_points_manager = Global.program.PointsManager
+	_registrar = Global.program.Registrar
 	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
 	_HUDPoints_ = Global.script_classes._HUDPoints_
 	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
@@ -78,16 +78,20 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	star.add_child(hud_points)
 
 func _load_binaries(star: Body) -> void:
-	for group_data in _table_data.asteroid_group_data:
-		var table_group: String = group_data.group
-		if !group_data.has("trojan_of"):
-			_load_group_binaries(star, table_group, group_data)
+	var ag_data: Array = _tables.AsteroidGroupData
+	var ag_fields: Dictionary = _tables.AsteroidGroupFields
+	for row_data in ag_data:
+		var group: String = row_data[ag_fields.group]
+		if !row_data[ag_fields.trojan_of]:
+			_load_group_binaries(star, group, row_data, ag_fields)
 		else: # trojans!
 			for l_point in [4, 5]: # split data table JT i!JT4 & JT5
-				var l_group: String = table_group + str(l_point)
-				_load_group_binaries(star, l_group, group_data, l_point)
+				var l_group: String = group + str(l_point)
+				_load_group_binaries(star, l_group, row_data, ag_fields, l_point)
 	
-func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_point: int = -1) -> void:
+func _load_group_binaries(star: Body, group: String, data: Array, fields: Dictionary,
+		l_point := -1) -> void:
+	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
 	var lagrange_point: LagrangePoint
 	# make the AsteroidGroup
@@ -96,7 +100,7 @@ func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_p
 	if !is_trojans:
 		asteroid_group.init(star, group)
 	else:
-		var planet_key: String = group_data.trojan_of
+		var planet_key: String = data[fields.trojan_of]
 		var planet: Body = _registrar.bodies_by_name[planet_key]
 		lagrange_point = _l_point_builder.get_or_make_lagrange_point(planet, l_point)
 		assert(lagrange_point)
@@ -104,8 +108,8 @@ func _load_group_binaries(star: Body, group: String, group_data: Dictionary, l_p
 	var mag_cutoff := 100.0
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override
-	elif group_data.has("mag_cutoff"):
-		mag_cutoff = group_data.mag_cutoff
+	else:
+		mag_cutoff = data[fields.mag_cutoff]
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:
 			_load_binary(asteroid_group, group, mag_str)

@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://ivoyager/gui_planetarium/plntrm_selection.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_widgets/viewpoint_buttons.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/view_buttons.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/selection_label.tscn" type="PackedScene" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=4]
 
@@ -14,7 +14,7 @@ margin_bottom = 44.0
 custom_constants/separation = 15
 script = ExtResource( 1 )
 
-[node name="ViewpointButtons" parent="." instance=ExtResource( 2 )]
+[node name="ViewButtons" parent="." instance=ExtResource( 2 )]
 margin_top = 0.0
 margin_right = 508.0
 margin_bottom = 20.0
