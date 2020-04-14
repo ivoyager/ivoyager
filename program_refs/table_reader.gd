@@ -38,14 +38,6 @@ const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
 
-enum { # str_type
-	AS_ENUM,
-	AS_TYPE,
-	AS_BODY
-}
-const EMPTY_ARRAY := []
-const EMPTY_DICT := {}
-
 var import := {
 	# data_name = [type_name, path]
 	# if type_name != "" then row keys and type dicts added to Global.table_types
@@ -59,16 +51,6 @@ var import := {
 		"res://ivoyager/data/solar_system/starlight_data.csv"],
 	WikiExtras = ["", "", "res://ivoyager/data/solar_system/wiki_extras.csv"],
 	}
-
-var import2 := {
-#	star_data = ["StarTypes", "res://ivoyager/data/solar_system/star_data.csv"],
-#	planet_data = ["PlanetTypes", "res://ivoyager/data/solar_system/planet_data.csv"],
-#	moon_data = ["MoonTypes", "res://ivoyager/data/solar_system/moon_data.csv"],
-#	asteroid_group_data = ["AsteroidGroupTypes", "res://ivoyager/data/solar_system/asteroid_group_data.csv"],
-#	body_data = ["BodyTypes", "res://ivoyager/data/solar_system/body_data.csv"],
-#	starlight_data = ["StarlightTypes", "res://ivoyager/data/solar_system/starlight_data.csv"],
-#	wiki_extra_titles = ["", "res://ivoyager/data/solar_system/wiki_extra_titles.csv"],
-}
 
 # global dicts
 var _tables: Dictionary = Global.tables
@@ -88,32 +70,9 @@ var _row_key: String
 var _field: String
 var _cell: String
 
+
 func project_init():
 	pass
-
-static func build_object(object: Object, row_data: Array, fields: Dictionary,
-		data_parser: Dictionary, req_data := EMPTY_ARRAY, read_types := EMPTY_DICT) -> void:
-	# helper function for builder classes
-	var enums: Script = Global.enums
-	var types: Dictionary = Global.table_types
-	var bodies_by_name: Dictionary = Global.program.Registrar.bodies_by_name
-	for property in data_parser:
-		var field: String = data_parser[property]
-		var value = row_data[fields[field]] if fields.has(field) else null
-		if value == null:
-			assert(!req_data.has(property), "Missing required data: " + row_data[0] + " " + field)
-			continue
-		var read_type: int = read_types.get(property, -1)
-		assert(read_type == -1 or typeof(value) == TYPE_STRING)
-		match read_type:
-			-1:
-				object[property] = value
-			AS_ENUM:
-				object[property] = enums[value]
-			AS_TYPE:
-				object[property] = types[value]
-			AS_BODY:
-				object[property] = bodies_by_name[value]
 
 func import_table_data():
 	print("Reading external data tables...")
@@ -138,24 +97,6 @@ func import_table_data():
 		if fields_name:
 			assert(!_tables.has(fields_name))
 			_tables[fields_name] = _fields
-			
-				
-	# REMOVING...
-	for data_name in import2:
-		var info: Array = import2[data_name]
-		var type_name: String = info[0]
-		var path: String = info[1]
-		var data := []
-		var type_dict := {}
-		_read_data_file(data, type_dict, path)
-		_tables[data_name] = data
-		if type_name:
-			assert(!_table_types.has(type_name))
-			_table_types[type_name] = type_dict
-			for key in type_dict:
-				assert(!_table_types.has(key))
-				_table_types[key] = type_dict[key]
-
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -264,130 +205,4 @@ func _line_error(msg := "") -> bool:
 	print("field     : ", _field)
 	print(_path)
 	return false
-
-
-# REMOVING...
-func _read_data_file(data_array: Array, type_dict: Dictionary, path: String) -> void:
-	assert(DPRINT and prints("Reading", path) or true)
-	var file := File.new()
-	if file.open(path, file.READ) != OK:
-		print("ERROR: Could not open file: ", path)
-		assert(false)
-	var delimiter := "," if path.ends_with(".csv") else "\t" # legacy project support; use *.csv
-	var is_header_line := true
-	var headers : Array
-	var data_types : Array
-	var units : Array
-	var defaults := {}
-	var row_count := 0
-	var line := file.get_line()
-	while !file.eof_reached():
-		var commenter := line.find("#")
-		if commenter != -1 and commenter < 4:
-			line = file.get_line()
-			continue
-		var line_array := Array(line.split(delimiter, true))
-		
-		# Store the header line
-		if is_header_line:
-			headers = line_array
-			is_header_line = false
-
-		# Store the data types
-		elif line_array[0] == "Data_Type":
-			data_types = line_array
-#
-		# Store units, if any
-		elif line_array[0] == "Units":
-			units = line_array
-
-		# Handle defaults line or regular data line
-		else:
-			var line_dict := {}
-			var is_defaults_line := false
-			for i in range(headers.size()):
-				var header : String = headers[i]
-				if header != "Comments":
-					var value : String = line_array[i]
-					if i == 0:
-						if header != "key":
-							print("ERROR: ", path, " doesn't have \"key\" as 1st header")
-							# Debug note: If you think you shouldn't be here, there is a good chance
-							# there is a weird destructive character in your comments section.
-							# E.g., Excel turns "..." into a sort of improvised explosive glyph.
-							assert(false)
-						if value == "Defaults":
-							is_defaults_line = true
-						else: # value is the row key
-							line_dict.key = value
-							type_dict[value] = row_count
-								
-					else: # regular data cell or default value
-						var data_type = data_types[i]
-						if value == "":
-							if is_defaults_line or !defaults.has(header):
-								pass
-#								value = null # won't be entered into dictionary
-							else:
-								line_dict[header] = defaults[header]
-						else:
-							match data_type:
-								"X":
-									line_dict[header] = true
-									if is_defaults_line:
-										print("ERROR: default value for \"X\" data type must be empty cell")
-										print(path)
-										assert(false)
-								"BOOL":
-#									# Excel quotes (or something) messes up bool(value)
-									if value.matchn("true"):
-										line_dict[header] = true
-									elif value.matchn("false"):
-										line_dict[header] = false
-									else:
-										assert(false)
-								"INT":
-									line_dict[header] = int(value)
-								"REAL":
-									var real := float(value)
-									if units and units[i]:
-										var unit_symbol: String = units[i]
-										line_dict[header] = unit_defs.conv(real, unit_symbol, false, true)
-									else:
-										line_dict[header] = real
-								"STRING":
-									line_dict[header] = strip_quotes(value)
-								_:
-									print("ERROR: Unknown data type: ", data_type)
-									print(path)
-									assert(false)
-			
-			if is_defaults_line:
-				defaults = line_dict
-			else:
-				line_dict.type = row_count # type is row integer
-				if line_dict.has("wiki_en"): # TODO: non-English Wikipedias
-					_wiki_titles[line_dict.key] = line_dict.wiki_en
-				# Append the completed dictionary for this item
-				data_array.append(line_dict)
-				row_count += 1
-		line = file.get_line()
-
-# ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
-
-static func strip_quotes(string: String) -> String:
-	if string.begins_with("\"") and string.ends_with("\""):
-		return string.substr(1, string.length() - 2)
-	return string
-
-
-	# WIP: override base wiki text with updated text from user:// if exists.
-	# Currently broken by: https://github.com/godotengine/godot/issues/16798
-	# Work-around for now is to manually move wiki_text from
-	# user://wiki/ivoyager_wiki_pack/ivoyager/wiki
-	# to res://ivoyager/wiki
-	
-#	if File.new().file_exists(WIKI_OVERRIDE_PACK):
-#		ProjectSettings.load_resource_pack(WIKI_OVERRIDE_PACK)
-		
 

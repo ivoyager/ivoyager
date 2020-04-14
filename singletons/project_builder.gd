@@ -96,7 +96,6 @@ var program_references := {
 	_MinorBodiesBuilder_ = MinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
-	_GUIHelper_ = GUIHelper,
 	_QtyStrings_ = QtyStrings,
 }
 

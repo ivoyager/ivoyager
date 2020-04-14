@@ -28,7 +28,8 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # project vars
 var major_moon_gm := 4.0 * UnitDefs.STANDARD_GM # eg, Miranda is 4.4 km^3/s^2
-var data_parser := { # property = table_field
+var data_parser := {
+	# property = table_field
 	name = "key",
 	body_type = "body_type",
 	starlight_type = "starlight_type",
@@ -60,10 +61,9 @@ var req_data := [
 	"name", "body_type", "m_radius", "file_prefix"
 ]
 var read_types := {
-	body_type = TableReader.AS_TYPE,
-	starlight_type = TableReader.AS_TYPE,
+	body_type = TableUtils.AS_TYPE,
+	starlight_type = TableUtils.AS_TYPE,
 }
-
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
@@ -108,7 +108,7 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 	if !parent:
 		body.is_top = true
 		assert(fields.has("top") and row_data[fields.top])
-	TableReader.build_object(body, row_data, fields, data_parser, req_data, read_types)
+	TableUtils.build_object(body, row_data, fields, data_parser, req_data, read_types)
 	match table_type:
 		Enums.TABLE_STARS:
 			body.is_star = true

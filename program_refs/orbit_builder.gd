@@ -118,7 +118,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	TableReader.build_object(self, row_data, fields, data_parser, req_data)
+	TableUtils.build_object(self, row_data, fields, data_parser, req_data)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.gm
 	if w == -INF:

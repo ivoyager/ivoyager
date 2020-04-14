@@ -28,7 +28,7 @@ func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	_selection_manager = GUIHelper.get_selection_manager(self)
+	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_buttons")
 	_back.connect("pressed", _selection_manager, "back")
 	_forward.connect("pressed", _selection_manager, "forward")
