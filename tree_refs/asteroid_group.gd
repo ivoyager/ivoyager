@@ -35,7 +35,7 @@ const DPRINT = false
 
 var is_trojans := false
 var star: Body
-var lagrange_point: LagrangePoint # null unless is_trojans
+var lagrange_point: LPoint # null unless is_trojans
 var group_name: String
 
 var max_apoapsis := 0.0
@@ -75,7 +75,7 @@ func init(star_: Body, group_name_: String) -> void:
 	group_name = group_name_
 	assert(VPRINT and _verbose_reset_mins_maxes() or true)
 
-func init_trojans(star_: Body, group_name_: String, lagrange_point_: LagrangePoint) -> void:
+func init_trojans(star_: Body, group_name_: String, lagrange_point_: LPoint) -> void:
 	star = star_
 	group_name = group_name_
 	is_trojans = true

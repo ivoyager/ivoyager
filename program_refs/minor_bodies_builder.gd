@@ -93,7 +93,7 @@ func _load_group_binaries(star: Body, group: String, data: Array, fields: Dictio
 		l_point := -1) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
-	var lagrange_point: LagrangePoint
+	var lagrange_point: LPoint
 	# make the AsteroidGroup
 	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
 #	var asteroid_group: AsteroidGroup = SaverLoader.make_object_or_scene(_AsteroidGroup_)

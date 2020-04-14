@@ -61,8 +61,8 @@ var req_data := [
 	"name", "body_type", "m_radius", "file_prefix"
 ]
 var read_types := {
-	body_type = TableUtils.AS_TYPE,
-	starlight_type = TableUtils.AS_TYPE,
+	body_type = TableHelper.AS_TYPE,
+	starlight_type = TableHelper.AS_TYPE,
 }
 
 # private
@@ -76,6 +76,7 @@ var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _table_helper: TableHelper
 var _Body_: Script
 var _HUDOrbit_: Script
 var _HUDIcon_: Script
@@ -93,6 +94,7 @@ func project_init() -> void:
 	_registrar = Global.program.Registrar
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_table_helper = Global.program.TableHelper
 	_Body_ = Global.script_classes._Body_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_HUDIcon_ = Global.script_classes._HUDIcon_
@@ -108,7 +110,7 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 	if !parent:
 		body.is_top = true
 		assert(fields.has("top") and row_data[fields.top])
-	TableUtils.build_object(body, row_data, fields, data_parser, req_data, read_types)
+	_table_helper.build_object(body, row_data, fields, data_parser, req_data, read_types)
 	match table_type:
 		Enums.TABLE_STARS:
 			body.is_star = true

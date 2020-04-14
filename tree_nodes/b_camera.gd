@@ -1,4 +1,4 @@
-# voyager_camera.gd
+# b_camera.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,9 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# BCamera for "Body". Presumably we will have other cameras in the future.
 
 extends Camera
-class_name VoyagerCamera
+class_name BCamera
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
@@ -312,7 +313,7 @@ func _ready() -> void:
 	_on_ready()
 
 func _on_ready():
-	name = "VoyagerCamera"
+	name = "BCamera"
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_send_gui_refresh")
@@ -339,7 +340,7 @@ func _on_ready():
 	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	_set_run_state(Global.state.is_running)
 	Global.emit_signal("camera_ready", self)
-	print("VoyagerCamera ready...")
+	print("BCamera ready...")
 
 func _set_run_state(is_running: bool) -> void:
 	set_process(is_running)

@@ -18,7 +18,7 @@
 #
 # I, Voyager handles input in these ways:
 #   - here as _input()
-#   - VoyagerCamera as _unhandled_input() [various mouse & key actions]
+#   - BCamera as _unhandled_input() [various mouse & key actions]
 #   - GameGUI as _input()
 #   - MainMenu & popups as _unhandled_key_input() [to capture ESC]
 #   - UIs as _gui_input

@@ -52,7 +52,7 @@ var _history := [] # weakrefs
 var _history_index := -1
 var _supress_history := false
 var _supress_camera_move := false
-var _connected_camera: VoyagerCamera # null unless _is_camera_selection
+var _connected_camera: BCamera # null unless _is_camera_selection
 
 func init_as_camera_selection() -> void:
 	_is_camera_selection = true

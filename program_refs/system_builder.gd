@@ -36,11 +36,11 @@ var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
 var _WorldEnvironment_: Script
-var _VoyagerCamera_: Script
+var _BCamera_: Script
 var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
-var _camera: VoyagerCamera
+var _camera: BCamera
 var _starfield: WorldEnvironment
 
 
@@ -50,7 +50,7 @@ func project_init():
 	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
 	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
-	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
+	_BCamera_ = Global.script_classes._BCamera_
 	_Body_ = Global.script_classes._Body_
 
 func build() -> void:
@@ -70,7 +70,7 @@ func _build_on_thread(_dummy: int) -> void:
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
-	_camera = SaverLoader.make_object_or_scene(_VoyagerCamera_)
+	_camera = SaverLoader.make_object_or_scene(_BCamera_)
 	call_deferred("_finish_build")
 
 func _finish_build() -> void:

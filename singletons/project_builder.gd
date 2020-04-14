@@ -97,6 +97,7 @@ var program_references := {
 	_LPointBuilder_ = LPointBuilder,
 	_MouseClickSelector_ = MouseClickSelector,
 	_QtyStrings_ = QtyStrings,
+	_TableHelper_ = TableHelper,
 }
 
 var program_nodes := {
@@ -140,9 +141,9 @@ var procedural_classes := {
 	_BodyList_ = BodyList,
 	# system_nodes
 	_Body_ = Body,
-	_LagrangePoint_ = LagrangePoint,
-	_VoyagerCamera_ = VoyagerCamera,
-	_WorldEnvironment_ = VoyagerEnvironment, # WorldEnvironment ok
+	_LPoint_ = LPoint,
+	_BCamera_ = BCamera,
+	_WorldEnvironment_ = VEnv, # any WorldEnvironment ok
 	_Model_ = Model, # Spatial ok
 	_Rings_ = TempRings, # Spatial ok
 	_Starlight_ = Starlight, # OmniLight ok

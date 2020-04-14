@@ -1,4 +1,4 @@
-# lagrange_point.gd
+# l_point.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -20,7 +20,7 @@
 # implementation for a graphic icon (there is no translation update now). Its
 # real purpose is to provide dynamic_elements for use by objects at Lagrange
 # Points, e.g., trojans. Note that L-point objects are in orbit around their
-# parent Body (e.g., Jupiter Trojans orbit the Sun). A LagrangePoint is itself
+# parent Body (e.g., Jupiter Trojans orbit the Sun). A LPoint is itself
 # not a Body but provides a common set of orbital elements that each L-point
 # object needs to update its own orbital elements.
 #
@@ -28,7 +28,7 @@
 # indicate that this is our intention.
 
 extends Spatial
-class_name LagrangePoint
+class_name LPoint
 
 # persisted
 var l_point: int # 1, 2, 3, 4, 5
