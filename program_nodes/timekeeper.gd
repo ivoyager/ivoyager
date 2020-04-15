@@ -72,10 +72,6 @@ var _speed_memory := -1
 var _date_str := ""
 var _hour_str := ""
 var _seconds_str := ""
-var _is_year_changed := true
-var _is_quarter_changed := true
-var _is_month_changed := true
-var _is_day_changed := true
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
@@ -83,7 +79,20 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 	"speed_multiplier", "is_paused", "year", "quarter", "month", "day", "ymd", "yqmd",
 	"_last_process_time", "_speed_memory", "_date_str", "_hour_str", "_seconds_str"]
 
+
+var _times: Array = Global.times
+var _date: Array = Global.date
+var _julian: Array = Global.julian
+
+# DEPRECIATE
 var _time_date: Array = Global.time_date
+
+var _is_year_changed := true
+var _is_quarter_changed := true
+var _is_month_changed := true
+var _is_day_changed := true
+
+
 var _allow_time_reversal: bool = Global.allow_time_reversal
 var _tree: SceneTree
 var _hm := [-1, -1] # only updated when clock displayed!
