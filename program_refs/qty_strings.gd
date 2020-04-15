@@ -101,7 +101,7 @@ var long_forms := {
 	"mm" : "TXT_MILIMETERS",
 	"cm" : "TXT_CENTIMETERS",
 	"m" : "TXT_METERS",
-	"km" : "TXT_KILOMETER",
+	"km" : "TXT_KILOMETERS",
 	"au" : "TXT_ASTRONOMICAL_UNITS",
 	"ly" : "TXT_LIGHT_YEARS",
 	"pc" : "TXT_PARSECS",

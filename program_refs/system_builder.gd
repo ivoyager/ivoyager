@@ -28,7 +28,8 @@ var progress_bodies_denominator := 267 # set to something greater than expected
 
 var progress := 0 # for MainProgBar
 var _use_thread: bool = Global.use_threads
-var _tables: Dictionary = Global.tables
+var _table_data: Dictionary = Global.table_data
+var _table_fields: Dictionary = Global.table_fields
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
 var _main_prog_bar: MainProgBar
@@ -36,11 +37,11 @@ var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
 var _WorldEnvironment_: Script
-var _VoyagerCamera_: Script
+var _BCamera_: Script
 var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
-var _camera: VoyagerCamera
+var _camera: BCamera
 var _starfield: WorldEnvironment
 
 
@@ -50,7 +51,7 @@ func project_init():
 	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
 	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
-	_VoyagerCamera_ = Global.script_classes._VoyagerCamera_
+	_BCamera_ = Global.script_classes._BCamera_
 	_Body_ = Global.script_classes._Body_
 
 func build() -> void:
@@ -64,13 +65,13 @@ func build() -> void:
 		_build_on_thread(0)
 
 func _build_on_thread(_dummy: int) -> void:
-	_add_bodies(_tables.StarData, _tables.StarFields, Enums.TABLE_STARS)
-	_add_bodies(_tables.PlanetData, _tables.PlanetFields, Enums.TABLE_PLANETS)
-	_add_bodies(_tables.MoonData, _tables.MoonFields, Enums.TABLE_MOONS)
+	_add_bodies("stars", Enums.TABLE_STARS)
+	_add_bodies("planets", Enums.TABLE_PLANETS)
+	_add_bodies("moons", Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
-	_camera = SaverLoader.make_object_or_scene(_VoyagerCamera_)
+	_camera = SaverLoader.make_object_or_scene(_BCamera_)
 	call_deferred("_finish_build")
 
 func _finish_build() -> void:
@@ -89,7 +90,9 @@ func _finish_build() -> void:
 		_main_prog_bar.stop()
 	emit_signal("finished")
 
-func _add_bodies(data: Array, fields: Dictionary, table_type: int) -> void:
+func _add_bodies(data_name: String, table_type: int) -> void:
+	var data: Array = _table_data[data_name]
+	var fields: Dictionary = _table_fields[data_name]
 	for row_data in data:
 		var body: Body = SaverLoader.make_object_or_scene(_Body_)
 		var parent: Body

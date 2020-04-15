@@ -1,4 +1,4 @@
-# voyager_environment.gd
+# v_env.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -20,7 +20,7 @@
 # for future modding capability via text files.
 
 extends WorldEnvironment
-class_name VoyagerEnvironment
+class_name VEnv
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 

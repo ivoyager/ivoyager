@@ -45,7 +45,7 @@ var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
 var _timekeeper: Timekeeper
 var _registrar: Registrar
-var _camera: VoyagerCamera
+var _camera: BCamera
 var _at_local_star_orbiter: Body
 var _to_local_star_orbiter: Body
 var _skip_local_system := {}
@@ -99,7 +99,7 @@ func _gui_refresh() -> void:
 	emit_signal("show_labels_changed", show_labels)
 	_update_icon_size()
 
-func _connect_camera(camera: VoyagerCamera) -> void:
+func _connect_camera(camera: BCamera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera

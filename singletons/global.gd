@@ -71,14 +71,15 @@ signal gui_refresh_requested()
 
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
-var time_date := [] # Timekeeper [time, year, quarter, month, day] int except time
+var time_date := [] # Timekeeper [time, year, quarter, month, day] ints except time
 var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
-var tables := {} # TableReader; table data (arrays of arrays) & field dicts
-var table_types := {} # TableReader; enum-like row keys (all) & table key dicts
-var wiki_titles := {} # TableReader; Wiki url identifiers by item key
+var table_data := {} # TableReader; arrays of arrays by "moons", "planets", etc.
+var table_fields := {} # TableReader; holds a dict of columns for each table
+var table_rows := {} # TableReader; ALL row keys, and a dict for each table
+var wiki_titles := {} # TableReader; all Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id

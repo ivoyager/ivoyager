@@ -24,7 +24,7 @@
 # See static/unit_defs.gd for base units. For float values, interpret -INF as
 # not applicable (NA) and +INF as unknown (?). 
 #
-# TODO: Make LagrangePoint into Body instances
+# TODO: Make LPoint into Body instances
 # TODO: barycenters
 
 extends Spatial

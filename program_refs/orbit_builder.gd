@@ -82,12 +82,15 @@ var Pw := -INF
 var Pnode := -INF
 var ref_plane := ""
 
-var _dynamic_orbits: bool = Global.dynamic_orbits
+var _table_helper: TableHelper
 var _Orbit_: Script
+var _dynamic_orbits: bool
 
 
 func project_init() -> void:
+	_table_helper = Global.program.TableHelper
 	_Orbit_ = Global.script_classes._Orbit_
+	_dynamic_orbits = Global.dynamic_orbits
 
 func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, time: float) -> Orbit:
 	assert(DPRINT and prints("make_orbit_from_data", tr(row_data[0]), parent, time) or true)
@@ -118,7 +121,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	TableUtils.build_object(self, row_data, fields, data_parser, req_data)
+	_table_helper.build_object(self, row_data, fields, data_parser, req_data)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.gm
 	if w == -INF:

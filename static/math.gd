@@ -15,26 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Usage note: issue #37529 prevents localization of global class_name to const.
-# For now, use:
+# Call directly using Math, or better, localize in your class header area.
+# Issue #37529 prevents localization of global class_name to const. Use:
 # const math := preload("res://ivoyager/static/math.gd")
 
 class_name Math
 
-# conversion constants -> sim standard units: s, km, kg, rad
-const HOUR := 3600.0 # s
-const DAY := 86400.0 # s
-const YEAR := DAY * 365.25 # exactly correct for Julian year
-const CENTURY := YEAR * 100.0
-const AU := 149597870.0 # km
-const DEG := 360.0 / TAU # rad
-const DEG_PER_DAY := DEG / DAY # rad/s
-
-
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
-func project_init():
-	pass
 
 static func cartesian2spherical(R: Vector3) -> Vector3:
 	var r := R.length()
