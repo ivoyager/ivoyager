@@ -15,12 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Reads external data tables (csv files) and adds data to Global.tables and
-# table_types. Global.table_types holds row number for all individual table
-# keys and an enum-like dict for each table (e.g., PlanetTypes, MoonTypes,
-# etc.).
+# Reads external data tables (.csv files) and adds results to:
+#    Global.table_data
+#    Global.table_fields
+#    Global.table_rows
 #
-# Table construction:
+# ivoyager/data/solar_system/*.csv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING. X-type will be
 #    converted to true (x) or false (blank). For all others, a blank cell
 #    without Defaults value will be converted to null (we use this to test
@@ -38,30 +38,28 @@ const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
 
+# project vars
 var import := {
-	# data_name = [type_name, path]
-	# if type_name != "" then row keys and type dicts added to Global.table_types
-	StarData = ["StarTypes", "StarFields", "res://ivoyager/data/solar_system/star_data.csv"],
-	PlanetData = ["PlanetTypes", "PlanetFields", "res://ivoyager/data/solar_system/planet_data.csv"],
-	MoonData = ["MoonTypes", "MoonFields", "res://ivoyager/data/solar_system/moon_data.csv"],
-	AsteroidGroupData = ["AsteroidGroupTypes", "AsteroidGroupFields",
-		"res://ivoyager/data/solar_system/asteroid_group_data.csv"],
-	BodyData = ["BodyTypes", "BodyFields", "res://ivoyager/data/solar_system/body_data.csv"],
-	StarlightData = ["StarlightTypes", "StarlightFields",
-		"res://ivoyager/data/solar_system/starlight_data.csv"],
-	WikiExtras = ["", "", "res://ivoyager/data/solar_system/wiki_extras.csv"],
-	}
+	stars = "res://ivoyager/data/solar_system/stars.csv",
+	planets = "res://ivoyager/data/solar_system/planets.csv",
+	moons = "res://ivoyager/data/solar_system/moons.csv",
+	bodies = "res://ivoyager/data/solar_system/bodies.csv",
+	lights = "res://ivoyager/data/solar_system/lights.csv",
+	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
+}
+var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
 # global dicts
-var _tables: Dictionary = Global.tables
-var _table_types: Dictionary = Global.table_types
+var _table_data: Dictionary = Global.table_data
+var _table_fields: Dictionary = Global.table_fields
+var _table_rows: Dictionary = Global.table_rows
 var _wiki_titles: Dictionary = Global.wiki_titles
 
 # current processing
 var _path: String
 var _data: Array
-var _types: Dictionary
 var _fields: Dictionary
+var _rows: Dictionary
 var _data_types: Array
 var _units: Array
 var _defaults: Array
@@ -76,27 +74,26 @@ func project_init():
 
 func import_table_data():
 	print("Reading external data tables...")
-	for data_name in import:
-		var import_array: Array = import[data_name]
-		var types_name: String = import_array[0]
-		var fields_name: String = import_array[1]
-		_path = import_array[2]
+	for path in wiki_extras:
+		_path = path
 		_data = []
-		_types = {} # row index by item key
+		_fields = {}
+		_rows = {}
+		_read_table() # writes wiki_titles; we don't need data, fields, rows
+	for key in import:
+		_path = import[key]
+		_data = []
 		_fields = {} # column index by field name
+		_rows = {} # row index by item key
 		_read_table()
 		# Global dict _wiki_titles was populated on the fly; otherwise, all
 		# global dicts are populated bellow...
-		_tables[data_name] = _data
-		if types_name:
-			assert(!_table_types.has(types_name))
-			_table_types[types_name] = _types
-			for key in _types:
-				assert(!_table_types.has(key))
-				_table_types[key] = _types[key]
-		if fields_name:
-			assert(!_tables.has(fields_name))
-			_tables[fields_name] = _fields
+		_table_data[key] = _data
+		_table_fields[key] = _fields
+		_table_rows[key] = _rows
+		for item_key in _rows:
+			assert(!_table_rows.has(item_key))
+			_table_rows[item_key] = _rows[item_key]
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -144,8 +141,8 @@ func _read_data_line() -> void:
 	var row_data := []
 	row_data.resize(_fields.size())
 	_row_key = _line_array[0]
-	assert(!_types.has(_row_key))
-	_types[_row_key] = row
+	assert(!_rows.has(_row_key))
+	_rows[_row_key] = row
 	row_data[0] = _row_key
 	for field in _fields:
 		_field = field

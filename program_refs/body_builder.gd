@@ -61,16 +61,17 @@ var req_data := [
 	"name", "body_type", "m_radius", "file_prefix"
 ]
 var read_types := {
-	body_type = TableHelper.AS_TYPE,
-	starlight_type = TableHelper.AS_TYPE,
+	body_type = TableHelper.AS_TABLE_TYPE,
+	starlight_type = TableHelper.AS_TABLE_TYPE,
 }
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
-var _tables: Dictionary = Global.tables
-var _table_types: Dictionary = Global.table_types
+var _table_data: Dictionary = Global.table_data
+var _table_fields: Dictionary = Global.table_fields
+var _table_rows: Dictionary = Global.table_rows
 var _time_date: Array = Global.time_date
 var _hud_2d_surface: Control
 var _registrar: Registrar
@@ -236,8 +237,8 @@ func _build_unpersisted(body: Body) -> void:
 	var starlight: Starlight
 	if body.starlight_type != -1:
 		starlight = SaverLoader.make_object_or_scene(_Starlight_)
-		var starlight_data: Array = _tables.StarlightData[body.starlight_type]
-		starlight.init(starlight_data, _tables.StarlightFields)
+		var starlight_data: Array = _table_data.lights[body.starlight_type]
+		starlight.init(starlight_data, _table_fields.lights)
 		body.add_child(starlight)
 	# HUDs
 	body.set_hud_too_close(_settings.hide_hud_when_close)
