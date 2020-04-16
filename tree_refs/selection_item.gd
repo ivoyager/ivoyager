@@ -72,7 +72,7 @@ const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
 # private
-var _time_date: Array = Global.time_date
+var _times: Array = Global.times
 
 func get_north() -> Vector3:
 	if is_body:
@@ -86,7 +86,7 @@ func get_orbit_anomaly_for_camera() -> float:
 	var orbit: Orbit = body.orbit
 	if !orbit:
 		return -INF
-	return orbit.get_anomaly_for_camera(_time_date[0])
+	return orbit.get_anomaly_for_camera(_times[0])
 
 func init(selection_type_: int) -> void:
 	selection_type = selection_type_

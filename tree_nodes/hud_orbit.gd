@@ -27,7 +27,7 @@ const ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMA
 var _orbit: Orbit
 var _orbit_mesh := ArrayMesh.new()
 var _orbit_graphic := ShaderMaterial.new()
-var _global_time_array: Array = Global.time_date
+var _times: Array = Global.times
 
 # shader params
 var _reference_normal: Vector3
@@ -73,7 +73,7 @@ func _draw_orbit() -> void:
 	if _reference_normal != reference_normal:
 		_reference_normal = reference_normal
 		_orbit_graphic.set_shader_param("reference_normal", _orbit.reference_normal)
-	var orbital_elements := _orbit.get_elements(_global_time_array[0])
+	var orbital_elements := _orbit.get_elements(_times[0])
 	var a: float = orbital_elements[0]
 	var e: float = orbital_elements[1]
 	var shape_elements := Vector2(a, e)

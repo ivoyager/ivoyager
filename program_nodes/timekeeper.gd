@@ -80,12 +80,10 @@ const PERSIST_PROPERTIES := ["time", "speed_index",
 	"_last_process_time", "_speed_memory", "_date_str", "_hour_str", "_seconds_str"]
 
 
-var _times: Array = Global.times
-var _date: Array = Global.date
-var _julian: Array = Global.julian
+var _times: Array = Global.times # [0] time (s, J2000) [1] UT1 (~d) [2] engine_time (s)
+var _date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
+var _clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
-# DEPRECIATE
-var _time_date: Array = Global.time_date
 
 var _is_year_changed := true
 var _is_quarter_changed := true
@@ -110,8 +108,12 @@ func project_init() -> void:
 	Global.connect("run_state_changed", self, "set_process")
 	_tree = Global.program.tree
 	time = Global.start_time
-	_time_date.resize(5)
-	_time_date[0] = time
+	
+	_times.resize(3)
+	_times[0] = time
+	_date.resize(3)
+	_clock.resize(3)
+	
 	set_yqmd(time, yqmd)
 	_update_from_yqmd()
 	_last_process_time = time
@@ -214,7 +216,7 @@ func convert_date_time_string(string: String, min_elements := 1) -> float:
 
 func set_time(new_time: float) -> void:
 	time = new_time
-	_time_date[0] = new_time
+	_times[0] = time
 	_last_process_time = new_time
 	reset()
 
@@ -283,10 +285,10 @@ func get_current_date_string(sep := "-") -> String:
 
 func _init_after_load() -> void:
 	_is_started = false
-	_time_date[0] = time
-	_time_date[1] = year
-	_time_date[2] = month
-	_time_date[3] = day
+	_times[0] = time
+	_date[0] = year
+	_date[1] = month
+	_date[2] = day
 
 func _ready() -> void:
 	set_process(Global.state.is_running) # should be false
@@ -313,7 +315,7 @@ func _on_process(delta: float) -> void:
 		print("Starting Timekeeper")
 	# simulator time
 	time += delta * speed_multiplier # speed_multiplier < 0 for time reversal
-	_time_date[0] = time
+	_times[0] = time
 	_update_display_and_calendar()
 	var sim_delta := time - _last_process_time
 	_last_process_time = time
@@ -366,21 +368,20 @@ func _update_from_yqmd() -> void:
 	if year != yqmd[0]:
 		year = yqmd[0]
 		ymd[0] = year
-		_time_date[1] = year
+		_date[0] = year
 		_is_year_changed = true
 	if quarter != yqmd[1]:
 		quarter = yqmd[1]
-		_time_date[2] = quarter
 		_is_quarter_changed = true
 	if month != yqmd[2]:
 		month = yqmd[2]
 		ymd[1] = month
-		_time_date[3] = month
+		_date[1] = month
 		_is_month_changed = true
 	if day != yqmd[3]:
 		day = yqmd[3]
 		ymd[2] = day
-		_time_date[4] = day
+		_date[2] = day
 		_is_day_changed = true
 	
 func _signal_speed_changed() -> void:

@@ -113,7 +113,7 @@ var hud_too_close := 0.0
 
 # private
 var _aux_graphic_process := false
-var _time_array: Array = Global.time_date
+var _times: Array = Global.times
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
@@ -210,7 +210,7 @@ func _on_ready() -> void:
 
 func _update_orbit_change():
 	if tidally_locked:
-		var new_north_pole := orbit.get_normal(_time_array[0])
+		var new_north_pole := orbit.get_normal(_times[0])
 		if axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
 			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)
