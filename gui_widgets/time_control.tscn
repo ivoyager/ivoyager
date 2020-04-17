@@ -53,3 +53,11 @@ toggle_mode = true
 shortcut_in_tooltip = false
 action_mode = 0
 text = "||"
+
+[node name="Real" type="Button" parent="."]
+margin_left = 128.0
+margin_right = 148.0
+margin_bottom = 20.0
+toggle_mode = true
+action_mode = 0
+text = "*"

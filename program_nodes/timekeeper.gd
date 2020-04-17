@@ -29,7 +29,8 @@ class_name Timekeeper
 
 signal processed(time, sim_delta, engine_delta) # this drives the simulator
 signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds)
-signal date_changed() # keep date reference from Global.date
+signal date_changed() # normal day rollover
+signal time_altered() # someone manipulated time
 
 const SECOND := UnitDefs.SECOND # sim_time conversion only
 const MINUTE := UnitDefs.MINUTE # sim_time conversion only
@@ -40,6 +41,7 @@ const EARTH_ROTATION_PERIOD_D := 0.99726968 # same as planets.csv table!
 const EARTH_ROTATION_PERIOD := EARTH_ROTATION_PERIOD_D * DAY # in sim_time
 
 # project vars
+var start_real_world_time := false # Overrides other start settings
 var speeds := [ # sim_units / delta
 		UnitDefs.SECOND, # real-time if SECOND = 1.0
 		UnitDefs.MINUTE,
@@ -64,6 +66,7 @@ var speed_symbols := [
 	"GAME_SPEED_WEEK_PER_SECOND",
 	"GAME_SPEED_MONTH_PER_SECOND",
 ]
+var real_time_speed := 0
 var default_speed := 2
 var show_clock_speed := 2 # this index and lower
 var show_seconds_speed := 1 # this index and lower
@@ -88,6 +91,7 @@ const PERSIST_PROPERTIES := ["time", "universal_time", "julian_day_number",
 	"speed_index", "is_paused", "is_reversed"]
 
 # public - read only!
+var is_real_world_time := false
 var engine_time: float # accumulated delta
 var speed_multiplier: float # negative if is_reversed
 var show_clock := false
@@ -105,6 +109,7 @@ var _signal_infos := []
 var _signal_recycle := []
 var _signal_counter := 0
 onready var _tree := get_tree()
+onready var _allow_real_world_time: bool = Global.allow_real_world_time
 onready var _allow_time_reversal: bool = Global.allow_time_reversal
 
 
@@ -113,12 +118,17 @@ func project_init() -> void: # this is before _ready()
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	_date_time_regex.compile(regexpr)
 	times.resize(4)
 	date.resize(3)
 	clock.resize(3)
 	_set_init_state()
 	_set_ready_state()
+
+static func get_real_world_time() -> float:
+	var j2000_s := OS.get_unix_time() - 946728000
+	return float(j2000_s) * UnitDefs.SECOND
 
 func get_ut1(sim_time: float) -> float:
 	# Use fposmod(ut1) to get fraction of day
@@ -171,11 +181,30 @@ static func set_gregorian_date(jdn: int, date_: Array) -> void:
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
-func change_time_reversed(new_is_reversed: bool) -> void:
+func set_real_world() -> void:
+	if !_allow_real_world_time or is_real_world_time:
+		return
+	set_time_reversed(false)
+	change_speed(0, real_time_speed)
+	is_real_world_time = true
+	time = get_real_world_time()
+	_reset_time()
+	emit_signal("time_altered")
+
+func set_time(new_time: float) -> void:
+	# tolerance is for tracking real world time; Unix time is in seconds (int)
+	# so tolerance = 1.5 should prevent frequent time resets.
+	time = new_time
+	is_real_world_time = false
+	_reset_time()
+	emit_signal("time_altered")
+
+func set_time_reversed(new_is_reversed: bool) -> void:
 	if !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
+	is_real_world_time = false
 	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
 
 func change_speed(delta_index: int, new_index := -1) -> void:
@@ -189,13 +218,8 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	if new_index == speed_index:
 		return
 	speed_index = new_index
-	speed_multiplier = speeds[new_index]
-	if is_reversed:
-		speed_multiplier *= -1.0
-	speed_name = speed_names[new_index]
-	speed_symbol = speed_symbols[new_index]
-	show_clock = new_index <= show_clock_speed
-	show_seconds = show_clock and new_index <= show_seconds_speed
+	is_real_world_time = false
+	_reset_speed()
 	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
 
 func can_incr_speed() -> bool:
@@ -265,13 +289,22 @@ func _set_init_state() -> void:
 	speed_index = default_speed
 
 func _set_ready_state() -> void:
+	_reset_time()
+	_reset_speed()
+
+func _reset_time() -> void:
 	universal_time = get_ut1(time)
 	julian_day_number = get_jdn_for_ut1(universal_time)
+	times[0] = time
 	times[2] = universal_time
 	times[3] = julian_day_number
 	set_gregorian_date(julian_day_number, date)
 	set_ut1_clock(universal_time, clock)
+
+func _reset_speed() -> void:
 	speed_multiplier = speeds[speed_index]
+	if is_reversed:
+		speed_multiplier *= -1.0
 	speed_name = speed_names[speed_index]
 	speed_symbol = speed_symbols[speed_index]
 	show_clock = speed_index <= show_clock_speed
@@ -279,6 +312,10 @@ func _set_ready_state() -> void:
 
 func _on_ready() -> void:
 	set_process(false) # changes with "run_state_changed" signal
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	if start_real_world_time:
+		set_real_world()
 
 func _on_process(delta: float) -> void:
 	if is_paused != _tree.paused:

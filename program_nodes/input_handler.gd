@@ -112,7 +112,7 @@ func _on_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("decr_speed"):
 		_timekeeper.change_speed(-1)
 	elif event.is_action_pressed("reverse_time"):
-		_timekeeper.change_time_reversed(!_timekeeper.is_reversed)
+		_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
 	elif event.is_action_pressed("toggle_orbits"):
 		_tree_manager.set_show_orbits(!_tree_manager.show_orbits)
 	elif event.is_action_pressed("toggle_icons"):

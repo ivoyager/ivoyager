@@ -27,14 +27,18 @@ onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
 onready var _reverse: Button = $Reverse
 onready var _pause: Button = $Pause
+onready var _real: Button = $Real
 onready var _game_speed: Label = $GameSpeed
 
 func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	_timekeeper.connect("time_altered", self, "_on_time_altered")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
-	_reverse.connect("pressed", self, "_set_reverse_time")
+	_reverse.connect("pressed", self, "_set_reverse")
 	_pause.connect("pressed", self, "_change_paused")
+	_real.connect("pressed", self, "_set_real_world")
+	_real.visible = Global.allow_real_world_time
 	_reverse.visible = Global.allow_time_reversal
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
@@ -45,12 +49,23 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 	_pause.pressed = is_paused
 	_plus.disabled = !_timekeeper.can_incr_speed()
 	_minus.disabled = !_timekeeper.can_decr_speed()
+	_real.pressed = _timekeeper.is_real_world_time
+
+func _on_time_altered() -> void:
+	_real.pressed = _timekeeper.is_real_world_time
 
 func _increment_speed(increment: int) -> void:
 	_timekeeper.change_speed(increment)
 
-func _set_reverse_time() -> void:
-	_timekeeper.change_time_reversed(_reverse.pressed)
+func _set_reverse() -> void:
+	_timekeeper.set_time_reversed(_reverse.pressed)
 
 func _change_paused() -> void:
 	_tree.paused = _pause.pressed
+	
+func _set_real_world() -> void:
+	if !_timekeeper.is_real_world_time:
+		_timekeeper.set_real_world()
+	else:
+		_real.pressed = true
+
