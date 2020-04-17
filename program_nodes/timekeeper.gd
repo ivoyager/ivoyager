@@ -175,10 +175,7 @@ func change_time_reversed(new_is_reversed: bool) -> void:
 	if !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
 	is_reversed = new_is_reversed
-	if new_is_reversed:
-		speed_multiplier = -speeds[speed_index]
-	else:
-		speed_multiplier = speeds[speed_index]
+	speed_multiplier *= -1.0
 	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
 
 func change_speed(delta_index: int, new_index := -1) -> void:
@@ -193,6 +190,8 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 		return
 	speed_index = new_index
 	speed_multiplier = speeds[new_index]
+	if is_reversed:
+		speed_multiplier *= -1.0
 	speed_name = speed_names[new_index]
 	speed_symbol = speed_symbols[new_index]
 	show_clock = new_index <= show_clock_speed
