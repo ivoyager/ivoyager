@@ -53,6 +53,20 @@ var _active_threads := []
 # another thread unless the function is guaranteed to be thread-safe (e.g,
 # read-only). Most functions are NOT thread safe!
 
+func project_init() -> void:
+	connect("ready", self, "_on_ready")
+	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
+	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("sim_stop_required", self, "require_stop")
+	Global.connect("sim_run_allowed", self, "allow_run")
+	_tree = Global.program.tree
+	_gui_top = Global.program.GUITop
+	_table_reader = Global.program.TableReader
+	_saver_loader = Global.program.get("SaverLoader")
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_system_builder = Global.program.SystemBuilder
+	_timekeeper = Global.program.Timekeeper
+
 func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
 	# to wait until these are removed.
@@ -120,8 +134,10 @@ func exit(exit_now: bool) -> void:
 func quick_save() -> void:
 	if _has_been_saved and _settings.save_base_name and file_utils.is_valid_dir(_settings.save_dir):
 		Global.emit_signal("close_main_menu_requested")
-		var date_string: String = _timekeeper.get_current_date_string("-") if _settings.append_date_to_save else ""
-		save_game(file_utils.get_save_path(_settings.save_dir, _settings.save_base_name, date_string, true))
+		var date_string: String = _timekeeper.get_current_date_for_file() \
+				if _settings.append_date_to_save else ""
+		save_game(file_utils.get_save_path(_settings.save_dir, _settings.save_base_name,
+				date_string, true))
 	else:
 		Global.emit_signal("save_dialog_requested")
 
@@ -224,20 +240,6 @@ func _on_init() -> void:
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
 
-func project_init() -> void:
-	connect("ready", self, "_on_ready")
-	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
-	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
-	Global.connect("sim_stop_required", self, "require_stop")
-	Global.connect("sim_run_allowed", self, "allow_run")
-	_tree = Global.program.tree
-	_gui_top = Global.program.GUITop
-	_table_reader = Global.program.TableReader
-	_saver_loader = Global.program.get("SaverLoader")
-	_main_prog_bar = Global.program.get("MainProgBar")
-	_system_builder = Global.program.SystemBuilder
-	_timekeeper = Global.program.Timekeeper
-
 func _on_ready() -> void:
 	require_stop(self)
 
@@ -267,6 +269,5 @@ func _run_simulator() -> void:
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
 	_tree.paused = _was_paused
-	_timekeeper.reset()
 	assert(DPRINT and prints("signal active_threads_allowed") or true)
 	emit_signal("active_threads_allowed")

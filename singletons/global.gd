@@ -30,7 +30,7 @@ signal main_inited()
 signal system_tree_built_or_loaded(is_new_game)
 signal system_tree_ready(is_new_game)
 signal about_to_start_simulator(is_new_game)
-signal about_to_free_procedural_nodes()
+signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_exit()
 signal simulator_exited()
 signal game_save_started()
@@ -48,9 +48,9 @@ signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal about_to_add_environment(environment, is_world_env)
 
-# sim state external control
+# sim state control
 signal sim_stop_required(who) # see Main for external thread coordination
-signal sim_run_allowed(who)
+signal sim_run_allowed(who) # all requiring stop must allow!
 
 # camera/UI requests
 signal move_camera_to_selection_requested(selection_item, view_type, spherical_position,
@@ -71,11 +71,9 @@ signal gui_refresh_requested()
 
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
-
-var times := [] # Timekeeper; [0] time (s, J2000) [1] UT1 (~d) [2] engine time (s)
+var times := [] # Timekeeper; [0] time (s, J2000) [1] engine_time [2] UT1 [3] JDN
 var date := [] # Timekeeper; Gregorian [0] year [1] month [2] day (ints)
 var clock := [] # Timekeeper; UT1 [0] hour [1] minute [2] second (ints)
-
 var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
@@ -110,9 +108,8 @@ var disable_exit := false
 var disable_quit := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
+var start_time: float = -0.1 * UnitDefs.YEAR # from J2000 epoch
 var allow_time_reversal := true
-var toggle_real_time_not_pause := false
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 3e10 * UnitDefs.KM
 var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")

@@ -45,18 +45,9 @@ shortcut_in_tooltip = false
 action_mode = 0
 text = "<"
 
-[node name="Real" type="Button" parent="."]
-margin_left = 98.0
-margin_right = 118.0
-margin_bottom = 20.0
-toggle_mode = true
-shortcut_in_tooltip = false
-action_mode = 0
-text = "*"
-
 [node name="Pause" type="Button" parent="."]
-margin_left = 122.0
-margin_right = 148.0
+margin_left = 98.0
+margin_right = 124.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false

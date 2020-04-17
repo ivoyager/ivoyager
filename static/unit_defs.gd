@@ -30,9 +30,9 @@
 
 class_name UnitDefs
 
-# SI base units
-const SECOND := 1.0 # Godot engine delta per sim second
-const METER := 1e-9 # Godot engine translation per sim meter (scale)
+# SI base units - all sim units derived from these!
+const SECOND := 1.0 # some code comments assume 1.0; Timekeeper sets sim speed
+const METER := 1e-9 # translation/sim_meter (scale); see caution above
 const KG := 1.0
 const AMPERE := 1.0
 const KELVIN := 1.0

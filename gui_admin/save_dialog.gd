@@ -26,9 +26,9 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 var add_quick_save_button := false
 
 var _settings: Dictionary = Global.settings
+var _settings_manager: SettingsManager
+var _timekeeper: Timekeeper
 var _main: Main
-var _settings_manager: SettingsManager = Global.program.SettingsManager
-var _timekeeper: Timekeeper = Global.program.Timekeeper
 
 func project_init() -> void:
 	if !Global.enable_save_load:
@@ -55,7 +55,8 @@ func _open() -> void:
 	popup_centered()
 	access = ACCESS_FILESYSTEM
 	var save_dir = file_utils.get_save_dir_path(Global.is_modded, _settings.save_dir)
-	var date_string: String = _timekeeper.get_current_date_string("-") if _settings.append_date_to_save else ""
+	var date_string: String = _timekeeper.get_current_date_for_file() \
+			if _settings.append_date_to_save else ""
 	current_path = file_utils.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_items()
 	
