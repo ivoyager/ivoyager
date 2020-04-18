@@ -19,12 +19,14 @@
 
 extends Label
 
+var show_pause := true
 var date_format := "%02d/%02d/%02d"
 var clock_hms_format := "  %02d:%02d:%02d"
 var clock_hm_format := "  %02d:%02d"
 
 var _date: Array = Global.date
 var _clock: Array = Global.clock
+var _is_paused := false
 var _show_clock := false
 var _show_seconds := false
 var _hm := [0, 0]
@@ -37,7 +39,7 @@ func _ready() -> void:
 	timekeeper.connect("processed", self, "_on_timekeeper_processed")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
 
-func _on_timekeeper_processed(_time: float, _s_delta: float, _e_delta: float) -> void:
+func _on_timekeeper_processed(_time: float, _e_delta: float) -> void:
 	var new_text := date_format % _date
 	if _show_clock:
 		if _show_seconds:
@@ -46,10 +48,13 @@ func _on_timekeeper_processed(_time: float, _s_delta: float, _e_delta: float) ->
 			_hm[0] = _clock[0]
 			_hm[1] = _clock[1]
 			new_text += clock_hm_format % _hm
+	if _is_paused and show_pause:
+		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
 
-func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
+func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		show_clock: bool, show_seconds: bool) -> void:
+	_is_paused = is_paused
 	_show_clock = show_clock
 	_show_seconds = show_seconds
 	if is_reversed:

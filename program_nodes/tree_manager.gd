@@ -113,11 +113,11 @@ func _disconnect_camera() -> void:
 		assert(DPRINT and prints("disconnected camera:", _camera) or true)
 	_camera = null
 
-func _timekeeper_process(time: float, _sim_delta: float, engine_delta: float) -> void:
+func _timekeeper_process(time: float, e_delta: float) -> void:
 	if !_camera:
 		return
 	_time = time
-	_camera.tree_manager_process(engine_delta)
+	_camera.tree_manager_process(e_delta)
 	if _camera_fov != _camera.fov:
 		_camera_fov = _camera.fov
 		_update_icon_size()

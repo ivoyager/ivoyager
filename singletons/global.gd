@@ -71,9 +71,9 @@ signal gui_refresh_requested()
 
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
-var times := [] # Timekeeper; [0] time (s, J2000) [1] engine_time [2] UT1 [3] JDN
-var date := [] # Timekeeper; Gregorian [0] year [1] month [2] day (ints)
-var clock := [] # Timekeeper; UT1 [0] hour [1] minute [2] second (ints)
+var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
+var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
+var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
 var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()

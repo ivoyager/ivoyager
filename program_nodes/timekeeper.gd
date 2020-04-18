@@ -27,18 +27,16 @@
 extends Node
 class_name Timekeeper
 
-signal processed(time, sim_delta, engine_delta) # this drives the simulator
+signal processed(sim_time, engine_delta) # this drives the simulator
 signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds)
 signal date_changed() # normal day rollover
-signal time_altered() # someone manipulated time
+signal time_altered() # someone manipulated time!
 
-const SECOND := UnitDefs.SECOND # sim_time conversion only
-const MINUTE := UnitDefs.MINUTE # sim_time conversion only
-const HOUR := UnitDefs.HOUR # sim_time conversion only
-const DAY := UnitDefs.DAY # sim_time conversion only
-const JD_J2000 := 2451545.0 # Julian Date (JD) of J2000 epoch time 
-const EARTH_ROTATION_PERIOD_D := 0.99726968 # same as planets.csv table!
-const EARTH_ROTATION_PERIOD := EARTH_ROTATION_PERIOD_D * DAY # in sim_time
+const SECOND := UnitDefs.SECOND # sim_time conversion
+const MINUTE := UnitDefs.MINUTE
+const HOUR := UnitDefs.HOUR
+const DAY := UnitDefs.DAY
+const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
 
 # project vars
 var start_real_world_time := false # Overrides other start settings
@@ -78,17 +76,15 @@ var regexpr := "^(-?\\d+)(?:[\\.\\/\\-](\\d\\d))?(?:[\\.\\/\\-](\\d\\d))?(?: " \
 		+ "(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?$"
 
 # public persisted - read-only!
-var time: float # seconds from J2000 epoch (~12:00, 2000-01-01)
-var universal_time: float # (mean solar days from J2000) - 0.5
-var julian_day_number: int # for current UT1 solar day noon
+var time: float # seconds from J2000 epoch (= 2000-01-01 12:00:00)
+var ut1: float # UT1 (mean solar days from J2000 - 0.5)
 var speed_index: int
 var is_paused := true # lags 1 frame behind actual tree pause
 var is_reversed := false
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["time", "universal_time", "julian_day_number",
-	"speed_index", "is_paused", "is_reversed"]
+const PERSIST_PROPERTIES := ["time", "ut1", "speed_index", "is_paused", "is_reversed"]
 
 # public - read only!
 var is_real_world_time := false
@@ -114,53 +110,49 @@ onready var _allow_time_reversal: bool = Global.allow_time_reversal
 
 
 func project_init() -> void: # this is before _ready()
-	Global.connect("run_state_changed", self, "set_process") # starts/stops
+	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	_date_time_regex.compile(regexpr)
-	times.resize(4)
+	times.resize(3)
 	date.resize(3)
 	clock.resize(3)
 	_set_init_state()
 	_set_ready_state()
 
-static func get_real_world_time() -> float:
-	var j2000_s := OS.get_unix_time() - 946728000
-	return float(j2000_s) * UnitDefs.SECOND
+func get_real_world_time() -> float:
+	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
+	var j2000_s := (sys_msec - 946728000000) * 0.001
+	return j2000_s * SECOND # this is sim_time
 
 func get_ut1(sim_time: float) -> float:
-	# Use fposmod(ut1) to get fraction of day
-	# From wiki:
-	# ERA = TAU * (0.7790572732640 + 1.00273781191135448 * UT1)
-	# Our simulator "UT1" is conceptually UT1, meaning it has to be derived
-	# from our simulator Earth rotation and solar orbit. These happen to be
-	# simplified somewhat, but not entirely.
-	# TODO: Timekeeper has to know some facts about sim Earth state to do this
-	# properly!
-	var earth_rotations := sim_time / EARTH_ROTATION_PERIOD
-	return (earth_rotations - 0.50137) / 1.00273781191135448
+	# This is close for J2000 +- 1000s yrs. Beyond that, Julian days diverge
+	# significantly from solar days. Note that our sim solar days are somewhat
+	# but not entirely simplified: sidereal day is constant but orbit is
+	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
+	# simulated Earth's solar day, whatever that happens to be. Override this
+	# function if you need something different. 
+	return sim_time / DAY + 0.5
 
-static func get_jdn_for_ut1(ut1: float) -> int:
-	# Get JDN for UT1 12:00; this applies the full UT1 solar day!
-	var ut1_midday := floor(ut1) + 0.5
-	var earth_rotations := ut1_midday * 1.00273781191135448 + 0.50137
-	var j2000_days := earth_rotations * EARTH_ROTATION_PERIOD_D
-	return int(j2000_days + JD_J2000)
+func get_time_from_ut1(ut1_: float) -> float:
+	# see comment above
+	return (ut1_ - 0.5) * DAY
 
-static func set_ut1_clock(ut1: float, clock_: Array) -> void:
+func set_ut1_clock(ut1_: float, clock_: Array) -> void:
 	# Expects clock_ of size 3
-	ut1 = fposmod(ut1, 1.0)
-	var total_seconds := int(ut1 * 86400.0) # these are not SI seconds!
+	ut1_ = fposmod(ut1_, 1.0)
+	var total_seconds := int(ut1_ * 86400.0)
 	# warning-ignore:integer_division
 	clock_[0] = total_seconds / 3600
 	# warning-ignore:integer_division
 	clock_[1] = (total_seconds / 60) % 60
 	clock_[2] = total_seconds % 60
 
-static func set_gregorian_date(jdn: int, date_: Array) -> void:
+func set_gregorian_date2(ut1_: float, date_: Array) -> void:
 	# Expects date_ of size 3
+	var jdn := int(floor(ut1_)) + J2000_JDN 
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -182,18 +174,17 @@ func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 func set_real_world() -> void:
-	if !_allow_real_world_time or is_real_world_time:
+	if !_allow_real_world_time:
 		return
-	set_time_reversed(false)
-	change_speed(0, real_time_speed)
-	is_real_world_time = true
+	if !is_real_world_time:
+		set_time_reversed(false)
+		change_speed(0, real_time_speed)
+		is_real_world_time = true
 	time = get_real_world_time()
 	_reset_time()
 	emit_signal("time_altered")
 
 func set_time(new_time: float) -> void:
-	# tolerance is for tracking real world time; Unix time is in seconds (int)
-	# so tolerance = 1.5 should prevent frequent time resets.
 	time = new_time
 	is_real_world_time = false
 	_reset_time()
@@ -293,13 +284,11 @@ func _set_ready_state() -> void:
 	_reset_speed()
 
 func _reset_time() -> void:
-	universal_time = get_ut1(time)
-	julian_day_number = get_jdn_for_ut1(universal_time)
+	ut1 = get_ut1(time)
 	times[0] = time
-	times[2] = universal_time
-	times[3] = julian_day_number
-	set_gregorian_date(julian_day_number, date)
-	set_ut1_clock(universal_time, clock)
+	times[2] = ut1
+	set_gregorian_date2(ut1, date)
+	set_ut1_clock(ut1, clock)
 
 func _reset_speed() -> void:
 	speed_multiplier = speeds[speed_index]
@@ -317,27 +306,31 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	if start_real_world_time:
 		set_real_world()
 
+func _on_run_state_changed(is_running: bool) -> void:
+	set_process(is_running)
+	if is_running and is_real_world_time:
+		yield(_tree, "idle_frame")
+		set_real_world()
+
 func _on_process(delta: float) -> void:
 	if is_paused != _tree.paused:
 		is_paused = !is_paused
-		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
-	if is_paused:
-		return
+		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
+				show_clock, show_seconds)
 	engine_time += delta
-	var sim_delta := delta * speed_multiplier
-	time += sim_delta
-	var new_ut1 := get_ut1(time)
-	var is_date_change := false
-	if floor(new_ut1) != floor(universal_time): # new solar day
-		julian_day_number = get_jdn_for_ut1(new_ut1)
-		set_gregorian_date(julian_day_number, date)
-		is_date_change = true
-	set_ut1_clock(new_ut1, clock)
-	universal_time = new_ut1
-	times[0] = time
 	times[1] = engine_time
-	times[2] = new_ut1
-	times[3] = julian_day_number
+
+	var is_date_change := false
+	if !is_paused:
+		time += delta * speed_multiplier
+		var new_ut1 := get_ut1(time)
+		if floor(new_ut1) != floor(ut1): # new solar day
+			set_gregorian_date2(new_ut1, date)
+			is_date_change = true
+		set_ut1_clock(new_ut1, clock)
+		ut1 = new_ut1
+		times[0] = time
+		times[2] = new_ut1
 
 	# We normally stagger engine interval signals to spread out the load on the
 	# main thread (under the assumption these trigger GUI or other
@@ -349,7 +342,7 @@ func _on_process(delta: float) -> void:
 		var signal_str: String = signal_info[0]
 		var interval_s: float = signal_info[1]
 		signal_time += interval_s
-		if signal_time < engine_time: # we are way behind for some reason!
+		if signal_time < engine_time: # we are behind for some reason!
 			process_one = false
 			signal_time += interval_s
 			while signal_time < engine_time:
@@ -360,7 +353,7 @@ func _on_process(delta: float) -> void:
 			break
 	if is_date_change:
 		emit_signal("date_changed")
-	emit_signal("processed", time, sim_delta, delta)
+	emit_signal("processed", time, delta)
 
 func _insert_engine_interval_signal(signal_info: Array, next_signal: float) -> void:
 	var index := _signal_engine_times.bsearch(next_signal, false) # after equal value

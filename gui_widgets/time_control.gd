@@ -64,8 +64,6 @@ func _change_paused() -> void:
 	_tree.paused = _pause.pressed
 	
 func _set_real_world() -> void:
-	if !_timekeeper.is_real_world_time:
-		_timekeeper.set_real_world()
-	else:
-		_real.pressed = true
+	_timekeeper.set_real_world()
+	_real.pressed = true
 
