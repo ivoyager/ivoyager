@@ -18,6 +18,9 @@ margin_top = -340.0
 margin_right = 550.0
 rect_min_size = Vector2( 550, 340 )
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ImageBox" type="VBoxContainer" parent="."]
 margin_left = 7.0
@@ -45,20 +48,14 @@ margin_right = 92.0
 [node name="ViewButtons" parent="ImageBox" instance=ExtResource( 5 )]
 margin_right = 508.0
 
-[node name="TLBox" type="CenterContainer" parent="."]
+[node name="SelectionButtons" parent="." instance=ExtResource( 6 )]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 74.0
 margin_bottom = 27.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
-
-[node name="SelectionButtons" parent="TLBox" instance=ExtResource( 6 )]
-margin_right = 67.0
-margin_bottom = 20.0
 
 [node name="TRBox" type="VBoxContainer" parent="."]
-margin_left = 343.0
+margin_left = 313.0
 margin_top = 7.0
 margin_right = 543.0
 margin_bottom = 244.0
@@ -68,13 +65,17 @@ custom_constants/separation = 17
 alignment = 1
 
 [node name="ShowButtons" parent="TRBox" instance=ExtResource( 7 )]
-margin_right = 160.0
+margin_left = 70.0
+margin_right = 230.0
 margin_bottom = 20.0
+size_flags_horizontal = 8
 
 [node name="SelectionData" parent="TRBox" instance=ExtResource( 8 )]
+margin_left = -1.0
 margin_top = 37.0
-margin_right = 200.0
+margin_right = 229.0
 margin_bottom = 237.0
+rect_min_size = Vector2( 230, 200 )
 size_flags_horizontal = 4
 
 [node name="BLBox" type="VBoxContainer" parent="."]

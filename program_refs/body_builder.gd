@@ -54,6 +54,7 @@ var data_parser := {
 	min_t = "min_t",
 	max_t = "max_t",
 	one_bar_t = "one_bar_t",
+	half_bar_t = "half_bar_t",
 	tenth_bar_t = "tenth_bar_t",
 	file_prefix = "file_prefix",
 }

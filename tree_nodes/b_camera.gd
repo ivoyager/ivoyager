@@ -54,7 +54,7 @@ const MIN_ANGLE_TO_POLE := PI / 80.0
 const MOUSE_MOVE_ADJ := 0.4
 const MOUSE_PITCH_YAW_ADJ := 0.1
 const MOUSE_ROLL_ADJ := 0.3
-const MOUSE_WHEEL_ADJ := 33.3
+const MOUSE_WHEEL_ADJ := 20.0
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
@@ -449,7 +449,7 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		if use_now == 0:
 			use_now = -1 if _mouse_wheel_accumulator < 0 else 1
 		_mouse_wheel_accumulator -= use_now
-		move_vector.z = delta * use_now * 0.1
+		move_vector.z = use_now * 0.002
 	# key control
 	if _move_action_pressed:
 		move_vector += _move_action_pressed * delta
