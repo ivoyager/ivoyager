@@ -23,7 +23,7 @@
 
 extends Node
 
-# sim state broadcasts (from ProjectBuilder & Main)
+# ProjectBuilder & Main broadcasts (program/simulator state)
 signal project_builder_finished()
 signal table_data_imported()
 signal main_inited()
@@ -40,23 +40,28 @@ signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
 
-# other object broadcasts
+# camera broadcasts
+signal camera_ready(camera)
+signal mouse_clicked_viewport_at(position, camera, is_left_click)
+
+
+# other broadcasts
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)
 signal gui_ready(control)
-signal camera_ready(camera)
-signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal about_to_add_environment(environment, is_world_env)
 
 # sim state control
 signal sim_stop_required(who) # see Main for external thread coordination
 signal sim_run_allowed(who) # all requiring stop must allow!
 
-# camera/UI requests
+# camera control
 signal move_camera_to_selection_requested(selection_item, view_type, spherical_position,
 		camera_rotation, is_instant_move) # 1st arg can be null; all others optional
 signal move_camera_to_body_requested(body, view_type, spherical_position, camera_rotation,
 		is_instant_move) # 1st arg can be null; all others optional
+
+# GUI requests
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)
@@ -64,10 +69,10 @@ signal toggle_show_hide_gui_requested()
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
-signal rich_text_popup_requested(header_text, bbcode_text)
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
+signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
