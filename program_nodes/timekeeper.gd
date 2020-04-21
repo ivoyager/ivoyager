@@ -132,8 +132,8 @@ func get_ut1(sim_time: float) -> float:
 	# significantly from solar days. Note that our sim solar days are somewhat
 	# but not entirely simplified: sidereal day is constant but orbit is
 	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
-	# simulated Earth's solar day, whatever that happens to be. Override this
-	# function if you need something different. 
+	# simulated Earth's solar day, whatever that happens to be. To do so, we
+	# would need to account for Earth's dynamic ortbit (rates of Om & w).
 	return sim_time / DAY + 0.5
 
 func get_time_from_ut1(ut1_: float) -> float:
