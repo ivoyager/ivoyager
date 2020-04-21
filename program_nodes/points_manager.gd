@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Node
 class_name PointsManager
@@ -77,13 +76,14 @@ func forget_points_category(category: String) -> void: # not needed for load
 	_points_categories.erase(category)
 
 func project_init() -> void:
+	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("gui_refresh_requested", self, "_refresh_gui")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
+
+func _restore_init_state() -> void:
+	_show_points.clear()
+	_points_groups.clear()
+	_points_categories.clear()
 
 func _refresh_gui() -> void:
 	for group_or_category in _show_points:
 		emit_signal("show_points_changed", group_or_category, _show_points[group_or_category])
-
-func _clear_procedural() -> void:
-	_points_groups.clear()
-	_points_categories.clear()

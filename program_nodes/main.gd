@@ -74,9 +74,7 @@ func add_active_thread(thread: Thread) -> void:
 
 func remove_active_thread(thread: Thread) -> void:
 	_active_threads.erase(thread)
-	if !_active_threads:
-		assert(DPRINT and prints("signal threads_finished") or true)
-		emit_signal("threads_finished")
+	test_active_threads()
 
 func test_active_threads() -> void:
 	if !_active_threads:
@@ -129,6 +127,9 @@ func exit(exit_now: bool) -> void:
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
+	_state.is_running = false
+	_state.is_loaded_game = false
+	_state.last_save_path = ""
 	Global.emit_signal("simulator_exited")
 
 func quick_save() -> void:

@@ -15,28 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Not much here after some consolidation. Depreciate?
+# Not much here after consolidation. Depreciate?
 
 extends Node
 class_name MinorBodiesManager
 
 
-var asteroids := [] # index is asteroid_id (freed are null)
-
 # Public
-var group_names := [] # array with group labels
-var ids_by_group := {} # dict of ids indexed by group label
-var group_refs_by_name := {} # only AsteroidGroups now
+var group_names := []
+var ids_by_group := {} # arrays of ids indexed by group name
+var group_refs_by_name := {} # AsteroidGroups now
 var lagrange_points := {} # dict of lagrange_point objects indexed by group name
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["group_names", "ids_by_group"]
-const PERSIST_OBJ_PROPERTIES := ["asteroids", "group_refs_by_name", "lagrange_points"]
+const PERSIST_OBJ_PROPERTIES := ["group_refs_by_name", "lagrange_points"]
 
 
 func project_init():
-	pass
+	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 
-
+func _restore_init_state() -> void:
+	group_names.clear()
+	ids_by_group.clear()
+	group_refs_by_name.clear()
+	lagrange_points.clear()

@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # I, Voyager handles input in these ways:
 #   - here as _input()
 #   - BCamera as _unhandled_input() [various mouse & key actions]
@@ -80,7 +79,7 @@ func _on_input(event: InputEvent) -> void:
 		_input_for_splash_screen(event)
 		return
 	if !_state.is_running:
-		return # e.g., main menu is up (it should handle allowed actions)
+		return # e.g., main menu has input control
 	
 	# Order matters! E.g., cntr-S must be captured before S. This could be
 	# troublesome for player modified hotkeys. One way to solve is to match
@@ -144,9 +143,9 @@ func _on_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("next_moon"):
 				_selection_manager.next_last(1, Enums.SELECTION_MOON)
 			else:
-				return
+				return # input NOT handled!
 		else:
-			return
+			return # input NOT handled!
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:
@@ -161,6 +160,6 @@ func _input_for_splash_screen(event: InputEvent) -> void:
 	elif event.is_action_pressed("quit"):
 		_main.quit(true)
 	else:
-		return
+		return # input NOT handled!
 	_tree.set_input_as_handled()
 
