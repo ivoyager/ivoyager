@@ -52,14 +52,11 @@ const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
 const NEAR_DIST_MULTIPLIER := 0.1 
 const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude 
 const MIN_ANGLE_TO_POLE := PI / 80.0
-const MOUSE_MOVE_ADJ := 0.4
-const MOUSE_PITCH_YAW_ADJ := 0.1
-const MOUSE_ROLL_ADJ := 0.3
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
-const ZERO_DRAG := Vector2.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const VECTOR3_ZERO := Vector3.ZERO
 
 # ******************************* PERSISTED ***********************************
 
@@ -69,8 +66,8 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
-var spherical_position := Vector3.ZERO # longitude, latitude, radius
-var camera_rotation := Vector3.ZERO # relative to pointing at parent, north up
+var spherical_position := VECTOR3_ZERO # longitude, latitude, radius
+var camera_rotation := VECTOR3_ZERO # relative to pointing at parent, north up
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
@@ -93,19 +90,18 @@ var ease_exponent := 5.0
 var follow_orbit: float = 4e7 * UnitDefs.KM # km after dividing by fov
 var orient_to_local_pole: float = 5e7 * UnitDefs.KM # must be > follow_orbit
 var orient_to_ecliptic: float = 5e10 * UnitDefs.KM # must be > orient_to_local_pole
+var action_rate := 10.0 # how fast we use up the accumulators
+var min_action := 0.002 # use all below this
+
+
+# DEPRECIATE
 var move_tangentially_rate := 0.7 # affects mouse & key
 var move_in_out_rate := 3.0 # affects mouse & key
-var mouse_rotate_min_z_at_offcenter := 0.2
-var mouse_rotate_max_z_at_offcenter := 0.7
-var mouse_wheel_halflife_x2 := 0.1 # sec
 
-# input controls (ViewportInput changes these)
-var move_action := Vector3.ZERO
-var rotate_action := Vector3.ZERO
-# MOVE TO ViewportInput!
-var left_drag_vector := ZERO_DRAG
-var right_drag_vector := ZERO_DRAG
-var mouse_wheel_accumulator := 0
+
+# input control - these are accumulators
+var move_action := VECTOR3_ZERO
+var rotate_action := VECTOR3_ZERO
 
 # public read-only
 var parent: Spatial # always current
@@ -129,7 +125,7 @@ var _move_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_spherical_position := Vector3.ONE
-var _from_camera_rotation := Vector3.ZERO
+var _from_camera_rotation := VECTOR3_ZERO
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 
@@ -138,9 +134,6 @@ onready var _viewport := get_viewport()
 onready var _tree := get_tree()
 # settings
 onready var _transition_time: float = _settings.camera_transition_time
-onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * MOUSE_MOVE_ADJ
-onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * MOUSE_PITCH_YAW_ADJ
-onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * MOUSE_ROLL_ADJ
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
@@ -197,7 +190,7 @@ static func convert_spherical_position(spherical_position_: Vector3, north: Vect
 	translation_ *= -radius
 	return translation_
 
-func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_position := Vector3.ZERO,
+func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_position := VECTOR3_ZERO,
 		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override spherical_position & camera_rotation.
@@ -218,13 +211,13 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 		VIEW_ZOOM, VIEW_45, VIEW_TOP:
 			spherical_position = selection_item.camera_spherical_positions[view_type]
 			spherical_position[2] /= fov
-			camera_rotation = Vector3.ZERO
+			camera_rotation = VECTOR3_ZERO
 		VIEW_CENTERED:
-			if to_spherical_position != Vector3.ZERO:
+			if to_spherical_position != VECTOR3_ZERO:
 				spherical_position = to_spherical_position
-			camera_rotation = Vector3.ZERO
+			camera_rotation = VECTOR3_ZERO
 		VIEW_UNCENTERED:
-			if to_spherical_position != Vector3.ZERO:
+			if to_spherical_position != VECTOR3_ZERO:
 				spherical_position = to_spherical_position
 			if to_rotations != NULL_ROTATION:
 				camera_rotation = to_rotations
@@ -245,11 +238,13 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 	var to_north: Vector3 = _to_spatial.north_pole if "north_pole" in _to_spatial else ECLIPTIC_NORTH
 	_move_north = (from_north + to_north).normalized()
 	is_moving = true
+	move_action = VECTOR3_ZERO
+	rotate_action = VECTOR3_ZERO
 	_move_longitude_remap = LONGITUDE_REMAP_INIT
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("view_type_changed", view_type)
 
-func move_to_body(to_body: Body, to_view_type := -1, to_spherical_position := Vector3.ZERO,
+func move_to_body(to_body: Body, to_view_type := -1, to_spherical_position := VECTOR3_ZERO,
 		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, is_instant_move) or true)
 	var to_selection_item := _registrar.get_selection_for_body(to_body)
@@ -273,7 +268,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
 	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, Vector3.ZERO, NULL_ROTATION, true)
+		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -341,7 +336,7 @@ func _set_run_state(is_running: bool) -> void:
 	set_process_unhandled_input(is_running)
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, Vector3.ZERO, NULL_ROTATION, true)
+	move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("run_state_changed", self, "_set_run_state")
@@ -416,53 +411,53 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var is_camera_bump := false
 	var is_rotation_change := false
 	_transform = _get_transform(selection_item, view_type, spherical_position, camera_rotation)
-	var move_vector := Vector3.ZERO
-	var rotate_vector := Vector3.ZERO
-	# mouse drag movement
-	if left_drag_vector:
-		move_vector.x = -left_drag_vector.x * delta * _mouse_move_rate
-		move_vector.y = left_drag_vector.y * delta * _mouse_move_rate
-		left_drag_vector = ZERO_DRAG
-	if right_drag_vector:
-		var mouse_rotate := right_drag_vector * delta
-		right_drag_vector = ZERO_DRAG
-#	if _drag_r_button_segment_start and _drag_r_button_segment_start != _drag_r_button_current:
-#		var mouse_rotate := (_drag_r_button_current - _drag_r_button_segment_start) * delta
-#		_drag_r_button_segment_start = _drag_r_button_current
-		# Mouse offset from center at start of drag determines amount of z-rotation vs xy-rotation
-		var mouse_pos := _viewport.get_mouse_position()
-		var z_proportion := (2.0 * mouse_pos - _viewport.size).length() \
-				/ _viewport.size.x
-		z_proportion -= mouse_rotate_min_z_at_offcenter
-		z_proportion /= mouse_rotate_max_z_at_offcenter - mouse_rotate_min_z_at_offcenter
-		z_proportion = clamp(z_proportion, 0.0, 1.0)
-		var center_to_mouse := (mouse_pos - _viewport.size / 2.0).normalized()
-		rotate_vector.z = center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
-		mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
-		rotate_vector.x = mouse_rotate.y
-		rotate_vector.y = mouse_rotate.x
-	# mouse wheel zooming
-	if mouse_wheel_accumulator != 0:
-		var use_now := int(mouse_wheel_accumulator * delta / mouse_wheel_halflife_x2)
-		if use_now == 0:
-			use_now = -1 if mouse_wheel_accumulator < 0 else 1
-		mouse_wheel_accumulator -= use_now
-		move_vector.z = use_now * 0.002
-	# key control
-	if move_action:
-		move_vector += move_action * delta
-	if rotate_action:
-		rotate_vector += rotate_action * delta
-	if move_vector.z:
-		_move_camera_radially(move_vector.z)
+	if move_action.z:
+		var move_z := move_action.z
+		if abs(move_z) > min_action:
+			move_z *= action_rate * delta
+			move_action.z -= move_z
+		else:
+			move_action.z = 0.0
+		_move_camera_radially(move_z)
 		is_dist_change = true
 		is_camera_bump = true
-	if move_vector.x or move_vector.y:
-		_move_camera_tangentially(move_vector)
+	if move_action.x or move_action.y:
+		var move_x := move_action.x
+		if abs(move_x) > min_action:
+			move_x *= action_rate * delta
+			move_action.x -= move_x
+		else:
+			move_action.x = 0.0
+		var move_y := move_action.y
+		if abs(move_y) > min_action:
+			move_y *= action_rate * delta
+			move_action.y -= move_y
+		else:
+			move_action.y = 0.0
+		_move_camera_tangentially(move_x, move_y)
 		is_rotation_change = true
 		is_camera_bump = true
-	if rotate_vector:
-		_rotate_camera(rotate_vector)
+	if rotate_action:
+		var rot_x := rotate_action.x
+		if abs(rot_x) > min_action:
+			rot_x *= action_rate * delta
+			rotate_action.x -= rot_x
+		else:
+			rotate_action.x = 0.0
+		var rot_y := rotate_action.y
+		if abs(rot_y) > min_action:
+			rot_y *= action_rate * delta
+			rotate_action.y -= rot_y
+		else:
+			rotate_action.y = 0.0
+		var rot_z := rotate_action.z
+		if abs(rot_z) > min_action:
+			rot_z *= action_rate * delta
+			rotate_action.z -= rot_z
+		else:
+			rotate_action.z = 0.0
+		_rotate_camera(rot_x, rot_y, rot_z)
+		rotate_action = VECTOR3_ZERO
 		is_rotation_change = true
 		is_camera_bump = true
 	# flagged updates
@@ -498,11 +493,11 @@ func _move_camera_radially(radial_movement: float) -> void:
 	var north := _get_north(selection_item, dist_sq)
 	spherical_position = get_spherical_position(origin, north)
 
-func _move_camera_tangentially(move_vector: Vector3) -> void:
+func _move_camera_tangentially(move_x: float, move_y: float) -> void:
 	# We're only interested in tangental compenents (x & y) but we need a
 	# Vector3 for 3D camera_rotation.
-	move_vector.z = 0.0
-	move_vector = Basis(camera_rotation) * move_vector # any resulting z is ignored
+	var move_vector := Basis(camera_rotation) * Vector3(move_x, move_y, 0.0)
+#	move_vector = Basis(camera_rotation) * move_vector # any resulting z is ignored
 	var origin := _transform.origin
 	var dist_sq := origin.length_squared()
 	var north := _get_north(selection_item, dist_sq)
@@ -519,11 +514,11 @@ func _move_camera_tangentially(move_vector: Vector3) -> void:
 	_transform.origin = origin
 	spherical_position = get_spherical_position(origin, north)
 
-func _rotate_camera(delta_rotations: Vector3) -> void:
+func _rotate_camera(rot_x: float, rot_y: float, rot_z: float) -> void:
 	var basis := Basis(camera_rotation)
-	basis = basis.rotated(basis.x, delta_rotations.x)
-	basis = basis.rotated(basis.y, delta_rotations.y)
-	basis = basis.rotated(basis.z, delta_rotations.z)
+	basis = basis.rotated(basis.x, rot_x)
+	basis = basis.rotated(basis.y, rot_y)
+	basis = basis.rotated(basis.z, rot_z)
 	camera_rotation = basis.get_euler()
 
 func _get_transform(selection_item_: SelectionItem, view_type_: int, spherical_position_: Vector3,
@@ -588,10 +583,4 @@ func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"camera_transition_time":
 			_transition_time = value
-		"camera_mouse_move_rate":
-			_mouse_move_rate = value * MOUSE_MOVE_ADJ
-		"camera_mouse_pitch_yaw_rate":
-			_mouse_pitch_yaw_rate = value * MOUSE_PITCH_YAW_ADJ
-		"camera_mouse_roll_rate":
-			_mouse_roll_rate = value * MOUSE_ROLL_ADJ
 
