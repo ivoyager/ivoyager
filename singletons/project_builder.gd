@@ -106,7 +106,7 @@ var program_nodes := {
 	_Main_ = Main,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
-	_ViewportInput_ = ViewportInput,
+	_ViewportInput_ = ViewportInput, # ok to remove or replace
 	_Registrar_ = Registrar,
 	_TreeManager_ = TreeManager,
 	_PointsManager_ = PointsManager,
@@ -143,7 +143,7 @@ var procedural_classes := {
 	# system_nodes
 	_Body_ = Body,
 	_LPoint_ = LPoint,
-	_BCamera_ = BCamera,
+	_Camera_ = BCamera, # Camera ok, but see comments in tree_nodes/b_camera.gd
 	_WorldEnvironment_ = VEnv, # any WorldEnvironment ok
 	_Model_ = Model, # Spatial ok
 	_Rings_ = TempRings, # Spatial ok

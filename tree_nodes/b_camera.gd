@@ -15,8 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# BCamera because it is always locked to a Body. You can replace with another
-# camera, but will need to modify/remove/replace ViewportInput.
+# This camera is always locked to a Body and constantly orients itself based on
+# that Body's orbit around its parent. You can replace this with another Camera
+# class, but see:
+#    Global signals (singletons/globa.gd)
+#    ViewportInput (program_nodes/viewport_input.gd)
+#    TreeManager (program_nodes/tree_manager.gd)
+#    SelectionManager (tree_refs/selection_manager.gd)
+# (You'll need to either match some BCamera API or modify/replace the latter
+# three classes.
 
 extends Camera
 class_name BCamera

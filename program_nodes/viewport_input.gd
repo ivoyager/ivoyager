@@ -15,9 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for camera movements and click selection. This node expects
-# specific members and functions present in BCamera! Modify, remove or replace
-# this node if these don't apply.
+# Handles input for camera movements and click selection. This node expects two
+# members to be present in your Camera:
+#    move_action
+#    rotate_action
+# You probably need to remove or replace this class if you need a different
+# input system for your camera.
 
 extends Node
 class_name ViewportInput

@@ -23,7 +23,8 @@ class_name SystemBuilder
 
 signal finished()
 
-# project var
+# project vars
+var add_camera := true
 var progress_bodies_denominator := 267 # set to something greater than expected
 
 var progress := 0 # for MainProgBar
@@ -37,11 +38,11 @@ var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
 var _WorldEnvironment_: Script
-var _BCamera_: Script
+var _Camera_: Script
 var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
-var _camera: BCamera
+var _camera: Camera
 var _starfield: WorldEnvironment
 
 
@@ -51,7 +52,8 @@ func project_init():
 	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
 	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
-	_BCamera_ = Global.script_classes._BCamera_
+	if add_camera:
+		_Camera_ = Global.script_classes._Camera_
 	_Body_ = Global.script_classes._Body_
 
 func build() -> void:
@@ -71,7 +73,8 @@ func _build_on_thread(_dummy: int) -> void:
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
 	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
-	_camera = SaverLoader.make_object_or_scene(_BCamera_)
+	if add_camera:
+		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
 
 func _finish_build() -> void:
@@ -82,8 +85,9 @@ func _finish_build() -> void:
 	top_body.add_child(_starfield)
 	_root.add_child(top_body)
 	_tree.set_current_scene(top_body)
-	var start_body: Body = _registrar.bodies_by_name[Global.start_body_name]
-	start_body.add_child(_camera)
+	if add_camera:
+		var start_body: Body = _registrar.bodies_by_name[Global.start_body_name]
+		start_body.add_child(_camera)
 	top_body.pause_mode = Node.PAUSE_MODE_PROCESS
 	_thread = null
 	if _main_prog_bar:
