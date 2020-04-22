@@ -54,6 +54,7 @@ var data_parser := {
 	min_t = "min_t",
 	max_t = "max_t",
 	one_bar_t = "one_bar_t",
+	half_bar_t = "half_bar_t",
 	tenth_bar_t = "tenth_bar_t",
 	file_prefix = "file_prefix",
 }
@@ -72,7 +73,7 @@ var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
 var _table_rows: Dictionary = Global.table_rows
-var _time_date: Array = Global.time_date
+var _times: Array = Global.times
 var _hud_2d_surface: Control
 var _registrar: Registrar
 var _selection_builder: SelectionBuilder
@@ -119,7 +120,7 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 			body.is_planet = true
 		Enums.TABLE_MOONS:
 			body.is_moon = true
-	var time: float = _time_date[0]
+	var time: float = _times[0]
 	var orbit: Orbit
 	if !body.is_top:
 		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, time)

@@ -20,7 +20,7 @@
 extends Control
 class_name GameGUI
 
-# project vars - modify on "objects_instantiated" signal
+# project vars - modify on objects_instantiated signal
 var draggable_panels := true
 var run_gui_classes := {
 	selection_panel = SelectionPanel,
@@ -59,12 +59,13 @@ func project_init():
 	mouse_filter = MOUSE_FILTER_IGNORE
 
 func _clear_procedural() -> void:
+	# remove game GUI on exit or before load
 	selection_manager = null
 	gui_panels.clear()
 	hide()
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
-	if is_new_game:
+	if is_new_game: # rebuild game GUI
 		selection_manager = _SelectionManager_.new()
 		selection_manager.init_as_camera_selection()
 		var start_selection: SelectionItem = _registrar.selection_items[Global.start_body_name]

@@ -37,6 +37,7 @@ onready var _show_data := [
 	["min_t", "LABEL_MIN_TEMP", _qty_strings.UNIT, "degC"],
 	["max_t", "LABEL_MAX_TEMP", _qty_strings.UNIT, "degC"],
 	["one_bar_t", "LABEL_ONE_BAR_TEMP", _qty_strings.UNIT, "degC"],
+	["half_bar_t", "LABEL_HALF_BAR_TEMP", _qty_strings.UNIT, "degC"],
 	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", _qty_strings.UNIT, "degC"],
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],

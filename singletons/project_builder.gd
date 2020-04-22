@@ -106,6 +106,7 @@ var program_nodes := {
 	_Main_ = Main,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
+	_ViewportInput_ = ViewportInput,
 	_Registrar_ = Registrar,
 	_TreeManager_ = TreeManager,
 	_PointsManager_ = PointsManager,

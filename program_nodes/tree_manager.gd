@@ -39,7 +39,6 @@ const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
 
 # unpersisted
-var _global_time_array: Array = Global.time_date
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
@@ -49,11 +48,23 @@ var _camera: BCamera
 var _at_local_star_orbiter: Body
 var _to_local_star_orbiter: Body
 var _skip_local_system := {}
-var _camera_fov := 50.0
-var _viewport_height := 0.0
+var _camera_fov := 0.0
 var _time: float
 var _camera_global_translation: Vector3
+onready var _init_show_orbits := show_orbits
+onready var _init_show_icons := show_icons
+onready var _init_show_labels := show_labels
 
+func project_init() -> void:
+	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	Global.connect("camera_ready", self, "_connect_camera")
+	Global.connect("gui_refresh_requested", self, "_gui_refresh")
+	Global.connect("setting_changed", self, "_settings_listener")
+	_root = Global.program.root
+	_timekeeper = Global.program.Timekeeper
+	_registrar = Global.program.Registrar
+	_root.connect("size_changed", self, "_update_icon_size")
+	_timekeeper.connect("processed", self, "_timekeeper_process")
 
 func set_show_icons(is_show: bool) -> void:
 	show_icons = is_show
@@ -74,24 +85,15 @@ func set_show_orbits(is_show: bool) -> void:
 	assert(DPRINT and prints("set_show_orbits", is_show) or true)
 	emit_signal("show_orbits_changed", is_show)
 
-
-func project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
-	Global.connect("camera_ready", self, "_connect_camera")
-	Global.connect("gui_refresh_requested", self, "_gui_refresh")
-	Global.connect("setting_changed", self, "_settings_listener")
-	_root = Global.program.root
-	_timekeeper = Global.program.Timekeeper
-	_registrar = Global.program.Registrar
-	_root.connect("size_changed", self, "_update_icon_size")
-	_timekeeper.connect("processed", self, "_timekeeper_process")
-	_viewport_height = _root.get_visible_rect().size.y
-
-func _clear_procedural() -> void:
+func _restore_init_state() -> void:
+	_disconnect_camera()
 	_at_local_star_orbiter = null
 	_to_local_star_orbiter = null
-	_disconnect_camera()
 	_skip_local_system.clear()
+	_camera_fov = 0.0 # will trigger an icon size update
+	show_orbits = _init_show_orbits
+	show_icons = _init_show_icons
+	show_labels = _init_show_labels
 
 func _gui_refresh() -> void:
 	emit_signal("show_orbits_changed", show_orbits)
@@ -114,11 +116,11 @@ func _disconnect_camera() -> void:
 		assert(DPRINT and prints("disconnected camera:", _camera) or true)
 	_camera = null
 
-func _timekeeper_process(time: float, _sim_delta: float, engine_delta: float) -> void:
+func _timekeeper_process(time: float, e_delta: float) -> void:
 	if !_camera:
 		return
 	_time = time
-	_camera.tree_manager_process(engine_delta)
+	_camera.tree_manager_process(e_delta)
 	if _camera_fov != _camera.fov:
 		_camera_fov = _camera.fov
 		_update_icon_size()
@@ -158,8 +160,9 @@ func _update_icon_size() -> void:
 	if !_camera:
 		return
 	var scaling_factor := math.get_fov_scaling_factor(_camera.fov)
-	_viewport_height = _root.get_visible_rect().size.y
-	_icon_quad_mesh.size = Vector2.ONE * (_settings.viewport_icon_size * scaling_factor / _viewport_height)
+	var viewport_height := _root.get_visible_rect().size.y
+	_icon_quad_mesh.size = Vector2.ONE * (_settings.viewport_icon_size \
+			* scaling_factor / viewport_height)
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "viewport_icon_size":

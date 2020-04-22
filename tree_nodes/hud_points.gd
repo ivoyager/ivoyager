@@ -71,7 +71,7 @@ func _init():
 func _ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 
-func _timekeeper_process(time: float, _sim_delta: float, _engine_delta: float) -> void:
+func _timekeeper_process(time: float, _e_delta: float) -> void:
 	if !visible or time == _last_update_time:
 		return
 	_last_update_time = time

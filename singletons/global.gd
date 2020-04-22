@@ -23,14 +23,14 @@
 
 extends Node
 
-# sim state broadcasts (from ProjectBuilder & Main)
+# ProjectBuilder & Main broadcasts (program/simulator state)
 signal project_builder_finished()
 signal table_data_imported()
 signal main_inited()
 signal system_tree_built_or_loaded(is_new_game)
 signal system_tree_ready(is_new_game)
 signal about_to_start_simulator(is_new_game)
-signal about_to_free_procedural_nodes()
+signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_exit()
 signal simulator_exited()
 signal game_save_started()
@@ -40,23 +40,28 @@ signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
 
-# other object broadcasts
+# camera broadcasts
+signal camera_ready(camera)
+signal mouse_clicked_viewport_at(position, camera, is_left_click)
+
+
+# other broadcasts
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)
 signal gui_ready(control)
-signal camera_ready(camera)
-signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal about_to_add_environment(environment, is_world_env)
 
-# sim state external control
+# sim state control
 signal sim_stop_required(who) # see Main for external thread coordination
-signal sim_run_allowed(who)
+signal sim_run_allowed(who) # all requiring stop must allow!
 
-# camera/UI requests
+# camera control
 signal move_camera_to_selection_requested(selection_item, view_type, spherical_position,
 		camera_rotation, is_instant_move) # 1st arg can be null; all others optional
 signal move_camera_to_body_requested(body, view_type, spherical_position, camera_rotation,
 		is_instant_move) # 1st arg can be null; all others optional
+
+# GUI requests
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)
@@ -64,14 +69,16 @@ signal toggle_show_hide_gui_requested()
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
-signal rich_text_popup_requested(header_text, bbcode_text)
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
+signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object is indicated; safe to keep container reference
 var state := {} # Main; keys include is_inited, is_running, etc.
-var time_date := [] # Timekeeper [time, year, quarter, month, day] ints except time
+var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
+var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
+var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
 var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
@@ -107,8 +114,8 @@ var disable_quit := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
-var allow_time_reversal := true
-var toggle_real_time_not_pause := false
+var allow_real_world_time := false # Planetarium sets true
+var allow_time_reversal := false # Planetarium sets true
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 3e10 * UnitDefs.KM
 var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")

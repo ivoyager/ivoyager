@@ -207,7 +207,7 @@ func _on_init() -> void:
 		toggle_labels = [{event_class = "InputEventKey", scancode = KEY_L}],
 		toggle_full_screen = [{event_class = "InputEventKey", scancode = KEY_F, shift = true}],
 		
-		toggle_pause_or_real_time = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
+		toggle_pause = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
 		incr_speed = [
 			{event_class = "InputEventKey", scancode = KEY_EQUAL},
 			{event_class = "InputEventKey", scancode = KEY_BRACERIGHT},

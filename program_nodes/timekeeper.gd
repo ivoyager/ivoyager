@@ -27,104 +27,132 @@
 extends Node
 class_name Timekeeper
 
-signal processed(time, sim_delta, engine_delta)
-signal display_date_time_changed(date_time_str)
-signal speed_changed(speed_str) # includes pause change
-signal year_changed(year)
-signal quarter_changed(quarter)
-signal month_changed(month)
-signal day_changed(day)
+signal processed(sim_time, engine_delta) # this drives the simulator
+signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds)
+signal date_changed() # normal day rollover
+signal time_altered() # someone manipulated time!
+
+const SECOND := UnitDefs.SECOND # sim_time conversion
+const MINUTE := UnitDefs.MINUTE
+const HOUR := UnitDefs.HOUR
+const DAY := UnitDefs.DAY
+const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
 
 # project vars
-var speeds := [
-		[], # 0-element not used
-		["GAME_SPEED_REAL_TIME", UnitDefs.SECOND],
-		["GAME_SPEED_MINUTE_PER_SECOND", UnitDefs.MINUTE],
-		["GAME_SPEED_HOUR_PER_SECOND", UnitDefs.HOUR],
-		["GAME_SPEED_DAY_PER_SECOND", UnitDefs.DAY],
-		["GAME_SPEED_WEEK_PER_SECOND", 7.0 * UnitDefs.DAY],
-		["GAME_SPEED_MONTH_PER_SECOND", 30.0 * UnitDefs.DAY]
-	]
-var default_speed := 3
-var realtime_speed := 1
-var show_clock_speed := 3
-var show_seconds_speed := 2
+var start_real_world_time := false # Overrides other start settings
+var speeds := [ # sim_units / delta
+		UnitDefs.SECOND, # real-time if SECOND = 1.0
+		UnitDefs.MINUTE,
+		UnitDefs.HOUR,
+		UnitDefs.DAY,
+		7.0 * UnitDefs.DAY,
+		30.4375 * UnitDefs.DAY,
+]
+var speed_names := [
+	"GAME_SPEED_REAL_TIME",
+	"GAME_SPEED_MINUTE_PER_SECOND",
+	"GAME_SPEED_HOUR_PER_SECOND",
+	"GAME_SPEED_DAY_PER_SECOND",
+	"GAME_SPEED_WEEK_PER_SECOND",
+	"GAME_SPEED_MONTH_PER_SECOND",
+]
+var speed_symbols := [
+	"GAME_SPEED_REAL_TIME",
+	"GAME_SPEED_MINUTE_PER_SECOND",
+	"GAME_SPEED_HOUR_PER_SECOND",
+	"GAME_SPEED_DAY_PER_SECOND",
+	"GAME_SPEED_WEEK_PER_SECOND",
+	"GAME_SPEED_MONTH_PER_SECOND",
+]
+var real_time_speed := 0
+var default_speed := 2
+var show_clock_speed := 2 # this index and lower
+var show_seconds_speed := 1 # this index and lower
+var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
+
 # Regex format "2000-01-01 00:00:00:00". Optional [./-] for date separator.
-# Can truncate after any time unit after year.
+# Can truncate after any time element after year.
 var regexpr := "^(-?\\d+)(?:[\\.\\/\\-](\\d\\d))?(?:[\\.\\/\\-](\\d\\d))?(?: " \
 		+ "(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?$"
 
 # public persisted - read-only!
-var time: float # seconds from J2000 epoch
-var speed_index := 0 # negative if time reversed
-var speed_multiplier := 0.0 # negative if time reversed
-var is_paused := false # lags 1 frame behind actual tree pause
-var year := -1 # 2000, etc...
-var quarter := -1 # 1-4
-var month := -1 # 1-12
-var day := -1 # 1-31
-var ymd := [-1, -1, -1]
-var yqmd := [-1, -1, -1, -1]
-
-# private persisted
-var _last_process_time: float
-var _speed_memory := -1
-var _date_str := ""
-var _hour_str := ""
-var _seconds_str := ""
-var _is_year_changed := true
-var _is_quarter_changed := true
-var _is_month_changed := true
-var _is_day_changed := true
+var time: float # seconds from J2000 epoch (= 2000-01-01 12:00:00)
+var ut1: float # UT1 (mean solar days from J2000 - 0.5)
+var speed_index: int
+var is_paused := true # lags 1 frame behind actual tree pause
+var is_reversed := false
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["time", "speed_index",
-	"speed_multiplier", "is_paused", "year", "quarter", "month", "day", "ymd", "yqmd",
-	"_last_process_time", "_speed_memory", "_date_str", "_hour_str", "_seconds_str"]
+const PERSIST_PROPERTIES := ["time", "ut1", "speed_index", "is_paused", "is_reversed"]
 
-var _time_date: Array = Global.time_date
-var _allow_time_reversal: bool = Global.allow_time_reversal
-var _tree: SceneTree
-var _hm := [-1, -1] # only updated when clock displayed!
-var _day_rollover := -INF
-var _minute_rollover := -INF
-var _second_rollover := -INF
-var _date_time_regex: RegEx
-var _is_started := false
+# public - read only!
+var is_real_world_time := false
+var engine_time: float # accumulated delta
+var speed_multiplier: float # negative if is_reversed
+var show_clock := false
+var show_seconds := false
+var speed_name: String
+var speed_symbol: String
+var times: Array = Global.times # [0] time (s, J2000) [1] engine_time [2] UT1 [3] JDN
+var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
+var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
+
+# private
+var _date_time_regex := RegEx.new()
+var _signal_engine_times := []
+var _signal_infos := []
+var _signal_recycle := []
+var _signal_counter := 0
+onready var _tree := get_tree()
+onready var _allow_real_world_time: bool = Global.allow_real_world_time
+onready var _allow_time_reversal: bool = Global.allow_time_reversal
 
 
-func project_init() -> void:
-	Global.connect("game_load_finished", self, "_init_after_load")
-	Global.connect("gui_refresh_requested", self, "reset")
-	Global.connect("gui_refresh_requested", self, "_signal_speed_changed")
-	Global.connect("run_state_changed", self, "set_process")
-	_tree = Global.program.tree
-	time = Global.start_time
-	_time_date.resize(5)
-	_time_date[0] = time
-	set_yqmd(time, yqmd)
-	_update_from_yqmd()
-	_last_process_time = time
-	is_paused = _tree.paused
-	speed_index = default_speed
-	speed_multiplier = speeds[default_speed][1]
-	_speed_memory = default_speed
-	_date_time_regex = RegEx.new()
+func project_init() -> void: # this is before _ready()
+	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	Global.connect("game_load_finished", self, "_set_ready_state")
+	Global.connect("simulator_exited", self, "_set_ready_state")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	_date_time_regex.compile(regexpr)
+	times.resize(3)
+	date.resize(3)
+	clock.resize(3)
+	_set_init_state()
+	_set_ready_state()
 
-static func get_hour(time_: float) -> int:
-	return wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
+func get_real_world_time() -> float:
+	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
+	var j2000_s := (sys_msec - 946728000000) * 0.001
+	return j2000_s * SECOND # this is sim_time
 
-static func get_hour_minute_second(time_: float) -> Array:
-	var h := wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
-	var m := wrapi(int(floor(time_ / 60.0)), 0, 60)
-	var s := wrapi(int(floor(time_)), 0, 60)
-	return [h, m, s]
+func get_ut1(sim_time: float) -> float:
+	# This is close for J2000 +- 1000s yrs. Beyond that, Julian days diverge
+	# significantly from solar days. Note that our sim solar days are somewhat
+	# but not entirely simplified: sidereal day is constant but orbit is
+	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
+	# simulated Earth's solar day, whatever that happens to be. To do so, we
+	# would need to account for Earth's dynamic ortbit (rates of Om & w).
+	return sim_time / DAY + 0.5
 
-static func set_yqmd(time_: float, yqmd_: Array) -> void:
-	# Convert to Julian Day Number, then calendar integers.
-	var jdn := int(floor(time_ / 86400.0 + 0.5)) + 2451545
+func get_time_from_ut1(ut1_: float) -> float:
+	# see comment above
+	return (ut1_ - 0.5) * DAY
+
+func set_ut1_clock(ut1_: float, clock_: Array) -> void:
+	# Expects clock_ of size 3
+	ut1_ = fposmod(ut1_, 1.0)
+	var total_seconds := int(ut1_ * 86400.0)
+	# warning-ignore:integer_division
+	clock_[0] = total_seconds / 3600
+	# warning-ignore:integer_division
+	clock_[1] = (total_seconds / 60) % 60
+	clock_[2] = total_seconds % 60
+
+func set_gregorian_date2(ut1_: float, date_: Array) -> void:
+	# Expects date_ of size 3
+	var jdn := int(floor(ut1_)) + J2000_JDN 
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -136,249 +164,198 @@ static func set_yqmd(time_: float, yqmd_: Array) -> void:
 	var m := (((h / 153) + 2) % 12) + 1
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
-	yqmd_[0] = (e / 1461) - 4716 + ((14 - m) / 12) # year
+	date_[0] = (e / 1461) - 4716 + ((14 - m) / 12) # year
 	# warning-ignore:integer_division
-	yqmd_[1] = (m - 1) / 3 + 1 # quarter
-	yqmd_[2] = m # month
+	date_[1] = m # month
 	# warning-ignore:integer_division
-	yqmd_[3] = ((h % 153) / 5) + 1 # day
+	date_[2] = ((h % 153) / 5) + 1 # day
 
-static func get_date_time_string(time_: float, sep := "-", n_elements := 6) -> String:
-	var yqmd_ := [-1, -1, -1, -1]
-	set_yqmd(time_, yqmd_)
-	if n_elements == 1:
-		return "%s" % yqmd_[0]
-	if n_elements == 2:
-		return "%s%s%02d" % [yqmd_[0], sep, yqmd_[2]]
-	if n_elements == 3:
-		return "%s%s%02d%s%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3]]
-	var hour := wrapi(int(floor(time_ / 3600.0 + 12.0)), 0, 24)
-	if n_elements == 4:
-		return "%s%s%02d%s%02d %02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3], hour]
-	var minute := wrapi(int(floor(time_ / 60.0)), 0, 60)
-	if n_elements == 5:
-		return "%s%s%02d%s%02d %02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
-				hour, minute]
-	var second := wrapi(int(floor(time_)), 0, 60)
-	if n_elements == 6:
-		return "%s%s%02d%s%02d %02d:%02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
-				hour, minute, second]
-	var sixtieth := wrapi(int(floor(time_ * 60.0)), 0, 60)
-	return "%s%s%02d%s%02d %02d:%02d:%02d:%02d" % [yqmd_[0], sep, yqmd_[2], sep, yqmd_[3],
-			hour, minute, second, sixtieth] 
+func get_current_date_for_file() -> String:
+	return date_format_for_file % date
 
-func convert_date_time_string(string: String, min_elements := 1) -> float:
-	# Inverse of get_date_time_string(). Valid string must follow format
-	# "0000-00-00 00:00:00:00" where "/" or "." can substitute for "-" and
-	# string can be truncated after any element. E.g., "2000", "2000-06",
-	# "2000/06/01 12:12" are ok. A date without hour will be interpreted as
-	# 12:00, not 00:00! Thus, "2000" returns 0.0 (=J2000 epoch).
-	# Returns -INF if can't parse format or not provided min_elements (e.g.,
-	# min_elements = 3 requires year, month, day, or more). Does not check for
-	# input errors such as month > 12 or day > days in month.
-	var regex_match := _date_time_regex.search(string)
-	if !regex_match:
-		return -INF
-	var strings := regex_match.strings
-	if !strings[min_elements - 1]:
-		return -INF
-	var y := int(strings[1]) # required
-	var m := int(strings[2]) if strings[2] else 1 # default January
-	var d := int(strings[3]) if strings[3] else 1 # default 1st
-	var hour := float(strings[4]) if strings[4] else 12.0 # default noon
-	var minute := float(strings[5]) if strings[5] else 0.0
-	var second := float(strings[6]) if strings[6] else 0.0
-	var sixtieth := float(strings[7]) if strings[7] else 0.0
-	# formula below is broken into three parts for the warning-ignore disables
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
-	var jdn: int = (1461 * (y + 4800 + (m - 14) / 12)) / 4
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
-	jdn += (367 * (m - 2 - 12 * ((m - 14) / 12))) / 12
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
-	jdn += -(3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075
-	return float(jdn - 2451545) * 86400.0 + ((hour - 12.0) * 3600.0) \
-			+ (minute * 60.0) + second + (sixtieth / 60.0)
+func set_real_world() -> void:
+	if !_allow_real_world_time:
+		return
+	if !is_real_world_time:
+		set_time_reversed(false)
+		change_speed(0, real_time_speed)
+		is_real_world_time = true
+	time = get_real_world_time()
+	_reset_time()
+	emit_signal("time_altered")
 
 func set_time(new_time: float) -> void:
 	time = new_time
-	_time_date[0] = new_time
-	_last_process_time = new_time
-	reset()
+	is_real_world_time = false
+	_reset_time()
+	emit_signal("time_altered")
 
-func increment_speed(increment: int) -> void:
-	assert(increment == 1 or increment == -1)
-	if _tree.paused: # unpause instead
-		_tree.paused = false
+func set_time_reversed(new_is_reversed: bool) -> void:
+	if !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
-	var time_direction := 1 if speed_index > 0 else -1
-	var new_speed_index := speed_index + increment * time_direction
-	var n_speeds := speeds.size()
-	if new_speed_index >= n_speeds:
-		new_speed_index = n_speeds - 1
-	elif new_speed_index <= -n_speeds:
-		new_speed_index = -n_speeds + 1
-	elif new_speed_index == 0:
-		new_speed_index = time_direction
-	if !_allow_time_reversal and new_speed_index < 1:
-		new_speed_index = 1
-	change_speed(new_speed_index)
+	is_reversed = new_is_reversed
+	speed_multiplier *= -1.0
+	is_real_world_time = false
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+
+func change_speed(delta_index: int, new_index := -1) -> void:
+	# Supply [0, new_index] to set a specific index
+	if new_index == -1:
+		new_index = speed_index + delta_index
+	if new_index < 0:
+		new_index = 0
+	elif new_index >= speeds.size():
+		new_index = speeds.size() - 1
+	if new_index == speed_index:
+		return
+	speed_index = new_index
+	is_real_world_time = false
+	_reset_speed()
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
 
 func can_incr_speed() -> bool:
-	return speed_index < speeds.size() - 1 and speed_index > 1 - speeds.size()
+	return speed_index < speeds.size() - 1
 
 func can_decr_speed() -> bool:
-	return speed_index > 1 or speed_index < -1
+	return speed_index > 0
 
-func is_real_time() -> bool:
-	return speed_index == realtime_speed
-
-func set_real_time(is_real_time: bool) -> void:
-	if is_real_time == (speed_index == realtime_speed):
-		return
-	var new_speed_index = realtime_speed if is_real_time else _speed_memory
-	change_speed(new_speed_index)
-
-func reverse_time():
-	if _allow_time_reversal:
-		change_speed(-speed_index)
-
-func set_reverse_time(is_reverse: bool):
-	if _allow_time_reversal and is_reverse == (speed_index > 0):
-		change_speed(-speed_index)
-
-func change_speed(new_speed_index: int) -> void:
-	assert(_allow_time_reversal or new_speed_index > 0)
-	if speed_index == new_speed_index:
-		return
-	if new_speed_index == realtime_speed:
-		_speed_memory = speed_index
-	speed_index = new_speed_index
-	if speed_index > 0:
-		speed_multiplier = speeds[speed_index][1]
+func make_engine_interval_signal(interval_s: float, offset_s: float) -> String:
+	# Returns a signal string for caller to connect to. This is useful if you
+	# have many GUIs updating at some interval and want them offset (so not on
+	# same frame). The subscription is not persisted so must be renewed in a
+	# loaded game.
+	assert(interval_s > 0.3, "Use _process() for shorter intervals!")
+	assert(offset_s <= interval_s)
+	var signal_str: String
+	if _signal_recycle:
+		signal_str = _signal_recycle.pop_back()
 	else:
-		speed_multiplier = -speeds[-speed_index][1]
-	reset()
-	_signal_speed_changed()
+		_signal_counter += 1
+		signal_str = String(_signal_counter)
+		add_user_signal(signal_str)
+	var signal_info := [signal_str, interval_s]
+	var next_signal := engine_time - fmod(engine_time, interval_s) + offset_s
+	if next_signal <= engine_time:
+		next_signal += interval_s
+	_insert_engine_interval_signal(signal_info, next_signal)
+	return signal_str
 
-func reset() -> void:
-	_day_rollover = -INF
-	_minute_rollover = -INF
-	_second_rollover = -INF
+func recycle_engine_interval_signal(signal_str: String) -> void:
+	# Recycle signal when it is safe for another subscriber to change & use.
+	var n_signals := _signal_infos.size()
+	var index := 0
+	while index < n_signals:
+		var test_signal_str: String = _signal_infos[index][0]
+		if test_signal_str == signal_str:
+			_signal_engine_times.remove(index)
+			_signal_infos.remove(index)
+			_signal_recycle.append(signal_str)
+			return
+		index += 1
+	assert(false, "Attempted to recycle non-existing signal")
 
-func get_current_date_string(sep := "-") -> String:
-	return str(year) + sep + ("%02d" % month) + sep + ("%02d" % day)
+# PUBLIC FUNCTIONS BELOW HAVE NOT BEEN TESTED!!!
 
-func _init_after_load() -> void:
-	_is_started = false
-	_time_date[0] = time
-	_time_date[1] = year
-	_time_date[2] = month
-	_time_date[3] = day
+
+# **************************** VIRTUAL & PRIVATE ******************************
 
 func _ready() -> void:
-	set_process(Global.state.is_running) # should be false
+	_on_ready() # subclass can override
 
 func _process(delta: float) -> void:
-	_on_process(delta) # so subclass can override
+	_on_process(delta) # subclass can override
+
+func _set_init_state() -> void:
+	for signal_info in _signal_infos:
+		var signal_str: String = signal_info[0]
+		_signal_recycle.append(signal_str)
+	_signal_infos.clear()
+	_signal_engine_times.clear()
+	_signal_engine_times.append(INF)
+	time = Global.start_time
+	engine_time = 0.0
+	times[0] = time
+	times[1] = engine_time
+	is_paused = true
+	speed_index = default_speed
+
+func _set_ready_state() -> void:
+	_reset_time()
+	_reset_speed()
+
+func _reset_time() -> void:
+	ut1 = get_ut1(time)
+	times[0] = time
+	times[2] = ut1
+	set_gregorian_date2(ut1, date)
+	set_ut1_clock(ut1, clock)
+
+func _reset_speed() -> void:
+	speed_multiplier = speeds[speed_index]
+	if is_reversed:
+		speed_multiplier *= -1.0
+	speed_name = speed_names[speed_index]
+	speed_symbol = speed_symbols[speed_index]
+	show_clock = speed_index <= show_clock_speed
+	show_seconds = show_clock and speed_index <= show_seconds_speed
+
+func _on_ready() -> void:
+	set_process(false) # changes with "run_state_changed" signal
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	if start_real_world_time:
+		set_real_world()
+
+func _on_run_state_changed(is_running: bool) -> void:
+	set_process(is_running)
+	if is_running and is_real_world_time:
+		yield(_tree, "idle_frame")
+		set_real_world()
 
 func _on_process(delta: float) -> void:
-	# detect and signal changes in pause state 
-	if _tree.paused:
-		if !is_paused:
-			is_paused = true
-			reset()
-			_signal_speed_changed()
-		if _is_started:
-			emit_signal("processed", time, 0.0, delta)
-			return
-	elif is_paused:
-		is_paused = false
-		reset()
-		_signal_speed_changed()
-	if !_is_started:
-		_is_started = true
-		print("Starting Timekeeper")
-	# simulator time
-	time += delta * speed_multiplier # speed_multiplier < 0 for time reversal
-	_time_date[0] = time
-	_update_display_and_calendar()
-	var sim_delta := time - _last_process_time
-	_last_process_time = time
-	emit_signal("processed", time, sim_delta, delta)
+	if is_paused != _tree.paused:
+		is_paused = !is_paused
+		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
+				show_clock, show_seconds)
+	engine_time += delta
+	times[1] = engine_time
 
-func _update_display_and_calendar() -> void:
-	# Override this function for alternative calendar/clock
-	var update_display := false
-	if time > _day_rollover or (speed_index < 0 and time < _day_rollover - 1.0):
-		set_yqmd(time, yqmd)
-		_update_from_yqmd()
-		_day_rollover = ceil(time / 86400.0 - 0.5) + 0.5
-		_date_str = "%s-%02d-%02d" % ymd
-		update_display = true
-	var show_clock := speed_index <= show_clock_speed and speed_index >= -show_clock_speed
-	if show_clock and (time > _minute_rollover or speed_index < 0):
-		var total_minutes := time / 60.0
-		_hm[0] = wrapi(int(floor(time / 3600.0 + 12.0)), 0, 24) # hour
-		_hm[1] = wrapi(int(floor(total_minutes)), 0, 60) # minute
-		_minute_rollover = ceil(total_minutes) * 60.0
-		_hour_str = " %02d:%02d" % _hm
-		update_display = true
-	var show_seconds := show_clock and speed_index <= show_seconds_speed and speed_index >= -show_seconds_speed
-	if show_seconds and (time > _second_rollover or speed_index < 0):
-		var second := wrapi(int(floor(time)), 0, 60)
-		_second_rollover = ceil(time)
-		_seconds_str = ":%02d" % second
-		update_display = true
-	if update_display:
-		var date_time_str := _date_str
-		if show_clock:
-			date_time_str += _hour_str
-			if show_seconds:
-				date_time_str += _seconds_str
-		emit_signal("display_date_time_changed", date_time_str)
-	if _is_day_changed:
-		_is_day_changed = false
-		emit_signal("day_changed", day)
-	if _is_month_changed:
-		_is_month_changed = false
-		emit_signal("month_changed", month)
-	if _is_quarter_changed:
-		_is_quarter_changed = false
-		emit_signal("quarter_changed", quarter)
-	if _is_year_changed:
-		_is_year_changed = false
-		emit_signal("year_changed", year)
+	var is_date_change := false
+	if !is_paused:
+		time += delta * speed_multiplier
+		var new_ut1 := get_ut1(time)
+		if floor(new_ut1) != floor(ut1): # new solar day
+			set_gregorian_date2(new_ut1, date)
+			is_date_change = true
+		set_ut1_clock(new_ut1, clock)
+		ut1 = new_ut1
+		times[0] = time
+		times[2] = new_ut1
 
-func _update_from_yqmd() -> void:
-	if year != yqmd[0]:
-		year = yqmd[0]
-		ymd[0] = year
-		_time_date[1] = year
-		_is_year_changed = true
-	if quarter != yqmd[1]:
-		quarter = yqmd[1]
-		_time_date[2] = quarter
-		_is_quarter_changed = true
-	if month != yqmd[2]:
-		month = yqmd[2]
-		ymd[1] = month
-		_time_date[3] = month
-		_is_month_changed = true
-	if day != yqmd[3]:
-		day = yqmd[3]
-		ymd[2] = day
-		_time_date[4] = day
-		_is_day_changed = true
-	
-func _signal_speed_changed() -> void:
-	if _tree.paused:
-		emit_signal("speed_changed", "GAME_SPEED_PAUSED")
-		return
-	if speed_index > 0:
-		emit_signal("speed_changed", tr(speeds[speed_index][0]))
-	else:
-		emit_signal("speed_changed", "-" + tr(speeds[-speed_index][0]))
+	# We normally stagger engine interval signals to spread out the load on the
+	# main thread (under the assumption these trigger GUI or other
+	# computations).
+	var process_one := true
+	while engine_time > _signal_engine_times[0]: # fast negative result!
+		var signal_time: float = _signal_engine_times.pop_front()
+		var signal_info: Array = _signal_infos.pop_front()
+		var signal_str: String = signal_info[0]
+		var interval_s: float = signal_info[1]
+		signal_time += interval_s
+		if signal_time < engine_time: # we are behind for some reason!
+			process_one = false
+			signal_time += interval_s
+			while signal_time < engine_time:
+				signal_time += interval_s
+		_insert_engine_interval_signal(signal_info, signal_time)
+		emit_signal(signal_str)
+		if process_one:
+			break
+	if is_date_change:
+		emit_signal("date_changed")
+	emit_signal("processed", time, delta)
+
+func _insert_engine_interval_signal(signal_info: Array, next_signal: float) -> void:
+	var index := _signal_engine_times.bsearch(next_signal, false) # after equal value
+	_signal_engine_times.insert(index, next_signal)
+	_signal_infos.insert(index, signal_info)

@@ -50,7 +50,7 @@ const PERSIST_PROPERTIES := ["reference_normal", "elements_at_epoch", "element_r
 const PERSIST_OBJ_PROPERTIES := []
 
 # vars below are for memoization
-var _time_date: Array = Global.time_date
+var _times: Array = Global.times
 var _present_time_index := -INF
 var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _future_elements := {}
@@ -246,7 +246,7 @@ func _get_elements(time: float) -> Array:
 	var time_index := round(time * update_frequency) # rounded float!
 	if time_index == _present_time_index:
 		return _present_elements # this is the vast majority of calls!
-	var present_time_index := round(_time_date[0] * update_frequency)
+	var present_time_index := round(_times[0] * update_frequency)
 	var is_present := time_index == present_time_index # time is close to current 
 	if is_present:
 		_present_time_index = present_time_index
@@ -267,12 +267,7 @@ func _get_elements(time: float) -> Array:
 	var i: float = elements_at_epoch[2] + element_rates[2] * t_clamped
 	var Om: float = elements_at_epoch[3] + element_rates[3] * t
 	var w: float = elements_at_epoch[4] + element_rates[4] * t
-	# M0 adjustmet below was discovered (by trial & error) to fix facing of
-	# tidally locked moons and prevent disconinous "jumps" when applying
-	# precessions above.
-	# FIXME: Is this because we aren't updating Body.reference_basis?
-	# FIXME: Triton facing still changes over long periods (yay Triton!). Does
-	# one or the other precession need reversal for retrograde?
+	# M is relative to Om & w, so we need to deduct Om & w changes from M0
 	var M0: float = elements_at_epoch[5] - (element_rates[3] + element_rates[4]) * t
 	var n: float = elements_at_epoch[6] # does not change
 	if m_modifiers: # Jupiter, Saturn, Uranus, Neptune & Pluto only
@@ -314,7 +309,7 @@ func _get_elements(time: float) -> Array:
 			# it should usually be sufficient to flush past only
 			for key in _flush_indexes:
 				_future_elements.erase(key)
-		else: # for some weird reason we have very many future elements
+		else: # for some reason we have very many future elements
 			_future_elements.clear()
 		_flush_indexes.clear()
 	# memoize and return

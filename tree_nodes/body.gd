@@ -66,14 +66,15 @@ var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3()
-# optional characteristics
+# optional characteristics (for display, INF -> ?; -INF -> don't show)
 var density := INF
-var albedo := INF
-var surf_pres := INF
+var albedo := -INF
+var surf_pres := -INF
 var surf_t := -INF # NA for gas giants
 var min_t := -INF
 var max_t := -INF
 var one_bar_t := -INF # venus, gas giants
+var half_bar_t := -INF # earth, venus, gas giants
 var tenth_bar_t := -INF # gas giants
 # file reading
 var file_prefix: String
@@ -92,7 +93,8 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
 	"right_ascension", "declination",
 	"has_minor_moons", "reference_basis", "north_pole",
-	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t", "one_bar_t", "tenth_bar_t",
+	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
+	"one_bar_t", "half_bar_t", "tenth_bar_t",
 	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
@@ -113,7 +115,7 @@ var hud_too_close := 0.0
 
 # private
 var _aux_graphic_process := false
-var _time_array: Array = Global.time_date
+var _times: Array = Global.times
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
@@ -210,7 +212,7 @@ func _on_ready() -> void:
 
 func _update_orbit_change():
 	if tidally_locked:
-		var new_north_pole := orbit.get_normal(_time_array[0])
+		var new_north_pole := orbit.get_normal(_times[0])
 		if axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
 			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)

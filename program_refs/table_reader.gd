@@ -86,8 +86,7 @@ func import_table_data():
 		_fields = {} # column index by field name
 		_rows = {} # row index by item key
 		_read_table()
-		# Global dict _wiki_titles was populated on the fly; otherwise, all
-		# global dicts are populated bellow...
+		# wiki_titles was populated on the fly; save data, fields, rows below
 		_table_data[key] = _data
 		_table_fields[key] = _fields
 		_table_rows[key] = _rows
@@ -102,10 +101,10 @@ func _read_table() -> void:
 		print("ERROR: Could not open file: ", _path)
 		assert(false)
 	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
-	var is_fields_line := true
 	_data_types = []
 	_units = []
 	_defaults = []
+	var is_1st_line := true
 	var line := file.get_line()
 	while !file.eof_reached():
 		var commenter := line.find("#")
@@ -113,9 +112,9 @@ func _read_table() -> void:
 			line = file.get_line()
 			continue
 		_line_array = Array(line.split(delimiter, true))
-		if is_fields_line: # always the 1st non-comment line
-			_read_fields_line()
-			is_fields_line = false
+		if is_1st_line:
+			_read_fields_line() # always the 1st non-comment line
+			is_1st_line = false
 		elif _line_array[0] == "Data_Type":
 			_data_types = _line_array
 		elif _line_array[0] == "Units":
@@ -128,7 +127,7 @@ func _read_table() -> void:
 		line = file.get_line()
 
 func _read_fields_line() -> void:
-	assert(_line_array[0] == "key") # fields[0] is always key!
+	assert(_line_array[0] == "key", "1st field must be 'key'")
 	var column := 0
 	for field in _line_array:
 		if field == "Comments":
@@ -139,7 +138,7 @@ func _read_fields_line() -> void:
 func _read_data_line() -> void:
 	var row := _data.size()
 	var row_data := []
-	row_data.resize(_fields.size())
+	row_data.resize(_fields.size()) # unfilled row_data are nulls
 	_row_key = _line_array[0]
 	assert(!_rows.has(_row_key))
 	_rows[_row_key] = row
@@ -191,7 +190,6 @@ func _read_data_line() -> void:
 					assert(!_wiki_titles.has(_row_key))
 					_wiki_titles[_row_key] = _cell
 	_data.append(row_data)
-#	print(row_data)
 
 func _line_error(msg := "") -> bool:
 	print("ERROR in _read_data_line...")

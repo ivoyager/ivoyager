@@ -53,7 +53,7 @@ const LOG_OF_10 := log(10)
 # project vars
 var multipliers := unit_defs.MULTIPLIERS
 var functions := unit_defs.FUNCTIONS
-var exp_str := "x10^" # or "e", "E"
+var exp_str := "e" # or "E" or "x10^"
 var prefix_names := [
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
