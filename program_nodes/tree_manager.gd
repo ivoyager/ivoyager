@@ -15,8 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Manages processing and visibility of system tree nodes.
+# Manages processing and visibility of system tree nodes. This node expects a
+# lot of interface specific to BCamera (search '_camera' below). You can
+# replace with your own Camera class but you will need to match some BCamera
+# API or modify functios below.
 
 extends Node
 class_name TreeManager
@@ -44,7 +46,7 @@ var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
 var _root: Viewport
 var _timekeeper: Timekeeper
 var _registrar: Registrar
-var _camera: BCamera
+var _camera: Camera
 var _at_local_star_orbiter: Body
 var _to_local_star_orbiter: Body
 var _skip_local_system := {}
@@ -101,7 +103,7 @@ func _gui_refresh() -> void:
 	emit_signal("show_labels_changed", show_labels)
 	_update_icon_size()
 
-func _connect_camera(camera: BCamera) -> void:
+func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera

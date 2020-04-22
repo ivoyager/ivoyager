@@ -15,8 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# BCamera because it is always locked to a Body. You can replace with another
-# camera, but will need to modify/remove/replace ViewportInput.
+# This camera is always locked to a Body and constantly orients itself based on
+# that Body's orbit around its parent. You can replace this with another Camera
+# class, but see:
+#    Global signals (singletons/globa.gd)
+#    ViewportInput (program_nodes/viewport_input.gd)
+#    TreeManager (program_nodes/tree_manager.gd)
+#    SelectionManager (tree_refs/selection_manager.gd)
+# (You'll need to either match some BCamera API or modify/replace the latter
+# three classes.
 
 extends Camera
 class_name BCamera
@@ -66,8 +73,11 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
+
+# TODO: Rename the next 2: view_position, view_orientation
 var spherical_position := VECTOR3_ZERO # longitude, latitude, radius
 var camera_rotation := VECTOR3_ZERO # relative to pointing at parent, north up
+
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 

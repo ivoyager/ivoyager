@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Wraps currently selected item and keeps selection history.
+# Wraps currently selected item and keeps selection history. Depends on certain
+# API present in BCamera (replicate that API or modify this class).
 
 extends Reference
 class_name SelectionManager
@@ -52,7 +53,7 @@ var _history := [] # weakrefs
 var _history_index := -1
 var _supress_history := false
 var _supress_camera_move := false
-var _connected_camera: BCamera # null unless _is_camera_selection
+var _connected_camera: Camera # null unless _is_camera_selection
 
 func init_as_camera_selection() -> void:
 	_is_camera_selection = true

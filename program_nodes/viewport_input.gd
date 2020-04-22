@@ -15,15 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for camera movements and click selection. This node expects
-# specific members and functions present in BCamera. Modify, remove or replace
-# this node if these don't apply.
-#
-# TODO: Shift-drag -> offset
-# TODO: alt-drag - yaw
+# Handles input for camera movements and click selection. This node expects two
+# members to be present in your Camera:
+#    move_action
+#    rotate_action
+# You probably need to remove or replace this class if you need a different
+# input system for your camera.
 
 extends Node
 class_name ViewportInput
+
+enum {
+	DRAG_MOVE,
+	DRAG_PITCH_YAW,
+	DRAG_ROLL,
+	DRAG_PITCH_YAW_ROLL_HYBRID
+}
 
 const MOUSE_WHEEL_ADJ := 2.5 # adjust so default setting can be ~1.0
 const MOUSE_MOVE_ADJ := 0.4
@@ -42,9 +49,16 @@ const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 
-var mouse_rotate_min_z_at_offcenter := 0.2
-var mouse_rotate_max_z_at_offcenter := 0.7
+# project vars
+var l_button_drag := DRAG_MOVE
+var r_button_drag := DRAG_PITCH_YAW_ROLL_HYBRID
+var cntr_drag := DRAG_PITCH_YAW_ROLL_HYBRID # keep same as above for Mac!
+var shift_drag := DRAG_PITCH_YAW
+var alt_drag := DRAG_ROLL
+var hybrid_drag_center_zone := 0.2 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
+var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 
+# private
 var _camera: Camera
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
@@ -59,20 +73,17 @@ onready var _key_move_rate: float = _settings.camera_key_move_rate * KEY_MOVE_AD
 onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * KEY_PITCH_YAW_ADJ
 onready var _key_roll_rate: float = _settings.camera_key_roll_rate * KEY_ROLL_ADJ
 
-var _drag_l_button_start := VECTOR2_ZERO
-var _drag_l_button_segment_start := VECTOR2_ZERO
-var _drag_r_button_start := VECTOR2_ZERO
-var _drag_r_button_segment_start := VECTOR2_ZERO
-var _left_drag_vector := VECTOR2_ZERO
-var _right_drag_vector := VECTOR2_ZERO
-
+var _drag_mode := -1 # one of DRAG_ enums when active
+var _drag_start := VECTOR2_ZERO
+var _drag_segment_start := VECTOR2_ZERO
+var _drag_vector := VECTOR2_ZERO
 var _mwheel_turning := 0.0
 var _move_pressed := VECTOR3_ZERO
 var _rotate_pressed := VECTOR3_ZERO
 
 
 func project_init() -> void:
-	Global.connect("run_state_changed", self, "set_process") # starts/stops
+	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
 
@@ -85,24 +96,41 @@ func _connect_camera(camera: Camera) -> void:
 func _ready():
 	set_process(false)
 
+func _on_run_state_changed(is_running: bool) -> void:
+	set_process(is_running)
+	set_process_unhandled_input(is_running)
+
 func _process(delta: float) -> void:
-	if _left_drag_vector:
-		_camera.move_action.x -= _left_drag_vector.x * delta * _mouse_move_rate
-		_camera.move_action.y += _left_drag_vector.y * delta * _mouse_move_rate
-		_left_drag_vector = VECTOR2_ZERO
-	if _right_drag_vector: # hybrid mode
-		var mouse_rotate := _right_drag_vector * delta
-		_right_drag_vector = VECTOR2_ZERO
-		var z_proportion := (2.0 * _drag_r_button_start - _viewport.size).length() \
-				/ _viewport.size.x
-		z_proportion -= mouse_rotate_min_z_at_offcenter
-		z_proportion /= mouse_rotate_max_z_at_offcenter - mouse_rotate_min_z_at_offcenter
-		z_proportion = clamp(z_proportion, 0.0, 1.0)
-		var center_to_mouse := (_viewport.get_mouse_position() - _viewport.size / 2.0).normalized()
-		_camera.rotate_action.z += center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
-		mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
-		_camera.rotate_action.x += mouse_rotate.y
-		_camera.rotate_action.y += mouse_rotate.x
+	if _drag_vector:
+		match _drag_mode:
+			DRAG_MOVE:
+				var multiplier := delta * _mouse_move_rate
+				_camera.move_action.x -= _drag_vector.x * multiplier
+				_camera.move_action.y += _drag_vector.y * multiplier
+			DRAG_PITCH_YAW:
+				var multiplier := delta * _mouse_pitch_yaw_rate
+				_camera.rotate_action.x += _drag_vector.y * multiplier
+				_camera.rotate_action.y += _drag_vector.x * multiplier
+			DRAG_ROLL:
+				var multiplier := delta * _mouse_roll_rate
+				var mouse_position := _drag_segment_start + _drag_vector
+				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
+				_camera.rotate_action.z += center_to_mouse.cross(_drag_vector) * multiplier
+			DRAG_PITCH_YAW_ROLL_HYBRID:
+				# one or a mix of two above based on mouse position
+				var mouse_rotate := _drag_vector * delta
+				var z_proportion := (2.0 * _drag_start - _viewport.size).length() / _viewport.size.x
+				z_proportion -= hybrid_drag_center_zone
+				z_proportion /= hybrid_drag_outside_zone - hybrid_drag_center_zone
+				z_proportion = clamp(z_proportion, 0.0, 1.0)
+				var mouse_position := _drag_segment_start + _drag_vector
+				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
+				_camera.rotate_action.z += center_to_mouse.cross(mouse_rotate) \
+						* z_proportion * _mouse_roll_rate
+				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
+				_camera.rotate_action.x += mouse_rotate.y
+				_camera.rotate_action.y += mouse_rotate.x
+		_drag_vector = VECTOR2_ZERO
 	if _mwheel_turning:
 		_camera.move_action.z += _mwheel_turning * delta
 		_mwheel_turning = 0.0
@@ -116,45 +144,41 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var is_handled := false
 	if event is InputEventMouseButton:
+		var button_index: int = event.button_index
 		# BUTTON_WHEEL_UP & _DOWN always fire twice (pressed then not pressed)
-		if event.button_index == BUTTON_WHEEL_UP:
+		if button_index == BUTTON_WHEEL_UP:
 			_mwheel_turning = _mouse_in_out_rate
 			is_handled = true
-		elif event.button_index == BUTTON_WHEEL_DOWN:
+		elif button_index == BUTTON_WHEEL_DOWN:
 			_mwheel_turning = -_mouse_in_out_rate
 			is_handled = true
 		# start/stop mouse drag or process a mouse click
-		elif event.button_index == BUTTON_LEFT:
-			if event.pressed:
-				_drag_l_button_start = _viewport.get_mouse_position()
-				_drag_l_button_segment_start = _drag_l_button_start
-			else:
-				if _drag_l_button_start == _viewport.get_mouse_position(): # mouse click!
+		elif button_index == BUTTON_LEFT or button_index == BUTTON_RIGHT:
+			if event.pressed: # possible drag start (but may be a click selection!)
+				_drag_start = event.position
+				_drag_segment_start = _drag_start
+				if event.control:
+					_drag_mode = cntr_drag
+				elif event.shift:
+					_drag_mode = shift_drag
+				elif event.alt:
+					_drag_mode = alt_drag
+				elif button_index == BUTTON_RIGHT:
+					_drag_mode = r_button_drag
+				else:
+					_drag_mode = l_button_drag
+			else: # end of drag, or button-up after a mouse click selection
+				if _drag_start == event.position: # was a mouse click!
 					Global.emit_signal("mouse_clicked_viewport_at", event.position, _camera, true)
-				_drag_l_button_start = VECTOR2_ZERO
-				_drag_l_button_segment_start = VECTOR2_ZERO
-			is_handled = true
-		elif event.button_index == BUTTON_RIGHT:
-			if event.pressed:
-				_drag_r_button_start = _viewport.get_mouse_position()
-				_drag_r_button_segment_start = _drag_r_button_start
-			else:
-				if _drag_r_button_start == _viewport.get_mouse_position(): # it was a mouse click, not drag movement
-					Global.emit_signal("mouse_clicked_viewport_at", event.position, _camera, false)
-				_drag_r_button_start = VECTOR2_ZERO
-				_drag_r_button_segment_start = VECTOR2_ZERO
+				_drag_start = VECTOR2_ZERO
+				_drag_segment_start = VECTOR2_ZERO
+				_drag_mode = -1
 			is_handled = true
 	elif event is InputEventMouseMotion:
-		# accumulate mouse drag motion
-		if _drag_l_button_segment_start:
-			var current_mouse_pos := _viewport.get_mouse_position()
-			_left_drag_vector += current_mouse_pos - _drag_l_button_segment_start
-			_drag_l_button_segment_start = current_mouse_pos
-			is_handled = true
-		if _drag_r_button_segment_start:
-			var current_mouse_pos := _viewport.get_mouse_position()
-			_right_drag_vector += current_mouse_pos - _drag_r_button_segment_start
-			_drag_r_button_segment_start = current_mouse_pos
+		if _drag_segment_start: # accumulate mouse drag motion
+			var current_mouse_pos: Vector2 = event.position
+			_drag_vector += current_mouse_pos - _drag_segment_start
+			_drag_segment_start = current_mouse_pos
 			is_handled = true
 	elif event.is_action_type():
 		if event.is_pressed():

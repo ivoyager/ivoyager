@@ -15,13 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# I, Voyager handles input in these ways:
+# I, Voyager handles input in three  ways:
 #   - here as _input()
-#   - BCamera as _unhandled_input() [various mouse & key actions]
-#   - GameGUI as _input()
-#   - MainMenu & popups as _unhandled_key_input() [to capture ESC]
-#   - UIs as _gui_input
-# Actions can be defined or modified in InputMapManager.
+#   - various GUI as _gui_input() or _unhandled_key_input()
+#   - ViewportInput as _unhandled_input()
+#
+# Most actions are defined at runtime by InputMapManager (not project.godot!).
 
 extends Node
 class_name InputHandler
