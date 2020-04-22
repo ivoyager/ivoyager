@@ -66,8 +66,11 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
+
+# TODO: Rename the next 2: view_position, view_orientation
 var spherical_position := VECTOR3_ZERO # longitude, latitude, radius
 var camera_rotation := VECTOR3_ZERO # relative to pointing at parent, north up
+
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
