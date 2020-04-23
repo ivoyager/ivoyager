@@ -20,8 +20,11 @@ extends VBoxContainer
 class_name MainMenu
 const SCENE := "res://ivoyager/gui_admin/main_menu.tscn"
 
-var planetarium_mode := false
 var button_infos := [] # shouldn't need but public just in case
+
+var planetarium_mode := false
+onready var mouse_trigger: Control = self # used for Planetarium vis control
+onready var mouse_visible := [self] # used for Planetarium vis control
 
 var _state: Dictionary = Global.state
 var _main: Main

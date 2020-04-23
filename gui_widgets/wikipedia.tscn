@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/wikipedia.gd" type="Script" id=1]
+
+[node name="Wikipedia" type="RichTextLabel"]
+margin_top = 275.0
+margin_right = 352.0
+margin_bottom = 305.0
+rect_min_size = Vector2( 100, 30 )
+bbcode_enabled = true
+bbcode_text = "[url]Wikipedia[/url]"
+text = "Wikipedia"
+scroll_active = false
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
