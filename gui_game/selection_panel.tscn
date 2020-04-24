@@ -25,13 +25,13 @@ __meta__ = {
 [node name="ImageBox" type="VBoxContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 515.0
+margin_right = 486.0
 margin_bottom = 333.0
 size_flags_horizontal = 0
 
 [node name="NameBox" type="HBoxContainer" parent="ImageBox"]
-margin_left = 208.0
-margin_right = 300.0
+margin_left = 193.0
+margin_right = 285.0
 margin_bottom = 14.0
 size_flags_horizontal = 4
 size_flags_vertical = 0
@@ -46,7 +46,7 @@ margin_right = 92.0
 [node name="SelectionImage" parent="ImageBox" instance=ExtResource( 4 )]
 
 [node name="ViewButtons" parent="ImageBox" instance=ExtResource( 5 )]
-margin_right = 508.0
+margin_right = 479.0
 
 [node name="SelectionButtons" parent="." instance=ExtResource( 6 )]
 margin_left = 7.0
@@ -55,28 +55,31 @@ margin_right = 74.0
 margin_bottom = 27.0
 
 [node name="TRBox" type="VBoxContainer" parent="."]
-margin_left = 313.0
+margin_left = 293.0
 margin_top = 7.0
 margin_right = 543.0
-margin_bottom = 244.0
+margin_bottom = 294.0
 size_flags_horizontal = 8
 size_flags_vertical = 0
 custom_constants/separation = 17
 alignment = 1
 
 [node name="ShowButtons" parent="TRBox" instance=ExtResource( 7 )]
-margin_left = 70.0
-margin_right = 230.0
+margin_left = 90.0
+margin_right = 250.0
 margin_bottom = 20.0
 size_flags_horizontal = 8
 
-[node name="SelectionData" parent="TRBox" instance=ExtResource( 8 )]
-margin_left = -1.0
+[node name="Scroll" type="ScrollContainer" parent="TRBox"]
 margin_top = 37.0
-margin_right = 229.0
-margin_bottom = 237.0
-rect_min_size = Vector2( 230, 200 )
-size_flags_horizontal = 4
+margin_right = 250.0
+margin_bottom = 287.0
+rect_min_size = Vector2( 0, 250 )
+scroll_horizontal_enabled = false
+
+[node name="SelectionData" parent="TRBox/Scroll" instance=ExtResource( 8 )]
+margin_right = 250.0
+rect_min_size = Vector2( 250, 0 )
 
 [node name="BLBox" type="VBoxContainer" parent="."]
 margin_left = 7.0

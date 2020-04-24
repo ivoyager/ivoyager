@@ -104,6 +104,7 @@ func build_system_tree() -> void:
 	_state.is_splash_screen = false
 	_system_builder.build()
 	yield(_system_builder, "finished")
+	_state.is_system_built = true
 	Global.emit_signal("system_tree_built_or_loaded", true)
 	yield(_tree, "idle_frame")
 	Global.emit_signal("system_tree_ready", true)
@@ -127,6 +128,7 @@ func exit(exit_now: bool) -> void:
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
+	_state.is_system_built = false
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
@@ -184,6 +186,7 @@ func load_game(path: String) -> void:
 		print("ERROR: Could not find " + path)
 		return
 	_state.is_splash_screen = false
+	_state.is_system_built = false
 	require_stop(self)
 	yield(self, "threads_finished")
 	_state.is_loaded_game = true
@@ -199,6 +202,7 @@ func load_game(path: String) -> void:
 	if _main_prog_bar:
 		_main_prog_bar.stop()
 	_was_paused = _settings.loaded_game_is_paused or _timekeeper.is_paused
+	_state.is_system_built = true
 	Global.emit_signal("system_tree_built_or_loaded", false)
 	yield(_tree, "idle_frame")
 	Global.emit_signal("system_tree_ready", false)
@@ -237,6 +241,7 @@ func _init() -> void:
 func _on_init() -> void:
 	_state.is_inited = false
 	_state.is_splash_screen = true
+	_state.is_system_built = false
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""

@@ -16,16 +16,35 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Control
+extends VBoxContainer
+
+var left_truncate := 45
+var bottom_margin := 10
+
+onready var mouse_trigger: Control = self
+onready var mouse_visible: Array
+onready var lock_mechanism := [$LockBox/LockLabel, $LockBox/LockCkBx]
+onready var all_gui := [self]
+
+var _settings: Dictionary = Global.settings
+onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
-	get_parent().register_mouse_trigger_guis($SystemNavigator, [self])
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [],
+			CONNECT_ONESHOT)
+	$LockBox/LockCkBx.pressed = _settings.lock_navigator
+	mouse_visible = lock_mechanism if _settings.lock_navigator else all_gui
+	$LockBox/LockCkBx.connect("toggled", self, "_on_lock_toggled")
 	$SystemNavigator.horizontal_expansion = 590.0
 	hide()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	$SystemNavigator.set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
-	$SystemNavigator.rect_position.x -= 54
-	$SystemNavigator.rect_position.y -= 20
+	set_anchors_and_margins_preset(PRESET_BOTTOM_LEFT, PRESET_MODE_MINSIZE)
+	rect_position.x -= left_truncate
+	rect_position.y -= bottom_margin
+	$LockBox/Spacer.rect_min_size.x = left_truncate
 	show()
+
+func _on_lock_toggled(pressed: bool) -> void:
+	mouse_visible = lock_mechanism if pressed else all_gui
+	_settings_manager.change_current("lock_navigator", pressed)

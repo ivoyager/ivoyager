@@ -19,7 +19,6 @@
 extends VBoxContainer
 
 var _points_manager: PointsManager = Global.program.PointsManager
-
 onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_checkbox: CheckBox = $Orbits/CheckBox
 onready var _labels_checkbox: CheckBox = $Labels/CheckBox
@@ -64,7 +63,6 @@ func _ready() -> void:
 		var rt_label: RichTextLabel = _asteroid_labels[key]
 		rt_label.bbcode_text = "[url]" + tr(key) + "[/url]"
 		rt_label.connect("meta_clicked", self, "_on_meta_clicked", [key])
-	get_parent().register_mouse_trigger_guis(self, [self])
 	hide()
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:

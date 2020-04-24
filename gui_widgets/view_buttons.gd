@@ -20,6 +20,9 @@
 
 extends HBoxContainer
 
+var use_small_txt := false
+var include_recenter := false
+
 var _camera: Camera
 onready var _recenter_button: Button = $Recenter
 onready var _zoom_button: Button = $Zoom
@@ -28,11 +31,25 @@ onready var _top_button: Button = $Top
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
-	_recenter_button.connect("pressed", self, "_recenter")
 	_zoom_button.connect("pressed", self, "_zoom")
 	_fortyfive_button.connect("pressed", self, "_fortyfive")
 	_top_button.connect("pressed", self, "_top")
+	if Global.state.is_system_built:
+		_on_system_built(false)
+	else:
+		Global.connect("system_tree_built_or_loaded", self, "_on_system_built", [], CONNECT_ONESHOT)
 	_connect_camera(get_viewport().get_camera())
+	
+
+func _on_system_built(_is_loaded_game: bool) -> void:
+	if use_small_txt:
+		_recenter_button.text = "BUTTON_RCTR"
+		_zoom_button.text = "BUTTON_ZM"
+		_top_button.text = "BUTTON_TP"
+	if include_recenter:
+		_recenter_button.connect("pressed", self, "_recenter")
+	else:
+		_recenter_button.queue_free()
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -46,7 +63,8 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _update_view_type(view_type: int) -> void:
-	_recenter_button.pressed = view_type != Enums.VIEW_UNCENTERED
+	if include_recenter:
+		_recenter_button.pressed = view_type != Enums.VIEW_UNCENTERED
 	_zoom_button.pressed = view_type == Enums.VIEW_ZOOM
 	_fortyfive_button.pressed = view_type == Enums.VIEW_45
 	_top_button.pressed = view_type == Enums.VIEW_TOP
