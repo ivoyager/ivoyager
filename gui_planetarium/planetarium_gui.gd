@@ -54,28 +54,36 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.get_parent().remove_child(main_menu)
 	add_child(main_menu)
+
 	
 
 func _input(event: InputEvent) -> void:
+	# By default, all children of this node are shown/hidden by mouse position.
+	# For fine control, use members mouse_trigger & mouse_visible
 	if event is InputEventMouseMotion:
 		if _is_mouse_button_pressed or !visible:
 			return
 		var mouse_pos: Vector2 = event.position
 		for child in get_children():
 			if not "mouse_trigger" in child:
-				continue
-			var mouse_visible: Array = child.mouse_visible
-			if !mouse_visible:
-				continue
-			var mouse_trigger: Control = child.mouse_trigger
-			var is_visible := _is_visible(mouse_trigger, mouse_pos)
-			if is_visible == mouse_visible[0].visible:
-				continue
-			for gui in mouse_visible:
-				gui.visible = is_visible
-				gui.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
+				var is_visible := _is_visible(child, mouse_pos)
+				if is_visible == child.visible:
+					continue
+				child.visible = is_visible
+				child.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
+			else:
+				var mouse_visible: Array = child.mouse_visible
+				if !mouse_visible:
+					continue
+				var mouse_trigger: Control = child.mouse_trigger
+				var is_visible := _is_visible(mouse_trigger, mouse_pos)
+				if is_visible == mouse_visible[0].visible:
+					continue
+				for gui in mouse_visible:
+					gui.visible = is_visible
+					gui.mouse_filter = MOUSE_FILTER_PASS if is_visible else MOUSE_FILTER_IGNORE
 	elif event is InputEventMouseButton:
-		_is_mouse_button_pressed = event.pressed # don't show GUIs during mouse drag
+		_is_mouse_button_pressed = event.pressed # don't show/hide GUIs during mouse drag
 
 func _is_visible(trigger: Control, pos: Vector2) -> bool:
 	var rect := trigger.get_global_rect()

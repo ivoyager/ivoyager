@@ -19,6 +19,7 @@
 #    Global.table_data
 #    Global.table_fields
 #    Global.table_rows
+#    Global.wiki_titles (if Global.wiki_enabled)
 #
 # ivoyager/data/solar_system/*.csv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING. X-type will be
@@ -49,11 +50,13 @@ var import := {
 }
 var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
-# global dicts
+# global dicts & project values
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
 var _table_rows: Dictionary = Global.table_rows
 var _wiki_titles: Dictionary = Global.wiki_titles
+var _enable_wiki: bool = Global.enable_wiki
+
 
 # current processing
 var _path: String
@@ -74,19 +77,21 @@ func project_init():
 
 func import_table_data():
 	print("Reading external data tables...")
-	for path in wiki_extras:
-		_path = path
-		_data = []
-		_fields = {}
-		_rows = {}
-		_read_table() # writes wiki_titles; we don't need data, fields, rows
+	if _enable_wiki:
+		for path in wiki_extras:
+			_path = path
+			_data = []
+			_fields = {}
+			_rows = {}
+			_read_table() # writes wiki_titles; we don't keep data, fields, rows
 	for key in import:
 		_path = import[key]
 		_data = []
 		_fields = {} # column index by field name
 		_rows = {} # row index by item key
 		_read_table()
-		# wiki_titles was populated on the fly; save data, fields, rows below
+		# wiki_titles was populated on the fly (if Global.enable_wiki); but we
+		# save everything else to Global dicts below
 		_table_data[key] = _data
 		_table_fields[key] = _fields
 		_table_rows[key] = _rows
@@ -186,7 +191,7 @@ func _read_data_line() -> void:
 				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
 					_cell = _cell.substr(1, _cell.length() - 2)
 				row_data[column] = _cell
-				if _field == "wiki_en": # TODO: non-English Wikipedias
+				if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
 					assert(!_wiki_titles.has(_row_key))
 					_wiki_titles[_row_key] = _cell
 	_data.append(row_data)

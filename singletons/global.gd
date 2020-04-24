@@ -111,13 +111,14 @@ var asteroid_mag_cutoff_override := INF # != INF overrides asteroid_group_data.c
 var skip_splash_screen := false
 var disable_exit := false
 var disable_quit := false
+var enable_wiki := false
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # Planetarium sets true
 var allow_time_reversal := false # Planetarium sets true
 var vertecies_per_orbit: int = 500
-var max_camera_distance: float = 3e10 * UnitDefs.KM
+var max_camera_distance: float = 200.0 * UnitDefs.AU
 var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)

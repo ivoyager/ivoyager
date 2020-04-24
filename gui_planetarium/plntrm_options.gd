@@ -18,10 +18,6 @@
 
 extends VBoxContainer
 
-
-onready var mouse_trigger: Control = self
-onready var mouse_visible := [self]
-
 var _points_manager: PointsManager = Global.program.PointsManager
 onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_checkbox: CheckBox = $Orbits/CheckBox

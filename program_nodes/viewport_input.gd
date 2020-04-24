@@ -19,8 +19,7 @@
 # members to be present in your Camera:
 #    move_action
 #    rotate_action
-# You probably need to remove or replace this class if you need a different
-# input system for your camera.
+# Remove, replace or modify this class if you need something different.
 
 extends Node
 class_name ViewportInput

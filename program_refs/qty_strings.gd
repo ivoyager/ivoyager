@@ -51,9 +51,9 @@ enum { # option_type for number_option()
 const LOG_OF_10 := log(10)
 
 # project vars
-var multipliers := unit_defs.MULTIPLIERS
+var multipliers := unit_defs.MULTIPLIERS # or set to your own dictionary
 var functions := unit_defs.FUNCTIONS
-var exp_str := "e" # or "E" or "x10^"
+var exp_str := "e" # e.g., set to "E", "x10^", " x 10^"
 var prefix_names := [
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"

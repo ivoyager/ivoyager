@@ -16,14 +16,20 @@
 # limitations under the License.
 # *****************************************************************************
 # GUI widget. Requires Control ancestor with member "selection_manager".
+# Certain property values are interpreted as unknown (dispay "?") or not
+# applicable (don't display label or value). For floats, these are INF and
+# -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
+
+# TODO: Mouse-over array.
 
 extends GridContainer
 
-var col1_width := 100
-var col2_width := 100
-
+# modify these (and rect_min_size) before "system_tree_ready"
+var max_data_items := 15
+var labels_width := 100
+var values_width := 100
 var show_data := [
-	# [property, label, option_type]; only REAL values use [2], [3] elements
+	# [property, label, option_type]; only REAL values use elements 2 & 3.
 	# We look first in SelectionItem, then Body if SelectionItem.is_body
 	# Integer value -1 and float value -INF are not displayed; float value INF
 	# displayed as "?".
@@ -45,12 +51,12 @@ var show_data := [
 	["n_moons", "LABEL_MOONS"],
 	["n_asteroids", "LABEL_ASTEROIDS"],
 	["n_comets", "LABEL_COMETS"]
-	]
+]
 
 onready var _qty_strings: QtyStrings = Global.program.QtyStrings
-onready var _labels: Label = $Labels
-onready var _values: Label = $Values
 var _selection_manager: SelectionManager
+var _labels := []
+var _values := []
 
 func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
@@ -58,8 +64,21 @@ func _ready():
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-	_labels.rect_min_size.x = col1_width
-	_values.rect_min_size.x = col2_width
+	var grid_index := 0
+	while grid_index < max_data_items:
+		var label := Label.new()
+		label.rect_min_size.x = labels_width
+		label.clip_text = true
+		label.hide()
+		_labels.append(label)
+		add_child(label)
+		var value := Label.new()
+		value.rect_min_size.x = values_width
+		value.clip_text = true
+		value.hide()
+		_values.append(value)
+		add_child(value)
+		grid_index += 1
 	_on_selection_changed()
 
 func _on_selection_changed() -> void:
@@ -69,8 +88,7 @@ func _on_selection_changed() -> void:
 	var body: Body
 	if _selection_manager.is_body():
 		body = _selection_manager.get_body()
-	var labels := ""
-	var values := ""
+	var grid_index := 0
 	for show_datum in show_data:
 		var property: String = show_datum[0]
 		var is_value := true
@@ -83,28 +101,38 @@ func _on_selection_changed() -> void:
 			is_value = false
 		if !is_value:
 			continue
-		var value: String
+		var display_str: String
 		match typeof(value_variant):
 			TYPE_INT:
-				if value_variant != -1:
-					value = str(value_variant)
+				if value_variant == -99:
+					display_str = "?"
+				elif value_variant != -1:
+					display_str = str(value_variant)
 			TYPE_REAL:
-				if value_variant == -INF:
+				if value_variant == INF:
+					display_str = "?"
+				elif value_variant == -INF:
 					pass
-				elif value_variant == INF:
-					value = "?"
 				elif show_datum.size() < 3:
-					value = str(value_variant)
+					display_str = str(value_variant)
 				else:
 					var option_type: int = show_datum[2]
 					var unit: String = show_datum[3] if show_datum.size() > 3 else ""
-					value = _qty_strings.number_option(value_variant, option_type, unit)
+					display_str = _qty_strings.number_option(value_variant, option_type, unit)
 			TYPE_STRING:
-				value = tr(value_variant)
-		if value:
-			var label: String = show_datum[1]
-			labels += tr(label) + "\n"
-			values += value + "\n"
-	_labels.text = labels
-	_values.text = values
+				display_str = tr(value_variant)
+		if !display_str:
+			continue
+		var label: String = show_datum[1]
+		_labels[grid_index].text = tr(label)
+		_values[grid_index].text = display_str
+		_labels[grid_index].show()
+		_values[grid_index].show()
+		grid_index += 1
+		if grid_index == max_data_items:
+			break
+	while grid_index < max_data_items:
+		_labels[grid_index].hide()
+		_values[grid_index].hide()
+		grid_index += 1
 

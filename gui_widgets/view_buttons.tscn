@@ -32,16 +32,16 @@ text = "BUTTON_ZOOM"
 
 [node name="FortyFive" type="Button" parent="."]
 margin_left = 256.0
-margin_right = 406.0
+margin_right = 377.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false
 action_mode = 0
-text = "BUTTON_45_DEGREES"
+text = "BUTTON_45_DEG"
 
 [node name="Top" type="Button" parent="."]
-margin_left = 410.0
-margin_right = 508.0
+margin_left = 381.0
+margin_right = 479.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false

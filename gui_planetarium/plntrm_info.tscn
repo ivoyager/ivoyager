@@ -18,7 +18,7 @@ __meta__ = {
 }
 
 [node name="TimeBox" type="HBoxContainer" parent="."]
-margin_right = 612.0
+margin_right = 583.0
 margin_bottom = 30.0
 rect_min_size = Vector2( 0, 30 )
 
@@ -38,13 +38,13 @@ size_flags_vertical = 4
 
 [node name="Spacer" type="Control" parent="."]
 margin_top = 34.0
-margin_right = 612.0
+margin_right = 583.0
 margin_bottom = 49.0
 rect_min_size = Vector2( 0, 15 )
 
 [node name="SelectionBox" type="HBoxContainer" parent="."]
 margin_top = 53.0
-margin_right = 612.0
+margin_right = 583.0
 margin_bottom = 83.0
 rect_min_size = Vector2( 0, 30 )
 
@@ -57,94 +57,103 @@ rect_min_size = Vector2( 100, 0 )
 [node name="ViewButtons" parent="SelectionBox" instance=ExtResource( 8 )]
 margin_left = 104.0
 margin_top = 5.0
-margin_right = 612.0
+margin_right = 583.0
 margin_bottom = 25.0
 size_flags_vertical = 4
 
 [node name="RangeLabel" parent="." instance=ExtResource( 5 )]
 margin_top = 87.0
-margin_right = 612.0
+margin_right = 583.0
 margin_bottom = 101.0
 size_flags_vertical = 8
 
-[node name="SelectionData" parent="." instance=ExtResource( 6 )]
+[node name="Scroll" type="ScrollContainer" parent="."]
 margin_top = 105.0
-margin_right = 612.0
-margin_bottom = 305.0
+margin_right = 583.0
+margin_bottom = 555.0
+rect_min_size = Vector2( 0, 450 )
+scroll_horizontal_enabled = false
 
-[node name="Wikipedia" parent="." instance=ExtResource( 7 )]
-margin_top = 309.0
-margin_right = 612.0
-margin_bottom = 339.0
+[node name="VBox" type="VBoxContainer" parent="Scroll"]
+margin_right = 330.0
+margin_bottom = 118.0
 
-[node name="LocksBox1" type="HBoxContainer" parent="."]
-margin_top = 343.0
-margin_right = 612.0
-margin_bottom = 367.0
+[node name="SelectionData" parent="Scroll/VBox" instance=ExtResource( 6 )]
+margin_right = 330.0
 
-[node name="LkTimeL" type="Label" parent="LocksBox1"]
+[node name="Wikipedia" parent="Scroll/VBox" instance=ExtResource( 7 )]
+margin_top = 4.0
+margin_right = 330.0
+margin_bottom = 34.0
+
+[node name="Locks1" type="HBoxContainer" parent="Scroll/VBox"]
+margin_top = 38.0
+margin_right = 330.0
+margin_bottom = 62.0
+
+[node name="LkTimeL" type="Label" parent="Scroll/VBox/Locks1"]
 margin_top = 5.0
 margin_right = 116.0
 margin_bottom = 19.0
 text = "LABEL_LOCK_TIME"
 
-[node name="LkTimeCkBx" type="CheckBox" parent="LocksBox1"]
+[node name="LkTimeCkBx" type="CheckBox" parent="Scroll/VBox/Locks1"]
 margin_left = 120.0
 margin_right = 144.0
 margin_bottom = 24.0
 
-[node name="LkSelectionL" type="Label" parent="LocksBox1"]
+[node name="LkSelectionL" type="Label" parent="Scroll/VBox/Locks1"]
 margin_left = 148.0
 margin_top = 5.0
 margin_right = 302.0
 margin_bottom = 19.0
 text = "LABEL_LOCK_SELECTION"
 
-[node name="LkSelectionCkBx" type="CheckBox" parent="LocksBox1"]
+[node name="LkSelectionCkBx" type="CheckBox" parent="Scroll/VBox/Locks1"]
 margin_left = 306.0
 margin_right = 330.0
 margin_bottom = 24.0
 
-[node name="LocksBox2" type="HBoxContainer" parent="."]
-margin_top = 371.0
-margin_right = 612.0
-margin_bottom = 395.0
+[node name="Locks2" type="HBoxContainer" parent="Scroll/VBox"]
+margin_top = 66.0
+margin_right = 330.0
+margin_bottom = 90.0
 
-[node name="LkRangeL" type="Label" parent="LocksBox2"]
+[node name="LkRangeL" type="Label" parent="Scroll/VBox/Locks2"]
 margin_top = 5.0
 margin_right = 148.0
 margin_bottom = 19.0
 text = "LABEL_LOCK_DISTANCE"
 
-[node name="LkRangeCkBx" type="CheckBox" parent="LocksBox2"]
+[node name="LkRangeCkBx" type="CheckBox" parent="Scroll/VBox/Locks2"]
 margin_left = 152.0
 margin_right = 176.0
 margin_bottom = 24.0
 
-[node name="LkinfoL" type="Label" parent="LocksBox2"]
+[node name="LkinfoL" type="Label" parent="Scroll/VBox/Locks2"]
 margin_left = 180.0
 margin_top = 5.0
 margin_right = 298.0
 margin_bottom = 19.0
 text = "LABEL_LOCK_INFO"
 
-[node name="LkInfoCkBx" type="CheckBox" parent="LocksBox2"]
+[node name="LkInfoCkBx" type="CheckBox" parent="Scroll/VBox/Locks2"]
 margin_left = 302.0
 margin_right = 326.0
 margin_bottom = 24.0
 
-[node name="LocksBox3" type="HBoxContainer" parent="."]
-margin_top = 399.0
-margin_right = 612.0
-margin_bottom = 423.0
+[node name="Locks3" type="HBoxContainer" parent="Scroll/VBox"]
+margin_top = 94.0
+margin_right = 330.0
+margin_bottom = 118.0
 
-[node name="LkControls" type="Label" parent="LocksBox3"]
+[node name="LkControls" type="Label" parent="Scroll/VBox/Locks3"]
 margin_top = 5.0
 margin_right = 154.0
 margin_bottom = 19.0
 text = "LABEL_LOCK_CONTROLS"
 
-[node name="LkControlsCkBx" type="CheckBox" parent="LocksBox3"]
+[node name="LkControlsCkBx" type="CheckBox" parent="Scroll/VBox/Locks3"]
 margin_left = 158.0
 margin_right = 182.0
 margin_bottom = 24.0
