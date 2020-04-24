@@ -34,8 +34,12 @@ var _settings: Dictionary = Global.settings
 onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 func _ready():
-	$TimeBox/TimeControl/GameSpeed.hide()
-	$TimeBox/TimeControl/Pause.hide()
+	var time_control: Control = $TimeBox/TimeControl
+	time_control.include_game_speed_label = false
+	time_control.include_pause_button = false
+	var view_buttons: Control = $SelectionBox/ViewButtons
+	view_buttons.use_small_txt = true
+	view_buttons.include_recenter = true
 	$Scroll/VBox/SelectionData.labels_width = col1_width
 	$Scroll/VBox/SelectionData.values_width = col2_width
 	if !Global.enable_wiki:

@@ -20,5 +20,10 @@ extends DraggablePanel
 class_name SelectionPanel
 const SCENE := "res://ivoyager/gui_game/selection_panel.tscn"
 
-func _ready():
-	$ImageBox/ViewButtons/Recenter.hide()
+func _ready() -> void:
+	var selection_data: Control = $TRBox/Scroll/SelectionData
+	selection_data.labels_width = 135
+	selection_data.values_width = 100
+	pass
+	
+	
