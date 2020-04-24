@@ -44,7 +44,6 @@ signal about_to_quit()
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
-
 # other broadcasts
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)

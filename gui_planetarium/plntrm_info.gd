@@ -22,18 +22,21 @@ var col1_width := 180
 var col2_width := 150
 
 onready var mouse_trigger: Control = self
-onready var mouse_visible := [$Scroll/VBox/Locks1, $Scroll/VBox/Locks2, $Scroll/VBox/Locks3]
+onready var mouse_visible := [$Scroll/VBox/Locks1, $Scroll/VBox/Locks2, $Scroll/VBox/Locks3,
+	$Scroll/VBox/Wikipedia]
 
 onready var time_items := [$TimeBox/DateTime]
 onready var selection_items := [$SelectionBox/SelectionLabel]
 onready var range_items := [$RangeLabel]
-onready var info_items := [$Scroll/VBox/SelectionData, $Scroll/VBox/Wikipedia]
+onready var info_items := [$Scroll/VBox/SelectionData]
 onready var control_items := [$TimeBox/TimeControl, $SelectionBox/ViewButtons]
 
 var _settings: Dictionary = Global.settings
 onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 func _ready():
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [],
+			CONNECT_ONESHOT)
 	var time_control: Control = $TimeBox/TimeControl
 	time_control.include_game_speed_label = false
 	time_control.include_pause_button = false
@@ -65,6 +68,15 @@ func _ready():
 			[info_items, "lock_info"])
 	$Scroll/VBox/Locks3/LkControlsCkBx.connect("toggled", self, "_lock_toggled",
 			[control_items, "lock_controls"])
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	# These are hidden during build but shown at start (until user moves mouse)
+	$TimeBox/TimeControl.show()
+	$SelectionBox/ViewButtons.show()
+	$Scroll/VBox/Wikipedia.show()
+	$Scroll/VBox/Locks1.show()
+	$Scroll/VBox/Locks2.show()
+	$Scroll/VBox/Locks3.show()
 
 func _lock_toggled(pressed: bool, guis: Array, setting_name := "") -> void:
 	if pressed:

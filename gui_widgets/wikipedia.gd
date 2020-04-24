@@ -17,6 +17,7 @@
 # *****************************************************************************
 # Note: RichTextLabel seems unable to set its own size. You have to set this
 # node's rect_min_size for it to show (as of Godot 3.2.1).
+# Note 2: Set Global.enable_wiki = true
 
 extends RichTextLabel
 

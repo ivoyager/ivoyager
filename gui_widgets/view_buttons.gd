@@ -30,7 +30,14 @@ onready var _fortyfive_button: Button = $FortyFive
 onready var _top_button: Button = $Top
 
 func _ready():
+	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	Global.connect("camera_ready", self, "_connect_camera")
+	_zoom_button.connect("pressed", self, "_zoom")
+	_fortyfive_button.connect("pressed", self, "_fortyfive")
+	_top_button.connect("pressed", self, "_top")
+	_connect_camera(get_viewport().get_camera())
+
+func _on_system_tree_built_or_loaded(_is_loaded_game: bool) -> void:
 	if use_small_txt:
 		_recenter_button.text = "BUTTON_RCTR"
 		_zoom_button.text = "BUTTON_ZM"
@@ -39,10 +46,6 @@ func _ready():
 		_recenter_button.connect("pressed", self, "_recenter")
 	else:
 		_recenter_button.queue_free()
-	_zoom_button.connect("pressed", self, "_zoom")
-	_fortyfive_button.connect("pressed", self, "_fortyfive")
-	_top_button.connect("pressed", self, "_top")
-	_connect_camera(get_viewport().get_camera())
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:

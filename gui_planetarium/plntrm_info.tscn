@@ -18,7 +18,7 @@ __meta__ = {
 }
 
 [node name="TimeBox" type="HBoxContainer" parent="."]
-margin_right = 583.0
+margin_right = 200.0
 margin_bottom = 30.0
 rect_min_size = Vector2( 0, 30 )
 
@@ -30,22 +30,19 @@ rect_min_size = Vector2( 200, 0 )
 size_flags_vertical = 4
 
 [node name="TimeControl" parent="TimeBox" instance=ExtResource( 3 )]
+visible = false
 margin_left = 204.0
 margin_top = 5.0
 margin_right = 352.0
 margin_bottom = 25.0
+size_flags_horizontal = 3
 size_flags_vertical = 4
-
-[node name="Spacer" type="Control" parent="."]
-margin_top = 34.0
-margin_right = 583.0
-margin_bottom = 49.0
-rect_min_size = Vector2( 0, 15 )
+alignment = 2
 
 [node name="SelectionBox" type="HBoxContainer" parent="."]
-margin_top = 53.0
-margin_right = 583.0
-margin_bottom = 83.0
+margin_top = 34.0
+margin_right = 200.0
+margin_bottom = 64.0
 rect_min_size = Vector2( 0, 30 )
 
 [node name="SelectionLabel" parent="SelectionBox" instance=ExtResource( 4 )]
@@ -55,41 +52,49 @@ margin_bottom = 22.0
 rect_min_size = Vector2( 100, 0 )
 
 [node name="ViewButtons" parent="SelectionBox" instance=ExtResource( 8 )]
+visible = false
 margin_left = 104.0
 margin_top = 5.0
 margin_right = 583.0
 margin_bottom = 25.0
+size_flags_horizontal = 3
 size_flags_vertical = 4
+alignment = 2
 
 [node name="RangeLabel" parent="." instance=ExtResource( 5 )]
-margin_top = 87.0
-margin_right = 583.0
-margin_bottom = 101.0
+margin_top = 68.0
+margin_right = 200.0
+margin_bottom = 82.0
 size_flags_vertical = 8
 
 [node name="Scroll" type="ScrollContainer" parent="."]
-margin_top = 105.0
-margin_right = 583.0
-margin_bottom = 555.0
+margin_top = 86.0
+margin_right = 200.0
+margin_bottom = 536.0
 rect_min_size = Vector2( 0, 450 )
 scroll_horizontal_enabled = false
 
 [node name="VBox" type="VBoxContainer" parent="Scroll"]
-margin_right = 330.0
-margin_bottom = 118.0
+margin_bottom = 14.0
 
 [node name="SelectionData" parent="Scroll/VBox" instance=ExtResource( 6 )]
-margin_right = 330.0
+
+[node name="Spacer" type="Control" parent="Scroll/VBox"]
+margin_top = 4.0
+margin_bottom = 14.0
+rect_min_size = Vector2( 0, 10 )
 
 [node name="Wikipedia" parent="Scroll/VBox" instance=ExtResource( 7 )]
+visible = false
 margin_top = 4.0
 margin_right = 330.0
 margin_bottom = 34.0
 
 [node name="Locks1" type="HBoxContainer" parent="Scroll/VBox"]
-margin_top = 38.0
+visible = false
+margin_top = 4.0
 margin_right = 330.0
-margin_bottom = 62.0
+margin_bottom = 28.0
 
 [node name="LkTimeL" type="Label" parent="Scroll/VBox/Locks1"]
 margin_top = 5.0
@@ -115,9 +120,10 @@ margin_right = 330.0
 margin_bottom = 24.0
 
 [node name="Locks2" type="HBoxContainer" parent="Scroll/VBox"]
-margin_top = 66.0
-margin_right = 330.0
-margin_bottom = 90.0
+visible = false
+margin_top = 4.0
+margin_right = 326.0
+margin_bottom = 28.0
 
 [node name="LkRangeL" type="Label" parent="Scroll/VBox/Locks2"]
 margin_top = 5.0
@@ -143,9 +149,10 @@ margin_right = 326.0
 margin_bottom = 24.0
 
 [node name="Locks3" type="HBoxContainer" parent="Scroll/VBox"]
-margin_top = 94.0
-margin_right = 330.0
-margin_bottom = 118.0
+visible = false
+margin_top = 4.0
+margin_right = 182.0
+margin_bottom = 28.0
 
 [node name="LkControls" type="Label" parent="Scroll/VBox/Locks3"]
 margin_top = 5.0
