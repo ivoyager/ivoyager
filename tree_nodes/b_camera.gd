@@ -23,7 +23,12 @@
 #    TreeManager (program_nodes/tree_manager.gd)
 #    SelectionManager (tree_refs/selection_manager.gd)
 # (You'll need to either match some BCamera API or modify/replace the latter
-# three classes.
+# three classes.)
+#
+# The camera stays "in place" by maintaining view_position & view_orientation.
+# Both are spherical coordinates. The first is position relative to a vector
+# from the parent body to the grandparent body (reversed at star orbiting
+# bodies). The second is rotation relative to pointing at parent.
 
 extends Camera
 class_name BCamera
@@ -46,6 +51,12 @@ const VIEW_45 = Enums.VIEW_45
 const VIEW_TOP = Enums.VIEW_TOP
 const VIEW_CENTERED = Enums.VIEW_CENTERED
 const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
+
+# TODO: Different pathings...
+enum {
+	INTERPOLATE_SPHERICAL, # looks better w/in systems among ecliptic/equatorial orbits
+	INTERPOLATE_CARTESIAN, # looks better otherwise
+}
 
 enum {
 	LONGITUDE_REMAP_INIT,
@@ -74,9 +85,8 @@ var is_camera_lock := true
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
 
-# TODO: Rename the next 2: view_position, view_orientation
-var spherical_position := VECTOR3_ZERO # longitude, latitude, radius
-var camera_rotation := VECTOR3_ZERO # relative to pointing at parent, north up
+var view_position := VECTOR3_ZERO # longitude, latitude, radius
+var view_orientation := VECTOR3_ZERO # relative to pointing at parent, north up
 
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
@@ -87,8 +97,8 @@ var _view_type_memory := view_type
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "spherical_position",
-	"camera_rotation", "focal_length", "focal_length_index", "_transform", "_view_type_memory"]
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "view_position",
+	"view_orientation", "focal_length", "focal_length_index", "_transform", "_view_type_memory"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
@@ -102,12 +112,6 @@ var orient_to_local_pole: float = 5e7 * UnitDefs.KM # must be > follow_orbit
 var orient_to_ecliptic: float = 5e10 * UnitDefs.KM # must be > orient_to_local_pole
 var action_rate := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
-
-
-# DEPRECIATE
-var move_tangentially_rate := 0.7 # affects mouse & key
-var move_in_out_rate := 3.0 # affects mouse & key
-
 
 # input control - these are accumulators
 var move_action := VECTOR3_ZERO
@@ -134,8 +138,8 @@ var _move_spatial: Spatial
 var _move_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
-var _from_spherical_position := Vector3.ONE
-var _from_camera_rotation := VECTOR3_ZERO
+var _from_view_position := Vector3.ONE
+var _from_view_orientation := VECTOR3_ZERO
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 
@@ -147,11 +151,11 @@ onready var _transition_time: float = _settings.camera_transition_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
-static func get_spherical_position(translation_: Vector3, north: Vector3,
+static func get_view_position(translation_: Vector3, north: Vector3,
 		ref_longitude := 0.0) -> Vector3:
 	# FIXME: This should be way simpler than the way I did it here!
 	#
-	# "spherical_position_" is a standardized Vector3 where:
+	# "view_position_" is a standardized Vector3 where:
 	#    x is longitude angle relative to ref_longitude
 	#    y is latitude angle
 	#    z is radius distance
@@ -177,15 +181,15 @@ static func get_spherical_position(translation_: Vector3, north: Vector3,
 	longitude = wrapf(longitude + PI / 2.0 - ref_longitude, -PI, PI)
 	return Vector3(longitude, latitude, radius)
 
-static func convert_spherical_position(spherical_position_: Vector3, north: Vector3,
+static func convert_view_position(view_position_: Vector3, north: Vector3,
 		ref_longitude: float) -> Vector3:
 	# inverse of above function
 	# FIXME: This should be way simpler than this!!!
 	if ref_longitude == -INF:
 		ref_longitude = 0.0
-	var longitude := spherical_position_[0]
-	var latitude := spherical_position_[1]
-	var radius := spherical_position_[2]
+	var longitude := view_position_[0]
+	var latitude := view_position_[1]
+	var radius := view_position_[2]
 	
 	# TODO: Use spherical coordinate conversions
 #	var spherical := Vector3(radius, PI / 2.0 - latitude, longitude - ref_longitude)
@@ -200,17 +204,17 @@ static func convert_spherical_position(spherical_position_: Vector3, north: Vect
 	translation_ *= -radius
 	return translation_
 
-func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_position := VECTOR3_ZERO,
+func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Most view_type values override spherical_position & camera_rotation.
-	assert(DPRINT and prints("move", to_selection_item, to_view_type, to_spherical_position,
+	# Most view_type values override view_position & view_orientation.
+	assert(DPRINT and prints("move", to_selection_item, to_view_type, to_view_position,
 			to_rotations, is_instant_move) or true)
 	_from_selection_item = selection_item
 	_from_spatial = parent
 	_from_view_type = view_type
-	_from_spherical_position = spherical_position
-	_from_camera_rotation = camera_rotation
+	_from_view_position = view_position
+	_from_view_orientation = view_orientation
 	if to_selection_item and to_selection_item.spatial:
 		selection_item = to_selection_item
 		_to_spatial = to_selection_item.spatial
@@ -219,23 +223,23 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 		view_type = to_view_type
 	match view_type:
 		VIEW_ZOOM, VIEW_45, VIEW_TOP:
-			spherical_position = selection_item.camera_spherical_positions[view_type]
-			spherical_position[2] /= fov
-			camera_rotation = VECTOR3_ZERO
+			view_position = selection_item.camera_view_positions[view_type]
+			view_position[2] /= fov
+			view_orientation = VECTOR3_ZERO
 		VIEW_CENTERED:
-			if to_spherical_position != VECTOR3_ZERO:
-				spherical_position = to_spherical_position
-			camera_rotation = VECTOR3_ZERO
+			if to_view_position != VECTOR3_ZERO:
+				view_position = to_view_position
+			view_orientation = VECTOR3_ZERO
 		VIEW_UNCENTERED:
-			if to_spherical_position != VECTOR3_ZERO:
-				spherical_position = to_spherical_position
+			if to_view_position != VECTOR3_ZERO:
+				view_position = to_view_position
 			if to_rotations != NULL_ROTATION:
-				camera_rotation = to_rotations
+				view_orientation = to_rotations
 		_:
 			assert(false)
 	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
-	if spherical_position.z < min_dist:
-		spherical_position.z = min_dist
+	if view_position.z < min_dist:
+		view_position.z = min_dist
 
 	if is_instant_move:
 		_move_progress = _transition_time # finishes move on next frame
@@ -254,11 +258,11 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_spherical_pos
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("view_type_changed", view_type)
 
-func move_to_body(to_body: Body, to_view_type := -1, to_spherical_position := VECTOR3_ZERO,
+func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, is_instant_move) or true)
 	var to_selection_item := _registrar.get_selection_for_body(to_body)
-	move(to_selection_item, to_view_type, to_spherical_position, to_rotations, is_instant_move)
+	move(to_selection_item, to_view_type, to_view_position, to_rotations, is_instant_move)
 
 func increment_focal_length(increment: int) -> void:
 	var new_fl_index = focal_length_index + increment
@@ -365,26 +369,26 @@ func _process_moving() -> void:
 	# Hand-off at halfway point avoids imprecision shakes at either end
 	if parent != _to_spatial and ease_progress > 0.5:
 		_do_camera_handoff()
-	# We interpolate position using our "spherical_position_" coordinates for the
+	# We interpolate position using our "view_position_" coordinates for the
 	# common parent of the move. E.g., we move around Jupiter (not through it
 	# if going from Io to Europa. Basis is interpolated more straightforwardly
 	# using transform.basis.
-	var from_transform := _get_transform(_from_selection_item, _from_view_type, _from_spherical_position,
-			_from_camera_rotation)
-	var to_transform := _get_transform(selection_item, view_type, spherical_position, camera_rotation)
+	var from_transform := _get_view_transform(_from_selection_item, _from_view_type, _from_view_position,
+			_from_view_orientation)
+	var to_transform := _get_view_transform(selection_item, view_type, view_position, view_orientation)
 	var global_common_translation := _move_spatial.global_transform.origin
 #	var common_north = _move_spatial.north_pole # FIXME
 	var from_common_translation := from_transform.origin \
 			+ _from_spatial.global_transform.origin - global_common_translation
 	var to_common_translation := to_transform.origin \
 			+ _to_spatial.global_transform.origin - global_common_translation
-	var from_common_spherical_position := get_spherical_position(from_common_translation, _move_north, 0.0)
-	var to_common_spherical_position := get_spherical_position(to_common_translation, _move_north, 0.0)
+	var from_common_view_position := get_view_position(from_common_translation, _move_north, 0.0)
+	var to_common_view_position := get_view_position(to_common_translation, _move_north, 0.0)
 	# We can remap longitude to allow shorter travel over the PI/-PI transition.
 	# However, we must commit at begining of move to a particular remapping and
 	# stick to it.
 	if _move_longitude_remap == LONGITUDE_REMAP_INIT:
-		var view_longitude_diff := to_common_spherical_position[0] - from_common_spherical_position[0]
+		var view_longitude_diff := to_common_view_position[0] - from_common_view_position[0]
 		if view_longitude_diff > PI:
 			_move_longitude_remap = LONGITUDE_REMAP_FROM
 		elif view_longitude_diff < -PI:
@@ -392,13 +396,13 @@ func _process_moving() -> void:
 		else:
 			_move_longitude_remap = LONGITUDE_REMAP_NONE
 	if _move_longitude_remap == LONGITUDE_REMAP_FROM:
-		from_common_spherical_position[0] += TAU
+		from_common_view_position[0] += TAU
 	elif _move_longitude_remap == LONGITUDE_REMAP_TO:
-		to_common_spherical_position[0] += TAU
-	var interpolated_spherical_position := from_common_spherical_position.linear_interpolate(
-			to_common_spherical_position, ease_progress)
-	var interpolated_common_translation := convert_spherical_position(
-			interpolated_spherical_position, _move_north, 0.0)
+		to_common_view_position[0] += TAU
+	var interpolated_view_position := from_common_view_position.linear_interpolate(
+			to_common_view_position, ease_progress)
+	var interpolated_common_translation := convert_view_position(
+			interpolated_view_position, _move_north, 0.0)
 
 	_transform.origin = interpolated_common_translation + global_common_translation \
 			- parent.global_transform.origin
@@ -420,7 +424,7 @@ func _do_camera_handoff() -> void:
 func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var is_camera_bump := false
 	var is_rotation_change := false
-	_transform = _get_transform(selection_item, view_type, spherical_position, camera_rotation)
+	_transform = _get_view_transform(selection_item, view_type, view_position, view_orientation)
 	if move_action.z:
 		var move_z := move_action.z
 		if abs(move_z) > min_action:
@@ -473,7 +477,7 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	# flagged updates
 	var dist_sq := _transform.origin.length_squared()
 	if is_camera_bump and view_type != VIEW_UNCENTERED:
-		if camera_rotation:
+		if view_orientation:
 			view_type = VIEW_UNCENTERED
 			emit_signal("view_type_changed", view_type)
 		elif view_type != VIEW_CENTERED:
@@ -488,12 +492,12 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	if is_rotation_change:
 		var north := _get_north(selection_item, dist_sq)
 		_transform = _transform.looking_at(-_transform.origin, north)
-		_transform.basis *= Basis(camera_rotation)
+		_transform.basis *= Basis(view_orientation)
 
 func _move_camera_radially(radial_movement: float) -> void:
 	var origin := _transform.origin
 	var dist_sq := origin.length_squared()
-	dist_sq *= 1.0 + radial_movement * move_in_out_rate
+	dist_sq *= 1.0 + radial_movement
 	if dist_sq > _max_dist_sq:
 		dist_sq = _max_dist_sq
 	elif dist_sq < _min_dist_sq:
@@ -501,56 +505,62 @@ func _move_camera_radially(radial_movement: float) -> void:
 	origin = origin.normalized() * sqrt(dist_sq)
 	_transform.origin = origin
 	var north := _get_north(selection_item, dist_sq)
-	spherical_position = get_spherical_position(origin, north)
+	view_position = get_view_position(origin, north)
 
 func _move_camera_tangentially(move_x: float, move_y: float) -> void:
 	# We're only interested in tangental compenents (x & y) but we need a
-	# Vector3 for 3D camera_rotation.
-	var move_vector := Basis(camera_rotation) * Vector3(move_x, move_y, 0.0)
-#	move_vector = Basis(camera_rotation) * move_vector # any resulting z is ignored
+	# Vector3 for 3D view_orientation.
+	var move_vector := Basis(view_orientation) * Vector3(move_x, move_y, 0.0)
+#	move_vector = Basis(view_orientation) * move_vector # any resulting z is ignored
 	var origin := _transform.origin
 	var dist_sq := origin.length_squared()
 	var north := _get_north(selection_item, dist_sq)
 	var angle_to_pole := origin.angle_to(north)
 	var old_angle_to_pole := angle_to_pole
-	angle_to_pole -= move_vector.y * move_tangentially_rate
+	angle_to_pole -= move_vector.y
 	if angle_to_pole < MIN_ANGLE_TO_POLE:
 		angle_to_pole = MIN_ANGLE_TO_POLE
 	elif angle_to_pole > PI - MIN_ANGLE_TO_POLE:
 		angle_to_pole = PI - MIN_ANGLE_TO_POLE
 	var x_axis := north.cross(origin).normalized()
 	origin = origin.rotated(x_axis, angle_to_pole - old_angle_to_pole)
-	origin = origin.rotated(north, move_vector.x * move_tangentially_rate)
+	origin = origin.rotated(north, move_vector.x)
 	_transform.origin = origin
-	spherical_position = get_spherical_position(origin, north)
+	view_position = get_view_position(origin, north)
 
 func _rotate_camera(rot_x: float, rot_y: float, rot_z: float) -> void:
-	var basis := Basis(camera_rotation)
+	var basis := Basis(view_orientation)
 	basis = basis.rotated(basis.x, rot_x)
 	basis = basis.rotated(basis.y, rot_y)
 	basis = basis.rotated(basis.z, rot_z)
-	camera_rotation = basis.get_euler()
+	view_orientation = basis.get_euler()
 
-func _get_transform(selection_item_: SelectionItem, view_type_: int, spherical_position_: Vector3,
-		camera_rotation_: Vector3) -> Transform:
-	var dist := spherical_position_.z
+func _get_view_transform(selection_item_: SelectionItem, view_type_: int, view_position_: Vector3,
+		view_orientation_: Vector3) -> Transform:
+	var dist := view_position_.z
 	var dist_sq := dist * dist
 	var north := _get_north(selection_item_, dist_sq)
-	var orbit_anomaly := _get_orbit_anomaly(selection_item_, dist_sq)
+	var reference_anomaly := _get_reference_anomaly(selection_item_, dist_sq)
 	var view_type_translation: Vector3
-	if !is_moving and view_type_ > VIEW_TOP:
+	
+	# WIP - Change below fixes "flip" for CENTERED -> ZOOM, but breaks movement
+	# among bodies when UNCENTERED.
+	
+	
+#	if !is_moving and view_type_ > VIEW_TOP:
+	if view_type_ > VIEW_TOP:
 		var delta_anomaly := 0.0
-		if orbit_anomaly != -INF and _last_anomaly != -INF:
-			delta_anomaly = orbit_anomaly - _last_anomaly
+		if reference_anomaly != -INF and _last_anomaly != -INF:
+			delta_anomaly = reference_anomaly - _last_anomaly
 		view_type_translation = _transform.origin.rotated(north, delta_anomaly)
 	else:
-		view_type_translation = convert_spherical_position(spherical_position_, north, orbit_anomaly)
-	_last_anomaly = orbit_anomaly
+		view_type_translation = convert_view_position(view_position_, north, reference_anomaly)
+	_last_anomaly = reference_anomaly
 	var view_type_transform := Transform(Basis(), view_type_translation).looking_at(-view_type_translation, north)
-	view_type_transform.basis *= Basis(camera_rotation_)
+	view_type_transform.basis *= Basis(view_orientation_)
 	return view_type_transform
 
-func _get_orbit_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
+func _get_reference_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
 	if dist_sq < _follow_orbit_dist_sq:
 		return selection_item_.get_orbit_anomaly_for_camera()
 	return -INF

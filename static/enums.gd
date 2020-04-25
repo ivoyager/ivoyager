@@ -23,8 +23,8 @@ enum {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
-	VIEW_CENTERED, # unspecified spherical_position
-	VIEW_UNCENTERED # unspecified spherical_position & camera_rotation
+	VIEW_CENTERED, # unspecified view_position
+	VIEW_UNCENTERED # unspecified view_position & view_orientation
 }
 
 enum {
