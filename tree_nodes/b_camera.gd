@@ -294,6 +294,7 @@ func change_camera_lock(new_lock: bool) -> void:
 				view_type = _view_type_memory
 
 func tree_manager_process(engine_delta: float) -> void:
+	# We process our working _transform, then update transform
 	var is_dist_change := false
 	if is_moving:
 		_move_progress += engine_delta
@@ -425,32 +426,41 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 	var is_camera_bump := false
 	var is_rotation_change := false
 	_transform = _get_view_transform(selection_item, view_type, view_position, view_orientation)
-	if move_action.z:
-		var move_z := move_action.z
-		if abs(move_z) > min_action:
-			move_z *= action_rate * delta
-			move_action.z -= move_z
-		else:
-			move_action.z = 0.0
-		_move_camera_radially(move_z)
+
+
+	if move_action:
+		_process_move_action(delta, view_position[2])
 		is_dist_change = true
-		is_camera_bump = true
-	if move_action.x or move_action.y:
-		var move_x := move_action.x
-		if abs(move_x) > min_action:
-			move_x *= action_rate * delta
-			move_action.x -= move_x
-		else:
-			move_action.x = 0.0
-		var move_y := move_action.y
-		if abs(move_y) > min_action:
-			move_y *= action_rate * delta
-			move_action.y -= move_y
-		else:
-			move_action.y = 0.0
-		_move_camera_tangentially(move_x, move_y)
 		is_rotation_change = true
 		is_camera_bump = true
+	
+	
+#	if move_action.z:
+#		var move_z := move_action.z
+#		if abs(move_z) > min_action:
+#			move_z *= action_rate * delta
+#			move_action.z -= move_z
+#		else:
+#			move_action.z = 0.0
+#		_move_camera_radially(move_z)
+#		is_dist_change = true
+#		is_camera_bump = true
+#	if move_action.x or move_action.y:
+#		var move_x := move_action.x
+#		if abs(move_x) > min_action:
+#			move_x *= action_rate * delta
+#			move_action.x -= move_x
+#		else:
+#			move_action.x = 0.0
+#		var move_y := move_action.y
+#		if abs(move_y) > min_action:
+#			move_y *= action_rate * delta
+#			move_action.y -= move_y
+#		else:
+#			move_action.y = 0.0
+#		_move_camera_tangentially(move_x, move_y)
+#		is_rotation_change = true
+#		is_camera_bump = true
 	if rotate_action:
 		var rot_x := rotate_action.x
 		if abs(rot_x) > min_action:
@@ -493,6 +503,28 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		var north := _get_north(selection_item, dist_sq)
 		_transform = _transform.looking_at(-_transform.origin, north)
 		_transform.basis *= Basis(view_orientation)
+		var reference_anomaly := _get_reference_anomaly(selection_item, dist_sq)
+		view_position = get_view_position(_transform.origin, north, reference_anomaly)
+
+func _process_move_action(delta: float, dist: float) -> void:
+	var move_now := move_action
+	if abs(move_now.x) > min_action:
+		move_now.x *= action_rate * delta
+		move_action.x -= move_now.x
+	else:
+		move_action.x = 0.0
+	if abs(move_now.y) > min_action:
+		move_now.y *= action_rate * delta
+		move_action.y -= move_now.y
+	else:
+		move_action.y = 0.0
+	if abs(move_now.z) > min_action:
+		move_now.z *= action_rate * delta
+		move_action.z -= move_now.z
+	else:
+		move_action.z = 0.0
+	_transform.origin += _transform.basis * (move_now * dist)
+	
 
 func _move_camera_radially(radial_movement: float) -> void:
 	var origin := _transform.origin
@@ -535,26 +567,13 @@ func _rotate_camera(rot_x: float, rot_y: float, rot_z: float) -> void:
 	basis = basis.rotated(basis.z, rot_z)
 	view_orientation = basis.get_euler()
 
-func _get_view_transform(selection_item_: SelectionItem, view_type_: int, view_position_: Vector3,
+func _get_view_transform(selection_item_: SelectionItem, _view_type_: int, view_position_: Vector3,
 		view_orientation_: Vector3) -> Transform:
 	var dist := view_position_.z
 	var dist_sq := dist * dist
 	var north := _get_north(selection_item_, dist_sq)
 	var reference_anomaly := _get_reference_anomaly(selection_item_, dist_sq)
-	var view_type_translation: Vector3
-	
-	# WIP - Change below fixes "flip" for CENTERED -> ZOOM, but breaks movement
-	# among bodies when UNCENTERED.
-	
-	
-#	if !is_moving and view_type_ > VIEW_TOP:
-	if view_type_ > VIEW_TOP:
-		var delta_anomaly := 0.0
-		if reference_anomaly != -INF and _last_anomaly != -INF:
-			delta_anomaly = reference_anomaly - _last_anomaly
-		view_type_translation = _transform.origin.rotated(north, delta_anomaly)
-	else:
-		view_type_translation = convert_view_position(view_position_, north, reference_anomaly)
+	var view_type_translation := convert_view_position(view_position_, north, reference_anomaly)
 	_last_anomaly = reference_anomaly
 	var view_type_transform := Transform(Basis(), view_type_translation).looking_at(-view_type_translation, north)
 	view_type_transform.basis *= Basis(view_orientation_)
@@ -563,7 +582,7 @@ func _get_view_transform(selection_item_: SelectionItem, view_type_: int, view_p
 func _get_reference_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
 	if dist_sq < _follow_orbit_dist_sq:
 		return selection_item_.get_orbit_anomaly_for_camera()
-	return -INF
+	return 0.0
 
 func _get_north(selection_item_: SelectionItem, dist_sq: float) -> Vector3:
 	if !selection_item_.is_body:

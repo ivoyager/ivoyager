@@ -80,12 +80,11 @@ func get_north() -> Vector3:
 	return ECLIPTIC_NORTH
 
 func get_orbit_anomaly_for_camera() -> float:
-	# returns -INF as null value if not applicable
 	if !is_body or !view_rotate_when_close:
-		return -INF
+		return 0.0
 	var orbit: Orbit = body.orbit
 	if !orbit:
-		return -INF
+		return 0.0
 	return orbit.get_anomaly_for_camera(_times[0])
 
 func init(selection_type_: int) -> void:
