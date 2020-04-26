@@ -69,7 +69,7 @@ const DPRINT := false
 const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
 const NEAR_DIST_MULTIPLIER := 0.1 
 const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude 
-const MIN_ANGLE_TO_POLE := PI / 80.0
+const MIN_ANGLE_TO_POLE := 0.1
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
@@ -124,11 +124,11 @@ var is_moving := false
 # private
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
-var _max_dist_sq: float = pow(Global.max_camera_distance, 2.0)
-var _min_dist_sq := 0.01 # set for parent body
-var _follow_orbit_dist_sq: float
-var _orient_to_local_pole_sq: float
-var _orient_to_ecliptic_sq: float
+var _max_dist: float = Global.max_camera_distance
+var _min_dist := 0.1 # set for parent body
+var _follow_orbit_dist: float
+var _orient_to_local_pole: float
+var _orient_to_ecliptic: float
 
 # move
 var _move_progress: float
@@ -142,6 +142,7 @@ var _from_view_position := Vector3.ONE
 var _from_view_orientation := VECTOR3_ZERO
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
+var _last_dist := 0.0
 
 onready var _top_body: Body = _registrar.top_body
 onready var _viewport := get_viewport()
@@ -218,7 +219,7 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 	if to_selection_item and to_selection_item.spatial:
 		selection_item = to_selection_item
 		_to_spatial = to_selection_item.spatial
-		_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
+		_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if to_view_type != -1:
 		view_type = to_view_type
 	match view_type:
@@ -277,10 +278,10 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_orient_to_local_pole_sq = pow(orient_to_local_pole / fov, 2)
-	_orient_to_ecliptic_sq = pow(orient_to_ecliptic / fov, 2)
-	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
-	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
+	_orient_to_local_pole = orient_to_local_pole / fov
+	_orient_to_ecliptic = orient_to_ecliptic / fov
+	_follow_orbit_dist = follow_orbit / fov
+	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if !suppress_move:
 		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
@@ -295,18 +296,16 @@ func change_camera_lock(new_lock: bool) -> void:
 
 func tree_manager_process(engine_delta: float) -> void:
 	# We process our working _transform, then update transform
-	var is_dist_change := false
 	if is_moving:
 		_move_progress += engine_delta
 		if _move_progress < _transition_time:
 			_process_moving()
 		else: # end the move
 			is_moving = false
-			is_dist_change = true
 			if parent != _to_spatial:
 				_do_camera_handoff() # happened at halfway unless is_instant_move
 	if !is_moving:
-		_process_not_moving(engine_delta, is_dist_change)
+		_process_not_moving(engine_delta)
 	if CENTER_ORIGIN_SHIFTING:
 		_top_body.translation -= parent.global_transform.origin
 	transform = _transform
@@ -326,7 +325,7 @@ func _on_ready():
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
-	var dist := _transform.origin.length_squared()
+	var dist := _transform.origin.length()
 	near = dist * NEAR_DIST_MULTIPLIER
 	far = dist * FAR_DIST_MULTIPLIER
 	pause_mode = PAUSE_MODE_PROCESS
@@ -338,10 +337,10 @@ func _on_ready():
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_follow_orbit_dist_sq = pow(follow_orbit / fov, 2)
-	_orient_to_local_pole_sq = pow(orient_to_local_pole / fov, 2)
-	_orient_to_ecliptic_sq = pow(orient_to_ecliptic / fov, 2)
-	_min_dist_sq = pow(selection_item.view_min_distance, 2.0) * 50.0 / fov
+	_follow_orbit_dist = follow_orbit / fov
+	_orient_to_local_pole = orient_to_local_pole / fov
+	_orient_to_ecliptic = orient_to_ecliptic / fov
+	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_set_run_state(Global.state.is_running)
 	Global.emit_signal("camera_ready", self)
 	print("BCamera ready...")
@@ -374,9 +373,9 @@ func _process_moving() -> void:
 	# common parent of the move. E.g., we move around Jupiter (not through it
 	# if going from Io to Europa. Basis is interpolated more straightforwardly
 	# using transform.basis.
-	var from_transform := _get_view_transform(_from_selection_item, _from_view_type, _from_view_position,
+	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
 			_from_view_orientation)
-	var to_transform := _get_view_transform(selection_item, view_type, view_position, view_orientation)
+	var to_transform := _get_view_transform(selection_item, view_position, view_orientation)
 	var global_common_translation := _move_spatial.global_transform.origin
 #	var common_north = _move_spatial.north_pole # FIXME
 	var from_common_translation := from_transform.origin \
@@ -404,11 +403,9 @@ func _process_moving() -> void:
 			to_common_view_position, ease_progress)
 	var interpolated_common_translation := convert_view_position(
 			interpolated_view_position, _move_north, 0.0)
-
 	_transform.origin = interpolated_common_translation + global_common_translation \
 			- parent.global_transform.origin
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, ease_progress)
-
 	var dist := _transform.origin.length()
 	near = dist * NEAR_DIST_MULTIPLIER
 	far = dist * FAR_DIST_MULTIPLIER
@@ -422,70 +419,15 @@ func _do_camera_handoff() -> void:
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
 
-func _process_not_moving(delta: float, is_dist_change := false) -> void:
+func _process_not_moving(delta: float) -> void:
 	var is_camera_bump := false
-	var is_rotation_change := false
-	_transform = _get_view_transform(selection_item, view_type, view_position, view_orientation)
-
-
+	_transform = _get_view_transform(selection_item, view_position, view_orientation)
 	if move_action:
-		_process_move_action(delta, view_position[2])
-		is_dist_change = true
-		is_rotation_change = true
+		_process_move_action(delta)
 		is_camera_bump = true
-	
-	
-#	if move_action.z:
-#		var move_z := move_action.z
-#		if abs(move_z) > min_action:
-#			move_z *= action_rate * delta
-#			move_action.z -= move_z
-#		else:
-#			move_action.z = 0.0
-#		_move_camera_radially(move_z)
-#		is_dist_change = true
-#		is_camera_bump = true
-#	if move_action.x or move_action.y:
-#		var move_x := move_action.x
-#		if abs(move_x) > min_action:
-#			move_x *= action_rate * delta
-#			move_action.x -= move_x
-#		else:
-#			move_action.x = 0.0
-#		var move_y := move_action.y
-#		if abs(move_y) > min_action:
-#			move_y *= action_rate * delta
-#			move_action.y -= move_y
-#		else:
-#			move_action.y = 0.0
-#		_move_camera_tangentially(move_x, move_y)
-#		is_rotation_change = true
-#		is_camera_bump = true
 	if rotate_action:
-		var rot_x := rotate_action.x
-		if abs(rot_x) > min_action:
-			rot_x *= action_rate * delta
-			rotate_action.x -= rot_x
-		else:
-			rotate_action.x = 0.0
-		var rot_y := rotate_action.y
-		if abs(rot_y) > min_action:
-			rot_y *= action_rate * delta
-			rotate_action.y -= rot_y
-		else:
-			rotate_action.y = 0.0
-		var rot_z := rotate_action.z
-		if abs(rot_z) > min_action:
-			rot_z *= action_rate * delta
-			rotate_action.z -= rot_z
-		else:
-			rotate_action.z = 0.0
-		_rotate_camera(rot_x, rot_y, rot_z)
-		rotate_action = VECTOR3_ZERO
-		is_rotation_change = true
+		_process_rotate_action(delta)
 		is_camera_bump = true
-	# flagged updates
-	var dist_sq := _transform.origin.length_squared()
 	if is_camera_bump and view_type != VIEW_UNCENTERED:
 		if view_orientation:
 			view_type = VIEW_UNCENTERED
@@ -493,20 +435,14 @@ func _process_not_moving(delta: float, is_dist_change := false) -> void:
 		elif view_type != VIEW_CENTERED:
 			view_type = VIEW_CENTERED
 			emit_signal("view_type_changed", view_type)
-	if is_dist_change:
-		var dist := sqrt(dist_sq)
+	var dist := view_position[2]
+	if !is_equal_approx(dist, _last_dist):
+		_last_dist = dist
 		emit_signal("range_changed", dist)
 		near = dist * NEAR_DIST_MULTIPLIER
 		far = dist * FAR_DIST_MULTIPLIER
-		is_rotation_change = true
-	if is_rotation_change:
-		var north := _get_north(selection_item, dist_sq)
-		_transform = _transform.looking_at(-_transform.origin, north)
-		_transform.basis *= Basis(view_orientation)
-		var reference_anomaly := _get_reference_anomaly(selection_item, dist_sq)
-		view_position = get_view_position(_transform.origin, north, reference_anomaly)
 
-func _process_move_action(delta: float, dist: float) -> void:
+func _process_move_action(delta: float) -> void:
 	var move_now := move_action
 	if abs(move_now.x) > min_action:
 		move_now.x *= action_rate * delta
@@ -523,77 +459,77 @@ func _process_move_action(delta: float, dist: float) -> void:
 		move_action.z -= move_now.z
 	else:
 		move_action.z = 0.0
-	_transform.origin += _transform.basis * (move_now * dist)
-	
+	var move_vector := _transform.basis * move_now # rotate for camera basis
+	var dot_origin := move_vector.dot(_transform.origin) # 0 for tangent move
+	var dist: float = view_position[2]
+	var north := _get_north(selection_item, dist)
+	var before_axis_of_latitude := _transform.origin.cross(north)
+	_transform.origin += move_vector * dist
+	var after_axis_of_latitude := _transform.origin.cross(north)
+	if before_axis_of_latitude.dot(after_axis_of_latitude) < 0.0:
+		# was pole transversal!
+		view_orientation.z = wrapf(view_orientation.z + PI, 0.0, TAU)
+	# Next step removes radial change from tangental movements
+	_transform.origin *= (dist + dot_origin) / _transform.origin.length()
+	# Adjust to current view_orientation and update view_position
+	_transform = _transform.looking_at(-_transform.origin, north)
+	_transform.basis *= Basis(view_orientation)
+	var reference_anomaly := _get_reference_anomaly(selection_item, dist)
+	view_position = get_view_position(_transform.origin, north, reference_anomaly)
 
-func _move_camera_radially(radial_movement: float) -> void:
-	var origin := _transform.origin
-	var dist_sq := origin.length_squared()
-	dist_sq *= 1.0 + radial_movement
-	if dist_sq > _max_dist_sq:
-		dist_sq = _max_dist_sq
-	elif dist_sq < _min_dist_sq:
-		dist_sq = _min_dist_sq
-	origin = origin.normalized() * sqrt(dist_sq)
-	_transform.origin = origin
-	var north := _get_north(selection_item, dist_sq)
-	view_position = get_view_position(origin, north)
-
-func _move_camera_tangentially(move_x: float, move_y: float) -> void:
-	# We're only interested in tangental compenents (x & y) but we need a
-	# Vector3 for 3D view_orientation.
-	var move_vector := Basis(view_orientation) * Vector3(move_x, move_y, 0.0)
-#	move_vector = Basis(view_orientation) * move_vector # any resulting z is ignored
-	var origin := _transform.origin
-	var dist_sq := origin.length_squared()
-	var north := _get_north(selection_item, dist_sq)
-	var angle_to_pole := origin.angle_to(north)
-	var old_angle_to_pole := angle_to_pole
-	angle_to_pole -= move_vector.y
-	if angle_to_pole < MIN_ANGLE_TO_POLE:
-		angle_to_pole = MIN_ANGLE_TO_POLE
-	elif angle_to_pole > PI - MIN_ANGLE_TO_POLE:
-		angle_to_pole = PI - MIN_ANGLE_TO_POLE
-	var x_axis := north.cross(origin).normalized()
-	origin = origin.rotated(x_axis, angle_to_pole - old_angle_to_pole)
-	origin = origin.rotated(north, move_vector.x)
-	_transform.origin = origin
-	view_position = get_view_position(origin, north)
-
-func _rotate_camera(rot_x: float, rot_y: float, rot_z: float) -> void:
+func _process_rotate_action(delta: float) -> void:
+	var rotate_now := rotate_action
+	if abs(rotate_now.x) > min_action:
+		rotate_now.x *= action_rate * delta
+		rotate_action.x -= rotate_now.x
+	else:
+		rotate_action.x = 0.0
+	if abs(rotate_now.y) > min_action:
+		rotate_now.y *= action_rate * delta
+		rotate_action.y -= rotate_now.y
+	else:
+		rotate_action.y = 0.0
+	if abs(rotate_now.z) > min_action:
+		rotate_now.z *= action_rate * delta
+		rotate_action.z -= rotate_now.z
+	else:
+		rotate_action.z = 0.0
 	var basis := Basis(view_orientation)
-	basis = basis.rotated(basis.x, rot_x)
-	basis = basis.rotated(basis.y, rot_y)
-	basis = basis.rotated(basis.z, rot_z)
+	basis = basis.rotated(basis.x, rotate_now.x)
+	basis = basis.rotated(basis.y, rotate_now.y)
+	basis = basis.rotated(basis.z, rotate_now.z)
 	view_orientation = basis.get_euler()
+	var dist: float = view_position[2]
+	var north := _get_north(selection_item, dist)
+	_transform = _transform.looking_at(-_transform.origin, north)
+	_transform.basis *= Basis(view_orientation)
 
-func _get_view_transform(selection_item_: SelectionItem, _view_type_: int, view_position_: Vector3,
+func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3,
 		view_orientation_: Vector3) -> Transform:
-	var dist := view_position_.z
-	var dist_sq := dist * dist
-	var north := _get_north(selection_item_, dist_sq)
-	var reference_anomaly := _get_reference_anomaly(selection_item_, dist_sq)
+	var dist := view_position_[2]
+	var north := _get_north(selection_item_, dist)
+	var reference_anomaly := _get_reference_anomaly(selection_item_, dist)
 	var view_type_translation := convert_view_position(view_position_, north, reference_anomaly)
 	_last_anomaly = reference_anomaly
 	var view_type_transform := Transform(Basis(), view_type_translation).looking_at(-view_type_translation, north)
 	view_type_transform.basis *= Basis(view_orientation_)
 	return view_type_transform
 
-func _get_reference_anomaly(selection_item_: SelectionItem, dist_sq: float) -> float:
-	if dist_sq < _follow_orbit_dist_sq:
+func _get_reference_anomaly(selection_item_: SelectionItem, dist: float) -> float:
+	if dist < _follow_orbit_dist:
 		return selection_item_.get_orbit_anomaly_for_camera()
 	return 0.0
 
-func _get_north(selection_item_: SelectionItem, dist_sq: float) -> Vector3:
+func _get_north(selection_item_: SelectionItem, dist: float) -> Vector3:
 	if !selection_item_.is_body:
 		return ECLIPTIC_NORTH
 	var local_north := selection_item_.get_north()
-	if dist_sq <= _orient_to_local_pole_sq:
+	if dist <= _orient_to_local_pole:
 		return local_north
-	elif dist_sq >= _orient_to_ecliptic_sq:
+	elif dist >= _orient_to_ecliptic:
 		return ECLIPTIC_NORTH
 	else:
-		var proportion := log(dist_sq / _orient_to_local_pole_sq) / log(_orient_to_ecliptic_sq / _orient_to_local_pole_sq)
+		var proportion := log(dist / _orient_to_local_pole) / log(_orient_to_ecliptic / _orient_to_local_pole)
 		proportion = ease(proportion, -ease_exponent)
 		var diff_vector := local_north - ECLIPTIC_NORTH
 		return (local_north - diff_vector * proportion).normalized()
