@@ -76,7 +76,7 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		x_offset_zoom = longitude_zoom_offset_parent_forground
 		y_offset_zoom = latitude_zoom_offset_parent_forground
 	var x_offset_top := longitude_fixed
-	var y_offset_top := PI / 2.0 - BCamera.MIN_ANGLE_TO_POLE
+	var y_offset_top := PI / 2.0 - 0.1
 	var x_offset_45 := (x_offset_zoom + x_offset_top) / 2.0
 	var y_offset_45 := (y_offset_zoom + y_offset_top) / 2.0
 	var m_radius := body.m_radius

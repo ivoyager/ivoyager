@@ -65,16 +65,16 @@ enum {
 	LONGITUDE_REMAP_TO
 }
 
-const DPRINT := false
-const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
-const NEAR_DIST_MULTIPLIER := 0.1 
-const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude 
-const MIN_ANGLE_TO_POLE := 0.1
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
 const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 const VECTOR3_ZERO := Vector3.ZERO
+
+const DPRINT := false
+const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
+const NEAR_DIST_MULTIPLIER := 0.1 
+const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude
 
 # ******************************* PERSISTED ***********************************
 
@@ -84,10 +84,8 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
-
 var view_position := VECTOR3_ZERO # longitude, latitude, radius
 var view_orientation := VECTOR3_ZERO # relative to pointing at parent, north up
-
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
@@ -143,6 +141,7 @@ var _from_view_orientation := VECTOR3_ZERO
 var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 var _last_dist := 0.0
+
 
 onready var _top_body: Body = _registrar.top_body
 onready var _viewport := get_viewport()
@@ -459,23 +458,36 @@ func _process_move_action(delta: float) -> void:
 		move_action.z -= move_now.z
 	else:
 		move_action.z = 0.0
-	var move_vector := _transform.basis * move_now # rotate for camera basis
-	var dot_origin := move_vector.dot(_transform.origin) # 0 for tangent move
+	# rotate for camera basis
+	var move_vector := _transform.basis * move_now
+	# get values for adjustments below
 	var dist: float = view_position[2]
 	var north := _get_north(selection_item, dist)
-	var before_axis_of_latitude := _transform.origin.cross(north)
-	_transform.origin += move_vector * dist
-	var after_axis_of_latitude := _transform.origin.cross(north)
-	if before_axis_of_latitude.dot(after_axis_of_latitude) < 0.0:
-		# was pole transversal!
+	var origin := _transform.origin
+	var move_dot_origin := move_vector.dot(origin) # radial movement
+	var normalized_origin := origin.normalized()
+	var longitude_vector := normalized_origin.cross(north).normalized()
+	# dampen "spin" as we near the poles
+	var longitudinal_move := longitude_vector * longitude_vector.dot(move_vector)
+	var spin_dampening := north.dot(normalized_origin)
+	spin_dampening *= spin_dampening # makes positive & reduces
+	spin_dampening *= spin_dampening # reduces more
+	move_vector -= longitudinal_move * spin_dampening
+	# add adjusted move vector scaled by distance to parent
+	origin += move_vector * dist
+	# test for pole traversal
+	if longitude_vector.dot(origin.cross(north)) <= 0.0: # before/after comparison
 		view_orientation.z = wrapf(view_orientation.z + PI, 0.0, TAU)
-	# Next step removes radial change from tangental movements
-	_transform.origin *= (dist + dot_origin) / _transform.origin.length()
-	# Adjust to current view_orientation and update view_position
-	_transform = _transform.looking_at(-_transform.origin, north)
+	# fix our distance to ignore small tangental movements
+	var new_dist := dist + move_dot_origin
+	new_dist = clamp(new_dist, _min_dist, _max_dist)
+	origin = new_dist * origin.normalized()
+	# update _transform & view_position (maintain view_orientation)
+	_transform.origin = origin
+	_transform = _transform.looking_at(-origin, north)
 	_transform.basis *= Basis(view_orientation)
-	var reference_anomaly := _get_reference_anomaly(selection_item, dist)
-	view_position = get_view_position(_transform.origin, north, reference_anomaly)
+	var reference_anomaly := _get_reference_anomaly(selection_item, new_dist)
+	view_position = get_view_position(origin, north, reference_anomaly)
 
 func _process_rotate_action(delta: float) -> void:
 	var rotate_now := rotate_action
