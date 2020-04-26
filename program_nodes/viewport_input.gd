@@ -31,12 +31,12 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
-const MOUSE_WHEEL_ADJ := 2.5 # adjust so default setting can be ~1.0
-const MOUSE_MOVE_ADJ := 0.4
+const MOUSE_WHEEL_ADJ := 7.5 # adjust so default setting can be ~1.0
+const MOUSE_MOVE_ADJ := 0.3
 const MOUSE_PITCH_YAW_ADJ := 0.2
 const MOUSE_ROLL_ADJ := 0.5
-const KEY_IN_OUT_ADJ := 1.0
-const KEY_MOVE_ADJ := 1.0
+const KEY_IN_OUT_ADJ := 3.0
+const KEY_MOVE_ADJ := 0.7
 const KEY_PITCH_YAW_ADJ := 3.0
 const KEY_ROLL_ADJ := 3.0
 

@@ -55,9 +55,9 @@ signal sim_stop_required(who) # see Main for external thread coordination
 signal sim_run_allowed(who) # all requiring stop must allow!
 
 # camera control
-signal move_camera_to_selection_requested(selection_item, view_type, spherical_position,
-		camera_rotation, is_instant_move) # 1st arg can be null; all others optional
-signal move_camera_to_body_requested(body, view_type, spherical_position, camera_rotation,
+signal move_camera_to_selection_requested(selection_item, view_type, view_position,
+		view_orientation, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_to_body_requested(body, view_type, view_position, view_orientation,
 		is_instant_move) # 1st arg can be null; all others optional
 
 # GUI requests

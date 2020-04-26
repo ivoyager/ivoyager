@@ -56,7 +56,7 @@ var n_comets := -1
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
 
-var camera_spherical_positions: Array #Vector3 for 1st three VIEW_TYPE_'S
+var camera_view_positions: Array #Vector3 for 1st three VIEW_TYPE_'S
 
 var spatial: Spatial # for camera parenting
 var body: Body # = spatial if is_body else null
@@ -65,7 +65,7 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "selection_type", "classification",
 	"is_body", "up_selection_name", "non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
-	"camera_spherical_positions"]
+	"camera_view_positions"]
 const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 
 # read-only
@@ -80,12 +80,11 @@ func get_north() -> Vector3:
 	return ECLIPTIC_NORTH
 
 func get_orbit_anomaly_for_camera() -> float:
-	# returns -INF as null value if not applicable
 	if !is_body or !view_rotate_when_close:
-		return -INF
+		return 0.0
 	var orbit: Orbit = body.orbit
 	if !orbit:
-		return -INF
+		return 0.0
 	return orbit.get_anomaly_for_camera(_times[0])
 
 func init(selection_type_: int) -> void:
