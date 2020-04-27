@@ -67,7 +67,6 @@ func _clear_procedural() -> void:
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 	if is_new_game: # rebuild game GUI
 		selection_manager = _SelectionManager_.new()
-		selection_manager.init_as_camera_selection()
 		var start_selection: SelectionItem = _registrar.selection_items[Global.start_body_name]
 		selection_manager.select(start_selection)
 		for key in run_gui_classes:

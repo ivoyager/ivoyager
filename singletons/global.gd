@@ -42,6 +42,7 @@ signal about_to_quit()
 
 # camera broadcasts
 signal camera_ready(camera)
+
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # other broadcasts
