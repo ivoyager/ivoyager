@@ -53,9 +53,6 @@ static func rotate_vector_pole(vector: Vector3, new_pole: Vector3) -> Vector3:
 	var X := ECLIPTIC_NORTH.cross(new_pole)
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
-#	var result := vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
-#	prints(vector, unrotate_vector_pole(result, new_pole))
-#	return result
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
 static func unrotate_vector_pole(vector: Vector3, old_pole: Vector3) -> Vector3:
@@ -72,17 +69,16 @@ static func unrotate_vector_pole(vector: Vector3, old_pole: Vector3) -> Vector3:
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
 static func rotate_basis_pole(basis: Basis, new_pole: Vector3) -> Basis:
-	# From ecliptic as above - NOT TESTED !!!
 	if new_pole == ECLIPTIC_NORTH:
 		return basis
 	var cos_th := ECLIPTIC_NORTH.dot(new_pole)
 	var X := ECLIPTIC_NORTH.cross(new_pole)
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
-	var one_minus_cos_th := 1.0 - cos_th
-	basis.x = basis.x * cos_th + k.cross(basis.x) * sin_th + k * k.dot(basis.x) * one_minus_cos_th
-	basis.y = basis.y * cos_th + k.cross(basis.y) * sin_th + k * k.dot(basis.y) * one_minus_cos_th
-	basis.z = basis.z * cos_th + k.cross(basis.z) * sin_th + k * k.dot(basis.z) * one_minus_cos_th
+	var c1 := 1.0 - cos_th
+	basis.x = basis.x * cos_th + k.cross(basis.x) * sin_th + k * k.dot(basis.x) * c1
+	basis.y = basis.y * cos_th + k.cross(basis.y) * sin_th + k * k.dot(basis.y) * c1
+	basis.z = basis.z * cos_th + k.cross(basis.z) * sin_th + k * k.dot(basis.z) * c1
 	return basis
 
 static func get_rotation_matrix(keplerian_elements: Array) -> Basis:
@@ -154,14 +150,16 @@ static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 
 # RA, dec are spherical coordinates except dec is from equator rather than pole
 static func get_equatorial_coordinates2(translation: Vector3) -> Vector2:
+	# returns Vector2(right_ascension, declination)
 	var r := translation.length()
 	return Vector2(
-		fposmod(atan2(translation.y, translation.x), TAU), # RA
-		asin(translation.z / r) # dec
+		fposmod(atan2(translation.y, translation.x), TAU),
+		asin(translation.z / r)
 	)
 
-static func convert_equatorial_coordinates2(right_ascension: float, declination: float) -> Vector3:
-	# returns translation w/ length = 1.0
+static func convert_equatorial_coordinates2(right_ascension: float,
+		declination: float) -> Vector3:
+	# returns translation assuming r = 1.0
 	var cos_decl := cos(declination)
 	return Vector3(
 		cos(right_ascension) * cos_decl,
@@ -170,19 +168,22 @@ static func convert_equatorial_coordinates2(right_ascension: float, declination:
 	)
 
 static func get_equatorial_coordinates3(translation: Vector3) -> Vector3:
+	# returns Vector3(right_ascension, declination, r)
 	var r := translation.length()
 	return Vector3(
-		fposmod(atan2(translation.y, translation.x), TAU), # RA
-		asin(translation.z / r), # dec
-		r # distance
+		fposmod(atan2(translation.y, translation.x), TAU),
+		asin(translation.z / r),
+		r
 	)
 
 static func convert_equatorial_coordinates3(equatorial_coord: Vector3) -> Vector3:
+	# equatorial_coord is Vector3(right_ascension, declination, r)
+	# returns translation
 	var right_ascension: float = equatorial_coord[0]
 	var declination: float = equatorial_coord[1]
 	var r: float = equatorial_coord[2]
 	var cos_decl := cos(declination)
-	return Vector3( # translation
+	return Vector3(
 		cos(right_ascension) * cos_decl,
 		sin(right_ascension) * cos_decl,
 		sin(declination)
@@ -192,7 +193,7 @@ static func convert_equatorial_coordinates3(equatorial_coord: Vector3) -> Vector
 static func acosh(x: float) -> float:
 	# from https://en.wikipedia.org/wiki/Hyperbolic_function
 	assert(x >= 1.0)
-	return log(x + sqrt(x * x - 1))
+	return log(x + sqrt(x * x - 1.0))
 
 # Camera
 static func get_view_position(translation: Vector3, north: Vector3,
@@ -206,6 +207,7 @@ static func get_view_position(translation: Vector3, north: Vector3,
 
 static func convert_view_position(view_position: Vector3, north: Vector3,
 		ref_longitude := 0.0) -> Vector3:
+	# see comment above
 	view_position[0] += ref_longitude
 	var translation := convert_equatorial_coordinates3(view_position)
 	translation = rotate_vector_pole(translation, north)

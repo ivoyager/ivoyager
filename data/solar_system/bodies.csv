@@ -4,7 +4,7 @@
 #,,,,,,,,
 #,,,,,,,,
 #,,# Graphics ---->,,,,,,
-key,ellipsoidal,unshaded,shadow,metallic,roughness,rim_enabled,rim,rim_tint
+key,ellipsoid,unshaded,shadow,metallic,roughness,rim_enabled,rim,rim_tint
 Data_Type,BOOL,BOOL,BOOL,REAL,REAL,BOOL,REAL,REAL
 Defaults,TRUE,FALSE,TRUE,0.1,0.6,TRUE,0.003,0.9
 Units,,,,,,,,

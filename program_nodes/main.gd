@@ -37,7 +37,6 @@ var _settings: Dictionary = Global.settings
 var _enable_save_load: bool = Global.enable_save_load
 var _tree: SceneTree
 var _gui_top: GUITop
-var _table_reader: TableReader
 var _saver_loader: SaverLoader
 var _main_prog_bar: MainProgBar
 var _system_builder: SystemBuilder
@@ -61,7 +60,6 @@ func project_init() -> void:
 	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.program.tree
 	_gui_top = Global.program.GUITop
-	_table_reader = Global.program.TableReader
 	_saver_loader = Global.program.get("SaverLoader")
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_system_builder = Global.program.SystemBuilder
@@ -251,7 +249,9 @@ func _on_ready() -> void:
 
 func _import_table_data() -> void:
 	yield(_tree, "idle_frame")
-	_table_reader.import_table_data()
+	var table_reader: TableReader = Global.program.TableReader
+	table_reader.import_table_data()
+	Global.program.erase("TableReader")
 	Global.emit_signal("table_data_imported")
 
 func _finish_init() -> void:

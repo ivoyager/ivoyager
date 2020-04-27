@@ -1,4 +1,4 @@
-# starlight.gd
+# light_builder.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,10 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# This is starlight from an individual star!
+# Only a star's OmniLight for now.
 
-extends OmniLight
-class_name Starlight
-	
-func init(data: Array, fields: Dictionary):
-	omni_range = data[fields.omni_range]
+class_name LightBuilder
+
+const METER := UnitDefs.METER
+
+var _table_data: Dictionary = Global.table_data
+var _table_fields: Dictionary = Global.table_fields
+
+
+func project_init() -> void:
+	pass
+
+func add_to(body: Body) -> void:
+	if body.starlight_type != -1:
+		var starlight := OmniLight.new()
+		var row_data: Array = _table_data.lights[body.starlight_type]
+		var fields: Dictionary = _table_fields.lights
+		starlight.omni_range = row_data[fields.omni_range]
+		starlight.name = "Starlight"
+		body.add_child(starlight)
+

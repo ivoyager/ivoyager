@@ -76,6 +76,9 @@ var _table_rows: Dictionary = Global.table_rows
 var _times: Array = Global.times
 var _hud_2d_surface: Control
 var _registrar: Registrar
+var _model_builder: ModelBuilder
+var _rings_builder: RingsBuilder
+var _light_builder: LightBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _table_helper: TableHelper
@@ -83,9 +86,6 @@ var _Body_: Script
 var _HUDOrbit_: Script
 var _HUDIcon_: Script
 var _HUDLabel_: Script
-var _Model_: Script
-var _Rings_: Script
-var _Starlight_: Script
 var _texture_2d_dir: String
 var _satellite_indexes := {} # passed to & shared by Body instances
 var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
@@ -94,6 +94,9 @@ func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
 	_hud_2d_surface = Global.program.HUD2dSurface
 	_registrar = Global.program.Registrar
+	_model_builder = Global.program.ModelBuilder
+	_rings_builder = Global.program.RingsBuilder
+	_light_builder = Global.program.LightBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
 	_table_helper = Global.program.TableHelper
@@ -101,13 +104,11 @@ func project_init() -> void:
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_HUDIcon_ = Global.script_classes._HUDIcon_
 	_HUDLabel_ = Global.script_classes._HUDLabel_
-	_Model_ = Global.script_classes._Model_
-	_Rings_ = Global.script_classes._Rings_
-	_Starlight_ = Global.script_classes._Starlight_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
-func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_type: int) -> void:
+func build(body: Body, parent: Body, row_data: Array, fields: Dictionary,
+		table_type: int) -> void:
 	assert(DPRINT and prints("build", tr(row_data[fields.key])) or true)
 	if !parent:
 		body.is_top = true
@@ -171,17 +172,14 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 			var correction_axis := body.north_pole.cross(orbit.reference_normal).normalized()
 			body.north_pole = body.north_pole.rotated(correction_axis, body.axial_tilt)
 	body.north_pole = body.north_pole.normalized()
-	# Keep below print statement for additional "does this make sense?" tests.
-	# prints(body.name, rad2deg(body.axial_tilt), rad2deg(body.north_pole.angle_to(ECLIPTIC_NORTH)))
 	if orbit and orbit.is_retrograde(time): # retrograde
 		body.rotation_period = -body.rotation_period
 	
 	# reference basis
-	var tilt_axis = Vector3(0.0, 1.0, 0.0).cross(body.north_pole).normalized() # up for model graphic is its y-axis
-	var tilt_angle = Vector3(0.0, 1.0, 0.0).angle_to(body.north_pole)
-	body.reference_basis = body.reference_basis.rotated(tilt_axis, tilt_angle)
-	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skip if 0 or null
-		body.reference_basis = body.reference_basis.rotated(body.north_pole, row_data[fields.rotate_adj])
+	body.reference_basis = math.rotate_basis_pole(Basis(), body.north_pole)
+	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skips if 0
+		body.reference_basis = body.reference_basis.rotated(body.north_pole,
+				row_data[fields.rotate_adj])
 
 	# file import info
 	if fields.has("rings") and row_data[fields.rings]:
@@ -216,31 +214,15 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	var file_prefix: String = body.file_prefix
-	var body_type: int = body.body_type
 	# model
 	if body.body_type != -1:
-		var model: Model = SaverLoader.make_object_or_scene(_Model_)
-		model.init(body_type, file_prefix, body.m_radius, body.e_radius)
-		var too_far: float = body.m_radius * model.TOO_FAR_RADIUS_MULTIPLIER
-		body.set_model(model, too_far)
+		_model_builder.add_to(body)
 	# rings
 	if body.rings_info:
-		var rings_file: String = body.rings_info[0]
-		var rings_radius: float = body.rings_info[1]
-		var rings: Spatial = SaverLoader.make_object_or_scene(_Rings_)
-		rings.init(rings_file, rings_radius)
-		var rings_tilt_axis := Vector3(0, 0, 1).cross(body.north_pole).normalized() # z-axis is up for rings graphic
-		var rings_tilt_angle := Vector3(0, 0, 1).angle_to(body.north_pole)
-		rings.rotate(rings_tilt_axis, rings_tilt_angle)
-		var too_far: float = rings_radius * rings.TOO_FAR_RADIUS_MULTIPLIER
-		body.set_aux_graphic(rings, too_far)
+		_rings_builder.add_to(body)
 	# starlight
-	var starlight: Starlight
 	if body.starlight_type != -1:
-		starlight = SaverLoader.make_object_or_scene(_Starlight_)
-		var starlight_data: Array = _table_data.lights[body.starlight_type]
-		starlight.init(starlight_data, _table_fields.lights)
-		body.add_child(starlight)
+		_light_builder.add_to(body)
 	# HUDs
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	# HUDOrbit

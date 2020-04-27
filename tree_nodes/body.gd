@@ -65,7 +65,7 @@ var right_ascension := -INF
 var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
-var north_pole := Vector3()
+var north_pole := Vector3(0.0, 0.0, 1.0)
 # optional characteristics (for display, INF -> ?; -INF -> don't show)
 var density := INF
 var albedo := -INF
@@ -100,44 +100,33 @@ const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
 # ****************************** UNPERSISTED **********************************
 
-# public read-only
+# public unpersisted - set by BodyBuilder
 var model: Spatial
-var aux_graphic: Spatial
+var aux_graphic: Spatial # rings, commet tail, etc.
 var hud_orbit: HUDOrbit
 var hud_icon: HUDIcon
 var hud_label: HUDLabel
 var texture_2d: Texture
-var texture_slice_2d: Texture # only used for stars
-var satellite_indexes: Dictionary # shared
-var model_too_far: float
-var aux_graphic_too_far: float
+var texture_slice_2d: Texture # GUI graphic for sun only
+var model_basis: Basis # at epoch
+var model_too_far := 0.0
+var aux_graphic_too_far := 0.0
+var aux_graphic_process := false
 var hud_too_close := 0.0
+var satellite_indexes: Dictionary # shared
 
 # private
-var _aux_graphic_process := false
 var _times: Array = Global.times
+var _visible := false
+var _model_visible := false
+var _aux_graphic_visible := false
+var _hud_orbit_visible := false
+var _hud_label_visible := false
+var _hud_icon_visible := false
 
 # *************************** PUBLIC FUNCTIONS ********************************
 
-func set_model(new_model: Spatial, too_far: float) -> void:
-	# null to remove
-	if model:
-		remove_child(model)
-	model = new_model
-	model_too_far = too_far
-	if new_model:
-		add_child(new_model)
-		
-func set_aux_graphic(new_aux_graphic: Spatial, too_far: float, has_body_process_method := false) -> void:
-	# null to remove
-	if aux_graphic:
-		remove_child(aux_graphic)
-	aux_graphic = new_aux_graphic
-	aux_graphic_too_far = too_far
-	_aux_graphic_process = has_body_process_method
-	if new_aux_graphic:
-		add_child(new_aux_graphic)
-		
+
 func set_label_text(text: String) -> void:
 	if hud_label:
 		hud_label.text = text
@@ -155,46 +144,67 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 	# TODO: Need viewport size correction
 	var global_translation := global_transform.origin
 	var camera_dist := global_translation.distance_to(camera_global_translation)
-	var is_hud_dist_ok := camera_dist > hud_too_close
-	if is_hud_dist_ok:
+	var hud_dist_ok := camera_dist > hud_too_close
+	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
-		is_hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
-	var is_label_visible := is_hud_dist_ok and show_labels and hud_label \
+		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
+	var hud_label_visible := show_labels and hud_dist_ok and hud_label \
 			and !camera.is_position_behind(global_translation)
-	if is_label_visible: # position 2D node before 3D translation!
+	if hud_label_visible: # position 2D node before 3D translation!
 		var label_pos := camera.unproject_position(global_translation)
 		var label_offset := -hud_label.rect_size / 2.0
 		hud_label.set_position(label_pos + label_offset)
 	if orbit:
 		translation = orbit.get_position(time)
 	if model:
-		if camera_dist < model_too_far or starlight_type != -1:
+		var model_visible := camera_dist < model_too_far
+		if model_visible:
 			var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-			model.transform.basis = reference_basis.rotated(north_pole, rotation_angle)
-			model.visible = true
-		else:
-			model.visible = false
+			model.transform.basis = model_basis.rotated(north_pole, rotation_angle)
+		if _model_visible != model_visible:
+			_model_visible = model_visible
+			model.visible = model_visible
+#			prints(tr(name), model_visible)
 	if aux_graphic:
-		if _aux_graphic_process:
+		var aux_graphic_visible := camera_dist < aux_graphic_too_far
+		if aux_graphic_visible and aux_graphic_process:
 			aux_graphic.body_process(time)
-		aux_graphic.visible = camera_dist < aux_graphic_too_far
-	if hud_label:
-		hud_label.visible = is_label_visible
+		if _aux_graphic_visible != aux_graphic_visible:
+			_aux_graphic_visible = aux_graphic_visible
+			aux_graphic.visible = aux_graphic_visible
 	if hud_orbit:
-		hud_orbit.visible = show_orbits and is_hud_dist_ok
+		var hud_orbit_visible := show_orbits and hud_dist_ok
+		if _hud_orbit_visible != hud_orbit_visible:
+			_hud_orbit_visible = hud_orbit_visible
+			hud_orbit.visible = hud_orbit_visible
+	if hud_label:
+		if _hud_label_visible != hud_label_visible:
+			_hud_label_visible = hud_label_visible
+			hud_label.visible = hud_label_visible
 	if hud_icon:
-		hud_icon.visible = show_icons and is_hud_dist_ok
-	visible = true
+		var hud_icon_visible := show_icons and hud_dist_ok
+		if _hud_icon_visible != hud_icon_visible:
+			_hud_icon_visible = hud_icon_visible
+			hud_icon.visible = hud_icon_visible
+	if !_visible:
+		_visible = true
+		visible = true
 
 func hide_visuals() -> void:
-	visible = false # hides all tree descendants (including model)
-	if hud_orbit:
+	_visible = false
+	visible = false # hides all tree descendants, including model
+	if hud_orbit: # not a child of this node!
+		_hud_orbit_visible = false
 		hud_orbit.visible = false
-	if hud_label:
+	if hud_label: # not a child of this node!
+		_hud_label_visible = false
 		hud_label.visible = false
+	
+	# Note: Visibility is NOT propagated from 3D to 2D nodes! So we can't just
+	# add HUDLabel as child of this node.
 	# TODO: We could add 2D labels in our tree-structure so visibility is
-	# inherited. I think something like "set_is_top" would prevent inheriting
-	# position. (Note: visibility is NOT inherited from 3D to 2D nodes!)
+	# propagated that way. I think something like "set_is_top" would prevent
+	# inheritin position.
 
 # *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
