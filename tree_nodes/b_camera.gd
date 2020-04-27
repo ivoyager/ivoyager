@@ -18,15 +18,13 @@
 # This camera is always locked to a Body and constantly orients itself based on
 # that Body's orbit around its parent. You can replace this with another Camera
 # class, but see:
-#    Global signals (singletons/globa.gd)
-#    ViewportInput (program_nodes/viewport_input.gd)
-#    TreeManager (program_nodes/tree_manager.gd)
+#    Global signals related to camera (singletons/global.gd)
+#    BCameraInput (program_nodes/b_camera_input.gd); replace this!
+#    TreeManager (program_nodes/tree_manager.gd); modify as needed!
 #    SelectionManager (tree_refs/selection_manager.gd)
-# (You'll need to either match some BCamera API or modify/replace the latter
-# three classes.)
 #
 # The camera stays "in place" by maintaining view_position & view_orientation.
-# Both are spherical coordinates. The first is position relative to a vector
+# The first is position relative to a vector
 # from the parent body to the grandparent body (reversed at star orbiting
 # bodies). The second is rotation relative to pointing at parent.
 
@@ -108,40 +106,38 @@ var ease_exponent := 5.0
 var follow_orbit: float = 4e7 * UnitDefs.KM # km after dividing by fov
 var orient_to_local_pole: float = 5e7 * UnitDefs.KM # must be > follow_orbit
 var orient_to_ecliptic: float = 5e10 * UnitDefs.KM # must be > orient_to_local_pole
-var action_rate := 10.0 # how fast we use up the accumulators
+var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
-
-# input control - these are accumulators
-var move_action := VECTOR3_ZERO
-var rotate_action := VECTOR3_ZERO
 
 # public read-only
 var parent: Spatial # always current
-var is_moving := false
+var is_moving := false # body to body move in progress
 
 # private
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
 var _max_dist: float = Global.max_camera_distance
-var _min_dist := 0.1 # set for parent body
+var _min_dist := 0.1 # changed on move for parent body
 var _follow_orbit_dist: float
 var _orient_to_local_pole: float
 var _orient_to_ecliptic: float
 
-# move
+# move/rotate actions - these are accumulators
+var _move_action := VECTOR3_ZERO
+var _rotate_action := VECTOR3_ZERO
+
+# body to body move
 var _move_progress: float
 var _to_spatial: Spatial
 var _from_spatial: Spatial
-var _move_spatial: Spatial
-var _move_north := ECLIPTIC_NORTH
+var _common_spatial: Spatial
+var _common_north := ECLIPTIC_NORTH
 var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE
 var _from_view_orientation := VECTOR3_ZERO
-var _last_anomaly := -INF # -INF is used as null value
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 var _last_dist := 0.0
-
 
 onready var _top_body: Body = _registrar.top_body
 onready var _viewport := get_viewport()
@@ -151,58 +147,11 @@ onready var _transition_time: float = _settings.camera_transition_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
-static func get_view_position(translation_: Vector3, north: Vector3,
-		ref_longitude := 0.0) -> Vector3:
-	# FIXME: This should be way simpler than the way I did it here!
-	#
-	# "view_position_" is a standardized Vector3 where:
-	#    x is longitude angle relative to ref_longitude
-	#    y is latitude angle
-	#    z is radius distance
-	# (ref_longitude is used here to track orbital motion when close; -INF, ok)
-	assert(north.is_normalized())
-	if ref_longitude == -INF:
-		ref_longitude = 0.0
-	
-	# TODO: Use spherical coordinate conversions
-#	translation_ = _math.rotate_vector_pole(translation_, north)
-#	var spherical := _math.cartesian2spherical(translation_)
-#	var radius := spherical[0]
-#	var latitude := PI / 2.0 - spherical[1]
-#	var longitude := wrapf(spherical[2] - ref_longitude, -PI, PI)
-	
-	var radius := translation_.length()
-	var latitude := PI / 2.0 - translation_.angle_to(north)
-	var axis := translation_.cross(north).normalized()
-	var world_x := Y_DIRECTION.cross(north).normalized()
-	var longitude := axis.angle_to(world_x)
-	if axis.dot(Y_DIRECTION) < 0.0:
-		longitude = -longitude
-	longitude = wrapf(longitude + PI / 2.0 - ref_longitude, -PI, PI)
-	return Vector3(longitude, latitude, radius)
+func add_move_action(move_action: Vector3) -> void:
+	_move_action += move_action
 
-static func convert_view_position(view_position_: Vector3, north: Vector3,
-		ref_longitude: float) -> Vector3:
-	# inverse of above function
-	# FIXME: This should be way simpler than this!!!
-	if ref_longitude == -INF:
-		ref_longitude = 0.0
-	var longitude := view_position_[0]
-	var latitude := view_position_[1]
-	var radius := view_position_[2]
-	
-	# TODO: Use spherical coordinate conversions
-#	var spherical := Vector3(radius, PI / 2.0 - latitude, longitude - ref_longitude)
-#	var translation_ := _math.spherical2cartesian(spherical)
-#	translation_ = -_math.rotate_vector_pole(north, translation_)
-	
-	var world_x := Y_DIRECTION.cross(north).normalized()
-	var axis := world_x.rotated(north, longitude - PI / 2.0 + ref_longitude)
-	var translation_ = axis.cross(north)
-	assert(translation_.is_normalized())
-	translation_ = translation_.rotated(axis, latitude)
-	translation_ *= -radius
-	return translation_
+func add_rotate_action(rotate_action: Vector3) -> void:
+	_rotate_action += rotate_action
 
 func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
@@ -247,13 +196,13 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 		_move_progress = 0.0 # starts move on next frame
 	else:
 		_move_progress = _transition_time / 2.0 # move was in progress; user is in a hurry!
-	_move_spatial = _get_common_spatial(_from_spatial, _to_spatial)
+	_common_spatial = _get_common_spatial(_from_spatial, _to_spatial)
 	var from_north: Vector3 = _from_spatial.north_pole if "north_pole" in _from_spatial else ECLIPTIC_NORTH
 	var to_north: Vector3 = _to_spatial.north_pole if "north_pole" in _to_spatial else ECLIPTIC_NORTH
-	_move_north = (from_north + to_north).normalized()
+	_common_north = (from_north + to_north).normalized()
 	is_moving = true
-	move_action = VECTOR3_ZERO
-	rotate_action = VECTOR3_ZERO
+	_move_action = VECTOR3_ZERO
+	_rotate_action = VECTOR3_ZERO
 	_move_longitude_remap = LONGITUDE_REMAP_INIT
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("view_type_changed", view_type)
@@ -319,7 +268,6 @@ func _on_ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_send_gui_refresh")
-	Global.connect("run_state_changed", self, "_set_run_state")
 	Global.connect("move_camera_to_selection_requested", self, "move")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
@@ -340,19 +288,13 @@ func _on_ready():
 	_orient_to_local_pole = orient_to_local_pole / fov
 	_orient_to_ecliptic = orient_to_ecliptic / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
-	_set_run_state(Global.state.is_running)
 	Global.emit_signal("camera_ready", self)
 	print("BCamera ready...")
-
-func _set_run_state(is_running: bool) -> void:
-	set_process(is_running)
-	set_process_unhandled_input(is_running)
 
 func _start_sim(_is_new_game: bool) -> void:
 	move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
 
 func _prepare_to_free() -> void:
-	Global.disconnect("run_state_changed", self, "_set_run_state")
 	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
 	Global.disconnect("move_camera_to_selection_requested", self, "move")
 	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
@@ -360,7 +302,7 @@ func _prepare_to_free() -> void:
 	parent = null
 	_to_spatial = null
 	_from_spatial = null
-	_move_spatial = null
+	_common_spatial = null
 	_top_body = null
 
 func _process_moving() -> void:
@@ -375,14 +317,14 @@ func _process_moving() -> void:
 	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
 			_from_view_orientation)
 	var to_transform := _get_view_transform(selection_item, view_position, view_orientation)
-	var global_common_translation := _move_spatial.global_transform.origin
-#	var common_north = _move_spatial.north_pole # FIXME
+	var global_common_translation := _common_spatial.global_transform.origin
+#	var common_north = _common_spatial.north_pole # FIXME
 	var from_common_translation := from_transform.origin \
 			+ _from_spatial.global_transform.origin - global_common_translation
 	var to_common_translation := to_transform.origin \
 			+ _to_spatial.global_transform.origin - global_common_translation
-	var from_common_view_position := get_view_position(from_common_translation, _move_north, 0.0)
-	var to_common_view_position := get_view_position(to_common_translation, _move_north, 0.0)
+	var from_common_view_position := math.get_view_position(from_common_translation, _common_north, 0.0)
+	var to_common_view_position := math.get_view_position(to_common_translation, _common_north, 0.0)
 	# We can remap longitude to allow shorter travel over the PI/-PI transition.
 	# However, we must commit at begining of move to a particular remapping and
 	# stick to it.
@@ -400,8 +342,8 @@ func _process_moving() -> void:
 		to_common_view_position[0] += TAU
 	var interpolated_view_position := from_common_view_position.linear_interpolate(
 			to_common_view_position, ease_progress)
-	var interpolated_common_translation := convert_view_position(
-			interpolated_view_position, _move_north, 0.0)
+	var interpolated_common_translation := math.convert_view_position(
+			interpolated_view_position, _common_north, 0.0)
 	_transform.origin = interpolated_common_translation + global_common_translation \
 			- parent.global_transform.origin
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, ease_progress)
@@ -421,10 +363,10 @@ func _do_camera_handoff() -> void:
 func _process_not_moving(delta: float) -> void:
 	var is_camera_bump := false
 	_transform = _get_view_transform(selection_item, view_position, view_orientation)
-	if move_action:
+	if _move_action:
 		_process_move_action(delta)
 		is_camera_bump = true
-	if rotate_action:
+	if _rotate_action:
 		_process_rotate_action(delta)
 		is_camera_bump = true
 	if is_camera_bump and view_type != VIEW_UNCENTERED:
@@ -442,22 +384,22 @@ func _process_not_moving(delta: float) -> void:
 		far = dist * FAR_DIST_MULTIPLIER
 
 func _process_move_action(delta: float) -> void:
-	var move_now := move_action
+	var move_now := _move_action
 	if abs(move_now.x) > min_action:
-		move_now.x *= action_rate * delta
-		move_action.x -= move_now.x
+		move_now.x *= action_immediacy * delta
+		_move_action.x -= move_now.x
 	else:
-		move_action.x = 0.0
+		_move_action.x = 0.0
 	if abs(move_now.y) > min_action:
-		move_now.y *= action_rate * delta
-		move_action.y -= move_now.y
+		move_now.y *= action_immediacy * delta
+		_move_action.y -= move_now.y
 	else:
-		move_action.y = 0.0
+		_move_action.y = 0.0
 	if abs(move_now.z) > min_action:
-		move_now.z *= action_rate * delta
-		move_action.z -= move_now.z
+		move_now.z *= action_immediacy * delta
+		_move_action.z -= move_now.z
 	else:
-		move_action.z = 0.0
+		_move_action.z = 0.0
 	# rotate for camera basis
 	var move_vector := _transform.basis * move_now
 	# get values for adjustments below
@@ -487,25 +429,25 @@ func _process_move_action(delta: float) -> void:
 	_transform = _transform.looking_at(-origin, north)
 	_transform.basis *= Basis(view_orientation)
 	var reference_anomaly := _get_reference_anomaly(selection_item, new_dist)
-	view_position = get_view_position(origin, north, reference_anomaly)
+	view_position = math.get_view_position(origin, north, reference_anomaly)
 
 func _process_rotate_action(delta: float) -> void:
-	var rotate_now := rotate_action
+	var rotate_now := _rotate_action
 	if abs(rotate_now.x) > min_action:
-		rotate_now.x *= action_rate * delta
-		rotate_action.x -= rotate_now.x
+		rotate_now.x *= action_immediacy * delta
+		_rotate_action.x -= rotate_now.x
 	else:
-		rotate_action.x = 0.0
+		_rotate_action.x = 0.0
 	if abs(rotate_now.y) > min_action:
-		rotate_now.y *= action_rate * delta
-		rotate_action.y -= rotate_now.y
+		rotate_now.y *= action_immediacy * delta
+		_rotate_action.y -= rotate_now.y
 	else:
-		rotate_action.y = 0.0
+		_rotate_action.y = 0.0
 	if abs(rotate_now.z) > min_action:
-		rotate_now.z *= action_rate * delta
-		rotate_action.z -= rotate_now.z
+		rotate_now.z *= action_immediacy * delta
+		_rotate_action.z -= rotate_now.z
 	else:
-		rotate_action.z = 0.0
+		_rotate_action.z = 0.0
 	var basis := Basis(view_orientation)
 	basis = basis.rotated(basis.x, rotate_now.x)
 	basis = basis.rotated(basis.y, rotate_now.y)
@@ -521,11 +463,10 @@ func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3
 	var dist := view_position_[2]
 	var north := _get_north(selection_item_, dist)
 	var reference_anomaly := _get_reference_anomaly(selection_item_, dist)
-	var view_type_translation := convert_view_position(view_position_, north, reference_anomaly)
-	_last_anomaly = reference_anomaly
-	var view_type_transform := Transform(Basis(), view_type_translation).looking_at(-view_type_translation, north)
-	view_type_transform.basis *= Basis(view_orientation_)
-	return view_type_transform
+	var view_translation := math.convert_view_position(view_position_, north, reference_anomaly)
+	var view_transform := Transform(Basis(), view_translation).looking_at(-view_translation, north)
+	view_transform.basis *= Basis(view_orientation_)
+	return view_transform
 
 func _get_reference_anomaly(selection_item_: SelectionItem, dist: float) -> float:
 	if dist < _follow_orbit_dist:

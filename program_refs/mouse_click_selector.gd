@@ -23,6 +23,7 @@ extends Reference
 class_name MouseClickSelector
 
 const MOUSE_CLICK_RANGE_SQ := 500.0 # in viewport pixels
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 var _registrar: Registrar
 var _mouse_position: Vector2
@@ -45,7 +46,7 @@ func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) ->
 	_closest_dist_sq = INF
 	_test_body_recursive(_registrar.top_body)
 	if _body:
-		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO, Vector3.ZERO)
+		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO, NULL_ROTATION)
 	else:
 		# placeholder for WIP PointPicker
 		pass

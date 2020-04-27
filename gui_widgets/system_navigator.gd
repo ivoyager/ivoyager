@@ -20,6 +20,7 @@
 extends HBoxContainer
 
 const DPRINT := false
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 var size_proportions_exponent := 0.4 # 1.0 is "true" proportions
 var horizontal_expansion := 550.0 # affects growth to right
