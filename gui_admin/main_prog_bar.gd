@@ -1,6 +1,6 @@
 # signal_prog_bar.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Target object must have property "progress" w/ integer value 0 - 100. This
 # node updates when the main thread is idle, so the target object needs to be
 # operating on another thread to see progress.

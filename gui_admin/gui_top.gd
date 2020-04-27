@@ -1,6 +1,6 @@
 # gui_top.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

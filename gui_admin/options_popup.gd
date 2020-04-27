@@ -1,6 +1,6 @@
 # options_popup.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
 

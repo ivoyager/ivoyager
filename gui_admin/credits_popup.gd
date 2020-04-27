@@ -1,6 +1,6 @@
 # credits_popup.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # WIP - I'm not super happy with the credits appearance right now. Needs work!
 # This was narrowly coded to parse ivoyager/CREDITS.md or file with identical
 # markup. Someone can generalize if they want.

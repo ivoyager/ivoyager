@@ -1,6 +1,6 @@
 # mouse_click_selector.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # This is a work-around for not using ray casting and collision bodies. Only
 # bodies with visible == true (and their children) need to be tested.
 

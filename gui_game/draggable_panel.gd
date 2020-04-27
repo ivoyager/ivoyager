@@ -1,6 +1,6 @@
 # draggable_panel.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Abstract base class extended by I, Voyager GUI panels.
+
 extends PanelContainer
 class_name DraggablePanel
 

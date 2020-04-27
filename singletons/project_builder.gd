@@ -1,6 +1,6 @@
 # project_builder.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Singleton "ProjectBuilder" builds the program (not the solar system!) and
-# makes program resources (program instances and classes) availible in Global
-# dictionaries.
+# Singleton "ProjectBuilder".
+# This node builds the program (not the solar system!) and makes program
+# nodes, references and classes availible in Global dictionaries. "Program
+# nodes" and "program references" are "small-s singletons". I.e., there is only
+# one instance of each, but they are instantiated here and are not global.
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!

@@ -1,6 +1,6 @@
 # input_map_manager.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # We define InputMap actions here to decouple version control for ivoyager and
 # extensions/addons (i.e., get them out of project.godot), and to allow player
 # modification via HotkeysPopup. Non-default actions are persisted in
