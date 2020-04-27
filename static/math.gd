@@ -53,6 +53,22 @@ static func rotate_vector_pole(vector: Vector3, new_pole: Vector3) -> Vector3:
 	var X := ECLIPTIC_NORTH.cross(new_pole)
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
+#	var result := vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
+#	prints(vector, unrotate_vector_pole(result, new_pole))
+#	return result
+	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
+
+static func unrotate_vector_pole(vector: Vector3, old_pole: Vector3) -> Vector3:
+	# Uses Rodrigues Formula to rotate vector from ecliptic (z up) orientation to
+	# provided new_pole; new_pole assumed to be a unit vector.
+#	if vector == ECLIPTIC_NORTH:
+#		return old_pole
+	if old_pole == ECLIPTIC_NORTH:
+		return vector
+	var cos_th := ECLIPTIC_NORTH.dot(old_pole)
+	var X := -ECLIPTIC_NORTH.cross(old_pole)
+	var sin_th := X.length()
+	var k := X / sin_th # normalized cross product
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
 static func rotate_basis_pole(basis: Basis, new_pole: Vector3) -> Basis:
@@ -137,19 +153,40 @@ static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 	)
 
 # RA, dec are spherical coordinates except dec is from equator rather than pole
-static func convert_equatorial_coordinates(right_ascension: float, declination: float) -> Vector3:
+static func get_equatorial_coordinates2(translation: Vector3) -> Vector2:
+	var r := translation.length()
+	return Vector2(
+		fposmod(atan2(translation.y, translation.x), TAU), # RA
+		asin(translation.z / r) # dec
+	)
+
+static func convert_equatorial_coordinates2(right_ascension: float, declination: float) -> Vector3:
+	# returns translation w/ length = 1.0
+	var cos_decl := cos(declination)
 	return Vector3(
-		cos(right_ascension) * cos(declination),
-		sin(right_ascension) * cos(declination),
+		cos(right_ascension) * cos_decl,
+		sin(right_ascension) * cos_decl,
 		sin(declination)
 	)
 
-static func get_equatorial_coordinates(cartesian_position: Vector3) -> Vector2:
-	var r := cartesian_position.length()
-	return Vector2(
-		fposmod(atan2(cartesian_position.y, cartesian_position.x), TAU), # RA
-		asin(cartesian_position.z / r) # dec
+static func get_equatorial_coordinates3(translation: Vector3) -> Vector3:
+	var r := translation.length()
+	return Vector3(
+		fposmod(atan2(translation.y, translation.x), TAU), # RA
+		asin(translation.z / r), # dec
+		r # distance
 	)
+
+static func convert_equatorial_coordinates3(equatorial_coord: Vector3) -> Vector3:
+	var right_ascension: float = equatorial_coord[0]
+	var declination: float = equatorial_coord[1]
+	var r: float = equatorial_coord[2]
+	var cos_decl := cos(declination)
+	return Vector3( # translation
+		cos(right_ascension) * cos_decl,
+		sin(right_ascension) * cos_decl,
+		sin(declination)
+	) * r
 
 # Misc
 static func acosh(x: float) -> float:
@@ -158,6 +195,22 @@ static func acosh(x: float) -> float:
 	return log(x + sqrt(x * x - 1))
 
 # Camera
+static func get_view_position(translation: Vector3, north: Vector3,
+		ref_longitude := 0.0) -> Vector3:
+	# view_position is [right_ascension, declination, range] sometimes relative
+	# to a moving ref_longitude
+	translation = unrotate_vector_pole(translation, north)
+	var view_position := get_equatorial_coordinates3(translation)
+	view_position[0] -= ref_longitude
+	return view_position
+
+static func convert_view_position(view_position: Vector3, north: Vector3,
+		ref_longitude := 0.0) -> Vector3:
+	view_position[0] += ref_longitude
+	var translation := convert_equatorial_coordinates3(view_position)
+	translation = rotate_vector_pole(translation, north)
+	return translation
+
 static func get_fov_from_focal_length(focal_length: float) -> float:
 	# This is for photography buffs who think in focal lengths (of full-frame
 	# sensor) rather than fov. Godot sets fov to fit horizonal screen height by

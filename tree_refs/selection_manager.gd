@@ -17,6 +17,8 @@
 # *****************************************************************************
 # Wraps currently selected item and keeps selection history. Depends on certain
 # API present in BCamera (replicate that API or modify this class).
+#
+# TODO: Invert dependency with BCamera???
 
 extends Reference
 class_name SelectionManager
@@ -38,6 +40,8 @@ const SELECTION_SPACECRAFTS = Enums.SELECTION_SPACECRAFTS
 const SELECTION_ASTEROID = Enums.SELECTION_ASTEROID
 const SELECTION_COMMET = Enums.SELECTION_COMMET
 const SELECTION_SPACECRAFT = Enums.SELECTION_SPACECRAFT
+
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 # persisted
 var selection_item: SelectionItem
@@ -64,7 +68,7 @@ func select(selection_item_: SelectionItem) -> void:
 		return
 	selection_item = selection_item_
 	if !_supress_camera_move and _connected_camera and _connected_camera.is_camera_lock:
-		_connected_camera.move(selection_item, -1, Vector3.ZERO, Vector3.ZERO)
+		_connected_camera.move(selection_item, -1, Vector3.ZERO, NULL_ROTATION)
 	_supress_camera_move = false
 	_add_history()
 	emit_signal("selection_changed")

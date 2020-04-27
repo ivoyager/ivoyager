@@ -77,7 +77,7 @@ func get_normal(time: float) -> Vector3:
 	# Orbit normal is specified by "rotation" elements Om & i. This vector
 	# precesses around the reference_normal.
 	var elements := _get_elements(time)
-	var relative_normal := math.convert_equatorial_coordinates(
+	var relative_normal := math.convert_equatorial_coordinates2(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
 	var orbit_normal: Vector3
 	if elements[2] > PI / 2.0: # retrograde

@@ -1,4 +1,4 @@
-# viewport_input.gd
+# b_camera_input.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,14 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for camera movements and click selection. This node expects two
-# members to be present in your Camera:
-#    move_action
-#    rotate_action
-# Remove, replace or modify this class if you need something different.
+# Handles input for BCamera movements and click selection. Remove or replace
+# this class if you have a different camera.
 
 extends Node
-class_name ViewportInput
+class_name BCameraInput
 
 enum {
 	DRAG_MOVE,
@@ -30,15 +27,6 @@ enum {
 	DRAG_ROLL,
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
-
-const MOUSE_WHEEL_ADJ := 7.5 # adjust so default setting can be ~1.0
-const MOUSE_MOVE_ADJ := 0.3
-const MOUSE_PITCH_YAW_ADJ := 0.2
-const MOUSE_ROLL_ADJ := 0.5
-const KEY_IN_OUT_ADJ := 3.0
-const KEY_MOVE_ADJ := 0.7
-const KEY_PITCH_YAW_ADJ := 3.0
-const KEY_ROLL_ADJ := 3.0
 
 const VIEW_ZOOM = Enums.VIEW_ZOOM
 const VIEW_45 = Enums.VIEW_45
@@ -49,28 +37,37 @@ const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 
 # project vars
+# set _adj vars so user option can be close to 1.0
+var mouse_wheel_adj := 7.5
+var mouse_move_adj := 0.3
+var mouse_pitch_yaw_adj := 0.13
+var mouse_roll_adj := 0.5
+var key_in_out_adj := 3.0
+var key_move_adj := 0.7
+var key_pitch_yaw_adj := 2.0
+var key_roll_adj := 3.0
 var l_button_drag := DRAG_MOVE
 var r_button_drag := DRAG_PITCH_YAW_ROLL_HYBRID
-var cntr_drag := DRAG_PITCH_YAW_ROLL_HYBRID # keep same as above for Mac!
+var cntr_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as r_button_drag for Mac!
 var shift_drag := DRAG_PITCH_YAW
 var alt_drag := DRAG_ROLL
 var hybrid_drag_center_zone := 0.2 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _camera: Camera
+var _camera: BCamera
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 
 var _settings: Dictionary = Global.settings
-onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * MOUSE_WHEEL_ADJ
-onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * MOUSE_MOVE_ADJ
-onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * MOUSE_PITCH_YAW_ADJ
-onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * MOUSE_ROLL_ADJ
-onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * KEY_IN_OUT_ADJ
-onready var _key_move_rate: float = _settings.camera_key_move_rate * KEY_MOVE_ADJ
-onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * KEY_PITCH_YAW_ADJ
-onready var _key_roll_rate: float = _settings.camera_key_roll_rate * KEY_ROLL_ADJ
+onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
+onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
+onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
+onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * mouse_roll_adj
+onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * key_in_out_adj
+onready var _key_move_rate: float = _settings.camera_key_move_rate * key_move_adj
+onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * key_pitch_yaw_adj
+onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
 
 var _drag_mode := -1 # one of DRAG_ enums when active
 var _drag_start := VECTOR2_ZERO
@@ -103,18 +100,16 @@ func _process(delta: float) -> void:
 	if _drag_vector:
 		match _drag_mode:
 			DRAG_MOVE:
-				var multiplier := delta * _mouse_move_rate
-				_camera.move_action.x -= _drag_vector.x * multiplier
-				_camera.move_action.y += _drag_vector.y * multiplier
+				_drag_vector *= delta * _mouse_move_rate
+				_camera.add_move_action(Vector3(-_drag_vector.x, _drag_vector.y, 0.0))
 			DRAG_PITCH_YAW:
-				var multiplier := delta * _mouse_pitch_yaw_rate
-				_camera.rotate_action.x += _drag_vector.y * multiplier
-				_camera.rotate_action.y += _drag_vector.x * multiplier
+				_drag_vector *= delta * _mouse_pitch_yaw_rate
+				_camera.add_rotate_action(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
-				var multiplier := delta * _mouse_roll_rate
 				var mouse_position := _drag_segment_start + _drag_vector
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
-				_camera.rotate_action.z += center_to_mouse.cross(_drag_vector) * multiplier
+				_drag_vector *= delta * _mouse_roll_rate
+				_camera.add_rotate_action(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
 			DRAG_PITCH_YAW_ROLL_HYBRID:
 				# one or a mix of two above based on mouse position
 				var mouse_rotate := _drag_vector * delta
@@ -124,19 +119,17 @@ func _process(delta: float) -> void:
 				z_proportion = clamp(z_proportion, 0.0, 1.0)
 				var mouse_position := _drag_segment_start + _drag_vector
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
-				_camera.rotate_action.z += center_to_mouse.cross(mouse_rotate) \
-						* z_proportion * _mouse_roll_rate
+				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
-				_camera.rotate_action.x += mouse_rotate.y
-				_camera.rotate_action.y += mouse_rotate.x
+				_camera.add_rotate_action(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
 		_drag_vector = VECTOR2_ZERO
 	if _mwheel_turning:
-		_camera.move_action.z += _mwheel_turning * delta
+		_camera.add_move_action(Vector3(0.0, 0.0, _mwheel_turning * delta))
 		_mwheel_turning = 0.0
 	if _move_pressed:
-		_camera.move_action += _move_pressed * delta
+		_camera.add_move_action(_move_pressed * delta)
 	if _rotate_pressed:
-		_camera.rotate_action += _rotate_pressed * delta
+		_camera.add_rotate_action(_rotate_pressed * delta)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if !_camera:
@@ -144,7 +137,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var is_handled := false
 	if event is InputEventMouseButton:
 		var button_index: int = event.button_index
-		# BUTTON_WHEEL_UP & _DOWN always fire twice (pressed then not pressed)
+		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
 		if button_index == BUTTON_WHEEL_UP:
 			_mwheel_turning = _mouse_in_out_rate
 			is_handled = true
@@ -249,18 +242,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"camera_mouse_in_out_rate":
-			_mouse_in_out_rate = value * MOUSE_WHEEL_ADJ
+			_mouse_in_out_rate = value * mouse_wheel_adj
 		"camera_mouse_move_rate":
-			_mouse_move_rate = value * MOUSE_MOVE_ADJ
+			_mouse_move_rate = value * mouse_move_adj
 		"camera_mouse_pitch_yaw_rate":
-			_mouse_pitch_yaw_rate = value * MOUSE_PITCH_YAW_ADJ
+			_mouse_pitch_yaw_rate = value * mouse_pitch_yaw_adj
 		"camera_mouse_roll_rate":
-			_mouse_roll_rate = value * MOUSE_ROLL_ADJ
+			_mouse_roll_rate = value * mouse_roll_adj
 		"camera_key_in_out_rate":
-			_key_in_out_rate = value * KEY_IN_OUT_ADJ
+			_key_in_out_rate = value * key_in_out_adj
 		"camera_key_move_rate":
-			_key_move_rate = value * KEY_MOVE_ADJ
+			_key_move_rate = value * key_move_adj
 		"camera_key_pitch_yaw_rate":
-			_key_pitch_yaw_rate = value * KEY_PITCH_YAW_ADJ
+			_key_pitch_yaw_rate = value * key_pitch_yaw_adj
 		"camera_key_roll_rate":
-			_key_roll_rate = value * KEY_ROLL_ADJ
+			_key_roll_rate = value * key_roll_adj

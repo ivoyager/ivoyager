@@ -191,7 +191,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 	if ref_plane == "Equatorial":
 		orbit.reference_normal = parent.north_pole
 	elif ref_plane == "Laplace":
-		orbit.reference_normal = math.convert_equatorial_coordinates(
+		orbit.reference_normal = math.convert_equatorial_coordinates2(
 				row_data[fields.orbit_RA], row_data[fields.orbit_dec])
 		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()

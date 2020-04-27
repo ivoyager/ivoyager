@@ -18,7 +18,7 @@
 # I, Voyager handles input in three  ways:
 #   - here as _input()
 #   - various GUI as _gui_input() or _unhandled_key_input()
-#   - ViewportInput as _unhandled_input()
+#   - BCameraInput as _unhandled_input()
 #
 # Most actions are defined at runtime by InputMapManager (not project.godot!).
 

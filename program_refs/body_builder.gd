@@ -148,7 +148,7 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary, table_
 	# intentionally flipped.
 	if !body.tidally_locked:
 		assert(body.right_ascension != -INF and body.declination != -INF)
-		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates(
+		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
 				body.right_ascension, body.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
