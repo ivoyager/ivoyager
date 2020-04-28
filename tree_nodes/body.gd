@@ -35,8 +35,7 @@ const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
 
-# ******************************* PERSISTED ***********************************
-
+# persisted
 var body_id := -1
 var is_star := false
 var is_planet := false # true for dwarf planets
@@ -98,8 +97,6 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
-# ****************************** UNPERSISTED **********************************
-
 # public unpersisted - set by BodyBuilder
 var model: Spatial
 var aux_graphic: Spatial # rings, commet tail, etc.
@@ -123,8 +120,6 @@ var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
 var _hud_icon_visible := false
-
-# *************************** PUBLIC FUNCTIONS ********************************
 
 
 func set_label_text(text: String) -> void:
@@ -199,14 +194,12 @@ func hide_visuals() -> void:
 	if hud_label: # not a child of this node!
 		_hud_label_visible = false
 		hud_label.visible = false
-	
 	# Note: Visibility is NOT propagated from 3D to 2D nodes! So we can't just
 	# add HUDLabel as child of this node.
 	# TODO: We could add 2D labels in our tree-structure so visibility is
 	# propagated that way. I think something like "set_is_top" would prevent
 	# inheritin position.
 
-# *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
 func _init():
 	_on_init()
