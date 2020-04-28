@@ -18,16 +18,19 @@
 
 class_name EnvironmentBuilder
 
-var gles2_adjustments := {} # TODO
+func project_init() -> void:
+	pass
 
-func add_world_environment(env_type: int) -> void:
-	var world_environment := WorldEnvironment.new()
-	var env = get_environment(env_type)
-	world_environment.environment = env
-	# Add to Universe
+func add_world_environment(env_type := 0) -> void:
+	# print statement here because it takes a looooong time...
+	print("Adding WorldEnvironment...")
+	var world_env := WorldEnvironment.new()
+	world_env.name = "WorldEnvironment"
+	world_env.environment = get_environment(env_type)
+	Global.program.universe.add_child(world_env)
 
 func get_environment(_env_type: int) -> Environment:
-	# TODO: Read from data table
+	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
 	panorama_sky.panorama = Global.assets.starfield
 	var env = Environment.new()

@@ -30,7 +30,7 @@ var _rings_dir: String
 func project_init() -> void:
 	_rings_dir = Global.asset_paths.rings_dir
 
-func add_to(body: Body) -> void:
+func add_rings(body: Body) -> void:
 	var rings_file: String = body.rings_info[0]
 	var radius: float = body.rings_info[1]
 	var texture: Texture = file_utils.find_resource(_rings_dir, rings_file)

@@ -39,6 +39,7 @@ var _tree: SceneTree
 var _saver_loader: SaverLoader
 var _main_prog_bar: MainProgBar
 var _system_builder: SystemBuilder
+var _environment_builder: EnvironmentBuilder
 var _timekeeper: Timekeeper
 var _has_been_saved := false
 var _was_paused := false
@@ -61,6 +62,7 @@ func project_init() -> void:
 	_saver_loader = Global.program.get("SaverLoader")
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_system_builder = Global.program.SystemBuilder
+	_environment_builder = Global.program.EnvironmentBuilder
 	_timekeeper = Global.program.Timekeeper
 
 func add_active_thread(thread: Thread) -> void:
@@ -252,8 +254,10 @@ func _import_table_data() -> void:
 	Global.emit_signal("table_data_imported")
 
 func _finish_init() -> void:
+	_environment_builder.add_world_environment() # this is really slow!!!
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
+	print("Main inited...")
 	Global.emit_signal("main_inited")
 	if Global.skip_splash_screen:
 		build_system_tree()

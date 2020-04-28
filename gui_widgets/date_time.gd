@@ -54,7 +54,6 @@ func _update(_time: float, _e_delta: float) -> void:
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		show_clock: bool, show_seconds: bool) -> void:
-	print("_on_speed_changed")
 	_is_paused = is_paused
 	_show_clock = show_clock
 	_show_seconds = show_seconds

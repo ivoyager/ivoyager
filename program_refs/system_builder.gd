@@ -37,22 +37,22 @@ var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
-var _WorldEnvironment_: Script
+#var _WorldEnvironment_: Script
 var _Camera_: Script
 var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
 var _camera: Camera
-var _starfield: WorldEnvironment
+#var _starfield: WorldEnvironment
 
 
 func project_init():
 	_universe = Global.program.universe
-	_main_prog_bar = Global.program.get("MainProgBar")
+	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_body_builder = Global.program.BodyBuilder
 	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
+#	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
 	if add_camera:
 		_Camera_ = Global.script_classes._Camera_
 	_Body_ = Global.script_classes._Body_
@@ -73,7 +73,7 @@ func _build_on_thread(_dummy: int) -> void:
 	_add_bodies("moons", Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
-	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
+#	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
 	if add_camera:
 		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
@@ -82,7 +82,7 @@ func _finish_build() -> void:
 	if _use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-	_universe.add_child(_starfield)
+#	_universe.add_child(_starfield)
 	for body in _registrar.top_bodies:
 		_universe.add_child(body)
 	if add_camera:

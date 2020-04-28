@@ -34,7 +34,7 @@ func project_init() -> void:
 	_globe_wraps_dir = Global.asset_paths.globe_wraps_dir
 	_fallback_globe_wrap = Global.assets.fallback_globe_wrap
 	
-func add_to(body: Body) -> void:
+func add_model(body: Body) -> void:
 	var model: Spatial
 	var body_type := body.body_type
 	var file_prefix := body.file_prefix

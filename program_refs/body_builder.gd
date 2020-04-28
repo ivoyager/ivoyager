@@ -61,7 +61,7 @@ var data_parser := {
 var req_data := [
 	"name", "body_type", "m_radius", "file_prefix"
 ]
-var read_types := {
+var read_types := { # to convert enums or enum-like strings
 	body_type = TableHelper.AS_TABLE_TYPE,
 	starlight_type = TableHelper.AS_TABLE_TYPE,
 }
@@ -74,38 +74,30 @@ var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
 var _table_rows: Dictionary = Global.table_rows
 var _times: Array = Global.times
-var _hud_2d_surface: Control
 var _registrar: Registrar
 var _model_builder: ModelBuilder
 var _rings_builder: RingsBuilder
 var _light_builder: LightBuilder
+var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _table_helper: TableHelper
 var _Body_: Script
-var _HUDOrbit_: Script
-var _HUDIcon_: Script
-var _HUDLabel_: Script
 var _texture_2d_dir: String
 var _satellite_indexes := {} # passed to & shared by Body instances
-var _orbit_mesh_arrays: Array # shared by HUDOrbit instances
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_hud_2d_surface = Global.program.HUD2dSurface
 	_registrar = Global.program.Registrar
 	_model_builder = Global.program.ModelBuilder
 	_rings_builder = Global.program.RingsBuilder
 	_light_builder = Global.program.LightBuilder
+	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
 	_table_helper = Global.program.TableHelper
 	_Body_ = Global.script_classes._Body_
-	_HUDOrbit_ = Global.script_classes._HUDOrbit_
-	_HUDIcon_ = Global.script_classes._HUDIcon_
-	_HUDLabel_ = Global.script_classes._HUDLabel_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
-	_orbit_mesh_arrays = _HUDOrbit_.make_mesh_arrays()
 
 func build(body: Body, parent: Body, row_data: Array, fields: Dictionary,
 		table_type: int) -> void:
@@ -213,63 +205,27 @@ func _build_unpersisted(body: Body) -> void:
 		if satellite:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
-	var file_prefix: String = body.file_prefix
-	# model
 	if body.body_type != -1:
-		_model_builder.add_to(body)
-	# rings
+		_model_builder.add_model(body)
 	if body.rings_info:
-		_rings_builder.add_to(body)
-	# starlight
+		_rings_builder.add_rings(body)
 	if body.starlight_type != -1:
-		_light_builder.add_to(body)
-	# HUDs
-	body.set_hud_too_close(_settings.hide_hud_when_close)
-	# HUDOrbit
-	var hud_orbit: HUDOrbit
+		_light_builder.add_starlight(body)
 	if body.orbit:
-		var orbit_color: Color
-		if body.is_minor_moon:
-			orbit_color = _settings.minor_moon_orbit_color
-		elif body.is_moon:
-			orbit_color = _settings.moon_orbit_color
-		elif body.is_dwarf_planet:
-			orbit_color = _settings.dwarf_planet_orbit_color
-		elif body.is_planet:
-			orbit_color = _settings.planet_orbit_color
-		if orbit_color:
-			hud_orbit = SaverLoader.make_object_or_scene(_HUDOrbit_)
-			hud_orbit.init(body.orbit, orbit_color, _orbit_mesh_arrays)
-			body.hud_orbit = hud_orbit
-			var parent: Body = body.get_parent()
-			parent.call_deferred("add_child", hud_orbit)
-	# HUDIcon
-	var hud_icon: HUDIcon = SaverLoader.make_object_or_scene(_HUDIcon_)
-	var fallback_icon_texture: Texture
-	if body.is_moon:
-		fallback_icon_texture = Global.assets.generic_moon_icon
-	else:
-		fallback_icon_texture = Global.assets.fallback_icon
-	hud_icon.init(file_prefix, fallback_icon_texture)
-	body.hud_icon = hud_icon
-	body.add_child(hud_icon)
-	# HUDLabel
-	var hud_label: HUDLabel = SaverLoader.make_object_or_scene(_HUDLabel_)
-	hud_label.init(tr(body.name))
-	body.hud_label = hud_label
-	_hud_2d_surface.add_child(hud_label)
-
-	# 2D selection textures
-	body.texture_2d = file_utils.find_resource(_texture_2d_dir, file_prefix)
+		_huds_builder.add_orbit(body)
+	_huds_builder.add_icon(body)
+	_huds_builder.add_label(body)
+	body.set_hud_too_close(_settings.hide_hud_when_close)
+	body.texture_2d = file_utils.find_resource(_texture_2d_dir, body.file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
 	if body.is_star:
-		var slice_name = file_prefix + "_slice"
+		var slice_name = body.file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = Global.assets.fallback_star_slice
 
-# DEPRECIATE - move to SelectionBuilder for SelectionItem
+# DEPRECIATE? - move to SelectionBuilder for SelectionItem
 func _get_classification(body: Body) -> String:
 	# for UI display "Classification: ______"
 	if body.is_star:

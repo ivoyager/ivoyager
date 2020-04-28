@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Parent control for HUDLabel or similar 2D objects.
+# Parent control for HUD labels or similar 2D objects.
 
 extends Control
 class_name HUD2dSurface

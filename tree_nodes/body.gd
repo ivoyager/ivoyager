@@ -97,20 +97,19 @@ const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon
 	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
 
-# public unpersisted - set by BodyBuilder
+# public unpersisted - read-only except builder classes
 var model: Spatial
-var aux_graphic: Spatial # rings, commet tail, etc.
+var aux_graphic: Spatial # rings, commet tail, etc. (for visibile control)
 var hud_orbit: HUDOrbit
-var hud_icon: HUDIcon
-var hud_label: HUDLabel
+var hud_icon: Spatial
+var hud_label: Control
 var texture_2d: Texture
-var texture_slice_2d: Texture # GUI graphic for sun only
+var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var model_basis: Basis # at epoch
 var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
-var aux_graphic_process := false
 var hud_too_close := 0.0
-var satellite_indexes: Dictionary # shared
+var satellite_indexes: Dictionary # one dict shared by all Bodies
 
 # private
 var _times: Array = Global.times
@@ -121,10 +120,6 @@ var _hud_orbit_visible := false
 var _hud_label_visible := false
 var _hud_icon_visible := false
 
-
-func set_label_text(text: String) -> void:
-	if hud_label:
-		hud_label.text = text
 
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
@@ -162,8 +157,6 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 #			prints(tr(name), model_visible)
 	if aux_graphic:
 		var aux_graphic_visible := camera_dist < aux_graphic_too_far
-		if aux_graphic_visible and aux_graphic_process:
-			aux_graphic.body_process(time)
 		if _aux_graphic_visible != aux_graphic_visible:
 			_aux_graphic_visible = aux_graphic_visible
 			aux_graphic.visible = aux_graphic_visible
@@ -195,7 +188,7 @@ func hide_visuals() -> void:
 		_hud_label_visible = false
 		hud_label.visible = false
 	# Note: Visibility is NOT propagated from 3D to 2D nodes! So we can't just
-	# add HUDLabel as child of this node.
+	# add HUD label as child of this node.
 	# TODO: We could add 2D labels in our tree-structure so visibility is
 	# propagated that way. I think something like "set_is_top" would prevent
 	# inheritin position.
