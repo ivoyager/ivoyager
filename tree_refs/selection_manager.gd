@@ -125,7 +125,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 	# This is messy because each selection_type is a special case. See logic
 	# for supported types.
 	if selection_type == SELECTION_STAR:
-		var sun: Body = _registrar.top_body # TODO: code for multistar systems
+		var sun: Body = _registrar.top_bodies[0] # TODO: code for multistar systems
 		select_body(sun)
 		return
 	var current_type := selection_item.selection_type

@@ -36,7 +36,6 @@ var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
 var _enable_save_load: bool = Global.enable_save_load
 var _tree: SceneTree
-var _gui_top: GUITop
 var _saver_loader: SaverLoader
 var _main_prog_bar: MainProgBar
 var _system_builder: SystemBuilder
@@ -59,7 +58,6 @@ func project_init() -> void:
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.program.tree
-	_gui_top = Global.program.GUITop
 	_saver_loader = Global.program.get("SaverLoader")
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_system_builder = Global.program.SystemBuilder
@@ -124,7 +122,6 @@ func exit(exit_now: bool) -> void:
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
-	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false

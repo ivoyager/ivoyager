@@ -27,10 +27,10 @@ const SELECTION_MOON = Enums.SELECTION_MOON
 const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
 
 # persisted - read only
-var top_body: Body
+var top_bodies := []
 var selection_items := {} # indexed by name
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_OBJ_PROPERTIES := ["top_body", "selection_items"]
+const PERSIST_OBJ_PROPERTIES := ["top_bodies", "selection_items"]
 
 # unpersisted - public are read-only!
 var bodies: Array = Global.bodies # indexed by body_id
@@ -42,7 +42,7 @@ func get_body_above_selection(selection_item: SelectionItem) -> Body:
 		selection_item = selection_items[selection_item.up_selection_name]
 		if selection_item.body:
 			return selection_item.body
-	return top_body
+	return top_bodies[0]
 
 func get_selection_star(selection_item: SelectionItem) -> Body:
 	var star_type: int = SELECTION_STAR
@@ -52,7 +52,7 @@ func get_selection_star(selection_item: SelectionItem) -> Body:
 		selection_item = selection_items[selection_item.up_selection_name]
 		if selection_item.selection_type == star_type:
 			return selection_item.body
-	return top_body # in case selection is Solar System; needs fix for multistar
+	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
 func get_selection_planet(selection_item: SelectionItem) -> Body:
 	var selection_type := selection_item.selection_type
@@ -81,7 +81,7 @@ func get_selection_for_body(body: Body) -> SelectionItem:
 	return selection_items[name_]
 
 func register_top_body(body: Body) -> void:
-	top_body = body
+	top_bodies.append(body)
 
 func register_body(body: Body) -> void:
 	var name_ := body.name
@@ -133,14 +133,15 @@ func project_init():
 	Global.connect("game_load_finished", self, "_index_bodies")
 
 func _clear() -> void:
-	top_body = null
+	top_bodies.clear()
 	selection_items.clear()
 	bodies.clear()
 	bodies_by_name.clear()
 	_removed_body_ids.clear()
 
 func _index_bodies() -> void:
-	_index_body_recursive(top_body)
+	for body in top_bodies:
+		_index_body_recursive(body)
 	var n_bodies := bodies.size()
 	var index := 0
 	while index < n_bodies:

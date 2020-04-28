@@ -69,7 +69,7 @@ const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 const VECTOR3_ZERO := Vector3.ZERO
 
 const DPRINT := false
-const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
+const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_DIST_MULTIPLIER := 0.1 
 const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude
 
@@ -138,7 +138,7 @@ var _from_view_orientation := VECTOR3_ZERO
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 var _last_dist := 0.0
 
-onready var _top_body: Body = _registrar.top_body
+var _universe: Spatial = Global.program.universe
 onready var _viewport := get_viewport()
 onready var _tree := get_tree()
 # settings
@@ -250,11 +250,14 @@ func tree_manager_process(engine_delta: float) -> void:
 		else: # end the move
 			is_moving = false
 			if parent != _to_spatial:
-				_do_camera_handoff() # happened at halfway unless is_instant_move
+				_do_camera_handoff() # happened already unless is_instant_move
 	if !is_moving:
 		_process_not_moving(engine_delta)
-	if CENTER_ORIGIN_SHIFTING:
-		_top_body.translation -= parent.global_transform.origin
+	if UNIVERSE_SHIFTING:
+		# Camera parent will be at global translation (0,0,0) after this step.
+		# The -= operator works because current Universe translation is part
+		# of parent.global_transform.origin. 
+		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
@@ -303,7 +306,6 @@ func _prepare_to_free() -> void:
 	_to_spatial = null
 	_from_spatial = null
 	_common_spatial = null
-	_top_body = null
 
 func _process_moving() -> void:
 	var ease_progress := ease(_move_progress / _transition_time, -ease_exponent)

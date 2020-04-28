@@ -1,4 +1,4 @@
-# one_use_confirm.gd
+# universe.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,30 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Universe is the main scene. It provide reference frame for top Body(ies),
+# which could be the Sun or a collection of stars or something else.
+# Get this node from Global.program.universe.
+# Get specific Body instances from Registrar (program_nodes/registrar.gd,
+# access via Global.program.Registrar).
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
+# !!!!!!!!          ivoyager/singletons/project_builder.gd             !!!!!!!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-extends ConfirmationDialog
-class_name OneUseConfirm
+extends Spatial
 
-var _stop_sim: bool
-
-func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
-		args := [], stop_sim := true):
-	connect("confirmed", on_confirm_object, on_confirm_method, args, CONNECT_ONESHOT)
-	connect("popup_hide", self, "_on_hide")
-	dialog_text = text
-	popup_exclusive = true
-	_stop_sim = stop_sim
-	if _stop_sim:
-		Global.emit_signal("sim_stop_required", self)
-	Global.program.universe.add_child(self)
-	popup_centered()
-
-func _on_hide() -> void:
-	if _stop_sim:
-		Global.emit_signal("sim_run_allowed", self)
-	queue_free()
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	get_tree().set_input_as_handled() # eat all keys
-	if event.is_action_pressed("ui_cancel"):
-		hide()
+const PERSIST_AS_PROCEDURAL_OBJECT := false

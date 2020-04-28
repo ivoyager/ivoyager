@@ -117,14 +117,14 @@ var program_nodes := {
 	_MinorBodiesManager_ = MinorBodiesManager,
 }
 
-var gui_top_nodes := {
-	# ProjectBuilder will instance one of each and add as child to GUITop. Use
+var gui_nodes := {
+	# ProjectBuilder instances one of each and adds as child to Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted. Last in list
 	# is "on top" for viewing and 1st for input processing. (Since you can't
-	# "insert" into dictionary, you might need to erase/add elements to order
-	# as needed.)
+	# "insert" into dictionary, you might need to reorder children of Universe
+	# after project start.)
 	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_ProjectGUI_ = GameGUI, # Control ok (planetarium replaces w/ PlanetariumGUI)
+	_ProjectGUI_ = GameGUI, # Control ok (e.g., = PlanetariumGUI in Planetarium)
 	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
 	_MainMenu_ = MainMenu, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove
@@ -158,7 +158,7 @@ var procedural_classes := {
 var extensions := []
 var program: Dictionary = Global.program
 var script_classes: Dictionary = Global.script_classes
-onready var gui_top: Control = get_node("/root/GUITop") # start scene & UI parent
+var universe: Spatial
 
 # **************************** INIT SEQUENCE **********************************
 
@@ -166,14 +166,11 @@ func init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
 	# (where <name> != "ivoyager" and does not start with ".") and then calls
 	# their extension_init() function.
-#	print("is_debug_build = ", OS.is_debug_build())
-#	print("Files in top dir...")
 	var dir := Directory.new()
 	dir.open("res://")
 	dir.list_dir_begin()
 	var dir_name := dir.get_next()
 	while dir_name:
-#		print(dir_name)
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
 			if file_utils.exists(path):
@@ -189,7 +186,7 @@ func init_extensions() -> void:
 	emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:
-	for dict in [program_references, program_nodes, gui_top_nodes]:
+	for dict in [program_references, program_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
@@ -197,11 +194,14 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	assert(!program.has("GUITop") and !program.has("tree") and !program.has("root"))
-	program.GUITop = gui_top
+	assert(!program.has("Universe"))
+	universe = get_node("/root/Universe")
+	program.universe = universe
+	assert(!program.has("tree"))
 	program.tree = get_tree()
+	assert(!program.has("root"))
 	program.root = get_tree().get_root()
-	for dict in [program_references, program_nodes, gui_top_nodes, procedural_classes]:
+	for dict in [program_references, program_nodes, gui_nodes, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
@@ -209,11 +209,11 @@ func instantiate_and_index() -> void:
 
 func init_project() -> void:
 	Global.project_init()
-	for dict in [program_references, program_nodes, gui_top_nodes]:
+	for dict in [program_references, program_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = program[object_key]
-			object.project_init() # ProjectBuilder instantiated must have this method!
+			object.project_init() # all instantiated here must have this method!
 	emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
@@ -222,9 +222,9 @@ func add_project_nodes() -> void:
 	for key in program_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		Global.add_child(program[object_key])
-	for key in gui_top_nodes:
+	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		gui_top.add_child(program[object_key])
+		universe.add_child(program[object_key])
 	emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
@@ -235,6 +235,9 @@ func signal_finished() -> void:
 # ****************************** PROJECT BUILD ********************************
 
 func _ready() -> void:
+	call_deferred("_build_deferred")
+	
+func _build_deferred() -> void:
 	var init_index := 0
 	while init_index < init_sequence.size():
 		var init_array: Array = init_sequence[init_index]

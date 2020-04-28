@@ -127,7 +127,8 @@ func _timekeeper_process(time: float, e_delta: float) -> void:
 		_camera_fov = _camera.fov
 		_update_icon_size()
 	_camera_global_translation = _camera.global_transform.origin
-	_process_body_recursive(_registrar.top_body)
+	for body in _registrar.top_bodies:
+		_process_body_recursive(body)
 
 func _process_body_recursive(body: Body) -> void:
 	# planned barycenter mechanic will expect children processed before parent

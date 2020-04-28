@@ -43,7 +43,8 @@ func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) ->
 	_viewport_height = camera.get_viewport().get_visible_rect().size.y
 	_body = null
 	_closest_dist_sq = INF
-	_test_body_recursive(_registrar.top_body)
+	for body in _registrar.top_bodies:
+		_test_body_recursive(body)
 	if _body:
 		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO, NULL_ROTATION)
 	else:

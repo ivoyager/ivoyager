@@ -32,6 +32,7 @@ var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
+var _universe: Spatial
 var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _registrar: Registrar
@@ -46,6 +47,7 @@ var _starfield: WorldEnvironment
 
 
 func project_init():
+	_universe = Global.program.universe
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_body_builder = Global.program.BodyBuilder
 	_registrar = Global.program.Registrar
@@ -80,14 +82,12 @@ func _finish_build() -> void:
 	if _use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-	var top_body: Body = _registrar.top_body
-	top_body.add_child(_starfield)
-	_root.add_child(top_body)
-	_tree.set_current_scene(top_body)
+	_universe.add_child(_starfield)
+	for body in _registrar.top_bodies:
+		_universe.add_child(body)
 	if add_camera:
 		var start_body: Body = _registrar.bodies_by_name[Global.start_body_name]
 		start_body.add_child(_camera)
-	top_body.pause_mode = Node.PAUSE_MODE_PROCESS
 	_thread = null
 	if _main_prog_bar:
 		_main_prog_bar.stop()

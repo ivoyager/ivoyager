@@ -115,6 +115,7 @@ func project_init() -> void: # this is before _ready()
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("gui_refresh_requested", self, "_refresh_gui")
 	_date_time_regex.compile(regexpr)
 	times.resize(3)
 	date.resize(3)
@@ -298,6 +299,9 @@ func _reset_speed() -> void:
 	speed_symbol = speed_symbols[speed_index]
 	show_clock = speed_index <= show_clock_speed
 	show_seconds = show_clock and speed_index <= show_seconds_speed
+
+func _refresh_gui() -> void:
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
 
 func _on_ready() -> void:
 	set_process(false) # changes with "run_state_changed" signal
