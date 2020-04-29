@@ -49,7 +49,7 @@ signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)
 signal gui_ready(control)
-signal about_to_add_environment(environment, is_world_env)
+signal environment_created(environment, is_world_env)
 
 # sim state control
 signal sim_stop_required(who) # see Main for external thread coordination

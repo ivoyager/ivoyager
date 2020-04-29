@@ -44,7 +44,7 @@ func project_init():
 		Global.connect("close_main_menu_requested", self, "_close")
 		Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
 		Global.connect("simulator_exited", self, "_set_splash_screen_config")
-		theme = Global.themes.main_menu
+	theme = Global.themes.main_menu
 	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
 	_main = Global.program.Main
 	if !Global.skip_splash_screen:

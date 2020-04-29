@@ -26,10 +26,10 @@ func add_world_environment(env_type := 0) -> void:
 	print("Adding WorldEnvironment...")
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
-	world_env.environment = get_environment(env_type)
+	world_env.environment = get_environment(env_type, true)
 	Global.program.universe.add_child(world_env)
 
-func get_environment(_env_type: int) -> Environment:
+func get_environment(_env_type: int, is_world_env := false) -> Environment:
 	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
 	panorama_sky.panorama = Global.assets.starfield
@@ -40,4 +40,6 @@ func get_environment(_env_type: int) -> Environment:
 	env.ambient_light_color = Color.white
 	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
+	# signal here to make modification by external project easy
+	Global.emit_signal("environment_created", env, is_world_env)
 	return env

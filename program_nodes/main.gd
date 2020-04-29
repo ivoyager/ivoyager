@@ -16,7 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 # Maintains high-level simulator state. Non-main threads should coordinate with
-# signals and functions here. 
+# signals and functions here (for safety when saving, exiting, quiting etc.). 
 
 extends Node
 class_name Main

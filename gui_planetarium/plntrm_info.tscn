@@ -64,13 +64,15 @@ alignment = 2
 [node name="RangeLabel" parent="." instance=ExtResource( 5 )]
 margin_top = 68.0
 margin_right = 200.0
-margin_bottom = 82.0
+margin_bottom = 98.0
+rect_min_size = Vector2( 0, 30 )
 size_flags_vertical = 8
+valign = 1
 
 [node name="Scroll" type="ScrollContainer" parent="."]
-margin_top = 86.0
+margin_top = 102.0
 margin_right = 200.0
-margin_bottom = 536.0
+margin_bottom = 552.0
 rect_min_size = Vector2( 0, 450 )
 scroll_horizontal_enabled = false
 
