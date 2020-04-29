@@ -21,17 +21,19 @@
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
 
 # TODO: Mouse-over array.
+# TODO: A wiki option for Planetarium (we have wiki_en for classes).
 
 extends GridContainer
 
 # modify these (and rect_min_size) before "system_tree_ready"
+var enable_wiki_links := false
 var max_data_items := 15
 var labels_width := 120
 var values_width := 120
 var show_data := [
 	# [property, label [, modifiers...]]; see code for modifiers
 	# displayed as "?".
-	["class_type", "LABEL_CLASSIFICATION", "classes"],
+	["class_type", "LABEL_CLASSIFICATION", "classes", true],
 	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],
 	["density", "LABEL_DENSITY", QtyStrings.UNIT, "g/cm^3"],
@@ -53,9 +55,11 @@ var show_data := [
 
 onready var _qty_strings: QtyStrings = Global.program.QtyStrings
 var _table_data: Dictionary = Global.table_data
+var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
 var _labels := []
 var _values := []
+var _meta_lookup := {}
 
 func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
@@ -65,18 +69,28 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	var grid_index := 0
 	while grid_index < max_data_items:
-		var label := Label.new()
-		label.rect_min_size.x = labels_width
-		label.clip_text = true
-		label.hide()
-		_labels.append(label)
-		add_child(label)
-		var value := Label.new()
-		value.rect_min_size.x = values_width
-		value.clip_text = true
-		value.hide()
-		_values.append(value)
-		add_child(value)
+		var label_label := Label.new()
+		label_label.rect_min_size.x = labels_width
+		label_label.clip_text = true
+		label_label.hide()
+		_labels.append(label_label)
+		add_child(label_label)
+		if enable_wiki_links:
+			var value_label := RichTextLabel.new()
+			value_label.rect_min_size.x = values_width
+			value_label.scroll_active = false
+			value_label.bbcode_enabled = true
+			value_label.connect("meta_clicked", self, "_on_meta_clicked")
+			value_label.hide()
+			_values.append(value_label)
+			add_child(value_label)
+		else:
+			var value_label := Label.new()
+			value_label.rect_min_size.x = values_width
+			value_label.clip_text = true
+			value_label.hide()
+			_values.append(value_label)
+			add_child(value_label)
 		grid_index += 1
 	_on_selection_changed()
 
@@ -91,48 +105,54 @@ func _on_selection_changed() -> void:
 	for show_datum in show_data:
 		var property: String = show_datum[0]
 		var is_value := true
-		var value_variant
+		var value # untyped!
 		if property in selection_item:
-			value_variant = selection_item.get(property)
+			value = selection_item.get(property)
 		elif body and property in body:
-			value_variant = body.get(property)
+			value = body.get(property)
 		else:
 			is_value = false
 		if !is_value:
 			continue
 		var display_str: String
-		match typeof(value_variant):
+		var wiki_key := ""
+		match typeof(value):
 			TYPE_INT:
-				if value_variant == -99:
+				if value == -99:
 					display_str = "?"
-				elif value_variant == -1:
+				elif value == -1:
 					pass
-				elif show_datum.size() == 3:
+				elif show_datum.size() > 2:
 					var table_name: String = show_datum[2]
 					var data: Array = _table_data[table_name]
-					var row_key: String = data[value_variant][0]
+					var row_key: String = data[value][0]
 					display_str = tr(row_key)
+					if enable_wiki_links and show_datum.size() > 3 and show_datum[3]:
+						wiki_key = row_key
 				else:
-					display_str = str(value_variant)
+					display_str = str(value)
 			TYPE_REAL:
-				if value_variant == INF:
+				if value == INF:
 					display_str = "?"
-				elif value_variant == -INF:
+				elif value == -INF:
 					pass
 				elif show_datum.size() < 3:
-					display_str = str(value_variant)
+					display_str = str(value)
 				else:
 					var option_type: int = show_datum[2]
 					var unit: String = show_datum[3] if show_datum.size() > 3 else ""
-					display_str = _qty_strings.number_option(value_variant, option_type, unit)
+					display_str = _qty_strings.number_option(value, option_type, unit)
 			TYPE_STRING:
-				display_str = tr(value_variant)
-					
+				display_str = tr(value)
 		if !display_str:
 			continue
 		var label: String = show_datum[1]
 		_labels[grid_index].text = tr(label)
-		_values[grid_index].text = display_str
+		if wiki_key and _wiki_titles.has(wiki_key):
+			_meta_lookup[display_str] = wiki_key
+			_values[grid_index].bbcode_text = "[url]" + display_str + "[/url]"
+		else:
+			_values[grid_index].text = display_str
 		_labels[grid_index].show()
 		_values[grid_index].show()
 		grid_index += 1
@@ -143,3 +163,7 @@ func _on_selection_changed() -> void:
 		_values[grid_index].hide()
 		grid_index += 1
 
+func _on_meta_clicked(meta: String) -> void:
+	var wiki_key: String = _meta_lookup[meta]
+	var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[wiki_key])
+	OS.shell_open(url)

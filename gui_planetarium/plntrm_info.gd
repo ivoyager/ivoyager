@@ -18,15 +18,14 @@
 
 extends VBoxContainer
 
-var col1_width := 180
-var col2_width := 150
+var col1_width := 170
+var col2_width := 170
 
 onready var mouse_trigger: Control = self
-onready var mouse_visible := [$Scroll/VBox/Locks1, $Scroll/VBox/Locks2, $Scroll/VBox/Locks3,
-	$Scroll/VBox/Wikipedia]
+onready var mouse_visible := [$Scroll/VBox/Locks1, $Scroll/VBox/Locks2, $Scroll/VBox/Locks3]
 
 onready var time_items := [$TimeBox/DateTime]
-onready var selection_items := [$SelectionBox/SelectionLabel]
+onready var selection_items := [$SelectionBox/SelectionWiki]
 onready var range_items := [$RangeLabel]
 onready var info_items := [$Scroll/VBox/SelectionData]
 onready var control_items := [$TimeBox/TimeControl, $SelectionBox/ViewButtons]
@@ -43,10 +42,10 @@ func _ready():
 	var view_buttons: Control = $SelectionBox/ViewButtons
 	view_buttons.use_small_txt = true
 	view_buttons.include_recenter = true
-	$Scroll/VBox/SelectionData.labels_width = col1_width
-	$Scroll/VBox/SelectionData.values_width = col2_width
-	if !Global.enable_wiki:
-		$Scroll/VBox/Wikipedia.queue_free()
+	var selection_data: Control = $Scroll/VBox/SelectionData
+	selection_data.enable_wiki_links = true
+	selection_data.labels_width = col1_width
+	selection_data.values_width = col2_width
 	# visibility control
 	$Scroll/VBox/Locks1/LkTimeCkBx.pressed = _settings.lock_time
 	$Scroll/VBox/Locks1/LkSelectionCkBx.pressed = _settings.lock_selection
@@ -73,7 +72,6 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	# These are hidden during build but shown at start (until user moves mouse)
 	$TimeBox/TimeControl.show()
 	$SelectionBox/ViewButtons.show()
-	$Scroll/VBox/Wikipedia.show()
 	$Scroll/VBox/Locks1.show()
 	$Scroll/VBox/Locks2.show()
 	$Scroll/VBox/Locks3.show()

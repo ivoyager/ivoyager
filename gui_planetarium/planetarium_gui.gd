@@ -41,8 +41,6 @@ func _ready() -> void:
 	_homepage_link.connect("meta_clicked", self, "_on_homepage_clicked")
 	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.add_child(_homepage_link)
-#	_homepage_link.rect_min_size = Vector2(200.0, 35.0)
-	
 	main_menu.set_anchors_and_margins_preset(Control.PRESET_TOP_RIGHT,
 			Control.PRESET_MODE_MINSIZE, 16)
 
@@ -55,8 +53,6 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.get_parent().remove_child(main_menu)
 	add_child(main_menu)
-
-	
 
 func _input(event: InputEvent) -> void:
 	# By default, all children of this node are shown/hidden by mouse position.
