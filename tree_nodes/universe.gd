@@ -1,6 +1,6 @@
-# gui_top.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# universe.gd
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUITop is current scene on launch (before system build) and again on exit.
+# Universe is the main scene root node. It provide reference frame for top Body
+# instances, which could be the Sun or a collection of stars or something else.
+# Get the Universe instance from Global.program.universe. Get specific Body
+# instances from Registrar (program_nodes/registrar.gd) which you can access
+# via Global.program.Registrar.
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
 # !!!!!!!!          ivoyager/singletons/project_builder.gd             !!!!!!!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-extends Control
-class_name GUITop
+extends Spatial
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-
-func _ready():
-	set_anchors_and_margins_preset(PRESET_WIDE)
-	mouse_filter = MOUSE_FILTER_IGNORE
-	pause_mode = PAUSE_MODE_PROCESS

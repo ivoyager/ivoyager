@@ -1,6 +1,6 @@
 # hud_2d_surface.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
-# Parent control for HUDLabel or similar 2D objects.
+# Parent control for HUD labels or similar 2D objects.
 
 extends Control
 class_name HUD2dSurface

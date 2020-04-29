@@ -1,6 +1,6 @@
 # global.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,13 +42,14 @@ signal about_to_quit()
 
 # camera broadcasts
 signal camera_ready(camera)
+
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # other broadcasts
 signal setting_changed(setting, value)
 signal gui_entered_tree(control)
 signal gui_ready(control)
-signal about_to_add_environment(environment, is_world_env)
+signal environment_created(environment, is_world_env)
 
 # sim state control
 signal sim_stop_required(who) # see Main for external thread coordination

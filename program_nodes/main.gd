@@ -1,6 +1,6 @@
 # main.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 # Maintains high-level simulator state. Non-main threads should coordinate with
-# signals and functions here. 
+# signals and functions here (for safety when saving, exiting, quiting etc.). 
 
 extends Node
 class_name Main
@@ -36,11 +36,10 @@ var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
 var _enable_save_load: bool = Global.enable_save_load
 var _tree: SceneTree
-var _gui_top: GUITop
-var _table_reader: TableReader
 var _saver_loader: SaverLoader
 var _main_prog_bar: MainProgBar
 var _system_builder: SystemBuilder
+var _environment_builder: EnvironmentBuilder
 var _timekeeper: Timekeeper
 var _has_been_saved := false
 var _was_paused := false
@@ -60,11 +59,10 @@ func project_init() -> void:
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.program.tree
-	_gui_top = Global.program.GUITop
-	_table_reader = Global.program.TableReader
 	_saver_loader = Global.program.get("SaverLoader")
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_system_builder = Global.program.SystemBuilder
+	_environment_builder = Global.program.EnvironmentBuilder
 	_timekeeper = Global.program.Timekeeper
 
 func add_active_thread(thread: Thread) -> void:
@@ -126,12 +124,12 @@ func exit(exit_now: bool) -> void:
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
-	_tree.set_current_scene(_gui_top)
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
+	_was_paused = false
 	Global.emit_signal("simulator_exited")
 
 func quick_save() -> void:
@@ -251,12 +249,16 @@ func _on_ready() -> void:
 
 func _import_table_data() -> void:
 	yield(_tree, "idle_frame")
-	_table_reader.import_table_data()
+	var table_reader: TableReader = Global.program.TableReader
+	table_reader.import_table_data()
+	Global.program.erase("TableReader")
 	Global.emit_signal("table_data_imported")
 
 func _finish_init() -> void:
+	_environment_builder.add_world_environment() # this is really slow!!!
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
+	print("Main inited...")
 	Global.emit_signal("main_inited")
 	if Global.skip_splash_screen:
 		build_system_tree()

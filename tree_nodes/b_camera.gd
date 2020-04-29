@@ -1,6 +1,6 @@
 # b_camera.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,7 @@
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
 #    BCameraInput (program_nodes/b_camera_input.gd); replace this!
-#    TreeManager (program_nodes/tree_manager.gd); modify as needed!
-#    SelectionManager (tree_refs/selection_manager.gd)
+#    TreeManager (program_nodes/tree_manager.gd); modify as needed
 #
 # The camera stays "in place" by maintaining view_position & view_orientation.
 # The first is position relative to a vector
@@ -70,7 +69,7 @@ const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 const VECTOR3_ZERO := Vector3.ZERO
 
 const DPRINT := false
-const CENTER_ORIGIN_SHIFTING := true # prevents "shakes" at high translation
+const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_DIST_MULTIPLIER := 0.1 
 const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude
 
@@ -104,8 +103,8 @@ var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.
 var init_focal_length_index := 2
 var ease_exponent := 5.0
 var follow_orbit: float = 4e7 * UnitDefs.KM # km after dividing by fov
-var orient_to_local_pole: float = 5e7 * UnitDefs.KM # must be > follow_orbit
-var orient_to_ecliptic: float = 5e10 * UnitDefs.KM # must be > orient_to_local_pole
+var use_local_north: float = 5e7 * UnitDefs.KM # must be > follow_orbit
+var use_ecliptic_north: float = 5e10 * UnitDefs.KM # must be > use_local_north
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 
@@ -119,8 +118,8 @@ var _registrar: Registrar = Global.program.Registrar
 var _max_dist: float = Global.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _follow_orbit_dist: float
-var _orient_to_local_pole: float
-var _orient_to_ecliptic: float
+var _use_local_north_dist: float
+var _use_ecliptic_north_dist: float
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -139,7 +138,7 @@ var _from_view_orientation := VECTOR3_ZERO
 var _move_longitude_remap := LONGITUDE_REMAP_INIT
 var _last_dist := 0.0
 
-onready var _top_body: Body = _registrar.top_body
+var _universe: Spatial = Global.program.universe
 onready var _viewport := get_viewport()
 onready var _tree := get_tree()
 # settings
@@ -226,8 +225,8 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_orient_to_local_pole = orient_to_local_pole / fov
-	_orient_to_ecliptic = orient_to_ecliptic / fov
+	_use_local_north_dist = use_local_north / fov
+	_use_ecliptic_north_dist = use_ecliptic_north / fov
 	_follow_orbit_dist = follow_orbit / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if !suppress_move:
@@ -251,11 +250,14 @@ func tree_manager_process(engine_delta: float) -> void:
 		else: # end the move
 			is_moving = false
 			if parent != _to_spatial:
-				_do_camera_handoff() # happened at halfway unless is_instant_move
+				_do_camera_handoff() # happened already unless is_instant_move
 	if !is_moving:
 		_process_not_moving(engine_delta)
-	if CENTER_ORIGIN_SHIFTING:
-		_top_body.translation -= parent.global_transform.origin
+	if UNIVERSE_SHIFTING:
+		# Camera parent will be at global translation (0,0,0) after this step.
+		# The -= operator works because current Universe translation is part
+		# of parent.global_transform.origin. 
+		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
@@ -264,6 +266,7 @@ func _ready() -> void:
 	_on_ready()
 
 func _on_ready():
+	assert(follow_orbit < use_local_north and use_local_north < use_ecliptic_north)
 	name = "BCamera"
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
@@ -285,8 +288,8 @@ func _on_ready():
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
 	_follow_orbit_dist = follow_orbit / fov
-	_orient_to_local_pole = orient_to_local_pole / fov
-	_orient_to_ecliptic = orient_to_ecliptic / fov
+	_use_local_north_dist = use_local_north / fov
+	_use_ecliptic_north_dist = use_ecliptic_north / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	Global.emit_signal("camera_ready", self)
 	print("BCamera ready...")
@@ -303,7 +306,6 @@ func _prepare_to_free() -> void:
 	_to_spatial = null
 	_from_spatial = null
 	_common_spatial = null
-	_top_body = null
 
 func _process_moving() -> void:
 	var ease_progress := ease(_move_progress / _transition_time, -ease_exponent)
@@ -477,12 +479,12 @@ func _get_north(selection_item_: SelectionItem, dist: float) -> Vector3:
 	if !selection_item_.is_body:
 		return ECLIPTIC_NORTH
 	var local_north := selection_item_.get_north()
-	if dist <= _orient_to_local_pole:
+	if dist <= _use_local_north_dist:
 		return local_north
-	elif dist >= _orient_to_ecliptic:
+	elif dist >= _use_ecliptic_north_dist:
 		return ECLIPTIC_NORTH
 	else:
-		var proportion := log(dist / _orient_to_local_pole) / log(_orient_to_ecliptic / _orient_to_local_pole)
+		var proportion := log(dist / _use_local_north_dist) / log(_use_ecliptic_north_dist / _use_local_north_dist)
 		proportion = ease(proportion, -ease_exponent)
 		var diff_vector := local_north - ECLIPTIC_NORTH
 		return (local_north - diff_vector * proportion).normalized()

@@ -1,6 +1,6 @@
-# v_env.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# environment_builder.gd
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Project can replace this class with another WorldEnvironment. We build the
-# environment by code to allow web depoloyment (uses different assets dir) and
-# for future modding capability via text files.
 
-extends WorldEnvironment
-class_name VEnv
+class_name EnvironmentBuilder
 
-const PERSIST_AS_PROCEDURAL_OBJECT := true
+func project_init() -> void:
+	pass
 
-func _ready():
+func add_world_environment(env_type := 0) -> void:
+	# print statement here because it takes a looooong time...
+	print("Adding WorldEnvironment...")
+	var world_env := WorldEnvironment.new()
+	world_env.name = "WorldEnvironment"
+	world_env.environment = get_environment(env_type, true)
+	Global.program.universe.add_child(world_env)
+
+func get_environment(_env_type: int, is_world_env := false) -> Environment:
+	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
 	panorama_sky.panorama = Global.assets.starfield
 	var env = Environment.new()
@@ -34,5 +40,6 @@ func _ready():
 	env.ambient_light_color = Color.white
 	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
-	Global.emit_signal("about_to_add_environment", env, true)
-	environment = env
+	# signal here to make modification by external project easy
+	Global.emit_signal("environment_created", env, is_world_env)
+	return env

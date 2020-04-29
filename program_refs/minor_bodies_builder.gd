@@ -1,6 +1,6 @@
 # minor_bodies_builder.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends Reference
 class_name MinorBodiesBuilder
@@ -56,7 +55,7 @@ func build() -> void:
 	if Global.skip_asteroids:
 		return
 	print("Adding minor bodies...")
-	var star := _registrar.top_body # TODO: multistar
+	var star: Body = _registrar.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	emit_signal("minor_bodies_added")
 

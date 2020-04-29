@@ -1,6 +1,6 @@
 # date_time.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,10 +36,10 @@ onready var _reverse_color: Color = Global.colors.danger
 
 func _ready() -> void:
 	var timekeeper: Timekeeper = Global.program.Timekeeper
-	timekeeper.connect("processed", self, "_on_timekeeper_processed")
+	timekeeper.connect("processed", self, "_update")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
 
-func _on_timekeeper_processed(_time: float, _e_delta: float) -> void:
+func _update(_time: float, _e_delta: float) -> void:
 	var new_text := date_format % _date
 	if _show_clock:
 		if _show_seconds:
@@ -61,4 +61,5 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		set("custom_colors/font_color", _reverse_color)
 	else:
 		set("custom_colors/font_color", _forward_color)
+	_update(0.0, 0.0)
 

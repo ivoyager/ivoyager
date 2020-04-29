@@ -1,6 +1,6 @@
 # mouse_click_selector.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # This is a work-around for not using ray casting and collision bodies. Only
 # bodies with visible == true (and their children) need to be tested.
 
@@ -44,7 +43,8 @@ func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) ->
 	_viewport_height = camera.get_viewport().get_visible_rect().size.y
 	_body = null
 	_closest_dist_sq = INF
-	_test_body_recursive(_registrar.top_body)
+	for body in _registrar.top_bodies:
+		_test_body_recursive(body)
 	if _body:
 		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO, NULL_ROTATION)
 	else:

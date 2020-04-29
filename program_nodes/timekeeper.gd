@@ -1,6 +1,6 @@
 # timekeeper.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,8 @@
 # The sim runs in s from J2000 (=2000-01-01 12:00). However, this class could
 # be subclassed to provide alternative time display and calendar signals, for
 # example, a Martian calendar/clock.
-# Processes through pause; stops/starts processing on run_state_changed signals.
+# This node processes during pause, but stops and starts processing on
+# "run_state_changed" signal.
 
 extends Node
 class_name Timekeeper
@@ -39,9 +40,9 @@ const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
 
 # project vars
-var start_real_world_time := false # Overrides other start settings
+var start_real_world_time := false # true verrides other start settings
 var speeds := [ # sim_units / delta
-		UnitDefs.SECOND, # real-time if SECOND = 1.0
+		UnitDefs.SECOND, # real-time if UnitDefs.SECOND = 1.0
 		UnitDefs.MINUTE,
 		UnitDefs.HOUR,
 		UnitDefs.DAY,
@@ -69,7 +70,6 @@ var default_speed := 2
 var show_clock_speed := 2 # this index and lower
 var show_seconds_speed := 1 # this index and lower
 var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
-
 # Regex format "2000-01-01 00:00:00:00". Optional [./-] for date separator.
 # Can truncate after any time element after year.
 var regexpr := "^(-?\\d+)(?:[\\.\\/\\-](\\d\\d))?(?:[\\.\\/\\-](\\d\\d))?(?: " \
@@ -94,7 +94,7 @@ var show_clock := false
 var show_seconds := false
 var speed_name: String
 var speed_symbol: String
-var times: Array = Global.times # [0] time (s, J2000) [1] engine_time [2] UT1 [3] JDN
+var times: Array = Global.times # [0] time (s, J2000) [1] engine_time [2] UT1
 var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
@@ -115,6 +115,7 @@ func project_init() -> void: # this is before _ready()
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("gui_refresh_requested", self, "_refresh_gui")
 	_date_time_regex.compile(regexpr)
 	times.resize(3)
 	date.resize(3)
@@ -128,12 +129,12 @@ func get_real_world_time() -> float:
 	return j2000_s * SECOND # this is sim_time
 
 func get_ut1(sim_time: float) -> float:
-	# This is close for J2000 +- 1000s yrs. Beyond that, Julian days diverge
+	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
 	# significantly from solar days. Note that our sim solar days are somewhat
 	# but not entirely simplified: sidereal day is constant but orbit is
 	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
 	# simulated Earth's solar day, whatever that happens to be. To do so, we
-	# would need to account for Earth's dynamic ortbit (rates of Om & w).
+	# would need to account for Earth's dynamic orbit (rates of Om & w).
 	return sim_time / DAY + 0.5
 
 func get_time_from_ut1(ut1_: float) -> float:
@@ -299,6 +300,9 @@ func _reset_speed() -> void:
 	show_clock = speed_index <= show_clock_speed
 	show_seconds = show_clock and speed_index <= show_seconds_speed
 
+func _refresh_gui() -> void:
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+
 func _on_ready() -> void:
 	set_process(false) # changes with "run_state_changed" signal
 
@@ -319,7 +323,6 @@ func _on_process(delta: float) -> void:
 				show_clock, show_seconds)
 	engine_time += delta
 	times[1] = engine_time
-
 	var is_date_change := false
 	if !is_paused:
 		time += delta * speed_multiplier
@@ -331,10 +334,8 @@ func _on_process(delta: float) -> void:
 		ut1 = new_ut1
 		times[0] = time
 		times[2] = new_ut1
-
 	# We normally stagger engine interval signals to spread out the load on the
-	# main thread (under the assumption these trigger GUI or other
-	# computations).
+	# main thread (under assumption these trigger GUI or other computations).
 	var process_one := true
 	while engine_time > _signal_engine_times[0]: # fast negative result!
 		var signal_time: float = _signal_engine_times.pop_front()

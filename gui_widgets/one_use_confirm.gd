@@ -1,6 +1,6 @@
 # one_use_confirm.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 
 extends ConfirmationDialog
 class_name OneUseConfirm
@@ -31,7 +30,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	_stop_sim = stop_sim
 	if _stop_sim:
 		Global.emit_signal("sim_stop_required", self)
-	Global.program.GUITop.add_child(self)
+	Global.program.universe.add_child(self)
 	popup_centered()
 
 func _on_hide() -> void:

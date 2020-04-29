@@ -1,6 +1,6 @@
 # b_camera_input.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,7 @@ const VIEW_CENTERED = Enums.VIEW_CENTERED
 const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 # project vars
 # set _adj vars so user option can be close to 1.0
@@ -56,6 +57,7 @@ var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRI
 
 # private
 var _camera: BCamera
+var _selection_manager: SelectionManager
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 
@@ -79,22 +81,47 @@ var _rotate_pressed := VECTOR3_ZERO
 
 
 func project_init() -> void:
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
 
 func _restore_init_state() -> void:
+	_disconnect_camera()
+	if _selection_manager:
+		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
+		_selection_manager = null
+
+func _connect_camera(camera: BCamera) -> void:
+	_disconnect_camera()
+	_camera = camera
+	_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+
+func _disconnect_camera() -> void:
+	if !_camera:
+		return
+	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
 	_camera = null
 
-func _connect_camera(camera: Camera) -> void:
-	_camera = camera
-
-func _ready():
-	set_process(false)
+func _on_system_tree_ready(_is_new_game: bool) -> void:
+	_selection_manager = Global.program.ProjectGUI.selection_manager
+	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	set_process_unhandled_input(is_running)
+
+func _on_selection_changed() -> void:
+	if _camera and _camera.is_camera_lock:
+		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
+
+func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+	if is_camera_lock:
+		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
+
+func _ready() -> void:
+	set_process(false)
+	set_process_unhandled_input(false)
 
 func _process(delta: float) -> void:
 	if _drag_vector:

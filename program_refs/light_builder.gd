@@ -1,4 +1,4 @@
-# minor_bodies_manager.gd
+# light_builder.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,29 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Not much here after consolidation. Depreciate?
+# Only a star's OmniLight for now.
 
-extends Node
-class_name MinorBodiesManager
+class_name LightBuilder
 
+const METER := UnitDefs.METER
 
-# Public
-var group_names := []
-var ids_by_group := {} # arrays of ids indexed by group name
-var group_refs_by_name := {} # AsteroidGroups now
-var lagrange_points := {} # dict of lagrange_point objects indexed by group name
-
-# persistence
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["group_names", "ids_by_group"]
-const PERSIST_OBJ_PROPERTIES := ["group_refs_by_name", "lagrange_points"]
+var _table_data: Dictionary = Global.table_data
+var _table_fields: Dictionary = Global.table_fields
 
 
-func project_init():
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+func project_init() -> void:
+	pass
 
-func _restore_init_state() -> void:
-	group_names.clear()
-	ids_by_group.clear()
-	group_refs_by_name.clear()
-	lagrange_points.clear()
+func add_starlight(body: Body) -> void:
+	if body.starlight_type != -1:
+		var starlight := OmniLight.new()
+		var row_data: Array = _table_data.lights[body.starlight_type]
+		var fields: Dictionary = _table_fields.lights
+		starlight.omni_range = row_data[fields.omni_range]
+		starlight.name = "Starlight"
+		body.add_child(starlight)
+

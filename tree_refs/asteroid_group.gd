@@ -1,6 +1,6 @@
 # asteroid_group.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Keeps compact data for an asteroid group, which could include >100,000
 # asteroids (Main Belt). Pool*Arrays are used to constitute ArrayMesh's in
 # HUDPoints, and act as source data for Asteroid instances. We can't easily

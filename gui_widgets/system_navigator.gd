@@ -1,6 +1,6 @@
 # system_navigator.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ func _build_navigation_tree() -> void:
 #	_button_group = ButtonGroup.new()
 	var total_size := 0.0
 	# calculate star "slice" relative size
-	var star := _registrar.top_body
+	var star: Body = _registrar.top_bodies[0]
 	var star_slice_size := pow(star.m_radius / 20.0, size_proportions_exponent) # slice image has 10% width
 	total_size += star_slice_size
 	# calcultate planet relative sizes

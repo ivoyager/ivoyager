@@ -1,6 +1,6 @@
 # system_builder.gd
-# This file is part of I, Voyager
-# https://ivoyager.dev
+# This file is part of I, Voyager (https://ivoyager.dev)
+# *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-#
 # Builds the star system(s) from data tables & binaries.
 
 extends Reference
@@ -33,25 +32,27 @@ var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
+var _universe: Spatial
 var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
-var _WorldEnvironment_: Script
+#var _WorldEnvironment_: Script
 var _Camera_: Script
 var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
 var _camera: Camera
-var _starfield: WorldEnvironment
+#var _starfield: WorldEnvironment
 
 
 func project_init():
-	_main_prog_bar = Global.program.get("MainProgBar")
+	_universe = Global.program.universe
+	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_body_builder = Global.program.BodyBuilder
 	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
+#	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
 	if add_camera:
 		_Camera_ = Global.script_classes._Camera_
 	_Body_ = Global.script_classes._Body_
@@ -72,7 +73,7 @@ func _build_on_thread(_dummy: int) -> void:
 	_add_bodies("moons", Enums.TABLE_MOONS)
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
-	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
+#	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
 	if add_camera:
 		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
@@ -81,14 +82,12 @@ func _finish_build() -> void:
 	if _use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-	var top_body: Body = _registrar.top_body
-	top_body.add_child(_starfield)
-	_root.add_child(top_body)
-	_tree.set_current_scene(top_body)
+#	_universe.add_child(_starfield)
+	for body in _registrar.top_bodies:
+		_universe.add_child(body)
 	if add_camera:
 		var start_body: Body = _registrar.bodies_by_name[Global.start_body_name]
 		start_body.add_child(_camera)
-	top_body.pause_mode = Node.PAUSE_MODE_PROCESS
 	_thread = null
 	if _main_prog_bar:
 		_main_prog_bar.stop()
