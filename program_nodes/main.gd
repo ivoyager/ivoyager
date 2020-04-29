@@ -129,6 +129,7 @@ func exit(exit_now: bool) -> void:
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
+	_was_paused = false
 	Global.emit_signal("simulator_exited")
 
 func quick_save() -> void:
