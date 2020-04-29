@@ -107,6 +107,7 @@ var use_local_north: float = 5e7 * UnitDefs.KM # must be > follow_orbit
 var use_ecliptic_north: float = 5e10 * UnitDefs.KM # must be > use_local_north
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
+var dist_compensation_exponent := 0.2 # 0.0 is full compensation; 1.0 is none
 
 # public read-only
 var parent: Spatial # always current

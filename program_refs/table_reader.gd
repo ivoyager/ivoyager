@@ -44,15 +44,17 @@ var import := {
 	stars = "res://ivoyager/data/solar_system/stars.csv",
 	planets = "res://ivoyager/data/solar_system/planets.csv",
 	moons = "res://ivoyager/data/solar_system/moons.csv",
-	bodies = "res://ivoyager/data/solar_system/bodies.csv",
 	lights = "res://ivoyager/data/solar_system/lights.csv",
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
+	classes = "res://ivoyager/data/solar_system/classes.csv",
+	models = "res://ivoyager/data/solar_system/models.csv",
 }
 var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
 # global dicts & project values
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
+var _table_data_types: Dictionary = Global.table_data_types
 var _table_rows: Dictionary = Global.table_rows
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _enable_wiki: bool = Global.enable_wiki
@@ -82,18 +84,21 @@ func import_table_data():
 			_path = path
 			_data = []
 			_fields = {}
+			_data_types = []
 			_rows = {}
 			_read_table() # writes wiki_titles; we don't keep data, fields, rows
 	for key in import:
 		_path = import[key]
 		_data = []
 		_fields = {} # column index by field name
+		_data_types = []
 		_rows = {} # row index by item key
 		_read_table()
 		# wiki_titles was populated on the fly (if Global.enable_wiki); but we
 		# save everything else to Global dicts below
 		_table_data[key] = _data
 		_table_fields[key] = _fields
+		_table_data_types[key] = _data_types
 		_table_rows[key] = _rows
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
@@ -106,7 +111,6 @@ func _read_table() -> void:
 		print("ERROR: Could not open file: ", _path)
 		assert(false)
 	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
-	_data_types = []
 	_units = []
 	_defaults = []
 	var is_1st_line := true
@@ -122,9 +126,10 @@ func _read_table() -> void:
 			is_1st_line = false
 		elif _line_array[0] == "Data_Type":
 			_data_types = _line_array
+			_data_types[0] = "STRING" # always key field
 		elif _line_array[0] == "Units":
 			_units = _line_array
-		elif _line_array[0] == "Defaults":
+		elif _line_array[0] == "Default":
 			_defaults = _line_array
 		else:
 			assert(_data_types) # required; Units & Defaults lines are optional
@@ -186,8 +191,9 @@ func _read_data_line() -> void:
 					var unit: String = _units[column]
 					real = unit_defs.conv(real, unit, false, true)
 				row_data[column] = real
-			"STRING":
-				assert(!_units or !_units[column] or _line_error("Expected no Units for STRING"))
+			"STRING", "ENUM", "BODY", "TABLE":
+				assert(!_units or !_units[column] or _line_error(
+						"Expected no Units for " + data_type))
 				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
 					_cell = _cell.substr(1, _cell.length() - 2)
 				row_data[column] = _cell

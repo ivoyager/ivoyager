@@ -26,14 +26,12 @@ extends GridContainer
 
 # modify these (and rect_min_size) before "system_tree_ready"
 var max_data_items := 15
-var labels_width := 100
-var values_width := 100
+var labels_width := 120
+var values_width := 120
 var show_data := [
-	# [property, label, option_type]; only REAL values use elements 2 & 3.
-	# We look first in SelectionItem, then Body if SelectionItem.is_body
-	# Integer value -1 and float value -INF are not displayed; float value INF
+	# [property, label [, modifiers...]]; see code for modifiers
 	# displayed as "?".
-	["classification", "LABEL_CLASSIFICATION"],
+	["class_type", "LABEL_CLASSIFICATION", "classes"],
 	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],
 	["density", "LABEL_DENSITY", QtyStrings.UNIT, "g/cm^3"],
@@ -54,6 +52,7 @@ var show_data := [
 ]
 
 onready var _qty_strings: QtyStrings = Global.program.QtyStrings
+var _table_data: Dictionary = Global.table_data
 var _selection_manager: SelectionManager
 var _labels := []
 var _values := []
@@ -106,7 +105,14 @@ func _on_selection_changed() -> void:
 			TYPE_INT:
 				if value_variant == -99:
 					display_str = "?"
-				elif value_variant != -1:
+				elif value_variant == -1:
+					pass
+				elif show_datum.size() == 3:
+					var table_name: String = show_datum[2]
+					var data: Array = _table_data[table_name]
+					var row_key: String = data[value_variant][0]
+					display_str = tr(row_key)
+				else:
 					display_str = str(value_variant)
 			TYPE_REAL:
 				if value_variant == INF:
@@ -121,6 +127,7 @@ func _on_selection_changed() -> void:
 					display_str = _qty_strings.number_option(value_variant, option_type, unit)
 			TYPE_STRING:
 				display_str = tr(value_variant)
+					
 		if !display_str:
 			continue
 		var label: String = show_datum[1]

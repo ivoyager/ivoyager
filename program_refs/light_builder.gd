@@ -29,9 +29,9 @@ func project_init() -> void:
 	pass
 
 func add_starlight(body: Body) -> void:
-	if body.starlight_type != -1:
+	if body.light_type != -1:
 		var starlight := OmniLight.new()
-		var row_data: Array = _table_data.lights[body.starlight_type]
+		var row_data: Array = _table_data.lights[body.light_type]
 		var fields: Dictionary = _table_fields.lights
 		starlight.omni_range = row_data[fields.omni_range]
 		starlight.name = "Starlight"

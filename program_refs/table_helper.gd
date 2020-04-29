@@ -15,19 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# See function build_object() to efficiently build objects with many properties
-# from data table rows. Use get functions to get a specific value.
+# For get functions, table_name is "planets", "moons", etc. Supply either row
+# or row_name.
 
 class_name TableHelper
-
-enum { # read_types for for build_object()
-	AS_IS,
-	AS_ENUM,
-	AS_TABLE_TYPE,
-	AS_BODY
-}
-const EMPTY_ARRAY := []
-const EMPTY_DICT := {}
 
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
@@ -39,97 +30,93 @@ var _enums: Script
 func project_init() -> void:
 	_enums = Global.enums
 
-func get_bool(data_name: String, field_name: String, row := -1, row_name := "") -> bool:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	# Table_Types "BOOL" and "X" are both encoded internally as bool.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
+func get_value(table_name: String, field_name: String, row := -1, row_name := ""):
+	# Returns null if missing or field doesn't exist in table.
+	# Otherwise, return type depends on table Data_Type:
+	#   "BOOL" and "X" -> bool
+	#   "INT" -> int
+	#   "REAL" -> float
+	#   all others -> String (see functions below for "ENUM", "TABLE", "BODY")
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return null
 	if row_name:
 		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
 	return row_data[column]
 
-func get_int(data_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
+func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# Use for Data_Type = "ENUM" to get enum int value.
+	# Returns -1 if missing!
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return -1
 	if row_name:
 		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return row_data[column]
-
-func get_real(data_name: String, field_name: String, row := -1, row_name := "") -> float:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
-	if row_name:
-		row = _table_rows[row_name]
-	var row_data: Array = data[row]
-	var column = fields[field_name]
-	return row_data[column]
-
-func get_string(data_name: String, field_name: String, row := -1, row_name := "") -> String:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
-	if row_name:
-		row = _table_rows[row_name]
-	var row_data: Array = data[row]
-	var column = fields[field_name]
-	return row_data[column]
-
-func get_enum(data_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
-	if row_name:
-		row = _table_rows[row_name]
-	var row_data: Array = data[row]
-	var column = fields[field_name]
+	if row_data[column] == null:
+		return -1
 	var enum_key: String = row_data[column]
 	return _enums[enum_key]
 
-func get_table_type(data_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
+func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# Use for Data_Type = "TABLE" to get row number (= "type").
+	# Returns -1 if missing!
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return -1
 	if row_name:
 		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
+	if row_data[column] == null:
+		return -1
 	var table_type: String = row_data[column]
 	return _table_rows[table_type]
 
-func get_body(data_name: String, field_name: String, row := -1, row_name := "") -> Body:
-	# data_name is "planets", "moons", etc. Supply either row or row_name.
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
+func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
+	# Use for Data_Type = "BODY" to get the Body instance.
+	# Returns null if missing!
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return null
 	if row_name:
 		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
+	if row_data[column] == null:
+		return null
 	var body_key: String = row_data[column]
 	return _bodies_by_name[body_key]
 
-func build_object(object: Object, row_data: Array, fields: Dictionary,
-		data_parser: Dictionary, req_data := EMPTY_ARRAY, read_types := EMPTY_DICT) -> void:
-	# This function helps a generator class build an object from table row data.
-	for property in data_parser:
-		var field: String = data_parser[property]
-		var value = row_data[fields[field]] if fields.has(field) else null
-		if value == null:
-			assert(!req_data.has(property), "Missing required data: " + row_data[0] + " " + field)
+func build_object(object: Object, row_data: Array, fields: Dictionary, data_types: Array,
+		property_fields: Dictionary) -> void:
+	# This function helps a builder class build an object from table row data.
+	for property in property_fields:
+		var field: String = property_fields[property]
+		if !fields.has(field):
 			continue
-		var read_type: int = read_types.get(property, AS_IS)
-		assert(read_type == AS_IS or typeof(value) == TYPE_STRING)
-		match read_type:
-			AS_IS:
-				object[property] = value
-			AS_ENUM:
+		var column: int = fields[field]
+		var value = row_data[column]
+		if value == null:
+			continue
+		var data_type: String = data_types[column]
+		match data_type:
+			"ENUM":
 				object[property] = _enums[value]
-			AS_TABLE_TYPE:
+			"TABLE":
 				object[property] = _table_rows[value]
-			AS_BODY:
+			"BODY":
 				object[property] = _bodies_by_name[value]
+			_:
+				object[property] = value

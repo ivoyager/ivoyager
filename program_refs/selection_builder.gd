@@ -51,7 +51,6 @@ func build_from_body(body: Body, parent_body: Body) -> SelectionItem:
 	selection_item.spatial = body
 	selection_item.body = body
 	selection_item.name = body.name
-	selection_item.classification = _get_classification_from_body(body)
 	set_view_parameters_from_body(selection_item, body)
 	if parent_body:
 		selection_item.up_selection_name = parent_body.name
@@ -102,17 +101,3 @@ func _get_selection_type_from_body(body: Body) -> int:
 	if body.is_moon:
 		return Enums.SELECTION_MOON
 	return -1
-
-func _get_classification_from_body(body: Body) -> String:
-	# for UI display "Classification: ______"
-	if body.is_star:
-		return "CLASSIFICATION_STAR"
-	if body.is_dwarf_planet:
-		return "CLASSIFICATION_DWARF_PLANET"
-	if body.is_planet:
-		return "CLASSIFICATION_PLANET"
-	if body.is_moon:
-		return "CLASSIFICATION_MOON"
-	return ""
-	
-	

@@ -37,19 +37,18 @@ const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
 
 # persisted
 var body_id := -1
+var selection_type := -1 # see static/enums.gd
+var class_type := -1 # classes.csv
+var model_type := -1 # models.csv
+var light_type := -1 # lights.csv (probably -1 except stars)
+var is_top := false # only the sun in I, Voyager
 var is_star := false
-var is_planet := false # true for dwarf planets
-var is_moon := false # true for minor moons
-var is_spacecraft := false
-var body_type := -1 # stays -1 for non-physical barycenters & lagrange points
-var selection_type := -1
-var starlight_type := -1
-var classification := "" # move to SelectionItem
-var is_top := false # true for top spatial node only (the sun in I, Voyager)
 var is_star_orbiting := false
-var is_gas_giant := false
+var is_planet := false # true for dwarf planets
 var is_dwarf_planet := false
+var is_moon := false # true for minor moons
 var is_minor_moon := false
+var is_spacecraft := false
 var has_atmosphere := false
 var tidally_locked := false
 var mass := 0.0
@@ -84,10 +83,9 @@ var satellites := [] # Body instances
 var lagrange_points := [] # instanced when needed
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "is_star", "is_planet", "is_moon",
-	"is_spacecraft", "body_type", "selection_type",
-	"starlight_type", "classification", "is_top", "is_star_orbiting",
-	"is_gas_giant", "is_dwarf_planet", "is_minor_moon",
+const PERSIST_PROPERTIES := ["name", "body_id", "selection_type", "class_type",
+	"model_type", "light_type", "is_top",  "is_star", "is_star_orbiting", "is_planet",
+	"is_dwarf_planet", "is_moon", "is_minor_moon", "is_spacecraft",
 	"has_atmosphere", "tidally_locked", "mass", "gm",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
 	"right_ascension", "declination",

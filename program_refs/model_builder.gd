@@ -36,10 +36,10 @@ func project_init() -> void:
 	
 func add_model(body: Body) -> void:
 	var model: Spatial
-	var body_type := body.body_type
+	var model_type := body.model_type
 	var file_prefix := body.file_prefix
-	var row_data: Array = _table_data.bodies[body_type]
-	var fields: Dictionary = _table_fields.bodies
+	var row_data: Array = _table_data.models[model_type]
+	var fields: Dictionary = _table_fields.models
 	var is_ellipsoid: bool = row_data[fields.ellipsoid]
 	if !is_ellipsoid and !DEBUG_NO_3D_MODELS:
 		# For imported (non-ellipsoid) models, scale is derived from file
@@ -47,16 +47,18 @@ func add_model(body: Body) -> void:
 		# meters. Absence of scale suffix indicates units of 1 meter.
 		var models_dir: String = Global.asset_paths.models_dir
 		var resource_file := file_utils.find_resource_file(models_dir, file_prefix)
-		if !resource_file:
-			resource_file = Global.asset_paths.fallback_model
-		var resource: Resource = load(resource_file)
-		var per_meter_scale := file_utils.get_scale_from_file_path(resource_file)
-		if resource is PackedScene:
-			model = resource.instance() # model is the base of a scene
-			model.scale = Vector3.ONE * METER / per_meter_scale
-			model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
-		# elif ?:
-		# TODO: could we save resources by importing mesh without scene?...
+#		if !resource_file:
+#			resource_file = Global.asset_paths.fallback_model
+			# TODO: We don't have a fallback_model yet, so fallthrough to ellipsoid...
+		if resource_file:
+			var resource: Resource = load(resource_file)
+			var per_meter_scale := file_utils.get_scale_from_file_path(resource_file)
+			if resource is PackedScene:
+				model = resource.instance() # model is the base of a scene
+				model.scale = Vector3.ONE * METER / per_meter_scale
+				model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
+			# elif ?:
+			# TODO: could we save resources by importing mesh without scene?...
 	if !model:
 		# fallback to ellipsoid model using the common Global.globe_mesh
 		var m_radius := body.m_radius

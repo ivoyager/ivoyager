@@ -28,60 +28,59 @@ const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
 
-var data_parser := { # property = table_field
-	a = "a",
-	e = "e",
-	i = "i",
-	Om = "Om",
-	w = "w",
-	w_hat = "w_hat",
-	M0 = "M0",
-	L0 = "L0",
-	T0 = "T0",
-	n = "n",
-	L_rate = "L_rate",
-	a_rate = "a_rate",
-	e_rate = "e_rate",
-	i_rate = "i_rate",
-	Om_rate = "Om_rate",
-	w_rate = "w_rate",
-	M_adj_b = "M_adj_b",
-	M_adj_c = "M_adj_c",
-	M_adj_s = "M_adj_s",
-	M_adj_f = "M_adj_f",
-	Pw = "Pw",
-	Pnode = "Pnode",
-	ref_plane = "ref_plane"
+var property_fields := {
+	# property = table_field
+	_a = "a",
+	_e = "e",
+	_i = "i",
+	_Om = "Om",
+	_w = "w",
+	_w_hat = "w_hat",
+	_M0 = "M0",
+	_L0 = "L0",
+	_T0 = "T0",
+	_n = "n",
+	_L_rate = "L_rate",
+	_a_rate = "a_rate",
+	_e_rate = "e_rate",
+	_i_rate = "i_rate",
+	_Om_rate = "Om_rate",
+	_w_rate = "w_rate",
+	_M_adj_b = "M_adj_b",
+	_M_adj_c = "M_adj_c",
+	_M_adj_s = "M_adj_s",
+	_M_adj_f = "M_adj_f",
+	_Pw = "Pw",
+	_Pnode = "Pnode",
+	_ref_plane = "ref_plane"
 }
-var req_data := ["a", "e", "i", "Om"]
-var ninf_resets := ["w", "w_hat", "M0", "L0", "T0", "n", "L_rate", "a_rate", "e_rate", "i_rate",
-	"Om_rate", "w_rate", "M_adj_b", "M_adj_c", "M_adj_s", "M_adj_f", "Pw", "Pnode"]
 
 # import data values
-var a := -INF
-var e := -INF
-var i := -INF
-var Om := -INF
-var w := -INF
-var w_hat := -INF
-var M0 := -INF
-var L0 := -INF
-var T0 := -INF
-var n := -INF
-var L_rate := -INF
-var a_rate := -INF
-var e_rate := -INF
-var i_rate := -INF
-var Om_rate := -INF
-var w_rate := -INF
-var M_adj_b := -INF
-var M_adj_c := -INF
-var M_adj_s := -INF
-var M_adj_f := -INF
-var Pw := -INF
-var Pnode := -INF
-var ref_plane := ""
+var _a := -INF
+var _e := -INF
+var _i := -INF
+var _Om := -INF
+var _w := -INF
+var _w_hat := -INF
+var _M0 := -INF
+var _L0 := -INF
+var _T0 := -INF
+var _n := -INF
+var _L_rate := -INF
+var _a_rate := -INF
+var _e_rate := -INF
+var _i_rate := -INF
+var _Om_rate := -INF
+var _w_rate := -INF
+var _M_adj_b := -INF
+var _M_adj_c := -INF
+var _M_adj_s := -INF
+var _M_adj_f := -INF
+var _Pw := -INF
+var _Pnode := -INF
+var _ref_plane := ""
 
+# project inits
 var _table_helper: TableHelper
 var _Orbit_: Script
 var _dynamic_orbits: bool
@@ -92,7 +91,8 @@ func project_init() -> void:
 	_Orbit_ = Global.script_classes._Orbit_
 	_dynamic_orbits = Global.dynamic_orbits
 
-func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, time: float) -> Orbit:
+func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, data_types: Array,
+		time: float) -> Orbit:
 	assert(DPRINT and prints("make_orbit_from_data", tr(row_data[0]), parent, time) or true)
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
@@ -121,25 +121,25 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	_table_helper.build_object(self, row_data, fields, data_parser, req_data)
+	_table_helper.build_object(self, row_data, fields, data_types, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.gm
-	if w == -INF:
-		assert(w_hat != -INF)
-		w = w_hat - Om
-	if n == -INF:
-		if L_rate != -INF:
-			n = L_rate
+	if _w == -INF:
+		assert(_w_hat != -INF)
+		_w = _w_hat - _Om
+	if _n == -INF:
+		if _L_rate != -INF:
+			_n = _L_rate
 		else:
-			n = sqrt(mu / (a * a * a))
-	if M0 == -INF:
-		if L0 != -INF:
-			M0 = L0 - w - Om
-		elif T0 != -INF:
-			M0 = -n * T0
+			_n = sqrt(mu / (_a * _a * _a))
+	if _M0 == -INF:
+		if _L0 != -INF:
+			_M0 = _L0 - _w - _Om
+		elif _T0 != -INF:
+			_M0 = -_n * _T0
 		else:
 			assert(false, "Elements must include M0, L0 or T0")
-	var elements := [a, e, i, Om, w, M0, n]
+	var elements := [_a, _e, _i, _Om, _w, _M0, _n]
 	var orbit: Orbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements
 	
@@ -152,26 +152,26 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 		# Rate info (if given) must matches one or the other format.
 		var element_rates: Array # optional
 		var m_modifiers: Array # optional
-		if a_rate != -INF: # is planet w/ rates
-			element_rates = [a_rate, e_rate, i_rate, Om_rate, w_rate]
+		if _a_rate != -INF: # is planet w/ rates
+			element_rates = [_a_rate, _e_rate, _i_rate, _Om_rate, _w_rate]
 			assert(element_rates.min() != -INF) # all rates present
 			# M modifiers are additional modifiers for Jupiter to Pluto.
-			if M_adj_b != -INF: # must also have c, s, f
-				m_modifiers = [M_adj_b, M_adj_c, M_adj_s, M_adj_f]
+			if _M_adj_b != -INF: # must also have c, s, f
+				m_modifiers = [_M_adj_b, _M_adj_c, _M_adj_s, _M_adj_f]
 				assert(m_modifiers.min() != null) # all present
-		elif Pw != -INF: # moon format
-			assert(Pnode != -INF) # both or neither
+		elif _Pw != -INF: # moon format
+			assert(_Pnode != -INF) # both or neither
 			# Some values are tiny leading to div/0 or excessive updating. These
 			# correspond to near-circular and/or non-inclined orbits (where Om & w
 			# are technically undefined and updates are irrelevant).
 			if elements[2] < MIN_I_FOR_NODAL_PRECESSION:
-				Pnode = 0.0
+				_Pnode = 0.0
 			if elements[1] < MIN_E_FOR_APSIDAL_PRECESSION:
-				Pw = 0.0
-			if Pw != 0.0 or Pnode != 0.0:
-				Om_rate = TAU / Pnode if Pnode > 0.0 else 0.0
-				w_rate = TAU / Pw if Pw > 0.0 else 0.0
-				element_rates = [0.0, 0.0, 0.0, Om_rate, w_rate]
+				_Pw = 0.0
+			if _Pw != 0.0 or _Pnode != 0.0:
+				_Om_rate = TAU / _Pnode if _Pnode > 0.0 else 0.0
+				_w_rate = TAU / _Pw if _Pw > 0.0 else 0.0
+				element_rates = [0.0, 0.0, 0.0, _Om_rate, _w_rate]
 		if element_rates:
 			orbit.element_rates = element_rates
 			if m_modifiers:
@@ -185,20 +185,21 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, tim
 			var w_pps: float = element_rates[4] / TAU
 			var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
 			orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
-			assert(DPRINT and prints("update_frequency", tr(row_data[0]), orbit.update_frequency) or true)
-
+			assert(DPRINT and prints("update_frequency", tr(row_data[0]),
+					orbit.update_frequency) or true)
 	# reference plane (moons!)
-	if ref_plane == "Equatorial":
+	if _ref_plane == "Equatorial":
 		orbit.reference_normal = parent.north_pole
-	elif ref_plane == "Laplace":
+	elif _ref_plane == "Laplace":
 		orbit.reference_normal = math.convert_equatorial_coordinates2(
 				row_data[fields.orbit_RA], row_data[fields.orbit_dec])
 		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
-	elif ref_plane:
-		assert(ref_plane == "Ecliptic")
+	elif _ref_plane:
+		assert(_ref_plane == "Ecliptic")
 	# reset for next orbit build
-	for property in ninf_resets:
-		set(property, -INF)
-	ref_plane = ""
+	for property in property_fields:
+		if property != "_ref_plane":
+			set(property, -INF)
+	_ref_plane = ""
 	return orbit
