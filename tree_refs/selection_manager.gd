@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Wraps currently selected item and keeps selection history. You can have >1 of
+# Has currently selected item and keeps selection history. You can have >1 of
 # these. GUI widgets search up for the 1st selection_manager in the ancestor
 # tree. BCameraInput grabs selection_manager from Global.program.ProjectGUI.
 

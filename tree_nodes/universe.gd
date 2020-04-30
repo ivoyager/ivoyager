@@ -18,8 +18,8 @@
 # Universe is the main scene root node. It provide reference frame for top Body
 # instances, which could be the Sun or a collection of stars or something else.
 # Get the Universe instance from Global.program.universe. Get specific Body
-# instances from Registrar (program_nodes/registrar.gd) which you can access
-# via Global.program.Registrar.
+# instances by name or id from Registrar (program_nodes/registrar.gd) which you
+# can access via Global.program.Registrar.
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
