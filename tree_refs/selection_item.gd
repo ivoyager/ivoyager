@@ -19,7 +19,6 @@
 extends Reference
 class_name SelectionItem
 
-
 const SELECTION_STAR_SYSTEM = Enums.SELECTION_STAR_SYSTEM
 const SELECTION_BARYCENTER = Enums.SELECTION_BARYCENTER
 const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
@@ -76,6 +75,11 @@ func get_north() -> Vector3:
 	if is_body:
 		return body.north_pole
 	return ECLIPTIC_NORTH
+
+func get_radius_for_camera() -> float:
+	if is_body:
+		return body.m_radius
+	return UnitDefs.KM
 
 func get_orbit_anomaly_for_camera() -> float:
 	if !is_body or !view_rotate_when_close:

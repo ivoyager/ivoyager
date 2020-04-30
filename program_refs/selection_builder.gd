@@ -28,9 +28,8 @@ var latitude_zoom_offset_star_behind := -PI / 200.0 # a bit below equator shows 
 var longitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly right of Moon
 var latitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly above Moon
 var min_view_dist_radius_multiplier := 1.65
-
-var m_radius_fill_view_zoom := 7e5 * UnitDefs.KM # this size object fills the zoom view
-var size_compensation_exponent := 0.2 # < 0.0 is "full" compensation; 1.0 is none
+var zoom_divisor := 3e3 * UnitDefs.KM # bigger makes zoom closer
+var size_ratio_exponent := 0.8 # 1.0 is full size compensation
 var system_radius_multiplier_top := 1.5
 
 # dependencies
@@ -80,10 +79,8 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	var y_offset_45 := (y_offset_zoom + y_offset_top) / 2.0
 	var m_radius := body.m_radius
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
-	var view_dist_zoom := 120.0 * m_radius
-	var adj_ratio := pow(m_radius_fill_view_zoom / m_radius, size_compensation_exponent)
-	view_dist_zoom *= adj_ratio
-	var view_dist_top := 400.0 * body.system_radius * system_radius_multiplier_top
+	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent)
+	var view_dist_top := 500.0 * body.system_radius * system_radius_multiplier_top
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
 	selection_item.camera_view_positions = [ # camera will divide dist by fov
 		Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom), # VIEW_ZOOM
