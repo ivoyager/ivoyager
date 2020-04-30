@@ -229,7 +229,7 @@ static func get_fov_scaling_factor(fov: float) -> float:
 	# be more generally useful for scale corrections after fov change.
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
 
-# Conversions
+# Conversions (use UnitDefs for most conversions!)
 static func srgb2linear(color: Color) -> Color:
 	if color.r <= 0.04045:
 		color.r /= 12.92

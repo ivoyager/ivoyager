@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://ivoyager/gui_widgets/wikipedia.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/selection_wiki.gd" type="Script" id=1]
 
-[node name="Wikipedia" type="RichTextLabel"]
+[node name="SelectionWiki" type="RichTextLabel"]
 margin_top = 275.0
 margin_right = 352.0
 margin_bottom = 305.0

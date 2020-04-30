@@ -28,12 +28,12 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # project vars
 var major_moon_gm := 4.0 * UnitDefs.STANDARD_GM # eg, Miranda is 4.4 km^3/s^2
-var data_parser := {
+var property_fields := {
 	# property = table_field
 	name = "key",
-	body_type = "body_type",
-	starlight_type = "starlight_type",
-	is_gas_giant = "gas_giant",
+	class_type = "class_type",
+	model_type = "model_type",
+	light_type = "light_type",
 	is_dwarf_planet = "dwarf",
 	has_minor_moons = "minor_moons",
 	has_atmosphere = "atmosphere",
@@ -58,13 +58,6 @@ var data_parser := {
 	tenth_bar_t = "tenth_bar_t",
 	file_prefix = "file_prefix",
 }
-var req_data := [
-	"name", "body_type", "m_radius", "file_prefix"
-]
-var read_types := { # to convert enums or enum-like strings
-	body_type = TableHelper.AS_TABLE_TYPE,
-	starlight_type = TableHelper.AS_TABLE_TYPE,
-}
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
@@ -72,6 +65,7 @@ var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
+var _table_data_types: Dictionary = Global.table_data_types
 var _table_rows: Dictionary = Global.table_rows
 var _times: Array = Global.times
 var _registrar: Registrar
@@ -99,24 +93,25 @@ func project_init() -> void:
 	_Body_ = Global.script_classes._Body_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
-func build(body: Body, parent: Body, row_data: Array, fields: Dictionary,
-		table_type: int) -> void:
-	assert(DPRINT and prints("build", tr(row_data[fields.key])) or true)
+func build(table_name: String, row: int, parent: Body) -> Body:
+	var row_data: Array = _table_data[table_name][row]
+	var fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var body: Body = SaverLoader.make_object_or_scene(_Body_)
+	_table_helper.build_object(body, row_data, fields, data_types, property_fields)
 	if !parent:
 		body.is_top = true
-		assert(fields.has("top") and row_data[fields.top])
-	_table_helper.build_object(body, row_data, fields, data_parser, req_data, read_types)
-	match table_type:
-		Enums.TABLE_STARS:
+	match table_name:
+		"stars":
 			body.is_star = true
-		Enums.TABLE_PLANETS:
+		"planets":
 			body.is_planet = true
-		Enums.TABLE_MOONS:
+		"moons":
 			body.is_moon = true
 	var time: float = _times[0]
 	var orbit: Orbit
 	if !body.is_top:
-		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, time)
+		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
 		body.orbit = orbit
 	if body.e_radius == 0.0:
 		body.e_radius = body.m_radius
@@ -177,7 +172,6 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary,
 	if fields.has("rings") and row_data[fields.rings]:
 		body.rings_info = [row_data[fields.rings], row_data[fields.rings_outer_radius]]
 
-	body.classification = _get_classification(body)
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
@@ -188,6 +182,8 @@ func build(body: Body, parent: Body, row_data: Array, fields: Dictionary,
 		_registrar.register_top_body(body)
 	_registrar.register_body(body)
 	_selection_builder.build_from_body(body, parent)
+	
+	return body
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	_satellite_indexes.clear()
@@ -205,11 +201,11 @@ func _build_unpersisted(body: Body) -> void:
 		if satellite:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
-	if body.body_type != -1:
+	if body.model_type != -1:
 		_model_builder.add_model(body)
 	if body.rings_info:
 		_rings_builder.add_rings(body)
-	if body.starlight_type != -1:
+	if body.light_type != -1:
 		_light_builder.add_starlight(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
@@ -224,19 +220,3 @@ func _build_unpersisted(body: Body) -> void:
 		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = Global.assets.fallback_star_slice
-
-# DEPRECIATE? - move to SelectionBuilder for SelectionItem
-func _get_classification(body: Body) -> String:
-	# for UI display "Classification: ______"
-	if body.is_star:
-		return "CLASSIFICATION_STAR"
-	if body.is_dwarf_planet:
-		return "CLASSIFICATION_DWARF_PLANET"
-	if body.is_planet:
-		return "CLASSIFICATION_PLANET"
-	if body.is_moon:
-		return "CLASSIFICATION_MOON"
-	return ""
-
-
-

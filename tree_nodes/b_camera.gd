@@ -49,11 +49,13 @@ const VIEW_TOP = Enums.VIEW_TOP
 const VIEW_CENTERED = Enums.VIEW_CENTERED
 const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
 
-# TODO: Different pathings...
-enum {
-	INTERPOLATE_SPHERICAL, # looks better w/in systems among ecliptic/equatorial orbits
-	INTERPOLATE_CARTESIAN, # looks better otherwise
-}
+# TODO: Different pathings. Our current "spherical" path looks best within
+# systems among bodies with ecliptic/equatorial orbits. But a simple cartesian
+# path would look better in other circumstances.
+#enum {
+#	PATH_SPHERICAL,
+#	PATH_CARTESIAN,
+#}
 
 enum {
 	LONGITUDE_REMAP_INIT,
@@ -107,6 +109,7 @@ var use_local_north: float = 5e7 * UnitDefs.KM # must be > follow_orbit
 var use_ecliptic_north: float = 5e10 * UnitDefs.KM # must be > use_local_north
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
+var size_ratio_exponent := 0.8 # 1.0 is full size compensation
 
 # public read-only
 var parent: Spatial # always current
@@ -174,20 +177,27 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 			view_position = selection_item.camera_view_positions[view_type]
 			view_position[2] /= fov
 			view_orientation = VECTOR3_ZERO
-		VIEW_CENTERED:
+		VIEW_CENTERED, VIEW_UNCENTERED:
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
+			elif _from_selection_item != selection_item \
+					and view_position[2] < _use_ecliptic_north_dist:
+				# partial distance compensation
+				var from_radius := _from_selection_item.get_radius_for_camera()
+				var to_radius := selection_item.get_radius_for_camera()
+				var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
+				view_position[2] *= adj_ratio
+			continue
+		VIEW_CENTERED:
 			view_orientation = VECTOR3_ZERO
 		VIEW_UNCENTERED:
-			if to_view_position != VECTOR3_ZERO:
-				view_position = to_view_position
 			if to_rotations != NULL_ROTATION:
 				view_orientation = to_rotations
 		_:
 			assert(false)
 	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
-	if view_position.z < min_dist:
-		view_position.z = min_dist
+	if view_position[2] < min_dist:
+		view_position[2] = min_dist
 
 	if is_instant_move:
 		_move_progress = _transition_time # finishes move on next frame

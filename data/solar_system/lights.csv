@@ -1,8 +1,7 @@
 ﻿# OmniLight properties for individual stars like our sun.,
-# (Not starlight in the normal English sense! That's in environment_data.),
 #,
 key,omni_range
 Data_Type,REAL
-Defaults,
+Default,
 Units,au
-STARLIGHT_SUN,80
+LIGHT_SUN,80

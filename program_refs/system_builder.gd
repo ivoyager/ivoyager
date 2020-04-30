@@ -30,16 +30,17 @@ var progress := 0 # for MainProgBar
 var _use_thread: bool = Global.use_threads
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
+var _table_data_types: Dictionary = Global.table_data_types
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
 var _universe: Spatial
 var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
-var _registrar: Registrar
 var _minor_bodies_builder: MinorBodiesBuilder
+var _registrar: Registrar
+var _table_helper: TableHelper
 #var _WorldEnvironment_: Script
 var _Camera_: Script
-var _Body_: Script
 var _progress_bodies := 0
 var _thread: Thread
 var _camera: Camera
@@ -50,12 +51,11 @@ func project_init():
 	_universe = Global.program.universe
 	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_body_builder = Global.program.BodyBuilder
-	_registrar = Global.program.Registrar
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-#	_WorldEnvironment_ = Global.script_classes._WorldEnvironment_
+	_registrar = Global.program.Registrar
+	_table_helper = Global.program.TableHelper
 	if add_camera:
 		_Camera_ = Global.script_classes._Camera_
-	_Body_ = Global.script_classes._Body_
 
 func build() -> void:
 	print("Building solar system...")
@@ -68,12 +68,11 @@ func build() -> void:
 		_build_on_thread(0)
 
 func _build_on_thread(_dummy: int) -> void:
-	_add_bodies("stars", Enums.TABLE_STARS)
-	_add_bodies("planets", Enums.TABLE_PLANETS)
-	_add_bodies("moons", Enums.TABLE_MOONS)
+	_add_bodies("stars")
+	_add_bodies("planets")
+	_add_bodies("moons")
 	_minor_bodies_builder.build()
 	_registrar.do_selection_counts_after_system_build()
-#	_starfield = SaverLoader.make_object_or_scene(_WorldEnvironment_)
 	if add_camera:
 		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
@@ -82,7 +81,6 @@ func _finish_build() -> void:
 	if _use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-#	_universe.add_child(_starfield)
 	for body in _registrar.top_bodies:
 		_universe.add_child(body)
 	if add_camera:
@@ -93,16 +91,13 @@ func _finish_build() -> void:
 		_main_prog_bar.stop()
 	emit_signal("finished")
 
-func _add_bodies(data_name: String, table_type: int) -> void:
-	var data: Array = _table_data[data_name]
-	var fields: Dictionary = _table_fields[data_name]
-	for row_data in data:
-		var body: Body = SaverLoader.make_object_or_scene(_Body_)
-		var parent: Body
-		if !fields.has("top") or !row_data[fields.top]:
-			var parent_str: String = row_data[fields.parent] # required if not top
-			parent = _registrar.bodies_by_name[parent_str]
-		_body_builder.build(body, parent, row_data, fields, table_type)
+func _add_bodies(table_name: String) -> void:
+	var data: Array = _table_data[table_name]
+	var n_rows := data.size()
+	var row := 0
+	while row < n_rows:
+		var parent := _table_helper.get_body(table_name, "parent", row) # null for Sun
+		var body := _body_builder.build(table_name, row, parent)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
@@ -110,6 +105,7 @@ func _add_bodies(data_name: String, table_type: int) -> void:
 		_progress_bodies += 1
 		# warning-ignore:integer_division
 		progress = 100 * _progress_bodies / progress_bodies_denominator
+		row += 1
 
 #func _do_counts(body: Body, selection_item: SelectionItem) -> void:
 #		if body.is_star:

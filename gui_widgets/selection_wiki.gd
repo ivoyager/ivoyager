@@ -1,4 +1,4 @@
-# planetarium_gui.gd
+# selection_wiki.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -21,7 +21,7 @@
 
 extends RichTextLabel
 
-var use_selection_as_text := false # otherwise, "Wikipedia"
+var use_selection_as_text := true # otherwise, "Wikipedia"
 var fallback_text := "LABEL_WIKIPEDIA"
 
 var _selection_manager: SelectionManager
@@ -43,10 +43,9 @@ func _on_selection_changed() -> void:
 	var object_key: String = _selection_manager.get_name()
 	bbcode_text = "[url]" + tr(object_key) + "[/url]"
 
-func _on_wiki_clicked(meta: String) -> void:
-	if meta == "Wikipedia":
-		var object_key: String = _selection_manager.get_name()
-		if _wiki_titles.has(object_key):
-			var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_key])
-			OS.shell_open(url)
+func _on_wiki_clicked(_meta: String) -> void:
+	var object_key: String = _selection_manager.get_name()
+	if _wiki_titles.has(object_key):
+		var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_key])
+		OS.shell_open(url)
 

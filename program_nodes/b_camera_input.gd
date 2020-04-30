@@ -78,6 +78,7 @@ var _drag_vector := VECTOR2_ZERO
 var _mwheel_turning := 0.0
 var _move_pressed := VECTOR3_ZERO
 var _rotate_pressed := VECTOR3_ZERO
+var _suppress_camera_move := false
 
 
 func project_init() -> void:
@@ -95,11 +96,13 @@ func _restore_init_state() -> void:
 func _connect_camera(camera: BCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
+	_camera.connect("move_started", self, "_on_camera_move_started")
 	_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
 	if !_camera:
 		return
+	_camera.disconnect("move_started", self, "_on_camera_move_started")
 	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
 	_camera = null
 
@@ -112,11 +115,17 @@ func _on_run_state_changed(is_running: bool) -> void:
 	set_process_unhandled_input(is_running)
 
 func _on_selection_changed() -> void:
-	if _camera and _camera.is_camera_lock:
+	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
 		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
 
-func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 	if is_camera_lock:
+		_suppress_camera_move = true
+		_selection_manager.select_body(to_body)
+	_suppress_camera_move = false
+
+func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+	if is_camera_lock and !_suppress_camera_move:
 		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
 
 func _ready() -> void:

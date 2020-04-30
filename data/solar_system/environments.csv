@@ -2,5 +2,5 @@
 #,
 key,dummy
 Data_Type,BOOL
-Defaults,TRUE
+Default,TRUE
 ENVIRONMENT_IVOYAGER,

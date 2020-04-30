@@ -19,7 +19,6 @@
 extends Reference
 class_name SelectionItem
 
-
 const SELECTION_STAR_SYSTEM = Enums.SELECTION_STAR_SYSTEM
 const SELECTION_BARYCENTER = Enums.SELECTION_BARYCENTER
 const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
@@ -41,7 +40,6 @@ const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 # persisted - read only
 var name: String # Registrar guaranties these are unique
 var selection_type: int
-var classification: String
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var non_body_texture_2d_path := "" # not used if is_body
@@ -55,15 +53,14 @@ var n_comets := -1
 # camera
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
-
 var camera_view_positions: Array #Vector3 for 1st three VIEW_TYPE_'S
 
 var spatial: Spatial # for camera parenting
 var body: Body # = spatial if is_body else null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "selection_type", "classification",
-	"is_body", "up_selection_name", "non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
+const PERSIST_PROPERTIES := ["name", "selection_type", "is_body", "up_selection_name",
+	"non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
 	"camera_view_positions"]
 const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
@@ -78,6 +75,11 @@ func get_north() -> Vector3:
 	if is_body:
 		return body.north_pole
 	return ECLIPTIC_NORTH
+
+func get_radius_for_camera() -> float:
+	if is_body:
+		return body.m_radius
+	return UnitDefs.KM
 
 func get_orbit_anomaly_for_camera() -> float:
 	if !is_body or !view_rotate_when_close:

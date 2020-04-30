@@ -26,12 +26,6 @@ enum {
 	VIEW_CENTERED, # unspecified view_position
 	VIEW_UNCENTERED # unspecified view_position & view_orientation
 }
-
-enum {
-	TABLE_STARS,
-	TABLE_PLANETS,
-	TABLE_MOONS,
-}
 	
 enum {
 	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
