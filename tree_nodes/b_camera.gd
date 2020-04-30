@@ -49,11 +49,13 @@ const VIEW_TOP = Enums.VIEW_TOP
 const VIEW_CENTERED = Enums.VIEW_CENTERED
 const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
 
-# TODO: Different pathings...
-enum {
-	INTERPOLATE_SPHERICAL, # looks better w/in systems among ecliptic/equatorial orbits
-	INTERPOLATE_CARTESIAN, # looks better otherwise
-}
+# TODO: Different pathings. Our current "spherical" path looks best within
+# systems among bodies with ecliptic/equatorial orbits. But a simple cartesian
+# path would look better in other circumstances.
+#enum {
+#	PATH_SPHERICAL,
+#	PATH_CARTESIAN,
+#}
 
 enum {
 	LONGITUDE_REMAP_INIT,
@@ -178,7 +180,8 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 		VIEW_CENTERED, VIEW_UNCENTERED:
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
-			elif _from_selection_item != selection_item and view_position[2] < use_ecliptic_north:
+			elif _from_selection_item != selection_item \
+					and view_position[2] < _use_ecliptic_north_dist:
 				# partial distance compensation
 				var from_radius := _from_selection_item.get_radius_for_camera()
 				var to_radius := selection_item.get_radius_for_camera()
