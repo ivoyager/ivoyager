@@ -31,6 +31,7 @@ extends Spatial
 class_name Body
 
 const DPRINT := false
+const HACKFIX_MOVE_HIDDEN_FAR_AWAY := true # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
@@ -179,6 +180,8 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 func hide_visuals() -> void:
 	_visible = false
 	visible = false # hides all tree descendants, including model
+	if HACKFIX_MOVE_HIDDEN_FAR_AWAY:
+		translation = Vector3(1e12, 1e12, 1e12)
 	if hud_orbit: # not a child of this node!
 		_hud_orbit_visible = false
 		hud_orbit.visible = false

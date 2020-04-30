@@ -27,7 +27,7 @@ const DPRINT := false
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # project vars
-var major_moon_gm := 4.0 * UnitDefs.STANDARD_GM # eg, Miranda is 4.4 km^3/s^2
+var major_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
 var property_fields := {
 	# property = table_field
 	name = "key",
@@ -202,7 +202,7 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		_model_builder.add_model(body)
+		_model_builder.add_model(body, body.is_minor_moon)
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
