@@ -100,15 +100,17 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return _bodies_by_name[body_key]
 
 func build_object(object: Object, row_data: Array, fields: Dictionary, data_types: Array,
-		property_fields: Dictionary) -> void:
+		property_fields: Dictionary, required_fields := []) -> void:
 	# This function helps a builder class build an object from table row data.
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
+			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
 			continue
 		var column: int = fields[field]
 		var value = row_data[column]
 		if value == null:
+			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
 			continue
 		var data_type: String = data_types[column]
 		match data_type:

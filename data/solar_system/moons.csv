@@ -1,6 +1,4 @@
 ﻿"# Pw, Pnode are apsidal and nodal precession, or period of rotation of w and Om (?). s, g ???",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-"# Units are optional when using sim standard units: s, km, kg, radians and their derivations (km/s, etc.). See ivoyager/static/conv.gd for allowed symbols.",,,,,,,,,,,,,,,,,,,,,,,,,,values???,,,,,,
-# Units can also be a valid float; value x float is expected to give standard sim units.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Sort each planet's moons by semi_major axis (a) for proper selection order.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #,,,,,,,,,,,,,,,,,,apsidal precession,nodal precession,,,,,,,to orbit plane,,,,,,what is this for?
 #,,,,all default,,J2000 facing,,TODO: implement!,,,,,,,,,,,,,,,,,,,,,,V0 or R,,

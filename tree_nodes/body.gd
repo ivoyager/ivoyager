@@ -36,6 +36,8 @@ const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
 
+# for floats, INF means unknown, -INF means not applicable
+
 # persisted
 var body_id := -1
 var selection_type := -1 # see static/enums.gd
@@ -52,11 +54,12 @@ var is_minor_moon := false
 var is_spacecraft := false
 var has_atmosphere := false
 var tidally_locked := false
-var mass := 0.0
-var gm := 0.0
-var esc_vel := 0.0
-var m_radius := 0.0
-var e_radius := 0.0
+var mass := INF
+var gm := -INF
+var surface_gravity := -INF
+var esc_vel := -INF
+var m_radius := INF
+var e_radius := INF
 var system_radius := 0.0 # widest orbiting satellite
 var rotation_period := 0.0
 var axial_tilt := 0.0
@@ -65,7 +68,6 @@ var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3(0.0, 0.0, 1.0)
-# optional characteristics (for display, INF -> ?; -INF -> don't show)
 var density := INF
 var albedo := -INF
 var surf_pres := -INF
@@ -87,7 +89,7 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "selection_type", "class_type",
 	"model_type", "light_type", "is_top",  "is_star", "is_star_orbiting", "is_planet",
 	"is_dwarf_planet", "is_moon", "is_minor_moon", "is_spacecraft",
-	"has_atmosphere", "tidally_locked", "mass", "gm",
+	"has_atmosphere", "tidally_locked", "mass", "gm", "surface_gravity",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
 	"right_ascension", "declination",
 	"has_minor_moons", "reference_basis", "north_pole",

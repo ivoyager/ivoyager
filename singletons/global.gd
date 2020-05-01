@@ -120,7 +120,6 @@ var allow_real_world_time := false # Planetarium sets true
 var allow_time_reversal := false # Planetarium sets true
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 200.0 * UnitDefs.AU
-var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 

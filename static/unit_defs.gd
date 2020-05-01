@@ -38,7 +38,7 @@ const AMPERE := 1.0
 const KELVIN := 1.0
 const CANDELA := 1.0
 
-# derived units
+# derived units & constants
 const DEG := PI / 180.0 # radians
 const MINUTE := 60.0 * SECOND
 const HOUR := 3600.0 * SECOND
@@ -52,6 +52,7 @@ const AU := 149597870700.0 * METER
 const PARSEC := 648000.0 * AU / PI
 const SPEED_OF_LIGHT := 299792458.0 * METER / SECOND
 const LIGHT_YEAR := SPEED_OF_LIGHT * YEAR
+const STANDARD_GRAVITY := 9.80665 * METER / (SECOND * SECOND)
 const GRAM := 1e-3 * KG
 const TONNE := 1e3 * KG
 const HECTARE := 1e4 * METER * METER
@@ -68,13 +69,13 @@ const COULOMB := SECOND * AMPERE
 const WEBER := VOLT * SECOND
 const TESLA := WEBER / (METER * METER)
 const STANDARD_GM := KM * KM * KM / (SECOND * SECOND) # usually in these units
+const GRAVITATIONAL_CONSTANT := 6.67430e-11 * METER * METER * METER / (KG * SECOND * SECOND)
 
 # Symbols below mostly follow:
 # https://en.wikipedia.org/wiki/International_System_of_Units
 
-# TODO: yr -> y
-
 const MULTIPLIERS := {
+	# duplicated symbols have leading underscore(s)
 	# time
 	"s" : SECOND,
 	"min" : MINUTE,
@@ -126,6 +127,9 @@ const MULTIPLIERS := {
 	"au/century" : AU / CENTURY,
 	"AU/century" : AU / CENTURY,
 	"c" : SPEED_OF_LIGHT,
+	# acceleration/gravity
+	"m/s^2" : METER / (SECOND * SECOND),
+	"_g" : STANDARD_GRAVITY,
 	# angular velocity
 	"rad/s" : 1.0 / SECOND, 
 	"deg/d" : DEG / DAY,
@@ -174,6 +178,7 @@ const MULTIPLIERS := {
 	"km^3/s^2" : STANDARD_GM,
 	"m^3/s^2" : METER * METER * METER / (SECOND * SECOND),
 	# gravitational constant
+	"m^3/(kg s^2)" : METER * METER * METER / (KG * SECOND * SECOND),
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),
 }
 

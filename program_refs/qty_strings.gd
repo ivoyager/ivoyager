@@ -80,7 +80,8 @@ var short_forms := {
 	"degF" : "TXT_DEG_F",
 	"deg/d" : "TXT_DEG_PER_DAY",
 	"deg/a" : "TXT_DEG_PER_YEAR",
-	"deg/century" : "DEG_PER_CENTURY",
+	"deg/century" : "TXT_DEG_PER_CENTURY",
+	"_g" : "g",
 }
 
 var long_forms := {
@@ -137,6 +138,9 @@ var long_forms := {
 	"km/s" : "TXT_KILOMETERS_PER_SECOND",
 	"km/h" : "TXT_KILOMETERS_PER_HOUR",
 	"c" : "TXT_SPEED_OF_LIGHT",
+	# acceleration/gravity
+	"m/s^2" : "TXT_METERS_PER_SECOND_SQUARED",
+	"_g" : "TXT_STANDARD_GRAVITIES",
 	# angular velocity
 	"deg/d" : "TXT_DEGREES_PER_DAY",
 	"deg/a" : "TXT_DEGREES_PER_YEAR",
