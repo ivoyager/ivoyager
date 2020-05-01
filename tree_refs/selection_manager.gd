@@ -30,7 +30,7 @@ const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
 const SELECTION_STAR = Enums.SELECTION_STAR
 const SELECTION_PLANET = Enums.SELECTION_PLANET
 const SELECTION_DWARF_PLANET = Enums.SELECTION_DWARF_PLANET
-const SELECTION_MOON = Enums.SELECTION_MOON
+const SELECTION_MAJOR_MOON = Enums.SELECTION_MAJOR_MOON
 const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
 const SELECTION_ASTEROIDS = Enums.SELECTION_ASTEROIDS
 const SELECTION_ASTEROID_GROUP = Enums.SELECTION_ASTEROID_GROUP
@@ -121,7 +121,7 @@ func down() -> void:
 	if body and body.satellites:
 		select_body(body.satellites[0])
 
-func next_last(incr: int, selection_type := -1) -> void:
+func next_last(incr: int, selection_type := -1, alt_selection_type := -1) -> void:
 	# This is messy because each selection_type is a special case. See logic
 	# for supported types.
 	if selection_type == SELECTION_STAR:
@@ -131,18 +131,6 @@ func next_last(incr: int, selection_type := -1) -> void:
 	var current_type := selection_item.selection_type
 	if selection_type == -1:
 		selection_type = current_type
-	var alt_selection_type := -1
-	match selection_type:
-		SELECTION_PLANET:
-			alt_selection_type = SELECTION_DWARF_PLANET
-		SELECTION_DWARF_PLANET:
-			selection_type = SELECTION_PLANET
-			alt_selection_type = SELECTION_DWARF_PLANET
-		SELECTION_MOON:
-			alt_selection_type = SELECTION_MINOR_MOON
-		SELECTION_MINOR_MOON:
-			selection_type = SELECTION_MOON
-			alt_selection_type = SELECTION_MINOR_MOON
 	var current_body := selection_item.body # could be null
 	var iteration_array: Array
 	var index := -1
@@ -160,7 +148,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 			index = iteration_array.find(planet)
 			if incr == 1:
 				index -= 1
-	elif selection_type == SELECTION_MOON:
+	elif selection_type == SELECTION_MAJOR_MOON:
 		var planet := _registrar.get_selection_planet(selection_item)
 		if !planet:
 			return
@@ -187,8 +175,7 @@ func next_last(incr: int, selection_type := -1) -> void:
 		elif index >= array_size:
 			index = 0
 		var body: Body = iteration_array[index]
-		var body_selection_type := body.selection_type
-		if body_selection_type == selection_type or body_selection_type == alt_selection_type:
+		if body.selection_type == selection_type or body.selection_type == alt_selection_type:
 			select_body(body)
 			return
 		count += 1

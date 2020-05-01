@@ -19,7 +19,8 @@
 # given time. We cull based on staleness of last visibility change. Use it for
 # minor moons, visited asteroids, spacecraft, etc. Project var max_lazy should
 # be set to something larger than the max number of lazy models likely to be
-# visible at a give time.
+# visible at a give time (however, a small value REALLY HELPS A LOT on low end
+# systems).
 
 class_name ModelBuilder
 
@@ -30,7 +31,7 @@ const MODEL_TOO_FAR_RADIUS_MULTIPLIER := 1e3
 const METER := UnitDefs.METER
 
 # project var
-var max_lazy := 20 # cull above this
+var max_lazy := 20
 
 var _times: Array = Global.times
 var _table_data: Dictionary = Global.table_data
@@ -52,6 +53,7 @@ func project_init() -> void:
 func add_model(body: Body, lazy_init: bool) -> void:
 	var model: Spatial
 	if lazy_init:
+		# make a simple Spatial placeholder
 		model = get_model(body.model_type, body.file_prefix, body.m_radius, body.e_radius, true)
 		model.hide()
 		model.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
@@ -137,6 +139,7 @@ func _lazy_init(body: Body) -> void:
 func _lazy_uninit(model: Spatial) -> void:
 	if model.visible:
 		return
+	# swap back to a placeholder again
 	model.disconnect("visibility_changed", self, "_update_lazy")
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
@@ -152,7 +155,7 @@ func _update_lazy(model: Spatial) -> void:
 	_lazy_tracker[model] = _times[1] # engine time
 
 func _cull_lazy() -> void:
-	# we cull from average update time (finding median is slow!)
+	# we cull for below average update time; someone's gotta be below average!
 	var update_cutoff := 0.0
 	var tracker_keys := _lazy_tracker.keys()
 	for model in tracker_keys:

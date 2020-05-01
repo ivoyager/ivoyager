@@ -23,7 +23,7 @@ class_name Registrar
 const SELECTION_STAR = Enums.SELECTION_STAR
 const SELECTION_PLANET = Enums.SELECTION_PLANET
 const SELECTION_DWARF_PLANET = Enums.SELECTION_DWARF_PLANET
-const SELECTION_MOON = Enums.SELECTION_MOON
+const SELECTION_MAJOR_MOON = Enums.SELECTION_MAJOR_MOON
 const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
 
 # persisted - read only
@@ -67,12 +67,12 @@ func get_selection_planet(selection_item: SelectionItem) -> Body:
 
 func get_selection_moon(selection_item: SelectionItem) -> Body:
 	var selection_type := selection_item.selection_type
-	if selection_type == SELECTION_MOON or selection_type == SELECTION_MINOR_MOON:
+	if selection_type == SELECTION_MAJOR_MOON or selection_type == SELECTION_MINOR_MOON:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
 		selection_type = selection_item.selection_type
-		if selection_type == SELECTION_MOON or selection_type == SELECTION_MINOR_MOON:
+		if selection_type == SELECTION_MAJOR_MOON or selection_type == SELECTION_MINOR_MOON:
 			return selection_item.body
 	return null
 
@@ -116,18 +116,6 @@ func remove_selection_item(selection_item: SelectionItem) -> void:
 	assert(selection_items.has(name_))
 	selection_items.erase(name_)
 
-func do_selection_counts_after_system_build() -> void:
-	for name_ in selection_items:
-		var selection_item: SelectionItem = selection_items[name_]
-		count_selection(selection_item)
-
-func count_selection(selection_item: SelectionItem) -> void:
-	_change_count_recursive(selection_item, selection_item.selection_type, 1)
-	
-func uncount_selection(selection_item: SelectionItem) -> void:
-	_change_count_recursive(selection_item, selection_item.selection_type, -1)
-
-
 func project_init():
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("game_load_finished", self, "_index_bodies")
@@ -159,11 +147,3 @@ func _index_body_recursive(body: Body) -> void:
 	for child in body.get_children():
 		if child is Body:
 			_index_body_recursive(child)
-
-func _change_count_recursive(selection_item: SelectionItem, selection_type: int, amount: int) -> void:
-	var up_selection_name := selection_item.up_selection_name
-	if up_selection_name:
-		var up_selection: SelectionItem = selection_items[up_selection_name]
-		up_selection.change_count(selection_type, amount)
-		_change_count_recursive(up_selection, selection_type, amount)
-		

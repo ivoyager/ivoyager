@@ -124,12 +124,12 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 		body.is_minor_moon = true
 	if body.esc_vel == 0.0:
 		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
+	body.selection_type = _get_selection_type(body)
 	# orbit and axis
 	if parent and parent.is_star:
 		body.is_star_orbiting = true
 	if body.tidally_locked:
 		body.rotation_period = TAU / orbit.get_mean_motion(time)
-
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
@@ -161,29 +161,37 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 	body.north_pole = body.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
 		body.rotation_period = -body.rotation_period
-	
 	# reference basis
 	body.reference_basis = math.rotate_basis_pole(Basis(), body.north_pole)
 	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skips if 0
 		body.reference_basis = body.reference_basis.rotated(body.north_pole,
 				row_data[fields.rotate_adj])
-
 	# file import info
 	if fields.has("rings") and row_data[fields.rings]:
 		body.rings_info = [row_data[fields.rings], row_data[fields.rings_outer_radius]]
-
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
 		if parent.system_radius < semimajor_axis:
 			parent.system_radius = semimajor_axis
-	
 	if !parent:
 		_registrar.register_top_body(body)
 	_registrar.register_body(body)
-	_selection_builder.build_from_body(body, parent)
-	
+	_selection_builder.build_and_register(body, parent)
 	return body
+
+func _get_selection_type(body: Body) -> int:
+	if body.is_star:
+		return Enums.SELECTION_STAR
+	if body.is_dwarf_planet:
+		return Enums.SELECTION_DWARF_PLANET
+	if body.is_planet:
+		return Enums.SELECTION_PLANET
+	if body.is_minor_moon:
+		return Enums.SELECTION_MINOR_MOON
+	if body.is_moon:
+		return Enums.SELECTION_MAJOR_MOON
+	return -1
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	_satellite_indexes.clear()

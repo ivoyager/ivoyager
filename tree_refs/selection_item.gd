@@ -25,7 +25,7 @@ const SELECTION_LAGRANGE_POINT = Enums.SELECTION_LAGRANGE_POINT
 const SELECTION_STAR = Enums.SELECTION_STAR
 const SELECTION_PLANET = Enums.SELECTION_PLANET
 const SELECTION_DWARF_PLANET = Enums.SELECTION_DWARF_PLANET
-const SELECTION_MOON = Enums.SELECTION_MOON
+const SELECTION_MAJOR_MOON = Enums.SELECTION_MAJOR_MOON
 const SELECTION_MINOR_MOON = Enums.SELECTION_MINOR_MOON
 const SELECTION_ASTEROIDS = Enums.SELECTION_ASTEROIDS
 const SELECTION_ASTEROID_GROUP = Enums.SELECTION_ASTEROID_GROUP
@@ -43,7 +43,7 @@ var selection_type: int
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var non_body_texture_2d_path := "" # not used if is_body
-# UI data
+# GUI data
 var n_stars := -1
 var n_planets := -1
 var n_dwarf_planets := -1
@@ -89,26 +89,9 @@ func get_orbit_anomaly_for_camera() -> float:
 		return 0.0
 	return orbit.get_anomaly_for_camera(_times[0])
 
-func init(selection_type_: int) -> void:
-	selection_type = selection_type_
-	match selection_type_:
-		SELECTION_MOON:
-			pass
-		SELECTION_PLANET, SELECTION_DWARF_PLANET:
-			n_moons = 0 # non -1 are valid for counting & UI display
-		SELECTION_STAR, SELECTION_STAR_SYSTEM:
-			n_planets = 0
-			n_dwarf_planets = 0
-			n_moons = 0
-			n_asteroids = 0
-			n_comets = 0
-			continue
-		SELECTION_STAR_SYSTEM:
-			n_stars = 0
-
 func change_count(change_selection_type: int, amount: int) -> void:
 	match change_selection_type:
-		SELECTION_MOON:
+		SELECTION_MAJOR_MOON, SELECTION_MINOR_MOON:
 			if n_moons != -1:
 				n_moons += amount
 		SELECTION_PLANET:
@@ -122,9 +105,6 @@ func change_count(change_selection_type: int, amount: int) -> void:
 				n_stars += amount
 
 func _init() -> void:
-	_on_init()
-
-func _on_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:

@@ -37,15 +37,13 @@ var _registrar: Registrar
 var _SelectionItem_: Script
 
 func project_init() -> void:
+	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
 	_registrar = Global.program.Registrar
 	_SelectionItem_ = Global.script_classes._SelectionItem_
 
-func build_from_body(body: Body, parent_body: Body) -> SelectionItem:
+func build_and_register(body: Body, parent_body: Body) -> void:
 	# parent_body = null for top Body
 	var selection_item: SelectionItem = _SelectionItem_.new()
-	var selection_type := _get_selection_type_from_body(body)
-	body.selection_type = selection_type
-	selection_item.init(selection_type)
 	selection_item.is_body = true
 	selection_item.spatial = body
 	selection_item.body = body
@@ -56,8 +54,17 @@ func build_from_body(body: Body, parent_body: Body) -> SelectionItem:
 		# TODO: Some special handling for barycenters
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
+	selection_item.selection_type = body.selection_type
+	match body.selection_type:
+		Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET:
+			selection_item.n_moons = 0
+		Enums.SELECTION_STAR, Enums.SELECTION_STAR_SYSTEM:
+			selection_item.n_planets = 0
+			selection_item.n_dwarf_planets = 0
+			selection_item.n_moons = 0
+#			selection_item.n_asteroids = 0
+#			selection_item.n_comets = 0
 	_registrar.register_selection_item(selection_item)
-	return selection_item
 
 func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
 	var x_offset_zoom: float
@@ -88,13 +95,27 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		Vector3(x_offset_top, y_offset_top, view_dist_top) # VIEW_TOP
 	]
 
-func _get_selection_type_from_body(body: Body) -> int:
+func _set_system_counts(is_new_game: bool) -> void:
+	if is_new_game:
+		for body in _registrar.top_bodies:
+			_set_counts_recursive(body)
+
+func _set_counts_recursive(body: Body) -> void:
 	if body.is_star:
-		return Enums.SELECTION_STAR
-	if body.is_dwarf_planet:
-		return Enums.SELECTION_DWARF_PLANET
-	if body.is_planet:
-		return Enums.SELECTION_PLANET
-	if body.is_moon:
-		return Enums.SELECTION_MOON
-	return -1
+		for child in body.satellites:
+			_set_counts_recursive(child)
+	var selection_item := _registrar.get_selection_for_body(body)
+	match body.selection_type:
+		Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET:
+			for child in body.satellites:
+				if child.is_moon:
+					selection_item.n_moons += 1
+		Enums.SELECTION_STAR:
+			for child in body.satellites:
+				if child.is_dwarf_planet:
+					selection_item.n_dwarf_planets += 1
+				elif child.is_planet:
+					selection_item.n_planets += 1
+				if child.satellites:
+					var child_selection_item := _registrar.get_selection_for_body(child)
+					selection_item.n_moons += child_selection_item.n_moons
