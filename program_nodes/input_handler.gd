@@ -134,13 +134,17 @@ func _on_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("next_star"):
 				_selection_manager.next_last(1, Enums.SELECTION_STAR)
 			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, Enums.SELECTION_PLANET)
+				_selection_manager.next_last(-1, Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET)
 			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, Enums.SELECTION_PLANET)
+				_selection_manager.next_last(1, Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET)
+			elif event.is_action_pressed("previous_major_moon"):
+				_selection_manager.next_last(-1, Enums.SELECTION_MAJOR_MOON)
+			elif event.is_action_pressed("next_major_moon"):
+				_selection_manager.next_last(1, Enums.SELECTION_MAJOR_MOON)
 			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, Enums.SELECTION_MOON)
+				_selection_manager.next_last(-1, Enums.SELECTION_MAJOR_MOON, Enums.SELECTION_MINOR_MOON)
 			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, Enums.SELECTION_MOON)
+				_selection_manager.next_last(1, Enums.SELECTION_MAJOR_MOON, Enums.SELECTION_MINOR_MOON)
 			else:
 				return # input NOT handled!
 		else:

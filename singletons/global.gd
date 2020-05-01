@@ -96,8 +96,8 @@ var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 
 # shared resources
-var icon_quad_mesh := QuadMesh.new() # shared by HUDIcons; scaled by TreeManager
-var globe_mesh := SphereMesh.new() # shared by ellipsoidal Models
+var icon_quad_mesh := QuadMesh.new() # shared by HUD icons; scaled by TreeManager
+var globe_mesh := SphereMesh.new() # shared by ellipsoid models
 
 # project vars - modify at project init (see ProjectBuilder)
 var project_name := "I, Voyager"
@@ -155,7 +155,6 @@ var asset_paths_for_load := { # project_init() will load these into assets
 	fallback_star_slice = "res://ivoyager_assets/2d_bodies/Sun_slice.256.png",
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
 }
-
 var shaders := {
 	orbit_ellipse = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
 	orbit_points = preload("res://ivoyager/shaders/orbit_points.shader"),

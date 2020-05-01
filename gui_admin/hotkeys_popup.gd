@@ -72,6 +72,8 @@ func _on_init():
 				next_star = "LABEL_SELECT_SUN",
 				next_planet = "LABEL_NEXT_PLANET",
 				previous_planet = "LABEL_LAST_PLANET",
+				next_major_moon = "LABEL_NEXT_MAJOR_MOON",
+				previous_major_moon = "LABEL_LAST_MAJOR_MOON",
 				next_moon = "LABEL_NEXT_MOON",
 				previous_moon = "LABEL_LAST_MOON",
 				# Below waiting for new code features

@@ -72,7 +72,7 @@ func _build_on_thread(_dummy: int) -> void:
 	_add_bodies("planets")
 	_add_bodies("moons")
 	_minor_bodies_builder.build()
-	_registrar.do_selection_counts_after_system_build()
+#	_registrar.do_selection_counts_after_system_build()
 	if add_camera:
 		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
