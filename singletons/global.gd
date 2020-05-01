@@ -96,8 +96,8 @@ var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 
 # shared resources
-var icon_quad_mesh := QuadMesh.new() # shared by HUDIcons; scaled by TreeManager
-var globe_mesh := SphereMesh.new() # shared by ellipsoidal Models
+var icon_quad_mesh := QuadMesh.new() # shared by HUD icons; scaled by TreeManager
+var globe_mesh := SphereMesh.new() # shared by ellipsoid models
 
 # project vars - modify at project init (see ProjectBuilder)
 var project_name := "I, Voyager"
@@ -146,7 +146,7 @@ var asset_paths := {
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
 }
 var asset_paths_for_load := { # project_init() will load these into assets
-	starfield = "res://ivoyager_assets/starfields/starmap_8k.jpg",
+	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
