@@ -37,7 +37,7 @@ func _ready() -> void:
 	_homepage_link.bbcode_text = "[url]I, Voyager[/url]"
 	_homepage_link.meta_underlined = true
 	_homepage_link.scroll_active = false
-	_homepage_link.rect_min_size = Vector2(150.0, 35.0)
+	_homepage_link.rect_min_size = Vector2(100.0, 35.0)
 	_homepage_link.connect("meta_clicked", self, "_on_homepage_clicked")
 	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.add_child(_homepage_link)
