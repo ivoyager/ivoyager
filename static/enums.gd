@@ -26,7 +26,7 @@ enum {
 	VIEW_CENTERED, # unspecified view_position
 	VIEW_UNCENTERED # unspecified view_position & view_orientation
 }
-	
+
 enum {
 	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
 	SELECTION_GALAXY,
@@ -48,3 +48,14 @@ enum {
 	SELECTION_SPACECRAFT
 }
 
+# named enums can't be accessed by TableReader/TableHelper (yet...)
+enum GUISizes {
+	GUI_SMALL,
+	GUI_MEDIUM,
+	GUI_LARGE,
+}
+
+enum StarmapSizes {
+	STARMAP_8K,
+	STARMAP_16K,
+}
