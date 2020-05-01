@@ -22,6 +22,12 @@
 extends Reference
 class_name ThemeManager
 
+# project vars
+var global_font := "gui_main" # these are defined in FontManager
+var main_menu_font := "large"
+var splash_screen_font := "medium"
+#var game_font := "game_theme"
+
 var _themes: Dictionary = Global.themes
 var _fonts: Dictionary = Global.fonts
 var _settings: Dictionary = Global.settings
@@ -29,16 +35,16 @@ var _settings: Dictionary = Global.settings
 func project_init() -> void:
 	# set global_theme for ProjectGUI
 	var global_theme := Theme.new()
-	global_theme.default_font = _fonts.gui_main
+	global_theme.default_font = _fonts[global_font]
 	_themes.global = global_theme
 	Global.program.ProjectGUI.theme = global_theme
-	# all non-ProjectGUIs must set their own theme from Global.themes
+	# all non-ProjectGUIs set their own theme from Global.themes
 	var main_menu_theme := Theme.new()
-	main_menu_theme.default_font = _fonts.large
+	main_menu_theme.default_font = _fonts[main_menu_font]
 	_themes.main_menu = main_menu_theme
 	var splash_screen_theme := Theme.new()
-	splash_screen_theme.default_font = _fonts.medium
+	splash_screen_theme.default_font = _fonts[splash_screen_font]
 	_themes.splash_screen = splash_screen_theme
-	var game_theme := Theme.new()
-	_themes.game = game_theme
+#	var game_theme := Theme.new()
+#	_themes.game = game_theme
 

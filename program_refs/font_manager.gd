@@ -22,13 +22,13 @@ class_name FontManager
 
 # project vars - modify on "project_objects_instantiated" signal
 var fixed_sizes := {
-	two_pt = 2, # hack to allow small button height (e.g., in NavigationPanel)
+	two_pt = 2, # hack to allow small button height (e.g., in SystemNavigator)
 	medium = 22,
 	large = 28,
 	}
 var gui_main_sizes := [14, 16, 20] # Settings.UISizes
-var gui_medium_sizes := [18, 20, 24] # I, Voyager doesn't use; we can change if 
-var gui_large_sizes := [22, 24, 28]  # there are more sensible default values. 
+var gui_medium_sizes := [18, 20, 24]
+var gui_large_sizes := [22, 24, 28] 
 
 # private
 var _fonts: Dictionary = Global.fonts
