@@ -39,7 +39,7 @@ var show_data := [
 	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyStrings.UNIT, "_g"],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],
 	["density", "LABEL_DENSITY", QtyStrings.UNIT, "g/cm^3"],
-	["albedo", "LABEL_ALBEDO"],
+	["albedo", "LABEL_ALBEDO", QtyStrings.SCIENTIFIC],
 	["surf_pres", "LABEL_SURFACE_PRESSURE", QtyStrings.PREFIXED_UNIT, "bar"],
 	["surf_t", "LABEL_SURFACE_TEMP", QtyStrings.UNIT, "degC"],
 	["min_t", "LABEL_MIN_TEMP", QtyStrings.UNIT, "degC"],
