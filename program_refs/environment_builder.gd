@@ -15,14 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# It takes a while to load the environment depending on starmap size. 8k is
+# twice as fast as 16k, at least on my laptop.
 
 class_name EnvironmentBuilder
+
+var _settings: Dictionary = Global.settings
+var _asset_paths: Dictionary = Global.asset_paths
 
 func project_init() -> void:
 	pass
 
 func add_world_environment(env_type := 0) -> void:
-	# print statement here because it takes a looooong time...
 	print("Adding WorldEnvironment...")
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
@@ -32,7 +36,14 @@ func add_world_environment(env_type := 0) -> void:
 func get_environment(_env_type: int, is_world_env := false) -> Environment:
 	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
-	panorama_sky.panorama = Global.assets.starfield
+	var starmap_file: String
+	match _settings.starmap:
+		Enums.StarmapSizes.STARMAP_8K:
+			starmap_file = _asset_paths.starmap_8k
+		Enums.StarmapSizes.STARMAP_16K:
+			starmap_file = _asset_paths.starmap_16k
+	var starmap: Texture = load(starmap_file)
+	panorama_sky.panorama = starmap
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky

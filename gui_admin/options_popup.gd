@@ -24,7 +24,8 @@ class_name OptionsPopup
 const DPRINT := true
 
 var setting_enums := {
-	gui_size = SettingsManager.GUISizes
+	gui_size = Enums.GUISizes,
+	starmap = Enums.StarmapSizes,
 }
 
 var format_overrides := {
@@ -58,7 +59,7 @@ func _on_init():
 				camera_key_move_rate = "LABEL_KEY_RATE_TANGENTIAL",
 				camera_key_pitch_yaw_rate = "LABEL_KEY_RATE_PITCH_YAW",
 				camera_key_roll_rate = "LABEL_KEY_RATE_ROLL",
-			}
+			},
 		],
 		[ # column 2
 			{
@@ -76,7 +77,11 @@ func _on_init():
 				viewport_icon_size = "LABEL_ICON_SIZE",
 				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
 			},
-		]
+			{
+				header = "LABEL_GRAPHICS_PERFORMANCE",
+				starmap = "LABEL_STARMAP",
+			},
+		],
 	]
 
 func project_init() -> void:

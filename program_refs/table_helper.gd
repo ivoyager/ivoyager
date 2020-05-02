@@ -48,7 +48,8 @@ func get_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var column = fields[field_name]
 	return row_data[column]
 
-func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+func get_enum(enum_name: String, table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# NOT TESTED!
 	# Use for Data_Type = "ENUM" to get enum int value.
 	# Returns -1 if missing!
 	assert((row == -1) != (row_name == ""))
@@ -62,8 +63,8 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	if row_data[column] == null:
 		return -1
-	var enum_key: String = row_data[column]
-	return _enums[enum_key]
+	var enum_key: String = row_data[column]	
+	return _enums[enum_name][enum_key]
 
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for Data_Type = "TABLE" to get row number (= "type").
@@ -100,23 +101,25 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return _bodies_by_name[body_key]
 
 func build_object(object: Object, row_data: Array, fields: Dictionary, data_types: Array,
-		property_fields: Dictionary) -> void:
+		property_fields: Dictionary, required_fields := []) -> void:
 	# This function helps a builder class build an object from table row data.
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
+			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
 			continue
 		var column: int = fields[field]
 		var value = row_data[column]
 		if value == null:
+			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
 			continue
 		var data_type: String = data_types[column]
 		match data_type:
-			"ENUM":
-				object[property] = _enums[value]
+			"REAL", "INT", "STRING", "BOOL", "X":
+				object[property] = value
 			"TABLE":
 				object[property] = _table_rows[value]
 			"BODY":
 				object[property] = _bodies_by_name[value]
-			_:
-				object[property] = value
+			_: # should be a valid enum name
+				object[property] = _enums[data_type][value]

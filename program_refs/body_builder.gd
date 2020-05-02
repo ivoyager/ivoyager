@@ -25,6 +25,7 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 const DPRINT := false
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
+const G := UnitDefs.GRAVITATIONAL_CONSTANT
 
 # project vars
 var major_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
@@ -39,14 +40,15 @@ var property_fields := {
 	has_atmosphere = "atmosphere",
 	m_radius = "m_radius",
 	e_radius = "e_radius", # set to m_radius if missing
-	mass = "mass", # can calculate from gm
-	gm = "GM", # can calculate fro mass
+	mass = "mass", # calculate from m_radius & density if missing
+	gm = "GM", # calculate from mass if missing
 	tidally_locked = "tidally_locked",
 	rotation_period = "rotation",
 	right_ascension = "RA",
 	declination = "dec",
 	axial_tilt = "axial_tilt",
 	esc_vel = "esc_vel",
+	surface_gravity = "surface_gravity",
 	density = "density",
 	albedo = "albedo",
 	surf_pres = "surf_pres",
@@ -58,10 +60,10 @@ var property_fields := {
 	tenth_bar_t = "tenth_bar_t",
 	file_prefix = "file_prefix",
 }
+var required_fields := ["class_type", "model_type", "m_radius", "file_prefix"] # assert if missing
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _gravitational_constant: float = Global.gravitational_constant
 var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
@@ -98,7 +100,7 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_helper.build_object(body, row_data, fields, data_types, property_fields)
+	_table_helper.build_object(body, row_data, fields, data_types, property_fields, required_fields)
 	if !parent:
 		body.is_top = true
 	match table_name:
@@ -113,17 +115,19 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 	if !body.is_top:
 		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
 		body.orbit = orbit
-	if body.e_radius == 0.0:
+	if body.e_radius == INF:
 		body.e_radius = body.m_radius
 	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
-	if body.mass == 0.0:
-		body.mass = body.gm / _gravitational_constant
-	if body.gm == 0.0:
-		body.gm = body.mass * _gravitational_constant
+	if body.mass == INF and body.density != INF:
+		body.mass = (PI * 4.0 / 3.0) * body.density * pow(body.m_radius, 3.0)
+	if body.gm == -INF and body.mass != INF:
+		body.gm = G * body.mass
 	if body.is_moon and body.gm < major_moon_gm and !row_data[fields.force_major]:
 		body.is_minor_moon = true
-	if body.esc_vel == 0.0:
+	if body.esc_vel == -INF and body.gm != -INF:
 		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
+	if body.surface_gravity == -INF and body.gm != -INF:
+		body.surface_gravity = body.gm / pow(body.m_radius, 2.0)
 	body.selection_type = _get_selection_type(body)
 	# orbit and axis
 	if parent and parent.is_star:
@@ -182,15 +186,15 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 
 func _get_selection_type(body: Body) -> int:
 	if body.is_star:
-		return Enums.SELECTION_STAR
+		return Enums.SelectionTypes.SELECTION_STAR
 	if body.is_dwarf_planet:
-		return Enums.SELECTION_DWARF_PLANET
+		return Enums.SelectionTypes.SELECTION_DWARF_PLANET
 	if body.is_planet:
-		return Enums.SELECTION_PLANET
+		return Enums.SelectionTypes.SELECTION_PLANET
 	if body.is_minor_moon:
-		return Enums.SELECTION_MINOR_MOON
+		return Enums.SelectionTypes.SELECTION_MINOR_MOON
 	if body.is_moon:
-		return Enums.SELECTION_MAJOR_MOON
+		return Enums.SelectionTypes.SELECTION_MAJOR_MOON
 	return -1
 
 func _init_unpersisted(_is_new_game: bool) -> void:

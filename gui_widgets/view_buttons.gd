@@ -20,6 +20,8 @@
 
 extends HBoxContainer
 
+const ViewTypes := Enums.ViewTypes
+
 var use_small_txt := false
 var include_recenter := false
 
@@ -64,10 +66,10 @@ func _disconnect_camera() -> void:
 
 func _update_view_type(view_type: int) -> void:
 	if include_recenter:
-		_recenter_button.pressed = view_type != Enums.VIEW_UNCENTERED
-	_zoom_button.pressed = view_type == Enums.VIEW_ZOOM
-	_fortyfive_button.pressed = view_type == Enums.VIEW_45
-	_top_button.pressed = view_type == Enums.VIEW_TOP
+		_recenter_button.pressed = view_type != ViewTypes.VIEW_UNCENTERED
+	_zoom_button.pressed = view_type == ViewTypes.VIEW_ZOOM
+	_fortyfive_button.pressed = view_type == ViewTypes.VIEW_45
+	_top_button.pressed = view_type == ViewTypes.VIEW_TOP
 
 func _recenter() -> void:
 	if !_camera:
@@ -81,7 +83,7 @@ func _zoom() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, Enums.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_zoom_button.pressed = true
 
@@ -89,7 +91,7 @@ func _fortyfive() -> void:
 	if !_camera:
 		return
 	if _fortyfive_button.pressed:
-		_camera.move(null, Enums.VIEW_45, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_fortyfive_button.pressed = true
 
@@ -97,6 +99,6 @@ func _top() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, Enums.VIEW_TOP, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO)
 	else:
 		_top_button.pressed = true

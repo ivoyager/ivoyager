@@ -1,7 +1,7 @@
 ﻿# Class types for info display and planetarium wiki links.,
 #,
 key,wiki_en
-Data_Type,STRING
+DataType,STRING
 Default,
 Units,
 CLASS_G_STAR,G-type_main-sequence_star

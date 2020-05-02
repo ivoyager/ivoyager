@@ -23,11 +23,6 @@
 extends CachedItemsManager
 class_name SettingsManager
 
-enum GUISizes {
-	GUI_SMALL,
-	GUI_MEDIUM,
-	GUI_LARGE,
-	}
 
 func _on_init():
 	# project vars - modify on ProjectBuilder signal "project_objects_instantiated"
@@ -53,18 +48,21 @@ func _on_init():
 		camera_key_roll_rate = 1.0,
 
 		# UI & HUD display
-		gui_size = GUISizes.GUI_MEDIUM,
+		gui_size = Enums.GUISizes.GUI_MEDIUM,
 		viewport_label_size = 12,
 		viewport_icon_size = 100,
 		hide_hud_when_close = true, # restart or load required
 	
-		# graphics
+		# colors
 		planet_orbit_color =  Color(0.5,0.5,0.1),
 		dwarf_planet_orbit_color = Color(0.1,0.8,0.2),
 		moon_orbit_color = Color(0.3,0.3,0.9),
 		minor_moon_orbit_color = Color(0.35,0.1,0.35),
 		default_orbit_color = Color(0.4,0.4,0.8),
 		asteroid_point_color = Color("008800"),
+		
+		# graphics/performance
+		starmap = Enums.StarmapSizes.STARMAP_16K,
 	
 		# misc
 		mouse_action_releases_gui_focus = true,

@@ -38,6 +38,8 @@ class_name TableReader
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
+const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "TABLE"] # & enum names
+
 
 # project vars
 var import := {
@@ -58,7 +60,7 @@ var _table_data_types: Dictionary = Global.table_data_types
 var _table_rows: Dictionary = Global.table_rows
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _enable_wiki: bool = Global.enable_wiki
-
+var _enums: Script = Global.enums
 
 # current processing
 var _path: String
@@ -124,9 +126,8 @@ func _read_table() -> void:
 		if is_1st_line:
 			_read_fields_line() # always the 1st non-comment line
 			is_1st_line = false
-		elif _line_array[0] == "Data_Type":
-			_data_types = _line_array
-			_data_types[0] = "STRING" # always key field
+		elif _line_array[0] == "DataType":
+			_read_data_types_line()
 		elif _line_array[0] == "Units":
 			_units = _line_array
 		elif _line_array[0] == "Default":
@@ -144,6 +145,13 @@ func _read_fields_line() -> void:
 			break
 		_fields[field] = column
 		column += 1
+
+func _read_data_types_line() -> void:
+	_data_types = _line_array
+	_data_types[0] = "STRING" # always key field
+	_data_types.resize(_fields.size()) # there could be an extra comment column
+	for data_type in _data_types:
+		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown DataType: " + data_type)
 
 func _read_data_line() -> void:
 	var row := _data.size()
@@ -191,7 +199,7 @@ func _read_data_line() -> void:
 					var unit: String = _units[column]
 					real = unit_defs.conv(real, unit, false, true)
 				row_data[column] = real
-			"STRING", "ENUM", "BODY", "TABLE":
+			_: # store as string
 				assert(!_units or !_units[column] or _line_error(
 						"Expected no Units for " + data_type))
 				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes

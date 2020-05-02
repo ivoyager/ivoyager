@@ -120,7 +120,6 @@ var allow_real_world_time := false # Planetarium sets true
 var allow_time_reversal := false # Planetarium sets true
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 200.0 * UnitDefs.AU
-var gravitational_constant := UnitDefs.conv(0.0667430, "km^3/(kg s^2)")
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 
@@ -144,9 +143,14 @@ var asset_paths := {
 	rings_dir = "res://ivoyager_assets/rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
+	starmap_8k = "res://ivoyager_assets/starfields/starmap_8k.jpg",
+	starmap_16k = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # project_init() will load these into assets
-	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
+	
+	# DEPRECIATE
+#	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
+	
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
