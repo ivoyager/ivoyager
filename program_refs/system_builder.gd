@@ -107,29 +107,3 @@ func _add_bodies(table_name: String) -> void:
 		progress = 100 * _progress_bodies / progress_bodies_denominator
 		row += 1
 
-#func _do_counts(body: Body, selection_item: SelectionItem) -> void:
-#		if body.is_star:
-#			body.n_planets = 0
-#			body.n_dwarf_planets = 0
-#			body.n_moons = 0
-#			body.n_asteroids = 0
-#			body.n_comets = 0
-#
-#		elif body.is_planet:
-#			body.n_moons = 0
-##			var parent_star := _registrar.get_parent_by_system_type(body, Global.SYSTEM_STAR)
-##			if body.is_dwarf_planet:
-##				parent_star.n_dwarf_planets += 1
-##
-##			else:
-##				parent_star.n_planets += 1
-#
-#		elif body.is_moon:
-#			pass
-##			var parent_star := _registrar.get_parent_by_system_type(body, Global.SYSTEM_STAR)
-##			parent_star.n_moons += 1
-##			var parent_planet := _registrar.get_parent_by_system_type(body, Global.SYSTEM_PLANET)
-##			parent_planet.n_moons += 1
-
-
-

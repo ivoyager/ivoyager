@@ -61,6 +61,11 @@ var property_fields := {
 	file_prefix = "file_prefix",
 }
 var required_fields := ["class_type", "model_type", "m_radius", "file_prefix"] # assert if missing
+var flag_fields := {
+	BODY_IS_TIDALLY_LOCKED : "tidally_locked",
+	BODY_HAS_MINOR_MOONS : "minor_moons",
+	BODY_HAS_ATMOSPHERE : "atmosphere",
+}
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation

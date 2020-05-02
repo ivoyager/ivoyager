@@ -57,3 +57,20 @@ enum StarmapSizes {
 	STARMAP_8K,
 	STARMAP_16K,
 }
+
+enum BodyFlags {
+	BODY_IS_TOP = 0b1,
+	BODY_IS_STAR_ORBITING = 0b10,
+	BODY_IS_PLANET = 0b100, # set for dwarf planets
+	BODY_IS_MOON = 0b1000,
+	BODY_IS_TIDALLY_LOCKED = 0b10000,
+	BODY_HAS_MINOR_MOONS = 0b100000,
+	BODY_HAS_ATMOSPHERE = 0b1000000,
+	BODY_APPROX_RADIUS = 0b10000000,
+	BODY_APPROX_GM = 0b1 * 0x100,
+	# First 4 bytes reserved: 0b1 to 0b10000000 * 0x1000000
+	# Extension may use bytes 5 to 8:
+	#     0b1 * 0x100000000 to 0b10000000 * 0x100000000000000).
+}
+
+

@@ -123,3 +123,46 @@ func build_object(object: Object, row_data: Array, fields: Dictionary, data_type
 				object[property] = _bodies_by_name[value]
 			_: # should be a valid enum name
 				object[property] = _enums[data_type][value]
+
+func build_dictionary(dict: Dictionary, row_data: Array, fields: Dictionary, data_types: Array,
+		property_fields: Dictionary, required_fields := []) -> void:
+	# This function helps a builder class build a dict from table row data.
+	for property in property_fields:
+		var field: String = property_fields[property]
+		if !fields.has(field):
+			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
+			continue
+		var column: int = fields[field]
+		var value = row_data[column]
+		if value == null:
+			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
+			continue
+		var data_type: String = data_types[column]
+		match data_type:
+			"REAL", "INT", "STRING", "BOOL", "X":
+				dict[property] = value
+			"DATA":
+				dict[property] = _table_rows[value]
+			"BODY":
+				dict[property] = _bodies_by_name[value]
+			_: # should be a valid enum name
+				dict[property] = _enums[data_type][value]
+
+func build_flags(flags: int, row_data: Array, fields: Dictionary, data_types: Array,
+		flag_fields: Dictionary, required_fields := []) -> int:
+	# Assumes relevant flag already in off state; only sets for TRUE or x values in table.
+	for flag in flag_fields:
+		var field: String = flag_fields[flag]
+#		var field: String = property_fields[property]
+		if !fields.has(field):
+			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
+			continue
+		var column: int = fields[field]
+		var value = row_data[column]
+		if value == null:
+			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
+			continue
+		assert(typeof(value) == TYPE_BOOL, "Expected table DataType = 'BOOL' or 'X'") # 
+		if value:
+			flags |= flag
+	return flags
