@@ -38,7 +38,7 @@ class_name TableReader
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 const DPRINT := false
-const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "TABLE"] # & enum names
+const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
 
 
 # project vars

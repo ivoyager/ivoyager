@@ -32,11 +32,11 @@ func project_init() -> void:
 
 func get_value(table_name: String, field_name: String, row := -1, row_name := ""):
 	# Returns null if missing or field doesn't exist in table.
-	# Otherwise, return type depends on table Data_Type:
+	# Otherwise, return type depends on table DataType:
 	#   "BOOL" and "X" -> bool
 	#   "INT" -> int
 	#   "REAL" -> float
-	#   all others -> String (see functions below for "ENUM", "TABLE", "BODY")
+	#   all others -> String (see functions below for "DATA", "BODY", or enums)
 	assert((row == -1) != (row_name == ""))
 	var fields: Dictionary = _table_fields[table_name]
 	if !fields.has(field_name):
@@ -48,26 +48,8 @@ func get_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var column = fields[field_name]
 	return row_data[column]
 
-func get_enum(enum_name: String, table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# NOT TESTED!
-	# Use for Data_Type = "ENUM" to get enum int value.
-	# Returns -1 if missing!
-	assert((row == -1) != (row_name == ""))
-	var fields: Dictionary = _table_fields[table_name]
-	if !fields.has(field_name):
-		return -1
-	if row_name:
-		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = fields[field_name]
-	if row_data[column] == null:
-		return -1
-	var enum_key: String = row_data[column]	
-	return _enums[enum_name][enum_key]
-
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# Use for Data_Type = "TABLE" to get row number (= "type").
+	# Use for DataType = "DATA" to get row number (= "type") of the cell item.
 	# Returns -1 if missing!
 	assert((row == -1) != (row_name == ""))
 	var fields: Dictionary = _table_fields[table_name]
@@ -84,7 +66,7 @@ func get_table_type(table_name: String, field_name: String, row := -1, row_name 
 	return _table_rows[table_type]
 
 func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
-	# Use for Data_Type = "BODY" to get the Body instance.
+	# Use for DataType = "BODY" to get the Body instance.
 	# Returns null if missing!
 	assert((row == -1) != (row_name == ""))
 	var fields: Dictionary = _table_fields[table_name]
@@ -99,6 +81,24 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 		return null
 	var body_key: String = row_data[column]
 	return _bodies_by_name[body_key]
+
+func get_enum(enum_name: String, table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# NOT TESTED!
+	# Use for DataType = "ENUM" to get enum int value.
+	# Returns -1 if missing!
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return -1
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	if row_data[column] == null:
+		return -1
+	var enum_key: String = row_data[column]	
+	return _enums[enum_name][enum_key]
 
 func build_object(object: Object, row_data: Array, fields: Dictionary, data_types: Array,
 		property_fields: Dictionary, required_fields := []) -> void:
@@ -117,7 +117,7 @@ func build_object(object: Object, row_data: Array, fields: Dictionary, data_type
 		match data_type:
 			"REAL", "INT", "STRING", "BOOL", "X":
 				object[property] = value
-			"TABLE":
+			"DATA":
 				object[property] = _table_rows[value]
 			"BODY":
 				object[property] = _bodies_by_name[value]
