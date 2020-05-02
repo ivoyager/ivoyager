@@ -15,19 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Program convention is to name associated vars "view_type", "table_type", etc.
 
 class_name Enums
 
-enum {
-	VIEW_ZOOM,
-	VIEW_45,
-	VIEW_TOP,
-	VIEW_CENTERED, # unspecified view_position
-	VIEW_UNCENTERED # unspecified view_position & view_orientation
-}
-
-enum {
+enum SelectionTypes {
 	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
 	SELECTION_GALAXY,
 	SELECTION_STAR_COLLECTION,
@@ -48,7 +39,14 @@ enum {
 	SELECTION_SPACECRAFT
 }
 
-# named enums can't be accessed by TableReader/TableHelper (yet...)
+enum ViewTypes {
+	VIEW_ZOOM,
+	VIEW_45,
+	VIEW_TOP,
+	VIEW_CENTERED, # unspecified view_position
+	VIEW_UNCENTERED # unspecified view_position & view_orientation
+}
+
 enum GUISizes {
 	GUI_SMALL,
 	GUI_MEDIUM,

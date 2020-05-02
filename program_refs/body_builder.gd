@@ -186,15 +186,15 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 
 func _get_selection_type(body: Body) -> int:
 	if body.is_star:
-		return Enums.SELECTION_STAR
+		return Enums.SelectionTypes.SELECTION_STAR
 	if body.is_dwarf_planet:
-		return Enums.SELECTION_DWARF_PLANET
+		return Enums.SelectionTypes.SELECTION_DWARF_PLANET
 	if body.is_planet:
-		return Enums.SELECTION_PLANET
+		return Enums.SelectionTypes.SELECTION_PLANET
 	if body.is_minor_moon:
-		return Enums.SELECTION_MINOR_MOON
+		return Enums.SelectionTypes.SELECTION_MINOR_MOON
 	if body.is_moon:
-		return Enums.SELECTION_MAJOR_MOON
+		return Enums.SelectionTypes.SELECTION_MAJOR_MOON
 	return -1
 
 func _init_unpersisted(_is_new_game: bool) -> void:

@@ -28,11 +28,11 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
-const VIEW_ZOOM = Enums.VIEW_ZOOM
-const VIEW_45 = Enums.VIEW_45
-const VIEW_TOP = Enums.VIEW_TOP
-const VIEW_CENTERED = Enums.VIEW_CENTERED
-const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
+const VIEW_ZOOM = Enums.ViewTypes.VIEW_ZOOM
+const VIEW_45 = Enums.ViewTypes.VIEW_45
+const VIEW_TOP = Enums.ViewTypes.VIEW_TOP
+const VIEW_CENTERED = Enums.ViewTypes.VIEW_CENTERED
+const VIEW_UNCENTERED = Enums.ViewTypes.VIEW_UNCENTERED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)

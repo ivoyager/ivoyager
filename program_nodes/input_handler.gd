@@ -132,19 +132,23 @@ func _on_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("select_down"):
 				_selection_manager.down()
 			elif event.is_action_pressed("next_star"):
-				_selection_manager.next_last(1, Enums.SELECTION_STAR)
+				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_STAR)
 			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET)
+				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_PLANET,
+						Enums.SelectionTypes.SELECTION_DWARF_PLANET)
 			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET)
+				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_PLANET,
+						Enums.SelectionTypes.SELECTION_DWARF_PLANET)
 			elif event.is_action_pressed("previous_major_moon"):
-				_selection_manager.next_last(-1, Enums.SELECTION_MAJOR_MOON)
+				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_MAJOR_MOON)
 			elif event.is_action_pressed("next_major_moon"):
-				_selection_manager.next_last(1, Enums.SELECTION_MAJOR_MOON)
+				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_MAJOR_MOON)
 			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, Enums.SELECTION_MAJOR_MOON, Enums.SELECTION_MINOR_MOON)
+				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_MAJOR_MOON,
+						Enums.SelectionTypes.SELECTION_MINOR_MOON)
 			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, Enums.SELECTION_MAJOR_MOON, Enums.SELECTION_MINOR_MOON)
+				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_MAJOR_MOON,
+						Enums.SelectionTypes.SELECTION_MINOR_MOON)
 			else:
 				return # input NOT handled!
 		else:

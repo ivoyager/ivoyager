@@ -43,11 +43,11 @@ signal view_type_changed(view_type)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-const VIEW_ZOOM = Enums.VIEW_ZOOM
-const VIEW_45 = Enums.VIEW_45
-const VIEW_TOP = Enums.VIEW_TOP
-const VIEW_CENTERED = Enums.VIEW_CENTERED
-const VIEW_UNCENTERED = Enums.VIEW_UNCENTERED
+const VIEW_ZOOM = Enums.ViewTypes.VIEW_ZOOM
+const VIEW_45 = Enums.ViewTypes.VIEW_45
+const VIEW_TOP = Enums.ViewTypes.VIEW_TOP
+const VIEW_CENTERED = Enums.ViewTypes.VIEW_CENTERED
+const VIEW_UNCENTERED = Enums.ViewTypes.VIEW_UNCENTERED
 
 # TODO: Different pathings. Our current "spherical" path looks best within
 # systems among bodies with ecliptic/equatorial orbits. But a simple cartesian

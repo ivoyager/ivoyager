@@ -48,7 +48,8 @@ func get_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var column = fields[field_name]
 	return row_data[column]
 
-func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+func get_enum(enum_name: String, table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# NOT TESTED!
 	# Use for Data_Type = "ENUM" to get enum int value.
 	# Returns -1 if missing!
 	assert((row == -1) != (row_name == ""))
@@ -62,8 +63,8 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	if row_data[column] == null:
 		return -1
-	var enum_key: String = row_data[column]
-	return _enums[enum_key]
+	var enum_key: String = row_data[column]	
+	return _enums[enum_name][enum_key]
 
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for Data_Type = "TABLE" to get row number (= "type").
@@ -114,11 +115,11 @@ func build_object(object: Object, row_data: Array, fields: Dictionary, data_type
 			continue
 		var data_type: String = data_types[column]
 		match data_type:
-			"ENUM":
-				object[property] = _enums[value]
+			"REAL", "INT", "STRING", "BOOL", "X":
+				object[property] = value
 			"TABLE":
 				object[property] = _table_rows[value]
 			"BODY":
 				object[property] = _bodies_by_name[value]
-			_:
-				object[property] = value
+			_: # should be a valid enum name
+				object[property] = _enums[data_type][value]

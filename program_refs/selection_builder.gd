@@ -56,9 +56,9 @@ func build_and_register(body: Body, parent_body: Body) -> void:
 		selection_item.up_selection_name = above_bodies_selection_name
 	selection_item.selection_type = body.selection_type
 	match body.selection_type:
-		Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET:
+		Enums.SelectionTypes.SELECTION_PLANET, Enums.SelectionTypes.SELECTION_DWARF_PLANET:
 			selection_item.n_moons = 0
-		Enums.SELECTION_STAR, Enums.SELECTION_STAR_SYSTEM:
+		Enums.SelectionTypes.SELECTION_STAR, Enums.SelectionTypes.SELECTION_STAR_SYSTEM:
 			selection_item.n_planets = 0
 			selection_item.n_dwarf_planets = 0
 			selection_item.n_moons = 0
@@ -106,11 +106,11 @@ func _set_counts_recursive(body: Body) -> void:
 			_set_counts_recursive(child)
 	var selection_item := _registrar.get_selection_for_body(body)
 	match body.selection_type:
-		Enums.SELECTION_PLANET, Enums.SELECTION_DWARF_PLANET:
+		Enums.SelectionTypes.SELECTION_PLANET, Enums.SelectionTypes.SELECTION_DWARF_PLANET:
 			for child in body.satellites:
 				if child.is_moon:
 					selection_item.n_moons += 1
-		Enums.SELECTION_STAR:
+		Enums.SelectionTypes.SELECTION_STAR:
 			for child in body.satellites:
 				if child.is_dwarf_planet:
 					selection_item.n_dwarf_planets += 1

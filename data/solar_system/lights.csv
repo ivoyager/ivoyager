@@ -1,7 +1,7 @@
 ﻿# OmniLight properties for individual stars like our sun.,
 #,
 key,omni_range
-Data_Type,REAL
+DataType,REAL
 Default,
 Units,au
 LIGHT_SUN,80

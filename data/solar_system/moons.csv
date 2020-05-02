@@ -3,7 +3,7 @@
 #,,,,,,,,,,,,,,,,,,apsidal precession,nodal precession,,,,,,,to orbit plane,,,,,,what is this for?
 #,,,,all default,,J2000 facing,,TODO: implement!,,,,,,,,,,,,,,,,,,,,,,V0 or R,,
 key,file_prefix,wiki_en,parent,class_type,model_type,rotate_adj,force_major,epoch_txt,epoch,a,e,i,Om,w,M0,n,P,Pw,Pnode,ref_plane,orbit_RA,orbit_dec,orbit_tilt,tidally_locked,rotation,axial_tilt,GM,m_radius,density,magnitude,albedo,atmosphere
-Data_Type,STRING,STRING,BODY,TABLE,TABLE,REAL,X,STRING,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,STRING,REAL,REAL,REAL,BOOL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,X
+DataType,STRING,STRING,BODY,TABLE,TABLE,REAL,X,STRING,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,STRING,REAL,REAL,REAL,BOOL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,X
 Default,,,,CLASS_MOON,MODEL_SMALL_C_TYPE,0,,,0,,,,,,,,,,,,,,,TRUE,,0,0,0,0,0,0,
 Units,,,,,,deg,,,d,km,,deg,deg,deg,deg,deg/d,d,a,a,,deg,deg,deg,,d,deg,km^3/s^2,km,g/cm^3,,,
 MOON_MOON,Moon,Moon,PLANET_EARTH,,MODEL_ROCKY_WORLD,,,2000 Jan. 1.50 TT,,384400,0.0554,5.16,125.08,318.15,135.27,13.176358,27.322,5.997,18.6,Ecliptic,,,,,,6.687,4902.801,1737.5,3.344,-12.74,0.12,
