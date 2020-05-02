@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# TODO: simplify code with the new TableHelper class.
+
 
 extends Reference
 class_name MinorBodiesBuilder
@@ -30,6 +32,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 var _settings: Dictionary = Global.settings
 var _table_data: Dictionary = Global.table_data
 var _table_fields: Dictionary = Global.table_fields
+var _table_helper: TableHelper
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
@@ -43,6 +46,7 @@ var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_table_helper = Global.program.TableHelper
 	_l_point_builder = Global.program.LPointBuilder
 	_minor_bodies_manager = Global.program.MinorBodiesManager
 	_points_manager = Global.program.PointsManager
@@ -78,16 +82,16 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	star.add_child(hud_points)
 
 func _load_binaries(star: Body) -> void:
-	var ag_data: Array = _table_data.asteroid_groups
-	var ag_fields: Dictionary = _table_fields.asteroid_groups
-	for row_data in ag_data:
-		var group: String = row_data[ag_fields.group]
-		if !row_data[ag_fields.trojan_of]:
-			_load_group_binaries(star, group, row_data, ag_fields)
+	var group_data: Array = _table_data.asteroid_groups
+	var group_fields: Dictionary = _table_fields.asteroid_groups
+	for row_data in group_data:
+		var group: String = row_data[group_fields.group]
+		if !row_data[group_fields.trojan_of]:
+			_load_group_binaries(star, group, row_data, group_fields)
 		else: # trojans!
 			for l_point in [4, 5]: # split data table JT i!JT4 & JT5
 				var l_group: String = group + str(l_point)
-				_load_group_binaries(star, l_group, row_data, ag_fields, l_point)
+				_load_group_binaries(star, l_group, row_data, group_fields, l_point)
 	
 func _load_group_binaries(star: Body, group: String, data: Array, fields: Dictionary,
 		l_point := -1) -> void:
