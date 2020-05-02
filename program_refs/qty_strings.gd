@@ -22,14 +22,22 @@ class_name QtyStrings
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 
 enum { # case_type
-	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 kilohertz", "1.00 Megahertz"
-	CASE_LOWER, # does not modify exp_str
-	CASE_UPPER, # does not modify exp_str
+	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 Kilohertz", "1.00 Megahertz"
+	CASE_LOWER, # does not modify exp_str or unit symbol
+	CASE_UPPER, # does not modify exp_str or unit symbol
+}
+
+enum { # num_type (TODO: commented formats)
+	NUM_DYNAMIC, # "0.0100" to "99999" as non-scientific, otherwise scientific
+	NUM_SCIENTIFIC, # pure scientific with specified sig_digits
+#	NUM_NO_OVERPRECISION, # e.g., "555555" -> "556000" if sig_digits = 3
+#	NUM_DYN_NO_OVERPRECISION, # DYNAMIC but "55555" -> "55600" if sig_digits = 3
+	NUM_DECIMAL_PL, # treat sig_digits as number of decimal places
 }
 
 enum { # option_type for number_option()
 	NAMED_NUMBER, # "99999", then "1.00 Million", etc.
-	SCIENTIFIC,
+	NUMBER,
 	UNIT,
 	PREFIXED_UNIT,
 	# length
@@ -198,84 +206,86 @@ func project_init():
 		large_numbers[i] = tr(large_numbers[i])
 
 func number_option(x: float, option_type: int, unit := "", long_form := false, case_type := CASE_MIXED,
-		use_sci := true, force_sci := false, sig_digits := 3) -> String:
-	# wrapper function for functions below
+		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+	# wrapper for functions below
 	match option_type:
 		NAMED_NUMBER:
 			return named_number(x, case_type)
-		SCIENTIFIC:
-			return scientific(x, force_sci, sig_digits)
+		NUMBER:
+			return number(x, num_type, sig_digits)
 		UNIT:
-			return number_unit(x, unit, long_form, case_type, use_sci, force_sci, sig_digits)
+			return number_unit(x, unit, long_form, case_type, num_type, sig_digits)
 		PREFIXED_UNIT:
-			return number_prefixed_unit(x, unit, long_form, case_type, use_sci, force_sci, sig_digits)
+			return number_prefixed_unit(x, unit, long_form, case_type, num_type, sig_digits)
 		LENGTH_M_KM: # m if x < 1.0 km
 			if x < unit_defs.KM:
-				return number_unit(x, "m", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "km", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "km", long_form, case_type, num_type, sig_digits)
 		LENGTH_KM_AU: # au if x > 0.1 au
 			if x < 0.1 * unit_defs.AU:
-				return number_unit(x, "km", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "au", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "km", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "au", long_form, case_type, num_type, sig_digits)
 		LENGTH_M_KM_AU:
 			if x < unit_defs.KM:
-				return number_unit(x, "m", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.AU:
-				return number_unit(x, "km", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "au", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "km", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "au", long_form, case_type, num_type, sig_digits)
 		LENGTH_M_KM_AU_LY:
 			if x < unit_defs.KM:
-				return number_unit(x, "m", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.AU:
-				return number_unit(x, "km", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "km", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.LIGHT_YEAR:
-				return number_unit(x, "au", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "ly", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "au", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "ly", long_form, case_type, num_type, sig_digits)
 		LENGTH_M_KM_AU_PREFIXED_PARSEC:
 			if x < unit_defs.KM:
-				return number_unit(x, "m", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.AU:
-				return number_unit(x, "km", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "km", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.PARSEC:
-				return number_unit(x, "au", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_prefixed_unit(x, "pc", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "au", long_form, case_type, num_type, sig_digits)
+			return number_prefixed_unit(x, "pc", long_form, case_type, num_type, sig_digits)
 		MASS_G_KG: # g if < 1.0 kg
 			if x < unit_defs.KG:
-				return number_unit(x, "g", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "kg", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "g", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "kg", long_form, case_type, num_type, sig_digits)
 		MASS_G_KG_T: # g if < 1.0 kg; t if x >= 1000.0 kg 
 			if x < unit_defs.KG:
-				return number_unit(x, "g", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "g", long_form, case_type, num_type, sig_digits)
 			elif x < unit_defs.TONNE:
-				return number_unit(x, "kg", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "t", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "kg", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "t", long_form, case_type, num_type, sig_digits)
 		MASS_G_KG_PREFIXED_T: # g, kg, t, kt, Mt, Gt, Tt, etc.
 			if x < unit_defs.KG:
-				return number_unit(x, "g", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "g", long_form, case_type, num_type, sig_digits)
 			elif x < unit_defs.TONNE:
-				return number_unit(x, "kg", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_prefixed_unit(x, "t", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "kg", long_form, case_type, num_type, sig_digits)
+			return number_prefixed_unit(x, "t", long_form, case_type, num_type, sig_digits)
 		VELOCITY_MPS_KMPS: # km/s if >= 1.0 km/s
 			if x < unit_defs.KM / unit_defs.SECOND:
-				return number_unit(x, "m/s", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "km/s", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m/s", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "km/s", long_form, case_type, num_type, sig_digits)
 		VELOCITY_MPS_KMPS_C: # c if >= 0.1 c
 			if x < unit_defs.KM / unit_defs.SECOND:
-				return number_unit(x, "m/s", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "m/s", long_form, case_type, num_type, sig_digits)
 			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
-				return number_unit(x, "c", long_form, case_type, use_sci, force_sci, sig_digits)
-			return number_unit(x, "km/s", long_form, case_type, use_sci, force_sci, sig_digits)
+				return number_unit(x, "c", long_form, case_type, num_type, sig_digits)
+			return number_unit(x, "km/s", long_form, case_type, num_type, sig_digits)
 	assert(false, "Unkknown option_type: " + option_type)
 	return String(x)
 
-func scientific(x: float, force_sci := false, sig_digits := 3) -> String:
-	# returns "0.0100" to "99999" as non-scientific unless force_sci
-	if x == 0.0:
-		_format2[0] = sig_digits - 1
-		_format2[1] = 0
-		return ("%.*f" % _format2) + exp_str + "0" if force_sci else "0"
-	var exponent := int(floor(log(abs(x)) / LOG_OF_10))
-	if force_sci or exponent > 4 or exponent < -2:
+func number(x: float, num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+	# see SCI_ enums for num_type
+	if num_type == NUM_DECIMAL_PL:
+		_format2[0] = sig_digits
+		_format2[1] = x
+		return ("%.*f" % _format2)
+	var exponent := 0
+	if x != 0.0:
+		exponent = int(floor(log(abs(x)) / LOG_OF_10))
+	if exponent > 4 or exponent < -2 or num_type == NUM_SCIENTIFIC:
 		var divisor := pow(10.0, exponent)
 		x = x / divisor if !is_zero_approx(divisor) else 1.0
 		_format4[0] = sig_digits - 1
@@ -290,7 +300,7 @@ func scientific(x: float, force_sci := false, sig_digits := 3) -> String:
 		_format2[1] = x
 		return "%.*f" % _format2 # e.g., 0.0555
 
-func named_number(x: float, case_type := CASE_MIXED) -> String:
+func named_number(x: float, case_type := CASE_MIXED, sig_digits := 3) -> String:
 	# returns integer string up to "999999", then "1.00 Million", etc.;
 	# you won't see scientific unless > 99999 Decillion.
 	if abs(x) < 1e6:
@@ -308,18 +318,14 @@ func named_number(x: float, case_type := CASE_MIXED) -> String:
 		lg_number_str = lg_number_str.to_lower()
 	elif case_type == CASE_UPPER:
 		lg_number_str = lg_number_str.to_upper()
-	return scientific(x) + " " + lg_number_str
+	return number(x, NUM_DYNAMIC, sig_digits) + " " + lg_number_str
 
 func number_unit(x: float, unit: String, long_form := false, case_type := CASE_MIXED,
-		use_sci := true, force_sci := false, sig_digits := 3) -> String:
+		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/unit_defs.gd)
 	x = unit_defs.conv(x, unit, true, false, multipliers, functions)
-	var number_str: String
-	if use_sci:
-		number_str = scientific(x, force_sci, sig_digits)
-	else:
-		number_str = String(x)
+	var number_str := number(x, num_type, sig_digits)
 	if long_form and long_forms.has(unit):
 		unit = tr(long_forms[unit])
 	elif short_forms.has(unit):
@@ -331,7 +337,7 @@ func number_unit(x: float, unit: String, long_form := false, case_type := CASE_M
 	return number_str + " " + unit
 
 func number_prefixed_unit(x: float, unit: String, long_form := false, case_type := CASE_MIXED,
-		use_sci := true, force_sci := false, sig_digits := 3) -> String:
+		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
 	# long_form = false or true, repspectively). You won't see scientific
 	# notation unless the internal value falls outside of the prefixes range.
@@ -350,11 +356,7 @@ func number_prefixed_unit(x: float, unit: String, long_form := false, case_type 
 		si_index = _n_prefixes - 1
 		exp_div_3 = si_index - _prefix_offset
 	x /= pow(10.0, exp_div_3 * 3)
-	var number_str: String
-	if use_sci:
-		number_str = scientific(x, force_sci, sig_digits)
-	else:
-		number_str = String(x)
+	var number_str := number(x, num_type, sig_digits)
 	if long_form and long_forms.has(unit):
 		unit = tr(long_forms[unit])
 	elif short_forms.has(unit):
