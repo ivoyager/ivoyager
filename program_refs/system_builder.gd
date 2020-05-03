@@ -97,7 +97,7 @@ func _add_bodies(table_name: String) -> void:
 	var row := 0
 	while row < n_rows:
 		var parent := _table_helper.get_body(table_name, "parent", row) # null for Sun
-		var body := _body_builder.build(table_name, row, parent)
+		var body := _body_builder.build_from_table(table_name, row, parent)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
@@ -106,30 +106,4 @@ func _add_bodies(table_name: String) -> void:
 		# warning-ignore:integer_division
 		progress = 100 * _progress_bodies / progress_bodies_denominator
 		row += 1
-
-#func _do_counts(body: Body, selection_item: SelectionItem) -> void:
-#		if body.is_star:
-#			body.n_planets = 0
-#			body.n_dwarf_planets = 0
-#			body.n_moons = 0
-#			body.n_asteroids = 0
-#			body.n_comets = 0
-#
-#		elif body.is_planet:
-#			body.n_moons = 0
-##			var parent_star := _registrar.get_parent_by_system_type(body, Global.SYSTEM_STAR)
-##			if body.is_dwarf_planet:
-##				parent_star.n_dwarf_planets += 1
-##
-##			else:
-##				parent_star.n_planets += 1
-#
-#		elif body.is_moon:
-#			pass
-##			var parent_star := _registrar.get_parent_by_system_type(body, Global.SYSTEM_STAR)
-##			parent_star.n_moons += 1
-##			var parent_planet := _registrar.get_parent_by_system_type(body, Global.SYSTEM_PLANET)
-##			parent_planet.n_moons += 1
-
-
 

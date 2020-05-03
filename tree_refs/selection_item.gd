@@ -19,17 +19,10 @@
 extends Reference
 class_name SelectionItem
 
-const SELECTION_STAR = Enums.SelectionTypes.SELECTION_STAR
-const SELECTION_PLANET = Enums.SelectionTypes.SELECTION_PLANET
-const SELECTION_DWARF_PLANET = Enums.SelectionTypes.SELECTION_DWARF_PLANET
-const SELECTION_MAJOR_MOON = Enums.SelectionTypes.SELECTION_MAJOR_MOON
-const SELECTION_MINOR_MOON = Enums.SelectionTypes.SELECTION_MINOR_MOON
-
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 
 # persisted - read only
 var name: String # Registrar guaranties these are unique
-var selection_type: int
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var non_body_texture_2d_path := "" # not used if is_body
@@ -49,7 +42,7 @@ var spatial: Spatial # for camera parenting
 var body: Body # = spatial if is_body else null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "selection_type", "is_body", "up_selection_name",
+const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
 	"camera_view_positions"]
@@ -60,6 +53,11 @@ var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
 # private
 var _times: Array = Global.times
+
+func get_flags() -> int:
+	if is_body:
+		return body.flags
+	return 0
 
 func get_north() -> Vector3:
 	if is_body:
@@ -79,20 +77,20 @@ func get_orbit_anomaly_for_camera() -> float:
 		return 0.0
 	return orbit.get_anomaly_for_camera(_times[0])
 
-func change_count(change_selection_type: int, amount: int) -> void:
-	match change_selection_type:
-		SELECTION_MAJOR_MOON, SELECTION_MINOR_MOON:
-			if n_moons != -1:
-				n_moons += amount
-		SELECTION_PLANET:
-			if n_planets != -1:
-				n_planets += amount
-		SELECTION_DWARF_PLANET:
-			if n_dwarf_planets != -1:
-				n_dwarf_planets += amount
-		SELECTION_STAR:
-			if n_stars != -1:
-				n_stars += amount
+#func change_count(change_selection_type: int, amount: int) -> void:
+#	match change_selection_type:
+#		SELECTION_MAJOR_MOON, SELECTION_MINOR_MOON:
+#			if n_moons != -1:
+#				n_moons += amount
+#		SELECTION_PLANET:
+#			if n_planets != -1:
+#				n_planets += amount
+#		SELECTION_DWARF_PLANET:
+#			if n_dwarf_planets != -1:
+#				n_dwarf_planets += amount
+#		SELECTION_STAR:
+#			if n_stars != -1:
+#				n_stars += amount
 
 func _init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)

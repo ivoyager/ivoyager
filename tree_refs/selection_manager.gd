@@ -24,10 +24,37 @@ class_name SelectionManager
 
 signal selection_changed()
 
-const SELECTION_STAR = Enums.SelectionTypes.SELECTION_STAR
-const SELECTION_PLANET = Enums.SelectionTypes.SELECTION_PLANET
-const SELECTION_MAJOR_MOON = Enums.SelectionTypes.SELECTION_MAJOR_MOON
-const SELECTION_SPACECRAFT = Enums.SelectionTypes.SELECTION_SPACECRAFT
+enum {
+	# some implemented but many planned
+	SELECTION_UNIVERSE,
+	SELECTION_GALAXY,
+	SELECTION_STAR_SYSTEM, # use as generic for Solar System (there isn't one!)
+	SELECTION_STAR,
+	SELECTION_TRUE_PLANET,
+	SELECTION_DWARF_PLANET,
+	SELECTION_PLANET, # both kinds ;-)
+	SELECTION_NAVIGATOR_MOON, # present in navigator GUI
+	SELECTION_MOON,
+	SELECTION_ASTEROID,
+	SELECTION_COMMET,
+	SELECTION_SPACECRAFT,
+	SELECTION_ALL_ASTEROIDS,
+	SELECTION_ASTEROID_GROUP,
+	SELECTION_ALL_COMMETS,
+	SELECTION_ALL_SPACECRAFTS,
+	# useful?
+	SELECTION_BARYCENTER,
+	SELECTION_LAGRANGE_POINT,
+}
+
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_NAVIGATOR_MOON := BodyFlags.IS_NAVIGATOR_MOON
+const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
+const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
 var selection_item: SelectionItem
@@ -110,49 +137,46 @@ func down() -> void:
 	if body and body.satellites:
 		select_body(body.satellites[0])
 
-func next_last(incr: int, selection_type := -1, alt_selection_type := -1) -> void:
-	# This is messy because each selection_type is a special case. See logic
-	# for supported types.
-	if selection_type == SELECTION_STAR:
-		var sun: Body = _registrar.top_bodies[0] # TODO: code for multistar systems
-		select_body(sun)
-		return
-	var current_type := selection_item.selection_type
-	if selection_type == -1:
-		selection_type = current_type
+func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> void:
 	var current_body := selection_item.body # could be null
 	var iteration_array: Array
 	var index := -1
-	if current_type == selection_type or current_type == alt_selection_type:
-		var up_body := _registrar.get_body_above_selection(selection_item)
-		iteration_array = up_body.satellites
-		index = iteration_array.find(current_body)
-	elif selection_type == SELECTION_PLANET:
-		var star := _registrar.get_selection_star(selection_item)
-		if !star:
-			return
-		iteration_array = star.satellites
-		var planet := _registrar.get_selection_planet(selection_item)
-		if planet:
-			index = iteration_array.find(planet)
-			if incr == 1:
-				index -= 1
-	elif selection_type == SELECTION_MAJOR_MOON:
-		var planet := _registrar.get_selection_planet(selection_item)
-		if !planet:
-			return
-		iteration_array = planet.satellites
-		var moon := _registrar.get_selection_moon(selection_item)
-		if moon:
-			index = iteration_array.find(moon)
-			if incr == 1:
-				index -= 1
-	elif selection_type == SELECTION_SPACECRAFT:
-		if current_body:
-			iteration_array = current_body.satellites
-		else:
+	match selection_type:
+		-1:
 			var up_body := _registrar.get_body_above_selection(selection_item)
 			iteration_array = up_body.satellites
+			index = iteration_array.find(current_body)
+		SELECTION_STAR:
+			 # TODO: code for multistar systems
+			var sun: Body = _registrar.top_bodies[0]
+			select_body(sun)
+			return
+		SELECTION_PLANET:
+			var star := _registrar.get_selection_star(selection_item)
+			if !star:
+				return
+			iteration_array = star.satellites
+			var planet := _registrar.get_selection_planet(selection_item)
+			if planet:
+				index = iteration_array.find(planet)
+				if planet != current_body and incr == 1:
+					index -= 1
+		SELECTION_NAVIGATOR_MOON, SELECTION_MOON:
+			var planet := _registrar.get_selection_planet(selection_item)
+			if !planet:
+				return
+			iteration_array = planet.satellites
+			var moon := _registrar.get_selection_moon(selection_item)
+			if moon:
+				index = iteration_array.find(moon)
+				if moon != current_body and incr == 1:
+					index -= 1
+		SELECTION_SPACECRAFT:
+			if current_body:
+				iteration_array = current_body.satellites
+			else:
+				var up_body := _registrar.get_body_above_selection(selection_item)
+				iteration_array = up_body.satellites
 	if !iteration_array:
 		return
 	var array_size := iteration_array.size()
@@ -164,7 +188,21 @@ func next_last(incr: int, selection_type := -1, alt_selection_type := -1) -> voi
 		elif index >= array_size:
 			index = 0
 		var body: Body = iteration_array[index]
-		if body.selection_type == selection_type or body.selection_type == alt_selection_type:
+		var select := false
+		match selection_type:
+			-1:
+				select = true
+			SELECTION_STAR:
+				select = bool(body.flags & IS_STAR)
+			SELECTION_PLANET:
+				select = bool(body.flags & IS_PLANET)
+			SELECTION_NAVIGATOR_MOON:
+				select = bool(body.flags & IS_NAVIGATOR_MOON)
+			SELECTION_MOON:
+				select = bool(body.flags & IS_MOON)
+			SELECTION_SPACECRAFT:
+				select = bool(body.flags & IS_SPACECRAFT)
+		if select:
 			select_body(body)
 			return
 		count += 1

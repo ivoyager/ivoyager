@@ -25,12 +25,13 @@ class_name TreeManager
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
-const DPRINT := false
-
 signal show_icons_changed(is_show)
 signal show_labels_changed(is_show)
 signal show_orbits_changed(is_show)
 
+const DPRINT := false
+const IS_STAR := Enums.BodyFlags.IS_STAR
+const IS_STAR_ORBITING := Enums.BodyFlags.IS_STAR_ORBITING
 
 # public - read-only except for project init
 var show_orbits := false
@@ -134,7 +135,8 @@ func _process_body_recursive(body: Body) -> void:
 	# planned barycenter mechanic will expect children processed before parent
 	if body.satellites:
 		# skip over planet or planetoid systems we are not at or going to
-		if body.is_star_orbiting and !body.is_star and body != _at_local_star_orbiter and body != _to_local_star_orbiter:
+		if body.flags & IS_STAR_ORBITING and not body.flags & IS_STAR \
+				and body != _at_local_star_orbiter and body != _to_local_star_orbiter:
 			if !_skip_local_system.get(body):
 				_skip_local_system[body] = true
 				for satellite in body.satellites:
@@ -153,9 +155,9 @@ func _camera_parent_changed(body: Body) -> void:
 	_to_local_star_orbiter = null
 
 func _get_local_star_orbiter(body: Body) -> Body:
-	if body.is_star_orbiting:
+	if body.flags & IS_STAR_ORBITING:
 		return body
-	if body.is_star:
+	if body.flags & IS_STAR:
 		return null
 	return _get_local_star_orbiter(body.get_parent())
 

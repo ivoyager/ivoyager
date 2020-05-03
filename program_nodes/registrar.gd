@@ -20,11 +20,10 @@
 extends Node
 class_name Registrar
 
-const SELECTION_STAR = Enums.SelectionTypes.SELECTION_STAR
-const SELECTION_PLANET = Enums.SelectionTypes.SELECTION_PLANET
-const SELECTION_DWARF_PLANET = Enums.SelectionTypes.SELECTION_DWARF_PLANET
-const SELECTION_MAJOR_MOON = Enums.SelectionTypes.SELECTION_MAJOR_MOON
-const SELECTION_MINOR_MOON = Enums.SelectionTypes.SELECTION_MINOR_MOON
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_MOON := BodyFlags.IS_MOON
+const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted - read only
 var top_bodies := []
@@ -45,34 +44,29 @@ func get_body_above_selection(selection_item: SelectionItem) -> Body:
 	return top_bodies[0]
 
 func get_selection_star(selection_item: SelectionItem) -> Body:
-	var star_type: int = SELECTION_STAR
-	if selection_item.selection_type == star_type:
+	if selection_item.get_flags() & IS_STAR:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.selection_type == star_type:
+		if selection_item.get_flags() & IS_STAR:
 			return selection_item.body
 	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
 func get_selection_planet(selection_item: SelectionItem) -> Body:
-	var selection_type := selection_item.selection_type
-	if selection_type == SELECTION_PLANET or selection_type == SELECTION_DWARF_PLANET:
+	if selection_item.get_flags() & IS_PLANET:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		selection_type = selection_item.selection_type
-		if selection_type == SELECTION_PLANET or selection_type == SELECTION_DWARF_PLANET:
+		if selection_item.get_flags() & IS_PLANET:
 			return selection_item.body
 	return null
 
 func get_selection_moon(selection_item: SelectionItem) -> Body:
-	var selection_type := selection_item.selection_type
-	if selection_type == SELECTION_MAJOR_MOON or selection_type == SELECTION_MINOR_MOON:
+	if selection_item.get_flags() & IS_MOON:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		selection_type = selection_item.selection_type
-		if selection_type == SELECTION_MAJOR_MOON or selection_type == SELECTION_MINOR_MOON:
+		if selection_item.get_flags() & IS_MOON:
 			return selection_item.body
 	return null
 

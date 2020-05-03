@@ -199,15 +199,18 @@ func _read_data_line() -> void:
 					var unit: String = _units[column]
 					real = unit_defs.conv(real, unit, false, true)
 				row_data[column] = real
-			_: # store as string
-				assert(!_units or !_units[column] or _line_error(
-						"Expected no Units for " + data_type))
+			"STRING", "DATA", "BODY": # store as string
+				assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
 				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
 					_cell = _cell.substr(1, _cell.length() - 2)
 				row_data[column] = _cell
 				if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
 					assert(!_wiki_titles.has(_row_key))
 					_wiki_titles[_row_key] = _cell
+			_: # must be valid enum name
+				assert(data_type in _enums or _line_error("Non-existent enum " + data_type))
+				assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
+				row_data[column] = _enums[data_type][_cell]
 	_data.append(row_data)
 
 func _line_error(msg := "") -> bool:
