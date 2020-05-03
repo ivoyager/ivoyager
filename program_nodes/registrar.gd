@@ -44,30 +44,29 @@ func get_body_above_selection(selection_item: SelectionItem) -> Body:
 	return top_bodies[0]
 
 func get_selection_star(selection_item: SelectionItem) -> Body:
-	if selection_item.flags & IS_STAR:
+	if selection_item.get_flags() & IS_STAR:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.flags & IS_STAR:
+		if selection_item.get_flags() & IS_STAR:
 			return selection_item.body
 	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
 func get_selection_planet(selection_item: SelectionItem) -> Body:
-	if selection_item.flags & IS_PLANET:
+	if selection_item.get_flags() & IS_PLANET:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.flags & IS_PLANET:
+		if selection_item.get_flags() & IS_PLANET:
 			return selection_item.body
 	return null
 
 func get_selection_moon(selection_item: SelectionItem) -> Body:
-#	var selection_type := selection_item.selection_type
-	if selection_item.flags & IS_MOON:
+	if selection_item.get_flags() & IS_MOON:
 		return selection_item.body
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.flags & IS_MOON:
+		if selection_item.get_flags() & IS_MOON:
 			return selection_item.body
 	return null
 

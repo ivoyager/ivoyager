@@ -132,23 +132,23 @@ func _on_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("select_down"):
 				_selection_manager.down()
 			elif event.is_action_pressed("next_star"):
-				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_STAR)
+				_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
 			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_PLANET,
-						Enums.SelectionTypes.SELECTION_DWARF_PLANET)
+				_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
 			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_PLANET,
-						Enums.SelectionTypes.SELECTION_DWARF_PLANET)
-			elif event.is_action_pressed("previous_major_moon"):
-				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_MAJOR_MOON)
-			elif event.is_action_pressed("next_major_moon"):
-				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_MAJOR_MOON)
+				_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
+			elif event.is_action_pressed("previous_nav_moon"):
+				_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
+			elif event.is_action_pressed("next_nav_moon"):
+				_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
 			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, Enums.SelectionTypes.SELECTION_MAJOR_MOON,
-						Enums.SelectionTypes.SELECTION_MINOR_MOON)
+				_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
 			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, Enums.SelectionTypes.SELECTION_MAJOR_MOON,
-						Enums.SelectionTypes.SELECTION_MINOR_MOON)
+				_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
+			elif event.is_action_pressed("previous_spacecraft"):
+				_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
+			elif event.is_action_pressed("next_spacecraft"):
+				_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
 			else:
 				return # input NOT handled!
 		else:

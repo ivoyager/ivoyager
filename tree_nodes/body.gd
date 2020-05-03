@@ -30,42 +30,27 @@
 extends Spatial
 class_name Body
 
-const BodyFlags := Enums.BodyFlags
-const IS_STAR := BodyFlags.IS_STAR
-const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
-const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
-const IS_MOON := BodyFlags.IS_MOON
-const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
-
 const DPRINT := false
 const HACKFIX_MOVE_HIDDEN_FAR_AWAY := true # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
 
-# for floats, INF means unknown, -INF means not applicable
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 
 # persisted
 var body_id := -1
-var selection_type := -1 # see static/enums.gd
 var class_type := -1 # classes.csv
 var model_type := -1 # models.csv
 var light_type := -1 # lights.csv (probably -1 except stars)
-var flags := 0 # See Enums.BodyFlags
+var flags := 0 # see Enums.BodyFlags
 
-# DEPRECIATE
-var is_top := false # only the sun in I, Voyager
-var is_star := false
-var is_star_orbiting := false
-var is_planet := false # true for dwarf planets
-var is_dwarf_planet := false
-var is_moon := false # true for minor moons
-var is_minor_moon := false
-var is_spacecraft := false
-var has_atmosphere := false
-var tidally_locked := false
-
-
+# for floats, INF means unknown, -INF means not applicable
 var mass := INF
 var gm := -INF
 var surface_gravity := -INF
@@ -80,6 +65,7 @@ var declination := -INF
 var has_minor_moons: bool
 var reference_basis := Basis()
 var north_pole := Vector3(0.0, 0.0, 1.0)
+var hydrostatic_equilibrium := -1 # Enums.KnowTypes
 var density := INF
 var albedo := -INF
 var surf_pres := -INF
@@ -98,15 +84,13 @@ var satellites := [] # Body instances
 var lagrange_points := [] # instanced when needed
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "selection_type", "class_type",
+const PERSIST_PROPERTIES := ["name", "body_id", "class_type",
 	"model_type", "light_type", "flags",
-	"is_top",  "is_star", "is_star_orbiting", "is_planet",
-	"is_dwarf_planet", "is_moon", "is_minor_moon", "is_spacecraft",
-	"has_atmosphere", "tidally_locked", "mass", "gm", "surface_gravity",
+	"mass", "gm", "surface_gravity",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
 	"right_ascension", "declination",
 	"has_minor_moons", "reference_basis", "north_pole",
-	 "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
+	 "hydrostatic_equilibrium", "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
 	"one_bar_t", "half_bar_t", "tenth_bar_t",
 	"file_prefix", "rings_info"]
 const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
@@ -223,7 +207,7 @@ func _on_ready() -> void:
 		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
 
 func _update_orbit_change():
-	if tidally_locked:
+	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
 		if axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
@@ -234,16 +218,16 @@ func _update_orbit_change():
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"planet_orbit_color":
-			if flags & IS_TRUE_PLANET and hud_orbit:
+			if flags & BodyFlags.IS_TRUE_PLANET and hud_orbit:
 				hud_orbit.change_color(value)
 		"dwarf_planet_orbit_color":
-			if flags & IS_DWARF_PLANET and hud_orbit:
+			if flags & BodyFlags.IS_DWARF_PLANET and hud_orbit:
 				hud_orbit.change_color(value)
 		"moon_orbit_color":
-			if flags & IS_MOON and not flags & IS_MINOR_MOON and hud_orbit:
+			if flags & BodyFlags.IS_MOON and flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
 				hud_orbit.change_color(value)
 		"minor_moon_orbit_color":
-			if flags & IS_MINOR_MOON and hud_orbit:
+			if flags & BodyFlags.IS_MOON and not flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
 				hud_orbit.change_color(value)
 		"hide_hud_when_close":
 			set_hud_too_close(value)

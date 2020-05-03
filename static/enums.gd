@@ -18,26 +18,12 @@
 
 class_name Enums
 
-# WIP - Remove from Body. Demote to selection action API item only. (not unique anymore)
-enum SelectionTypes {
-	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
-	SELECTION_GALAXY,
-	SELECTION_STAR_COLLECTION,
-	SELECTION_STAR_SYSTEM, # used as generic for Solar System (there isn't one!)
-	SELECTION_BARYCENTER,
-	SELECTION_LAGRANGE_POINT,
-	SELECTION_STAR,
-	SELECTION_PLANET,
-	SELECTION_DWARF_PLANET,
-	SELECTION_MAJOR_MOON, # major/minor for GUI purposes (not official)
-	SELECTION_MINOR_MOON,
-	SELECTION_ASTEROIDS,
-	SELECTION_ASTEROID_GROUP,
-	SELECTION_COMMETS,
-	SELECTION_SPACECRAFTS,
-	SELECTION_ASTEROID,
-	SELECTION_COMMET,
-	SELECTION_SPACECRAFT
+enum KnowTypes {
+	NO,
+	DOUBTFUL,
+	UNKNOWN,
+	LIKELY,
+	YES,
 }
 
 enum ViewTypes {
@@ -76,7 +62,7 @@ enum BodyFlags {
 	IS_STAR_ORBITING = 0b1000 * 0x10000,
 	IS_TIDALLY_LOCKED = 0b10000 * 0x10000,
 	IS_NAVIGATOR_MOON = 0b100000 * 0x10000, # show in system navigator
-	IS_MINOR_MOON = 0b1000000 * 0x10000, # GUI orbit color & lazy init
+	LIKELY_HYDROSTATIC_EQUILIBRIUM = 0b1000000 * 0x10000,
 	HAS_MINOR_MOONS = 0b10000000 * 0x10000,
 	HAS_ATMOSPHERE = 0b1 * 0x1000000,
 	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km"

@@ -27,31 +27,30 @@ const DPRINT := false
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
-const IS_STAR := BodyFlags.IS_STAR
-const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
 
 # project vars
-var major_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
+var large_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
 var property_fields := {
 	# property = table_field
 	name = "key",
 	class_type = "class_type",
 	model_type = "model_type",
 	light_type = "light_type",
-	is_dwarf_planet = "dwarf",
-	has_minor_moons = "minor_moons",
-	has_atmosphere = "atmosphere",
+#	is_dwarf_planet = "dwarf",
+#	has_minor_moons = "minor_moons",
+#	has_atmosphere = "atmosphere",
 	m_radius = "m_radius",
 	e_radius = "e_radius", # set to m_radius if missing
 	mass = "mass", # calculate from m_radius & density if missing
 	gm = "GM", # calculate from mass if missing
-	tidally_locked = "tidally_locked",
+#	tidally_locked = "tidally_locked",
 	rotation_period = "rotation",
 	right_ascension = "RA",
 	declination = "dec",
 	axial_tilt = "axial_tilt",
 	esc_vel = "esc_vel",
 	surface_gravity = "surface_gravity",
+	hydrostatic_equilibrium = "hydrostatic_equilibrium",
 	density = "density",
 	albedo = "albedo",
 	surf_pres = "surf_pres",
@@ -111,27 +110,27 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
 	_table_helper.build_object(body, row_data, fields, data_types, property_fields, required_fields)
-	# set body.flags
+	# flags
 	var flags := _table_helper.build_flags(0, row_data, fields, flag_fields)
 	if !parent:
-		flags |= BodyFlags.IS_TOP
-		body.is_top = true
+		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
+		flags |= BodyFlags.PROXY_STAR_SYSTEM
+	if body.hydrostatic_equilibrium >= Enums.KnowTypes.LIKELY:
+		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":
 			flags |= BodyFlags.IS_STAR
-			body.is_star = true
+			if flags & BodyFlags.IS_TOP:
+				flags |= BodyFlags.IS_PRIMARY_STAR
 		"planets":
 			flags |= BodyFlags.IS_STAR_ORBITING
 			if not flags & BodyFlags.IS_DWARF_PLANET:
 				flags |= BodyFlags.IS_TRUE_PLANET
-			body.is_planet = true
-			body.is_star_orbiting = true
 		"moons":
 			flags |= BodyFlags.IS_MOON
-			if body.gm < major_moon_gm and !row_data[fields.force_major]:
-				flags |= BodyFlags.IS_MINOR_MOON
-				body.is_minor_moon = true
-			body.is_moon = true
+			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM or row_data[fields.force_navigator]:
+				flags |= BodyFlags.IS_NAVIGATOR_MOON
+#	prints(tr(body.name), flags & BodyFlags.IS_NAVIGATOR_MOON)
 	body.flags = flags
 	# orbit
 	var time: float = _times[0]
@@ -147,18 +146,11 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		body.mass = (PI * 4.0 / 3.0) * body.density * pow(body.m_radius, 3.0)
 	if body.gm == -INF and body.mass != INF: # planet table have mass, not GM
 		body.gm = G * body.mass
-#	if body.is_moon and body.gm < major_moon_gm and !row_data[fields.force_major]:
-#		body.is_minor_moon = true
 	if body.esc_vel == -INF and body.gm != -INF:
 		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
 	if body.surface_gravity == -INF and body.gm != -INF:
 		body.surface_gravity = body.gm / pow(body.m_radius, 2.0)
-	body.selection_type = _get_selection_type(body)
 	# orbit and axis
-#	if parent and parent.is_star:
-#		body.is_star_orbiting = true
-#	if flags & BodyFlags.IS_TIDALLY_LOCKED:
-#		body.rotation_period = TAU / orbit.get_mean_motion(time)
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
@@ -210,20 +202,6 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	_selection_builder.build_and_register(body, parent)
 	return body
 
-# DEPRECIATE
-func _get_selection_type(body: Body) -> int:
-	if body.is_star:
-		return Enums.SelectionTypes.SELECTION_STAR
-	if body.is_dwarf_planet:
-		return Enums.SelectionTypes.SELECTION_DWARF_PLANET
-	if body.is_planet:
-		return Enums.SelectionTypes.SELECTION_PLANET
-	if body.is_minor_moon:
-		return Enums.SelectionTypes.SELECTION_MINOR_MOON
-	if body.is_moon:
-		return Enums.SelectionTypes.SELECTION_MAJOR_MOON
-	return -1
-
 func _init_unpersisted(_is_new_game: bool) -> void:
 	_satellite_indexes.clear()
 	for body in _registrar.bodies:
@@ -241,7 +219,7 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		_model_builder.add_model(body, bool(body.flags & IS_MINOR_MOON))
+		_model_builder.add_model(body, not body.flags & BodyFlags.IS_NAVIGATOR_MOON)
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
@@ -254,7 +232,7 @@ func _build_unpersisted(body: Body) -> void:
 	body.texture_2d = file_utils.find_resource(_texture_2d_dir, body.file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
-	if body.flags & IS_STAR:
+	if body.flags & BodyFlags.IS_STAR:
 		var slice_name = body.file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:

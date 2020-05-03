@@ -62,7 +62,7 @@ func build_and_register(body: Body, parent_body: Body) -> void:
 		# TODO: Some special handling for barycenters
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
-	selection_item.selection_type = body.selection_type
+#	selection_item.selection_type = body.selection_type
 	if body.flags & IS_PLANET:
 		selection_item.n_moons = 0
 	elif body.flags & IS_STAR:

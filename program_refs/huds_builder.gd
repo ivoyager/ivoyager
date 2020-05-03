@@ -24,7 +24,7 @@ const BodyFlags := Enums.BodyFlags
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
-const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
+const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
 const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3(0, 0, 100),
@@ -84,10 +84,10 @@ func add_orbit(body: Body) -> void:
 	var hud_orbit := HUDOrbit.new()
 	var color: Color
 	var flags := body.flags
-	if flags & IS_MINOR_MOON:
-		color = _settings.minor_moon_orbit_color
-	elif flags & IS_MOON:
+	if flags & IS_MOON and flags & LIKELY_HYDROSTATIC_EQUILIBRIUM:
 		color = _settings.moon_orbit_color
+	elif flags & IS_MOON:
+		color = _settings.minor_moon_orbit_color
 	elif flags & IS_TRUE_PLANET:
 		color = _settings.planet_orbit_color
 	elif flags & IS_DWARF_PLANET:
