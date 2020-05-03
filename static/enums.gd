@@ -18,6 +18,7 @@
 
 class_name Enums
 
+# WIP - Remove from Body. Demote to selection action API item only. (not unique anymore)
 enum SelectionTypes {
 	SELECTION_UNIVERSE, # I, Voyager doesn't use the first three
 	SELECTION_GALAXY,
@@ -59,18 +60,31 @@ enum StarmapSizes {
 }
 
 enum BodyFlags {
-	BODY_IS_TOP = 0b1,
-	BODY_IS_STAR_ORBITING = 0b10,
-	BODY_IS_PLANET = 0b100, # set for dwarf planets
-	BODY_IS_MOON = 0b1000,
-	BODY_IS_TIDALLY_LOCKED = 0b10000,
-	BODY_HAS_MINOR_MOONS = 0b100000,
-	BODY_HAS_ATMOSPHERE = 0b1000000,
-	BODY_APPROX_RADIUS = 0b10000000,
-	BODY_APPROX_GM = 0b1 * 0x100,
-	# First 4 bytes reserved: 0b1 to 0b10000000 * 0x1000000
-	# Extension may use bytes 5 to 8:
-	#     0b1 * 0x100000000 to 0b10000000 * 0x100000000000000).
+	# identity (2 bytes reserved)
+	IS_BARYCENTER = 0b1,
+	IS_STAR = 0b10,
+	IS_TRUE_PLANET = 0b100,
+	IS_DWARF_PLANET = 0b1000,
+	IS_MOON = 0b10000,
+	IS_ASTEROID = 0b100000,
+	IS_COMET = 0b1000000,
+	IS_SPACECRAFT = 0b1 * 0x100,
+	# properties (3 bytes reserved)
+	IS_TOP = 0b1 * 0x10000, # is in Registar.top_bodies
+	PROXY_STAR_SYSTEM = 0b10 * 0x10000, # top star or barycenter of system
+	IS_PRIMARY_STAR = 0b100 * 0x10000,
+	IS_STAR_ORBITING = 0b1000 * 0x10000,
+	IS_TIDALLY_LOCKED = 0b10000 * 0x10000,
+	IS_NAVIGATOR_MOON = 0b100000 * 0x10000, # show in system navigator
+	IS_MINOR_MOON = 0b1000000 * 0x10000, # GUI orbit color & lazy init
+	HAS_MINOR_MOONS = 0b10000000 * 0x10000,
+	HAS_ATMOSPHERE = 0b1 * 0x1000000,
+	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km"
+	APPROX_GM = 0b100 * 0x1000000,
+	# First 5 bytes reserved: 0b1 to 0b10000000 * 0x100000000
+	# It's *probably* safe for extension to use bytes 6 to 8:
+	#     0b1 * 0x10000000000 to 0b10000000 * 0x100000000000000
+	# But more safe to extend Body and add your own flags_ext property!
 }
 
 

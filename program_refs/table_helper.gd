@@ -148,8 +148,8 @@ func build_dictionary(dict: Dictionary, row_data: Array, fields: Dictionary, dat
 			_: # should be a valid enum name
 				dict[property] = _enums[data_type][value]
 
-func build_flags(flags: int, row_data: Array, fields: Dictionary, data_types: Array,
-		flag_fields: Dictionary, required_fields := []) -> int:
+func build_flags(flags: int, row_data: Array, fields: Dictionary, flag_fields: Dictionary,
+		required_fields := []) -> int:
 	# Assumes relevant flag already in off state; only sets for TRUE or x values in table.
 	for flag in flag_fields:
 		var field: String = flag_fields[flag]

@@ -20,6 +20,12 @@ class_name HUDsBuilder
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
+const BodyFlags := Enums.BodyFlags
+const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
+
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
 const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3(0, 0, 100),
 	Vector3(0, 0, 0))
@@ -54,7 +60,7 @@ func add_icon(body: Body) -> void:
 	var icon_material := SpatialMaterial.new()
 	var icon_texture: Texture = file_utils.find_resource(_hud_icons_dir, body.file_prefix)
 	if !icon_texture:
-		if body.is_moon:
+		if body.flags & IS_MOON:
 			icon_texture = _generic_moon_icon
 		else:
 			icon_texture = _fallback_icon
@@ -77,14 +83,15 @@ func add_orbit(body: Body) -> void:
 		return
 	var hud_orbit := HUDOrbit.new()
 	var color: Color
-	if body.is_minor_moon:
+	var flags := body.flags
+	if flags & IS_MINOR_MOON:
 		color = _settings.minor_moon_orbit_color
-	elif body.is_moon:
+	elif flags & IS_MOON:
 		color = _settings.moon_orbit_color
-	elif body.is_dwarf_planet:
-		color = _settings.dwarf_planet_orbit_color
-	elif body.is_planet:
+	elif flags & IS_TRUE_PLANET:
 		color = _settings.planet_orbit_color
+	elif flags & IS_DWARF_PLANET:
+		color = _settings.dwarf_planet_orbit_color
 	else:
 		color = _settings.default_orbit_color
 	hud_orbit.orbit = body.orbit

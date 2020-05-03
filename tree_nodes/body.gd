@@ -30,6 +30,13 @@
 extends Spatial
 class_name Body
 
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
+
 const DPRINT := false
 const HACKFIX_MOVE_HIDDEN_FAR_AWAY := true # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
@@ -44,6 +51,9 @@ var selection_type := -1 # see static/enums.gd
 var class_type := -1 # classes.csv
 var model_type := -1 # models.csv
 var light_type := -1 # lights.csv (probably -1 except stars)
+var flags := 0 # See Enums.BodyFlags
+
+# DEPRECIATE
 var is_top := false # only the sun in I, Voyager
 var is_star := false
 var is_star_orbiting := false
@@ -54,6 +64,8 @@ var is_minor_moon := false
 var is_spacecraft := false
 var has_atmosphere := false
 var tidally_locked := false
+
+
 var mass := INF
 var gm := -INF
 var surface_gravity := -INF
@@ -87,7 +99,8 @@ var lagrange_points := [] # instanced when needed
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "selection_type", "class_type",
-	"model_type", "light_type", "is_top",  "is_star", "is_star_orbiting", "is_planet",
+	"model_type", "light_type", "flags",
+	"is_top",  "is_star", "is_star_orbiting", "is_planet",
 	"is_dwarf_planet", "is_moon", "is_minor_moon", "is_spacecraft",
 	"has_atmosphere", "tidally_locked", "mass", "gm", "surface_gravity",
 	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
@@ -125,7 +138,7 @@ var _hud_icon_visible := false
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
 		hud_too_close = m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
-		if is_star:
+		if flags & IS_STAR:
 			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER
 	else:
 		hud_too_close = 0.0
@@ -221,16 +234,16 @@ func _update_orbit_change():
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"planet_orbit_color":
-			if is_planet and !is_dwarf_planet and hud_orbit:
+			if flags & IS_TRUE_PLANET and hud_orbit:
 				hud_orbit.change_color(value)
 		"dwarf_planet_orbit_color":
-			if is_dwarf_planet and hud_orbit:
+			if flags & IS_DWARF_PLANET and hud_orbit:
 				hud_orbit.change_color(value)
 		"moon_orbit_color":
-			if is_moon and !is_minor_moon and hud_orbit:
+			if flags & IS_MOON and not flags & IS_MINOR_MOON and hud_orbit:
 				hud_orbit.change_color(value)
 		"minor_moon_orbit_color":
-			if is_minor_moon and hud_orbit:
+			if flags & IS_MINOR_MOON and hud_orbit:
 				hud_orbit.change_color(value)
 		"hide_hud_when_close":
 			set_hud_too_close(value)

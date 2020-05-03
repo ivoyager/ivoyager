@@ -21,6 +21,7 @@ extends HBoxContainer
 
 const DPRINT := false
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const IS_MINOR_MOON := Enums.BodyFlags.IS_MINOR_MOON
 
 var size_proportions_exponent := 0.4 # 1.0 is "true" proportions
 var horizontal_expansion := 550.0 # affects growth to right
@@ -72,7 +73,7 @@ func _build_navigation_tree() -> void:
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, image_size, false)
 		for moon in planet.satellites:
-			if moon.is_minor_moon:
+			if moon.flags & IS_MINOR_MOON:
 				continue
 			image_size = floor(pow(moon.m_radius, size_proportions_exponent) * expansion / total_size)
 			_add_nav_button(planet_vbox, moon, image_size, false)

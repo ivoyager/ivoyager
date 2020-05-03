@@ -97,7 +97,7 @@ func _add_bodies(table_name: String) -> void:
 	var row := 0
 	while row < n_rows:
 		var parent := _table_helper.get_body(table_name, "parent", row) # null for Sun
-		var body := _body_builder.build(table_name, row, parent)
+		var body := _body_builder.build_from_table(table_name, row, parent)
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)

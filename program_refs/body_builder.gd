@@ -26,6 +26,9 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const DPRINT := false
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
 const G := UnitDefs.GRAVITATIONAL_CONSTANT
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_MINOR_MOON := BodyFlags.IS_MINOR_MOON
 
 # project vars
 var major_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
@@ -61,10 +64,12 @@ var property_fields := {
 	file_prefix = "file_prefix",
 }
 var required_fields := ["class_type", "model_type", "m_radius", "file_prefix"] # assert if missing
+
 var flag_fields := {
-	BODY_IS_TIDALLY_LOCKED : "tidally_locked",
-	BODY_HAS_MINOR_MOONS : "minor_moons",
-	BODY_HAS_ATMOSPHERE : "atmosphere",
+	BodyFlags.IS_DWARF_PLANET : "dwarf",
+	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
+	BodyFlags.HAS_MINOR_MOONS : "minor_moons",
+	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
 
 # private
@@ -100,50 +105,65 @@ func project_init() -> void:
 	_Body_ = Global.script_classes._Body_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
-func build(table_name: String, row: int, parent: Body) -> Body:
+func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var row_data: Array = _table_data[table_name][row]
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
 	_table_helper.build_object(body, row_data, fields, data_types, property_fields, required_fields)
+	# set body.flags
+	var flags := _table_helper.build_flags(0, row_data, fields, flag_fields)
 	if !parent:
+		flags |= BodyFlags.IS_TOP
 		body.is_top = true
 	match table_name:
 		"stars":
+			flags |= BodyFlags.IS_STAR
 			body.is_star = true
 		"planets":
+			flags |= BodyFlags.IS_STAR_ORBITING
+			if not flags & BodyFlags.IS_DWARF_PLANET:
+				flags |= BodyFlags.IS_TRUE_PLANET
 			body.is_planet = true
+			body.is_star_orbiting = true
 		"moons":
+			flags |= BodyFlags.IS_MOON
+			if body.gm < major_moon_gm and !row_data[fields.force_major]:
+				flags |= BodyFlags.IS_MINOR_MOON
+				body.is_minor_moon = true
 			body.is_moon = true
+	body.flags = flags
+	# orbit
 	var time: float = _times[0]
 	var orbit: Orbit
-	if !body.is_top:
+	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
 		body.orbit = orbit
+	# parameters
 	if body.e_radius == INF:
 		body.e_radius = body.m_radius
 	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
 	if body.mass == INF and body.density != INF:
 		body.mass = (PI * 4.0 / 3.0) * body.density * pow(body.m_radius, 3.0)
-	if body.gm == -INF and body.mass != INF:
+	if body.gm == -INF and body.mass != INF: # planet table have mass, not GM
 		body.gm = G * body.mass
-	if body.is_moon and body.gm < major_moon_gm and !row_data[fields.force_major]:
-		body.is_minor_moon = true
+#	if body.is_moon and body.gm < major_moon_gm and !row_data[fields.force_major]:
+#		body.is_minor_moon = true
 	if body.esc_vel == -INF and body.gm != -INF:
 		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
 	if body.surface_gravity == -INF and body.gm != -INF:
 		body.surface_gravity = body.gm / pow(body.m_radius, 2.0)
 	body.selection_type = _get_selection_type(body)
 	# orbit and axis
-	if parent and parent.is_star:
-		body.is_star_orbiting = true
-	if body.tidally_locked:
-		body.rotation_period = TAU / orbit.get_mean_motion(time)
+#	if parent and parent.is_star:
+#		body.is_star_orbiting = true
+#	if flags & BodyFlags.IS_TIDALLY_LOCKED:
+#		body.rotation_period = TAU / orbit.get_mean_motion(time)
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
-	if !body.tidally_locked:
+	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(body.right_ascension != -INF and body.declination != -INF)
 		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
 				body.right_ascension, body.declination)
@@ -155,6 +175,7 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 		else: # sun
 			body.axial_tilt = body.north_pole.angle_to(ECLIPTIC_NORTH)
 	else:
+		body.rotation_period = TAU / orbit.get_mean_motion(time)
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -189,6 +210,7 @@ func build(table_name: String, row: int, parent: Body) -> Body:
 	_selection_builder.build_and_register(body, parent)
 	return body
 
+# DEPRECIATE
 func _get_selection_type(body: Body) -> int:
 	if body.is_star:
 		return Enums.SelectionTypes.SELECTION_STAR
@@ -219,7 +241,7 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		_model_builder.add_model(body, body.is_minor_moon)
+		_model_builder.add_model(body, bool(body.flags & IS_MINOR_MOON))
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
@@ -232,7 +254,7 @@ func _build_unpersisted(body: Body) -> void:
 	body.texture_2d = file_utils.find_resource(_texture_2d_dir, body.file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = Global.assets.fallback_texture_2d
-	if body.is_star:
+	if body.flags & IS_STAR:
 		var slice_name = body.file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
 		if !body.texture_slice_2d:

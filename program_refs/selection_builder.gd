@@ -19,6 +19,14 @@
 extends Reference
 class_name SelectionBuilder
 
+const BodyFlags := Enums.BodyFlags
+const IS_STAR := BodyFlags.IS_STAR
+const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_STAR_ORBITING := BodyFlags.IS_STAR_ORBITING
+const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
+
 # project vars
 var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
 var longitude_fixed := 0.0
@@ -55,24 +63,23 @@ func build_and_register(body: Body, parent_body: Body) -> void:
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
 	selection_item.selection_type = body.selection_type
-	match body.selection_type:
-		Enums.SelectionTypes.SELECTION_PLANET, Enums.SelectionTypes.SELECTION_DWARF_PLANET:
-			selection_item.n_moons = 0
-		Enums.SelectionTypes.SELECTION_STAR, Enums.SelectionTypes.SELECTION_STAR_SYSTEM:
-			selection_item.n_planets = 0
-			selection_item.n_dwarf_planets = 0
-			selection_item.n_moons = 0
-#			selection_item.n_asteroids = 0
-#			selection_item.n_comets = 0
+	if body.flags & IS_PLANET:
+		selection_item.n_moons = 0
+	elif body.flags & IS_STAR:
+		selection_item.n_planets = 0
+		selection_item.n_dwarf_planets = 0
+		selection_item.n_moons = 0
+#		selection_item.n_asteroids = 0
+#		selection_item.n_comets = 0
 	_registrar.register_selection_item(selection_item)
 
 func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
 	var x_offset_zoom: float
 	var y_offset_zoom: float
-	if body.is_top or !body.orbit:
+	if !body.orbit:
 		x_offset_zoom = longitude_fixed
 		y_offset_zoom = latitude_fixed
-	elif body.is_star_orbiting and !body.is_star: # put parent star behind camera
+	elif body.flags & IS_STAR_ORBITING and not body.flags & IS_STAR: # put parent star behind camera
 		selection_item.view_rotate_when_close = true
 		x_offset_zoom = longitude_zoom_offset_star_behind
 		y_offset_zoom = latitude_zoom_offset_star_behind
@@ -101,21 +108,20 @@ func _set_system_counts(is_new_game: bool) -> void:
 			_set_counts_recursive(body)
 
 func _set_counts_recursive(body: Body) -> void:
-	if body.is_star:
+	if body.flags & IS_STAR:
 		for child in body.satellites:
 			_set_counts_recursive(child)
 	var selection_item := _registrar.get_selection_for_body(body)
-	match body.selection_type:
-		Enums.SelectionTypes.SELECTION_PLANET, Enums.SelectionTypes.SELECTION_DWARF_PLANET:
-			for child in body.satellites:
-				if child.is_moon:
-					selection_item.n_moons += 1
-		Enums.SelectionTypes.SELECTION_STAR:
-			for child in body.satellites:
-				if child.is_dwarf_planet:
-					selection_item.n_dwarf_planets += 1
-				elif child.is_planet:
-					selection_item.n_planets += 1
-				if child.satellites:
-					var child_selection_item := _registrar.get_selection_for_body(child)
-					selection_item.n_moons += child_selection_item.n_moons
+	if body.flags & IS_PLANET:
+		for child in body.satellites:
+			if child.flags & IS_MOON:
+				selection_item.n_moons += 1
+	elif body.flags & IS_STAR:
+		for child in body.satellites:
+			if child.flags & IS_DWARF_PLANET:
+				selection_item.n_dwarf_planets += 1
+			elif child.flags & IS_TRUE_PLANET:
+				selection_item.n_planets += 1
+			if child.satellites:
+				var child_selection_item := _registrar.get_selection_for_body(child)
+				selection_item.n_moons += child_selection_item.n_moons
