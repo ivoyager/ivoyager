@@ -19,6 +19,8 @@
 # Certain property values are interpreted as unknown (dispay "?") or not
 # applicable (don't display label or value). For floats, these are INF and
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
+# To find properites, we search first in SelectionItem, then Body, then
+# Properties, then Rotations.
 
 # TODO: Mouse-over array.
 # TODO: A wiki option for Planetarium (we have wiki_en for classes).

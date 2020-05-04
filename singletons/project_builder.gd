@@ -151,6 +151,7 @@ var procedural_classes := {
 	# tree_refs
 	_Orbit_ = Orbit,
 	_Rotations_ = Rotations,
+	_Properties_ = Properties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,
 	_AsteroidGroup_ = AsteroidGroup,

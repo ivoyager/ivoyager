@@ -123,7 +123,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, dat
 	
 	_table_helper.build_object(self, row_data, fields, data_types, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
-	var mu := parent.gm
+	var mu := parent.properties.gm
 	if _w == -INF:
 		assert(_w_hat != -INF)
 		_w = _w_hat - _Om

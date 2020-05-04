@@ -47,12 +47,12 @@ func _build_navigation_tree() -> void:
 	var total_size := 0.0
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
-	var star_slice_size := pow(star.m_radius / 20.0, size_proportions_exponent) # slice image has 10% width
+	var star_slice_size := pow(star.properties.m_radius / 20.0, size_proportions_exponent) # slice image has 10% width
 	total_size += star_slice_size
 	# calcultate planet relative sizes
 	var biggest_size := 0.0 # used for planet vertical spacer
 	for planet in star.satellites:
-		var size := pow(planet.m_radius, size_proportions_exponent)
+		var size := pow(planet.properties.m_radius, size_proportions_exponent)
 		total_size += size
 		if biggest_size < size:
 			biggest_size = size
@@ -60,13 +60,13 @@ func _build_navigation_tree() -> void:
 	var biggest_image_size := floor(biggest_size * expansion / total_size)
 	total_size *= 1.09 # TODO: something less ad hoc for procedural
 	# build the system button tree
-	var image_size := floor(pow(star.m_radius / 20.0, size_proportions_exponent) * expansion / total_size)
+	var image_size := floor(pow(star.properties.m_radius / 20.0, size_proportions_exponent) * expansion / total_size)
 	_add_nav_button(self, star, image_size, true)
 	for planet in star.satellites: # vertical box for each planet w/ its moons
 		var planet_vbox := VBoxContainer.new()
 		planet_vbox.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		add_child(planet_vbox)
-		image_size = floor(pow(planet.m_radius, size_proportions_exponent) * expansion / total_size)
+		image_size = floor(pow(planet.properties.m_radius, size_proportions_exponent) * expansion / total_size)
 		var v_spacer_size := floor((biggest_image_size - image_size) / 2) + 13 # plus adds space above planets
 		var spacer := Control.new()
 		spacer.rect_min_size = Vector2(min_width, v_spacer_size)
@@ -75,7 +75,7 @@ func _build_navigation_tree() -> void:
 		for moon in planet.satellites:
 			if not moon.flags & IS_NAVIGATOR_MOON:
 				continue
-			image_size = floor(pow(moon.m_radius, size_proportions_exponent) * expansion / total_size)
+			image_size = floor(pow(moon.properties.m_radius, size_proportions_exponent) * expansion / total_size)
 			_add_nav_button(planet_vbox, moon, image_size, false)
 	assert(DPRINT and call_deferred("debug_print") or true)
 			

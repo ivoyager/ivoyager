@@ -91,7 +91,7 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	var y_offset_top := PI / 2.0 - 0.1
 	var x_offset_45 := (x_offset_zoom + x_offset_top) / 2.0
 	var y_offset_45 := (y_offset_zoom + y_offset_top) / 2.0
-	var m_radius := body.m_radius
+	var m_radius := body.properties.m_radius
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
 	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent)
 	var view_dist_top := 500.0 * body.system_radius * system_radius_multiplier_top

@@ -54,14 +54,16 @@ func add_model(body: Body, lazy_init: bool) -> void:
 	var model: Spatial
 	if lazy_init:
 		# make a simple Spatial placeholder
-		model = get_model(body.model_type, body.file_prefix, body.m_radius, body.e_radius, true)
+		model = get_model(body.model_type, body.file_prefix, body.properties.m_radius,
+				body.properties.e_radius, true)
 		model.hide()
 		model.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
 	else:
-		model = get_model(body.model_type, body.file_prefix, body.m_radius, body.e_radius)
+		model = get_model(body.model_type, body.file_prefix, body.properties.m_radius,
+				body.properties.e_radius)
 		model.hide()
 	body.model = model
-	body.model_too_far = body.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
+	body.model_too_far = body.properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
 	body.model_basis = body.reference_basis * model.transform.basis
 	body.add_child(model)
 
@@ -127,7 +129,8 @@ func _lazy_init(body: Body) -> void:
 	var placeholder := body.model
 	assert(placeholder.visible)
 	placeholder.queue_free()
-	var model := get_model(body.model_type, body.file_prefix, body.m_radius, body.e_radius)
+	var model := get_model(body.model_type, body.file_prefix, body.properties.m_radius,
+		body.properties.e_radius)
 	model.connect("visibility_changed", self, "_update_lazy", [model])
 	body.model = model
 	body.add_child(model)

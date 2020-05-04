@@ -66,7 +66,7 @@ func get_north() -> Vector3:
 
 func get_radius_for_camera() -> float:
 	if is_body:
-		return body.m_radius
+		return body.properties.m_radius
 	return UnitDefs.KM
 
 func get_orbit_anomaly_for_camera() -> float:

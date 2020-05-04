@@ -29,21 +29,27 @@ const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
 # project vars
-var large_moon_gm := 1.0 * UnitDefs.STANDARD_GM # eg, Mimus 2.5, Miranda 4.4
-var property_fields := {
+var body_fields := {
 	# property = table_field
 	name = "key",
 	class_type = "class_type",
 	model_type = "model_type",
 	light_type = "light_type",
+	file_prefix = "file_prefix",
+}
+var body_fields_req := ["class_type", "model_type", "m_radius", "file_prefix"]
+
+var flag_fields := {
+	BodyFlags.IS_DWARF_PLANET : "dwarf",
+	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
+	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
+}
+
+var properties_fields := {
 	m_radius = "m_radius",
 	e_radius = "e_radius", # set to m_radius if missing
 	mass = "mass", # calculate from m_radius & density if missing
 	gm = "GM", # calculate from mass if missing
-#	rotation_period = "rotation",
-#	right_ascension = "RA",
-#	declination = "dec",
-#	axial_tilt = "axial_tilt",
 	esc_vel = "esc_vel",
 	surface_gravity = "surface_gravity",
 	hydrostatic_equilibrium = "hydrostatic_equilibrium",
@@ -56,14 +62,9 @@ var property_fields := {
 	one_bar_t = "one_bar_t",
 	half_bar_t = "half_bar_t",
 	tenth_bar_t = "tenth_bar_t",
-	file_prefix = "file_prefix",
 }
-var required_fields := ["class_type", "model_type", "m_radius", "file_prefix"] # assert if missing
-var flag_fields := {
-	BodyFlags.IS_DWARF_PLANET : "dwarf",
-	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
-	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
-}
+var properties_fields_req := ["m_radius"]
+
 var rotations_fields := {
 	rotation_period = "rotation",
 	right_ascension = "RA",
@@ -89,6 +90,7 @@ var _orbit_builder: OrbitBuilder
 var _table_helper: TableHelper
 var _Body_: Script
 var _Rotations_: Script
+var _Properties_: Script
 var _texture_2d_dir: String
 var _satellite_indexes := {} # passed to & shared by Body instances
 
@@ -105,6 +107,7 @@ func project_init() -> void:
 	_table_helper = Global.program.TableHelper
 	_Body_ = Global.script_classes._Body_
 	_Rotations_ = Global.script_classes._Rotations_
+	_Properties_ = Global.script_classes._Properties_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
@@ -112,13 +115,13 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_helper.build_object(body, row_data, fields, data_types, property_fields, required_fields)
+	_table_helper.build_object(body, row_data, fields, data_types, body_fields, body_fields_req)
 	# flags
 	var flags := _table_helper.build_flags(0, row_data, fields, flag_fields)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	if body.hydrostatic_equilibrium >= Enums.KnowTypes.LIKELY:
+	if row_data[fields.hydrostatic_equilibrium] >= Enums.KnowTypes.LIKELY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":
@@ -141,22 +144,22 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
 		body.orbit = orbit
-	# rotations
-	
-	
-	
-	# parameters
-	if body.e_radius == INF:
-		body.e_radius = body.m_radius
-	body.system_radius = body.e_radius * 10.0 # widens if satalletes are added
-	if body.mass == INF and body.density != INF:
-		body.mass = (PI * 4.0 / 3.0) * body.density * pow(body.m_radius, 3.0)
-	if body.gm == -INF and body.mass != INF: # planet table have mass, not GM
-		body.gm = G * body.mass
-	if body.esc_vel == -INF and body.gm != -INF:
-		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
-	if body.surface_gravity == -INF and body.gm != -INF:
-		body.surface_gravity = body.gm / pow(body.m_radius, 2.0)
+	# properties
+	var properties: Properties = _Properties_.new()
+	body.properties = properties
+	_table_helper.build_object(properties, row_data, fields, data_types, properties_fields,
+			properties_fields_req)
+	if properties.e_radius == INF:
+		properties.e_radius = properties.m_radius
+	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
+	if properties.mass == INF and properties.density != INF:
+		properties.mass = (PI * 4.0 / 3.0) * properties.density * pow(properties.m_radius, 3.0)
+	if properties.gm == -INF and properties.mass != INF: # planet table have mass, not GM
+		properties.gm = G * properties.mass
+	if properties.esc_vel == -INF and properties.gm != -INF:
+		properties.esc_vel = sqrt(2.0 * properties.gm / properties.m_radius)
+	if properties.surface_gravity == -INF and properties.gm != -INF:
+		properties.surface_gravity = properties.gm / pow(properties.m_radius, 2.0)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
