@@ -36,18 +36,14 @@ var property_fields := {
 	class_type = "class_type",
 	model_type = "model_type",
 	light_type = "light_type",
-#	is_dwarf_planet = "dwarf",
-#	has_minor_moons = "minor_moons",
-#	has_atmosphere = "atmosphere",
 	m_radius = "m_radius",
 	e_radius = "e_radius", # set to m_radius if missing
 	mass = "mass", # calculate from m_radius & density if missing
 	gm = "GM", # calculate from mass if missing
-#	tidally_locked = "tidally_locked",
-	rotation_period = "rotation",
-	right_ascension = "RA",
-	declination = "dec",
-	axial_tilt = "axial_tilt",
+#	rotation_period = "rotation",
+#	right_ascension = "RA",
+#	declination = "dec",
+#	axial_tilt = "axial_tilt",
 	esc_vel = "esc_vel",
 	surface_gravity = "surface_gravity",
 	hydrostatic_equilibrium = "hydrostatic_equilibrium",
@@ -63,12 +59,16 @@ var property_fields := {
 	file_prefix = "file_prefix",
 }
 var required_fields := ["class_type", "model_type", "m_radius", "file_prefix"] # assert if missing
-
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
-	BodyFlags.HAS_MINOR_MOONS : "minor_moons",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
+}
+var rotations_fields := {
+	rotation_period = "rotation",
+	right_ascension = "RA",
+	declination = "dec",
+	axial_tilt = "axial_tilt",
 }
 
 # private
@@ -88,8 +88,10 @@ var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _table_helper: TableHelper
 var _Body_: Script
+var _Rotations_: Script
 var _texture_2d_dir: String
 var _satellite_indexes := {} # passed to & shared by Body instances
+
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
@@ -102,6 +104,7 @@ func project_init() -> void:
 	_orbit_builder = Global.program.OrbitBuilder
 	_table_helper = Global.program.TableHelper
 	_Body_ = Global.script_classes._Body_
+	_Rotations_ = Global.script_classes._Rotations_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
@@ -138,6 +141,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
 		body.orbit = orbit
+	# rotations
+	
+	
+	
 	# parameters
 	if body.e_radius == INF:
 		body.e_radius = body.m_radius
@@ -150,24 +157,27 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		body.esc_vel = sqrt(2.0 * body.gm / body.m_radius)
 	if body.surface_gravity == -INF and body.gm != -INF:
 		body.surface_gravity = body.gm / pow(body.m_radius, 2.0)
-	# orbit and axis
+	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
+	var rotations: Rotations = _Rotations_.new()
+	body.rotations = rotations
+	_table_helper.build_object(rotations, row_data, fields, data_types, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(body.right_ascension != -INF and body.declination != -INF)
-		body.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
-				body.right_ascension, body.declination)
+		assert(rotations.right_ascension != -INF and rotations.declination != -INF)
+		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
+				rotations.right_ascension, rotations.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).
 		if orbit:
-			body.axial_tilt = body.north_pole.angle_to(orbit.get_normal(time))
+			rotations.axial_tilt = rotations.north_pole.angle_to(orbit.get_normal(time))
 		else: # sun
-			body.axial_tilt = body.north_pole.angle_to(ECLIPTIC_NORTH)
+			rotations.axial_tilt = rotations.north_pole.angle_to(ECLIPTIC_NORTH)
 	else:
-		body.rotation_period = TAU / orbit.get_mean_motion(time)
+		rotations.rotation_period = TAU / orbit.get_mean_motion(time)
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -176,17 +186,17 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		body.north_pole = orbit.get_normal(time)
-		if body.axial_tilt != 0.0:
-			var correction_axis := body.north_pole.cross(orbit.reference_normal).normalized()
-			body.north_pole = body.north_pole.rotated(correction_axis, body.axial_tilt)
-	body.north_pole = body.north_pole.normalized()
+		rotations.north_pole = orbit.get_normal(time)
+		if rotations.axial_tilt != 0.0:
+			var correction_axis := rotations.north_pole.cross(orbit.reference_normal).normalized()
+			rotations.north_pole = rotations.north_pole.rotated(correction_axis, rotations.axial_tilt)
+	rotations.north_pole = rotations.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
-		body.rotation_period = -body.rotation_period
+		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
-	body.reference_basis = math.rotate_basis_pole(Basis(), body.north_pole)
+	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
 	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skips if 0
-		body.reference_basis = body.reference_basis.rotated(body.north_pole,
+		body.reference_basis = body.reference_basis.rotated(rotations.north_pole,
 				row_data[fields.rotate_adj])
 	# file import info
 	if fields.has("rings") and row_data[fields.rings]:

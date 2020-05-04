@@ -206,8 +206,8 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 	else:
 		_move_progress = _transition_time / 2.0 # move was in progress; user is in a hurry!
 	_common_spatial = _get_common_spatial(_from_spatial, _to_spatial)
-	var from_north: Vector3 = _from_spatial.north_pole if "north_pole" in _from_spatial else ECLIPTIC_NORTH
-	var to_north: Vector3 = _to_spatial.north_pole if "north_pole" in _to_spatial else ECLIPTIC_NORTH
+	var from_north: Vector3 = _from_spatial.rotations.north_pole
+	var to_north: Vector3 = _to_spatial.rotations.north_pole
 	_common_north = (from_north + to_north).normalized()
 	is_moving = true
 	_move_action = VECTOR3_ZERO

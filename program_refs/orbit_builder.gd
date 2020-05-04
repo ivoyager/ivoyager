@@ -189,7 +189,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, dat
 					orbit.update_frequency) or true)
 	# reference plane (moons!)
 	if _ref_plane == "Equatorial":
-		orbit.reference_normal = parent.north_pole
+		orbit.reference_normal = parent.rotations.north_pole
 	elif _ref_plane == "Laplace":
 		orbit.reference_normal = math.convert_equatorial_coordinates2(
 				row_data[fields.orbit_RA], row_data[fields.orbit_dec])
