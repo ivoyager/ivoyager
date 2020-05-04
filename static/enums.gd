@@ -22,7 +22,7 @@ enum KnowTypes {
 	NO,
 	DOUBTFUL,
 	UNKNOWN,
-	LIKELY,
+	PROBABLY,
 	YES,
 }
 
@@ -73,4 +73,10 @@ enum BodyFlags {
 	# But more safe to extend Body and add your own flags_ext property!
 }
 
-
+static func get_reverse_enum(enum_name: String, value: int) -> String:
+	# This is not fast! intended mostly for GUI
+	var dict: Dictionary = Global.enums[enum_name]
+	for key in dict:
+		if dict[key] == value:
+			return key
+	return ""

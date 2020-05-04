@@ -53,7 +53,7 @@ var properties_fields := {
 	esc_vel = "esc_vel",
 	surface_gravity = "surface_gravity",
 	hydrostatic_equilibrium = "hydrostatic_equilibrium",
-	density = "density",
+	mean_density = "density",
 	albedo = "albedo",
 	surf_pres = "surf_pres",
 	surf_t = "surf_t",
@@ -121,7 +121,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	if row_data[fields.hydrostatic_equilibrium] >= Enums.KnowTypes.LIKELY:
+	if row_data[fields.hydrostatic_equilibrium] >= Enums.KnowTypes.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":
@@ -152,8 +152,8 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if properties.e_radius == INF:
 		properties.e_radius = properties.m_radius
 	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
-	if properties.mass == INF and properties.density != INF:
-		properties.mass = (PI * 4.0 / 3.0) * properties.density * pow(properties.m_radius, 3.0)
+	if properties.mass == INF and properties.mean_density != INF:
+		properties.mass = (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
 	if properties.gm == -INF and properties.mass != INF: # planet table have mass, not GM
 		properties.gm = G * properties.mass
 	if properties.esc_vel == -INF and properties.gm != -INF:

@@ -26,7 +26,7 @@ var esc_vel := -INF
 var m_radius := INF
 var e_radius := INF
 var hydrostatic_equilibrium := -1 # Enums.KnowTypes
-var density := INF
+var mean_density := INF
 var albedo := -INF
 var surf_pres := -INF
 var surf_t := -INF # NA for gas giants
@@ -38,6 +38,6 @@ var tenth_bar_t := -INF # gas giants
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["mass", "gm", "surface_gravity", "esc_vel", "m_radius", "e_radius", 
-	 "hydrostatic_equilibrium", "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
+	 "hydrostatic_equilibrium", "mean_density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
 	"one_bar_t", "half_bar_t", "tenth_bar_t"]
 
