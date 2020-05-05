@@ -149,6 +149,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.properties = properties
 	_table_helper.build_object(properties, row_data, fields, data_types, properties_fields,
 			properties_fields_req)
+	# imputed properties (keep correct precision!)
 	if properties.e_radius == INF:
 		properties.e_radius = properties.m_radius
 	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added

@@ -211,7 +211,7 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 	if multiplier:
 		return x / multiplier if to_unit else x * multiplier
 	if functions.has(unit):
-		# this is a hack until we have 1st class functions in 4.0
+		# TODO 4.0: fix this hack when we have 1st class functions!
 		var unit_defs = load("res://ivoyager/static/unit_defs.gd")
 		return unit_defs.call(functions[unit], x, to_unit)
 	assert(false, "Unknown unit symbol: " + unit)

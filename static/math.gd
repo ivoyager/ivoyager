@@ -22,7 +22,7 @@
 class_name Math
 
 const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
-
+const LOG_OF_10 := log(10.0)
 
 static func cartesian2spherical(R: Vector3) -> Vector3:
 	var r := R.length()
@@ -40,7 +40,7 @@ static func spherical2cartesian(S: Vector3) -> Vector3:
 		r * sin_th * cos(ph), # x
 		r * sin_th * sin(ph), # y
 		r * cos(th) # z
-		)
+	)
 
 static func rotate_vector_pole(vector: Vector3, new_pole: Vector3) -> Vector3:
 	# Uses Rodrigues Formula to rotate vector from ecliptic (z up) orientation to
@@ -188,6 +188,63 @@ static func convert_equatorial_coordinates3(equatorial_coord: Vector3) -> Vector
 		sin(right_ascension) * cos_decl,
 		sin(declination)
 	) * r
+
+# Precision
+static func get_str_decimal_precision(x_str: String) -> int:
+	# valid float str or table number format (leading underscore, capital E ok)
+	var length := x_str.length()
+	var sig_digits := 0
+	var i := 0
+	while i < length:
+		var chr: String = x_str[i]
+		if chr.is_valid_integer():
+			sig_digits += 1
+		elif chr == "e" or chr == "E":
+			return sig_digits
+		i += 1
+	return sig_digits
+
+static func get_least_str_decimal_precision(str_array: Array) -> int:
+	var least_sig_digits := 999
+	for x_str in str_array:
+		var sig_digits := get_str_decimal_precision(x_str)
+		if least_sig_digits > sig_digits:
+			least_sig_digits = sig_digits
+	return least_sig_digits
+
+static func get_decimal_precision(x: float) -> int:
+	# Use with caution! 100.0 will return 1, which could happen by chance even
+	# if this is a precise measurement. Intended for GUI display only; data
+	# import should use function above. Max return is 10.
+	# It's a bit odd converting to String. Is there a faster way...?
+	if x == 0.0:
+		return 1
+	var exp10 := floor(log(abs(x)) / LOG_OF_10)
+	var str1000 := String(x / pow(10.0, exp10 - 3.0)) # (10000, 1000] as text
+	if str1000.find(".") != -1: # has decimal, so no trailing 0's
+		return str1000.length() - 1
+	if str1000.ends_with("000"):
+		return 1
+	if str1000.ends_with("00"):
+		return 2
+	if str1000.ends_with("0"):
+		return 3
+	return 4
+
+static func set_decimal_precision(x: float, sig_digits: int) -> float:
+	# Ensures that String(x) will be displayed with sig_digits or less.
+	if x == 0.0:
+		return 0.0
+	var exp10 := floor(log(abs(x)) / LOG_OF_10)
+	var decimal_factor := pow(10.0, exp10 - sig_digits + 1)
+	x /= decimal_factor
+	return round(x) * decimal_factor
+
+
+
+
+
+
 
 # Misc
 static func acosh(x: float) -> float:

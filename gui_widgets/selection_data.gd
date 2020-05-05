@@ -26,24 +26,29 @@
 
 extends GridContainer
 
+const BodyFlags := Enums.BodyFlags
+
 enum {
 	TABLE_ROW,
 	ENUM
 }
 
 # modify these (and rect_min_size) before "system_tree_ready"
-var enable_wiki_links := false # Global.enable_wiki must also be set
+var enable_wiki_links := true # Global.enable_wiki must also be set
 var max_data_items := 15
 var labels_width := 120
 var values_width := 120
 var show_data := [
-	# [0] property [1] display label [2, 3] type-specific (see code)
-	# [4] flags test [5] label as wiki link [6] value as wiki link
-	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, false, true],
+	# [0] property [1] display label [2-4] type-specific (see code)
+	# [5] flags test (show) [6] flags test (is approximate value)
+	# [7] label as wiki link [8] value as wiki link
+	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
 	["m_radius", "LABEL_MEAN_RADIUS", QtyStrings.UNIT, "km"],
+	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyStrings.UNIT, "km", -1,
+			BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET],
 	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
-	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "KnowTypes",
-			Enums.BodyFlags.IS_MOON, true],
+	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "KnowTypes", null,
+			BodyFlags.IS_MOON, null, true],
 	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyStrings.UNIT, "_g"],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],
 	["mean_density", "LABEL_MEAN_DENSITY", QtyStrings.UNIT, "g/cm^3"],
@@ -143,8 +148,9 @@ func _on_selection_changed() -> void:
 			value = orbit.get(property)
 		if value == null:
 			continue
-		if show_datum.size() > 4 and show_datum[4]:
-			if !body or not body.flags & show_datum[4]:
+		var datum_size: int = show_datum.size()
+		if datum_size > 5 and show_datum[5]:
+			if !body or not body.flags & show_datum[5]:
 				continue
 		var value_str: String
 		var value_wiki: String
@@ -154,7 +160,7 @@ func _on_selection_changed() -> void:
 					value_str = "?"
 				elif value == -1:
 					pass
-				elif show_datum.size() > 2:
+				elif datum_size > 2 and show_datum[2] != null:
 					var key: String
 					match show_datum[2]:
 						TABLE_ROW:
@@ -166,9 +172,8 @@ func _on_selection_changed() -> void:
 							var enum_name: String = show_datum[3]
 							key = Enums.get_reverse_enum(enum_name, value)
 							value_str = tr(key)
-					if enable_wiki_links and key and show_datum.size() > 6 and show_datum[6]:
+					if enable_wiki_links and key and datum_size > 8 and show_datum[8]:
 						value_wiki = key
-						print(value_wiki)
 				else:
 					value_str = str(value)
 			TYPE_REAL:
@@ -176,20 +181,23 @@ func _on_selection_changed() -> void:
 					value_str = "?"
 				elif value == -INF:
 					pass
-				elif show_datum.size() < 3:
-					value_str = str(value)
-				else:
+				elif datum_size > 2 and show_datum[2] != null:
+					# expects elements 2, 3, 4
 					var option_type: int = show_datum[2]
-					var unit: String = show_datum[3] if show_datum.size() > 3 else ""
-					value_str = _qty_strings.number_option(value, option_type, unit)
+					var unit: String = show_datum[3] if datum_size > 3 and show_datum[3] != null else ""
+					var sig_digits: int = show_datum[4] if datum_size > 4 and show_datum[4] != null else -1
+					value_str = _qty_strings.number_option(value, option_type, unit,
+							false, 0, 0, sig_digits)
+				else:
+					value_str = str(value)
 			TYPE_STRING:
 				value_str = tr(value)
-				if enable_wiki_links and show_datum.size() > 6 and show_datum[6]:
+				if enable_wiki_links and datum_size > 8 and show_datum[8]:
 					value_wiki = value
 		if !value_str:
 			continue
 		var label: String = show_datum[1]
-		if enable_wiki_links and _wiki_titles.has(label):
+		if enable_wiki_links and datum_size > 7 and show_datum[7] and _wiki_titles.has(label):
 			var tr_label := tr(label)
 			_meta_lookup[tr_label] = label
 			_labels[grid_index].bbcode_text = "[url]" + tr_label + "[/url]"
