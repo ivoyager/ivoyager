@@ -61,12 +61,12 @@ func get_flags() -> int:
 
 func get_north() -> Vector3:
 	if is_body:
-		return body.north_pole
+		return body.rotations.north_pole
 	return ECLIPTIC_NORTH
 
 func get_radius_for_camera() -> float:
 	if is_body:
-		return body.m_radius
+		return body.properties.m_radius
 	return UnitDefs.KM
 
 func get_orbit_anomaly_for_camera() -> float:

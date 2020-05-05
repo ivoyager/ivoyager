@@ -142,18 +142,20 @@ var procedural_classes := {
 	# Nodes and references not instantiated by ProjectBuilder. These classes
 	# plus all above can be accessed from Global.script_classes (keys still
 	# have underscores). 
-	# tree_refs
-	_SelectionItem_ = SelectionItem,
-	_SelectionManager_ = SelectionManager,
-	_Orbit_ = Orbit,
-	_AsteroidGroup_ = AsteroidGroup,
-	_BodyList_ = BodyList,
 	# tree_nodes
 	_Body_ = Body,
 	_LPoint_ = LPoint,
 	_Camera_ = BCamera, # Camera ok, but see comments in b_camera.gd
 	_HUDOrbit_ = HUDOrbit,
 	_HUDPoints_ = HUDPoints,
+	# tree_refs
+	_Orbit_ = Orbit,
+	_Rotations_ = Rotations,
+	_Properties_ = Properties,
+	_SelectionItem_ = SelectionItem,
+	_SelectionManager_ = SelectionManager,
+	_AsteroidGroup_ = AsteroidGroup,
+	_BodyList_ = BodyList,
 }
 
 var extensions := []

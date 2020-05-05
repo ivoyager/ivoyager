@@ -36,6 +36,7 @@ extends Reference
 class_name TableReader
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const math := preload("res://ivoyager/static/math.gd")
 
 const DPRINT := false
 const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
@@ -192,12 +193,15 @@ func _read_data_line() -> void:
 				assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 				row_data[column] = int(_cell)
 			"REAL":
+				_cell = _cell.lstrip("_")
 				_cell = _cell.replace("E", "e")
 				assert(_cell.is_valid_float() or _line_error("Expected REAL"))
+				var sig_digits := math.get_str_decimal_precision(_cell)
 				var real := float(_cell)
 				if _units and _units[column]:
 					var unit: String = _units[column]
 					real = unit_defs.conv(real, unit, false, true)
+					real = math.set_decimal_precision(real, sig_digits)
 				row_data[column] = real
 			"STRING", "DATA", "BODY": # store as string
 				assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))

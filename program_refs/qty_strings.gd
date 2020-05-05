@@ -20,6 +20,7 @@
 class_name QtyStrings
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const math := preload("res://ivoyager/static/math.gd")
 
 enum { # case_type
 	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 Kilohertz", "1.00 Megahertz"
@@ -29,7 +30,7 @@ enum { # case_type
 
 enum { # num_type (TODO: commented formats)
 	NUM_DYNAMIC, # "0.0100" to "99999" as non-scientific, otherwise scientific
-	NUM_SCIENTIFIC, # pure scientific with specified sig_digits
+	NUM_SCIENTIFIC, # pure scientific
 #	NUM_NO_OVERPRECISION, # e.g., "555555" -> "556000" if sig_digits = 3
 #	NUM_DYN_NO_OVERPRECISION, # DYNAMIC but "55555" -> "55600" if sig_digits = 3
 	NUM_DECIMAL_PL, # treat sig_digits as number of decimal places
@@ -206,7 +207,7 @@ func project_init():
 		large_numbers[i] = tr(large_numbers[i])
 
 func number_option(x: float, option_type: int, unit := "", long_form := false, case_type := CASE_MIXED,
-		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+		num_type := NUM_DYNAMIC, sig_digits := -1) -> String:
 	# wrapper for functions below
 	match option_type:
 		NAMED_NUMBER:
@@ -276,31 +277,38 @@ func number_option(x: float, option_type: int, unit := "", long_form := false, c
 	assert(false, "Unkknown option_type: " + option_type)
 	return String(x)
 
-func number(x: float, num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+func number(x: float, num_type := NUM_DYNAMIC, sig_digits := -1) -> String:
 	# see SCI_ enums for num_type
+	# sig_digets = -1 displays precision as is
 	if num_type == NUM_DECIMAL_PL:
 		_format2[0] = sig_digits
 		_format2[1] = x
 		return ("%.*f" % _format2)
-	var exponent := 0
+	var exp10 := 0
 	if x != 0.0:
-		exponent = int(floor(log(abs(x)) / LOG_OF_10))
-	if exponent > 4 or exponent < -2 or num_type == NUM_SCIENTIFIC:
-		var divisor := pow(10.0, exponent)
+		exp10 = int(floor(log(abs(x)) / LOG_OF_10))
+	if exp10 > 4 or exp10 < -2 or num_type == NUM_SCIENTIFIC:
+		var divisor := pow(10.0, exp10)
 		x = x / divisor if !is_zero_approx(divisor) else 1.0
-		_format4[0] = sig_digits - 1
-		_format4[1] = x
-		_format4[2] = exp_str
-		_format4[3] = exponent
-		return "%.*f%s%s" % _format4 # e.g., 5.55e5
-	elif exponent > 1:
+		if sig_digits == -1:
+			return String(x) + exp_str + String(exp10)
+		else:
+			_format4[0] = sig_digits - 1
+			_format4[1] = x
+			_format4[2] = exp_str
+			_format4[3] = exp10
+			return "%.*f%s%s" % _format4 # e.g., 5.55e5
+	if sig_digits == -1:
+		return (String(x))
+	var decimal_pl := sig_digits - exp10 - 1
+	if decimal_pl < 1:
 		return "%.f" % x # whole number
 	else:
-		_format2[0] = sig_digits - exponent - 1
+		_format2[0] = decimal_pl
 		_format2[1] = x
 		return "%.*f" % _format2 # e.g., 0.0555
 
-func named_number(x: float, case_type := CASE_MIXED, sig_digits := 3) -> String:
+func named_number(x: float, case_type := CASE_MIXED, sig_digits := -1) -> String:
 	# returns integer string up to "999999", then "1.00 Million", etc.;
 	# you won't see scientific unless > 99999 Decillion.
 	if abs(x) < 1e6:
@@ -321,9 +329,11 @@ func named_number(x: float, case_type := CASE_MIXED, sig_digits := 3) -> String:
 	return number(x, NUM_DYNAMIC, sig_digits) + " " + lg_number_str
 
 func number_unit(x: float, unit: String, long_form := false, case_type := CASE_MIXED,
-		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+		num_type := NUM_DYNAMIC, sig_digits := -1) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/unit_defs.gd)
+	if sig_digits == -1:
+		sig_digits = math.get_decimal_precision(x)
 	x = unit_defs.conv(x, unit, true, false, multipliers, functions)
 	var number_str := number(x, num_type, sig_digits)
 	if long_form and long_forms.has(unit):
@@ -337,7 +347,7 @@ func number_unit(x: float, unit: String, long_form := false, case_type := CASE_M
 	return number_str + " " + unit
 
 func number_prefixed_unit(x: float, unit: String, long_form := false, case_type := CASE_MIXED,
-		num_type := NUM_DYNAMIC, sig_digits := 3) -> String:
+		num_type := NUM_DYNAMIC, sig_digits := -1) -> String:
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
 	# long_form = false or true, repspectively). You won't see scientific
 	# notation unless the internal value falls outside of the prefixes range.
@@ -345,6 +355,8 @@ func number_prefixed_unit(x: float, unit: String, long_form := false, case_type 
 	# composite unit where the first unit has a power other than 1 (eg, m^3).
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
 	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
+	if sig_digits == -1:
+		sig_digits = math.get_decimal_precision(x)
 	if unit:
 		x = unit_defs.conv(x, unit, true, false, multipliers, functions)
 	var exp_div_3 := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))

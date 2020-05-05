@@ -5,4 +5,4 @@ key,file_prefix,wiki_en,class_type,model_type,light_type,hydrostatic_equilibrium
 DataType,STRING,STRING,DATA,DATA,DATA,KnowTypes,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL
 Default,,,,,,YES,,,,,,,,,,,,,,,,,,
 Units,,,,,,,deg,deg,ly,au,,deg,deg,deg,deg,d,deg,deg,km,km,kg,g/cm^3,km/s,m^3/s^2
-STAR_SUN,Sun,Sun,CLASS_G_STAR,MODEL_G_STAR,LIGHT_SUN,,0,0,0,,,,,,,25.05,286.13,63.87,696392,696392,1.99E+30,1.408,617.7,1.33E+20
+STAR_SUN,Sun,Sun,CLASS_G_STAR,MODEL_G_STAR,LIGHT_SUN,,0,0,0,,,,,,,25.05,286.13,63.87,696342,696339,1.99E+30,1.408,617.7,1.33E+20

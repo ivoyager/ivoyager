@@ -50,50 +50,24 @@ var model_type := -1 # models.csv
 var light_type := -1 # lights.csv (probably -1 except stars)
 var flags := 0 # see Enums.BodyFlags
 
-# for floats, INF means unknown, -INF means not applicable
-var mass := INF
-var gm := -INF
-var surface_gravity := -INF
-var esc_vel := -INF
-var m_radius := INF
-var e_radius := INF
 var system_radius := 0.0 # widest orbiting satellite
-var rotation_period := 0.0
-var axial_tilt := 0.0
-var right_ascension := -INF
-var declination := -INF
-var has_minor_moons: bool
 var reference_basis := Basis()
-var north_pole := Vector3(0.0, 0.0, 1.0)
-var hydrostatic_equilibrium := -1 # Enums.KnowTypes
-var density := INF
-var albedo := -INF
-var surf_pres := -INF
-var surf_t := -INF # NA for gas giants
-var min_t := -INF
-var max_t := -INF
-var one_bar_t := -INF # venus, gas giants
-var half_bar_t := -INF # earth, venus, gas giants
-var tenth_bar_t := -INF # gas giants
+
+
 # file reading
 var file_prefix: String
 var rings_info: Array # [file_name, radius] if exists
 
+var properties: Properties
+var rotations: Rotations
 var orbit: Orbit
 var satellites := [] # Body instances
-var lagrange_points := [] # instanced when needed
+var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "class_type",
-	"model_type", "light_type", "flags",
-	"mass", "gm", "surface_gravity",
-	"esc_vel", "m_radius", "e_radius", "system_radius", "rotation_period", "axial_tilt",
-	"right_ascension", "declination",
-	"has_minor_moons", "reference_basis", "north_pole",
-	 "hydrostatic_equilibrium", "density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
-	"one_bar_t", "half_bar_t", "tenth_bar_t",
-	"file_prefix", "rings_info"]
-const PERSIST_OBJ_PROPERTIES := ["orbit", "satellites", "lagrange_points"]
+const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
+	"light_type", "flags", "system_radius", "reference_basis", "file_prefix", "rings_info"]
+const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites", "lagrange_points"]
 
 # public unpersisted - read-only except builder classes
 var model: Spatial
@@ -121,7 +95,7 @@ var _hud_icon_visible := false
 
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
-		hud_too_close = m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
+		hud_too_close = properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
 			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER
 	else:
@@ -147,8 +121,9 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 	if model:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-			model.transform.basis = model_basis.rotated(north_pole, rotation_angle)
+			model.transform.basis = rotations.get_basis(time, model_basis)
+#			var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
+#			model.transform.basis = model_basis.rotated(north_pole, rotation_angle)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model.visible = model_visible
@@ -209,10 +184,10 @@ func _on_ready() -> void:
 func _update_orbit_change():
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
-		if axial_tilt != 0.0:
+		if rotations.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, axial_tilt)
-		north_pole = new_north_pole
+			new_north_pole = new_north_pole.rotated(correction_axis, rotations.axial_tilt)
+		rotations.north_pole = new_north_pole
 		# TODO: Adjust reference_basis
 
 func _settings_listener(setting: String, value) -> void:

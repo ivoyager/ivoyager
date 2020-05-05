@@ -56,8 +56,10 @@ func _test_body_recursive(body: Body) -> void:
 	if !_camera.is_position_behind(test_global_position):
 		var dist_sq := (_camera_global_translation - test_global_position).length_squared()
 		if dist_sq < _closest_dist_sq:
-			var screen_radius_sq := _get_screen_radius_sq(body.m_radius, _viewport_height, _camera.fov, dist_sq)
-			var screen_range_sq := (_mouse_position - _camera.unproject_position(test_global_position)).length_squared()
+			var screen_radius_sq := _get_screen_radius_sq(body.properties.m_radius,
+					_viewport_height, _camera.fov, dist_sq)
+			var screen_range_sq := (_mouse_position - \
+					_camera.unproject_position(test_global_position)).length_squared()
 			if screen_range_sq < MOUSE_CLICK_RANGE_SQ + screen_radius_sq:
 				_body = body
 				_closest_dist_sq = dist_sq
