@@ -33,7 +33,6 @@ const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh
 var _hud_2d_surface: Control
-var _label_font: Font
 var _generic_moon_icon: Texture
 var _fallback_icon: Texture
 var _hud_icons_dir: String
@@ -41,7 +40,6 @@ var _orbit_mesh_arrays := []
 
 func project_init() -> void:
 	_hud_2d_surface = Global.program.HUD2dSurface
-	_label_font = Global.fonts.hud_labels
 	_generic_moon_icon = Global.assets.generic_moon_icon
 	_fallback_icon = Global.assets.fallback_icon
 	_hud_icons_dir = Global.asset_paths.hud_icons_dir

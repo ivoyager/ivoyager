@@ -49,7 +49,8 @@ func set_full_screen(is_hide_gui: bool) -> void:
 	visible = !is_hide_gui
 
 func project_init():
-	hide()
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
+			[], CONNECT_ONESHOT)
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
@@ -57,6 +58,10 @@ func project_init():
 	Global.connect("toggle_show_hide_gui_requested", self, "_toggle_show_hide")
 	set_anchors_and_margins_preset(PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_IGNORE
+	hide()
+
+func _on_project_builder_finished() -> void:
+	theme = Global.themes.main
 
 func _clear_procedural() -> void:
 	# remove game GUI on exit or before load

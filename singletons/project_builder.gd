@@ -82,25 +82,30 @@ var init_sequence := [
 # ProjectBuilder, edge underscores are removed to form keys in the
 # Global.program dictionary (and name property for nodes).
 
-var program_references := {
-	# ProjectBuilder instances one of each. No save/load persistence.
-	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
-	_InputMapManager_ = InputMapManager,
+var program_builders := {
+	# ProjectBuilder instances one of each. No save/load persistence. These are
+	# treated exactly like program_references (separate for organization).
 	_TableReader_ = TableReader,
 	_SaverLoader_ = SaverLoader,
-	_FontManager_ = FontManager, # ok to replace
-	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
-	_SystemBuilder_ = SystemBuilder,
 	_EnvironmentBuilder_ = EnvironmentBuilder,
+	_SystemBuilder_ = SystemBuilder,
 	_BodyBuilder_ = BodyBuilder,
+	_OrbitBuilder_ = OrbitBuilder,
 	_ModelBuilder_ = ModelBuilder,
 	_RingsBuilder_ = RingsBuilder,
 	_LightBuilder_ = LightBuilder,
 	_HUDsBuilder_ = HUDsBuilder,
-	_SelectionBuilder_ = SelectionBuilder,
-	_OrbitBuilder_ = OrbitBuilder,
 	_MinorBodiesBuilder_ = MinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
+	_SelectionBuilder_ = SelectionBuilder,
+}
+
+var program_references := {
+	# ProjectBuilder instances one of each. No save/load persistence.
+	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
+	_InputMapManager_ = InputMapManager,
+	_FontManager_ = FontManager, # ok to replace
+	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
 	_MouseClickSelector_ = MouseClickSelector,
 	_QtyStrings_ = QtyStrings,
 	_TableHelper_ = TableHelper,
@@ -189,7 +194,7 @@ func init_extensions() -> void:
 	emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:
-	for dict in [program_references, program_nodes, gui_controls]:
+	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
@@ -204,7 +209,8 @@ func instantiate_and_index() -> void:
 	program.tree = get_tree()
 	assert(!program.has("root"))
 	program.root = get_tree().get_root()
-	for dict in [program_references, program_nodes, gui_controls, procedural_classes]:
+	for dict in [program_builders,program_references, program_nodes, gui_controls,
+			procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
@@ -212,7 +218,7 @@ func instantiate_and_index() -> void:
 
 func init_project() -> void:
 	Global.project_init()
-	for dict in [program_references, program_nodes, gui_controls]:
+	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = program[object_key]

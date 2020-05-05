@@ -29,8 +29,13 @@ var _is_mouse_button_pressed := false
 var _homepage_link := RichTextLabel.new()
 
 func project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self,
-			"_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
+			[], CONNECT_ONESHOT)
+	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded",
+			[], CONNECT_ONESHOT)
+
+func _on_project_builder_finished() -> void:
+	theme = Global.themes.main
 
 func _ready() -> void:
 	_homepage_link.bbcode_enabled = true

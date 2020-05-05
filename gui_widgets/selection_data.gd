@@ -186,8 +186,7 @@ func _on_selection_changed() -> void:
 					var option_type: int = show_datum[2]
 					var unit: String = show_datum[3] if datum_size > 3 and show_datum[3] != null else ""
 					var sig_digits: int = show_datum[4] if datum_size > 4 and show_datum[4] != null else -1
-					value_str = _qty_strings.number_option(value, option_type, unit,
-							false, 0, 0, sig_digits)
+					value_str = _qty_strings.number_option(value, option_type, unit, sig_digits)
 				else:
 					value_str = str(value)
 			TYPE_STRING:

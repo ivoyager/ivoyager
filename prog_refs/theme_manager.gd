@@ -15,9 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains Global.themes dictionary. This class sets theme for ProjectGUI
-# (whatever that is defined as in ProjectBuilder), but all GUIs not under that
-# Control must set their own theme from the Global dict.
+# Maintains Global.themes dictionary. All controls are expected to set their
+# own theme from this dictionary.
 
 extends Reference
 class_name ThemeManager
@@ -26,25 +25,18 @@ class_name ThemeManager
 var global_font := "gui_main" # these are defined in FontManager
 var main_menu_font := "large"
 var splash_screen_font := "medium"
-#var game_font := "game_theme"
 
 var _themes: Dictionary = Global.themes
 var _fonts: Dictionary = Global.fonts
-var _settings: Dictionary = Global.settings
 
 func project_init() -> void:
-	# set global_theme for ProjectGUI
-	var global_theme := Theme.new()
-	global_theme.default_font = _fonts[global_font]
-	_themes.global = global_theme
-	Global.program.ProjectGUI.theme = global_theme
-	# all non-ProjectGUIs set their own theme from Global.themes
-	var main_menu_theme := Theme.new()
-	main_menu_theme.default_font = _fonts[main_menu_font]
-	_themes.main_menu = main_menu_theme
-	var splash_screen_theme := Theme.new()
-	splash_screen_theme.default_font = _fonts[splash_screen_font]
-	_themes.splash_screen = splash_screen_theme
-#	var game_theme := Theme.new()
-#	_themes.game = game_theme
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
+			[], CONNECT_ONESHOT)
+	_themes.main = Theme.new()
+	_themes.main_menu = Theme.new()
+	_themes.splash_screen = Theme.new()
 
+func _on_project_builder_finished() -> void:
+	_themes.main.default_font = _fonts[global_font]
+	_themes.main_menu.default_font = _fonts[main_menu_font]
+	_themes.splash_screen.default_font = _fonts[splash_screen_font]

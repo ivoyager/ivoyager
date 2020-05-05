@@ -17,25 +17,23 @@ texture = ExtResource( 2 )
 expand = true
 stretch_mode = 6
 
-[node name="Copyright" type="Label" parent="."]
-visible = false
-margin_left = 35.0
-margin_top = 280.0
-margin_right = 176.0
-margin_bottom = 125.0
+[node name="Info" type="Label" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 47.5942
+margin_top = -136.891
+margin_right = 155.594
+margin_bottom = -54.8905
+grow_vertical = 0
 text = "I, Voyager
+v0.0.0
 
 (c) 2017-2020
 Charlie Whitfield"
-
-[node name="Version" type="Label" parent="."]
-anchor_top = 1.0
-anchor_bottom = 1.0
-margin_left = 35.0
-margin_top = -77.0
-margin_right = 120.0
-margin_bottom = -63.0
-text = "v0.0.0"
+valign = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="PBDCaption" type="Label" parent="."]
 anchor_left = 0.8

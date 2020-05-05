@@ -44,7 +44,6 @@ func project_init():
 		Global.connect("close_main_menu_requested", self, "_close")
 		Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
 		Global.connect("simulator_exited", self, "_set_splash_screen_config")
-	theme = Global.themes.main_menu
 	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
 	_main = Global.program.Main
 	if !Global.skip_splash_screen:
@@ -57,6 +56,7 @@ func project_init():
 	# Other admin GUI's init their own buttons
 
 func _on_ready() -> void:
+	theme = Global.themes.main_menu
 	button_infos.sort_custom(self, "_sort_button_infos")
 	for button_info in button_infos:
 		var button: Button = button_info[0]
@@ -69,6 +69,7 @@ func _on_ready() -> void:
 		_set_running_config(true)
 	else:
 		_set_splash_screen_config()
+	print("MM ready ", rect_position, rect_size)
 
 func _sort_button_infos(a: Array, b: Array) -> bool:
 	return a[1] > b[1] # priority

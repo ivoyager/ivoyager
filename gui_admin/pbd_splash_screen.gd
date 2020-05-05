@@ -23,23 +23,21 @@ const SCENE := "res://ivoyager/gui_admin/pbd_splash_screen.tscn"
 var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
 var _main_menu: MainMenu
-var _copyright: Label
-var _version: Label
-var _pbd_caption: Label
+onready var _info: Label = $Info
+onready var _pbd_caption: Label = $PBDCaption
 
 func project_init():
 	connect("ready", self, "_on_ready")
-	_settings_manager = Global.program.SettingsManager
-	_main_menu = Global.program.get("MainMenu")
-	theme = Global.themes.splash_screen
-
-func _on_ready():
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
+			[], CONNECT_ONESHOT)
+	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("simulator_exited", self, "show")
-	_copyright = $Copyright
-	_version = $Version
-	_pbd_caption = $PBDCaption
+	_settings_manager = Global.program.SettingsManager
+	_main_menu = Global.program.get("MainMenu")
+
+func _on_ready():
+	theme = Global.themes.splash_screen
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
 	_pbd_caption.connect("gui_input", self, "_pbd_caption_input")
@@ -47,14 +45,15 @@ func _on_ready():
 	_pbd_caption.text = "TXT_PBD_LONG" if _settings.pbd_splash_caption_open else "TXT_PBD_SHORT"
 	if Global.skip_splash_screen:
 		hide()
+	_info.hide()
 
 func _on_project_builder_finished() -> void:
-	_copyright.margin_left = _main_menu.margin_left if _main_menu else 35.0
-	_copyright.margin_top = _main_menu.rect_position.y + _main_menu.rect_size.y + 40.0 if _main_menu else 100.0
-	_copyright.show()
-	_version.text = Global.ivoyager_version
-	_version.margin_left = _main_menu.margin_left if _main_menu else 35.0
-	_version.show()
+	_info.text = _info.text.replace("0.0.0", Global.ivoyager_version)
+	_info.margin_left = _main_menu.margin_left if _main_menu else 35.0
+	_info.show()
+
+func _on_main_inited() -> void:
+	pass
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	hide()
