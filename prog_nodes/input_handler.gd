@@ -26,7 +26,6 @@ extends Node
 class_name InputHandler
 
 var _state: Dictionary = Global.state
-var _settings: Dictionary = Global.settings
 var _script_classes: Dictionary = Global.script_classes
 var _allow_dev_tools: bool = Global.allow_dev_tools
 var _tree: SceneTree

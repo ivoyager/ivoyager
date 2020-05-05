@@ -36,29 +36,28 @@ var _settings: Dictionary = Global.settings
 var _primary_font_data: DynamicFontData
 
 func project_init() -> void:
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
+			[], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_primary_font_data = Global.assets.primary_font_data
 	for key in fixed_sizes:
-		var dynamic_font = DynamicFont.new()
-		dynamic_font.font_data = _primary_font_data
-		dynamic_font.size = fixed_sizes[key]
-		_fonts[key] = dynamic_font
-	var gui_main_font = DynamicFont.new()
-	gui_main_font.font_data = _primary_font_data
-	gui_main_font.size = gui_main_sizes[_settings.gui_size]
-	_fonts.gui_main = gui_main_font
-	var gui_medium_font = DynamicFont.new()
-	gui_medium_font.font_data = _primary_font_data
-	gui_medium_font.size = gui_medium_sizes[_settings.gui_size]
-	_fonts.gui_medium = gui_medium_font
-	var gui_large_font = DynamicFont.new()
-	gui_large_font.font_data = _primary_font_data
-	gui_large_font.size = gui_large_sizes[_settings.gui_size]
-	_fonts.gui_large = gui_large_font
-	var hud_labels_font = DynamicFont.new()
-	hud_labels_font.font_data = _primary_font_data
-	hud_labels_font.size = _settings.viewport_label_size
-	_fonts.hud_labels = hud_labels_font
+		_fonts[key] = DynamicFont.new()
+		_fonts[key].font_data = _primary_font_data
+		_fonts[key].size = fixed_sizes[key]
+	_fonts.gui_main = DynamicFont.new()
+	_fonts.gui_medium = DynamicFont.new()
+	_fonts.gui_large = DynamicFont.new()
+	_fonts.hud_labels = DynamicFont.new()
+	_fonts.gui_main.font_data = _primary_font_data
+	_fonts.gui_medium.font_data = _primary_font_data
+	_fonts.gui_large.font_data = _primary_font_data
+	_fonts.hud_labels.font_data = _primary_font_data
+
+func _on_project_builder_finished() -> void:
+	_fonts.gui_main.size = gui_main_sizes[_settings.gui_size]
+	_fonts.gui_medium.size = gui_medium_sizes[_settings.gui_size]
+	_fonts.gui_large.size = gui_large_sizes[_settings.gui_size]
+	_fonts.hud_labels.size = _settings.viewport_label_size
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

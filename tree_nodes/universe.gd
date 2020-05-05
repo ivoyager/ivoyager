@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Universe is the main scene root node. It provide reference frame for top Body
-# instances, which could be the Sun or a collection of stars or something else.
-# Get the Universe instance from Global.program.universe. Get specific Body
-# instances by name or id from Registrar (program_nodes/registrar.gd) which you
-# can access via Global.program.Registrar.
+# Universe is the main scene root node. It provides spatial reference for top
+# Body instances, which could be the Sun or a collection of stars or something
+# else. Get the Universe instance from Global.program.universe. Get specific
+# Body instances by name or id from Registrar (program_nodes/registrar.gd)
+# which you can access via Global.program.Registrar.
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
