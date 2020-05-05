@@ -34,7 +34,7 @@ enum {
 }
 
 # modify these (and rect_min_size) before "system_tree_ready"
-var enable_wiki_links := true # Global.enable_wiki must also be set
+var enable_wiki_links := false # Global.enable_wiki must also be set
 var max_data_items := 15
 var labels_width := 120
 var values_width := 120
