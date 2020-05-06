@@ -54,6 +54,8 @@ var _table_data := {}
 var _table_fields := {}
 var _table_data_types := {}
 var _table_units := {}
+var _value_indexes := {"" : 0}
+var _values := [""]
 var _table_rows: Dictionary = Global.table_rows
 var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _wiki_titles: Dictionary = Global.wiki_titles
@@ -72,14 +74,14 @@ var _line_array: Array
 var _row_key: String
 var _field: String
 var _cell: String
+var _count := 0
 
 
-func project_init():
+func project_init() -> void:
 	var table_helper: TableHelper = Global.program.TableHelper
-	table_helper.init_tables(_table_data, _table_fields, _table_data_types, _table_units)
+	table_helper.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _values)
 
-func import_table_data():
-	print("Reading external data tables...")
+func import_table_data() -> void:
 	if _enable_wiki:
 		for path in wiki_extras:
 			_path = path
@@ -105,6 +107,7 @@ func import_table_data():
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
 			_table_rows[item_key] = _rows[item_key]
+	print("Imported ", _count, " table values (", _values.size(), " unique)...")
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -176,23 +179,28 @@ func _read_data_line() -> void:
 	_row_key = _line_array[0]
 	assert(!_rows.has(_row_key))
 	_rows[_row_key] = row
-	row_data[0] = _row_key
 	for field in _fields:
 		_field = field
-		if _field == "key":
-			continue
 		var column: int = _fields[_field]
 		_cell = _get_clean_value(_line_array[column])
 		if !_cell: # set to default
 			_cell = _defaults[column]
 		if !_cell:
-			row_data[column] = ""
+			row_data[column] = 0
 			continue
 		assert(_cell_test(column))
-		row_data[column] = _cell
+		# value is stored as index for each unique cell value
+		if _value_indexes.has(_cell):
+			row_data[column] = _value_indexes[_cell]
+		else:
+			var index := _values.size()
+			_values.append(_cell)
+			_value_indexes[_cell] = index
+			row_data[column] = index
 		if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
 			assert(!_wiki_titles.has(_row_key))
 			_wiki_titles[_row_key] = _cell
+		_count += 1
 	_data.append(row_data)
 
 func _get_clean_value(value: String) -> String:

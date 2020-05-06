@@ -69,7 +69,6 @@ func _on_ready() -> void:
 		_set_running_config(true)
 	else:
 		_set_splash_screen_config()
-	print("MM ready ", rect_position, rect_size)
 
 func _sort_button_infos(a: Array, b: Array) -> bool:
 	return a[1] > b[1] # priority

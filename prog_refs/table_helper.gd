@@ -23,6 +23,7 @@ class_name TableHelper
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
+var _values: Array
 var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
 var _table_fields: Dictionary # a dict of columns for each table
 var _table_data_types: Dictionary # an array for each table
@@ -41,11 +42,12 @@ func project_init() -> void:
 	_unit_functions = Global.unit_functions
 
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
-		table_units: Dictionary) -> void:
+		table_units: Dictionary, values: Array) -> void:
 	_table_data = table_data
 	_table_fields = table_fields
 	_table_data_types = table_data_types
 	_table_units = table_units
+	_values = values
 
 func get_n_table_rows(table_name: String) -> int:
 	var data: Array = _table_data[table_name]
@@ -53,7 +55,7 @@ func get_n_table_rows(table_name: String) -> int:
 
 func get_row_key(table_name: String, row: int) -> String:
 	var row_data: Array = _table_data[table_name][row]
-	return row_data[0]
+	return _values[row_data[0]]
 
 func is_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
 	# use for STRING or to get unconverted table value; returns "" if missing
@@ -66,7 +68,7 @@ func is_value(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return bool(row_data[column])
+	return bool(_values[row_data[column]])
 
 func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
 	# use for STRING or to get unconverted table value; returns "" if missing
@@ -79,7 +81,7 @@ func get_string(table_name: String, field_name: String, row := -1, row_name := "
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return row_data[column]
+	return _values[row_data[column]]
 
 func get_bool(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
 	# use for table DataType "BOOL" or "X"; returns false if missing
@@ -92,7 +94,7 @@ func get_bool(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_bool(row_data[column])
+	return conv_bool(_values[row_data[column]])
 
 func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# returns -1 if missing
@@ -105,7 +107,7 @@ func get_int(table_name: String, field_name: String, row := -1, row_name := "") 
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_int(row_data[column])
+	return conv_int(_values[row_data[column]])
 
 func get_real(table_name: String, field_name: String, row := -1, row_name := "") -> float:
 	# returns -INF if missing
@@ -120,7 +122,7 @@ func get_real(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	var units: Array = _table_units[table_name]
 	var unit: String = units[column]
-	return conv_real(row_data[column], unit)
+	return conv_real(_values[row_data[column]], unit)
 
 func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	var num_str := get_string(table_name, field_name, row, row_name)
@@ -150,7 +152,7 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	var data_types: Array = _table_data_types[table_name]
 	var enum_name: String = data_types[column]
-	return conv_enum(row_data[column], enum_name)
+	return conv_enum(_values[row_data[column]], enum_name)
 
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for DataType = "DATA" to get row number (= "type") of the cell item.
@@ -164,7 +166,7 @@ func get_table_type(table_name: String, field_name: String, row := -1, row_name 
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_data(row_data[column])
+	return conv_data(_values[row_data[column]])
 
 func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
 	# Use for DataType = "BODY" to get the Body instance.
@@ -178,7 +180,7 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_body(row_data[column])
+	return conv_body(_values[row_data[column]])
 
 func build_object(object: Object, table_name: String, table_row: int, property_fields: Dictionary,
 		required_fields := []) -> void:
@@ -189,12 +191,13 @@ func build_object(object: Object, table_name: String, table_row: int, property_f
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
-			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
+			assert(!required_fields.has(field), "Missing table column: " + _values[row_data[0]] + " " + field)
 			continue
 		var column: int = fields[field]
-		var value: String = row_data[column]
+		var value_index: int = row_data[column]
+		var value: String = _values[value_index]
 		if !value:
-			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
+			assert(!required_fields.has(field), "Missing table value: " + _values[row_data[0]] + " " + field)
 			continue
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
@@ -209,12 +212,13 @@ func build_dictionary(dict: Dictionary, table_name: String, table_row: int, prop
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
-			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
+			assert(!required_fields.has(field), "Missing table column: " + _values[row_data[0]] + " " + field)
 			continue
 		var column: int = fields[field]
-		var value: String = row_data[column]
+		var value_index: int = row_data[column]
+		var value: String = _values[value_index]
 		if !value:
-			assert(!required_fields.has(field), "Missing table value: " + row_data[0] + " " + field)
+			assert(!required_fields.has(field), "Missing table value: " + _values[row_data[0]] + " " + field)
 			continue
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
@@ -229,10 +233,11 @@ func build_flags(flags: int, table_name: String, table_row: int, flag_fields: Di
 	for flag in flag_fields:
 		var field: String = flag_fields[flag]
 		if !fields.has(field):
-			assert(!required_fields.has(field), "Missing table column: " + row_data[0] + " " + field)
+			assert(!required_fields.has(field), "Missing table column: " + _values[row_data[0]] + " " + field)
 			continue
 		var column: int = fields[field]
-		var value: String = row_data[column]
+		var value_index: int = row_data[column]
+		var value: String = _values[value_index]
 		var data_type: String = data_types[column]
 		assert(data_type == "BOOL" or data_type == "X", "Expected table DataType = 'BOOL' or 'X'")
 		if conv_bool(value):
