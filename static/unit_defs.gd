@@ -217,6 +217,22 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 	assert(false, "Unknown unit symbol: " + unit)
 	return x
 
+static func is_valid_unit(unit: String, preprocess := false,
+		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> bool:
+	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
+	# dictionaries); preprocess = true handles prefixes "10^x " or "1/".
+	# Valid examples: "1/century", "10^24 kg", "1/(10^3 yr)".
+	if preprocess: # mainly for table import
+		if unit.begins_with("1/"):
+			unit = unit.lstrip("1/")
+			if unit.begins_with("(") and unit.ends_with(")"):
+				unit = unit.lstrip("(").rstrip(")")
+		if unit.begins_with("10^"):
+			var space_pos := unit.find(" ")
+			assert(space_pos > 3, "A space must follow '10^xx'")
+			unit = unit.substr(space_pos + 1, 999)
+	return multipliers.has(unit) or functions.has(unit)
+
 static func conv_centigrade(x: float, to := false) -> float:
 	return x - 273.15 if to else x + 273.15
 

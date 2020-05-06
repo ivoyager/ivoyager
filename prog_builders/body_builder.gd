@@ -142,21 +142,40 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
 	_table_helper.build_object(properties, table_name, row, properties_fields, properties_fields_req)
-	# imputed properties (keep correct precision!)
-	if is_inf(properties.e_radius):
-		properties.e_radius = properties.m_radius
-	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
-	
-	# TODO: Fix decimal precision for derived properties
-	
-	if is_inf(properties.mass) and !is_inf(properties.mean_density):
-		properties.mass = (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-	if is_inf(properties.gm) and !is_inf(properties.mass): # planet table have mass, not GM
-		properties.gm = G * properties.mass
-	if is_inf(properties.esc_vel) and !is_inf(properties.gm):
-		properties.esc_vel = sqrt(2.0 * properties.gm / properties.m_radius)
-	if is_inf(properties.surface_gravity) and !is_inf(properties.gm):
-		properties.surface_gravity = properties.gm / pow(properties.m_radius, 2.0)
+	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
+	if is_inf(properties.mass):
+		var sig_digits := _table_helper.get_least_real_precision(table_name, ["density", "m_radius"], row)
+		if sig_digits > 1:
+			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
+			properties.mass = math.set_decimal_precision(mass, sig_digits)
+	if is_inf(properties.gm): # planets table has mass, not GM
+		var sig_digits := _table_helper.get_real_precision(table_name, "mass", row)
+		if sig_digits > 1:
+			if sig_digits > 6:
+				sig_digits = 6 # limited by G precision
+			var gm := G * properties.mass
+			properties.gm = math.set_decimal_precision(gm, sig_digits)
+	if is_inf(properties.esc_vel) or is_inf(properties.surface_gravity):
+		if _table_helper.is_value(table_name, "GM", row):
+			var sig_digits := _table_helper.get_least_real_precision(table_name, ["GM", "m_radius"], row)
+			if sig_digits > 2:
+				if is_inf(properties.esc_vel):
+					var esc_vel := sqrt(2.0 * properties.gm / properties.m_radius)
+					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_inf(properties.surface_gravity):
+					var surface_gravity := properties.gm / pow(properties.m_radius, 2.0)
+					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+		else: # planet w/ mass
+			var sig_digits := _table_helper.get_least_real_precision(table_name, ["mass", "m_radius"], row)
+			if sig_digits > 2:
+				if is_inf(properties.esc_vel):
+					if sig_digits > 6:
+						sig_digits = 6
+					var esc_vel := sqrt(2.0 * G * properties.mass / properties.m_radius)
+					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_inf(properties.surface_gravity):
+					var surface_gravity := G * properties.mass / pow(properties.m_radius, 2.0)
+					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should

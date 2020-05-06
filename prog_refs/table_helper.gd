@@ -31,10 +31,14 @@ var _table_rows: Dictionary = Global.table_rows
 var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _bodies_by_name: Dictionary = Global.bodies_by_name
 var _enums: Script
+var _unit_multipliers: Dictionary = Global.unit_multipliers
+var _unit_functions: Dictionary = Global.unit_functions
 
 
 func project_init() -> void:
 	_enums = Global.enums
+	_unit_multipliers = Global.unit_multipliers
+	_unit_functions = Global.unit_functions
 
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
 		table_units: Dictionary) -> void:
@@ -50,6 +54,19 @@ func get_n_table_rows(table_name: String) -> int:
 func get_row_key(table_name: String, row: int) -> String:
 	var row_data: Array = _table_data[table_name][row]
 	return row_data[0]
+
+func is_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
+	# use for STRING or to get unconverted table value; returns "" if missing
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return false
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	return bool(row_data[column])
 
 func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
 	# use for STRING or to get unconverted table value; returns "" if missing
@@ -107,7 +124,18 @@ func get_real(table_name: String, field_name: String, row := -1, row_name := "")
 
 func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	var num_str := get_string(table_name, field_name, row, row_name)
+	if !num_str:
+		return 0 # missing value
 	return math.get_str_decimal_precision(num_str)
+	
+func get_least_real_precision(table_name: String, field_names: Array, row := -1, row_name := "") -> int:
+	var num_strs := []
+	for field_name in field_names:
+		var num_str := get_string(table_name, field_name, row, row_name)
+		if !num_str:
+			return 0 # missing value
+		num_strs.append(num_str)
+	return math.get_least_str_decimal_precision(num_strs)
 
 func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# returns -1 if missing
@@ -244,7 +272,7 @@ func conv_real(value: String, unit := "") -> float:
 	var real := float(value)
 	if unit:
 		var sig_digits := math.get_str_decimal_precision(value)
-		real = unit_defs.conv(real, unit, false, true)
+		real = unit_defs.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
 		real = math.set_decimal_precision(real, sig_digits)
 	return float(real)
 

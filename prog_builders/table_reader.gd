@@ -115,7 +115,9 @@ func _read_table() -> void:
 	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
 	_units = []
 	_defaults = []
-	var is_1st_line := true
+	var have_fields := false
+	var reading_data := false
+	var n_columns := 0
 	var line := file.get_line()
 	while !file.eof_reached():
 		var commenter := line.find("#")
@@ -123,39 +125,47 @@ func _read_table() -> void:
 			line = file.get_line()
 			continue
 		_line_array = Array(line.split(delimiter, true))
-		if is_1st_line:
-			_read_fields_line() # always the 1st non-comment line
-			is_1st_line = false
-		elif _line_array[0] == "DataType":
-			_read_data_types_line()
-		elif _line_array[0] == "Units":
-			_units = _line_array
-			# TODO: check valid units
-		elif _line_array[0] == "Default":
-			_defaults = _line_array
-		else:
-			assert(_data_types) # required; Units & Defaults lines are optional
-			if !_units:
-				for _i in range(_data_types.size()):
-					_units.append("")
+		if !reading_data:
+			if !have_fields: # always 1st line!
+				assert(_line_array[0] == "key", "1st field must be 'key'")
+				for field in _line_array:
+					if field == "Comments":
+						break
+					_fields[field] = n_columns
+					n_columns += 1
+				have_fields = true
+			elif _line_array[0] == "DataType":
+				_data_types = _line_array
+				_data_types[0] = "STRING" # always key field
+				_data_types.resize(n_columns) # there could be an extra comment column
+				assert(_data_type_test())
+			elif _line_array[0] == "Units":
+				_units = _line_array
+				_units[0] = ""
+				_units.resize(n_columns)
+				assert(_unit_test())
+			elif _line_array[0] == "Default":
+				_defaults = _line_array
+				_defaults[0] = ""
+				_defaults.resize(n_columns)
+				var i := 0
+				while i < n_columns:
+					if _defaults[i]:
+						_defaults[i] = _get_clean_value(_defaults[i])
+					i += 1
+			else:
+				assert(_data_types) # required
+				if !_units:
+					for _i in range(n_columns):
+						_units.append("")
+				if !_defaults:
+					for _i in range(n_columns):
+						_defaults.append("")
+				assert(_table_test(n_columns))
+				reading_data = true
+		if reading_data:
 			_read_data_line()
 		line = file.get_line()
-
-func _read_fields_line() -> void:
-	assert(_line_array[0] == "key", "1st field must be 'key'")
-	var column := 0
-	for field in _line_array:
-		if field == "Comments":
-			break
-		_fields[field] = column
-		column += 1
-
-func _read_data_types_line() -> void:
-	_data_types = _line_array
-	_data_types[0] = "STRING" # always key field
-	_data_types.resize(_fields.size()) # there could be an extra comment column
-	for data_type in _data_types:
-		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown DataType: " + data_type)
 
 func _read_data_line() -> void:
 	# The only data modification we do here is strip enclosing quotes and
@@ -172,42 +182,70 @@ func _read_data_line() -> void:
 		if _field == "key":
 			continue
 		var column: int = _fields[_field]
-		_cell = _line_array[column]
-		if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
-			_cell = _cell.substr(1, _cell.length() - 2)
-		_cell = _cell.lstrip("_")
-		if !_cell and _defaults and _defaults[column]: # set to default
+		_cell = _get_clean_value(_line_array[column])
+		if !_cell: # set to default
 			_cell = _defaults[column]
 		if !_cell:
 			row_data[column] = ""
 			continue
-		assert(_format_test(column))
+		assert(_cell_test(column))
 		row_data[column] = _cell
 		if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
 			assert(!_wiki_titles.has(_row_key))
 			_wiki_titles[_row_key] = _cell
 	_data.append(row_data)
 
-func _format_test(column: int) -> bool:
+func _get_clean_value(value: String) -> String:
+	if value.begins_with("\"") and value.ends_with("\""): # whole cell quoted
+		value = value.substr(1, value.length() - 2)
+	return value.lstrip("_")
+
+func _data_type_test() -> bool:
+	for data_type in _data_types:
+		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown DataType: " + data_type)
+	return true
+
+func _unit_test() -> bool:
+	for unit in _units:
+		if unit:
+			assert(unit_defs.is_valid_unit(unit, true, Global.unit_multipliers, Global.unit_functions),
+					"Unkown unit " + unit)
+	return true
+
+func _table_test(n_columns: int) -> bool:
+	for column in range(n_columns):
+		var data_type: String = _data_types[column]
+		match data_type:
+			"X":
+				assert(!_defaults[column], "Expected no Default for X type")
+				assert(!_units[column], "Expected no Units for X type")
+			"BOOL":
+				assert(!_units[column], "Expected no Units for BOOL")
+			"INT":
+				assert(!_units[column], "Expected no Units for INT")
+			"REAL":
+				pass
+			"STRING", "DATA", "BODY":
+				assert(!_units[column], "Expected no Units for " + data_type)
+			_: # must be valid enum name
+				assert(!_units or !_units[column], "Expected no Units for " + data_type)
+				assert(data_type in _enums, "Non-existent enum dict " + data_type)
+	return true
+
+func _cell_test(column: int) -> bool:
 	var data_type: String = _data_types[column]
 	match data_type:
 		"X":
-			assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
-			assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
 			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
 		"BOOL":
-			assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
 			assert(_cell.matchn("true") or _cell.matchn("false") or _line_error("Expected BOOL"))
 		"INT":
-			assert(!_units or !_units[column] or _line_error("Expected no Units for INT"))
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":
 			assert(_cell.replace("E", "e").is_valid_float() or _line_error("Expected REAL"))
 		"STRING", "DATA", "BODY":
-			assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
+			pass
 		_: # must be valid enum name
-			assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
-			assert(data_type in _enums or _line_error("Non-existent enum dict " + data_type))
 			assert(_enums[data_type].has(_cell) or _line_error("Non-existent enum value " + _cell))
 	return true
 

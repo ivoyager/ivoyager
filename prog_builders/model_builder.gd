@@ -101,8 +101,9 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 			# TODO: models that are not PackedScene???
 	if !model:
 		# fallback to ellipsoid model using the common Global.globe_mesh
-		assert(m_radius > 0.0 and e_radius > 0.0)
-		var polar_radius = 3.0 * m_radius - 2.0 * e_radius
+		assert(m_radius > 0.0)
+#		if is_inf(e_radius):
+#			e_radius = m_radius
 		var albedo_texture: Texture = _find_resource(_globe_wraps_dir, file_prefix + ".albedo")
 		if is_placeholder:
 			model = Spatial.new()
@@ -119,7 +120,11 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 			else:
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
-		model.scale = Vector3(e_radius, polar_radius, e_radius)
+		if !is_inf(e_radius):
+			var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
+			model.scale = Vector3(e_radius, polar_radius, e_radius)
+		else:
+			model.scale = Vector3(m_radius, m_radius, m_radius)
 		model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return model
 
