@@ -114,7 +114,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	var hydrostatic_equilibrium: int = _table_helper.get_value(table_name, "hydrostatic_equilibrium", row)
+	var hydrostatic_equilibrium: int = _table_helper.get_enum(table_name, "hydrostatic_equilibrium", row)
 	if hydrostatic_equilibrium >= Enums.KnowTypes.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
@@ -129,7 +129,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		"moons":
 			flags |= BodyFlags.IS_MOON
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
-					or _table_helper.get_value(table_name, "force_navigator", row):
+					or _table_helper.get_bool(table_name, "force_navigator", row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 	# orbit
@@ -143,19 +143,19 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.properties = properties
 	_table_helper.build_object(properties, table_name, row, properties_fields, properties_fields_req)
 	# imputed properties (keep correct precision!)
-	if properties.e_radius == INF:
+	if is_inf(properties.e_radius):
 		properties.e_radius = properties.m_radius
 	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
 	
 	# TODO: Fix decimal precision for derived properties
 	
-	if properties.mass == INF and properties.mean_density != INF:
+	if is_inf(properties.mass) and !is_inf(properties.mean_density):
 		properties.mass = (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-	if properties.gm == -INF and properties.mass != INF: # planet table have mass, not GM
+	if is_inf(properties.gm) and !is_inf(properties.mass): # planet table have mass, not GM
 		properties.gm = G * properties.mass
-	if properties.esc_vel == -INF and properties.gm != -INF:
+	if is_inf(properties.esc_vel) and !is_inf(properties.gm):
 		properties.esc_vel = sqrt(2.0 * properties.gm / properties.m_radius)
-	if properties.surface_gravity == -INF and properties.gm != -INF:
+	if is_inf(properties.surface_gravity) and !is_inf(properties.gm):
 		properties.surface_gravity = properties.gm / pow(properties.m_radius, 2.0)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
@@ -166,7 +166,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.rotations = rotations
 	_table_helper.build_object(rotations, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(rotations.right_ascension != -INF and rotations.declination != -INF)
+		assert(!is_inf(rotations.right_ascension) and !is_inf(rotations.declination))
 		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
 				rotations.right_ascension, rotations.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
@@ -196,7 +196,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# reference basis
 	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
 	var rotation_0 := _table_helper.get_real(table_name, "rotate_adj", row)
-	if rotation_0 != 0.0 and rotation_0 != -INF: # skips if 0
+	if rotation_0 and !is_inf(rotation_0):
 		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
 	var rings_prefix := _table_helper.get_string(table_name, "rings", row)

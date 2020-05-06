@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For floats, INF means unknown, -INF means not applicable.
+# For floats: INF means unknown, -INF means not applicable. E.g., all physical
+# bodies have mass & m_radius, but some don't have gm, surface_gravity or
+# e_radius.
 
 class_name Properties
 
@@ -24,7 +26,7 @@ var gm := -INF
 var surface_gravity := -INF
 var esc_vel := -INF
 var m_radius := INF
-var e_radius := INF
+var e_radius := -INF
 var hydrostatic_equilibrium := -1 # Enums.KnowTypes
 var mean_density := INF
 var albedo := -INF

@@ -187,8 +187,8 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	if _ref_plane == "Equatorial":
 		orbit.reference_normal = parent.rotations.north_pole
 	elif _ref_plane == "Laplace":
-		var orbit_ra: float = _table_helper.get_value(table_name, "orbit_RA", table_row)
-		var orbit_dec: float = _table_helper.get_value(table_name, "orbit_dec", table_row)
+		var orbit_ra: float = _table_helper.get_real(table_name, "orbit_RA", table_row)
+		var orbit_dec: float = _table_helper.get_real(table_name, "orbit_dec", table_row)
 		orbit.reference_normal = math.convert_equatorial_coordinates2(orbit_ra, orbit_dec)
 		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()

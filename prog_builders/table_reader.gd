@@ -16,23 +16,19 @@
 # limitations under the License.
 # *****************************************************************************
 # Reads external data tables (.csv files) and adds results to:
-#    Global.table_data
-#    Global.table_fields
 #    Global.table_rows
+#    Global.table_row_dicts
 #    Global.wiki_titles (if Global.wiki_enabled)
+#    private table containers in TableHelper via init_tables()
 #
 # ivoyager/data/solar_system/*.csv table construction:
-#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING. X-type will be
-#    converted to true (x) or false (blank). For all others, a blank cell
-#    without Defaults value will be converted to null (we use this to test
-#    for missing values!). BOOL is case insensitive. FLOAT converts "E" to
-#    "e" before attempting type cast.
+#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
+#    See tables for examples; see TableHelper for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
 #    replaced with this value.
 #  Units (optional; REAL only!). Reals will be converted from provided units
 #    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS.
 
-extends Reference
 class_name TableReader
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
@@ -57,6 +53,7 @@ var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 var _table_data := {}
 var _table_fields := {}
 var _table_data_types := {}
+var _table_units := {}
 var _table_rows: Dictionary = Global.table_rows
 var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _wiki_titles: Dictionary = Global.wiki_titles
@@ -79,7 +76,7 @@ var _cell: String
 
 func project_init():
 	var table_helper: TableHelper = Global.program.TableHelper
-	table_helper.init_tables(_table_data, _table_fields, _table_data_types)
+	table_helper.init_tables(_table_data, _table_fields, _table_data_types, _table_units)
 
 func import_table_data():
 	print("Reading external data tables...")
@@ -103,6 +100,7 @@ func import_table_data():
 		_table_data[key] = _data
 		_table_fields[key] = _fields
 		_table_data_types[key] = _data_types
+		_table_units[key] = _units
 		_table_row_dicts[key] = _rows
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
@@ -132,10 +130,14 @@ func _read_table() -> void:
 			_read_data_types_line()
 		elif _line_array[0] == "Units":
 			_units = _line_array
+			# TODO: check valid units
 		elif _line_array[0] == "Default":
 			_defaults = _line_array
 		else:
 			assert(_data_types) # required; Units & Defaults lines are optional
+			if !_units:
+				for _i in range(_data_types.size()):
+					_units.append("")
 			_read_data_line()
 		line = file.get_line()
 
@@ -156,6 +158,8 @@ func _read_data_types_line() -> void:
 		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown DataType: " + data_type)
 
 func _read_data_line() -> void:
+	# The only data modification we do here is strip enclosing quotes and
+	# leading underscore. We do some format checks with asserts.
 	var row := _data.size()
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
@@ -169,54 +173,43 @@ func _read_data_line() -> void:
 			continue
 		var column: int = _fields[_field]
 		_cell = _line_array[column]
-		if !_cell and _defaults and _defaults[column]: # impute default
+		if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
+			_cell = _cell.substr(1, _cell.length() - 2)
+		_cell = _cell.lstrip("_")
+		if !_cell and _defaults and _defaults[column]: # set to default
 			_cell = _defaults[column]
-		var data_type: String = _data_types[column]
-		if !_cell: # for all types excpet "X", blank cell w/out default is null!
-			if data_type == "X":
-				row_data[column] = false
+		if !_cell:
+			row_data[column] = ""
 			continue
-		match data_type:
-			"X":
-				assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
-				assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
-				assert(_cell == "x" or _line_error("X type must be x or blank cell"))
-				row_data[column] = true
-			"BOOL":
-				assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
-				if _cell.matchn("true"): # case insensitive
-					row_data[column] = true
-				else:
-					assert(_cell.matchn("false") or _line_error("Expected BOOL (true/false)"))
-					row_data[column] = false
-			"INT":
-				assert(!_units or !_units[column] or _line_error("Expected no Units for INT"))
-				assert(_cell.is_valid_integer() or _line_error("Expected INT"))
-				row_data[column] = int(_cell)
-			"REAL":
-				_cell = _cell.lstrip("_")
-				_cell = _cell.replace("E", "e")
-				assert(_cell.is_valid_float() or _line_error("Expected REAL"))
-				var sig_digits := math.get_str_decimal_precision(_cell)
-				var real := float(_cell)
-				if _units and _units[column]:
-					var unit: String = _units[column]
-					real = unit_defs.conv(real, unit, false, true)
-					real = math.set_decimal_precision(real, sig_digits)
-				row_data[column] = real
-			"STRING", "DATA", "BODY": # store as string
-				assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
-				if _cell.begins_with("\"") and _cell.ends_with("\""): # strip quotes
-					_cell = _cell.substr(1, _cell.length() - 2)
-				row_data[column] = _cell
-				if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
-					assert(!_wiki_titles.has(_row_key))
-					_wiki_titles[_row_key] = _cell
-			_: # must be valid enum name
-				assert(data_type in _enums or _line_error("Non-existent enum " + data_type))
-				assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
-				row_data[column] = _enums[data_type][_cell]
+		assert(_format_test(column))
+		row_data[column] = _cell
+		if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
+			assert(!_wiki_titles.has(_row_key))
+			_wiki_titles[_row_key] = _cell
 	_data.append(row_data)
+
+func _format_test(column: int) -> bool:
+	var data_type: String = _data_types[column]
+	match data_type:
+		"X":
+			assert(!_defaults or !_defaults[column] or _line_error("Expected no Default for X type"))
+			assert(!_units or !_units[column] or _line_error("Expected no Units for X type"))
+			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
+		"BOOL":
+			assert(!_units or !_units[column] or _line_error("Expected no Units for BOOL"))
+			assert(_cell.matchn("true") or _cell.matchn("false") or _line_error("Expected BOOL"))
+		"INT":
+			assert(!_units or !_units[column] or _line_error("Expected no Units for INT"))
+			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
+		"REAL":
+			assert(_cell.replace("E", "e").is_valid_float() or _line_error("Expected REAL"))
+		"STRING", "DATA", "BODY":
+			assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
+		_: # must be valid enum name
+			assert(!_units or !_units[column] or _line_error("Expected no Units for " + data_type))
+			assert(data_type in _enums or _line_error("Non-existent enum dict " + data_type))
+			assert(_enums[data_type].has(_cell) or _line_error("Non-existent enum value " + _cell))
+	return true
 
 func _line_error(msg := "") -> bool:
 	print("ERROR in _read_data_line...")
