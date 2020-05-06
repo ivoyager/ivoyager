@@ -33,19 +33,29 @@ const METER := UnitDefs.METER
 # project var
 var max_lazy := 20
 
+# private
 var _times: Array = Global.times
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
 var _globe_mesh: SphereMesh = Global.globe_mesh
+var _table_helper: TableHelper
 var _globe_wraps_dir: String
 var _models_dir: String
 var _fallback_globe_wrap: Texture
 var _memoized := {}
 var _lazy_tracker := {}
 var _n_lazy := 0
+var _material_fields := {
+	metallic = "metallic",
+	roughness = "roughness",
+	rim_enabled = "rim_enabled",
+	rim = "rim",
+	rim_tint = "rim_tint",
+	flags_unshaded = "unshaded",
+}
+
 
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
+	_table_helper = Global.program.TableHelper
 	_globe_wraps_dir = Global.asset_paths.globe_wraps_dir
 	_models_dir = Global.asset_paths.models_dir
 	_fallback_globe_wrap = Global.assets.fallback_globe_wrap
@@ -71,9 +81,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		is_placeholder := false) -> Spatial:
 	# radii used only for ellipsoid
 	var model: Spatial
-	var row_data: Array = _table_data.models[model_type]
-	var fields: Dictionary = _table_fields.models
-	var is_ellipsoid: bool = row_data[fields.ellipsoid]
+	var is_ellipsoid: bool = _table_helper.get_bool("models", "ellipsoid", model_type)
 	if !is_ellipsoid and !DEBUG_NO_3D_MODELS:
 		# For imported (non-ellipsoid) models, scale is derived from file
 		# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
@@ -93,8 +101,9 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 			# TODO: models that are not PackedScene???
 	if !model:
 		# fallback to ellipsoid model using the common Global.globe_mesh
-		assert(m_radius > 0.0 and e_radius > 0.0)
-		var polar_radius = 3.0 * m_radius - 2.0 * e_radius
+		assert(m_radius > 0.0)
+#		if is_inf(e_radius):
+#			e_radius = m_radius
 		var albedo_texture: Texture = _find_resource(_globe_wraps_dir, file_prefix + ".albedo")
 		if is_placeholder:
 			model = Spatial.new()
@@ -106,17 +115,16 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 			if !albedo_texture:
 				albedo_texture = _fallback_globe_wrap
 			surface.albedo_texture = albedo_texture
-			surface.metallic = row_data[fields.metallic]
-			surface.roughness = row_data[fields.roughness]
-			surface.rim_enabled = row_data[fields.rim_enabled]
-			surface.rim = row_data[fields.rim]
-			surface.rim_tint = row_data[fields.rim_tint]
-			surface.flags_unshaded = row_data[fields.unshaded]
-			if row_data[fields.shadow]:
+			_table_helper.build_object(surface, "models", model_type, _material_fields)
+			if _table_helper.get_bool("models", "shadow", model_type):
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 			else:
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
-		model.scale = Vector3(e_radius, polar_radius, e_radius)
+		if !is_inf(e_radius):
+			var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
+			model.scale = Vector3(e_radius, polar_radius, e_radius)
+		else:
+			model.scale = Vector3(m_radius, m_radius, m_radius)
 		model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return model
 
