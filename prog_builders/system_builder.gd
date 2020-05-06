@@ -28,9 +28,6 @@ var progress_bodies_denominator := 267 # set to something greater than expected
 
 var progress := 0 # for MainProgBar
 var _use_thread: bool = Global.use_threads
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
-var _table_data_types: Dictionary = Global.table_data_types
 var _tree: SceneTree = Global.get_tree()
 var _root: Viewport = _tree.get_root()
 var _universe: Spatial
@@ -39,12 +36,10 @@ var _body_builder: BodyBuilder
 var _minor_bodies_builder: MinorBodiesBuilder
 var _registrar: Registrar
 var _table_helper: TableHelper
-#var _WorldEnvironment_: Script
 var _Camera_: Script
 var _progress_bodies := 0
 var _thread: Thread
 var _camera: Camera
-#var _starfield: WorldEnvironment
 
 
 func project_init():
@@ -72,7 +67,6 @@ func _build_on_thread(_dummy: int) -> void:
 	_add_bodies("planets")
 	_add_bodies("moons")
 	_minor_bodies_builder.build()
-#	_registrar.do_selection_counts_after_system_build()
 	if add_camera:
 		_camera = SaverLoader.make_object_or_scene(_Camera_)
 	call_deferred("_finish_build")
@@ -92,8 +86,7 @@ func _finish_build() -> void:
 	emit_signal("finished")
 
 func _add_bodies(table_name: String) -> void:
-	var data: Array = _table_data[table_name]
-	var n_rows := data.size()
+	var n_rows := _table_helper.get_n_table_rows(table_name)
 	var row := 0
 	while row < n_rows:
 		var parent := _table_helper.get_body(table_name, "parent", row) # null for Sun
@@ -101,7 +94,6 @@ func _add_bodies(table_name: String) -> void:
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
-#		_do_counts(body, selection_item)
 		_progress_bodies += 1
 		# warning-ignore:integer_division
 		progress = 100 * _progress_bodies / progress_bodies_denominator

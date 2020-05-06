@@ -83,10 +83,8 @@ var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
-var table_data := {} # TableReader; arrays of arrays by "moons", "planets", etc.
-var table_fields := {} # TableReader; a dict of columns for each table
-var table_data_types := {} # TableReader; an array for each table
-var table_rows := {} # TableReader; ALL row keys and a dict for each table
+var table_rows := {} # TableReader; row ints for ALL row keys
+var table_row_dicts := {} # TableReader; a row dict for each table
 var wiki_titles := {} # TableReader; all Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
@@ -147,10 +145,6 @@ var asset_paths := {
 	starmap_16k = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # project_init() will load these into assets
-	
-	# DEPRECIATE
-#	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
-	
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",

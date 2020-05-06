@@ -30,8 +30,6 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 # dependencies
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
 var _table_helper: TableHelper
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
@@ -82,38 +80,37 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	star.add_child(hud_points)
 
 func _load_binaries(star: Body) -> void:
-	var group_data: Array = _table_data.asteroid_groups
-	var group_fields: Dictionary = _table_fields.asteroid_groups
-	for row_data in group_data:
-		var group: String = row_data[group_fields.group]
-		if !row_data[group_fields.trojan_of]:
-			_load_group_binaries(star, group, row_data, group_fields)
+	var n_asteroid_groups := _table_helper.get_n_table_rows("asteroid_groups")
+	var row := 0
+	while row < n_asteroid_groups:
+		var group := _table_helper.get_string("asteroid_groups", "group", row)
+		var trojan_of := _table_helper.get_body("asteroid_groups", "trojan_of", row)
+		if !trojan_of:
+			_load_group_binaries(star, group, row)
 		else: # trojans!
 			for l_point in [4, 5]: # split data table JT i!JT4 & JT5
 				var l_group: String = group + str(l_point)
-				_load_group_binaries(star, l_group, row_data, group_fields, l_point)
+				_load_group_binaries(star, l_group, row, l_point, trojan_of)
+		row += 1
 	
-func _load_group_binaries(star: Body, group: String, data: Array, fields: Dictionary,
-		l_point := -1) -> void:
+func _load_group_binaries(star: Body, group: String, table_row: int, l_point := -1,
+		trojan_of: Body = null) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
 	var lagrange_point: LPoint
 	# make the AsteroidGroup
 	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
-#	var asteroid_group: AsteroidGroup = SaverLoader.make_object_or_scene(_AsteroidGroup_)
 	if !is_trojans:
 		asteroid_group.init(star, group)
 	else:
-		var planet_key: String = data[fields.trojan_of]
-		var planet: Body = _registrar.bodies_by_name[planet_key]
-		lagrange_point = _l_point_builder.get_or_make_lagrange_point(planet, l_point)
+		lagrange_point = _l_point_builder.get_or_make_lagrange_point(trojan_of, l_point)
 		assert(lagrange_point)
 		asteroid_group.init_trojans(star, group, lagrange_point)
 	var mag_cutoff := 100.0
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override
 	else:
-		mag_cutoff = data[fields.mag_cutoff]
+		mag_cutoff = _table_helper.get_real("asteroid_groups", "mag_cutoff", table_row)
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:
 			_load_binary(asteroid_group, group, mag_str)

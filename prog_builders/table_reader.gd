@@ -54,11 +54,11 @@ var import := {
 }
 var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
-# global dicts & project values
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
-var _table_data_types: Dictionary = Global.table_data_types
+var _table_data := {}
+var _table_fields := {}
+var _table_data_types := {}
 var _table_rows: Dictionary = Global.table_rows
+var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _enable_wiki: bool = Global.enable_wiki
 var _enums: Script = Global.enums
@@ -78,7 +78,8 @@ var _cell: String
 
 
 func project_init():
-	pass
+	var table_helper: TableHelper = Global.program.TableHelper
+	table_helper.init_tables(_table_data, _table_fields, _table_data_types)
 
 func import_table_data():
 	print("Reading external data tables...")
@@ -102,7 +103,7 @@ func import_table_data():
 		_table_data[key] = _data
 		_table_fields[key] = _fields
 		_table_data_types[key] = _data_types
-		_table_rows[key] = _rows
+		_table_row_dicts[key] = _rows
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
 			_table_rows[item_key] = _rows[item_key]

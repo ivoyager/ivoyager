@@ -20,15 +20,30 @@
 
 class_name TableHelper
 
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
+var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
+var _table_fields: Dictionary # a dict of columns for each table
+var _table_data_types: Dictionary # an array for each table
 var _table_rows: Dictionary = Global.table_rows
+var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _bodies_by_name: Dictionary = Global.bodies_by_name
 var _enums: Script
 
 
 func project_init() -> void:
 	_enums = Global.enums
+
+func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary) -> void:
+	_table_data = table_data
+	_table_fields = table_fields
+	_table_data_types = table_data_types
+
+func get_n_table_rows(table_name: String) -> int:
+	var data: Array = _table_data[table_name]
+	return data.size()
+
+func get_row_key(table_name: String, row: int) -> String:
+	var row_data: Array = _table_data[table_name][row]
+	return row_data[0]
 
 func get_value(table_name: String, field_name: String, row := -1, row_name := ""):
 	# Returns null if missing or field doesn't exist in table.
@@ -47,6 +62,71 @@ func get_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var row_data: Array = data[row]
 	var column = fields[field_name]
 	return row_data[column]
+
+func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
+	# Use for STRING or to get any raw table value
+	# returns "" if missing
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return ""
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	if row_data[column] == null:
+		return ""
+	var value: String = row_data[column]
+	return value
+
+func get_bool(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
+	# returns false if missing
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return false
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	if row_data[column] == null:
+		return false
+	var value: bool = row_data[column]
+	return value
+
+func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# returns -1 if missing
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return -1
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	if row_data[column] == null:
+		return -1
+	var value: int = row_data[column]
+	return value
+
+func get_real(table_name: String, field_name: String, row := -1, row_name := "") -> float:
+	# returns -INF if missing
+	assert((row == -1) != (row_name == ""))
+	var fields: Dictionary = _table_fields[table_name]
+	if !fields.has(field_name):
+		return -INF
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = fields[field_name]
+	if row_data[column] == null:
+		return -INF
+	var value: float = row_data[column]
+	return value
 
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for DataType = "DATA" to get row number (= "type") of the cell item.
@@ -82,9 +162,11 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	var body_key: String = row_data[column]
 	return _bodies_by_name[body_key]
 
-func build_object(object: Object, row_data: Array, fields: Dictionary, data_types: Array,
-		property_fields: Dictionary, required_fields := []) -> void:
-	# This function helps a builder class build an object from table row data.
+func build_object(object: Object, table_name: String, table_row: int, property_fields: Dictionary,
+		required_fields := []) -> void:
+	var fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var row_data: Array = _table_data[table_name][table_row]
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
@@ -104,9 +186,11 @@ func build_object(object: Object, row_data: Array, fields: Dictionary, data_type
 			_:
 				object[property] = value
 
-func build_dictionary(dict: Dictionary, row_data: Array, fields: Dictionary, data_types: Array,
+func build_dictionary(dict: Dictionary, table_name: String, table_row: int,
 		property_fields: Dictionary, required_fields := []) -> void:
-	# This function helps a builder class build a dict from table row data.
+	var fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var row_data: Array = _table_data[table_name][table_row]
 	for property in property_fields:
 		var field: String = property_fields[property]
 		if !fields.has(field):
@@ -126,9 +210,11 @@ func build_dictionary(dict: Dictionary, row_data: Array, fields: Dictionary, dat
 			_:
 				dict[property] = value
 
-func build_flags(flags: int, row_data: Array, fields: Dictionary, flag_fields: Dictionary,
+func build_flags(flags: int, table_name: String, table_row: int, flag_fields: Dictionary,
 		required_fields := []) -> int:
 	# Assumes relevant flag already in off state; only sets for TRUE or x values in table.
+	var fields: Dictionary = _table_fields[table_name]
+	var row_data: Array = _table_data[table_name][table_row]
 	for flag in flag_fields:
 		var field: String = flag_fields[flag]
 		if !fields.has(field):

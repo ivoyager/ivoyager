@@ -75,10 +75,6 @@ var rotations_fields := {
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
-var _table_data_types: Dictionary = Global.table_data_types
-var _table_rows: Dictionary = Global.table_rows
 var _times: Array = Global.times
 var _registrar: Registrar
 var _model_builder: ModelBuilder
@@ -111,17 +107,15 @@ func project_init() -> void:
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
-	var row_data: Array = _table_data[table_name][row]
-	var fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_helper.build_object(body, row_data, fields, data_types, body_fields, body_fields_req)
+	_table_helper.build_object(body, table_name, row, body_fields, body_fields_req)
 	# flags
-	var flags := _table_helper.build_flags(0, row_data, fields, flag_fields)
+	var flags := _table_helper.build_flags(0, table_name, row, flag_fields)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	if row_data[fields.hydrostatic_equilibrium] >= Enums.KnowTypes.PROBABLY:
+	var hydrostatic_equilibrium: int = _table_helper.get_value(table_name, "hydrostatic_equilibrium", row)
+	if hydrostatic_equilibrium >= Enums.KnowTypes.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":
@@ -134,25 +128,27 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 				flags |= BodyFlags.IS_TRUE_PLANET
 		"moons":
 			flags |= BodyFlags.IS_MOON
-			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM or row_data[fields.force_navigator]:
+			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
+					or _table_helper.get_value(table_name, "force_navigator", row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
-#	prints(tr(body.name), flags & BodyFlags.IS_NAVIGATOR_MOON)
 	body.flags = flags
 	# orbit
 	var time: float = _times[0]
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
-		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
+		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.orbit = orbit
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
-	_table_helper.build_object(properties, row_data, fields, data_types, properties_fields,
-			properties_fields_req)
+	_table_helper.build_object(properties, table_name, row, properties_fields, properties_fields_req)
 	# imputed properties (keep correct precision!)
 	if properties.e_radius == INF:
 		properties.e_radius = properties.m_radius
 	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
+	
+	# TODO: Fix decimal precision for derived properties
+	
 	if properties.mass == INF and properties.mean_density != INF:
 		properties.mass = (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
 	if properties.gm == -INF and properties.mass != INF: # planet table have mass, not GM
@@ -168,7 +164,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# intentionally flipped.
 	var rotations: Rotations = _Rotations_.new()
 	body.rotations = rotations
-	_table_helper.build_object(rotations, row_data, fields, data_types, rotations_fields)
+	_table_helper.build_object(rotations, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(rotations.right_ascension != -INF and rotations.declination != -INF)
 		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
@@ -199,12 +195,14 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
 	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
-	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skips if 0
-		body.reference_basis = body.reference_basis.rotated(rotations.north_pole,
-				row_data[fields.rotate_adj])
+	var rotation_0 := _table_helper.get_real(table_name, "rotate_adj", row)
+	if rotation_0 != 0.0 and rotation_0 != -INF: # skips if 0
+		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
-	if fields.has("rings") and row_data[fields.rings]:
-		body.rings_info = [row_data[fields.rings], row_data[fields.rings_outer_radius]]
+	var rings_prefix := _table_helper.get_string(table_name, "rings", row)
+	if rings_prefix:
+		var rings_radius := _table_helper.get_real(table_name, "rings_outer_radius", row)
+		body.rings_info = [rings_prefix, rings_radius]
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
