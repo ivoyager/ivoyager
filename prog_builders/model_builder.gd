@@ -26,7 +26,6 @@ class_name ModelBuilder
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-const DEBUG_NO_3D_MODELS := false
 const MODEL_TOO_FAR_RADIUS_MULTIPLIER := 1e3
 const METER := UnitDefs.METER
 
@@ -81,51 +80,50 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		is_placeholder := false) -> Spatial:
 	# radii used only for ellipsoid
 	var model: Spatial
+	# For imported models, scale is derived from file
+	# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
+	# meters. Absence of scale suffix indicates units of 1 meter.
+	var resource_file := _find_and_load_resource_file(_models_dir, file_prefix)
 	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
-	if !is_ellipsoid and !DEBUG_NO_3D_MODELS:
-		# For imported (non-ellipsoid) models, scale is derived from file
-		# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
-		# meters. Absence of scale suffix indicates units of 1 meter.
-		var resource_file := _find_and_load_resource_file(_models_dir, file_prefix)
-		# TODO: fallback_model (for now, we fallthrough to ellipsoid)
-		if resource_file:
-			var resource: Resource = _memoized[resource_file]
-			if resource is PackedScene:
-				if is_placeholder:
-					model = Spatial.new()
-				else:
-					model = resource.instance() # model is the base of a scene
-				var per_meter_scale := file_utils.get_scale_from_file_path(resource_file)
-				model.scale = Vector3.ONE * METER / per_meter_scale
-				model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
-			# TODO: models that are not PackedScene???
-	if !model:
-		# fallback to ellipsoid model using the common Global.globe_mesh
-		assert(m_radius > 0.0)
-#		if is_inf(e_radius):
-#			e_radius = m_radius
-		var albedo_texture: Texture = _find_resource(_globe_wraps_dir, file_prefix + ".albedo")
-		if is_placeholder:
-			model = Spatial.new()
-		else:
-			model = MeshInstance.new() # this is the return Spatial
-			model.mesh = _globe_mesh
-			var surface := SpatialMaterial.new()
-			model.set_surface_material(0, surface)
-			if !albedo_texture:
-				albedo_texture = _fallback_globe_wrap
-			surface.albedo_texture = albedo_texture
-			_table_reader.build_object(surface, "models", model_type, _material_fields)
-			if _table_reader.get_bool("models", "shadow", model_type):
-				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
+	if !resource_file and !is_ellipsoid:
+		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
+		pass
+	if resource_file:
+		var resource: Resource = _memoized[resource_file]
+		if resource is PackedScene:
+			if is_placeholder:
+				model = Spatial.new()
 			else:
-				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
-		if !is_inf(e_radius):
-			var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
-			model.scale = Vector3(e_radius, polar_radius, e_radius)
+				model = resource.instance() # model is the base of a scene
+			var per_meter_scale := file_utils.get_scale_from_file_path(resource_file)
+			model.scale = Vector3.ONE * METER / per_meter_scale
+			model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
+			return model
+		# TODO: models that are not PackedScene???
+	# fallthrough to ellipsoid model using the common Global.globe_mesh
+	assert(m_radius > 0.0)
+	var albedo_texture: Texture = _find_resource(_globe_wraps_dir, file_prefix + ".albedo")
+	if is_placeholder:
+		model = Spatial.new()
+	else:
+		model = MeshInstance.new() # this is the return Spatial
+		model.mesh = _globe_mesh
+		var surface := SpatialMaterial.new()
+		model.set_surface_material(0, surface)
+		if !albedo_texture:
+			albedo_texture = _fallback_globe_wrap
+		surface.albedo_texture = albedo_texture
+		_table_reader.build_object(surface, "models", model_type, _material_fields)
+		if _table_reader.get_bool("models", "shadow", model_type):
+			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 		else:
-			model.scale = Vector3(m_radius, m_radius, m_radius)
-		model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
+			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
+	if !is_inf(e_radius):
+		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
+		model.scale = Vector3(e_radius, polar_radius, e_radius)
+	else:
+		model.scale = Vector3(m_radius, m_radius, m_radius)
+	model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return model
 
 func _clear_procedural() -> void:

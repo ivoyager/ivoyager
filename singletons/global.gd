@@ -162,7 +162,7 @@ var shaders := {
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.5"
+var ivoyager_version := "0.0.6 dev"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
