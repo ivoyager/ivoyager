@@ -40,16 +40,13 @@ signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
 
-# camera broadcasts
-signal camera_ready(camera)
-
-signal mouse_clicked_viewport_at(position, camera, is_left_click)
-
 # other broadcasts
 signal setting_changed(setting, value)
-signal gui_entered_tree(control)
-signal gui_ready(control)
+signal gui_entered_tree(control) # depreciate?
+signal gui_ready(control) # depreciate?
 signal environment_created(environment, is_world_env)
+signal camera_ready(camera)
+signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # sim state control
 signal sim_stop_required(who) # see Main for external thread coordination
@@ -83,11 +80,9 @@ var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
-var table_data := {} # TableReader; arrays of arrays by "moons", "planets", etc.
-var table_fields := {} # TableReader; a dict of columns for each table
-var table_data_types := {} # TableReader; an array for each table
-var table_rows := {} # TableReader; ALL row keys and a dict for each table
-var wiki_titles := {} # TableReader; all Wiki url identifiers by item key
+var table_rows := {} # TableImporter; row ints for ALL row keys
+var table_row_dicts := {} # TableImporter; a row dict for each table
+var wiki_titles := {} # TableImporter; all Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
@@ -122,6 +117,8 @@ var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 200.0 * UnitDefs.AU
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
+var unit_multipliers := UnitDefs.MULTIPLIERS
+var unit_functions := UnitDefs.FUNCTIONS
 
 var colors := { # user settable are in SettingsManager
 	normal = Color.white,
@@ -147,10 +144,6 @@ var asset_paths := {
 	starmap_16k = "res://ivoyager_assets/starfields/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # project_init() will load these into assets
-	
-	# DEPRECIATE
-#	starfield = "res://ivoyager_assets/starfields/starmap_16k.jpg",
-	
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
@@ -169,7 +162,7 @@ var shaders := {
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.5"
+var ivoyager_version := "0.0.6 dev"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false

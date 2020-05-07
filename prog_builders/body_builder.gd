@@ -75,10 +75,6 @@ var rotations_fields := {
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _settings: Dictionary = Global.settings
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
-var _table_data_types: Dictionary = Global.table_data_types
-var _table_rows: Dictionary = Global.table_rows
 var _times: Array = Global.times
 var _registrar: Registrar
 var _model_builder: ModelBuilder
@@ -87,7 +83,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _Body_: Script
 var _Rotations_: Script
 var _Properties_: Script
@@ -104,24 +100,22 @@ func project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
 	_Rotations_ = Global.script_classes._Rotations_
 	_Properties_ = Global.script_classes._Properties_
 	_texture_2d_dir = Global.asset_paths.texture_2d_dir
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
-	var row_data: Array = _table_data[table_name][row]
-	var fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_helper.build_object(body, row_data, fields, data_types, body_fields, body_fields_req)
+	_table_reader.build_object(body, table_name, row, body_fields, body_fields_req)
 	# flags
-	var flags := _table_helper.build_flags(0, row_data, fields, flag_fields)
+	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	if row_data[fields.hydrostatic_equilibrium] >= Enums.KnowTypes.PROBABLY:
+	var hydrostatic_equilibrium: int = _table_reader.get_enum(table_name, "hydrostatic_equilibrium", row)
+	if hydrostatic_equilibrium >= Enums.KnowTypes.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":
@@ -134,33 +128,54 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 				flags |= BodyFlags.IS_TRUE_PLANET
 		"moons":
 			flags |= BodyFlags.IS_MOON
-			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM or row_data[fields.force_navigator]:
+			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
+					or _table_reader.get_bool(table_name, "force_navigator", row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
-#	prints(tr(body.name), flags & BodyFlags.IS_NAVIGATOR_MOON)
 	body.flags = flags
 	# orbit
 	var time: float = _times[0]
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
-		orbit = _orbit_builder.make_orbit_from_data(parent, row_data, fields, data_types, time)
+		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.orbit = orbit
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
-	_table_helper.build_object(properties, row_data, fields, data_types, properties_fields,
-			properties_fields_req)
-	# imputed properties (keep correct precision!)
-	if properties.e_radius == INF:
-		properties.e_radius = properties.m_radius
-	body.system_radius = properties.e_radius * 10.0 # widens if satalletes are added
-	if properties.mass == INF and properties.mean_density != INF:
-		properties.mass = (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-	if properties.gm == -INF and properties.mass != INF: # planet table have mass, not GM
-		properties.gm = G * properties.mass
-	if properties.esc_vel == -INF and properties.gm != -INF:
-		properties.esc_vel = sqrt(2.0 * properties.gm / properties.m_radius)
-	if properties.surface_gravity == -INF and properties.gm != -INF:
-		properties.surface_gravity = properties.gm / pow(properties.m_radius, 2.0)
+	_table_reader.build_object(properties, table_name, row, properties_fields, properties_fields_req)
+	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
+	if is_inf(properties.mass):
+		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
+		if sig_digits > 1:
+			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
+			properties.mass = math.set_decimal_precision(mass, sig_digits)
+	if is_inf(properties.gm): # planets table has mass, not GM
+		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
+		if sig_digits > 1:
+			if sig_digits > 6:
+				sig_digits = 6 # limited by G precision
+			var gm := G * properties.mass
+			properties.gm = math.set_decimal_precision(gm, sig_digits)
+	if is_inf(properties.esc_vel) or is_inf(properties.surface_gravity):
+		if _table_reader.is_value(table_name, "GM", row):
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
+			if sig_digits > 2:
+				if is_inf(properties.esc_vel):
+					var esc_vel := sqrt(2.0 * properties.gm / properties.m_radius)
+					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_inf(properties.surface_gravity):
+					var surface_gravity := properties.gm / pow(properties.m_radius, 2.0)
+					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+		else: # planet w/ mass
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
+			if sig_digits > 2:
+				if is_inf(properties.esc_vel):
+					if sig_digits > 6:
+						sig_digits = 6
+					var esc_vel := sqrt(2.0 * G * properties.mass / properties.m_radius)
+					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_inf(properties.surface_gravity):
+					var surface_gravity := G * properties.mass / pow(properties.m_radius, 2.0)
+					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
@@ -168,9 +183,9 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# intentionally flipped.
 	var rotations: Rotations = _Rotations_.new()
 	body.rotations = rotations
-	_table_helper.build_object(rotations, row_data, fields, data_types, rotations_fields)
+	_table_reader.build_object(rotations, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(rotations.right_ascension != -INF and rotations.declination != -INF)
+		assert(!is_inf(rotations.right_ascension) and !is_inf(rotations.declination))
 		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
 				rotations.right_ascension, rotations.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
@@ -199,12 +214,14 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
 	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
-	if fields.has("rotate_adj") and row_data[fields.rotate_adj]: # skips if 0
-		body.reference_basis = body.reference_basis.rotated(rotations.north_pole,
-				row_data[fields.rotate_adj])
+	var rotation_0 := _table_reader.get_real(table_name, "rotate_adj", row)
+	if rotation_0 and !is_inf(rotation_0):
+		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
-	if fields.has("rings") and row_data[fields.rings]:
-		body.rings_info = [row_data[fields.rings], row_data[fields.rings_outer_radius]]
+	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
+	if rings_prefix:
+		var rings_radius := _table_reader.get_real(table_name, "rings_outer_radius", row)
+		body.rings_info = [rings_prefix, rings_radius]
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
@@ -214,6 +231,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		_registrar.register_top_body(body)
 	_registrar.register_body(body)
 	_selection_builder.build_and_register(body, parent)
+	body.hide()
 	return body
 
 func _init_unpersisted(_is_new_game: bool) -> void:

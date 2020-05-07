@@ -69,7 +69,7 @@ var show_data := [
 ]
 
 onready var _qty_strings: QtyStrings = Global.program.QtyStrings
-var _table_data: Dictionary = Global.table_data
+onready var _table_reader: TableReader = Global.program.TableReader
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
 var _labels := []
@@ -165,8 +165,7 @@ func _on_selection_changed() -> void:
 					match show_datum[2]:
 						TABLE_ROW:
 							var table_name: String = show_datum[3]
-							var data: Array = _table_data[table_name]
-							key = data[value][0]
+							key = _table_reader.get_row_key(table_name, value)
 							value_str = tr(key)
 						ENUM:
 							var enum_name: String = show_datum[3]

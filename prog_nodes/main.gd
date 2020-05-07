@@ -249,9 +249,9 @@ func _on_ready() -> void:
 
 func _import_table_data() -> void:
 	yield(_tree, "idle_frame")
-	var table_reader: TableReader = Global.program.TableReader
-	table_reader.import_table_data()
-	Global.program.erase("TableReader")
+	var table_importer: TableImporter = Global.program.TableImporter
+	table_importer.import_table_data()
+	Global.program.erase("TableImporter")
 	Global.emit_signal("table_data_imported")
 
 func _finish_init() -> void:

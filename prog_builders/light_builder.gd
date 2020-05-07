@@ -21,19 +21,16 @@ class_name LightBuilder
 
 const METER := UnitDefs.METER
 
-var _table_data: Dictionary = Global.table_data
-var _table_fields: Dictionary = Global.table_fields
+var _table_reader: TableReader
 
 
 func project_init() -> void:
-	pass
+	_table_reader = Global.program.TableReader
 
 func add_starlight(body: Body) -> void:
 	if body.light_type != -1:
 		var starlight := OmniLight.new()
-		var row_data: Array = _table_data.lights[body.light_type]
-		var fields: Dictionary = _table_fields.lights
-		starlight.omni_range = row_data[fields.omni_range]
+		var light_type: int = body.light_type
+		starlight.omni_range = _table_reader.get_real("lights", "omni_range", light_type)
 		starlight.name = "Starlight"
 		body.add_child(starlight)
-

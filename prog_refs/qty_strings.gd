@@ -59,8 +59,6 @@ enum { # option_type for number_option()
 const LOG_OF_10 := log(10.0)
 
 # project vars
-var multipliers := unit_defs.MULTIPLIERS # or set to your own dictionary
-var functions := unit_defs.FUNCTIONS
 var exp_str := "e" # e.g., set to "E", "x10^", " x 10^"
 var prefix_names := [
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
@@ -196,8 +194,12 @@ var _prefix_offset: int
 var _n_lg_numbers: int
 var _format2 := [null, null] # scratch array
 var _format4 := [null, null, null, null] # scratch array
+var _multipliers: Dictionary
+var _functions: Dictionary
 
 func project_init():
+	_multipliers = Global.unit_multipliers
+	_functions = Global.unit_functions
 	_n_prefixes = prefix_symbols.size()
 	assert(_n_prefixes == prefix_names.size())
 	_prefix_offset = prefix_symbols.find("")
@@ -333,7 +335,7 @@ func number_unit(x: float, unit: String, sig_digits := -1, num_type := NUM_DYNAM
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/unit_defs.gd)
 	if sig_digits == -1:
 		sig_digits = math.get_decimal_precision(x)
-	x = unit_defs.conv(x, unit, true, false, multipliers, functions)
+	x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
 	var number_str := number(x, sig_digits, num_type)
 	if long_form and long_forms.has(unit):
 		unit = tr(long_forms[unit])
@@ -357,7 +359,7 @@ func number_prefixed_unit(x: float, unit: String, sig_digits := -1, num_type := 
 	if sig_digits == -1:
 		sig_digits = math.get_decimal_precision(x)
 	if unit:
-		x = unit_defs.conv(x, unit, true, false, multipliers, functions)
+		x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
 	var exp_div_3 := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
 	var si_index := exp_div_3 + _prefix_offset
 	if si_index < 0:

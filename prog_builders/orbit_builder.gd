@@ -81,19 +81,17 @@ var _Pnode := -INF
 var _ref_plane := ""
 
 # project inits
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
 
 func project_init() -> void:
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_Orbit_ = Global.script_classes._Orbit_
 	_dynamic_orbits = Global.dynamic_orbits
 
-func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, data_types: Array,
-		time: float) -> Orbit:
-	assert(DPRINT and prints("make_orbit_from_data", tr(row_data[0]), parent, time) or true)
+func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> Orbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
@@ -121,7 +119,7 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, dat
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	_table_helper.build_object(self, row_data, fields, data_types, property_fields)
+	_table_reader.build_object(self, table_name, table_row, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.properties.gm
 	if _w == -INF:
@@ -185,14 +183,13 @@ func make_orbit_from_data(parent: Body, row_data: Array, fields: Dictionary, dat
 			var w_pps: float = element_rates[4] / TAU
 			var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
 			orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
-			assert(DPRINT and prints("update_frequency", tr(row_data[0]),
-					orbit.update_frequency) or true)
 	# reference plane (moons!)
 	if _ref_plane == "Equatorial":
 		orbit.reference_normal = parent.rotations.north_pole
 	elif _ref_plane == "Laplace":
-		orbit.reference_normal = math.convert_equatorial_coordinates2(
-				row_data[fields.orbit_RA], row_data[fields.orbit_dec])
+		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
+		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)
+		orbit.reference_normal = math.convert_equatorial_coordinates2(orbit_ra, orbit_dec)
 		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
 	elif _ref_plane:

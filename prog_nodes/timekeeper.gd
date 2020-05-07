@@ -273,7 +273,10 @@ func _set_init_state() -> void:
 	_signal_infos.clear()
 	_signal_engine_times.clear()
 	_signal_engine_times.append(INF)
-	time = Global.start_time
+	if start_real_world_time:
+		time = get_real_world_time()
+	else:
+		time = Global.start_time
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
