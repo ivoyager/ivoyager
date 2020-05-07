@@ -34,10 +34,10 @@ var max_lazy := 20
 
 # private
 var _times: Array = Global.times
+var _models_search := Global.models_search
+var _textures_search := Global.textures_search
 var _globe_mesh: SphereMesh = Global.globe_mesh
 var _table_reader: TableReader
-var _globe_wraps_dir: String
-var _models_dir: String
 var _fallback_globe_wrap: Texture
 var _memoized := {}
 var _lazy_tracker := {}
@@ -55,8 +55,6 @@ var _material_fields := {
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
 	_table_reader = Global.program.TableReader
-	_globe_wraps_dir = Global.asset_paths.globe_wraps_dir
-	_models_dir = Global.asset_paths.models_dir
 	_fallback_globe_wrap = Global.assets.fallback_globe_wrap
 
 func add_model(body: Body, lazy_init: bool) -> void:
@@ -83,7 +81,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 	# For imported models, scale is derived from file
 	# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
 	# meters. Absence of scale suffix indicates units of 1 meter.
-	var resource_file := _find_and_load_resource_file(_models_dir, file_prefix)
+	var resource_file := _find_and_load_resource_file(_models_search, file_prefix)
 	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
 	if !resource_file and !is_ellipsoid:
 		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
@@ -102,7 +100,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		# TODO: models that are not PackedScene???
 	# fallthrough to ellipsoid model using the common Global.globe_mesh
 	assert(m_radius > 0.0)
-	var albedo_texture: Texture = _find_resource(_globe_wraps_dir, file_prefix + ".albedo")
+	var albedo_texture: Texture = _find_resource(_textures_search, file_prefix + ".albedo")
 	if is_placeholder:
 		model = Spatial.new()
 	else:
@@ -115,9 +113,11 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		surface.albedo_texture = albedo_texture
 		_table_reader.build_object(surface, "models", model_type, _material_fields)
 		if _table_reader.get_bool("models", "shadow", model_type):
-			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
 		else:
-			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+		# FIXME! Should cast shadows, but it doesn't...
+#		prints(model.cast_shadow, surface.flags_do_not_receive_shadows)
 	if !is_inf(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)
@@ -175,19 +175,27 @@ func _cull_lazy() -> void:
 			_lazy_uninit(model)
 
 # below memoized to prevent file searching and loading at runtime...
-func _find_resource(dir_path: String, file_prefix: String) -> Resource:
-	var key := dir_path + file_prefix
+func _find_resource(dir_paths: Array, file_prefix: String) -> Resource:
+	var key := file_prefix + "@"
 	if _memoized.has(key):
 		return _memoized[key]
-	var resource: Resource = file_utils.find_resource(dir_path, file_prefix)
+	var resource: Resource
+	for dir_path in dir_paths:
+		resource = file_utils.find_resource(dir_path, file_prefix)
+		if resource:
+			break
 	_memoized[key] = resource # could be null
 	return resource
 
-func _find_and_load_resource_file(dir_path: String, file_prefix: String) -> String:
-	var key := dir_path + file_prefix
+func _find_and_load_resource_file(dir_paths: Array, file_prefix: String) -> String:
+	var key := file_prefix + "&"
 	if _memoized.has(key):
 		return _memoized[key]
-	var file_str: String = file_utils.find_resource_file(dir_path, file_prefix)
+	var file_str: String
+	for dir_path in dir_paths:
+		file_str = file_utils.find_resource_file(dir_path, file_prefix)
+		if file_str:
+			break
 	_memoized[key] = file_str # could be ""
 	if file_str:
 		_memoized[file_str] = load(file_str)

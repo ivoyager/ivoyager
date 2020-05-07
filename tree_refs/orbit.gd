@@ -101,7 +101,7 @@ func get_anomaly_for_camera(time: float) -> float:
 	return anomaly
 
 func get_position(time: float) -> Vector3:
-	# returns scaled values, not km!
+	# returns Vector3(x, y, z)
 	var elements := _get_elements(time)
 	var R := get_position_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
@@ -109,17 +109,18 @@ func get_position(time: float) -> Vector3:
 	return R
 
 func get_vectors(time: float) -> Array:
+	# returns [Vector3(x, y, z), Vector3(vx, vy, vz)]
 	# NOT TESTED!
 	var elements := _get_elements(time)
 	var RV := get_vectors_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
 		RV[0] = math.rotate_vector_pole(RV[0], reference_normal)
 		RV[1] = math.rotate_vector_pole(RV[1], reference_normal)
-	return RV # [translation, velocity_vector]
+	return RV
 
 func get_elements(time: float) -> Array:
 	var elements := _get_elements(time)
-	return elements.duplicate() 
+	return elements.duplicate() # safe
 
 static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	# Derived from https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf. However,
@@ -194,8 +195,8 @@ static func get_vectors_from_elements(elements: Array, time: float) -> Array:
 	return [Vector3(x, y, z), Vector3(vx, vy, vz)]
 
 static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: float) -> Array:
+	# returns an elements array
 	# NOT TESTED!!!
-	# Returns an elements array. Args must be scaled!
 	var h_bar: Vector3 = R.cross(V)
 	var h := h_bar.length()
 	var r := R.length()

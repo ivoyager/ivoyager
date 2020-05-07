@@ -122,10 +122,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 			flags |= BodyFlags.IS_STAR
 			if flags & BodyFlags.IS_TOP:
 				flags |= BodyFlags.IS_PRIMARY_STAR
+			flags |= BodyFlags.FORCE_PROCESS
 		"planets":
 			flags |= BodyFlags.IS_STAR_ORBITING
 			if not flags & BodyFlags.IS_DWARF_PLANET:
 				flags |= BodyFlags.IS_TRUE_PLANET
+			flags |= BodyFlags.FORCE_PROCESS
 		"moons":
 			flags |= BodyFlags.IS_MOON
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
@@ -255,7 +257,7 @@ func _build_unpersisted(body: Body) -> void:
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
-		_light_builder.add_starlight(body)
+		_light_builder.add_omnilight(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
 	_huds_builder.add_icon(body)

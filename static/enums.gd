@@ -54,24 +54,29 @@ enum BodyFlags {
 	IS_MOON = 0b10000,
 	IS_ASTEROID = 0b100000,
 	IS_COMET = 0b1000000,
-	IS_SPACECRAFT = 0b1 * 0x100,
+	IS_SPACECRAFT = 0b10000000,
 	# properties (3 bytes reserved)
-	IS_TOP = 0b1 * 0x10000, # is in Registar.top_bodies
-	PROXY_STAR_SYSTEM = 0b10 * 0x10000, # top star or barycenter of system
-	IS_PRIMARY_STAR = 0b100 * 0x10000,
-	IS_STAR_ORBITING = 0b1000 * 0x10000,
-	IS_TIDALLY_LOCKED = 0b10000 * 0x10000,
-	IS_NAVIGATOR_MOON = 0b100000 * 0x10000, # show in system navigator
-	LIKELY_HYDROSTATIC_EQUILIBRIUM = 0b1000000 * 0x10000, # used for moon orbit color
-#	XXX = 0b10000000 * 0x10000,
+	FORCE_PROCESS = 0b1 * 0x10000, # Not implemented!: this body & all above it always process
+	IS_TOP = 0b10 * 0x10000, # is in Registar.top_bodies
+	PROXY_STAR_SYSTEM = 0b100 * 0x10000, # top star or barycenter of system
+	IS_PRIMARY_STAR = 0b1000 * 0x10000,
+	IS_STAR_ORBITING = 0b10000 * 0x10000,
+	IS_TIDALLY_LOCKED = 0b100000 * 0x10000,
+	IS_NAVIGATOR_MOON = 0b1000000 * 0x10000, # show in system navigator
+	LIKELY_HYDROSTATIC_EQUILIBRIUM = 0b10000000 * 0x10000, # for moon orbit color
 	HAS_ATMOSPHERE = 0b1 * 0x1000000,
-	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km"
-	APPROX_GM = 0b100 * 0x1000000,
+#	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km" (TODO)
+#	APPROX_GM = 0b100 * 0x1000000,
 	# First 5 bytes reserved: 0b1 to 0b10000000 * 0x100000000
 	# It's *probably* safe for extension to use bytes 6 to 8:
 	#     0b1 * 0x10000000000 to 0b10000000 * 0x100000000000000
 	# But more safe to extend Body and add your own flags_ext property!
 }
+
+# We can reference Godot classes here so TableReader has access to their enums
+# e.g.,
+# const GeometryInstance := GeometryInstance
+# This should work but isn't tested yet...
 
 static func get_reverse_enum(enum_name: String, value: int) -> String:
 	# This is not fast! intended mostly for GUI
