@@ -108,7 +108,7 @@ func import_table_data() -> void:
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
 			_table_rows[item_key] = _rows[item_key]
-	print("Imported ", _count, " table values (", _values.size(), " unique)...")
+	print("Imported ", _count, " table values (", _values.size(), " unique strings)...")
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)

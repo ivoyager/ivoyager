@@ -113,9 +113,11 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		surface.albedo_texture = albedo_texture
 		_table_reader.build_object(surface, "models", model_type, _material_fields)
 		if _table_reader.get_bool("models", "shadow", model_type):
-			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
 		else:
-			model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+		# FIXME! Should cast shadows, but it doesn't...
+#		prints(model.cast_shadow, surface.flags_do_not_receive_shadows)
 	if !is_inf(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)

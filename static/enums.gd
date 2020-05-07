@@ -73,6 +73,11 @@ enum BodyFlags {
 	# But more safe to extend Body and add your own flags_ext property!
 }
 
+# We can reference Godot classes here so TableReader has access to their enums
+# e.g.,
+# const GeometryInstance := GeometryInstance
+# This should work but isn't tested yet...
+
 static func get_reverse_enum(enum_name: String, value: int) -> String:
 	# This is not fast! intended mostly for GUI
 	var dict: Dictionary = Global.enums[enum_name]

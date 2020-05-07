@@ -257,7 +257,7 @@ func _build_unpersisted(body: Body) -> void:
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
-		_light_builder.add_starlight(body)
+		_light_builder.add_omnilight(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
 	_huds_builder.add_icon(body)

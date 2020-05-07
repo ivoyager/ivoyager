@@ -51,3 +51,5 @@ func add_rings(body: Body) -> void:
 	body.aux_graphic = rings
 	body.aux_graphic_too_far = radius * RINGS_TOO_FAR_RADIUS_MULTIPLIER
 	body.add_child(rings)
+	# FIXME! Should cast shadows, but it doesn't...
+#	prints(rings.cast_shadow, rings_material.flags_do_not_receive_shadows)

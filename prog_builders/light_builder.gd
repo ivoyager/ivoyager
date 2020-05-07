@@ -23,14 +23,17 @@ const METER := UnitDefs.METER
 
 var _table_reader: TableReader
 
-
 func project_init() -> void:
 	_table_reader = Global.program.TableReader
 
-func add_starlight(body: Body) -> void:
+func add_omnilight(body: Body) -> void:
 	if body.light_type != -1:
-		var starlight := OmniLight.new()
+		var omnilight := OmniLight.new()
 		var light_type: int = body.light_type
-		starlight.omni_range = _table_reader.get_real("lights", "omni_range", light_type)
-		starlight.name = "Starlight"
-		body.add_child(starlight)
+		omnilight.shadow_enabled = true
+#		omnilight.shadow_bias = 0.05
+		omnilight.omni_range = _table_reader.get_real("lights", "omni_range", light_type)
+		omnilight.name = "Starlight"
+		body.add_child(omnilight)
+		
+#		print(omnilight.shadow_enabled)
