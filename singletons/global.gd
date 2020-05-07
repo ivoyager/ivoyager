@@ -129,14 +129,34 @@ var colors := { # user settable are in SettingsManager
 
 var planetary_system_dir := "res://ivoyager/data/solar_system"
 
+# We search for assets based on "file_prefix" and sometimes other name elements
+# like "albedo". To build a model, ModelBuilder first looks for an existing
+# model in model_paths (1st path element to last). Failing that, it will use
+# a premade generic mesh (e.g., globe_mesh) and search for textures in
+# texture_paths. If it can't find "<file_prifix>.albedo", then it will use the
+# generic grey grid. Invalid paths are erased at project init.
+# Modify array content below to alter search paths.
+
+var models_search := [
+	"res://ivoyager_assets/models",
+	"res://ivoyager_assets_web/models",
+]
+var textures_search := [
+	"res://ivoyager_assets/globe_wraps",
+	"res://ivoyager_assets_web/globe_wraps",
+]
+
+# Note: some paths below will likely be depreciated in favor of fallthough
+# systems as above.
+
 # The ivoyager_assets directory may be replaced by project or in specific
 # deployments. E.g., we set asset_replacement_dir = "ivoyager_assets_web" for
 # web deployment of the Planetarium.
 var asset_replacement_dir := "" 
 var asset_paths := {
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
-	models_dir = "res://ivoyager_assets/models",
-	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
+#	models_dir = "res://ivoyager_assets/models",
+#	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
 	rings_dir = "res://ivoyager_assets/rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
@@ -176,6 +196,9 @@ var _ivoyager_version := ivoyager_version
 
 func project_init() -> void:
 	# This is the first of all project_init() calls.
+	_erase_invalid_dir_paths(models_search)
+	_erase_invalid_dir_paths(textures_search)
+
 	prints(project_name, ivoyager_version, project_version)
 	if asset_replacement_dir:
 		for dict in [asset_paths, asset_paths_for_load]:
@@ -195,3 +218,14 @@ func check_load_version() -> void:
 
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
+
+func _erase_invalid_dir_paths(dir_array: Array) -> void:
+	var dir := Directory.new()
+	var index := dir_array.size() - 1
+	while index >= 0:
+		var dir_path: String = dir_array[index]
+		if dir.open(dir_path) != OK:
+			dir_array.remove(index)
+		index -= 1
+			
+		
