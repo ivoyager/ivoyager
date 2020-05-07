@@ -36,7 +36,7 @@ var max_lazy := 20
 # private
 var _times: Array = Global.times
 var _globe_mesh: SphereMesh = Global.globe_mesh
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _globe_wraps_dir: String
 var _models_dir: String
 var _fallback_globe_wrap: Texture
@@ -55,7 +55,7 @@ var _material_fields := {
 
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_globe_wraps_dir = Global.asset_paths.globe_wraps_dir
 	_models_dir = Global.asset_paths.models_dir
 	_fallback_globe_wrap = Global.assets.fallback_globe_wrap
@@ -81,7 +81,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		is_placeholder := false) -> Spatial:
 	# radii used only for ellipsoid
 	var model: Spatial
-	var is_ellipsoid: bool = _table_helper.get_bool("models", "ellipsoid", model_type)
+	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
 	if !is_ellipsoid and !DEBUG_NO_3D_MODELS:
 		# For imported (non-ellipsoid) models, scale is derived from file
 		# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
@@ -115,8 +115,8 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 			if !albedo_texture:
 				albedo_texture = _fallback_globe_wrap
 			surface.albedo_texture = albedo_texture
-			_table_helper.build_object(surface, "models", model_type, _material_fields)
-			if _table_helper.get_bool("models", "shadow", model_type):
+			_table_reader.build_object(surface, "models", model_type, _material_fields)
+			if _table_reader.get_bool("models", "shadow", model_type):
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 			else:
 				model.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_OFF

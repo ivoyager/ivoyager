@@ -35,7 +35,7 @@ var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _minor_bodies_builder: MinorBodiesBuilder
 var _registrar: Registrar
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _Camera_: Script
 var _progress_bodies := 0
 var _thread: Thread
@@ -48,7 +48,7 @@ func project_init():
 	_body_builder = Global.program.BodyBuilder
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
 	_registrar = Global.program.Registrar
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	if add_camera:
 		_Camera_ = Global.script_classes._Camera_
 
@@ -86,10 +86,10 @@ func _finish_build() -> void:
 	emit_signal("finished")
 
 func _add_bodies(table_name: String) -> void:
-	var n_rows := _table_helper.get_n_table_rows(table_name)
+	var n_rows := _table_reader.get_n_table_rows(table_name)
 	var row := 0
 	while row < n_rows:
-		var parent := _table_helper.get_body(table_name, "parent", row) # null for Sun
+		var parent := _table_reader.get_body(table_name, "parent", row) # null for Sun
 		var body := _body_builder.build_from_table(table_name, row, parent)
 		if parent:
 			parent.add_child(body)

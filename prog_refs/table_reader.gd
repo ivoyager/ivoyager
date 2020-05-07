@@ -1,4 +1,4 @@
-# table_helper.gd
+# table_reader.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -18,7 +18,7 @@
 # For get functions, table_name is "planets", "moons", etc. Supply either row
 # or row_name.
 
-class_name TableHelper
+class_name TableReader
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -32,8 +32,8 @@ var _table_rows: Dictionary = Global.table_rows
 var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _bodies_by_name: Dictionary = Global.bodies_by_name
 var _enums: Script
-var _unit_multipliers: Dictionary = Global.unit_multipliers
-var _unit_functions: Dictionary = Global.unit_functions
+var _unit_multipliers: Dictionary
+var _unit_functions: Dictionary
 
 
 func project_init() -> void:

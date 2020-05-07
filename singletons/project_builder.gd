@@ -85,7 +85,7 @@ var init_sequence := [
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
 	# treated exactly like program_references (separate for organization).
-	_TableReader_ = TableReader,
+	_TableImporter_ = TableImporter,
 	_SaverLoader_ = SaverLoader,
 	_EnvironmentBuilder_ = EnvironmentBuilder,
 	_SystemBuilder_ = SystemBuilder,
@@ -108,7 +108,7 @@ var program_references := {
 	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
 	_MouseClickSelector_ = MouseClickSelector,
 	_QtyStrings_ = QtyStrings,
-	_TableHelper_ = TableHelper,
+	_TableReader_ = TableReader,
 }
 
 var program_nodes := {

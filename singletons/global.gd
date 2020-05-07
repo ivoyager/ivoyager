@@ -40,16 +40,13 @@ signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
 
-# camera broadcasts
-signal camera_ready(camera)
-
-signal mouse_clicked_viewport_at(position, camera, is_left_click)
-
 # other broadcasts
 signal setting_changed(setting, value)
-signal gui_entered_tree(control)
-signal gui_ready(control)
+signal gui_entered_tree(control) # depreciate?
+signal gui_ready(control) # depreciate?
 signal environment_created(environment, is_world_env)
+signal camera_ready(camera)
+signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # sim state control
 signal sim_stop_required(who) # see Main for external thread coordination
@@ -83,9 +80,9 @@ var program := {} # program nodes & refs populated by ProjectBuilder
 var script_classes := {} # classes defined in ProjectBuilder dictionaries
 var assets := {} # populated by this node project_init()
 var settings := {} # SettingsManager
-var table_rows := {} # TableReader; row ints for ALL row keys
-var table_row_dicts := {} # TableReader; a row dict for each table
-var wiki_titles := {} # TableReader; all Wiki url identifiers by item key
+var table_rows := {} # TableImporter; row ints for ALL row keys
+var table_row_dicts := {} # TableImporter; a row dict for each table
+var wiki_titles := {} # TableImporter; all Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
@@ -103,7 +100,7 @@ var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
 var enums: Script = Enums # replace w/ extended static class
-var use_threads := false # false for debugging (saver_loader.gd has its own)
+var use_threads := true # false for debugging (saver_loader.gd has its own)
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # != INF overrides asteroid_group_data.csv

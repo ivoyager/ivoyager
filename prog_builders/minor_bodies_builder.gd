@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: simplify code with the new TableHelper class.
+# TODO: simplify code with the new TableReader class.
 
 
 extends Reference
@@ -30,7 +30,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 # dependencies
 var _settings: Dictionary = Global.settings
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
@@ -44,7 +44,7 @@ var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_l_point_builder = Global.program.LPointBuilder
 	_minor_bodies_manager = Global.program.MinorBodiesManager
 	_points_manager = Global.program.PointsManager
@@ -80,11 +80,11 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	star.add_child(hud_points)
 
 func _load_binaries(star: Body) -> void:
-	var n_asteroid_groups := _table_helper.get_n_table_rows("asteroid_groups")
+	var n_asteroid_groups := _table_reader.get_n_table_rows("asteroid_groups")
 	var row := 0
 	while row < n_asteroid_groups:
-		var group := _table_helper.get_string("asteroid_groups", "group", row)
-		var trojan_of := _table_helper.get_body("asteroid_groups", "trojan_of", row)
+		var group := _table_reader.get_string("asteroid_groups", "group", row)
+		var trojan_of := _table_reader.get_body("asteroid_groups", "trojan_of", row)
 		if !trojan_of:
 			_load_group_binaries(star, group, row)
 		else: # trojans!
@@ -110,7 +110,7 @@ func _load_group_binaries(star: Body, group: String, table_row: int, l_point := 
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override
 	else:
-		mag_cutoff = _table_helper.get_real("asteroid_groups", "mag_cutoff", table_row)
+		mag_cutoff = _table_reader.get_real("asteroid_groups", "mag_cutoff", table_row)
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:
 			_load_binary(asteroid_group, group, mag_str)

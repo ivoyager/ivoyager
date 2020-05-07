@@ -83,7 +83,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _Body_: Script
 var _Rotations_: Script
 var _Properties_: Script
@@ -100,7 +100,7 @@ func project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
 	_Rotations_ = Global.script_classes._Rotations_
 	_Properties_ = Global.script_classes._Properties_
@@ -108,13 +108,13 @@ func project_init() -> void:
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_helper.build_object(body, table_name, row, body_fields, body_fields_req)
+	_table_reader.build_object(body, table_name, row, body_fields, body_fields_req)
 	# flags
-	var flags := _table_helper.build_flags(0, table_name, row, flag_fields)
+	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	var hydrostatic_equilibrium: int = _table_helper.get_enum(table_name, "hydrostatic_equilibrium", row)
+	var hydrostatic_equilibrium: int = _table_reader.get_enum(table_name, "hydrostatic_equilibrium", row)
 	if hydrostatic_equilibrium >= Enums.KnowTypes.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
@@ -129,7 +129,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		"moons":
 			flags |= BodyFlags.IS_MOON
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
-					or _table_helper.get_bool(table_name, "force_navigator", row):
+					or _table_reader.get_bool(table_name, "force_navigator", row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 	# orbit
@@ -141,23 +141,23 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
-	_table_helper.build_object(properties, table_name, row, properties_fields, properties_fields_req)
+	_table_reader.build_object(properties, table_name, row, properties_fields, properties_fields_req)
 	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
 	if is_inf(properties.mass):
-		var sig_digits := _table_helper.get_least_real_precision(table_name, ["density", "m_radius"], row)
+		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
 		if sig_digits > 1:
 			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
 			properties.mass = math.set_decimal_precision(mass, sig_digits)
 	if is_inf(properties.gm): # planets table has mass, not GM
-		var sig_digits := _table_helper.get_real_precision(table_name, "mass", row)
+		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
 			var gm := G * properties.mass
 			properties.gm = math.set_decimal_precision(gm, sig_digits)
 	if is_inf(properties.esc_vel) or is_inf(properties.surface_gravity):
-		if _table_helper.is_value(table_name, "GM", row):
-			var sig_digits := _table_helper.get_least_real_precision(table_name, ["GM", "m_radius"], row)
+		if _table_reader.is_value(table_name, "GM", row):
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
 			if sig_digits > 2:
 				if is_inf(properties.esc_vel):
 					var esc_vel := sqrt(2.0 * properties.gm / properties.m_radius)
@@ -166,7 +166,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 					var surface_gravity := properties.gm / pow(properties.m_radius, 2.0)
 					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
-			var sig_digits := _table_helper.get_least_real_precision(table_name, ["mass", "m_radius"], row)
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
 			if sig_digits > 2:
 				if is_inf(properties.esc_vel):
 					if sig_digits > 6:
@@ -183,7 +183,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# intentionally flipped.
 	var rotations: Rotations = _Rotations_.new()
 	body.rotations = rotations
-	_table_helper.build_object(rotations, table_name, row, rotations_fields)
+	_table_reader.build_object(rotations, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(!is_inf(rotations.right_ascension) and !is_inf(rotations.declination))
 		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
@@ -214,13 +214,13 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
 	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
-	var rotation_0 := _table_helper.get_real(table_name, "rotate_adj", row)
+	var rotation_0 := _table_reader.get_real(table_name, "rotate_adj", row)
 	if rotation_0 and !is_inf(rotation_0):
 		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
-	var rings_prefix := _table_helper.get_string(table_name, "rings", row)
+	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
 	if rings_prefix:
-		var rings_radius := _table_helper.get_real(table_name, "rings_outer_radius", row)
+		var rings_radius := _table_reader.get_real(table_name, "rings_outer_radius", row)
 		body.rings_info = [rings_prefix, rings_radius]
 	# parent modifications
 	if parent and orbit:
@@ -231,6 +231,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		_registrar.register_top_body(body)
 	_registrar.register_body(body)
 	_selection_builder.build_and_register(body, parent)
+	body.hide()
 	return body
 
 func _init_unpersisted(_is_new_game: bool) -> void:

@@ -1,4 +1,4 @@
-# table_reader.gd
+# table_importer.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -19,17 +19,18 @@
 #    Global.table_rows
 #    Global.table_row_dicts
 #    Global.wiki_titles (if Global.wiki_enabled)
-#    private table containers in TableHelper via init_tables()
+#    private table containers in TableReader via init_tables()
 #
 # ivoyager/data/solar_system/*.csv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
-#    See tables for examples; see TableHelper for conversions.
+#    See tables for examples; see TableReader for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
 #    replaced with this value.
 #  Units (optional; REAL only!). Reals will be converted from provided units
-#    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS.
+#    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS or
+#    replacement dicts specified in Global.unit_multipliers, .unit_functions.
 
-class_name TableReader
+class_name TableImporter
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -78,8 +79,8 @@ var _count := 0
 
 
 func project_init() -> void:
-	var table_helper: TableHelper = Global.program.TableHelper
-	table_helper.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _values)
+	var table_reader: TableReader = Global.program.TableReader
+	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _values)
 
 func import_table_data() -> void:
 	if _enable_wiki:

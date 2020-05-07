@@ -194,7 +194,7 @@ var _prefix_offset: int
 var _n_lg_numbers: int
 var _format2 := [null, null] # scratch array
 var _format4 := [null, null, null, null] # scratch array
-var _multipliers: Dictionary # or set to your own dictionary
+var _multipliers: Dictionary
 var _functions: Dictionary
 
 func project_init():

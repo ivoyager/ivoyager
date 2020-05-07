@@ -81,13 +81,13 @@ var _Pnode := -INF
 var _ref_plane := ""
 
 # project inits
-var _table_helper: TableHelper
+var _table_reader: TableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
 
 func project_init() -> void:
-	_table_helper = Global.program.TableHelper
+	_table_reader = Global.program.TableReader
 	_Orbit_ = Global.script_classes._Orbit_
 	_dynamic_orbits = Global.dynamic_orbits
 
@@ -119,7 +119,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	_table_helper.build_object(self, table_name, table_row, property_fields)
+	_table_reader.build_object(self, table_name, table_row, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.properties.gm
 	if _w == -INF:
@@ -187,8 +187,8 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	if _ref_plane == "Equatorial":
 		orbit.reference_normal = parent.rotations.north_pole
 	elif _ref_plane == "Laplace":
-		var orbit_ra: float = _table_helper.get_real(table_name, "orbit_RA", table_row)
-		var orbit_dec: float = _table_helper.get_real(table_name, "orbit_dec", table_row)
+		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
+		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)
 		orbit.reference_normal = math.convert_equatorial_coordinates2(orbit_ra, orbit_dec)
 		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
