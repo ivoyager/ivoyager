@@ -36,6 +36,7 @@ var _icon_quad_mesh: QuadMesh
 var _hud_2d_surface: Control
 var _generic_moon_icon: Texture
 var _fallback_icon: Texture
+var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
 func project_init() -> void:
@@ -43,6 +44,7 @@ func project_init() -> void:
 	_hud_2d_surface = Global.program.HUD2dSurface
 	_generic_moon_icon = Global.assets.generic_moon_icon
 	_fallback_icon = Global.assets.fallback_icon
+	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func add_label(body: Body) -> void:
@@ -94,7 +96,7 @@ func add_orbit(body: Body) -> void:
 		color = _settings.default_orbit_color
 	hud_orbit.orbit = body.orbit
 	hud_orbit.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-	hud_orbit.shader_material.shader = Global.shaders.orbit_ellipse
+	hud_orbit.shader_material.shader = _orbit_ellipse_shader
 	hud_orbit.material_override = hud_orbit.shader_material
 	hud_orbit.orbit_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP,
 			_orbit_mesh_arrays, [], ORBIT_ARRAY_FLAGS)

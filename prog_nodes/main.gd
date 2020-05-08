@@ -195,7 +195,7 @@ func load_game(path: String) -> void:
 	Global.emit_signal("game_load_started")
 	_saver_loader.load_game(save_file, _tree)
 	yield(_saver_loader, "finished")
-	Global.check_load_version()
+	_test_load_version_warning()
 	Global.emit_signal("game_load_finished")
 	if _main_prog_bar:
 		_main_prog_bar.stop()
@@ -279,3 +279,12 @@ func _run_simulator() -> void:
 	_tree.paused = _was_paused
 	assert(DPRINT and prints("signal active_threads_allowed") or true)
 	emit_signal("active_threads_allowed")
+
+func _test_load_version_warning() -> void:
+	if Global.current_project_version != Global.project_version \
+			or Global.current_ivoyager_version != Global.ivoyager_version:
+		print("WARNING! Loaded game was created with a different version...")
+		prints("Present running version: ", Global.current_ivoyager_version,
+				Global.current_project_version)
+		prints("Loaded game started as:  ", Global.ivoyager_version, Global.project_version)
+

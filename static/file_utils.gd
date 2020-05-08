@@ -62,7 +62,7 @@ static func get_save_path(save_dir: String, base_name: String, date_string := ""
 static func exists(file_path: String) -> bool:
 	var file := File.new()
 	if file_path.ends_with(".gd"):
-		# export changes ".gd" to ".gdc"
+		# Godot exported has ".gd" changed to ".gdc"
 		return file.file_exists(file_path) or file.file_exists(file_path + "c")
 	return file.file_exists(file_path)
 

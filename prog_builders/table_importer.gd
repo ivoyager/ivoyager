@@ -38,31 +38,22 @@ const math := preload("res://ivoyager/static/math.gd")
 const DPRINT := false
 const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
 
-
-# project vars
-var import := {
-	stars = "res://ivoyager/data/solar_system/stars.csv",
-	planets = "res://ivoyager/data/solar_system/planets.csv",
-	moons = "res://ivoyager/data/solar_system/moons.csv",
-	lights = "res://ivoyager/data/solar_system/lights.csv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
-	classes = "res://ivoyager/data/solar_system/classes.csv",
-	models = "res://ivoyager/data/solar_system/models.csv",
-}
-var wiki_extras := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
-
+# source files
+var _table_import: Dictionary = Global.table_import
+var _wiki_only: Array = Global.table_import_wiki_only
+# imported data
 var _table_data := {}
 var _table_fields := {}
 var _table_data_types := {}
 var _table_units := {}
-var _value_indexes := {"" : 0}
+var _table_rows: Dictionary = Global.table_rows # Global shared
+var _table_row_dicts: Dictionary = Global.table_row_dicts # Global shared
+var _wiki_titles: Dictionary = Global.wiki_titles # Global shared
+var _value_indexes := {"" : 0} # preloaded 0-index is null value
 var _values := [""]
-var _table_rows: Dictionary = Global.table_rows
-var _table_row_dicts: Dictionary = Global.table_row_dicts
-var _wiki_titles: Dictionary = Global.wiki_titles
+# localization
 var _enable_wiki: bool = Global.enable_wiki
 var _enums: Script = Global.enums
-
 # current processing
 var _path: String
 var _data: Array
@@ -84,15 +75,15 @@ func project_init() -> void:
 
 func import_table_data() -> void:
 	if _enable_wiki:
-		for path in wiki_extras:
+		for path in _wiki_only:
 			_path = path
 			_data = []
 			_fields = {}
 			_data_types = []
 			_rows = {}
 			_read_table() # writes wiki_titles; we don't keep data, fields, rows
-	for key in import:
-		_path = import[key]
+	for key in _table_import:
+		_path = _table_import[key]
 		_data = []
 		_fields = {} # column index by field name
 		_data_types = []
