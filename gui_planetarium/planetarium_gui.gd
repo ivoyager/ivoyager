@@ -34,9 +34,6 @@ func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded",
 			[], CONNECT_ONESHOT)
 
-func _on_project_builder_finished() -> void:
-	theme = Global.themes.main
-
 func _ready() -> void:
 	_homepage_link.bbcode_enabled = true
 	_homepage_link.bbcode_text = "[url]I, Voyager[/url]"
@@ -48,6 +45,14 @@ func _ready() -> void:
 	main_menu.add_child(_homepage_link)
 	main_menu.set_anchors_and_margins_preset(Control.PRESET_TOP_RIGHT,
 			Control.PRESET_MODE_MINSIZE, 16)
+	print("added homepage")
+
+func _on_project_builder_finished() -> void:
+	theme = Global.themes.main
+	# reparent MainMenu here for visibility control
+	var main_menu: MainMenu = Global.program.MainMenu
+	main_menu.get_parent().remove_child(main_menu)
+	add_child(main_menu)
 
 func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	selection_manager = _SelectionManager_.new()
@@ -55,9 +60,9 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
 	# reparent MainMenu here for visibility control
-	var main_menu: MainMenu = Global.program.MainMenu
-	main_menu.get_parent().remove_child(main_menu)
-	add_child(main_menu)
+#	var main_menu: MainMenu = Global.program.MainMenu
+#	main_menu.get_parent().remove_child(main_menu)
+#	add_child(main_menu)
 
 func _input(event: InputEvent) -> void:
 	# By default, all children of this node are shown/hidden by mouse position.

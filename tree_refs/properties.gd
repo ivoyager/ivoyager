@@ -15,18 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For floats: INF means unknown, -INF means not applicable. E.g., all physical
-# bodies have mass & m_radius, but some don't have gm, surface_gravity or
-# e_radius.
+# For floats: INF means unknown, -INF means not applicable. All physical bodies
+# have mass & m_radius (although possibly unknown). Other properties may apply
+# by body type.
 
 class_name Properties
 
 var mass := INF
+var m_radius := INF
 var gm := -INF
 var surface_gravity := -INF
 var esc_vel := -INF
-var m_radius := INF
 var e_radius := -INF
+var p_radius := -INF
 var hydrostatic_equilibrium := -1 # Enums.KnowTypes
 var mean_density := INF
 var albedo := -INF
@@ -39,7 +40,8 @@ var half_bar_t := -INF # earth, venus, gas giants
 var tenth_bar_t := -INF # gas giants
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["mass", "gm", "surface_gravity", "esc_vel", "m_radius", "e_radius", 
-	 "hydrostatic_equilibrium", "mean_density", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
-	"one_bar_t", "half_bar_t", "tenth_bar_t"]
+const PERSIST_PROPERTIES := ["mass", "m_radius",
+	"gm", "surface_gravity", "esc_vel", "e_radius", "p_radius",
+	"hydrostatic_equilibrium", "mean_density", "albedo", "surf_pres",
+	"surf_t", "min_t", "max_t", "one_bar_t", "half_bar_t", "tenth_bar_t"]
 

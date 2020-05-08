@@ -1,4 +1,4 @@
-# rich_text_popup.gd
+# credits_popup.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,40 +15,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Generic PopupPanel with RichTextLabel using BBCode.
-# BBCode is really limited, but I think improvements are coming in Godot 3.2.
+# WIP - I'm not super happy with the credits appearance right now. Needs work!
+# This was narrowly coded to parse ivoyager/CREDITS.md or file with identical
+# markup. Someone can generalize if they want.
 
 extends PopupPanel
-class_name RichTextPopup
-const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
+class_name PlntrmHelpPopup
+const SCENE := "res://ivoyager/gui_planetarium/plntrm_help_popup.tscn"
+
+enum {
+	PLAIN_TEXT,
+	MAIN_HEADER,
+	SUBSECTION_HEADER,
+	BLOCK_TEXT,
+	BOLD_TEXT
+	}
+
+# project vars
+
 
 var _main: Main
 onready var _header: Label = $VBox/Header
-onready var _rt_label: RichTextLabel = $VBox/RTLabel
+onready var _rtlabel: RichTextLabel = $VBox/RTLabel
+onready var _close_button: Button = $VBox/Close
 
 func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("rich_text_popup_requested", self, "_open")
+	Global.connect("help_requested", self, "_open")
 	_main = Global.program.Main
+	var main_menu: MainMenu = Global.program.get("MainMenu")
+	if main_menu:
+		main_menu.make_button("BUTTON_HELP", 1500, true, false, self, "_open")
 
 func _on_ready() -> void:
 	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
-	$VBox/Close.connect("pressed", self, "hide")
+	_rtlabel.bbcode_enabled = true
+	_rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+	_close_button.connect("pressed", self, "hide")
 
-func _open(header_text: String, bbcode_text: String) -> void:
+func _open() -> void:
 	set_process_unhandled_key_input(true)
 	_main.require_stop(self)
-	_header.text = header_text
-	_rt_label.bbcode_text = tr(bbcode_text)
+	var version: String = load("res://planetarium/planetarium.gd").EXTENSION_VERSION
+	var help_text := "Planetarium " + version + "\n" + tr("TXT_PLANETARIUM_HELP")
+	_rtlabel.bbcode_text = help_text
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
 func _on_popup_hide() -> void:
-	_rt_label.bbcode_text = ""
 	set_process_unhandled_key_input(false)
 	_main.allow_run(self)
+
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)
@@ -58,3 +77,6 @@ func _on_unhandled_key_input(event: InputEventKey) -> void:
 		get_tree().set_input_as_handled()
 		hide()
 
+func _on_meta_clicked(meta: String) -> void:
+	if meta == tr("LABEL_IVOYAGER_FORUM"):
+		OS.shell_open("https://ivoyager.dev/forum/")

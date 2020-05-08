@@ -111,6 +111,7 @@ func project_init() -> void:
 	connect("popup_hide", self, "_on_popup_hide")
 
 func _on_ready() -> void:
+	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
 	_header = $VBox/TopHBox/Header
 	_aux_button = $VBox/TopHBox/AuxButton

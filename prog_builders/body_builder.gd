@@ -136,7 +136,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
 					or _table_reader.get_bool(table_name, "force_navigator", row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
-	body.flags = flags
+	body.flags = flags # there may be more flags set below
 	# orbit
 	var time: float = _times[0]
 	var orbit: Orbit
@@ -148,6 +148,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.properties = properties
 	_table_reader.build_object(properties, table_name, row, properties_fields, properties_fields_req)
 	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
+	if !is_inf(properties.e_radius):
+		properties.p_radius = 3.0 * properties.m_radius - 2.0 * properties.e_radius
+	else:
+		body.flags |= BodyFlags.DISPLAY_M_RADIUS
 	if is_inf(properties.mass):
 		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
 		if sig_digits > 1:

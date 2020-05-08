@@ -64,7 +64,8 @@ enum BodyFlags {
 	IS_TIDALLY_LOCKED = 0b100000 * 0x10000,
 	IS_NAVIGATOR_MOON = 0b1000000 * 0x10000, # show in system navigator
 	LIKELY_HYDROSTATIC_EQUILIBRIUM = 0b10000000 * 0x10000, # for moon orbit color
-	HAS_ATMOSPHERE = 0b1 * 0x1000000,
+	DISPLAY_M_RADIUS = 0b1 * 0x1000000,
+	HAS_ATMOSPHERE = 0b10 * 0x1000000,
 #	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km" (TODO)
 #	APPROX_GM = 0b100 * 0x1000000,
 	# First 5 bytes reserved: 0b1 to 0b10000000 * 0x100000000

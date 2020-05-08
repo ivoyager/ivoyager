@@ -43,9 +43,9 @@ var show_data := [
 	# [5] flags test (show) [6] flags test (is approximate value)
 	# [7] label as wiki link [8] value as wiki link
 	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
-	["m_radius", "LABEL_MEAN_RADIUS", QtyStrings.UNIT, "km"],
-	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyStrings.UNIT, "km", -1,
-			BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET],
+	["m_radius", "LABEL_MEAN_RADIUS", QtyStrings.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
+	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyStrings.UNIT, "km"],
+	["p_radius", "LABEL_POLAR_RADIUS", QtyStrings.UNIT, "km"],
 	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
 	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "KnowTypes", null,
 			BodyFlags.IS_MOON, null, true],

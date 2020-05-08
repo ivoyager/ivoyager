@@ -66,6 +66,7 @@ signal toggle_show_hide_gui_requested()
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
+signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
@@ -178,7 +179,7 @@ var asset_paths_for_load := { # loaded into "assets" dict at project init
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.6 dev"
+var ivoyager_version := "0.0.6-alpha dev"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false

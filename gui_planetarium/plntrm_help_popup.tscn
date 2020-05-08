@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://ivoyager/gui_admin/credits_popup.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_planetarium/plntrm_help_popup.gd" type="Script" id=1]
 
-[node name="CreditsPopup" type="PopupPanel"]
+[node name="PlntrmHelpPopup" type="PopupPanel"]
 margin_right = 8.0
 margin_bottom = 8.0
 popup_exclusive = true
@@ -13,6 +13,7 @@ margin_left = 4.0
 margin_top = 4.0
 margin_right = 116.0
 margin_bottom = 72.0
+rect_min_size = Vector2( 680, 0 )
 custom_constants/separation = 17
 alignment = 1
 
@@ -21,21 +22,15 @@ margin_right = 40.0
 margin_bottom = 14.0
 size_flags_horizontal = 4
 size_flags_vertical = 0
+custom_constants/line_spacing = 3
+text = "Help"
 align = 1
 
-[node name="Scroll" type="ScrollContainer" parent="VBox"]
+[node name="RTLabel" type="RichTextLabel" parent="VBox"]
 margin_right = 40.0
 margin_bottom = 40.0
+rect_min_size = Vector2( 650, 700 )
 size_flags_horizontal = 4
-size_flags_vertical = 3
-scroll_horizontal_enabled = false
-
-[node name="Content" type="VBoxContainer" parent="VBox/Scroll"]
-margin_right = 40.0
-margin_bottom = 40.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-alignment = 1
 
 [node name="Close" type="Button" parent="VBox"]
 margin_right = 12.0

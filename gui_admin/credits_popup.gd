@@ -66,6 +66,7 @@ func project_init() -> void:
 		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
 
 func _on_ready() -> void:
+	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
 	_header = $VBox/Header
 	_content = $VBox/Scroll/Content

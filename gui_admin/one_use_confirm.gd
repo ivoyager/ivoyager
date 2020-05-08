@@ -31,6 +31,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	if _stop_sim:
 		Global.emit_signal("sim_stop_required", self)
 	Global.program.universe.add_child(self)
+	theme = Global.themes.main
 	popup_centered()
 
 func _on_hide() -> void:
