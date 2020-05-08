@@ -82,10 +82,12 @@ func _increment_speed(increment: int) -> void:
 	_timekeeper.change_speed(increment)
 
 func _set_reverse() -> void:
-	_timekeeper.set_time_reversed(_reverse.pressed)
+	if Global.allow_time_reversal:
+		_timekeeper.set_time_reversed(_reverse.pressed)
 
 func _change_paused() -> void:
-	_tree.paused = _pause.pressed
+	if !Global.disable_pause:
+		_tree.paused = _pause.pressed
 	
 func _set_real_world() -> void:
 	_timekeeper.set_real_world()

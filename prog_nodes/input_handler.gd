@@ -27,7 +27,9 @@ class_name InputHandler
 
 var _state: Dictionary = Global.state
 var _script_classes: Dictionary = Global.script_classes
-var _allow_dev_tools: bool = Global.allow_dev_tools
+var _disable_pause: bool
+var _allow_time_reversal: bool
+var _allow_dev_tools: bool
 var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
@@ -52,6 +54,9 @@ func make_action(action: String, is_pressed := true) -> void:
 func project_init():
 	Global.connect("system_tree_ready", self, "_on_system_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
+	_disable_pause = Global.disable_pause
+	_allow_time_reversal = Global.allow_time_reversal
+	_allow_dev_tools = Global.allow_dev_tools
 	_tree = Global.program.tree
 	_main = Global.program.Main
 	_tree_manager = Global.program.TreeManager
@@ -103,13 +108,15 @@ func _on_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("save_quit"):
 		_main.save_quit()
 	elif event.is_action_pressed("toggle_pause"):
-		_tree.paused = !_tree.paused
+		if !_disable_pause:
+			_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
 		_timekeeper.change_speed(1)
 	elif event.is_action_pressed("decr_speed"):
 		_timekeeper.change_speed(-1)
 	elif event.is_action_pressed("reverse_time"):
-		_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
+		if _allow_time_reversal:
+			_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
 	elif event.is_action_pressed("toggle_orbits"):
 		_tree_manager.set_show_orbits(!_tree_manager.show_orbits)
 	elif event.is_action_pressed("toggle_icons"):
