@@ -36,7 +36,7 @@ var max_lazy := 20
 var _times: Array = Global.times
 var _models_search := Global.models_search
 var _textures_search := Global.maps_search
-var _globe_mesh: SphereMesh = Global.globe_mesh
+var _globe_mesh: SphereMesh
 var _table_reader: TableReader
 var _fallback_albedo_map: Texture
 var _memoized := {}
@@ -54,25 +54,25 @@ var _material_fields := {
 
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
+	_globe_mesh = Global.shared_resources.globe_mesh
 	_table_reader = Global.program.TableReader
 	_fallback_albedo_map = Global.assets.fallback_albedo_map
 
 func add_model(body: Body, lazy_init: bool) -> void:
 	var model: Spatial
+	var properties := body.properties
 	if lazy_init:
 		# make a simple Spatial placeholder
-		model = get_model(body.model_type, body.file_prefix, body.properties.m_radius,
-				body.properties.e_radius, true)
+		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
+				properties.e_radius, true)
 		model.hide()
 		model.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
 	else:
-		model = get_model(body.model_type, body.file_prefix, body.properties.m_radius,
-				body.properties.e_radius)
+		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
+				properties.e_radius)
 		model.hide()
 	body.model = model
-	body.model_too_far = body.properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
-	body.rotations.init_model_basis(model.transform.basis)
-#	body.model_ref_basis = model.transform.basis
+	body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
 	body.add_child(model)
 
 func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: float,
@@ -82,7 +82,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 	# For imported models, scale is derived from file
 	# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
 	# meters. Absence of scale suffix indicates units of 1 meter.
-	var resource_file := _find_and_load_resource_file(_models_search, file_prefix)
+	var resource_file := _find_file_and_resource(_models_search, file_prefix)
 	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
 	if !resource_file and !is_ellipsoid:
 		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
@@ -180,23 +180,15 @@ func _find_resource(dir_paths: Array, file_prefix: String) -> Resource:
 	var key := file_prefix + "@"
 	if _memoized.has(key):
 		return _memoized[key]
-	var resource: Resource
-	for dir_path in dir_paths:
-		resource = file_utils.find_resource(dir_path, file_prefix)
-		if resource:
-			break
+	var resource: Resource = file_utils.find_and_load_resource(dir_paths, file_prefix)
 	_memoized[key] = resource # could be null
 	return resource
 
-func _find_and_load_resource_file(dir_paths: Array, file_prefix: String) -> String:
+func _find_file_and_resource(dir_paths: Array, file_prefix: String) -> String:
 	var key := file_prefix + "&"
 	if _memoized.has(key):
 		return _memoized[key]
-	var file_str: String
-	for dir_path in dir_paths:
-		file_str = file_utils.find_resource_file(dir_path, file_prefix)
-		if file_str:
-			break
+	var file_str: String = file_utils.find_resource_file(dir_paths, file_prefix)
 	_memoized[key] = file_str # could be ""
 	if file_str:
 		_memoized[file_str] = load(file_str)

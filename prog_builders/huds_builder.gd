@@ -31,18 +31,18 @@ const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3
 	Vector3(0, 0, 0))
 
 var _settings: Dictionary = Global.settings
-var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh
+var _icons_search: Array = Global.icons_search
+var _icon_quad_mesh: QuadMesh
 var _hud_2d_surface: Control
 var _generic_moon_icon: Texture
 var _fallback_icon: Texture
-var _hud_icons_dir: String
 var _orbit_mesh_arrays := []
 
 func project_init() -> void:
+	_icon_quad_mesh = Global.shared_resources.icon_quad_mesh
 	_hud_2d_surface = Global.program.HUD2dSurface
 	_generic_moon_icon = Global.assets.generic_moon_icon
 	_fallback_icon = Global.assets.fallback_icon
-	_hud_icons_dir = Global.asset_paths.hud_icons_dir
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func add_label(body: Body) -> void:
@@ -56,7 +56,7 @@ func add_label(body: Body) -> void:
 func add_icon(body: Body) -> void:
 	var icon := MeshInstance.new()
 	var icon_material := SpatialMaterial.new()
-	var icon_texture: Texture = file_utils.find_resource(_hud_icons_dir, body.file_prefix)
+	var icon_texture: Texture = file_utils.find_and_load_resource(_icons_search, body.file_prefix)
 	if !icon_texture:
 		if body.flags & IS_MOON:
 			icon_texture = _generic_moon_icon

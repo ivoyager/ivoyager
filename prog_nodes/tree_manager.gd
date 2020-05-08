@@ -43,7 +43,7 @@ const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
 
 # unpersisted
 var _settings: Dictionary = Global.settings
-var _icon_quad_mesh: QuadMesh = Global.icon_quad_mesh # shared by hud_icons
+var _icon_quad_mesh: QuadMesh
 var _root: Viewport
 var _timekeeper: Timekeeper
 var _registrar: Registrar
@@ -63,6 +63,7 @@ func project_init() -> void:
 	Global.connect("camera_ready", self, "_connect_camera")
 	Global.connect("gui_refresh_requested", self, "_gui_refresh")
 	Global.connect("setting_changed", self, "_settings_listener")
+	_icon_quad_mesh = Global.shared_resources.icon_quad_mesh
 	_root = Global.program.root
 	_timekeeper = Global.program.Timekeeper
 	_registrar = Global.program.Registrar
