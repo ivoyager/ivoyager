@@ -24,5 +24,7 @@ Cntr-H - See or modify all hotkeys.[/indent]
 [indent]These are not (yet) selectable. The simulator shows all numbered
 and multiposition asteroids filtered by magnitude. Note that magnitude
 filter for Near-Earth and Mars-Crossers is much less restrictive than all
-other groups. (We show only a tiny fraction of known Main Belt asteroids!)"
+other groups. (We show only a tiny fraction of known Main Belt asteroids!)
+
+Please ask questions at [url]I, Voyager Forums[/url]!"
 TXT_WEB_PLANETARIUM_LOADING,Building the solar system and loading graphics...\n\nThis may take a while...

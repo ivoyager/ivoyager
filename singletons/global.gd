@@ -66,6 +66,7 @@ signal toggle_show_hide_gui_requested()
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
+signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal gui_refresh_requested()
