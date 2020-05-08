@@ -33,6 +33,7 @@ func project_init() -> void:
 	_main = Global.program.Main
 
 func _on_ready() -> void:
+	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
 	$VBox/Close.connect("pressed", self, "hide")
 

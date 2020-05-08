@@ -31,30 +31,13 @@ enum {
 	BOLD_TEXT
 	}
 
-# project vars - modify on project_objects_instantiated signal
-var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
-var scroll_size := Vector2(950, 700)
-var autowrap_reduction := 15
-var subpanel_reduction := 50
-var spacer_size := 10
-var block_text_label_prepend := "    "
-var line_codes := {
-	# match from left - order matters
-	"" : PLAIN_TEXT, # not matched
-	"## " : SUBSECTION_HEADER,
-	"##" : SUBSECTION_HEADER, # empty header is break line
-	"# " : MAIN_HEADER,
-	"    " : BLOCK_TEXT,
-	}
+# project vars
+
 
 var _main: Main
-var _header: Label
-var _content: VBoxContainer
-var _close_button: Button
-var _current_container: Container
-var _current_label: Label
-var _text := ""
-
+onready var _header: Label = $VBox/Header
+onready var _rtlabel: RichTextLabel = $VBox/RTLabel
+onready var _close_button: Button = $VBox/Close
 
 func project_init() -> void:
 	connect("ready", self, "_on_ready")
@@ -63,118 +46,28 @@ func project_init() -> void:
 	_main = Global.program.Main
 	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
-		main_menu.make_button("BUTTON_CREDITS", 10, true, false, self, "_open")
+		main_menu.make_button("BUTTON_HELP", 1500, true, false, self, "_open")
 
 func _on_ready() -> void:
+	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
-	_header = $VBox/Header
-	_content = $VBox/Scroll/Content
-	_close_button = $VBox/Close
+	_rtlabel.bbcode_enabled = true
+	_rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
 	_close_button.connect("pressed", self, "hide")
-	$VBox/Scroll.rect_min_size = scroll_size
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
 	_main.require_stop(self)
-	if !_build_content():
-		_main.allow_run(self)
-		return
+	var version: String = load("res://planetarium/planetarium.gd").EXTENSION_VERSION
+	var help_text := "Planetarium " + version + "\n" + tr("TXT_PLANETARIUM_HELP")
+	_rtlabel.bbcode_text = help_text
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
 func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)
-	_current_container = null
-	_current_label = null
-	_text = ""
-	for child in _content.get_children():
-		child.queue_free()
 	_main.allow_run(self)
 
-func _build_content() -> bool:
-	var file := File.new()
-	if file.open(file_path, File.READ) != OK:
-		print("ERROR: Could not open for read: ", file_path)
-		return false
-	_current_container = _content
-	var code := -1
-	var need_end := false
-	var line := file.get_line()
-	while !file.eof_reached():
-		if !line:
-			line = file.get_line()
-			continue
-		var markup = _get_markup(line)
-		line = line.lstrip(markup)
-		var new_code: int = line_codes[markup]
-		if new_code != code:
-			if need_end:
-				_end_markup_type(code)
-			code = new_code
-			_begin_markup_type(code)
-			need_end = true
-		_text += line + "\n"
-		line = file.get_line()
-	if need_end:
-		_end_markup_type(code)
-	return true
-
-func _begin_markup_type(code: int) -> void:
-	match code:
-		MAIN_HEADER:
-			_header.set("custom_fonts/font", Global.fonts.large)
-			_header.size_flags_horizontal = SIZE_SHRINK_CENTER
-		SUBSECTION_HEADER:
-			_current_container = _content
-			_current_label = Label.new()
-			_current_label.set("custom_fonts/font", Global.fonts.medium)
-			_current_label.size_flags_horizontal = SIZE_SHRINK_CENTER
-		PLAIN_TEXT, BOLD_TEXT:
-			_current_container = _content
-			_current_label = Label.new()
-			_current_label.autowrap = true
-			_current_label.size_flags_horizontal = SIZE_SHRINK_CENTER
-			_current_label.rect_min_size.x = scroll_size.x - subpanel_reduction
-		BLOCK_TEXT:
-			_current_container = PanelContainer.new()
-			_current_container.rect_min_size.x = scroll_size.x - subpanel_reduction
-			_current_container.size_flags_horizontal = SIZE_SHRINK_CENTER
-			_current_label = Label.new()
-			_current_label.autowrap = true
-			_current_label.size_flags_horizontal = SIZE_EXPAND_FILL
-			_current_label.rect_min_size.x = scroll_size.x - subpanel_reduction - autowrap_reduction
-
-func _end_markup_type(code: int) -> void:
-	_text = _text.rstrip("\n")
-	match code:
-		MAIN_HEADER:
-			_header.text = _text
-			_text = ""
-		SUBSECTION_HEADER:
-			var spacer := Control.new()
-			spacer.rect_min_size.y = spacer_size
-			_content.add_child(spacer)
-			if !_text: # empty header
-				continue
-			_current_label.text = _text
-			_text = ""
-			_content.add_child(_current_label)
-		PLAIN_TEXT, BOLD_TEXT:
-			_current_label.text = _text
-			_text = ""
-			_content.add_child(_current_label)
-		BLOCK_TEXT:
-			_text = _text.replacen("\n", "\n" + block_text_label_prepend)
-			_current_label.text = block_text_label_prepend + _text
-			_text = ""
-			_current_container.add_child(_current_label)
-			_content.add_child(_current_container)
-	
-func _get_markup(line: String) -> String:
-	for markup in line_codes:
-		if markup and line.begins_with(markup):
-			return markup
-	return ""
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)
@@ -184,6 +77,6 @@ func _on_unhandled_key_input(event: InputEventKey) -> void:
 		get_tree().set_input_as_handled()
 		hide()
 
-	
-	
-
+func _on_meta_clicked(meta: String) -> void:
+	if meta == tr("LABEL_IVOYAGER_FORUM"):
+		OS.shell_open("https://ivoyager.dev/forum/")

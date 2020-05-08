@@ -46,6 +46,7 @@ func project_init():
 	connect("popup_hide", self, "_on_hide")
 
 func _ready():
+	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
 
 func _open() -> void:
