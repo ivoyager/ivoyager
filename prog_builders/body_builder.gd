@@ -75,6 +75,7 @@ var rotations_fields := {
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _settings: Dictionary = Global.settings
+var _bodies_2d_search: Array = Global.bodies_2d_search
 var _times: Array = Global.times
 var _registrar: Registrar
 var _model_builder: ModelBuilder
@@ -87,7 +88,8 @@ var _table_reader: TableReader
 var _Body_: Script
 var _Rotations_: Script
 var _Properties_: Script
-var _texture_2d_dir: String
+var _fallback_body_2d: Texture
+var _fallback_star_slice: Texture
 var _satellite_indexes := {} # passed to & shared by Body instances
 
 
@@ -104,7 +106,8 @@ func project_init() -> void:
 	_Body_ = Global.script_classes._Body_
 	_Rotations_ = Global.script_classes._Rotations_
 	_Properties_ = Global.script_classes._Properties_
-	_texture_2d_dir = Global.asset_paths.texture_2d_dir
+	_fallback_body_2d = Global.assets.fallback_body_2d
+	_fallback_star_slice = Global.assets.fallback_star_slice
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
@@ -215,10 +218,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if orbit and orbit.is_retrograde(time): # retrograde
 		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
-	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
-	var rotation_0 := _table_reader.get_real(table_name, "rotate_adj", row)
+	rotations.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
+	var rotation_0 := _table_reader.get_real(table_name, "rotation_0", row)
 	if rotation_0 and !is_inf(rotation_0):
-		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
+		rotations.reference_basis = rotations.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
 	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
 	if rings_prefix:
@@ -254,6 +257,7 @@ func _build_unpersisted(body: Body) -> void:
 		satellite_index += 1
 	if body.model_type != -1:
 		_model_builder.add_model(body, not body.flags & BodyFlags.IS_NAVIGATOR_MOON)
+		body.rotations.init_model_basis(body.model.transform.basis)
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
@@ -263,11 +267,11 @@ func _build_unpersisted(body: Body) -> void:
 	_huds_builder.add_icon(body)
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
-	body.texture_2d = file_utils.find_resource(_texture_2d_dir, body.file_prefix)
+	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, body.file_prefix)
 	if !body.texture_2d:
-		body.texture_2d = Global.assets.fallback_texture_2d
+		body.texture_2d = _fallback_body_2d
 	if body.flags & BodyFlags.IS_STAR:
 		var slice_name = body.file_prefix + "_slice"
-		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)
+		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
 		if !body.texture_slice_2d:
-			body.texture_slice_2d = Global.assets.fallback_star_slice
+			body.texture_slice_2d = _fallback_star_slice

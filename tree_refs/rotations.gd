@@ -26,13 +26,19 @@ var right_ascension := -INF
 var declination := -INF
 var rotation_period := 0.0
 var north_pole := Vector3(0.0, 0.0, 1.0)
+var reference_basis := Basis() # body z shift to north_pole and rotation_0
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["axial_tilt", "right_ascension", "declination",
-	"rotation_period", "north_pole"]
+	"rotation_period", "north_pole", "reference_basis"]
 
-func get_basis(time: float, model_basis: Basis) -> Basis:
+var _model_ref_basis: Basis # original model rotations & scale
+var _working_ref_basis: Basis
+
+func init_model_basis(model_ref_basis: Basis) -> void:
+	_model_ref_basis = model_ref_basis
+	_working_ref_basis = reference_basis * _model_ref_basis
+
+func get_rotated_basis(time: float) -> Basis:
 	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-	return model_basis.rotated(north_pole, rotation_angle)
-
-
+	return _working_ref_basis.rotated(north_pole, rotation_angle)

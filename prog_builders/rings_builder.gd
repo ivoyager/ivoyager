@@ -25,15 +25,15 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const RINGS_TOO_FAR_RADIUS_MULTIPLIER := 2e3
 const METER := UnitDefs.METER
 
-var _rings_dir: String
+var _rings_search: Array = Global.rings_search
 
 func project_init() -> void:
-	_rings_dir = Global.asset_paths.rings_dir
+	pass
 
 func add_rings(body: Body) -> void:
-	var rings_file: String = body.rings_info[0]
+	var rings_file: String = body.rings_info[0] + "_temp"
 	var radius: float = body.rings_info[1]
-	var texture: Texture = file_utils.find_resource(_rings_dir, rings_file)
+	var texture: Texture = file_utils.find_and_load_resource(_rings_search, rings_file)
 	assert(texture) # no fallback!
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()

@@ -62,7 +62,7 @@ static func get_save_path(save_dir: String, base_name: String, date_string := ""
 static func exists(file_path: String) -> bool:
 	var file := File.new()
 	if file_path.ends_with(".gd"):
-		# export changes ".gd" to ".gdc"
+		# Godot exported has ".gd" changed to ".gdc"
 		return file.file_exists(file_path) or file.file_exists(file_path + "c")
 	return file.file_exists(file_path)
 
@@ -95,28 +95,28 @@ static func make_or_clear_dir(dir_path: String) -> void:
 
 # loading assets & data files
 
-static func find_resource_file(dir_path: String, file_prefix: String) -> String:
+static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
 	# followed by dot. Returns resource file if it exists. We expect to
 	# find file with .import extension (this is the ONLY file in an exported
-	# project), but ".import" must be removed from end to load it.
+	# project!), but ".import" must be removed from end to load it.
 	file_prefix = file_prefix + "."
 	var dir := Directory.new()
-	if dir.open(dir_path) != OK:
-		print("ERROR: Could not access directory: ", dir_path)
-		return ""
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name:
-		if !dir.current_is_dir():
-			if file_name.begins_with(file_prefix):
-				if file_name.get_extension() == "import":
-					return dir_path.plus_file(file_name).get_basename()
-		file_name = dir.get_next()
+	for dir_path in dir_paths:
+		if dir.open(dir_path) != OK:
+			continue
+		dir.list_dir_begin()
+		var file_name := dir.get_next()
+		while file_name:
+			if !dir.current_is_dir():
+				if file_name.begins_with(file_prefix):
+					if file_name.get_extension() == "import":
+						return dir_path.plus_file(file_name).get_basename()
+			file_name = dir.get_next()
 	return ""
 
-static func find_resource(dir_path: String, file_prefix: String) -> Resource:
-	var path := find_resource_file(dir_path, file_prefix)
+static func find_and_load_resource(dir_paths: Array, file_prefix: String) -> Resource:
+	var path := find_resource_file(dir_paths, file_prefix)
 	if path:
 		return load(path)
 	return null

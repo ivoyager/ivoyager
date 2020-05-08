@@ -37,9 +37,9 @@ func init(group_: AsteroidGroup, color_: Color) -> void:
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_orbit_points.shader = Global.shaders.orbit_points
+		_orbit_points.shader = Global.shared_resources.orbit_points_shader
 	else:
-		_orbit_points.shader = Global.shaders.orbit_points_lagrangian
+		_orbit_points.shader = Global.shared_resources.orbit_points_lagrangian_shader
 	material_override = _orbit_points
 	var timekeeper: Timekeeper = Global.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")

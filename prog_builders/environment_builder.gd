@@ -20,6 +20,8 @@
 
 class_name EnvironmentBuilder
 
+var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
+
 var _settings: Dictionary = Global.settings
 var _asset_paths: Dictionary = Global.asset_paths
 
@@ -42,6 +44,8 @@ func get_environment(_env_type: int, is_world_env := false) -> Environment:
 			starmap_file = _asset_paths.starmap_8k
 		Enums.StarmapSizes.STARMAP_16K:
 			starmap_file = _asset_paths.starmap_16k
+	if !FileUtils.exists(starmap_file):
+		starmap_file = _asset_paths[fallback_starmap]
 	var starmap: Texture = load(starmap_file)
 	panorama_sky.panorama = starmap
 	var env = Environment.new()
@@ -51,6 +55,6 @@ func get_environment(_env_type: int, is_world_env := false) -> Environment:
 	env.ambient_light_color = Color.white
 	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
-	# signal here to make modification by external project easy
+	# we signal to make modification by external project easy
 	Global.emit_signal("environment_created", env, is_world_env)
 	return env
