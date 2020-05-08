@@ -51,7 +51,6 @@ var light_type := -1 # lights.csv (probably -1 except stars)
 var flags := 0 # see Enums.BodyFlags
 
 var system_radius := 0.0 # widest orbiting satellite
-var reference_basis := Basis()
 
 
 # file reading
@@ -66,8 +65,9 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
-	"light_type", "flags", "system_radius", "reference_basis", "file_prefix", "rings_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites", "lagrange_points"]
+	"light_type", "flags", "system_radius", "file_prefix", "rings_info"]
+const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites",
+	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
 var model: Spatial
@@ -77,7 +77,6 @@ var hud_icon: Spatial
 var hud_label: Control
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
-var model_basis: Basis # at epoch
 var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
 var hud_too_close := 0.0
@@ -121,13 +120,10 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 	if model:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			model.transform.basis = rotations.get_basis(time, model_basis)
-#			var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-#			model.transform.basis = model_basis.rotated(north_pole, rotation_angle)
+			model.transform.basis = rotations.get_rotated_basis(time)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model.visible = model_visible
-#			prints(tr(name), model_visible)
 	if aux_graphic:
 		var aux_graphic_visible := camera_dist < aux_graphic_too_far
 		if _aux_graphic_visible != aux_graphic_visible:

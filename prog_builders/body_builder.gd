@@ -215,10 +215,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if orbit and orbit.is_retrograde(time): # retrograde
 		rotations.rotation_period = -rotations.rotation_period
 	# reference basis
-	body.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
-	var rotation_0 := _table_reader.get_real(table_name, "rotate_adj", row)
+	rotations.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
+	var rotation_0 := _table_reader.get_real(table_name, "rotation_0", row)
 	if rotation_0 and !is_inf(rotation_0):
-		body.reference_basis = body.reference_basis.rotated(rotations.north_pole, rotation_0)
+		rotations.reference_basis = rotations.reference_basis.rotated(rotations.north_pole, rotation_0)
 	# file import info
 	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
 	if rings_prefix:
@@ -265,7 +265,7 @@ func _build_unpersisted(body: Body) -> void:
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	body.texture_2d = file_utils.find_resource(_texture_2d_dir, body.file_prefix)
 	if !body.texture_2d:
-		body.texture_2d = Global.assets.fallback_texture_2d
+		body.texture_2d = Global.assets.fallback_2d_body
 	if body.flags & BodyFlags.IS_STAR:
 		var slice_name = body.file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_resource(_texture_2d_dir, slice_name)

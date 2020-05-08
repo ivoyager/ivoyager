@@ -132,8 +132,8 @@ var planetary_system_dir := "res://ivoyager/data/solar_system"
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing
 # model in model_paths (1st path element to last). Failing that, it will use
-# a premade generic mesh (e.g., globe_mesh) and search for textures in
-# texture_paths. If it can't find "<file_prifix>.albedo", then it will use the
+# a premade generic mesh (e.g., globe_mesh) and search for map textures in
+# maps_search. If it can't find "<file_prifix>.albedo", then it will use the
 # generic grey grid. Invalid paths are erased at project init.
 # Modify array content below to alter search paths.
 
@@ -141,9 +141,9 @@ var models_search := [
 	"res://ivoyager_assets/models",
 	"res://ivoyager_assets_web/models",
 ]
-var textures_search := [
-	"res://ivoyager_assets/globe_wraps",
-	"res://ivoyager_assets_web/globe_wraps",
+var maps_search := [
+	"res://ivoyager_assets/maps",
+	"res://ivoyager_assets_web/maps",
 ]
 
 # Note: some paths below will likely be depreciated in favor of fallthough
@@ -155,19 +155,17 @@ var textures_search := [
 var asset_replacement_dir := "" 
 var asset_paths := {
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
-#	models_dir = "res://ivoyager_assets/models",
-#	globe_wraps_dir = "res://ivoyager_assets/globe_wraps",
 	rings_dir = "res://ivoyager_assets/rings",
 	texture_2d_dir = "res://ivoyager_assets/2d_bodies",
 	hud_icons_dir = "res://ivoyager_assets/icons/hud_icons",
-	starmap_8k = "res://ivoyager_assets/starfields/starmap_8k.jpg",
-	starmap_16k = "res://ivoyager_assets/starfields/starmap_16k.jpg",
+	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
+	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # project_init() will load these into assets
 	generic_moon_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
 	fallback_icon = "res://ivoyager_assets/icons/hud_icons/generic_o.icon.png",
-	fallback_globe_wrap = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
-	fallback_texture_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
+	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
+	fallback_2d_body = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb",
 	fallback_star_slice = "res://ivoyager_assets/2d_bodies/Sun_slice.256.png",
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
@@ -197,7 +195,7 @@ var _ivoyager_version := ivoyager_version
 func project_init() -> void:
 	# This is the first of all project_init() calls.
 	_erase_invalid_dir_paths(models_search)
-	_erase_invalid_dir_paths(textures_search)
+	_erase_invalid_dir_paths(maps_search)
 
 	prints(project_name, ivoyager_version, project_version)
 	if asset_replacement_dir:

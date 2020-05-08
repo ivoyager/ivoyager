@@ -35,10 +35,10 @@ var max_lazy := 20
 # private
 var _times: Array = Global.times
 var _models_search := Global.models_search
-var _textures_search := Global.textures_search
+var _textures_search := Global.maps_search
 var _globe_mesh: SphereMesh = Global.globe_mesh
 var _table_reader: TableReader
-var _fallback_globe_wrap: Texture
+var _fallback_albedo_map: Texture
 var _memoized := {}
 var _lazy_tracker := {}
 var _n_lazy := 0
@@ -55,7 +55,7 @@ var _material_fields := {
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
 	_table_reader = Global.program.TableReader
-	_fallback_globe_wrap = Global.assets.fallback_globe_wrap
+	_fallback_albedo_map = Global.assets.fallback_albedo_map
 
 func add_model(body: Body, lazy_init: bool) -> void:
 	var model: Spatial
@@ -71,7 +71,8 @@ func add_model(body: Body, lazy_init: bool) -> void:
 		model.hide()
 	body.model = model
 	body.model_too_far = body.properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
-	body.model_basis = body.reference_basis * model.transform.basis
+	body.rotations.init_model_basis(model.transform.basis)
+#	body.model_ref_basis = model.transform.basis
 	body.add_child(model)
 
 func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: float,
@@ -100,7 +101,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		# TODO: models that are not PackedScene???
 	# fallthrough to ellipsoid model using the common Global.globe_mesh
 	assert(m_radius > 0.0)
-	var albedo_texture: Texture = _find_resource(_textures_search, file_prefix + ".albedo")
+	var albedo_map: Texture = _find_resource(_textures_search, file_prefix + ".albedo")
 	if is_placeholder:
 		model = Spatial.new()
 	else:
@@ -108,9 +109,9 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		model.mesh = _globe_mesh
 		var surface := SpatialMaterial.new()
 		model.set_surface_material(0, surface)
-		if !albedo_texture:
-			albedo_texture = _fallback_globe_wrap
-		surface.albedo_texture = albedo_texture
+		if !albedo_map:
+			albedo_map = _fallback_albedo_map
+		surface.albedo_texture = albedo_map
 		_table_reader.build_object(surface, "models", model_type, _material_fields)
 		if _table_reader.get_bool("models", "shadow", model_type):
 			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
