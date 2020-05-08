@@ -191,7 +191,8 @@ var current_project_version := project_version
 var current_ivoyager_version := ivoyager_version
 
 # private
-var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, icons_search]
+var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, icons_search,
+	rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func project_init() -> void:

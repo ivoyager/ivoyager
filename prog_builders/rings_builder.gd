@@ -34,7 +34,7 @@ func add_rings(body: Body) -> void:
 	var rings_file: String = body.rings_info[0] + "_temp"
 	var radius: float = body.rings_info[1]
 	var texture: Texture = file_utils.find_and_load_resource(_rings_search, rings_file)
-	assert(texture) # no fallback!
+	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()
 	rings_material.albedo_texture = texture
