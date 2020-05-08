@@ -124,6 +124,8 @@ func project_init() -> void:
 	if main_menu:
 		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
+	if Global.disable_pause:
+		remove_item("toggle_pause")
 	if !Global.allow_time_reversal:
 		remove_item("reverse_time")
 	if !Global.allow_dev_tools:

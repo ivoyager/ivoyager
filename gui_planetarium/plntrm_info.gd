@@ -39,6 +39,9 @@ func _ready():
 	var time_control: Control = $TimeBox/TimeControl
 	time_control.include_game_speed_label = false
 	time_control.include_pause_button = false
+	var real_time_button: Button = $TimeBox/TimeControl/Real
+	time_control.move_child(real_time_button, 0)
+	real_time_button.text = "BUTTON_NOW"
 	var view_buttons: Control = $SelectionBox/ViewButtons
 	view_buttons.use_small_txt = true
 	view_buttons.include_recenter = true
