@@ -20,6 +20,10 @@
 # HUDPoints, and act as source data for Asteroid instances. We can't easily
 # separate contruction here because we would have to pass-by-value very large
 # pool arrays.
+#
+# TODO: This should be a Node (parented by Sun in our solar system). We should
+# merge this with HUDPoints. Builder stuff currently in both classes should go
+# to a builder class.
 
 extends Reference
 class_name AsteroidGroup
@@ -177,13 +181,13 @@ func _fix_binary_keplerian_elements() -> void:
 		# Fix M0 for different epoch.
 		# Currently, *.cat files have epoch MJD 58200. We need to check this
 		# whenever we download new source data and adjust code accordingly.
-		# TODO: automate this in big_data_interface.gd.
+		# TODO: automate this (or provide setting) in asteroid_importer.gd.
 		# We need to correct M0 from MJD to J2000 day:
 		# MJD = 58200
 		# JD = MJD + 2400000.5 = 2458200.5
 		# J2000 day = JD - 2451545 = 6655.5
 		var M0: float = Om_w_M0_n[index][2] # already in rad
-		var M0_J2000: float = M0 - n * 6655.5 # J2000 was this many days before import epoch
+		var M0_J2000: float = M0 - n * 6655.5 * UnitDefs.DAY
 		M0_J2000 = fposmod(M0_J2000, TAU)
 		Om_w_M0_n[index][2] = M0_J2000
 		# apoapsis
