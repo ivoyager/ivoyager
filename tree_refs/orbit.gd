@@ -108,7 +108,7 @@ func get_position(time: float) -> Vector3:
 		R = math.rotate_vector_pole(R, reference_normal)
 	return R
 
-func get_vectors(time: float) -> Array:
+func get_position_velocity(time: float) -> Array:
 	# returns [Vector3(x, y, z), Vector3(vx, vy, vz)]
 	# NOT TESTED!
 	var elements := _get_elements(time)

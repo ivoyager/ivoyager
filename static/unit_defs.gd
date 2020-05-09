@@ -180,6 +180,8 @@ const MULTIPLIERS := {
 	# gravitational constant
 	"m^3/(kg s^2)" : METER * METER * METER / (KG * SECOND * SECOND),
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),
+	# misc
+	"deg/century^2" : DEG / (CENTURY * CENTURY),
 }
 
 const FUNCTIONS := {
