@@ -32,10 +32,10 @@ func add_world_environment(env_type := 0) -> void:
 	print("Adding WorldEnvironment...")
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
-	world_env.environment = get_environment(env_type, true)
+	world_env.environment = get_environment(env_type)
 	Global.program.universe.add_child(world_env)
 
-func get_environment(_env_type: int, is_world_env := false) -> Environment:
+func get_environment(_env_type: int) -> Environment:
 	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
@@ -51,10 +51,11 @@ func get_environment(_env_type: int, is_world_env := false) -> Environment:
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
+	env.glow_enabled = true
 	env.background_energy = 1.0
 	env.ambient_light_color = Color.white
-	env.ambient_light_energy = 0.02 # adjust up for web?
+	env.ambient_light_energy = 0.03 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
-	# we signal to make modification by external project easy
-	Global.emit_signal("environment_created", env, is_world_env)
+	if Global.is_gles2: # GLES2 lighting is different than GLES3!
+		env.ambient_light_energy = 0.2
 	return env

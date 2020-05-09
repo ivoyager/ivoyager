@@ -44,7 +44,6 @@ signal about_to_quit()
 signal setting_changed(setting, value)
 signal gui_entered_tree(control) # depreciate?
 signal gui_ready(control) # depreciate?
-signal environment_created(environment, is_world_env)
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
@@ -188,9 +187,10 @@ const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 # *****************************************************************************
 
-# these may differ after game load; Main uses for version warning
+# read-only!
 var current_project_version := project_version
 var current_ivoyager_version := ivoyager_version
+var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 
 # private
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, icons_search,
