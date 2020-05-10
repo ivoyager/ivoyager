@@ -51,11 +51,15 @@ func get_environment(_env_type: int) -> Environment:
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
-	env.glow_enabled = true
-	env.background_energy = 1.0
+	env.background_energy = 1.5
 	env.ambient_light_color = Color.white
-	env.ambient_light_energy = 0.03 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
+	env.ambient_light_energy = 0.03 # adjust up for web?
+	env.glow_enabled = true
+	env.glow_intensity = 0.8
+	env.glow_bloom = 1.0
 	if Global.is_gles2: # GLES2 lighting is different than GLES3!
-		env.ambient_light_energy = 0.2
+		env.ambient_light_energy = 0.15
+		env.glow_intensity = 0.8
+		env.glow_bloom = 0.5
 	return env
