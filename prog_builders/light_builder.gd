@@ -38,9 +38,13 @@ func add_omnilight(body: Body) -> void:
 	_table_reader.build_object(omnilight, "lights", light_type, omni_fields)
 	omnilight.shadow_enabled = true # FIXME: No shadows. Why not?
 #	omnilight.shadow_bias = 0.01 # Can't even generate shadow artifacts
-	omnilight.light_energy = 1.5
 	omnilight.omni_attenuation = 8.0
+	omnilight.light_energy = 1.5
+	omnilight.light_specular = 0.5
 	if Global.is_gles2:
+		omnilight.omni_attenuation = 3.0
 		omnilight.light_energy = 1.2
+		omnilight.light_specular = 0.25
+	elif Global.auto_exposure_enabled:
 		omnilight.omni_attenuation = 3.0
 	body.add_child(omnilight)

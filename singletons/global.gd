@@ -110,6 +110,7 @@ var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
 var disable_pause := false
+var auto_exposure_enabled := true # no effect in GLES2
 var vertecies_per_orbit: int = 500
 var max_camera_distance: float = 200.0 * UnitDefs.AU
 var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
