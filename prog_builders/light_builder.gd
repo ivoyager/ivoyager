@@ -21,19 +21,30 @@ class_name LightBuilder
 
 const METER := UnitDefs.METER
 
+var omni_fields := {
+	omni_range = "omni_range",
+}
+
 var _table_reader: TableReader
 
 func project_init() -> void:
 	_table_reader = Global.program.TableReader
 
 func add_omnilight(body: Body) -> void:
-	if body.light_type != -1:
-		var omnilight := OmniLight.new()
-		var light_type: int = body.light_type
-		omnilight.shadow_enabled = true
-#		omnilight.shadow_bias = 0.05
-		omnilight.omni_range = _table_reader.get_real("lights", "omni_range", light_type)
-		omnilight.name = "Starlight"
-		body.add_child(omnilight)
-		
-#		print(omnilight.shadow_enabled)
+	if body.light_type == -1:
+		return
+	var omnilight := OmniLight.new()
+	var light_type: int = body.light_type
+	_table_reader.build_object(omnilight, "lights", light_type, omni_fields)
+	omnilight.shadow_enabled = true # FIXME: No shadows. Why not?
+#	omnilight.shadow_bias = 0.01 # Can't even generate shadow artifacts
+	omnilight.omni_attenuation = 8.0
+	omnilight.light_energy = 1.5
+	omnilight.light_specular = 0.5
+	if Global.is_gles2:
+		omnilight.omni_attenuation = 3.0
+		omnilight.light_energy = 1.2
+		omnilight.light_specular = 0.25
+	elif Global.auto_exposure_enabled:
+		omnilight.omni_attenuation = 3.0
+	body.add_child(omnilight)

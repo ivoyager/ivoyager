@@ -32,10 +32,10 @@ func add_world_environment(env_type := 0) -> void:
 	print("Adding WorldEnvironment...")
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
-	world_env.environment = get_environment(env_type, true)
+	world_env.environment = get_environment(env_type)
 	Global.program.universe.add_child(world_env)
 
-func get_environment(_env_type: int, is_world_env := false) -> Environment:
+func get_environment(_env_type: int) -> Environment:
 	# TODO: Read env settings from data table!
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
@@ -51,10 +51,26 @@ func get_environment(_env_type: int, is_world_env := false) -> Environment:
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
-	env.background_energy = 1.0
+	env.background_energy = 1.5
 	env.ambient_light_color = Color.white
-	env.ambient_light_energy = 0.02 # adjust up for web?
 	env.ambient_light_sky_contribution = 0.0
-	# we signal to make modification by external project easy
-	Global.emit_signal("environment_created", env, is_world_env)
+	env.glow_enabled = true
+	env.ambient_light_energy = 0.03
+	env.glow_intensity = 0.8
+	env.glow_bloom = 1.0
+	if Global.is_gles2: # GLES2 lighting is different than GLES3!
+		env.ambient_light_energy = 0.15
+		env.glow_hdr_threshold = 0.9
+		env.glow_intensity = 0.8
+		env.glow_bloom = 0.5
+	elif Global.auto_exposure_enabled:
+		env.auto_exposure_enabled = true
+		env.auto_exposure_speed = 5.0
+		env.auto_exposure_scale = 0.4
+		env.auto_exposure_min_luma = 0.18 # bigger reduces overexposure blowout
+		env.auto_exposure_max_luma = 8.0 # small values increase overexp blowout (no auto corr)
+		env.glow_hdr_luminance_cap = 12.0 # can't see any effect
+		env.glow_hdr_scale = 2.0 # can't see any effect
+#		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+		env.tonemap_exposure = 0.4 # adjust w/ auto_exposure_scale
 	return env
