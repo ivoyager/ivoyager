@@ -121,11 +121,14 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		else:
 #			surface.albedo_texture = albedo_map
 			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-			surface.flags_unshaded = false
+#			model.extra_cull_margin = 1e6 # has no effect???
 			surface.emission_texture = albedo_map
 			surface.emission_enabled = true
 #			surface.emission = Color.white
 			surface.emission_energy = 5.0
+			# Need ~10000 at Earth dist for auto-exp effect, stronger at Mars.
+			# Need ~5 when close for sun detail. 
+			
 #			surface.emission_on_uv2 = true
 #			surface.emission_operator = SpatialMaterial.EMISSION_OP_ADD
 	if !is_inf(e_radius):
