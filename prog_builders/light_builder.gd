@@ -30,21 +30,22 @@ var _table_reader: TableReader
 func project_init() -> void:
 	_table_reader = Global.program.TableReader
 
-func add_omnilight(body: Body) -> void:
+func add_omni_light(body: Body) -> void:
 	if body.light_type == -1:
 		return
-	var omnilight := OmniLight.new()
+	var omni_light := OmniLight.new()
 	var light_type: int = body.light_type
-	_table_reader.build_object(omnilight, "lights", light_type, omni_fields)
-	omnilight.shadow_enabled = true # FIXME: No shadows. Why not?
-#	omnilight.shadow_bias = 0.01 # Can't even generate shadow artifacts
-	omnilight.omni_attenuation = 8.0
-	omnilight.light_energy = 1.5
-	omnilight.light_specular = 0.5
+	_table_reader.build_object(omni_light, "lights", light_type, omni_fields)
+	omni_light.shadow_enabled = true # FIXME: No shadows. Why not?
+#	omni_light.shadow_bias = 0.01 # Can't even generate shadow artifacts
+	omni_light.omni_attenuation = 8.0
+	omni_light.light_energy = 1.5
+	omni_light.light_specular = 0.5
 	if Global.is_gles2:
-		omnilight.omni_attenuation = 3.0
-		omnilight.light_energy = 1.2
-		omnilight.light_specular = 0.25
+		omni_light.omni_attenuation = 3.0
+		omni_light.light_energy = 1.2
+		omni_light.light_specular = 0.25
 	elif Global.auto_exposure_enabled:
-		omnilight.omni_attenuation = 3.0
-	body.add_child(omnilight)
+		omni_light.omni_attenuation = 3.0
+	body.omni_light = omni_light
+	body.add_child(omni_light)

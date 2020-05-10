@@ -34,7 +34,10 @@ const DPRINT := false
 const HACKFIX_MOVE_HIDDEN_FAR_AWAY := false # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
-const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
+const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
+const STAR_GROW_DIST := 2.0 * UnitDefs.AU # keep star visible at greater ranges
+const STAR_GROW_EXPONENT := 0.6
+
 
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
@@ -72,18 +75,25 @@ const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites
 # public unpersisted - read-only except builder classes
 var model: Spatial
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibile control)
+var omni_light: OmniLight
+var star_surface: SpatialMaterial # for dynamic emission
 var hud_orbit: HUDOrbit
 var hud_icon: Spatial
 var hud_label: Control
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
+var model_ref_basis: Basis # original model rotations & scale
 var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
 var hud_too_close := 0.0
+var light_emission_near := 1.5 # near star's radius
+var light_emission_polynomial_1 := 0.7
+var light_emission_polynomial_2 := 0.15
 var satellite_indexes: Dictionary # one dict shared by all Bodies
 
 # private
 var _times: Array = Global.times
+var _camera_info: Array = Global.camera_info
 var _visible := false
 var _model_visible := false
 var _aux_graphic_visible := false
@@ -120,7 +130,12 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 	if model:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			model.transform.basis = rotations.get_rotated_basis(time)
+			if light_type == -1:
+				model.transform.basis = rotations.get_rotated_basis(model_ref_basis, time)
+			else:
+				var grow_scale := _grow_star(camera_dist)
+				var model_basis := model_ref_basis.scaled(Vector3(grow_scale, grow_scale, grow_scale))
+				model.transform.basis = rotations.get_rotated_basis(model_basis, time)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model.visible = model_visible
@@ -164,6 +179,19 @@ func hide_visuals() -> void:
 	# propagated that way. I think something like "set_is_top" would prevent
 	# inheritin position.
 
+func _grow_star(camera_dist: float) -> float:
+	# increase emmision_energy & return >1.0 scale for distant star
+	if star_surface:
+		var dist_ratio := camera_dist / properties.m_radius
+		var multiplier := light_emission_polynomial_1 * dist_ratio + \
+				light_emission_polynomial_2 * dist_ratio * dist_ratio
+		var emission_energy := light_emission_near * multiplier
+		star_surface.emission_energy = emission_energy
+#		print(emission_energy)
+	var grow_scale := 1.0
+	if camera_dist > STAR_GROW_DIST:
+		grow_scale = pow(camera_dist / STAR_GROW_DIST, STAR_GROW_EXPONENT)
+	return grow_scale
 
 func _init():
 	_on_init()

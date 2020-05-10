@@ -116,6 +116,7 @@ var parent: Spatial # always current
 var is_moving := false # body to body move in progress
 
 # private
+var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
 var _max_dist: float = Global.max_camera_distance
@@ -269,6 +270,7 @@ func tree_manager_process(engine_delta: float) -> void:
 		# of parent.global_transform.origin. 
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
+	_camera_info[2] = global_transform.origin
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
@@ -301,6 +303,8 @@ func _on_ready():
 	_use_local_north_dist = use_local_north / fov
 	_use_ecliptic_north_dist = use_ecliptic_north / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
+	_camera_info[0] = self
+	_camera_info[1] = fov
 	Global.emit_signal("camera_ready", self)
 	print("BCamera ready...")
 

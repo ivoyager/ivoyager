@@ -32,13 +32,13 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["axial_tilt", "right_ascension", "declination",
 	"rotation_period", "north_pole", "reference_basis"]
 
-var _model_ref_basis: Basis # original model rotations & scale
-var _working_ref_basis: Basis
+#var _model_ref_basis: Basis # original model rotations & scale
+#var _working_ref_basis: Basis
 
-func init_model_basis(model_ref_basis: Basis) -> void:
-	_model_ref_basis = model_ref_basis
-	_working_ref_basis = reference_basis * _model_ref_basis
+#func init_model_basis(model_ref_basis: Basis) -> void:
+#	_model_ref_basis = model_ref_basis
+#	_working_ref_basis = reference_basis * _model_ref_basis
 
-func get_rotated_basis(time: float) -> Basis:
+func get_rotated_basis(model_basis: Basis, time: float) -> Basis:
 	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-	return _working_ref_basis.rotated(north_pole, rotation_angle)
+	return (reference_basis * model_basis).rotated(north_pole, rotation_angle)

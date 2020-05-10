@@ -260,12 +260,14 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		_model_builder.add_model(body, not body.flags & BodyFlags.IS_NAVIGATOR_MOON)
-		body.rotations.init_model_basis(body.model.transform.basis)
+		var lazy_init: bool = body.flags & BodyFlags.IS_MOON \
+				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
+		_model_builder.add_model(body, lazy_init)
+		body.model_ref_basis = body.model.transform.basis
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
-		_light_builder.add_omnilight(body)
+		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
 	_huds_builder.add_icon(body)

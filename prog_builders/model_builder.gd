@@ -39,7 +39,7 @@ var _textures_search := Global.maps_search
 var _globe_mesh: SphereMesh
 var _table_reader: TableReader
 var _fallback_albedo_map: Texture
-var _memoized := {}
+var _memoized := {} # overloaded w/ some non-memoization stuff
 var _lazy_tracker := {}
 var _n_lazy := 0
 var _material_fields := {
@@ -71,7 +71,14 @@ func add_model(body: Body, lazy_init: bool) -> void:
 				properties.e_radius)
 		model.hide()
 	body.model = model
-	body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
+	if body.light_type == -1:
+		body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
+	else:
+		body.model_too_far = INF
+		var star_surface_key := body.file_prefix + "*"
+		if _memoized.has(star_surface_key):
+			body.star_surface = _memoized[star_surface_key]
+#			print(body.star_surface)
 	body.add_child(model)
 
 func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: float,
@@ -108,6 +115,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		model.mesh = _globe_mesh
 		var surface := SpatialMaterial.new()
 		model.set_surface_material(0, surface)
+		
 		if !albedo_map:
 			albedo_map = _fallback_albedo_map
 		_table_reader.build_object(surface, "models", model_type, _material_fields)
@@ -122,6 +130,11 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 #			surface.albedo_texture = albedo_map
 			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
 #			model.extra_cull_margin = 1e6 # has no effect???
+#			var max_r: float = Global.max_camera_distance
+#			max_r /= 100.0
+#			var star_aabb := AABB(-max_r * Vector3.ONE, 2.0 * max_r * Vector3.ONE)
+#			model.set_custom_aabb(star_aabb)
+
 			surface.emission_texture = albedo_map
 			surface.emission_enabled = true
 #			surface.emission = Color.white
@@ -131,6 +144,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 			
 #			surface.emission_on_uv2 = true
 #			surface.emission_operator = SpatialMaterial.EMISSION_OP_ADD
+			_memoized[file_prefix + "*"] = surface
 	if !is_inf(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)
