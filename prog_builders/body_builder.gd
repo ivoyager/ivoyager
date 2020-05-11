@@ -86,8 +86,9 @@ var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _table_reader: TableReader
 var _Body_: Script
-var _Rotations_: Script
+var _ModelManager_: Script
 var _Properties_: Script
+var _StarRegulator_: Script
 var _fallback_body_2d: Texture
 var _fallback_star_slice: Texture
 var _satellite_indexes := {} # passed to & shared by Body instances
@@ -104,7 +105,7 @@ func project_init() -> void:
 	_orbit_builder = Global.program.OrbitBuilder
 	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
-	_Rotations_ = Global.script_classes._Rotations_
+	_ModelManager_ = Global.script_classes._ModelManager_
 	_Properties_ = Global.script_classes._Properties_
 	_fallback_body_2d = Global.assets.fallback_body_2d
 	_fallback_star_slice = Global.assets.fallback_star_slice
@@ -190,22 +191,22 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
-	var rotations: Rotations = _Rotations_.new()
-	body.rotations = rotations
-	_table_reader.build_object(rotations, table_name, row, rotations_fields)
+	var model_manager: ModelManager = _ModelManager_.new()
+	body.model_manager = model_manager
+	_table_reader.build_object(model_manager, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(!is_inf(rotations.right_ascension) and !is_inf(rotations.declination))
-		rotations.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
-				rotations.right_ascension, rotations.declination)
+		assert(!is_inf(model_manager.right_ascension) and !is_inf(model_manager.declination))
+		model_manager.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
+				model_manager.right_ascension, model_manager.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).
 		if orbit:
-			rotations.axial_tilt = rotations.north_pole.angle_to(orbit.get_normal(time))
+			model_manager.axial_tilt = model_manager.north_pole.angle_to(orbit.get_normal(time))
 		else: # sun
-			rotations.axial_tilt = rotations.north_pole.angle_to(ECLIPTIC_NORTH)
+			model_manager.axial_tilt = model_manager.north_pole.angle_to(ECLIPTIC_NORTH)
 	else:
-		rotations.rotation_period = TAU / orbit.get_mean_motion(time)
+		model_manager.rotation_period = TAU / orbit.get_mean_motion(time)
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -214,18 +215,18 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		rotations.north_pole = orbit.get_normal(time)
-		if rotations.axial_tilt != 0.0:
-			var correction_axis := rotations.north_pole.cross(orbit.reference_normal).normalized()
-			rotations.north_pole = rotations.north_pole.rotated(correction_axis, rotations.axial_tilt)
-	rotations.north_pole = rotations.north_pole.normalized()
+		model_manager.north_pole = orbit.get_normal(time)
+		if model_manager.axial_tilt != 0.0:
+			var correction_axis := model_manager.north_pole.cross(orbit.reference_normal).normalized()
+			model_manager.north_pole = model_manager.north_pole.rotated(correction_axis, model_manager.axial_tilt)
+	model_manager.north_pole = model_manager.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
-		rotations.rotation_period = -rotations.rotation_period
+		model_manager.rotation_period = -model_manager.rotation_period
 	# reference basis
-	rotations.reference_basis = math.rotate_basis_pole(Basis(), rotations.north_pole)
+	model_manager.reference_basis = math.rotate_basis_pole(Basis(), model_manager.north_pole)
 	var rotation_0 := _table_reader.get_real(table_name, "rotation_0", row)
 	if rotation_0 and !is_inf(rotation_0):
-		rotations.reference_basis = rotations.reference_basis.rotated(rotations.north_pole, rotation_0)
+		model_manager.reference_basis = model_manager.reference_basis.rotated(model_manager.north_pole, rotation_0)
 	# file import info
 	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
 	if rings_prefix:
@@ -260,8 +261,8 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		var lazy_init: bool = body.flags & BodyFlags.IS_MOON \
-				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
+		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  #\
+#				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
 		body.model_ref_basis = body.model.transform.basis
 	if body.rings_info:

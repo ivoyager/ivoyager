@@ -1,4 +1,4 @@
-# rotations.gd
+# model_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles rotation and rotation precession.
-# TODO: Rotation precession.
+# Handles rotation (TODO: and rotation precession). For star, handles dynamic
+# emission and scaling (to maintain effects & visibility at great distance)
+#
 # TODO: Hyperion has chaotic rotation. How do we simulate that???
 
-class_name Rotations
+class_name ModelManager
 
 var axial_tilt := 0.0
 var right_ascension := -INF

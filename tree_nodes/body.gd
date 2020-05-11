@@ -38,7 +38,6 @@ const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
 const STAR_GROW_DIST := 2.0 * UnitDefs.AU # keep star visible at greater ranges
 const STAR_GROW_EXPONENT := 0.6
 
-
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
@@ -61,7 +60,7 @@ var file_prefix: String
 var rings_info: Array # [file_name, radius] if exists
 
 var properties: Properties
-var rotations: Rotations
+var model_manager: ModelManager
 var orbit: Orbit
 var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
@@ -69,20 +68,24 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_prefix", "rings_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["properties", "model_manager", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
 var model: Spatial
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibile control)
-var omni_light: OmniLight
-var star_surface: SpatialMaterial # for dynamic emission
+
 var hud_orbit: HUDOrbit
 var hud_icon: Spatial
 var hud_label: Control
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
-var model_ref_basis: Basis # original model rotations & scale
+
+
+var omni_light: OmniLight
+var star_surface: SpatialMaterial # for dynamic emission
+
+var model_ref_basis: Basis # original model model_manager & scale
 var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
 var hud_too_close := 0.0
@@ -131,11 +134,11 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
 			if light_type == -1:
-				model.transform.basis = rotations.get_rotated_basis(model_ref_basis, time)
+				model.transform.basis = model_manager.get_rotated_basis(model_ref_basis, time)
 			else:
 				var grow_scale := _grow_star(camera_dist)
 				var model_basis := model_ref_basis.scaled(Vector3(grow_scale, grow_scale, grow_scale))
-				model.transform.basis = rotations.get_rotated_basis(model_basis, time)
+				model.transform.basis = model_manager.get_rotated_basis(model_basis, time)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model.visible = model_visible
@@ -208,10 +211,10 @@ func _on_ready() -> void:
 func _update_orbit_change():
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
-		if rotations.axial_tilt != 0.0:
+		if model_manager.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, rotations.axial_tilt)
-		rotations.north_pole = new_north_pole
+			new_north_pole = new_north_pole.rotated(correction_axis, model_manager.axial_tilt)
+		model_manager.north_pole = new_north_pole
 		# TODO: Adjust reference_basis
 
 func _settings_listener(setting: String, value) -> void:

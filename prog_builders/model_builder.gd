@@ -167,6 +167,7 @@ func _lazy_init(body: Body) -> void:
 	model.connect("visibility_changed", self, "_update_lazy", [model])
 	body.model = model
 	body.add_child(model)
+#	prints(tr(body.name), model)
 	_n_lazy += 1
 	if _n_lazy > max_lazy:
 		_cull_lazy()
