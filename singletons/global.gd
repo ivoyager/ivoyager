@@ -87,6 +87,7 @@ var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
 var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
+var camera_info := [null, 50.0, 0.0] # Camera; [Camera, fov, global_translation]
 var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 

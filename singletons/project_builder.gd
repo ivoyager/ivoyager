@@ -155,12 +155,12 @@ var procedural_classes := {
 	_HUDPoints_ = HUDPoints,
 	# tree_refs
 	_Orbit_ = Orbit,
-	_Rotations_ = Rotations,
+	_ModelManager_ = ModelManager,
 	_Properties_ = Properties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,
 	_AsteroidGroup_ = AsteroidGroup,
-	_BodyList_ = BodyList,
+	_BodyList_ = BodyList, # WIP
 }
 
 var extensions := []

@@ -34,7 +34,7 @@ const DPRINT := false
 const HACKFIX_MOVE_HIDDEN_FAR_AWAY := false # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
-const HUD_TOO_CLOSE_STAR_MULTIPLIER := 3.0 # combines w/ above
+const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
 
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
@@ -52,13 +52,12 @@ var flags := 0 # see Enums.BodyFlags
 
 var system_radius := 0.0 # widest orbiting satellite
 
-
 # file reading
 var file_prefix: String
 var rings_info: Array # [file_name, radius] if exists
 
 var properties: Properties
-var rotations: Rotations
+var model_manager: ModelManager
 var orbit: Orbit
 var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
@@ -66,12 +65,12 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_prefix", "rings_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "rotations", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["properties", "model_manager", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
-var model: Spatial
-var aux_graphic: Spatial # rings, commet tail, etc. (for visibile control)
+var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
+var omni_light: OmniLight # star only
 var hud_orbit: HUDOrbit
 var hud_icon: Spatial
 var hud_label: Control
@@ -84,6 +83,7 @@ var satellite_indexes: Dictionary # one dict shared by all Bodies
 
 # private
 var _times: Array = Global.times
+var _camera_info: Array = Global.camera_info
 var _visible := false
 var _model_visible := false
 var _aux_graphic_visible := false
@@ -117,13 +117,13 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 		hud_label.set_position(label_pos + label_offset)
 	if orbit:
 		translation = orbit.get_position(time)
-	if model:
+	if model_manager:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			model.transform.basis = rotations.get_rotated_basis(time)
+			model_manager.process_visible(time, camera_dist)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
-			model.visible = model_visible
+			model_manager.change_visibility(model_visible)
 	if aux_graphic:
 		var aux_graphic_visible := camera_dist < aux_graphic_too_far
 		if _aux_graphic_visible != aux_graphic_visible:
@@ -164,7 +164,6 @@ func hide_visuals() -> void:
 	# propagated that way. I think something like "set_is_top" would prevent
 	# inheritin position.
 
-
 func _init():
 	_on_init()
 
@@ -180,11 +179,11 @@ func _on_ready() -> void:
 func _update_orbit_change():
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
-		if rotations.axial_tilt != 0.0:
+		if model_manager.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, rotations.axial_tilt)
-		rotations.north_pole = new_north_pole
-		# TODO: Adjust reference_basis
+			new_north_pole = new_north_pole.rotated(correction_axis, model_manager.axial_tilt)
+		model_manager.north_pole = new_north_pole
+		# TODO: Adjust body_ref_basis???
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

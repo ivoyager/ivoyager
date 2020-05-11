@@ -20,7 +20,7 @@
 # applicable (don't display label or value). For floats, these are INF and
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
 # To find properites, we search first in SelectionItem, then Body, then
-# Properties, then Rotations.
+# Properties, then ModelManager.
 
 # TODO: Mouse-over array.
 
@@ -125,12 +125,12 @@ func _on_selection_changed() -> void:
 		return
 	var body: Body
 	var properties: Properties
-	var rotations: Rotations
+	var model_manager: ModelManager
 	var orbit: Orbit
 	if _selection_manager.is_body():
 		body = _selection_manager.get_body()
 		properties = body.properties
-		rotations = body.rotations
+		model_manager = body.model_manager
 		orbit = body.orbit
 	var grid_index := 0
 	for show_datum in show_data:
@@ -142,8 +142,8 @@ func _on_selection_changed() -> void:
 			value = body.get(property)
 		elif properties and property in properties:
 			value = properties.get(property)
-		elif rotations and property in rotations:
-			value = rotations.get(property)
+		elif model_manager and property in model_manager:
+			value = model_manager.get(property)
 		elif orbit and property in orbit:
 			value = orbit.get(property)
 		if value == null:
