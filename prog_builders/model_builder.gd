@@ -29,8 +29,13 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const MODEL_TOO_FAR_RADIUS_MULTIPLIER := 1e3
 const METER := UnitDefs.METER
 
-# project var
+# project vars
 var max_lazy := 20
+var star_grow_dist := 2.0 * UnitDefs.AU # grow to stay visible at greater range
+var star_grow_exponent := 0.6
+var star_energy_ref_dist := 3.8e6 * UnitDefs.KM # ~4x radius works
+var star_energy_near := 10.0 # energy at _star_energy_ref_dist
+var star_energy_exponent := 1.9
 
 # private
 var _times: Array = Global.times
@@ -39,7 +44,7 @@ var _textures_search := Global.maps_search
 var _globe_mesh: SphereMesh
 var _table_reader: TableReader
 var _fallback_albedo_map: Texture
-var _memoized := {} # overloaded w/ some non-memoization stuff
+var _saved_resources := {}
 var _lazy_tracker := {}
 var _n_lazy := 0
 var _material_fields := {
@@ -50,7 +55,6 @@ var _material_fields := {
 	rim_tint = "rim_tint",
 }
 
-
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
 	_globe_mesh = Global.shared_resources.globe_mesh
@@ -58,8 +62,9 @@ func project_init() -> void:
 	_fallback_albedo_map = Global.assets.fallback_albedo_map
 
 func add_model(body: Body, lazy_init: bool) -> void:
-	var model: Spatial
 	var properties := body.properties
+	var model_manager := body.model_manager
+	var model: Spatial
 	if lazy_init:
 		# make a simple Spatial placeholder
 		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
@@ -70,15 +75,17 @@ func add_model(body: Body, lazy_init: bool) -> void:
 		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
 				properties.e_radius)
 		model.hide()
-	body.model = model
+	model_manager.set_model(model)
 	if body.light_type == -1:
 		body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
 	else:
 		body.model_too_far = INF
 		var star_surface_key := body.file_prefix + "*"
-		if _memoized.has(star_surface_key):
-			body.star_surface = _memoized[star_surface_key]
-#			print(body.star_surface)
+		if _saved_resources.has(star_surface_key):
+			var star_surface: SpatialMaterial = _saved_resources[star_surface_key]
+			model_manager.set_dynamic_star(star_surface, star_grow_dist,
+					star_grow_exponent, star_energy_ref_dist,
+					star_energy_near, star_energy_exponent)
 	body.add_child(model)
 
 func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: float,
@@ -94,7 +101,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
 		pass
 	if resource_file:
-		var resource: Resource = _memoized[resource_file]
+		var resource: Resource = _saved_resources[resource_file]
 		if resource is PackedScene:
 			if is_placeholder:
 				model = Spatial.new()
@@ -127,24 +134,17 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 #			if Global.is_gles2:
 #				surface.roughness = 1.0
 		else:
-#			surface.albedo_texture = albedo_map
 			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-#			model.extra_cull_margin = 1e6 # has no effect???
-#			var max_r: float = Global.max_camera_distance
-#			max_r /= 100.0
-#			var star_aabb := AABB(-max_r * Vector3.ONE, 2.0 * max_r * Vector3.ONE)
-#			model.set_custom_aabb(star_aabb)
+			# TODO: File should be "Sun.emission" and we need dynamic emission
+			# loading (e.g., for Earth lights)
 
 			surface.emission_texture = albedo_map
 			surface.emission_enabled = true
+			# ModelManager sets emission_energy
 #			surface.emission = Color.white
-			surface.emission_energy = 5.0
-			# Need ~10000 at Earth dist for auto-exp effect, stronger at Mars.
-			# Need ~5 when close for sun detail. 
-			
-#			surface.emission_on_uv2 = true
-#			surface.emission_operator = SpatialMaterial.EMISSION_OP_ADD
-			_memoized[file_prefix + "*"] = surface
+#			surface.emission_energy = 5.0
+
+			_saved_resources[file_prefix + "*"] = surface
 	if !is_inf(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)
@@ -154,20 +154,21 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 	return model
 
 func _clear_procedural() -> void:
-	# we keep _memoized since the file system won't change
+	# we keep _saved_resources since the file system won't change
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
 func _lazy_init(body: Body) -> void:
-	var placeholder := body.model
+	var properties := body.properties
+	var model_manager := body.model_manager
+	var placeholder := model_manager.model
 	assert(placeholder.visible)
 	placeholder.queue_free()
-	var model := get_model(body.model_type, body.file_prefix, body.properties.m_radius,
-		body.properties.e_radius)
+	var model := get_model(body.model_type, body.file_prefix, properties.m_radius,
+		properties.e_radius)
 	model.connect("visibility_changed", self, "_update_lazy", [model])
-	body.model = model
+	model_manager.replace_model(model)
 	body.add_child(model)
-#	prints(tr(body.name), model)
 	_n_lazy += 1
 	if _n_lazy > max_lazy:
 		_cull_lazy()
@@ -181,10 +182,11 @@ func _lazy_uninit(model: Spatial) -> void:
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
 	var body: Body = model.get_parent_spatial()
+	var model_manager := body.model_manager
 	var placeholder := Spatial.new()
 	placeholder.hide()
 	placeholder.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
-	body.model = placeholder
+	model_manager.replace_model(placeholder)
 	body.add_child(placeholder)
 	model.queue_free()
 
@@ -192,7 +194,7 @@ func _update_lazy(model: Spatial) -> void:
 	_lazy_tracker[model] = _times[1] # engine time
 
 func _cull_lazy() -> void:
-	# we cull for below average update time; someone's gotta be below average!
+	# we cull for < average update time (quicker than median)
 	var update_cutoff := 0.0
 	var tracker_keys := _lazy_tracker.keys()
 	for model in tracker_keys:
@@ -205,19 +207,19 @@ func _cull_lazy() -> void:
 # below memoized to prevent file searching and loading at runtime...
 func _find_resource(dir_paths: Array, file_prefix: String) -> Resource:
 	var key := file_prefix + "@"
-	if _memoized.has(key):
-		return _memoized[key]
+	if _saved_resources.has(key):
+		return _saved_resources[key]
 	var resource: Resource = file_utils.find_and_load_resource(dir_paths, file_prefix)
-	_memoized[key] = resource # could be null
+	_saved_resources[key] = resource # could be null
 	return resource
 
 func _find_file_and_resource(dir_paths: Array, file_prefix: String) -> String:
 	var key := file_prefix + "&"
-	if _memoized.has(key):
-		return _memoized[key]
+	if _saved_resources.has(key):
+		return _saved_resources[key]
 	var file_str: String = file_utils.find_resource_file(dir_paths, file_prefix)
-	_memoized[key] = file_str # could be ""
+	_saved_resources[key] = file_str # could be ""
 	if file_str:
-		_memoized[file_str] = load(file_str)
+		_saved_resources[file_str] = load(file_str)
 	return file_str
 

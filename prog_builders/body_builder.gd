@@ -222,11 +222,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	model_manager.north_pole = model_manager.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
 		model_manager.rotation_period = -model_manager.rotation_period
-	# reference basis
-	model_manager.reference_basis = math.rotate_basis_pole(Basis(), model_manager.north_pole)
+	# body reference basis
+	var body_ref_basis := math.rotate_basis_pole(Basis(), model_manager.north_pole)
 	var rotation_0 := _table_reader.get_real(table_name, "rotation_0", row)
 	if rotation_0 and !is_inf(rotation_0):
-		model_manager.reference_basis = model_manager.reference_basis.rotated(model_manager.north_pole, rotation_0)
+		body_ref_basis = body_ref_basis.rotated(model_manager.north_pole, rotation_0)
+	model_manager.set_body_ref_basis(body_ref_basis)
 	# file import info
 	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
 	if rings_prefix:
@@ -261,10 +262,10 @@ func _build_unpersisted(body: Body) -> void:
 			_satellite_indexes[satellite] = satellite_index
 		satellite_index += 1
 	if body.model_type != -1:
-		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  #\
-#				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
+		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
+				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
-		body.model_ref_basis = body.model.transform.basis
+#		body.model_ref_basis = body.model.transform.basis
 	if body.rings_info:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:

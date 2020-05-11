@@ -37,7 +37,7 @@ func add_omni_light(body: Body) -> void:
 	var light_type: int = body.light_type
 	_table_reader.build_object(omni_light, "lights", light_type, omni_fields)
 	omni_light.shadow_enabled = true # FIXME: No shadows. Why not?
-#	omni_light.shadow_bias = 0.01 # Can't even generate shadow artifacts
+#	omni_light.shadow_bias = 0.01 # Can't even generate shadow artifacts!
 	omni_light.omni_attenuation = 8.0
 	omni_light.light_energy = 1.5
 	omni_light.light_specular = 0.5
