@@ -97,10 +97,10 @@ var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
 var enums: Script = Enums # replace w/ extended static class
-var use_threads := true # false for debugging (saver_loader.gd has its own)
+var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
-var asteroid_mag_cutoff_override := INF # != INF overrides asteroid_group_data.csv
+var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
 var skip_splash_screen := false
 var disable_exit := false
 var disable_quit := false
@@ -170,8 +170,8 @@ var asset_paths := {
 }
 var asset_paths_for_load := { # loaded into "assets" dict at project init
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
-	generic_moon_icon = "res://ivoyager_assets/icons/generic_o.icon.png",
-	fallback_icon = "res://ivoyager_assets/icons/generic_o.icon.png",
+	generic_moon_icon = "res://ivoyager_assets/icons/generic_o.png",
+	fallback_icon = "res://ivoyager_assets/icons/generic_o.png",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!

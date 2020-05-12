@@ -64,15 +64,16 @@ func project_init() -> void:
 func add_model(body: Body, lazy_init: bool) -> void:
 	var properties := body.properties
 	var model_manager := body.model_manager
+	var file_prefix: String = body.file_info[0]
 	var model: Spatial
 	if lazy_init:
 		# make a simple Spatial placeholder
-		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
+		model = get_model(body.model_type, file_prefix, properties.m_radius,
 				properties.e_radius, true)
 		model.hide()
 		model.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
 	else:
-		model = get_model(body.model_type, body.file_prefix, properties.m_radius,
+		model = get_model(body.model_type, file_prefix, properties.m_radius,
 				properties.e_radius)
 		model.hide()
 	model_manager.set_model(model)
@@ -80,7 +81,7 @@ func add_model(body: Body, lazy_init: bool) -> void:
 		body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
 	else:
 		body.model_too_far = INF
-		var star_surface_key := body.file_prefix + "*"
+		var star_surface_key := file_prefix + "*"
 		if _saved_resources.has(star_surface_key):
 			var star_surface: SpatialMaterial = _saved_resources[star_surface_key]
 			model_manager.set_dynamic_star(star_surface, star_grow_dist,
@@ -147,7 +148,7 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 	return model
 
 func _clear_procedural() -> void:
-	# we keep _saved_resources since the file system won't change
+	_saved_resources.clear()
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
@@ -157,8 +158,8 @@ func _lazy_init(body: Body) -> void:
 	var placeholder := model_manager.model
 	assert(placeholder.visible)
 	placeholder.queue_free()
-	var model := get_model(body.model_type, body.file_prefix, properties.m_radius,
-		properties.e_radius)
+	var file_prefix: String = body.file_info[0]
+	var model := get_model(body.model_type, file_prefix, properties.m_radius, properties.e_radius)
 	model.connect("visibility_changed", self, "_update_lazy", [model])
 	model_manager.replace_model(model)
 	body.add_child(model)

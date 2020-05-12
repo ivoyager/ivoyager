@@ -52,9 +52,7 @@ var flags := 0 # see Enums.BodyFlags
 
 var system_radius := 0.0 # widest orbiting satellite
 
-# file reading
-var file_prefix: String
-var rings_info: Array # [file_name, radius] if exists
+var file_info := [""] # [file_prefix, icon, rings, rings_radius], 1st required
 
 var properties: Properties
 var model_manager: ModelManager
@@ -64,7 +62,7 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
-	"light_type", "flags", "system_radius", "file_prefix", "rings_info"]
+	"light_type", "flags", "system_radius", "file_info"]
 const PERSIST_OBJ_PROPERTIES := ["properties", "model_manager", "orbit", "satellites",
 	"lagrange_points"]
 

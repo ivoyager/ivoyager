@@ -30,6 +30,7 @@ signal show_labels_changed(is_show)
 signal show_orbits_changed(is_show)
 
 const DPRINT := false
+const QUAD_MESH_BASE_SIZE := Vector2(1.0, 1.0)
 const IS_STAR := Enums.BodyFlags.IS_STAR
 const IS_STAR_ORBITING := Enums.BodyFlags.IS_STAR_ORBITING
 
@@ -44,6 +45,7 @@ const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
 # unpersisted
 var _settings: Dictionary = Global.settings
 var _icon_quad_mesh: QuadMesh
+var _tree: SceneTree
 var _root: Viewport
 var _timekeeper: Timekeeper
 var _registrar: Registrar
@@ -64,6 +66,7 @@ func project_init() -> void:
 	Global.connect("gui_refresh_requested", self, "_gui_refresh")
 	Global.connect("setting_changed", self, "_settings_listener")
 	_icon_quad_mesh = Global.shared_resources.icon_quad_mesh
+	_tree = Global.program.tree
 	_root = Global.program.root
 	_timekeeper = Global.program.Timekeeper
 	_registrar = Global.program.Registrar
@@ -167,8 +170,11 @@ func _update_icon_size() -> void:
 		return
 	var scaling_factor := math.get_fov_scaling_factor(_camera.fov)
 	var viewport_height := _root.get_visible_rect().size.y
-	_icon_quad_mesh.size = Vector2.ONE * (_settings.viewport_icon_size \
-			* scaling_factor / viewport_height)
+	var icon_height: float = (scaling_factor / viewport_height) * _settings.viewport_icon_size
+	for hud_icon in _tree.get_nodes_in_group("HUD Icons"):
+		var icon_mesh: QuadMesh = hud_icon.mesh
+		var old_height := icon_mesh.size.y
+		icon_mesh.size *= icon_height / old_height
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "viewport_icon_size":

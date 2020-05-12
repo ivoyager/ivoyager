@@ -27,8 +27,9 @@ const IS_MOON := BodyFlags.IS_MOON
 const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
-const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3(0, 0, 100),
-	Vector3(0, 0, 0))
+#const ICON_TRANSFORM = Transform()
+##const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3(0, 0, 100),
+##	Vector3(0, 0, 0))
 
 var _settings: Dictionary = Global.settings
 var _icons_search: Array = Global.icons_search
@@ -58,12 +59,21 @@ func add_label(body: Body) -> void:
 func add_icon(body: Body) -> void:
 	var icon := MeshInstance.new()
 	var icon_material := SpatialMaterial.new()
-	var icon_texture: Texture = file_utils.find_and_load_resource(_icons_search, body.file_prefix)
+	var icon_texture: Texture
+	var file_info := body.file_info
+	if file_info.size() > 1 and file_info[1]: # icon name if exists
+		icon_texture = file_utils.find_and_load_resource(_icons_search, file_info[1])
+	if !icon_texture:
+		icon_texture = file_utils.find_and_load_resource(_icons_search, file_info[0])
 	if !icon_texture:
 		if body.flags & IS_MOON:
 			icon_texture = _generic_moon_icon
 		else:
 			icon_texture = _fallback_icon
+	var icon_size := icon_texture.get_size()
+	icon_size /= icon_size.y
+	icon.mesh = QuadMesh.new()
+	icon.mesh.set_size(icon_size)
 	icon_material.albedo_texture = icon_texture
 	icon_material.flags_transparent = true
 	icon_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
@@ -71,9 +81,8 @@ func add_icon(body: Body) -> void:
 	icon_material.flags_fixed_size = true
 	icon_material.flags_albedo_tex_force_srgb = true
 	icon_material.params_billboard_mode = SpatialMaterial.BILLBOARD_ENABLED
-	icon.transform = ICON_TRANSFORM
-	icon.mesh = _icon_quad_mesh
 	icon.material_override = icon_material
+	icon.add_to_group("HUD Icons") # for resizing with fov changes
 	icon.hide()
 	body.hud_icon = icon
 	body.add_child(icon)
