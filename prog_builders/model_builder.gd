@@ -40,7 +40,7 @@ var star_energy_exponent := 1.9
 # private
 var _times: Array = Global.times
 var _models_search := Global.models_search
-var _textures_search := Global.maps_search
+var _maps_search := Global.maps_search
 var _globe_mesh: SphereMesh
 var _table_reader: TableReader
 var _fallback_albedo_map: Texture
@@ -90,17 +90,18 @@ func add_model(body: Body, lazy_init: bool) -> void:
 
 func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: float,
 		is_placeholder := false) -> Spatial:
-	# radii used only for ellipsoid
+	# Radii used only for ellipsoid.
+	# We need correct scale and rotation even if it is a placeholder Spatial!
 	var model: Spatial
-	# For imported models, scale is derived from file
-	# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
-	# meters. Absence of scale suffix indicates units of 1 meter.
 	var resource_file := _find_file_and_resource(_models_search, file_prefix)
 	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
 	if !resource_file and !is_ellipsoid:
 		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
 		pass
 	if resource_file:
+		# For imported models, scale is derived from file
+		# name: e.g., "*_1_1000.*" is understood to be in length units of 1000
+		# meters. Absence of scale suffix indicates units of 1 meter.
 		var resource: Resource = _saved_resources[resource_file]
 		if resource is PackedScene:
 			if is_placeholder:
@@ -114,7 +115,8 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		# TODO: models that are not PackedScene???
 	# fallthrough to ellipsoid model using the common Global.globe_mesh
 	assert(m_radius > 0.0)
-	var albedo_map: Texture = _find_resource(_textures_search, file_prefix + ".albedo")
+	var albedo_map: Texture = _find_resource(_maps_search, file_prefix + ".albedo")
+	var emission_map: Texture = _find_resource(_maps_search, file_prefix + ".emission")
 	if is_placeholder:
 		model = Spatial.new()
 	else:
@@ -122,29 +124,20 @@ func get_model(model_type: int, file_prefix: String, m_radius: float, e_radius: 
 		model.mesh = _globe_mesh
 		var surface := SpatialMaterial.new()
 		model.set_surface_material(0, surface)
-		
-		if !albedo_map:
+		if !albedo_map and !emission_map:
 			albedo_map = _fallback_albedo_map
 		_table_reader.build_object(surface, "models", model_type, _material_fields)
-		if !_table_reader.get_bool("models", "starlight", model_type):
-			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
-			# FIXME! Should cast shadows, but it doesn't...
-	#		prints(model.cast_shadow, surface.flags_do_not_receive_shadows)
+		if albedo_map:
 			surface.albedo_texture = albedo_map
-#			if Global.is_gles2:
-#				surface.roughness = 1.0
-		else:
-			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-			# TODO: File should be "Sun.emission" and we need dynamic emission
-			# loading (e.g., for Earth lights)
-
-			surface.emission_texture = albedo_map
+		if emission_map:
 			surface.emission_enabled = true
-			# ModelManager sets emission_energy
-#			surface.emission = Color.white
-#			surface.emission_energy = 5.0
-
+			surface.emission_texture = emission_map
+		if _table_reader.get_bool("models", "starlight", model_type):
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
 			_saved_resources[file_prefix + "*"] = surface
+		else:
+			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+			# FIXME! Should cast shadows, but it doesn't...!
 	if !is_inf(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)
