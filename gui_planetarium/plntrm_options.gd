@@ -21,8 +21,8 @@ extends VBoxContainer
 var _points_manager: PointsManager = Global.program.PointsManager
 onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_checkbox: CheckBox = $Orbits/CheckBox
-onready var _names_checkbox: CheckBox = $Names/CheckBox
-onready var _symbols_checkbox: CheckBox = $Symbols/CheckBox
+onready var _names_checkbox: CheckBox = $NamesSymbols/CheckBox1
+onready var _symbols_checkbox: CheckBox = $NamesSymbols/CheckBox2
 onready var _fullscreen_button: Button = $FullScreen/Button
 
 onready var _asteroid_checkboxes := {
