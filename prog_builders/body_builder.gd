@@ -237,11 +237,6 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# file import info
 	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
 	body.file_info[0] = file_prefix
-	var icon := _table_reader.get_string(table_name, "icon", row)
-	if icon: # if missing HUDsBuilder uses file_prefix
-		if body.file_info.size() < 2:
-			body.file_info.resize(2)
-		body.file_info[1] = icon
 	var rings := _table_reader.get_string(table_name, "rings", row)
 	if rings:
 		if body.file_info.size() < 4:
@@ -286,7 +281,6 @@ func _build_unpersisted(body: Body) -> void:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
-	_huds_builder.add_icon(body)
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	var file_prefix: String = body.file_info[0]

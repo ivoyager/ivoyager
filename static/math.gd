@@ -282,8 +282,9 @@ static func get_focal_length_from_fov(fov: float) -> float:
 
 static func get_fov_scaling_factor(fov: float) -> float:
 	# This polynomial was empirically determined (with a tape measure!) to
-	# correct icon size on the screen for fov changes (more or less). It may
-	# be more generally useful for scale corrections after fov change.
+	# correct icon size on the screen for fov changes (more or less). Icons
+	# werer depreciated, but it may be more generally useful for scale
+	# corrections after fov change.
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
 
 # Conversions (use UnitDefs for most conversions!)

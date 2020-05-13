@@ -72,9 +72,8 @@ func _on_init():
 		pbd_splash_caption_open = false,
 		
 		# TODO:
-#		planet_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
-#		moon_icon_color = Color(0.5, 0.7, 0.4), # green w/ yellow
-#		minor_orbit_color = Color(0.8, 0.0, 0.0),
+#		planet_label_color
+#		moon_label_color
 		}
 	
 	# read-only

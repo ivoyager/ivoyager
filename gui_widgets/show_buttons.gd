@@ -31,9 +31,6 @@ func _ready() -> void:
 	_tree_manager.connect("show_orbits_changed", self, "_update_show_orbits")
 	_tree_manager.connect("show_symbols_changed", self, "_update_show_symbols")
 	_tree_manager.connect("show_names_changed", self, "_update_show_names")
-	_orbits_button.text = "LABEL_ORBITS"
-	_symbols_button.text = "LABEL_ICONS"
-	_names_button.text = "LABEL_LABELS"
 
 func _show_hide_orbits() -> void:
 	_tree_manager.set_show_orbits(_orbits_button.pressed)

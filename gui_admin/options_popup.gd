@@ -30,8 +30,8 @@ var setting_enums := {
 
 var format_overrides := {
 	camera_transition_time = {max_value = 10.0},
-	viewport_label_size = {min_value = 4.0, max_value = 36.0},
-	viewport_icon_size = {min_value = 40.0, max_value = 300.0, step = 10.0},
+	viewport_names_size = {min_value = 4.0, max_value = 50.0},
+	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
 }
 
 var _settings: Dictionary = Global.settings

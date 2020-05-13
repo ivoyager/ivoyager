@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# HUDsBuilder hooks up text change functions and visibility.
+# HUDsBuilder hooks up text change functions; Body sets visibility.
 
 extends Label
 class_name HUDLabel
@@ -34,6 +34,8 @@ func set_body_symbol(body_symbol: String) -> void:
 func _ready() -> void:
 	_name_font = Global.fonts.hud_names
 	_symbol_font = Global.fonts.hud_symbols
+	align = ALIGN_CENTER
+	valign = VALIGN_CENTER
 
 func _on_show_names_changed(is_show: bool) -> void:
 	if is_show:
@@ -44,4 +46,3 @@ func _on_show_symbols_changed(is_show: bool) -> void:
 	if is_show:
 		text = _body_symbol
 		set("custom_fonts/font", _symbol_font)
-
