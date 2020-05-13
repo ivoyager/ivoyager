@@ -55,8 +55,8 @@ func _on_init():
 			{
 				header = "LABEL_SHOW_HIDE",
 				toggle_orbits = "LABEL_ORBITS",
-				toggle_icons = "LABEL_ICONS",
-				toggle_labels = "LABEL_LABELS",
+				toggle_symbols = "LABEL_SYMBOLS",
+				toggle_names = "LABEL_NAMES",
 				toggle_full_screen = "LABEL_ALL_GUI",
 			},
 		],

@@ -44,6 +44,7 @@ const IS_MOON := BodyFlags.IS_MOON
 const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 
 # persisted
+# name is table row key ("MOON_EUROPA", etc.), which is localization key
 var symbol := "\u25CC" # dashed circle default
 var body_id := -1
 var class_type := -1 # classes.csv
@@ -72,7 +73,7 @@ var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
 var hud_orbit: HUDOrbit
 var hud_icon: Spatial
-var hud_label: Control
+var hud_label: HUDLabel
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var model_too_far := 0.0
@@ -100,7 +101,7 @@ func set_hud_too_close(hide_hud_when_close: bool) -> void:
 		hud_too_close = 0.0
 
 func tree_manager_process(time: float, camera: Camera, camera_global_translation: Vector3,
-		show_orbits: bool, show_icons: bool, show_labels: bool) -> void:
+		show_orbits: bool, show_symbols: bool, show_names: bool) -> void:
 	# TODO: Need viewport size correction
 	var global_translation := global_transform.origin
 	var camera_dist := global_translation.distance_to(camera_global_translation)
@@ -108,7 +109,7 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
-	var hud_label_visible := show_labels and hud_dist_ok and hud_label \
+	var hud_label_visible := (show_names or show_symbols) and hud_dist_ok and hud_label \
 			and !camera.is_position_behind(global_translation)
 	if hud_label_visible: # position 2D node before 3D translation!
 		var label_pos := camera.unproject_position(global_translation)
@@ -137,11 +138,11 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 		if _hud_label_visible != hud_label_visible:
 			_hud_label_visible = hud_label_visible
 			hud_label.visible = hud_label_visible
-	if hud_icon:
-		var hud_icon_visible := show_icons and hud_dist_ok
-		if _hud_icon_visible != hud_icon_visible:
-			_hud_icon_visible = hud_icon_visible
-			hud_icon.visible = hud_icon_visible
+#	if hud_icon:
+#		var hud_icon_visible := show_symbols and hud_dist_ok
+#		if _hud_icon_visible != hud_icon_visible:
+#			_hud_icon_visible = hud_icon_visible
+#			hud_icon.visible = hud_icon_visible
 	if !_visible:
 		_visible = true
 		visible = true

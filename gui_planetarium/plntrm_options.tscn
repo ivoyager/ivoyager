@@ -23,36 +23,36 @@ margin_left = 215.0
 margin_right = 239.0
 margin_bottom = 24.0
 
-[node name="Labels" type="HBoxContainer" parent="."]
+[node name="Names" type="HBoxContainer" parent="."]
 margin_top = 28.0
 margin_right = 239.0
 margin_bottom = 52.0
 
-[node name="Label" type="Label" parent="Labels"]
+[node name="Label" type="Label" parent="Names"]
 margin_top = 5.0
 margin_right = 211.0
 margin_bottom = 19.0
 size_flags_horizontal = 3
-text = "LABEL_LABELS"
+text = "LABEL_NAMES"
 
-[node name="CheckBox" type="CheckBox" parent="Labels"]
+[node name="CheckBox" type="CheckBox" parent="Names"]
 margin_left = 215.0
 margin_right = 239.0
 margin_bottom = 24.0
 
-[node name="Icons" type="HBoxContainer" parent="."]
+[node name="Symbols" type="HBoxContainer" parent="."]
 margin_top = 56.0
 margin_right = 239.0
 margin_bottom = 80.0
 
-[node name="Label" type="Label" parent="Icons"]
+[node name="Label" type="Label" parent="Symbols"]
 margin_top = 5.0
 margin_right = 211.0
 margin_bottom = 19.0
 size_flags_horizontal = 3
-text = "LABEL_ICONS"
+text = "LABEL_SYMBOLS"
 
-[node name="CheckBox" type="CheckBox" parent="Icons"]
+[node name="CheckBox" type="CheckBox" parent="Symbols"]
 margin_left = 215.0
 margin_right = 239.0
 margin_bottom = 24.0

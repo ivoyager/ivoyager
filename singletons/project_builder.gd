@@ -151,6 +151,7 @@ var procedural_classes := {
 	_Body_ = Body,
 	_LPoint_ = LPoint,
 	_Camera_ = BCamera, # Camera ok, but see comments in b_camera.gd
+	_HUDLabel_ = HUDLabel,
 	_HUDOrbit_ = HUDOrbit,
 	_HUDPoints_ = HUDPoints,
 	# tree_refs

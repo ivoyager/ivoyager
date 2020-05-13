@@ -49,8 +49,8 @@ func _on_init():
 
 		# UI & HUD display
 		gui_size = Enums.GUISizes.GUI_MEDIUM,
-		viewport_label_size = 12,
-		viewport_icon_size = 80,
+		viewport_names_size = 15,
+		viewport_symbols_size = 25,
 		hide_hud_when_close = true, # restart or load required
 	
 		# colors

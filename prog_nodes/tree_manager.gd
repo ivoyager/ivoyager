@@ -25,8 +25,8 @@ class_name TreeManager
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
-signal show_icons_changed(is_show)
-signal show_labels_changed(is_show)
+signal show_symbols_changed(is_show)
+signal show_names_changed(is_show)
 signal show_orbits_changed(is_show)
 
 const DPRINT := false
@@ -36,11 +36,11 @@ const IS_STAR_ORBITING := Enums.BodyFlags.IS_STAR_ORBITING
 
 # public - read-only except for project init
 var show_orbits := false
-var show_icons := false
-var show_labels := false
+var show_symbols := false
+var show_names := false
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["show_orbits", "show_icons", "show_labels"]
+const PERSIST_PROPERTIES := ["show_orbits", "show_symbols", "show_names"]
 
 # unpersisted
 var _settings: Dictionary = Global.settings
@@ -57,8 +57,8 @@ var _camera_fov := 0.0
 var _time: float
 var _camera_global_translation: Vector3
 onready var _init_show_orbits := show_orbits
-onready var _init_show_icons := show_icons
-onready var _init_show_labels := show_labels
+onready var _init_show_symbols := show_symbols
+onready var _init_show_names := show_names
 
 func project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
@@ -70,22 +70,22 @@ func project_init() -> void:
 	_root = Global.program.root
 	_timekeeper = Global.program.Timekeeper
 	_registrar = Global.program.Registrar
-	_root.connect("size_changed", self, "_update_icon_size")
+#	_root.connect("size_changed", self, "_update_icon_size")
 	_timekeeper.connect("processed", self, "_timekeeper_process")
 
-func set_show_icons(is_show: bool) -> void:
-	show_icons = is_show
-	if is_show and show_labels:
-		set_show_labels(false)
-	assert(DPRINT and prints("set_show_icons", is_show) or true)
-	emit_signal("show_icons_changed", is_show)
+func set_show_symbols(is_show: bool) -> void:
+	show_symbols = is_show
+	if is_show and show_names:
+		set_show_names(false)
+	assert(DPRINT and prints("set_show_symbols", is_show) or true)
+	emit_signal("show_symbols_changed", is_show)
 	
-func set_show_labels(is_show: bool) -> void:
-	show_labels = is_show
-	if is_show and show_icons:
-		set_show_icons(false)
-	assert(DPRINT and prints("set_show_labels", is_show) or true)
-	emit_signal("show_labels_changed", is_show)
+func set_show_names(is_show: bool) -> void:
+	show_names = is_show
+	if is_show and show_symbols:
+		set_show_symbols(false)
+	assert(DPRINT and prints("set_show_names", is_show) or true)
+	emit_signal("show_names_changed", is_show)
 
 func set_show_orbits(is_show: bool) -> void:
 	show_orbits = is_show
@@ -99,14 +99,14 @@ func _restore_init_state() -> void:
 	_skip_local_system.clear()
 	_camera_fov = 0.0 # will trigger an icon size update
 	show_orbits = _init_show_orbits
-	show_icons = _init_show_icons
-	show_labels = _init_show_labels
+	show_symbols = _init_show_symbols
+	show_names = _init_show_names
 
 func _gui_refresh() -> void:
 	emit_signal("show_orbits_changed", show_orbits)
-	emit_signal("show_icons_changed", show_icons)
-	emit_signal("show_labels_changed", show_labels)
-	_update_icon_size()
+	emit_signal("show_symbols_changed", show_symbols)
+	emit_signal("show_names_changed", show_names)
+#	_update_icon_size()
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -130,7 +130,7 @@ func _timekeeper_process(time: float, e_delta: float) -> void:
 	_camera.tree_manager_process(e_delta)
 	if _camera_fov != _camera.fov:
 		_camera_fov = _camera.fov
-		_update_icon_size()
+#		_update_icon_size()
 	_camera_global_translation = _camera.global_transform.origin
 	for body in _registrar.top_bodies:
 		_process_body_recursive(body)
@@ -149,7 +149,7 @@ func _process_body_recursive(body: Body) -> void:
 			_skip_local_system[body] = false
 			for satellite in body.satellites:
 				_process_body_recursive(satellite)
-	body.tree_manager_process(_time, _camera, _camera_global_translation, show_orbits, show_icons, show_labels)
+	body.tree_manager_process(_time, _camera, _camera_global_translation, show_orbits, show_symbols, show_names)
 
 func _camera_move_started(to_body: Body, _is_camera_lock: bool) -> void:
 	_to_local_star_orbiter = _get_local_star_orbiter(to_body)
@@ -165,17 +165,16 @@ func _get_local_star_orbiter(body: Body) -> Body:
 		return null
 	return _get_local_star_orbiter(body.get_parent())
 
-func _update_icon_size() -> void:
-	if !_camera:
-		return
-	var scaling_factor := math.get_fov_scaling_factor(_camera.fov)
-	var viewport_height := _root.get_visible_rect().size.y
-	var icon_height: float = (scaling_factor / viewport_height) * _settings.viewport_icon_size
-	for hud_icon in _tree.get_nodes_in_group("HUD Icons"):
-		var icon_mesh: QuadMesh = hud_icon.mesh
-		var old_height := icon_mesh.size.y
-		icon_mesh.size *= icon_height / old_height
+#func _update_icon_size() -> void:
+#	if !_camera:
+#		return
+#	var scaling_factor := math.get_fov_scaling_factor(_camera.fov)
+#	var viewport_height := _root.get_visible_rect().size.y
+#	var icon_height: float = (scaling_factor / viewport_height) * _settings.viewport_icon_size
+#	for hud_icon in _tree.get_nodes_in_group("HUD Icons"):
+#		var icon_mesh: QuadMesh = hud_icon.mesh
+#		var old_height := icon_mesh.size.y
+#		icon_mesh.size *= icon_height / old_height
 
 func _settings_listener(setting: String, _value) -> void:
-	if setting == "viewport_icon_size":
-		_update_icon_size()
+	pass

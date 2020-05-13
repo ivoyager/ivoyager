@@ -33,6 +33,9 @@ const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY
 
 var _settings: Dictionary = Global.settings
 var _icons_search: Array = Global.icons_search
+var _HUDLabel_: Script
+var _HUDOrbit_: Script
+var _tree_manager: TreeManager
 var _icon_quad_mesh: QuadMesh
 var _hud_2d_surface: Control
 var _generic_moon_icon: Texture
@@ -41,6 +44,9 @@ var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
 func project_init() -> void:
+	_HUDLabel_ = Global.script_classes._HUDLabel_
+	_HUDOrbit_ = Global.script_classes._HUDOrbit_
+	_tree_manager = Global.program.TreeManager
 	_icon_quad_mesh = Global.shared_resources.icon_quad_mesh
 	_hud_2d_surface = Global.program.HUD2dSurface
 	_generic_moon_icon = Global.assets.generic_moon_icon
@@ -49,12 +55,14 @@ func project_init() -> void:
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func add_label(body: Body) -> void:
-	var label := Label.new()
-	label.text = body.symbol # tr(body.name)
-	label.set("custom_fonts/font", Global.fonts.hud_labels)
-	label.hide()
-	body.hud_label = label
-	_hud_2d_surface.add_child(label)
+	var hud_label: HUDLabel = _HUDLabel_.new()
+	hud_label.set_body_name(body.name)
+	hud_label.set_body_symbol(body.symbol)
+	_tree_manager.connect("show_names_changed", hud_label, "_on_show_names_changed")
+	_tree_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
+	hud_label.hide()
+	body.hud_label = hud_label
+	_hud_2d_surface.add_child(hud_label)
 
 func add_icon(body: Body) -> void:
 	var icon := MeshInstance.new()
@@ -90,7 +98,7 @@ func add_icon(body: Body) -> void:
 func add_orbit(body: Body) -> void:
 	if !body.orbit:
 		return
-	var hud_orbit := HUDOrbit.new()
+	var hud_orbit: HUDOrbit = _HUDOrbit_.new()
 	var color: Color
 	var flags := body.flags
 	if flags & IS_MOON and flags & LIKELY_HYDROSTATIC_EQUILIBRIUM:

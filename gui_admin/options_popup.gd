@@ -73,8 +73,8 @@ func _on_init():
 			{
 				header = "LABEL_GUI_AND_HUD",
 				gui_size = "LABEL_GUI_SIZE",
-				viewport_label_size = "LABEL_LABEL_SIZE",
-				viewport_icon_size = "LABEL_ICON_SIZE",
+				viewport_names_size = "LABEL_NAMES_SIZE",
+				viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
 				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
 			},
 			{

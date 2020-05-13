@@ -119,10 +119,10 @@ func _on_input(event: InputEvent) -> void:
 			_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
 	elif event.is_action_pressed("toggle_orbits"):
 		_tree_manager.set_show_orbits(!_tree_manager.show_orbits)
-	elif event.is_action_pressed("toggle_icons"):
-		_tree_manager.set_show_icons(!_tree_manager.show_icons)
-	elif event.is_action_pressed("toggle_labels"):
-		_tree_manager.set_show_labels(!_tree_manager.show_labels)
+	elif event.is_action_pressed("toggle_symbols"):
+		_tree_manager.set_show_symbols(!_tree_manager.show_symbols)
+	elif event.is_action_pressed("toggle_names"):
+		_tree_manager.set_show_names(!_tree_manager.show_names)
 	else:
 		if _selection_manager:
 			if event.is_action_pressed("select_forward"):
