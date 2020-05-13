@@ -202,8 +202,8 @@ func _on_init() -> void:
 		next_spacecraft = [{event_class = "InputEventKey", scancode = KEY_K}],
 		previous_spacecraft = [{event_class = "InputEventKey", scancode = KEY_K, shift = true}],
 		toggle_orbits = [{event_class = "InputEventKey", scancode = KEY_O}],
-		toggle_icons = [{event_class = "InputEventKey", scancode = KEY_I}],
-		toggle_labels = [{event_class = "InputEventKey", scancode = KEY_L}],
+		toggle_symbols = [{event_class = "InputEventKey", scancode = KEY_I}],
+		toggle_names = [{event_class = "InputEventKey", scancode = KEY_L}],
 		toggle_full_screen = [{event_class = "InputEventKey", scancode = KEY_F, shift = true}],
 		toggle_pause = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
 		incr_speed = [

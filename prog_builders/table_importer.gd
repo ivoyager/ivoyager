@@ -146,7 +146,7 @@ func _read_table() -> void:
 				var i := 0
 				while i < n_columns:
 					if _defaults[i]:
-						_defaults[i] = _get_clean_value(_defaults[i])
+						_defaults[i] = _get_processed_value(_defaults[i])
 					i += 1
 			else:
 				assert(_data_types) # required
@@ -163,8 +163,11 @@ func _read_table() -> void:
 		line = file.get_line()
 
 func _read_data_line() -> void:
-	# The only data modification we do here is strip enclosing quotes and
-	# leading underscore. We do some format checks with asserts.
+	# We do minimal value modification here:
+	#   - Strip enclosing quotes
+	#   - Strip leanding underscore
+	#   - c_unescape()
+	# But we do some asserts for DataType.
 	var row := _data.size()
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
@@ -174,7 +177,7 @@ func _read_data_line() -> void:
 	for field in _fields:
 		_field = field
 		var column: int = _fields[_field]
-		_cell = _get_clean_value(_line_array[column])
+		_cell = _get_processed_value(_line_array[column])
 		if !_cell: # set to default
 			_cell = _defaults[column]
 		if !_cell:
@@ -195,10 +198,12 @@ func _read_data_line() -> void:
 		_count += 1
 	_data.append(row_data)
 
-func _get_clean_value(value: String) -> String:
+func _get_processed_value(value: String) -> String:
 	if value.begins_with("\"") and value.ends_with("\""): # whole cell quoted
 		value = value.substr(1, value.length() - 2)
-	return value.lstrip("_")
+	value = value.lstrip("_")
+	value = value.c_unescape() # does not work for "\u"; Godot issue #38716
+	return value
 
 func _data_type_test() -> bool:
 	for data_type in _data_types:

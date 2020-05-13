@@ -21,34 +21,31 @@ extends VBoxContainer
 
 onready var _tree_manager: TreeManager = Global.program.TreeManager
 onready var _orbits_button: Button = $HBox/Orbits
-onready var _icons_button: Button = $HBox/Icons
-onready var _labels_button: Button = $HBox/Labels
+onready var _symbols_button: Button = $HBox/Symbols
+onready var _names_button: Button = $HBox/Names
 
 func _ready() -> void:
 	_orbits_button.connect("pressed", self, "_show_hide_orbits")
-	_icons_button.connect("pressed", self, "_show_hide_icons")
-	_labels_button.connect("pressed", self, "_show_hide_labels")
+	_symbols_button.connect("pressed", self, "_show_hide_symbols")
+	_names_button.connect("pressed", self, "_show_hide_names")
 	_tree_manager.connect("show_orbits_changed", self, "_update_show_orbits")
-	_tree_manager.connect("show_icons_changed", self, "_update_show_icons")
-	_tree_manager.connect("show_labels_changed", self, "_update_show_labels")
-	_orbits_button.text = "LABEL_ORBITS"
-	_icons_button.text = "LABEL_ICONS"
-	_labels_button.text = "LABEL_LABELS"
+	_tree_manager.connect("show_symbols_changed", self, "_update_show_symbols")
+	_tree_manager.connect("show_names_changed", self, "_update_show_names")
 
 func _show_hide_orbits() -> void:
 	_tree_manager.set_show_orbits(_orbits_button.pressed)
 
-func _show_hide_labels() -> void:
-	_tree_manager.set_show_labels(_labels_button.pressed)
+func _show_hide_names() -> void:
+	_tree_manager.set_show_names(_names_button.pressed)
 
-func _show_hide_icons() -> void:
-	_tree_manager.set_show_icons(_icons_button.pressed)
+func _show_hide_symbols() -> void:
+	_tree_manager.set_show_symbols(_symbols_button.pressed)
 
 func _update_show_orbits(is_show: bool) -> void:
 	_orbits_button.pressed = is_show
 
-func _update_show_icons(is_show: bool) -> void:
-	_icons_button.pressed = is_show
+func _update_show_symbols(is_show: bool) -> void:
+	_symbols_button.pressed = is_show
 
-func _update_show_labels(is_show: bool) -> void:
-	_labels_button.pressed = is_show
+func _update_show_names(is_show: bool) -> void:
+	_names_button.pressed = is_show

@@ -32,12 +32,12 @@ const BodyFlags := Enums.BodyFlags
 var body_fields := {
 	# property = table_field
 	name = "key",
+	symbol = "symbol",
 	class_type = "class_type",
 	model_type = "model_type",
 	light_type = "light_type",
-	file_prefix = "file_prefix",
 }
-var body_fields_req := ["class_type", "model_type", "m_radius", "file_prefix"]
+var body_fields_req := ["class_type", "model_type", "m_radius"]
 
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
@@ -113,6 +113,12 @@ func project_init() -> void:
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
 	_table_reader.build_object(body, table_name, row, body_fields, body_fields_req)
+	# temp symbol fix (see Godot issue #38716)
+	var symbol_tempfix := _table_reader.get_int(table_name, "symbol_tempfix", row)
+	if symbol_tempfix != -1:
+		body.symbol = char(symbol_tempfix)
+	if body.symbol == "\\u25CC":
+		body.symbol = char(9676)
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:
@@ -229,10 +235,14 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		body_ref_basis = body_ref_basis.rotated(model_manager.north_pole, rotation_0)
 	model_manager.set_body_ref_basis(body_ref_basis)
 	# file import info
-	var rings_prefix := _table_reader.get_string(table_name, "rings", row)
-	if rings_prefix:
-		var rings_radius := _table_reader.get_real(table_name, "rings_outer_radius", row)
-		body.rings_info = [rings_prefix, rings_radius]
+	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
+	body.file_info[0] = file_prefix
+	var rings := _table_reader.get_string(table_name, "rings", row)
+	if rings:
+		if body.file_info.size() < 4:
+			body.file_info.resize(4)
+		body.file_info[2] = rings
+		body.file_info[3] = _table_reader.get_real(table_name, "rings_radius", row)
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
@@ -265,21 +275,20 @@ func _build_unpersisted(body: Body) -> void:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
-#		body.model_ref_basis = body.model.transform.basis
-	if body.rings_info:
+	if body.file_info.size() > 2 and body.file_info[2]:
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
-	_huds_builder.add_icon(body)
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
-	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, body.file_prefix)
+	var file_prefix: String = body.file_info[0]
+	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !body.texture_2d:
 		body.texture_2d = _fallback_body_2d
 	if body.flags & BodyFlags.IS_STAR:
-		var slice_name = body.file_prefix + "_slice"
+		var slice_name = file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
 		if !body.texture_slice_2d:
 			body.texture_slice_2d = _fallback_star_slice

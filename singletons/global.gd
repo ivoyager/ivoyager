@@ -97,10 +97,10 @@ var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
 var enums: Script = Enums # replace w/ extended static class
-var use_threads := true # false for debugging (saver_loader.gd has its own)
+var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
-var asteroid_mag_cutoff_override := INF # != INF overrides asteroid_group_data.csv
+var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
 var skip_splash_screen := false
 var disable_exit := false
 var disable_quit := false
@@ -127,7 +127,6 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 }
 
 var shared_resources := {
-	icon_quad_mesh = QuadMesh.new(), # all HUD icons; scaled by TreeManager
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
 	orbit_ellipse_shader = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
@@ -160,7 +159,6 @@ var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 var models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
 var maps_search := ["res://ivoyager_assets/maps"]
 var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
-var icons_search := ["res://ivoyager_assets/icons"]
 var rings_search := ["res://ivoyager_assets/rings"]
 
 var asset_paths := {
@@ -169,9 +167,7 @@ var asset_paths := {
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # loaded into "assets" dict at project init
-	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
-	generic_moon_icon = "res://ivoyager_assets/icons/generic_o.icon.png",
-	fallback_icon = "res://ivoyager_assets/icons/generic_o.icon.png",
+	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
@@ -195,8 +191,7 @@ var current_ivoyager_version := ivoyager_version
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 
 # private
-var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, icons_search,
-	rings_search]
+var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func project_init() -> void:

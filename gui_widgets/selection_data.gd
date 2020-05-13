@@ -98,6 +98,7 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 			value_label.rect_min_size.x = values_width
 			value_label.scroll_active = false
 			value_label.bbcode_enabled = true
+			value_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			value_label.connect("meta_clicked", self, "_on_meta_clicked")
 			value_label.hide()
 			_values.append(value_label)

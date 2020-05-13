@@ -16,7 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 # This is a Spatial in case we want to update its translation in future
-# implementation for a graphic icon (there is no translation update now). Its
+# implementation for a graphic symbol (there is no translation update now). Its
 # real purpose is to provide dynamic_elements for use by objects at Lagrange
 # Points, e.g., trojans. Note that L-point objects are in orbit around their
 # parent Body (e.g., Jupiter Trojans orbit the Sun). A LPoint is itself

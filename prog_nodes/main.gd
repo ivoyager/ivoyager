@@ -60,6 +60,8 @@ func project_init() -> void:
 	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.program.tree
 	_saver_loader = Global.program.get("SaverLoader")
+	if _saver_loader:
+		_saver_loader.use_thread = Global.use_threads
 	_main_prog_bar = Global.program.get("MainProgBar")
 	_system_builder = Global.program.SystemBuilder
 	_environment_builder = Global.program.EnvironmentBuilder

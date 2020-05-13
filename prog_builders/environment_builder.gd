@@ -51,7 +51,7 @@ func get_environment(_env_type: int) -> Environment:
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
-	env.background_energy = 1.5
+	env.background_energy = 1.0
 	env.ambient_light_color = Color.white
 	env.ambient_light_sky_contribution = 0.0
 	env.ambient_light_energy = 0.03
@@ -59,15 +59,6 @@ func get_environment(_env_type: int) -> Environment:
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.glow_intensity = 0.8
 	env.glow_bloom = 1.0
-#	print(env.is_glow_bicubic_upscale_enabled())
-#	print(env.is_glow_level_enabled(0))
-#	print(env.is_glow_level_enabled(1))
-#	print(env.is_glow_level_enabled(2))
-#	print(env.is_glow_level_enabled(3))
-#	print(env.is_glow_level_enabled(4))
-#	print(env.is_glow_level_enabled(5))
-#	print(env.is_glow_level_enabled(6))
-	
 	env.set_glow_level(0, false)
 	env.set_glow_level(1, true)
 	env.set_glow_level(2, false)

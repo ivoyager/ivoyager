@@ -27,61 +27,37 @@ const IS_MOON := BodyFlags.IS_MOON
 const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
-const ICON_TRANSFORM = Transform(Vector3(100, 0, 0), Vector3(0, 100, 0), Vector3(0, 0, 100),
-	Vector3(0, 0, 0))
 
 var _settings: Dictionary = Global.settings
-var _icons_search: Array = Global.icons_search
-var _icon_quad_mesh: QuadMesh
+var _HUDLabel_: Script
+var _HUDOrbit_: Script
+var _tree_manager: TreeManager
 var _hud_2d_surface: Control
-var _generic_moon_icon: Texture
-var _fallback_icon: Texture
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
 func project_init() -> void:
-	_icon_quad_mesh = Global.shared_resources.icon_quad_mesh
+	_HUDLabel_ = Global.script_classes._HUDLabel_
+	_HUDOrbit_ = Global.script_classes._HUDOrbit_
+	_tree_manager = Global.program.TreeManager
 	_hud_2d_surface = Global.program.HUD2dSurface
-	_generic_moon_icon = Global.assets.generic_moon_icon
-	_fallback_icon = Global.assets.fallback_icon
 	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func add_label(body: Body) -> void:
-	var label := Label.new()
-	label.text = tr(body.name)
-	label.set("custom_fonts/font", Global.fonts.hud_labels)
-	label.hide()
-	body.hud_label = label
-	_hud_2d_surface.add_child(label)
-
-func add_icon(body: Body) -> void:
-	var icon := MeshInstance.new()
-	var icon_material := SpatialMaterial.new()
-	var icon_texture: Texture = file_utils.find_and_load_resource(_icons_search, body.file_prefix)
-	if !icon_texture:
-		if body.flags & IS_MOON:
-			icon_texture = _generic_moon_icon
-		else:
-			icon_texture = _fallback_icon
-	icon_material.albedo_texture = icon_texture
-	icon_material.flags_transparent = true
-	icon_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
-	icon_material.flags_unshaded = true
-	icon_material.flags_fixed_size = true
-	icon_material.flags_albedo_tex_force_srgb = true
-	icon_material.params_billboard_mode = SpatialMaterial.BILLBOARD_ENABLED
-	icon.transform = ICON_TRANSFORM
-	icon.mesh = _icon_quad_mesh
-	icon.material_override = icon_material
-	icon.hide()
-	body.hud_icon = icon
-	body.add_child(icon)
+	var hud_label: HUDLabel = _HUDLabel_.new()
+	hud_label.set_body_name(body.name)
+	hud_label.set_body_symbol(body.symbol)
+	_tree_manager.connect("show_names_changed", hud_label, "_on_show_names_changed")
+	_tree_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
+	hud_label.hide()
+	body.hud_label = hud_label
+	_hud_2d_surface.add_child(hud_label)
 
 func add_orbit(body: Body) -> void:
 	if !body.orbit:
 		return
-	var hud_orbit := HUDOrbit.new()
+	var hud_orbit: HUDOrbit = _HUDOrbit_.new()
 	var color: Color
 	var flags := body.flags
 	if flags & IS_MOON and flags & LIKELY_HYDROSTATIC_EQUILIBRIUM:
