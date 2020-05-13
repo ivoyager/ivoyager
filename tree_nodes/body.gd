@@ -44,6 +44,7 @@ const IS_MOON := BodyFlags.IS_MOON
 const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 
 # persisted
+var symbol := "\u25CC" # dashed circle default
 var body_id := -1
 var class_type := -1 # classes.csv
 var model_type := -1 # models.csv
@@ -61,7 +62,7 @@ var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "class_type", "model_type",
+const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_info"]
 const PERSIST_OBJ_PROPERTIES := ["properties", "model_manager", "orbit", "satellites",
 	"lagrange_points"]

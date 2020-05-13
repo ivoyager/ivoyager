@@ -30,6 +30,7 @@ var _wiki_titles: Dictionary = Global.wiki_titles
 func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	connect("meta_clicked", self, "_on_wiki_clicked")
+	size_flags_horizontal = SIZE_EXPAND_FILL
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
@@ -48,4 +49,3 @@ func _on_wiki_clicked(_meta: String) -> void:
 	if _wiki_titles.has(object_key):
 		var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_key])
 		OS.shell_open(url)
-

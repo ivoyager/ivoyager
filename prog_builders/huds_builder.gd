@@ -50,7 +50,7 @@ func project_init() -> void:
 
 func add_label(body: Body) -> void:
 	var label := Label.new()
-	label.text = tr(body.name)
+	label.text = body.symbol # tr(body.name)
 	label.set("custom_fonts/font", Global.fonts.hud_labels)
 	label.hide()
 	body.hud_label = label

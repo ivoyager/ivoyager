@@ -169,7 +169,7 @@ var asset_paths := {
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # loaded into "assets" dict at project init
-	primary_font_data = "res://ivoyager_assets/fonts/Roboto-Regular.ttf",
+	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	generic_moon_icon = "res://ivoyager_assets/icons/generic_o.png",
 	fallback_icon = "res://ivoyager_assets/icons/generic_o.png",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
