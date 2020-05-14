@@ -86,6 +86,7 @@ func project_init() -> void:
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
+	Global.connect("setting_changed", self, "_settings_listener")
 
 func _restore_init_state() -> void:
 	_disconnect_camera()
