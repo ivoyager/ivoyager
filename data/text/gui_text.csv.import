@@ -12,5 +12,5 @@ dest_files=[ "res://ivoyager/data/text/gui_text.en.translation" ]
 
 [params]
 
-compress=true
+compress=false
 delimiter=0

@@ -113,12 +113,6 @@ func project_init() -> void:
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
 	_table_reader.build_object(body, table_name, row, body_fields, body_fields_req)
-	# temp symbol fix (see Godot issue #38716)
-	var symbol_tempfix := _table_reader.get_int(table_name, "symbol_tempfix", row)
-	if symbol_tempfix != -1:
-		body.symbol = char(symbol_tempfix)
-	if body.symbol == "\\u25CC":
-		body.symbol = char(9676)
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:

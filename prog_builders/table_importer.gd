@@ -203,6 +203,7 @@ func _get_processed_value(value: String) -> String:
 		value = value.substr(1, value.length() - 2)
 	value = value.lstrip("_")
 	value = value.c_unescape() # does not work for "\u"; Godot issue #38716
+	value = StrUtils.c_unescape_patch(value)
 	return value
 
 func _data_type_test() -> bool:

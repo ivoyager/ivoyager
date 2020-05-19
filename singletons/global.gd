@@ -210,12 +210,19 @@ func after_extensions_inited():
 func _load_translations() -> void:
 	for tr_path in translations:
 		var translation: Translation = load(tr_path)
-		# TODO?: patch for Godot issue #38716 not understanding "\uXXXX"
-		# Wait! I can't patch above due to Godot issue #38862
-#		print(translation.get_message_count()) # always 0
-#		print(translation.get_message_list ()) # always []
-#		print(translation.get_message("BUTTON_TOP")) # but this works?!
-		TranslationServer.add_translation(translation)
+		if translation is PHashTranslation:
+			TranslationServer.add_translation(translation)
+		else:
+			# Patch for Godot issue #38716 not understanding "\uXXXX". Requires
+			# compress=false in the .import file!
+			for txt_key in translation.get_message_list():
+				var text: String = translation.get_message(txt_key)
+				var new_text := StrUtils.c_unescape_patch(text)
+				if new_text != text:
+					translation.add_message(txt_key, new_text)
+			var compressed_tr := PHashTranslation.new()
+			compressed_tr.generate(translation)
+			TranslationServer.add_translation(compressed_tr)
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:
