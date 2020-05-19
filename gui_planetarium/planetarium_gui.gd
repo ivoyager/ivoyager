@@ -43,9 +43,7 @@ func _ready() -> void:
 	_homepage_link.connect("meta_clicked", self, "_on_homepage_clicked")
 	var main_menu: MainMenu = Global.program.MainMenu
 	main_menu.add_child(_homepage_link)
-	main_menu.set_anchors_and_margins_preset(Control.PRESET_TOP_RIGHT,
-			Control.PRESET_MODE_MINSIZE, 16)
-	print("added homepage")
+	main_menu.set_anchors_and_margins_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
 
 func _on_project_builder_finished() -> void:
 	theme = Global.themes.main
