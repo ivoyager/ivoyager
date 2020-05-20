@@ -173,11 +173,16 @@ var asset_paths_for_load := { # loaded into "assets" dict at project init
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 	fallback_star_slice = "res://ivoyager_assets/bodies_2d/Sun_slice.256.png",
 }
+var translations := [ # added here so extensions can modify
+	"res://ivoyager/data/text/entities_text.en.translation",
+	"res://ivoyager/data/text/gui_text.en.translation",
+	"res://ivoyager/data/text/long_text.en.translation",
+]
 
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.6-alpha"
+var ivoyager_version := "0.0.7-alpha dev"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
@@ -194,11 +199,30 @@ var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/drive
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
-func project_init() -> void:
-	# 1st, so assets are present at other class's project_init()
+func after_extensions_inited():
+	# called by ProjectBuilder before all other class instantiations
 	prints(project_name, ivoyager_version, project_version)
+	_load_translations()
 	_modify_asset_paths()
 	_load_assets()
+	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
+
+func _load_translations() -> void:
+	for tr_path in translations:
+		var translation: Translation = load(tr_path)
+		if translation is PHashTranslation:
+			TranslationServer.add_translation(translation)
+		else:
+			# Patch for Godot issue #38716 not understanding "\uXXXX". Requires
+			# compress=false in the .import file!
+			for txt_key in translation.get_message_list():
+				var text: String = translation.get_message(txt_key)
+				var new_text := StrUtils.c_unescape_patch(text)
+				if new_text != text:
+					translation.add_message(txt_key, new_text)
+			var compressed_tr := PHashTranslation.new()
+			compressed_tr.generate(translation)
+			TranslationServer.add_translation(compressed_tr)
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:
@@ -221,6 +245,3 @@ func _load_assets() -> void:
 	for asset_name in asset_paths_for_load:
 		var path: String = asset_paths_for_load[asset_name]
 		assets[asset_name] = load(path)
-
-func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"

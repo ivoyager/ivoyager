@@ -193,6 +193,7 @@ func init_extensions() -> void:
 	for extension in extensions:
 		extension.extension_init() # extension files must have this method!
 	emit_signal("extentions_inited")
+	Global.after_extensions_inited()
 
 func instantiate_and_index() -> void:
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
@@ -210,15 +211,13 @@ func instantiate_and_index() -> void:
 	program.tree = get_tree()
 	assert(!program.has("root"))
 	program.root = get_tree().get_root()
-	for dict in [program_builders,program_references, program_nodes, gui_controls,
-			procedural_classes]:
+	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
 	emit_signal("project_objects_instantiated")
 
 func init_project() -> void:
-	Global.project_init()
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
