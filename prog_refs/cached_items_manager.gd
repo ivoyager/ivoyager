@@ -144,7 +144,7 @@ func _get_file(flags: int) -> File:
 		if flags == File.WRITE:
 			print("ERROR! Could not open ", file_path, " for write!")
 		else:
-			print("Could not open ", file_path, " for read (maybe no changes yet)")
+			print("Could not open ", file_path, " for read (expected if no changes)")
 		return null
 	return file
 
