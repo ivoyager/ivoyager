@@ -95,6 +95,21 @@ static func make_or_clear_dir(dir_path: String) -> void:
 
 # loading assets & data files
 
+static func get_dir_files(dir_path: String) -> Array:
+	# Use for debugging. Export removes files & changes file names!
+	var dir := Directory.new()
+	if dir.open(dir_path) != OK:
+		print("Could not open dir: ", dir_path)
+		return []
+	var result := []
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name:
+		if !dir.current_is_dir():
+			result.append(file_name)
+		file_name = dir.get_next()
+	return result
+
 static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
 	# followed by dot. Returns resource file if it exists. We expect to

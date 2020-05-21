@@ -85,6 +85,7 @@ var init_sequence := [
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
 	# treated exactly like program_references (separate for organization).
+	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
 	_SaverLoader_ = SaverLoader,
 	_EnvironmentBuilder_ = EnvironmentBuilder,
