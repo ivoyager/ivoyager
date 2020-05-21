@@ -202,27 +202,9 @@ var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
 	prints(project_name, ivoyager_version, project_version)
-	_load_translations()
 	_modify_asset_paths()
 	_load_assets()
 	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
-
-func _load_translations() -> void:
-	for tr_path in translations:
-		var translation: Translation = load(tr_path)
-		if translation is PHashTranslation:
-			TranslationServer.add_translation(translation)
-		else:
-			# Patch for Godot issue #38716 not understanding "\uXXXX". Requires
-			# compress=false in the .import file!
-			for txt_key in translation.get_message_list():
-				var text: String = translation.get_message(txt_key)
-				var new_text := StrUtils.c_unescape_patch(text)
-				if new_text != text:
-					translation.add_message(txt_key, new_text)
-			var compressed_tr := PHashTranslation.new()
-			compressed_tr.generate(translation)
-			TranslationServer.add_translation(compressed_tr)
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:

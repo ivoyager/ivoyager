@@ -276,6 +276,7 @@ func _stop_simulator() -> void:
 	
 func _run_simulator() -> void:
 	print("Run simulator")
+	print(FileUtils.get_dir_files("res://ivoyager/data/text"))
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
 	_tree.paused = _was_paused
