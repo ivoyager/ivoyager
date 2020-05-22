@@ -194,6 +194,7 @@ const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 var current_project_version := project_version
 var current_ivoyager_version := ivoyager_version
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
+var is_html5: bool = OS.has_feature('JavaScript')
 
 # private
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
