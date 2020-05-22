@@ -228,6 +228,8 @@ func quit(quit_now: bool) -> void:
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
+	if Global.is_html5:
+		JavaScript.eval("window.close()")
 
 func save_quit() -> void:
 	Global.connect("game_save_finished", self, "quit", [true])
