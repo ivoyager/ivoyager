@@ -70,7 +70,7 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	show()
 
 func _on_viewport_size_changed() -> void:
-	_fullscreen_button.text = "Shrink" if OS.window_fullscreen else "Expand"
+	_fullscreen_button.text = "Off" if OS.window_fullscreen else "On"
 
 func _change_fullscreen() -> void:
 	OS.window_fullscreen = !OS.window_fullscreen

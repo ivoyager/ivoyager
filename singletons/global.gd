@@ -102,7 +102,6 @@ var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
 var skip_splash_screen := false
-var full_screen_on_system_tree_ready := false
 var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
