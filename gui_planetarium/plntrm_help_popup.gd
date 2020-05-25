@@ -23,17 +23,6 @@ extends PopupPanel
 class_name PlntrmHelpPopup
 const SCENE := "res://ivoyager/gui_planetarium/plntrm_help_popup.tscn"
 
-enum {
-	PLAIN_TEXT,
-	MAIN_HEADER,
-	SUBSECTION_HEADER,
-	BLOCK_TEXT,
-	BOLD_TEXT
-	}
-
-# project vars
-
-
 var _main: Main
 onready var _header: Label = $VBox/Header
 onready var _rtlabel: RichTextLabel = $VBox/RTLabel
@@ -54,13 +43,15 @@ func _on_ready() -> void:
 	_rtlabel.bbcode_enabled = true
 	_rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
 	_close_button.connect("pressed", self, "hide")
+	var version: String = load("res://planetarium/planetarium.gd").EXTENSION_VERSION
+	_header.text = "Help - v" + version
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
 	_main.require_stop(self)
-	var version: String = load("res://planetarium/planetarium.gd").EXTENSION_VERSION
-	var help_text := "Planetarium " + version + "\n" + tr("TXT_PLANETARIUM_HELP")
-	_rtlabel.bbcode_text = help_text
+#	var version: String = load("res://planetarium/planetarium.gd").EXTENSION_VERSION
+#	var help_text := "Planetarium " + version + "\n" + tr("TXT_PLANETARIUM_HELP")
+	_rtlabel.bbcode_text = tr("TXT_PLANETARIUM_HELP")
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
@@ -80,3 +71,5 @@ func _on_unhandled_key_input(event: InputEventKey) -> void:
 func _on_meta_clicked(meta: String) -> void:
 	if meta == tr("LABEL_IVOYAGER_FORUM"):
 		OS.shell_open("https://ivoyager.dev/forum/")
+	elif meta == "GitHub Sponsors":
+		OS.shell_open("https://github.com/sponsors/charliewhitfield")
