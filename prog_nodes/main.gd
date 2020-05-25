@@ -56,6 +56,7 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
 	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
 	_tree = Global.program.tree
@@ -266,6 +267,10 @@ func _finish_init() -> void:
 	Global.emit_signal("main_inited")
 	if Global.skip_splash_screen:
 		build_system_tree()
+
+func _on_system_tree_ready(_is_new_game: bool) -> void:
+	if Global.full_screen_on_system_tree_ready:
+		OS.window_fullscreen = true
 
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
