@@ -276,7 +276,7 @@ func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num
 			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
 				return number_unit(x, "c", sig_digits, num_type, long_form, case_type)
 			return number_unit(x, "km/s", sig_digits, num_type, long_form, case_type)
-	assert(false, "Unkknown option_type: " + option_type)
+	assert(false, "Unkknown option_type: " + String(option_type))
 	return String(x)
 
 func number(x: float, sig_digits := -1, num_type := NUM_DYNAMIC) -> String:
