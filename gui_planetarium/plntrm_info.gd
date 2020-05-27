@@ -22,20 +22,18 @@ var col1_width := 170
 var col2_width := 170
 
 onready var mouse_trigger: Control = self
-onready var mouse_visible := [$Scroll/VBox/Locks1, $Scroll/VBox/Locks2, $Scroll/VBox/Locks3]
+onready var mouse_visible := [] # dynamic
 
 onready var time_items := [$TimeBox/DateTime]
 onready var selection_items := [$SelectionBox/SelectionWiki]
 onready var range_items := [$RangeLabel]
-onready var info_items := [$Scroll/VBox/SelectionData]
+onready var info_items := [$InfoScroll]
 onready var control_items := [$TimeBox/TimeControl, $SelectionBox/ViewButtons]
-
-var _settings: Dictionary = Global.settings
-onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 func _ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [],
 			CONNECT_ONESHOT)
+	Global.connect("setting_changed", self, "_settings_listener")
 	var time_control: Control = $TimeBox/TimeControl
 	time_control.include_game_speed_label = false
 	time_control.include_pause_button = false
@@ -45,47 +43,43 @@ func _ready():
 	var view_buttons: Control = $SelectionBox/ViewButtons
 	view_buttons.use_small_txt = true
 	view_buttons.include_recenter = true
-	var selection_data: Control = $Scroll/VBox/SelectionData
+	var selection_data: Control = $InfoScroll/SelectionData
 	selection_data.enable_wiki_links = true
 	selection_data.labels_width = col1_width
 	selection_data.values_width = col2_width
-	# visibility control
-	$Scroll/VBox/Locks1/LkTimeCkBx.pressed = _settings.lock_time
-	$Scroll/VBox/Locks1/LkSelectionCkBx.pressed = _settings.lock_selection
-	$Scroll/VBox/Locks2/LkRangeCkBx.pressed = _settings.lock_range
-	$Scroll/VBox/Locks2/LkInfoCkBx.pressed = _settings.lock_info
-	$Scroll/VBox/Locks3/LkControlsCkBx.pressed = _settings.lock_controls
-	_lock_toggled(_settings.lock_time, time_items)
-	_lock_toggled(_settings.lock_selection, selection_items)
-	_lock_toggled(_settings.lock_range, range_items)
-	_lock_toggled(_settings.lock_info, info_items)
-	_lock_toggled(_settings.lock_controls, control_items)
-	$Scroll/VBox/Locks1/LkTimeCkBx.connect("toggled", self, "_lock_toggled",
-			[time_items, "lock_time"])
-	$Scroll/VBox/Locks1/LkSelectionCkBx.connect("toggled", self, "_lock_toggled",
-			[selection_items, "lock_selection"])
-	$Scroll/VBox/Locks2/LkRangeCkBx.connect("toggled", self, "_lock_toggled",
-			[range_items, "lock_range"])
-	$Scroll/VBox/Locks2/LkInfoCkBx.connect("toggled", self, "_lock_toggled",
-			[info_items, "lock_info"])
-	$Scroll/VBox/Locks3/LkControlsCkBx.connect("toggled", self, "_lock_toggled",
-			[control_items, "lock_controls"])
+	var settings: Dictionary = Global.settings
+	_change_mouse_vis_control(settings.lock_time, time_items)
+	_change_mouse_vis_control(settings.lock_selection, selection_items)
+	_change_mouse_vis_control(settings.lock_range, range_items)
+	_change_mouse_vis_control(settings.lock_info, info_items)
+	_change_mouse_vis_control(settings.lock_controls, control_items)
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	# These are hidden during build but shown at start (until user moves mouse)
-	$TimeBox/TimeControl.show()
-	$SelectionBox/ViewButtons.show()
-	$Scroll/VBox/Locks1.show()
-	$Scroll/VBox/Locks2.show()
-	$Scroll/VBox/Locks3.show()
+	# Show everything (whether locked or not) until user moves mouse
+	for array in [time_items, selection_items, range_items, info_items, control_items]:
+		for gui in array:
+			gui.show()
 
-func _lock_toggled(pressed: bool, guis: Array, setting_name := "") -> void:
-	if pressed:
+func _change_mouse_vis_control(is_locked: bool, guis: Array) -> void:
+	if is_locked:
 		for gui in guis:
+			gui.show()
 			mouse_visible.erase(gui)
 	else:
 		for gui in guis:
+			gui.hide()
 			if !mouse_visible.has(gui):
 				mouse_visible.append(gui)
-	if setting_name:
-		_settings_manager.change_current(setting_name, pressed)
+
+func _settings_listener(setting: String, value) -> void:
+	match setting:
+		"lock_time":
+			_change_mouse_vis_control(value, time_items)
+		"lock_selection":
+			_change_mouse_vis_control(value, selection_items)
+		"lock_range":
+			_change_mouse_vis_control(value, range_items)
+		"lock_info":
+			_change_mouse_vis_control(value, info_items)
+		"lock_controls":
+			_change_mouse_vis_control(value, control_items)

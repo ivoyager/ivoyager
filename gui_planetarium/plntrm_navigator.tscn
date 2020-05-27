@@ -10,29 +10,9 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="LockBox" type="HBoxContainer" parent="."]
-margin_right = 111.0
-margin_bottom = 35.0
-
-[node name="Spacer" type="Control" parent="LockBox"]
-margin_bottom = 35.0
-rect_min_size = Vector2( 0, 35 )
-
-[node name="LockLabel" type="Label" parent="LockBox"]
-margin_left = 4.0
-margin_top = 10.0
-margin_right = 83.0
-margin_bottom = 24.0
-text = "LABEL_LOCK"
-
-[node name="LockCkBx" type="CheckBox" parent="LockBox"]
-margin_left = 87.0
-margin_right = 111.0
-margin_bottom = 35.0
-
 [node name="SystemNavigator" parent="." instance=ExtResource( 2 )]
 margin_left = 0.0
-margin_top = 39.0
-margin_right = 111.0
-margin_bottom = 39.0
+margin_top = 0.0
+margin_right = 0.0
+margin_bottom = 0.0
 size_flags_vertical = 8

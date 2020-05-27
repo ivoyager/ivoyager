@@ -21,19 +21,32 @@ extends Control
 class_name PlanetariumGUI
 const SCENE := "res://ivoyager/gui_planetarium/planetarium_gui.tscn"
 
+const MOUSE_ON_CONTROL_MARGIN := 15.0
+const INFO_NAV_GAP := 20.0
+
 var selection_manager: SelectionManager
 
 onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
-onready var _viewport := get_viewport()
+onready var _info: Control = $PlntrmInfo
+onready var _info_scroll: Control = $PlntrmInfo/InfoScroll
+onready var _navigator: Control = $PlntrmNavigator
+
 var _is_mouse_button_pressed := false
 var _homepage_link := RichTextLabel.new()
 var _supportus_link := RichTextLabel.new()
+var _is_running := false
 
 func project_init() -> void:
 	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
 			[], CONNECT_ONESHOT)
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded",
 			[], CONNECT_ONESHOT)
+	Global.connect("run_state_changed", self, "_on_run_state_changed")
+
+func _ready() -> void:
+	Global.connect("gui_refresh_requested", self, "_reset_info_size")
+	get_tree().connect("screen_resized", self, "_reset_info_size")
+	_navigator.connect("visibility_changed", self, "_reset_info_size")
 
 func _on_project_builder_finished() -> void:
 	theme = Global.themes.main
@@ -73,16 +86,33 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	var start_selection: SelectionItem = registrar.selection_items[Global.start_body_name]
 	selection_manager.select(start_selection)
 
+func _reset_info_size() -> void:
+#	yield(get_tree(), "idle_frame")
+	var info_size_y: float
+	if _navigator.visible:
+		info_size_y = _navigator.rect_position.y - INFO_NAV_GAP
+	else:
+		info_size_y = get_viewport().size.y - INFO_NAV_GAP
+	_info.rect_min_size.y = info_size_y
+	_info_scroll.rect_size.y = 0.0 # needed for resize when turning fullscreen OFF
+	_info.rect_size.y = 0.0 # needed for resize when turning fullscreen OFF
+
+func _on_run_state_changed(is_running: bool) -> void:
+	_is_running = is_running
+
 func _input(event: InputEvent) -> void:
-	# By default, all children of this node are shown/hidden by mouse position.
-	# For fine control, use members mouse_trigger & mouse_visible
+	if !_is_running:
+		return
+	# This node controls visibility of its children by mouse position. By
+	# default, the whole child node is shown/hidden. More specific control is
+	# possible if child has members mouse_trigger & mouse_visible.
 	if event is InputEventMouseMotion:
-		if _is_mouse_button_pressed or !visible:
-			return
+		if _is_mouse_button_pressed:
+			return # we are in the middle of a mouse drag!
 		var mouse_pos: Vector2 = event.position
 		for child in get_children():
 			if not "mouse_trigger" in child:
-				var is_visible := _is_visible(child, mouse_pos)
+				var is_visible := _is_mouse_on_control(mouse_pos, child)
 				if is_visible == child.visible:
 					continue
 				child.visible = is_visible
@@ -92,7 +122,7 @@ func _input(event: InputEvent) -> void:
 				if !mouse_visible:
 					continue
 				var mouse_trigger: Control = child.mouse_trigger
-				var is_visible := _is_visible(mouse_trigger, mouse_pos)
+				var is_visible := _is_mouse_on_control(mouse_pos, mouse_trigger)
 				if is_visible == mouse_visible[0].visible:
 					continue
 				for gui in mouse_visible:
@@ -101,17 +131,9 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		_is_mouse_button_pressed = event.pressed # don't show/hide GUIs during mouse drag
 
-func _is_visible(trigger: Control, pos: Vector2) -> bool:
-	var rect := trigger.get_global_rect()
-	if trigger.anchor_left != ANCHOR_BEGIN and pos.x < rect.position.x:
-		return false
-	if trigger.anchor_right != ANCHOR_END and pos.x > rect.end.x:
-		return false
-	if trigger.anchor_top != ANCHOR_BEGIN and pos.y < rect.position.y:
-		return false
-	if trigger.anchor_bottom != ANCHOR_END and pos.y > rect.end.y:
-		return false
-	return true
+func _is_mouse_on_control(mouse_pos: Vector2, trigger: Control) -> bool:
+	var trigger_rect := trigger.get_global_rect().grow(MOUSE_ON_CONTROL_MARGIN)
+	return trigger_rect.has_point(mouse_pos)
 
 func _on_homepage_clicked(_meta: String) -> void:
 	OS.shell_open("https://ivoyager.dev")

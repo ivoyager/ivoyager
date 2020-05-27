@@ -48,7 +48,8 @@ onready var _asteroid_labels := {
 
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator", [], CONNECT_ONESHOT)
-	get_viewport().connect("size_changed", self, "_on_viewport_size_changed")
+	Global.connect("gui_refresh_requested", self, "_on_screen_resized")
+	get_tree().connect("screen_resized", self, "_on_screen_resized")
 	_orbits_checkbox.connect("pressed", self, "_show_hide_orbits")
 	_names_checkbox.connect("pressed", self, "_show_hide_names")
 	_symbols_checkbox.connect("pressed", self, "_show_hide_symbols")
@@ -69,8 +70,9 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_resize_and_reposition()
 	show()
 
-func _on_viewport_size_changed() -> void:
-	_fullscreen_button.text = "Off" if OS.window_fullscreen else "On"
+func _on_screen_resized() -> void:
+	yield(get_tree(), "idle_frame")
+	_fullscreen_button.text = "BUTTON_OFF" if OS.window_fullscreen else "BUTTON_ON"
 
 func _change_fullscreen() -> void:
 	OS.window_fullscreen = !OS.window_fullscreen
