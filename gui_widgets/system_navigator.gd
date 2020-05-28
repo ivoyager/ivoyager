@@ -22,6 +22,7 @@ extends HBoxContainer
 const DPRINT := false
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
+const STAR_SLICE_MULTIPLIER := 0.05
 
 var size_proportions_exponent := 0.4 # 1.0 is "true" proportions
 var horizontal_expansion := 550.0 # affects growth to right
@@ -47,7 +48,8 @@ func _build_navigation_tree() -> void:
 	var total_size := 0.0
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
-	var star_slice_size := pow(star.properties.m_radius / 20.0, size_proportions_exponent) # slice image has 10% width
+	var star_slice_size := pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER,
+			size_proportions_exponent)
 	total_size += star_slice_size
 	# calcultate planet relative sizes
 	var biggest_size := 0.0 # used for planet vertical spacer
@@ -60,7 +62,8 @@ func _build_navigation_tree() -> void:
 	var biggest_image_size := floor(biggest_size * expansion / total_size)
 	total_size *= 1.09 # TODO: something less ad hoc for procedural
 	# build the system button tree
-	var image_size := floor(pow(star.properties.m_radius / 20.0, size_proportions_exponent) * expansion / total_size)
+	var image_size := floor(pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER,
+			size_proportions_exponent) * expansion / total_size)
 	_add_nav_button(self, star, image_size, true)
 	for planet in star.satellites: # vertical box for each planet w/ its moons
 		var planet_vbox := VBoxContainer.new()

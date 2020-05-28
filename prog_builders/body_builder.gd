@@ -90,7 +90,6 @@ var _ModelManager_: Script
 var _Properties_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
-var _fallback_star_slice: Texture
 var _satellite_indexes := {} # passed to & shared by Body instances
 
 
@@ -108,7 +107,6 @@ func project_init() -> void:
 	_ModelManager_ = Global.script_classes._ModelManager_
 	_Properties_ = Global.script_classes._Properties_
 	_fallback_body_2d = Global.assets.fallback_body_2d
-	_fallback_star_slice = Global.assets.fallback_star_slice
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
@@ -284,5 +282,3 @@ func _build_unpersisted(body: Body) -> void:
 	if body.flags & BodyFlags.IS_STAR:
 		var slice_name = file_prefix + "_slice"
 		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
-		if !body.texture_slice_2d:
-			body.texture_slice_2d = _fallback_star_slice
