@@ -30,6 +30,7 @@ var _script_classes: Dictionary = Global.script_classes
 var _disable_pause: bool
 var _allow_time_reversal: bool
 var _allow_dev_tools: bool
+var _allow_fullscreen_toggle: bool
 var _tree: SceneTree
 var _main: Main
 var _tree_manager: TreeManager
@@ -57,6 +58,7 @@ func project_init():
 	_disable_pause = Global.disable_pause
 	_allow_time_reversal = Global.allow_time_reversal
 	_allow_dev_tools = Global.allow_dev_tools
+	_allow_fullscreen_toggle = Global.allow_fullscreen_toggle
 	_tree = Global.program.tree
 	_main = Global.program.Main
 	_tree_manager = Global.program.TreeManager
@@ -93,8 +95,10 @@ func _on_input(event: InputEvent) -> void:
 		Global.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
 		Global.emit_signal("hotkeys_requested")
-	elif event.is_action_pressed("toggle_full_screen"):
+	elif event.is_action_pressed("toggle_all_gui"):
 		Global.emit_signal("toggle_show_hide_gui_requested")
+	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
+		OS.window_fullscreen = !OS.window_fullscreen
 	elif event.is_action_pressed("quick_save"):
 		_main.quick_save()
 	elif event.is_action_pressed("save_as"):
@@ -107,16 +111,14 @@ func _on_input(event: InputEvent) -> void:
 		_main.quit(false)
 	elif event.is_action_pressed("save_quit"):
 		_main.save_quit()
-	elif event.is_action_pressed("toggle_pause"):
-		if !_disable_pause:
-			_tree.paused = !_tree.paused
+	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
+		_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
 		_timekeeper.change_speed(1)
 	elif event.is_action_pressed("decr_speed"):
 		_timekeeper.change_speed(-1)
-	elif event.is_action_pressed("reverse_time"):
-		if _allow_time_reversal:
-			_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
+	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
+		_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
 	elif event.is_action_pressed("toggle_orbits"):
 		_tree_manager.set_show_orbits(!_tree_manager.show_orbits)
 	elif event.is_action_pressed("toggle_symbols"):

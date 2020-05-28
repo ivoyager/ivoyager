@@ -204,7 +204,8 @@ func _on_init() -> void:
 		toggle_orbits = [{event_class = "InputEventKey", scancode = KEY_O}],
 		toggle_symbols = [{event_class = "InputEventKey", scancode = KEY_I}],
 		toggle_names = [{event_class = "InputEventKey", scancode = KEY_L}],
-		toggle_full_screen = [{event_class = "InputEventKey", scancode = KEY_F, shift = true}],
+		toggle_all_gui = [{event_class = "InputEventKey", scancode = KEY_G, control = true}],
+		toggle_fullscreen = [{event_class = "InputEventKey", scancode = KEY_F, control = true}],
 		toggle_pause = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
 		incr_speed = [
 			{event_class = "InputEventKey", scancode = KEY_EQUAL},
