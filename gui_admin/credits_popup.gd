@@ -33,7 +33,7 @@ enum {
 
 # project vars - modify on project_objects_instantiated signal
 var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
-var scroll_size := Vector2(950, 700)
+var scroll_size := Vector2(950, 630)
 var autowrap_reduction := 15
 var subpanel_reduction := 50
 var spacer_size := 10
@@ -156,6 +156,7 @@ func _end_markup_type(code: int) -> void:
 			spacer.rect_min_size.y = spacer_size
 			_content.add_child(spacer)
 			if !_text: # empty header
+				_current_label.queue_free()
 				continue
 			_current_label.text = _text
 			_text = ""

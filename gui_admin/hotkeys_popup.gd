@@ -36,7 +36,7 @@ func _on_init():
 		[ # column 1; each dict is a subpanel
 			{
 				header = "LABEL_ADMIN",
-				toggle_fullscreen = "LABEL_FULLSCREEN",
+				toggle_fullscreen = "LABEL_TOGGLE_FULLSCREEN",
 				toggle_options = "LABEL_OPTIONS",
 				toggle_hotkeys = "LABEL_HOTKEYS",
 				load_game = "LABEL_LOAD_FILE",
