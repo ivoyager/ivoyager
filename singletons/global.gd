@@ -173,7 +173,6 @@ var asset_paths_for_load := { # loaded into "assets" dict at project init
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
-	fallback_star_slice = "res://ivoyager_assets/bodies_2d/Sun_slice.256.png",
 }
 var translations := [ # added here so extensions can modify
 	"res://ivoyager/data/text/entities_text.en.translation",
