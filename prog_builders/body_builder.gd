@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Be carful to test for table nulls explicitly! (0.0 != null)
 
 extends Reference
 class_name BodyBuilder
@@ -222,6 +221,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		model_geometry.rotation_period = -model_geometry.rotation_period
 	# body reference basis
 	var basis_at_epoch := math.rotate_basis_z(Basis.IDENTITY, model_geometry.north_pole)
+	if flags & BodyFlags.IS_TIDALLY_LOCKED:
+		# Rotate x-axis to mean parent facing
+		var mean_anomaly_at_epoch: float = orbit.elements_at_epoch[5]
+		basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, mean_anomaly_at_epoch)
 	var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
 	if longitude_at_epoch and !is_inf(longitude_at_epoch):
 		basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, longitude_at_epoch)

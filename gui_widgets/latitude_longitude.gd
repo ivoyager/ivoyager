@@ -1,4 +1,4 @@
-# range_label.gd
+# body_builder.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Visible when camera "locked". Expects camera signals
-# "range_changed" and "camera_lock_changed".
 
 extends Label
 
@@ -31,17 +29,17 @@ func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("range_changed", self, "_on_range_changed")
+		_camera.connect("latitude_longitude_changed", self, "_on_latitude_longitude_changed")
 		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("range_changed", self, "_on_range_changed")
+		_camera.disconnect("range_changed", self, "_on_latitude_longitude_changed")
 		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
 	_camera = null
 
-func _on_range_changed(new_range: float) -> void:
-	text = _qty_strings.number_option(new_range, _qty_strings.LENGTH_M_KM_AU, "", 3)
+func _on_latitude_longitude_changed(lat: float, long: float) -> void:
+	text = _qty_strings.latitude_longitude(lat, long, 1)
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	visible = is_locked

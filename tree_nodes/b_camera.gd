@@ -37,7 +37,7 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 signal move_started(to_body, is_camera_lock)
 signal parent_changed(new_body)
 signal range_changed(new_range)
-signal lat_long_changed(latitude, longitude)
+signal latitude_longitude_changed(latitude, longitude)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
@@ -294,6 +294,10 @@ func tree_manager_process(engine_delta: float) -> void:
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 	_camera_info[2] = global_transform.origin
+	
+	# temp
+	var lat_long := selection_item.get_latitude_longitude(translation)
+	emit_signal("latitude_longitude_changed", lat_long[0], lat_long[1])
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 

@@ -62,6 +62,11 @@ var texture_slice_2d: Texture # stars only
 var _times: Array = Global.times
 
 
+func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
+	if !is_body:
+		return VECTOR2_ZERO
+	return body.get_latitude_longitude(translation, time)
+
 func get_global_origin() -> Vector3:
 	return spatial.global_transform.origin
 

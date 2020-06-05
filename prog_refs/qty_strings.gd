@@ -54,6 +54,9 @@ enum { # option_type for number_option()
 	# velocity
 	VELOCITY_MPS_KMPS, # km/s if >= 1.0 km/s
 	VELOCITY_MPS_KMPS_C, # km/s if >= 1.0 km/s; c if >= 0.1 c
+	# misc
+	LATITUDE,
+	LONGITUDE,
 }
 
 const LOG_OF_10 := log(10.0)
@@ -276,8 +279,42 @@ func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num
 			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
 				return number_unit(x, "c", sig_digits, num_type, long_form, case_type)
 			return number_unit(x, "km/s", sig_digits, num_type, long_form, case_type)
+		LATITUDE:
+			return latitude(x, sig_digits, long_form, case_type)
+		LONGITUDE:
+			return longitude(x, sig_digits, long_form, case_type)
+			
 	assert(false, "Unkknown option_type: " + String(option_type))
 	return String(x)
+
+func latitude_longitude(lat: float, long: float, decimal_pl := 0, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	return latitude(lat, decimal_pl, long_form, case_type) + " " \
+			+ longitude(long, decimal_pl, long_form, case_type)
+
+func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+	var suffix: String
+	if long_form:
+		suffix = tr("TXT_NORTH") if x >= 0.0 else tr("TXT_SOUTH")
+	else:
+		suffix = tr("TXT_NORTH_SHORT") if x >= 0.0 else tr("TXT_SOUTH_SHORT")
+	if case_type == CASE_LOWER:
+		suffix = suffix.to_lower()
+	elif case_type == CASE_UPPER:
+		suffix = suffix.to_upper()
+	return number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type) + suffix
+
+func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+	var suffix: String
+	if long_form:
+		suffix = tr("TXT_WEST") if x >= 0.0 else tr("TXT_EAST")
+	else:
+		suffix = tr("TXT_WEST_SHORT") if x >= 0.0 else tr("TXT_EAST_SHORT")
+	if case_type == CASE_LOWER:
+		suffix = suffix.to_lower()
+	elif case_type == CASE_UPPER:
+		suffix = suffix.to_upper()
+	return number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type) + suffix
 
 func number(x: float, sig_digits := -1, num_type := NUM_DYNAMIC) -> String:
 	# sig_digets = -1 displays decimal precision "as is".

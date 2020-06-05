@@ -55,11 +55,6 @@ static func unrotate_vector_z(vector: Vector3, old_z: Vector3) -> Vector3:
 	var X := -Z_VECTOR.cross(old_z) # flip the cross-product for converse
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
-	
-#	var result := vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
-#	printt(vector, rotate_vector_z(result, old_z))
-#	return result
-	
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
 static func rotate_basis_z(basis: Basis, new_z: Vector3) -> Basis:

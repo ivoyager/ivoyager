@@ -91,6 +91,10 @@ var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
 
+func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
+	if !model_geometry:
+		return VECTOR2_ZERO
+	return model_geometry.get_latitude_longitude(translation, time)
 
 func get_north(_time := -INF) -> Vector3:
 	# Returns this body's north in ecliptic coordinates.

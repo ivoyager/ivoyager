@@ -50,6 +50,15 @@ var _times: Array = Global.times
 var _dynamic_star: Array
 var _working_basis: Basis
 
+func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
+	# Order is flipped from standard spherical (RA, Dec), and we wrap longitude
+	# from -PI (East) to PI (West).
+	var ground_basis := get_ground_ref_basis(time)
+	var spherical := math.get_rotated_spherical3(translation, ground_basis)
+	var latitude: float = spherical[1]
+	var longitude: float = wrapf(spherical[0], -PI, PI)
+	return Vector2(latitude, longitude)
+
 func get_ground_ref_basis(time := -INF) -> Basis:
 	if time == -INF:
 		time = _times[0]
