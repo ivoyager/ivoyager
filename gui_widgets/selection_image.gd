@@ -37,4 +37,4 @@ func _on_selection_changed() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
 		Global.emit_signal("move_camera_to_selection_requested", _selection_manager.selection_item,
-				-1, Vector3.ZERO, Vector3.ZERO)
+				-1, Vector3.ZERO, Vector3.ZERO, -1)

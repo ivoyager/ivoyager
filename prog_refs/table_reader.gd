@@ -28,7 +28,7 @@ var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
 var _table_fields: Dictionary # a dict of columns for each table
 var _table_data_types: Dictionary # an array for each table
 var _table_units: Dictionary # an array for each table
-var _table_rows: Dictionary = Global.table_rows
+var _table_rows: Dictionary = Global.table_rows # indexed by ALL table rows
 var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _bodies_by_name: Dictionary = Global.bodies_by_name
 var _enums: Script
@@ -53,12 +53,24 @@ func get_n_table_rows(table_name: String) -> int:
 	var data: Array = _table_data[table_name]
 	return data.size()
 
-func get_row_key(table_name: String, row: int) -> String:
+func get_row_name(table_name: String, row: int) -> String:
+	# assumes valid args
 	var row_data: Array = _table_data[table_name][row]
 	return _values[row_data[0]]
 
-func is_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
-	# use for STRING or to get unconverted table value; returns "" if missing
+func get_row(table_name: String, row_name: String) -> int:
+	# returns -1 if missing row_name
+	var table_rows: Dictionary = _table_row_dicts[table_name]
+	if table_rows.has(row_name):
+		return table_rows[row_name]
+	return -1
+
+func has_row_name(table_name: String, row_name: String) -> bool:
+	var table_rows: Dictionary = _table_row_dicts[table_name]
+	return table_rows.has(row_name)
+
+func has_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
+	# supply either row or row_name
 	assert((row == -1) != (row_name == ""))
 	var fields: Dictionary = _table_fields[table_name]
 	if !fields.has(field_name):

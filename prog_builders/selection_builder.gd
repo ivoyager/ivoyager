@@ -31,10 +31,10 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
 var longitude_fixed := 0.0
 var latitude_fixed := 0.0
-var longitude_zoom_offset_star_behind := PI + PI / 3.0 # view from above 3 O'Clock
-var latitude_zoom_offset_star_behind := -PI / 200.0 # a bit below equator shows off Saturn's rings
-var longitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly right of Moon
-var latitude_zoom_offset_parent_forground := PI / 10.0 # eg, Earth slightly above Moon
+var longitude_zoom_offset_star_behind := 0.0 # PI + PI / 3.0 # view from above 3 O'Clock
+var latitude_zoom_offset_star_behind := 0.0 # -PI / 200.0 # a bit below equator shows off Saturn's rings
+var longitude_zoom_offset_parent_forground := PI # PI / 10.0 # eg, Earth slightly right of Moon
+var latitude_zoom_offset_parent_forground := 0.0 # PI / 10.0 # eg, Earth slightly above Moon
 var min_view_dist_radius_multiplier := 1.65
 var zoom_divisor := 3e3 * UnitDefs.KM # bigger makes zoom closer
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation
@@ -99,7 +99,8 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 	selection_item.camera_view_positions = [ # camera will divide dist by fov
 		Vector3(x_offset_zoom, y_offset_zoom, view_dist_zoom), # VIEW_ZOOM
 		Vector3(x_offset_45, y_offset_45, view_dist_45), # VIEW_45
-		Vector3(x_offset_top, y_offset_top, view_dist_top) # VIEW_TOP
+		Vector3(x_offset_top, y_offset_top, view_dist_top), # VIEW_TOP
+		Vector3(0.0, 0.0, view_dist_zoom) # VIEW_OUTWARD
 	]
 
 func _set_system_counts(is_new_game: bool) -> void:

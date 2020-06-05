@@ -18,61 +18,55 @@
 # Call directly using Math, or better, localize in your class header area.
 # Issue #37529 prevents localization of global class_name to const. Use:
 # const math := preload("res://ivoyager/static/math.gd")
+#
+# WIP -
+# Spherical coordinates are ALWAYS either:
+#   right_ascension, declination, distance (= longitude, latitude, distance)
+#   right_ascension, declination (= longitude, latitude)
+# Elsewhere in code these might be ecliptic2, equatorial2, geographic2, etc.
 
 class_name Math
 
-const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
+const IDENTITY_BASIS := Basis.IDENTITY
+const Z_VECTOR := Vector3(0.0, 0.0, 1.0)
+const VECTOR2_ZERO := Vector2.ZERO
+const VECTOR3_ZERO := Vector3.ZERO
 const LOG_OF_10 := log(10.0)
 
-static func cartesian2spherical(R: Vector3) -> Vector3:
-	var r := R.length()
-	var th := acos(R.z / r) # polar angle [0, PI]
-	var ph := atan2(R.y, R.x) # azimuthal angle [0, TAU]
-	return Vector3(r, th, ph)
 
-static func spherical2cartesian(S: Vector3) -> Vector3:
-	var r := S[0]
-	var th := S[1]
-	var ph := wrapf(S[2], 0.0, TAU)
-	assert(th >= 0 and th <= PI)
-	var sin_th := sin(th)
-	return Vector3(
-		r * sin_th * cos(ph), # x
-		r * sin_th * sin(ph), # y
-		r * cos(th) # z
-	)
-
-static func rotate_vector_pole(vector: Vector3, new_pole: Vector3) -> Vector3:
-	# Uses Rodrigues Formula to rotate vector from ecliptic (z up) orientation to
-	# provided new_pole; new_pole assumed to be a unit vector.
-	if vector == ECLIPTIC_NORTH:
-		return new_pole
-	if new_pole == ECLIPTIC_NORTH:
+static func rotate_vector_z(vector: Vector3, new_z: Vector3) -> Vector3:
+	# Uses Rodrigues Rotation Formula to rotate vector to a new basis defined
+	# by new_z; new_z must be a unit vector. Use for N Pole rotations.
+	if vector == Z_VECTOR:
+		return new_z
+	if new_z == Z_VECTOR:
 		return vector
-	var cos_th := ECLIPTIC_NORTH.dot(new_pole)
-	var X := ECLIPTIC_NORTH.cross(new_pole)
+	var cos_th := Z_VECTOR.dot(new_z)
+	var X := Z_VECTOR.cross(new_z)
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
-static func unrotate_vector_pole(vector: Vector3, old_pole: Vector3) -> Vector3:
-	# Uses Rodrigues Formula to rotate vector from ecliptic (z up) orientation to
-	# provided new_pole; new_pole assumed to be a unit vector.
-#	if vector == ECLIPTIC_NORTH:
-#		return old_pole
-	if old_pole == ECLIPTIC_NORTH:
+static func unrotate_vector_z(vector: Vector3, old_z: Vector3) -> Vector3:
+	# converse of above function
+	if old_z == Z_VECTOR:
 		return vector
-	var cos_th := ECLIPTIC_NORTH.dot(old_pole)
-	var X := -ECLIPTIC_NORTH.cross(old_pole)
+	var cos_th := Z_VECTOR.dot(old_z)
+	var X := -Z_VECTOR.cross(old_z) # flip the cross-product for converse
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
+	
+#	var result := vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
+#	printt(vector, rotate_vector_z(result, old_z))
+#	return result
+	
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
-static func rotate_basis_pole(basis: Basis, new_pole: Vector3) -> Basis:
-	if new_pole == ECLIPTIC_NORTH:
+static func rotate_basis_z(basis: Basis, new_z: Vector3) -> Basis:
+	if new_z == Z_VECTOR:
 		return basis
-	var cos_th := ECLIPTIC_NORTH.dot(new_pole)
-	var X := ECLIPTIC_NORTH.cross(new_pole)
+	var cos_th := Z_VECTOR.dot(new_z)
+	var X := Z_VECTOR.cross(new_z)
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
 	var c1 := 1.0 - cos_th
@@ -148,18 +142,17 @@ static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 		Vector3(z1, z2, z3)
 	)
 
-# RA, dec are spherical coordinates except dec is from equator rather than pole
-static func get_equatorial_coordinates2(translation: Vector3) -> Vector2:
-	# returns Vector2(right_ascension, declination)
+# Spherical
+static func get_spherical2(translation: Vector3) -> Vector2:
 	var r := translation.length()
-	return Vector2(
-		fposmod(atan2(translation.y, translation.x), TAU),
-		asin(translation.z / r)
-	)
+	if r == 0.0:
+		return VECTOR2_ZERO
+	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU)
+	var declination := asin(translation.z / r)
+	return Vector2(right_ascension, declination)
 
-static func convert_equatorial_coordinates2(right_ascension: float,
-		declination: float) -> Vector3:
-	# returns translation assuming r = 1.0
+static func convert_spherical2(right_ascension: float, declination: float) -> Vector3:
+	# returns translation with r = 1.0
 	var cos_decl := cos(declination)
 	return Vector3(
 		cos(right_ascension) * cos_decl,
@@ -167,27 +160,71 @@ static func convert_equatorial_coordinates2(right_ascension: float,
 		sin(declination)
 	)
 
-static func get_equatorial_coordinates3(translation: Vector3) -> Vector3:
-	# returns Vector3(right_ascension, declination, r)
+static func get_spherical3(translation: Vector3) -> Vector3:
 	var r := translation.length()
-	return Vector3(
-		fposmod(atan2(translation.y, translation.x), TAU),
-		asin(translation.z / r),
-		r
-	)
+	if r == 0.0:
+		return VECTOR3_ZERO
+	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU)
+	var declination := asin(translation.z / r)
+	return Vector3(right_ascension, declination, r)
 
-static func convert_equatorial_coordinates3(equatorial_coord: Vector3) -> Vector3:
-	# equatorial_coord is Vector3(right_ascension, declination, r)
-	# returns translation
-	var right_ascension: float = equatorial_coord[0]
-	var declination: float = equatorial_coord[1]
-	var r: float = equatorial_coord[2]
+static func convert_spherical3(spherical3: Vector3) -> Vector3:
+	var right_ascension: float = spherical3[0]
+	var declination: float = spherical3[1]
+	var r: float = spherical3[2]
 	var cos_decl := cos(declination)
 	return Vector3(
-		cos(right_ascension) * cos_decl,
-		sin(right_ascension) * cos_decl,
-		sin(declination)
-	) * r
+		r * cos(right_ascension) * cos_decl,
+		r * sin(right_ascension) * cos_decl,
+		r * sin(declination)
+	)
+
+static func get_rotated_spherical3(translation: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
+	translation = rotation.xform_inv(translation)
+	return get_spherical3(translation)
+
+static func convert_rotated_spherical3(spherical3: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
+	var translation := convert_spherical3(spherical3)
+	return rotation.xform(translation)
+
+static func wrap_spherical3(spherical3: Vector3) -> Vector3:
+	var ra: float = spherical3[0] # make this 0 to TAU
+	var dec: float = spherical3[1] # make this -PI/2 to PI/2
+	dec = wrapf(dec, -PI, PI)
+	if dec > (PI / 2.0): # pole traversal
+		dec = PI - dec
+		ra += PI
+	elif dec < (-PI / 2.0): # pole traversal
+		dec = PI + dec
+		ra += PI
+	ra = wrapf(ra, 0.0, TAU)
+	spherical3[0] = ra
+	spherical3[1] = dec
+	return spherical3
+
+# DEPRECIATE
+static func get_relative_spherical3(translation: Vector3, north: Vector3,
+		ref_spherical2 := VECTOR2_ZERO) -> Vector3:
+	translation = unrotate_vector_z(translation, north)
+	var spherical3 := get_spherical3(translation)
+	spherical3[0] -= ref_spherical2[0] # longitude
+	spherical3[1] -= ref_spherical2[1] # latitude
+	return wrap_spherical3(spherical3)
+
+static func convert_relative_spherical3(spherical3: Vector3, north: Vector3,
+		ref_spherical2 := VECTOR2_ZERO) -> Vector3:
+#	var arg = spherical3
+	spherical3[0] += ref_spherical2[0] # longitude
+	spherical3[1] += ref_spherical2[1] # latitude
+	# TODO: not sure if wrap is needed here; test it!
+	spherical3 = wrap_spherical3(spherical3)
+	var translation := convert_spherical3(spherical3)
+	translation = rotate_vector_z(translation, north)
+#	printt(arg, get_relative_spherical3(translation, north, ref_spherical2))
+	return translation
+
+
+
 
 # Precision
 static func get_str_decimal_precision(x_str: String) -> int:
@@ -241,34 +278,12 @@ static func set_decimal_precision(x: float, sig_digits: int) -> float:
 	return round(x) * decimal_factor
 
 
-
-
-
-
-
 # Misc
 static func acosh(x: float) -> float:
 	# from https://en.wikipedia.org/wiki/Hyperbolic_function
 	assert(x >= 1.0)
 	return log(x + sqrt(x * x - 1.0))
 
-# Camera
-static func get_view_position(translation: Vector3, north: Vector3,
-		ref_longitude := 0.0) -> Vector3:
-	# view_position is [right_ascension, declination, range] sometimes relative
-	# to a moving ref_longitude
-	translation = unrotate_vector_pole(translation, north)
-	var view_position := get_equatorial_coordinates3(translation)
-	view_position[0] -= ref_longitude
-	return view_position
-
-static func convert_view_position(view_position: Vector3, north: Vector3,
-		ref_longitude := 0.0) -> Vector3:
-	# see comment above
-	view_position[0] += ref_longitude
-	var translation := convert_equatorial_coordinates3(view_position)
-	translation = rotate_vector_pole(translation, north)
-	return translation
 
 static func get_fov_from_focal_length(focal_length: float) -> float:
 	# This is for photography buffs who think in focal lengths (of full-frame

@@ -29,7 +29,7 @@ var setting_enums := {
 }
 
 var format_overrides := {
-	camera_transition_time = {max_value = 10.0},
+	camera_transfer_time = {max_value = 10.0},
 	viewport_names_size = {min_value = 4.0, max_value = 50.0},
 	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
 }
@@ -50,7 +50,7 @@ func _on_init():
 			},
 			{
 				header = "LABEL_CAMERA",
-				camera_transition_time = "LABEL_TRANSITION_TIME",
+				camera_transfer_time = "LABEL_TRANSFER_TIME",
 				camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
 				camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
 				camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",

@@ -24,7 +24,7 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 const DPRINT := false
-const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
+const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
@@ -86,7 +86,7 @@ var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _table_reader: TableReader
 var _Body_: Script
-var _ModelManager_: Script
+var _ModelGeometry_: Script
 var _Properties_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
@@ -104,7 +104,7 @@ func project_init() -> void:
 	_orbit_builder = Global.program.OrbitBuilder
 	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
-	_ModelManager_ = Global.script_classes._ModelManager_
+	_ModelGeometry_ = Global.script_classes._ModelGeometry_
 	_Properties_ = Global.script_classes._Properties_
 	_fallback_body_2d = Global.assets.fallback_body_2d
 
@@ -164,7 +164,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 			var gm := G * properties.mass
 			properties.gm = math.set_decimal_precision(gm, sig_digits)
 	if is_inf(properties.esc_vel) or is_inf(properties.surface_gravity):
-		if _table_reader.is_value(table_name, "GM", row):
+		if _table_reader.has_value(table_name, "GM", row):
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
 			if sig_digits > 2:
 				if is_inf(properties.esc_vel):
@@ -189,22 +189,22 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
-	var model_manager: ModelManager = _ModelManager_.new()
-	body.model_manager = model_manager
-	_table_reader.build_object(model_manager, table_name, row, rotations_fields)
+	var model_geometry: ModelGeometry = _ModelGeometry_.new()
+	body.model_geometry = model_geometry
+	_table_reader.build_object(model_geometry, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(!is_inf(model_manager.right_ascension) and !is_inf(model_manager.declination))
-		model_manager.north_pole = _ecliptic_rotation * math.convert_equatorial_coordinates2(
-				model_manager.right_ascension, model_manager.declination)
+		assert(!is_inf(model_geometry.right_ascension) and !is_inf(model_geometry.declination))
+		model_geometry.north_pole = _ecliptic_rotation * math.convert_spherical2(
+				model_geometry.right_ascension, model_geometry.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).
 		if orbit:
-			model_manager.axial_tilt = model_manager.north_pole.angle_to(orbit.get_normal(time))
+			model_geometry.axial_tilt = model_geometry.north_pole.angle_to(orbit.get_normal(time))
 		else: # sun
-			model_manager.axial_tilt = model_manager.north_pole.angle_to(ECLIPTIC_NORTH)
+			model_geometry.axial_tilt = model_geometry.north_pole.angle_to(ECLIPTIC_Z)
 	else:
-		model_manager.rotation_period = TAU / orbit.get_mean_motion(time)
+		model_geometry.rotation_period = TAU / orbit.get_mean_motion(time)
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -213,19 +213,19 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		model_manager.north_pole = orbit.get_normal(time)
-		if model_manager.axial_tilt != 0.0:
-			var correction_axis := model_manager.north_pole.cross(orbit.reference_normal).normalized()
-			model_manager.north_pole = model_manager.north_pole.rotated(correction_axis, model_manager.axial_tilt)
-	model_manager.north_pole = model_manager.north_pole.normalized()
+		model_geometry.north_pole = orbit.get_normal(time)
+		if model_geometry.axial_tilt != 0.0:
+			var correction_axis := model_geometry.north_pole.cross(orbit.reference_normal).normalized()
+			model_geometry.north_pole = model_geometry.north_pole.rotated(correction_axis, model_geometry.axial_tilt)
+	model_geometry.north_pole = model_geometry.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
-		model_manager.rotation_period = -model_manager.rotation_period
+		model_geometry.rotation_period = -model_geometry.rotation_period
 	# body reference basis
-	var body_ref_basis := math.rotate_basis_pole(Basis(), model_manager.north_pole)
-	var rotation_0 := _table_reader.get_real(table_name, "rotation_0", row)
-	if rotation_0 and !is_inf(rotation_0):
-		body_ref_basis = body_ref_basis.rotated(model_manager.north_pole, rotation_0)
-	model_manager.set_body_ref_basis(body_ref_basis)
+	var basis_at_epoch := math.rotate_basis_z(Basis.IDENTITY, model_geometry.north_pole)
+	var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
+	if longitude_at_epoch and !is_inf(longitude_at_epoch):
+		basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, longitude_at_epoch)
+	model_geometry.set_basis_at_epoch(basis_at_epoch)
 	# file import info
 	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
 	body.file_info[0] = file_prefix

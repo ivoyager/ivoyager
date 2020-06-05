@@ -23,35 +23,30 @@ extends HBoxContainer
 const ViewTypes := Enums.ViewTypes
 
 var use_small_txt := false
-var include_recenter := false
 
 var _camera: Camera
-onready var _recenter_button: Button = $Recenter
 onready var _zoom_button: Button = $Zoom
-onready var _fortyfive_button: Button = $FortyFive
+onready var _45_button: Button = $FortyFive
 onready var _top_button: Button = $Top
+onready var _outward_button: Button = $Outward
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
-	_zoom_button.connect("pressed", self, "_zoom")
-	_fortyfive_button.connect("pressed", self, "_fortyfive")
-	_top_button.connect("pressed", self, "_top")
+	_zoom_button.connect("pressed", self, "_on_zoom_pressed")
+	_45_button.connect("pressed", self, "_on_45_pressed")
+	_top_button.connect("pressed", self, "_on_top_pressed")
+	_outward_button.connect("pressed", self, "_on_outward_pressed")
 	if Global.state.is_system_built:
 		_on_system_built(false)
 	else:
 		Global.connect("system_tree_built_or_loaded", self, "_on_system_built", [], CONNECT_ONESHOT)
 	_connect_camera(get_viewport().get_camera())
-	
 
 func _on_system_built(_is_loaded_game: bool) -> void:
 	if use_small_txt:
-		_recenter_button.text = "BUTTON_RCTR"
 		_zoom_button.text = "BUTTON_ZM"
 		_top_button.text = "BUTTON_TP"
-	if include_recenter:
-		_recenter_button.connect("pressed", self, "_recenter")
-	else:
-		_recenter_button.queue_free()
+		_outward_button.text = "BUTTON_OUTWD"
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -65,40 +60,40 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _update_view_type(view_type: int) -> void:
-	if include_recenter:
-		_recenter_button.pressed = view_type != ViewTypes.VIEW_UNCENTERED
 	_zoom_button.pressed = view_type == ViewTypes.VIEW_ZOOM
-	_fortyfive_button.pressed = view_type == ViewTypes.VIEW_45
+	_45_button.pressed = view_type == ViewTypes.VIEW_45
 	_top_button.pressed = view_type == ViewTypes.VIEW_TOP
+	_outward_button.pressed = view_type == ViewTypes.VIEW_OUTWARD
 
-func _recenter() -> void:
-	if !_camera:
-		return
-	if _recenter_button.pressed:
-		_camera.move(null, -1, Vector3.ZERO, Vector3.ZERO)
-	else:
-		_recenter_button.pressed = true
-
-func _zoom() -> void:
+func _on_zoom_pressed() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_zoom_button.pressed = true
 
-func _fortyfive() -> void:
+func _on_45_pressed() -> void:
 	if !_camera:
 		return
-	if _fortyfive_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO)
+	if _45_button.pressed:
+		_camera.move(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
-		_fortyfive_button.pressed = true
+		_45_button.pressed = true
 
-func _top() -> void:
+func _on_top_pressed() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO)
+		_camera.move(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_top_button.pressed = true
+
+func _on_outward_pressed() -> void:
+	if !_camera:
+		return
+	if _outward_button.pressed:
+		_camera.move(null, ViewTypes.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
+	else:
+		_outward_button.pressed = true
+
