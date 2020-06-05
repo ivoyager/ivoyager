@@ -30,8 +30,15 @@ enum ViewTypes {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
-	VIEW_CENTERED, # unspecified view_position
-	VIEW_UNCENTERED # unspecified view_position & view_orientation
+	VIEW_OUTWARD,
+	VIEW_BUMPED, # unspecified view_position
+	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
+}
+
+enum TrackTypes {
+	TRACK_NONE,
+	TRACK_ORBIT,
+	TRACK_GROUND,
 }
 
 enum GUISizes {

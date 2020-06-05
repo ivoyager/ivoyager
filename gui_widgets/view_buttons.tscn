@@ -13,17 +13,8 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Recenter" type="Button" parent="."]
-margin_right = 134.0
-margin_bottom = 20.0
-toggle_mode = true
-shortcut_in_tooltip = false
-action_mode = 0
-text = "BUTTON_RECENTER"
-
 [node name="Zoom" type="Button" parent="."]
-margin_left = 138.0
-margin_right = 252.0
+margin_right = 114.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false
@@ -31,8 +22,8 @@ action_mode = 0
 text = "BUTTON_ZOOM"
 
 [node name="FortyFive" type="Button" parent="."]
-margin_left = 256.0
-margin_right = 377.0
+margin_left = 118.0
+margin_right = 239.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false
@@ -40,10 +31,19 @@ action_mode = 0
 text = "BUTTON_45_DEG"
 
 [node name="Top" type="Button" parent="."]
-margin_left = 381.0
-margin_right = 479.0
+margin_left = 243.0
+margin_right = 341.0
 margin_bottom = 20.0
 toggle_mode = true
 shortcut_in_tooltip = false
 action_mode = 0
 text = "BUTTON_TOP"
+
+[node name="Outward" type="Button" parent="."]
+margin_left = 345.0
+margin_right = 485.0
+margin_bottom = 20.0
+toggle_mode = true
+shortcut_in_tooltip = false
+action_mode = 0
+text = "BUTTON_OUTWARD"

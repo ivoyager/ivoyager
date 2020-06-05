@@ -42,7 +42,7 @@ func add_rings(body: Body) -> void:
 	rings_material.params_cull_mode = SpatialMaterial.CULL_DISABLED
 	rings_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
 	rings.scale = Vector3(radius * 2.0, radius * 2.0, 1.0)
-	rings.transform.basis = math.rotate_basis_pole(rings.transform.basis, body.model_manager.north_pole)
+	rings.transform.basis = math.rotate_basis_z(rings.transform.basis, body.model_geometry.north_pole)
 	rings.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 	rings.mesh = QuadMesh.new()
 	rings.set_surface_material(0, rings_material)

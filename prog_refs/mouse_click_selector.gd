@@ -46,7 +46,8 @@ func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) ->
 	for body in _registrar.top_bodies:
 		_test_body_recursive(body)
 	if _body:
-		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO, NULL_ROTATION)
+		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO,
+				NULL_ROTATION, -1)
 	else:
 		# placeholder for WIP PointPicker
 		pass

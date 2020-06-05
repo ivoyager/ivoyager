@@ -27,12 +27,17 @@
 extends Spatial
 class_name Body
 
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
 const DPRINT := false
 const HACKFIX_MOVE_HIDDEN_FAR_AWAY := false # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
 
+const IDENTITY_BASIS := Basis.IDENTITY
+const ECLIPTIC_Z := IDENTITY_BASIS.z
+const VECTOR2_ZERO := Vector2.ZERO
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
@@ -54,7 +59,7 @@ var system_radius := 0.0 # widest orbiting satellite
 var file_info := [""] # [file_prefix, icon [REMOVED], rings, rings_radius], 1st required
 
 var properties: Properties
-var model_manager: ModelManager
+var model_geometry: ModelGeometry
 var orbit: Orbit
 var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
@@ -62,7 +67,7 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "model_manager", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["properties", "model_geometry", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
@@ -86,6 +91,49 @@ var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
 
+
+func get_north(_time := -INF) -> Vector3:
+	# Returns this body's north in ecliptic coordinates.
+	# TODO: North precession
+	if !model_geometry:
+		return ECLIPTIC_Z
+	return model_geometry.north_pole
+
+func get_orbit_normal(time := -INF) -> Vector3:
+	if !orbit:
+		return ECLIPTIC_Z
+	return orbit.get_normal(time)
+
+func get_ground_ref_basis(time := -INF) -> Basis:
+	# returns rotation basis referenced to ground
+	if !model_geometry:
+		return IDENTITY_BASIS
+	return model_geometry.get_ground_ref_basis(time)
+
+func get_orbit_ref_basis(time := -INF) -> Basis:
+	# returns rotation basis referenced to parent body
+	if !orbit:
+		return IDENTITY_BASIS
+	var x_axis := -orbit.get_position(time).normalized()
+	var up := orbit.get_normal(time)
+	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
+	var z_axis := x_axis.cross(y_axis)
+	return Basis(x_axis, y_axis, z_axis)
+
+#func get_orbit_ref_ecliptic2(time := -INF) -> Vector2:
+#	# Returns ecliptic2 spherical coordinates (RA, Dec) of parent body.
+#	if !orbit:
+#		return VECTOR2_ZERO # "Primary direction" in ecliptic2 spherical
+#	var parent_ecliptic := -orbit.get_position(time)
+#	return math.get_spherical2(parent_ecliptic)
+#
+#func get_geo_ref_ecliptic2(time := -INF) -> Vector2:
+#	# Returns ecliptic2 spherical coordinates (RA, Dec) of lat,long = 0,0.
+#	# For tidally locked bodies, this is nearly same as get_orbit_ref_ecliptic2(),
+#	# but varies with librations (see wiki Lunar Libration).
+#	if !model_geometry:
+#		return VECTOR2_ZERO # "Primary direction" in ecliptic2 spherical
+#	return model_geometry.get_geo_ref_ecliptic2(time)
 
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
@@ -111,13 +159,13 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
 	if orbit:
 		translation = orbit.get_position(time)
-	if model_manager:
+	if model_geometry:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			model_manager.process_visible(time, camera_dist)
+			model_geometry.process_visible(time, camera_dist)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
-			model_manager.change_visibility(model_visible)
+			model_geometry.change_visibility(model_visible)
 	if aux_graphic:
 		var aux_graphic_visible := camera_dist < aux_graphic_too_far
 		if _aux_graphic_visible != aux_graphic_visible:
@@ -168,11 +216,11 @@ func _on_ready() -> void:
 func _update_orbit_change():
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
-		if model_manager.axial_tilt != 0.0:
+		if model_geometry.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, model_manager.axial_tilt)
-		model_manager.north_pole = new_north_pole
-		# TODO: Adjust body_ref_basis???
+			new_north_pole = new_north_pole.rotated(correction_axis, model_geometry.axial_tilt)
+		model_geometry.north_pole = new_north_pole
+		# TODO: Adjust basis_at_epoch???
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

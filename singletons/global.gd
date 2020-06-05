@@ -53,9 +53,9 @@ signal sim_run_allowed(who) # all requiring stop must allow!
 
 # camera control
 signal move_camera_to_selection_requested(selection_item, view_type, view_position,
-		view_orientation, is_instant_move) # 1st arg can be null; all others optional
-signal move_camera_to_body_requested(body, view_type, view_position, view_orientation,
-		is_instant_move) # 1st arg can be null; all others optional
+		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
+		track_type, is_instant_move) # 1st arg can be null; all others optional
 
 # GUI requests
 signal open_main_menu_requested()
@@ -146,6 +146,7 @@ var table_import := {
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
 	classes = "res://ivoyager/data/solar_system/classes.csv",
 	models = "res://ivoyager/data/solar_system/models.csv",
+	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.csv",
 }
 var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 

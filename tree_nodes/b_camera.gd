@@ -22,10 +22,10 @@
 #    BCameraInput (program_nodes/b_camera_input.gd); replace this!
 #    TreeManager (program_nodes/tree_manager.gd); modify as needed
 #
-# The camera stays "in place" by maintaining view_position & view_orientation.
-# The first is position relative to a vector
-# from the parent body to the grandparent body (reversed at star orbiting
-# bodies). The second is rotation relative to pointing at parent.
+# The camera stays "in place" by maintaining view_position & view_rotations.
+# The first is position relative to either target body's parent or ground
+# depending on track_type. The second is rotation relative to looking at
+# target body w/ north up.
 
 extends Camera
 class_name BCamera
@@ -37,38 +37,39 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 signal move_started(to_body, is_camera_lock)
 signal parent_changed(new_body)
 signal range_changed(new_range)
+signal lat_long_changed(latitude, longitude)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
+signal track_type_changed(track_type)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
 const VIEW_ZOOM = Enums.ViewTypes.VIEW_ZOOM
 const VIEW_45 = Enums.ViewTypes.VIEW_45
 const VIEW_TOP = Enums.ViewTypes.VIEW_TOP
-const VIEW_CENTERED = Enums.ViewTypes.VIEW_CENTERED
-const VIEW_UNCENTERED = Enums.ViewTypes.VIEW_UNCENTERED
+const VIEW_OUTWARD = Enums.ViewTypes.VIEW_OUTWARD
+const VIEW_BUMPED = Enums.ViewTypes.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = Enums.ViewTypes.VIEW_BUMPED_ROTATED
+const TRACK_NONE = Enums.TrackTypes.TRACK_NONE
+const TRACK_ORBIT = Enums.TrackTypes.TRACK_ORBIT
+const TRACK_GROUND = Enums.TrackTypes.TRACK_GROUND
 
-# TODO: Different pathings. Our current "spherical" path looks best within
-# systems among bodies with ecliptic/equatorial orbits. But a simple cartesian
-# path would look better in other circumstances.
-#enum {
-#	PATH_SPHERICAL,
-#	PATH_CARTESIAN,
-#}
-
+# TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
+# circumstances, PATH_CARTESION may look better.
 enum {
-	LONGITUDE_REMAP_INIT,
-	LONGITUDE_REMAP_NONE,
-	LONGITUDE_REMAP_FROM,
-	LONGITUDE_REMAP_TO
+	PATH_CARTESIAN,
+	PATH_SPHERICAL,
 }
 
-const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
-const Y_DIRECTION := Vector3(0.0, 1.0, 0.0)
-const X_DIRECTION := Vector3(1.0, 0.0, 0.0)
+const IDENTITY_BASIS := Basis.IDENTITY
+const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
+const ECLIPTIC_Y := IDENTITY_BASIS.y
+const ECLIPTIC_Z := IDENTITY_BASIS.z # ecliptic north
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
+const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
@@ -83,19 +84,21 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
-var view_position := VECTOR3_ZERO # longitude, latitude, radius
-var view_orientation := VECTOR3_ZERO # relative to pointing at parent, north up
+var track_type := TRACK_ORBIT
+var view_position := VECTOR3_ZERO # spherical; relative to orbit or ground ref
+var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
 # private
-var _transform := Transform(Basis(), Vector3.ONE) # "working" value
+var _transform := Transform(Basis(), Vector3.ONE) # working value
 var _view_type_memory := view_type
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "view_position",
-	"view_orientation", "focal_length", "focal_length_index", "_transform", "_view_type_memory"]
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "track_type",
+	"view_position", "view_rotations", "focal_length", "focal_length_index",
+	"_transform", "_view_type_memory"]
 const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
@@ -104,9 +107,9 @@ const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var follow_orbit: float = 4e7 * UnitDefs.KM # km after dividing by fov
-var use_local_north: float = 5e7 * UnitDefs.KM # must be > follow_orbit
-var use_ecliptic_north: float = 5e10 * UnitDefs.KM # must be > use_local_north
+var track_dist: float = 4e7 * UnitDefs.KM # km after dividing by fov
+var use_local_up: float = 5e7 * UnitDefs.KM # must be > track_dist
+var use_ecliptic_up: float = 5e10 * UnitDefs.KM # must be > use_local_up
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation
@@ -116,37 +119,40 @@ var parent: Spatial # always current
 var is_moving := false # body to body move in progress
 
 # private
+var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
 var _max_dist: float = Global.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
-var _follow_orbit_dist: float
-var _use_local_north_dist: float
-var _use_ecliptic_north_dist: float
+var _track_dist: float
+var _use_local_up_dist: float
+var _use_ecliptic_up_dist: float
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
 var _rotate_action := VECTOR3_ZERO
 
-# body to body move
+# body to body transfer
 var _move_progress: float
+var _path_type := PATH_SPHERICAL # TODO: select at move()
 var _to_spatial: Spatial
 var _from_spatial: Spatial
-var _common_spatial: Spatial
-var _common_north := ECLIPTIC_NORTH
+var _transfer_ref_spatial: Spatial
+var _transfer_ref_basis: Basis
 var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE
-var _from_view_orientation := VECTOR3_ZERO
-var _move_longitude_remap := LONGITUDE_REMAP_INIT
+var _from_view_rotations := VECTOR3_ZERO
+var _from_track_type := TRACK_ORBIT
+
 var _last_dist := 0.0
 
 var _universe: Spatial = Global.program.universe
 onready var _viewport := get_viewport()
 onready var _tree := get_tree()
 # settings
-onready var _transition_time: float = _settings.camera_transition_time
+onready var _transfer_time: float = _settings.camera_transfer_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
@@ -157,16 +163,18 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 	_rotate_action += rotate_action
 
 func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Most view_type values override view_position & view_orientation.
+	# Most view_type values override all or some components of view_position &
+	# view_rotations.
 	assert(DPRINT and prints("move", to_selection_item, to_view_type, to_view_position,
-			to_rotations, is_instant_move) or true)
+			to_view_rotations, to_track_type, is_instant_move) or true)
 	_from_selection_item = selection_item
 	_from_spatial = parent
 	_from_view_type = view_type
 	_from_view_position = view_position
-	_from_view_orientation = view_orientation
+	_from_view_rotations = view_rotations
+	_from_track_type = track_type
 	if to_selection_item and to_selection_item.spatial:
 		selection_item = to_selection_item
 		_to_spatial = to_selection_item.spatial
@@ -177,51 +185,65 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 		VIEW_ZOOM, VIEW_45, VIEW_TOP:
 			view_position = selection_item.camera_view_positions[view_type]
 			view_position[2] /= fov
-			view_orientation = VECTOR3_ZERO
-		VIEW_CENTERED, VIEW_UNCENTERED:
+			view_rotations = VECTOR3_ZERO
+		VIEW_OUTWARD:
+			view_position[2] = _min_dist # TODO: _min_dist = 0 if looking away?
+			view_rotations = OUTWARD_VIEW_ROTATION
+		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
 			elif _from_selection_item != selection_item \
-					and view_position[2] < _use_ecliptic_north_dist:
+					and view_position[2] < _use_ecliptic_up_dist:
 				# partial distance compensation
 				var from_radius := _from_selection_item.get_radius_for_camera()
 				var to_radius := selection_item.get_radius_for_camera()
 				var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
 				view_position[2] *= adj_ratio
 			continue
-		VIEW_CENTERED:
-			view_orientation = VECTOR3_ZERO
-		VIEW_UNCENTERED:
-			if to_rotations != NULL_ROTATION:
-				view_orientation = to_rotations
+		VIEW_BUMPED:
+			view_rotations = VECTOR3_ZERO
+		VIEW_BUMPED_ROTATED:
+			if to_view_rotations != NULL_ROTATION:
+				view_rotations = to_view_rotations
 		_:
-			assert(false)
+			assert(false, "Unknown view_type %s" % view_type)
 	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
-
+	if to_track_type != -1 and track_type != to_track_type:
+		track_type = to_track_type
+		emit_signal("track_type_changed", to_track_type)
 	if is_instant_move:
-		_move_progress = _transition_time # finishes move on next frame
+		_move_progress = _transfer_time # finishes move on next frame
 	elif !is_moving:
 		_move_progress = 0.0 # starts move on next frame
 	else:
-		_move_progress = _transition_time / 2.0 # move was in progress; user is in a hurry!
-	_common_spatial = _get_common_spatial(_from_spatial, _to_spatial)
-	var from_north: Vector3 = _from_spatial.model_manager.north_pole
-	var to_north: Vector3 = _to_spatial.model_manager.north_pole
-	_common_north = (from_north + to_north).normalized()
+		_move_progress = _transfer_time / 2.0 # move was in progress; user is in a hurry!
+	_transfer_ref_spatial = _get_transfer_ref_spatial(_from_spatial, _to_spatial)
+	_transfer_ref_basis = _get_transfer_ref_basis(_from_selection_item, selection_item)
 	is_moving = true
 	_move_action = VECTOR3_ZERO
 	_rotate_action = VECTOR3_ZERO
-	_move_longitude_remap = LONGITUDE_REMAP_INIT
 	emit_signal("move_started", _to_spatial, is_camera_lock)
-	emit_signal("view_type_changed", view_type)
+	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
 
 func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_rotations := NULL_ROTATION, is_instant_move := false) -> void:
-	assert(DPRINT and prints("move_to_body", to_body, to_view_type, is_instant_move) or true)
+		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
+	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
+			to_view_rotations, to_track_type, is_instant_move) or true)
 	var to_selection_item := _registrar.get_selection_for_body(to_body)
-	move(to_selection_item, to_view_type, to_view_position, to_rotations, is_instant_move)
+	move(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
+			is_instant_move)
+
+func change_track_type(new_track_type: int) -> void:
+	# changes tracking without a "move"
+	if new_track_type == track_type:
+		return
+	track_type = new_track_type
+	view_type = VIEW_BUMPED_ROTATED
+	_reset_view_position_and_rotations()
+	emit_signal("track_type_changed", track_type)
+	emit_signal("view_type_changed", view_type)
 
 func increment_focal_length(increment: int) -> void:
 	var new_fl_index = focal_length_index + increment
@@ -236,12 +258,12 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_use_local_north_dist = use_local_north / fov
-	_use_ecliptic_north_dist = use_ecliptic_north / fov
-	_follow_orbit_dist = follow_orbit / fov
+	_use_local_up_dist = use_local_up / fov
+	_use_ecliptic_up_dist = use_ecliptic_up / fov
+	_track_dist = track_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
+		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -249,25 +271,26 @@ func change_camera_lock(new_lock: bool) -> void:
 		is_camera_lock = new_lock
 		emit_signal("camera_lock_changed", new_lock)
 		if new_lock:
-			if view_type > VIEW_TOP:
+			if view_type > VIEW_OUTWARD:
 				view_type = _view_type_memory
 
 func tree_manager_process(engine_delta: float) -> void:
 	# We process our working _transform, then update transform
 	if is_moving:
 		_move_progress += engine_delta
-		if _move_progress < _transition_time:
-			_process_moving()
+		if _move_progress < _transfer_time:
+			_process_transferring()
 		else: # end the move
 			is_moving = false
 			if parent != _to_spatial:
 				_do_camera_handoff() # happened already unless is_instant_move
 	if !is_moving:
-		_process_not_moving(engine_delta)
+		_process_not_transferring(engine_delta)
 	if UNIVERSE_SHIFTING:
 		# Camera parent will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
-		# of parent.global_transform.origin. 
+		# of parent.global_transform.origin, so we are removing old shift at
+		# the same time we add our new shift. 
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 	_camera_info[2] = global_transform.origin
@@ -278,7 +301,7 @@ func _ready() -> void:
 	_on_ready()
 
 func _on_ready():
-	assert(follow_orbit < use_local_north and use_local_north < use_ecliptic_north)
+	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
 	name = "BCamera"
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
@@ -299,9 +322,9 @@ func _on_ready():
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_follow_orbit_dist = follow_orbit / fov
-	_use_local_north_dist = use_local_north / fov
-	_use_ecliptic_north_dist = use_ecliptic_north / fov
+	_track_dist = track_dist / fov
+	_use_local_up_dist = use_local_up / fov
+	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_camera_info[0] = self
 	_camera_info[1] = fov
@@ -309,7 +332,7 @@ func _on_ready():
 	print("BCamera ready...")
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, VECTOR3_ZERO, NULL_ROTATION, true)
+	move(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
@@ -319,54 +342,21 @@ func _prepare_to_free() -> void:
 	parent = null
 	_to_spatial = null
 	_from_spatial = null
-	_common_spatial = null
+	_transfer_ref_spatial = null
 
-func _process_moving() -> void:
-	var ease_progress := ease(_move_progress / _transition_time, -ease_exponent)
+func _process_transferring() -> void:
+	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
 	# Hand-off at halfway point avoids imprecision shakes at either end
-	if parent != _to_spatial and ease_progress > 0.5:
+	if parent != _to_spatial and progress > 0.5:
 		_do_camera_handoff()
-	# We interpolate position using our "view_position_" coordinates for the
-	# common parent of the move. E.g., we move around Jupiter (not through it
-	# if going from Io to Europa. Basis is interpolated more straightforwardly
-	# using transform.basis.
-	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
-			_from_view_orientation)
-	var to_transform := _get_view_transform(selection_item, view_position, view_orientation)
-	var global_common_translation := _common_spatial.global_transform.origin
-#	var common_north = _common_spatial.north_pole # FIXME
-	var from_common_translation := from_transform.origin \
-			+ _from_spatial.global_transform.origin - global_common_translation
-	var to_common_translation := to_transform.origin \
-			+ _to_spatial.global_transform.origin - global_common_translation
-	var from_common_view_position := math.get_view_position(from_common_translation, _common_north, 0.0)
-	var to_common_view_position := math.get_view_position(to_common_translation, _common_north, 0.0)
-	# We can remap longitude to allow shorter travel over the PI/-PI transition.
-	# However, we must commit at begining of move to a particular remapping and
-	# stick to it.
-	if _move_longitude_remap == LONGITUDE_REMAP_INIT:
-		var view_longitude_diff := to_common_view_position[0] - from_common_view_position[0]
-		if view_longitude_diff > PI:
-			_move_longitude_remap = LONGITUDE_REMAP_FROM
-		elif view_longitude_diff < -PI:
-			_move_longitude_remap = LONGITUDE_REMAP_TO
-		else:
-			_move_longitude_remap = LONGITUDE_REMAP_NONE
-	if _move_longitude_remap == LONGITUDE_REMAP_FROM:
-		from_common_view_position[0] += TAU
-	elif _move_longitude_remap == LONGITUDE_REMAP_TO:
-		to_common_view_position[0] += TAU
-	var interpolated_view_position := from_common_view_position.linear_interpolate(
-			to_common_view_position, ease_progress)
-	var interpolated_common_translation := math.convert_view_position(
-			interpolated_view_position, _common_north, 0.0)
-	_transform.origin = interpolated_common_translation + global_common_translation \
-			- parent.global_transform.origin
-	_transform.basis = from_transform.basis.slerp(to_transform.basis, ease_progress)
+	if _path_type == PATH_CARTESIAN:
+		_interpolate_cartesian_path(progress)
+	else: # PATH_SPHERICAL
+		_interpolate_spherical_path(progress)
 	var dist := _transform.origin.length()
 	near = dist * NEAR_DIST_MULTIPLIER
 	far = dist * FAR_DIST_MULTIPLIER
-	if parent != _to_spatial: # use dist to target parent for GUI
+	if parent != _to_spatial: # GUI is already showing _to_spatial
 		dist = (global_transform.origin - _to_spatial.global_transform.origin).length()
 	emit_signal("range_changed", dist)
 
@@ -376,21 +366,69 @@ func _do_camera_handoff() -> void:
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
 
-func _process_not_moving(delta: float) -> void:
+func _interpolate_cartesian_path(progress: float) -> void:
+	# interpolate global cartesian coordinates
+	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
+			_from_view_rotations, _from_track_type)
+	var to_transform := _get_view_transform(selection_item, view_position,
+			view_rotations, track_type)
+	var from_global_origin := _from_spatial.global_transform.origin
+	var to_global_origin := _to_spatial.global_transform.origin
+	from_transform.origin += from_global_origin
+	to_transform.origin += to_global_origin
+	_transform = from_transform.interpolate_with(to_transform, progress)
+	if parent == _from_spatial:
+		_transform.origin -= from_global_origin
+	else:
+		_transform.origin -= to_global_origin
+
+func _interpolate_spherical_path(progress: float) -> void:
+	# interpolate spherical coordinates relative to _transfer_ref_spatial and
+	# _transfer_ref_basis
+	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
+			_from_view_rotations, _from_track_type)
+	var to_transform := _get_view_transform(selection_item, view_position,
+			view_rotations, track_type)
+	var from_global_origin := _from_spatial.global_transform.origin
+	var to_global_origin := _to_spatial.global_transform.origin
+	var ref_origin := _transfer_ref_spatial.global_transform.origin
+	var from_ref_origin := from_transform.origin + from_global_origin - ref_origin
+	var to_ref_origin := to_transform.origin + to_global_origin - ref_origin
+	var from_ref_spherical := math.get_rotated_spherical3(from_ref_origin, _transfer_ref_basis)
+	var to_ref_spherical := math.get_rotated_spherical3(to_ref_origin, _transfer_ref_basis)
+	# interpolate spherical coordinates & convert
+	var longitude_diff: float = to_ref_spherical[0] - from_ref_spherical[0]
+	if longitude_diff > PI:
+		from_ref_spherical[0] += TAU
+	if longitude_diff < -PI:
+		to_ref_spherical[0] += TAU
+	var spherical := from_ref_spherical.linear_interpolate(to_ref_spherical, progress)
+	_transform.origin = math.convert_rotated_spherical3(spherical, _transfer_ref_basis)
+	_transform.origin += ref_origin
+	if parent == _from_spatial:
+		_transform.origin -= from_global_origin
+	else:
+		_transform.origin -= to_global_origin
+	# interpolate basis
+	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
+
+func _process_not_transferring(delta: float) -> void:
 	var is_camera_bump := false
-	_transform = _get_view_transform(selection_item, view_position, view_orientation)
+	# maintain present "position" based on track_type
+	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
+	# process accumulated user inputs
 	if _move_action:
 		_process_move_action(delta)
 		is_camera_bump = true
 	if _rotate_action:
 		_process_rotate_action(delta)
 		is_camera_bump = true
-	if is_camera_bump and view_type != VIEW_UNCENTERED:
-		if view_orientation:
-			view_type = VIEW_UNCENTERED
+	if is_camera_bump and view_type != VIEW_BUMPED_ROTATED:
+		if view_rotations:
+			view_type = VIEW_BUMPED_ROTATED
 			emit_signal("view_type_changed", view_type)
-		elif view_type != VIEW_CENTERED:
-			view_type = VIEW_CENTERED
+		elif view_type != VIEW_BUMPED:
+			view_type = VIEW_BUMPED
 			emit_signal("view_type_changed", view_type)
 	var dist := view_position[2]
 	if !is_equal_approx(dist, _last_dist):
@@ -400,110 +438,153 @@ func _process_not_moving(delta: float) -> void:
 		far = dist * FAR_DIST_MULTIPLIER
 
 func _process_move_action(delta: float) -> void:
+	var action_proportion := action_immediacy * delta
+	if action_proportion > 1.0:
+		action_proportion = 1.0
 	var move_now := _move_action
 	if abs(move_now.x) > min_action:
-		move_now.x *= action_immediacy * delta
+		move_now.x *= action_proportion
 		_move_action.x -= move_now.x
 	else:
 		_move_action.x = 0.0
 	if abs(move_now.y) > min_action:
-		move_now.y *= action_immediacy * delta
+		move_now.y *= action_proportion
 		_move_action.y -= move_now.y
 	else:
 		_move_action.y = 0.0
 	if abs(move_now.z) > min_action:
-		move_now.z *= action_immediacy * delta
+		move_now.z *= action_proportion
 		_move_action.z -= move_now.z
 	else:
 		_move_action.z = 0.0
 	# rotate for camera basis
-	var move_vector := _transform.basis * move_now
+	var move_vector := _transform.basis.xform(move_now)
 	# get values for adjustments below
-	var dist: float = view_position[2]
-	var north := _get_north(selection_item, dist)
 	var origin := _transform.origin
-	var move_dot_origin := move_vector.dot(origin) # radial movement
+	var dist: float = view_position[2]
+	var up := _get_up(selection_item, dist, track_type)
+	var radial_movement := move_vector.dot(origin)
 	var normalized_origin := origin.normalized()
-	var longitude_vector := normalized_origin.cross(north).normalized()
-	# dampen "spin" as we near the poles
+	var longitude_vector := normalized_origin.cross(up).normalized()
+	# dampen "spin" movement as we near the poles
 	var longitudinal_move := longitude_vector * longitude_vector.dot(move_vector)
-	var spin_dampening := north.dot(normalized_origin)
+	var spin_dampening := up.dot(normalized_origin)
 	spin_dampening *= spin_dampening # makes positive & reduces
 	spin_dampening *= spin_dampening # reduces more
 	move_vector -= longitudinal_move * spin_dampening
 	# add adjusted move vector scaled by distance to parent
 	origin += move_vector * dist
 	# test for pole traversal
-	if longitude_vector.dot(origin.cross(north)) <= 0.0: # before/after comparison
-		view_orientation.z = wrapf(view_orientation.z + PI, 0.0, TAU)
+	if longitude_vector.dot(origin.cross(up)) <= 0.0: # before/after comparison
+		view_rotations.z = wrapf(view_rotations.z + PI, -PI, PI)
 	# fix our distance to ignore small tangental movements
-	var new_dist := dist + move_dot_origin
+	var new_dist := dist + radial_movement
 	new_dist = clamp(new_dist, _min_dist, _max_dist)
 	origin = new_dist * origin.normalized()
-	# update _transform & view_position (maintain view_orientation)
+	# update _transform using new origin & existing view_rotations
 	_transform.origin = origin
-	_transform = _transform.looking_at(-origin, north)
-	_transform.basis *= Basis(view_orientation)
-	var reference_anomaly := _get_reference_anomaly(selection_item, new_dist)
-	view_position = math.get_view_position(origin, north, reference_anomaly)
+	_transform = _transform.looking_at(-origin, up)
+	_transform.basis *= Basis(view_rotations)
+	# reset view_position
+	var tracking_basis := _get_tracking_basis(selection_item, new_dist, track_type)
+	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 
 func _process_rotate_action(delta: float) -> void:
+	var action_proportion := action_immediacy * delta
+	if action_proportion > 1.0:
+		action_proportion = 1.0
 	var rotate_now := _rotate_action
 	if abs(rotate_now.x) > min_action:
-		rotate_now.x *= action_immediacy * delta
+		rotate_now.x *= action_proportion
 		_rotate_action.x -= rotate_now.x
 	else:
 		_rotate_action.x = 0.0
 	if abs(rotate_now.y) > min_action:
-		rotate_now.y *= action_immediacy * delta
+		rotate_now.y *= action_proportion
 		_rotate_action.y -= rotate_now.y
 	else:
 		_rotate_action.y = 0.0
 	if abs(rotate_now.z) > min_action:
-		rotate_now.z *= action_immediacy * delta
+		rotate_now.z *= action_proportion
 		_rotate_action.z -= rotate_now.z
 	else:
 		_rotate_action.z = 0.0
-	var basis := Basis(view_orientation)
+	var basis := Basis(view_rotations)
 	basis = basis.rotated(basis.x, rotate_now.x)
 	basis = basis.rotated(basis.y, rotate_now.y)
 	basis = basis.rotated(basis.z, rotate_now.z)
-	view_orientation = basis.get_euler()
-	var dist: float = view_position[2]
-	var north := _get_north(selection_item, dist)
-	_transform = _transform.looking_at(-_transform.origin, north)
-	_transform.basis *= Basis(view_orientation)
+	view_rotations = basis.get_euler()
+	var dist := view_position[2]
+	var up := _get_up(selection_item, dist, track_type)
+	_transform = _transform.looking_at(-_transform.origin, up)
+#	_transform.basis *= Basis(view_rotations)
+	_transform.basis = _transform.basis * Basis(view_rotations)
+
+func _reset_view_position_and_rotations() -> void:
+	# update for current _transform, selection_item & track_type
+	var origin := _transform.origin
+	var dist := origin.length()
+	# position
+	var tracking_basis := _get_tracking_basis(selection_item, dist, track_type)
+	view_position = math.get_rotated_spherical3(origin, tracking_basis)
+	# rotations
+	var basis_rotated := _transform.basis
+	var up := _get_up(selection_item, dist, track_type)
+	var transform_looking_at := _transform.looking_at(-origin, up)
+	var basis_looking_at := transform_looking_at.basis
+	# From _process_rotate_action() we have...
+	# basis_rotated = basis_looking_at * rotations_basis
+	# A = B * C
+	# C = B^-1 * A
+	var rotations_basis := basis_looking_at.inverse() * basis_rotated
+	view_rotations = rotations_basis.get_euler()
 
 func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3,
-		view_orientation_: Vector3) -> Transform:
+		view_rotations_: Vector3, track_type_: int) -> Transform:
 	var dist := view_position_[2]
-	var north := _get_north(selection_item_, dist)
-	var reference_anomaly := _get_reference_anomaly(selection_item_, dist)
-	var view_translation := math.convert_view_position(view_position_, north, reference_anomaly)
-	var view_transform := Transform(Basis(), view_translation).looking_at(-view_translation, north)
-	view_transform.basis *= Basis(view_orientation_)
+	var up := _get_up(selection_item_, dist, track_type_)
+	var tracking_basis := _get_tracking_basis(selection_item_, dist, track_type_)
+	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
+	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
+			-view_translation, up)
+	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis
 	return view_transform
 
-func _get_reference_anomaly(selection_item_: SelectionItem, dist: float) -> float:
-	if dist < _follow_orbit_dist:
-		return selection_item_.get_orbit_anomaly_for_camera()
-	return 0.0
-
-func _get_north(selection_item_: SelectionItem, dist: float) -> Vector3:
-	if !selection_item_.is_body:
-		return ECLIPTIC_NORTH
-	var local_north := selection_item_.get_north()
-	if dist <= _use_local_north_dist:
-		return local_north
-	elif dist >= _use_ecliptic_north_dist:
-		return ECLIPTIC_NORTH
+func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> Vector3:
+	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_NONE:
+		return ECLIPTIC_Z
+	var local_up: Vector3
+	if track_type_ == TRACK_ORBIT:
+		local_up = selection_item_.get_orbit_normal()
 	else:
-		var proportion := log(dist / _use_local_north_dist) / log(_use_ecliptic_north_dist / _use_local_north_dist)
-		proportion = ease(proportion, -ease_exponent)
-		var diff_vector := local_north - ECLIPTIC_NORTH
-		return (local_north - diff_vector * proportion).normalized()
+		local_up = selection_item_.get_north()
+	if dist <= _use_local_up_dist:
+		return local_up
+	# interpolate along a log scale
+	var proportion := log(dist / _use_local_up_dist) / log(
+			_use_ecliptic_up_dist / _use_local_up_dist)
+	proportion = ease(proportion, -ease_exponent)
+	var diff_vector := local_up - ECLIPTIC_Z
+	return (local_up - diff_vector * proportion).normalized()
 
-func _get_common_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
+func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type_: int) -> Basis:
+	if dist > _track_dist:
+		return IDENTITY_BASIS
+	if track_type_ == TRACK_ORBIT:
+		return selection_item_.get_orbit_ref_basis()
+	if track_type_ == TRACK_GROUND:
+		return selection_item_.get_ground_ref_basis()
+	return IDENTITY_BASIS
+
+func _get_transfer_ref_basis(s1: SelectionItem, s2: SelectionItem) -> Basis:
+	var normal1 := s1.get_orbit_normal()
+	var normal2 := s2.get_orbit_normal()
+	var z_axis := (normal1 + normal2).normalized()
+	var y_axis := z_axis.cross(ECLIPTIC_X).normalized() # norm needed - imprecision?
+	var x_axis := y_axis.cross(z_axis)
+	return Basis(x_axis, y_axis, z_axis)
+
+func _get_transfer_ref_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
 	assert(spatial1 and spatial2)
 	while spatial1:
 		var test_spatial = spatial2
@@ -520,11 +601,11 @@ func _send_gui_refresh() -> void:
 		emit_signal("parent_changed", parent)
 	emit_signal("range_changed", translation.length())
 	emit_signal("focal_length_changed", focal_length)
-	emit_signal("camera_lock_changed", is_camera_lock)
+#	emit_signal("camera_lock_changed", is_camera_lock) # triggers camera move
 	emit_signal("view_type_changed", view_type)
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
-		"camera_transition_time":
-			_transition_time = value
+		"camera_transfer_time":
+			_transfer_time = value
 

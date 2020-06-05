@@ -20,7 +20,7 @@
 # applicable (don't display label or value). For floats, these are INF and
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
 # To find properites, we search first in SelectionItem, then Body, then
-# Properties, then ModelManager.
+# Properties, then ModelGeometry.
 
 # TODO: Mouse-over array.
 
@@ -126,12 +126,12 @@ func _on_selection_changed() -> void:
 		return
 	var body: Body
 	var properties: Properties
-	var model_manager: ModelManager
+	var model_geometry: ModelGeometry
 	var orbit: Orbit
 	if _selection_manager.is_body():
 		body = _selection_manager.get_body()
 		properties = body.properties
-		model_manager = body.model_manager
+		model_geometry = body.model_geometry
 		orbit = body.orbit
 	var grid_index := 0
 	for show_datum in show_data:
@@ -143,8 +143,8 @@ func _on_selection_changed() -> void:
 			value = body.get(property)
 		elif properties and property in properties:
 			value = properties.get(property)
-		elif model_manager and property in model_manager:
-			value = model_manager.get(property)
+		elif model_geometry and property in model_geometry:
+			value = model_geometry.get(property)
 		elif orbit and property in orbit:
 			value = orbit.get(property)
 		if value == null:
@@ -166,7 +166,7 @@ func _on_selection_changed() -> void:
 					match show_datum[2]:
 						TABLE_ROW:
 							var table_name: String = show_datum[3]
-							key = _table_reader.get_row_key(table_name, value)
+							key = _table_reader.get_row_name(table_name, value)
 							value_str = tr(key)
 						ENUM:
 							var enum_name: String = show_datum[3]

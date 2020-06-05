@@ -19,7 +19,13 @@
 extends Reference
 class_name SelectionItem
 
-const ECLIPTIC_NORTH := Vector3(0.0, 0.0, 1.0)
+const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+
+const IDENTITY_BASIS := Basis.IDENTITY
+const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
+const ECLIPTIC_Y := Vector3(0.0, 1.0, 0.0)
+const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
+const VECTOR2_ZERO := Vector2.ZERO
 
 # persisted - read only
 var name: String # Registrar guaranties these are unique
@@ -36,10 +42,11 @@ var n_comets := -1
 # camera
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
-var camera_view_positions: Array #Vector3 for 1st three VIEW_TYPE_'S
+var camera_view_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 
-var spatial: Spatial # for camera parenting
+var spatial: Spatial # for camera reference
 var body: Body # = spatial if is_body else null
+
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
@@ -54,15 +61,51 @@ var texture_slice_2d: Texture # stars only
 # private
 var _times: Array = Global.times
 
+
+func get_global_origin() -> Vector3:
+	return spatial.global_transform.origin
+
 func get_flags() -> int:
 	if is_body:
 		return body.flags
 	return 0
 
-func get_north() -> Vector3:
-	if is_body:
-		return body.model_manager.north_pole
-	return ECLIPTIC_NORTH
+func get_orbit_normal(time := -INF) -> Vector3:
+	if !is_body:
+		return ECLIPTIC_Z
+	return body.get_orbit_normal(time)
+
+func get_north(time := -INF) -> Vector3:
+	if !is_body:
+		return ECLIPTIC_Z
+	return body.get_north(time)
+
+func get_ground_ref_basis(time := -INF) -> Basis:
+	if !is_body:
+		return IDENTITY_BASIS
+	return body.get_ground_ref_basis(time)
+
+func get_orbit_ref_basis(time := -INF) -> Basis:
+	if !is_body:
+		return IDENTITY_BASIS
+	return body.get_orbit_ref_basis(time)
+
+
+#func get_orbit_ref_ecliptic2(time := -INF) -> Vector2:
+#	# Returns ecliptic spherical coordinates (RA, Dec) of parent body.
+#	if !is_body:
+#		return VECTOR2_ZERO
+#	return body.get_orbit_ref_ecliptic2(time)
+#
+#func get_geo_ref_ecliptic2(time := -INF) -> Vector2:
+#	# Returns ecliptic spherical coordinates (RA, Dec) of lat,long = 0,0.
+#	# For tidally locked bodies, this is nearly same as get_orbit_ref_ecliptic2(),
+#	# but varies with librations (see wiki Lunar Libration).
+#	if !is_body:
+#		return VECTOR2_ZERO
+#	return body.get_geo_ref_ecliptic2(time)
+	
+
 
 func get_radius_for_camera() -> float:
 	if is_body:
@@ -77,20 +120,11 @@ func get_orbit_anomaly_for_camera() -> float:
 		return 0.0
 	return orbit.get_anomaly_for_camera(_times[0])
 
-#func change_count(change_selection_type: int, amount: int) -> void:
-#	match change_selection_type:
-#		SELECTION_MAJOR_MOON, SELECTION_MINOR_MOON:
-#			if n_moons != -1:
-#				n_moons += amount
-#		SELECTION_PLANET:
-#			if n_planets != -1:
-#				n_planets += amount
-#		SELECTION_DWARF_PLANET:
-#			if n_dwarf_planets != -1:
-#				n_dwarf_planets += amount
-#		SELECTION_STAR:
-#			if n_stars != -1:
-#				n_stars += amount
+func get_ref_longitude() -> float:
+	# direction of this item's zero longitude
+	
+	return 0.0
+
 
 func _init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)
