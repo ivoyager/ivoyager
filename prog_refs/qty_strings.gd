@@ -295,26 +295,40 @@ func latitude_longitude(lat: float, long: float, decimal_pl := 0, long_form := f
 func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
 	if long_form:
-		suffix = tr("TXT_NORTH") if x >= 0.0 else tr("TXT_SOUTH")
+		if x >= 0.0 or is_zero_approx(x):
+			suffix = tr("TXT_NORTH")
+		else:
+			suffix = tr("TXT_SOUTH")
 	else:
-		suffix = tr("TXT_NORTH_SHORT") if x >= 0.0 else tr("TXT_SOUTH_SHORT")
+		if x >= 0.0 or is_zero_approx(x):
+			suffix = tr("TXT_NORTH_SHORT")
+		else:
+			suffix = tr("TXT_SOUTH_SHORT")
 	if case_type == CASE_LOWER:
 		suffix = suffix.to_lower()
 	elif case_type == CASE_UPPER:
 		suffix = suffix.to_upper()
-	return number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type) + suffix
+	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
+	return (num_str + suffix).lstrip("-")
 
 func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
 	if long_form:
-		suffix = tr("TXT_WEST") if x >= 0.0 else tr("TXT_EAST")
+		if x >= 0.0 or is_zero_approx(x):
+			suffix = tr("TXT_EAST")
+		else:
+			suffix = tr("TXT_WEST")
 	else:
-		suffix = tr("TXT_WEST_SHORT") if x >= 0.0 else tr("TXT_EAST_SHORT")
+		if x >= 0.0 or is_zero_approx(x):
+			suffix = tr("TXT_EAST_SHORT")
+		else:
+			suffix = tr("TXT_WEST_SHORT")
 	if case_type == CASE_LOWER:
 		suffix = suffix.to_lower()
 	elif case_type == CASE_UPPER:
 		suffix = suffix.to_upper()
-	return number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type) + suffix
+	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
+	return (num_str + suffix).lstrip("-")
 
 func number(x: float, sig_digits := -1, num_type := NUM_DYNAMIC) -> String:
 	# sig_digets = -1 displays decimal precision "as is".

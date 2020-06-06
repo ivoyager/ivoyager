@@ -95,41 +95,10 @@ func get_orbit_ref_basis(time := -INF) -> Basis:
 		return IDENTITY_BASIS
 	return body.get_orbit_ref_basis(time)
 
-
-#func get_orbit_ref_ecliptic2(time := -INF) -> Vector2:
-#	# Returns ecliptic spherical coordinates (RA, Dec) of parent body.
-#	if !is_body:
-#		return VECTOR2_ZERO
-#	return body.get_orbit_ref_ecliptic2(time)
-#
-#func get_geo_ref_ecliptic2(time := -INF) -> Vector2:
-#	# Returns ecliptic spherical coordinates (RA, Dec) of lat,long = 0,0.
-#	# For tidally locked bodies, this is nearly same as get_orbit_ref_ecliptic2(),
-#	# but varies with librations (see wiki Lunar Libration).
-#	if !is_body:
-#		return VECTOR2_ZERO
-#	return body.get_geo_ref_ecliptic2(time)
-	
-
-
 func get_radius_for_camera() -> float:
 	if is_body:
 		return body.properties.m_radius
 	return UnitDefs.KM
-
-func get_orbit_anomaly_for_camera() -> float:
-	if !is_body or !view_rotate_when_close:
-		return 0.0
-	var orbit: Orbit = body.orbit
-	if !orbit:
-		return 0.0
-	return orbit.get_anomaly_for_camera(_times[0])
-
-func get_ref_longitude() -> float:
-	# direction of this item's zero longitude
-	
-	return 0.0
-
 
 func _init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)

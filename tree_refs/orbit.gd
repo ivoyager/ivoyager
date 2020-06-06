@@ -100,18 +100,24 @@ func get_mean_anomaly(time := -INF) -> float:
 		time = _times[0]
 	var elements := _get_elements(time)
 	return wrapf(elements[6] * time + elements[5], -PI, PI) # M = n * time + M0
-	
-func get_anomaly_for_camera(time := -INF) -> float:
+
+func get_true_anomaly(time := -INF) -> float:
 	if time == -INF:
 		time = _times[0]
 	var elements := _get_elements(time)
-	var M: float = elements[6] * time + elements[5] # M = n * time + M0
-	var Om: float = elements[3]
-	var w: float = elements[4]
-	var anomaly := wrapf(M + Om + w, -PI, PI)
-	if elements[2] > PI / 2.0:
-		return -anomaly
-	return anomaly
+	# see get_position_from_elements()
+	var e: float = elements[1]  # eccentricity
+	var M0: float = elements[5] # mean anomaly at epoch
+	var n: float = elements[6]  # mean motion
+	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
+	var E := M + e * sin(M) # eccentric anomaly
+	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
+	E -= dE
+	while abs(dE) > 1e-5:
+		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
+		E -= dE
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0))
+	return nu
 
 func get_position(time := -INF) -> Vector3:
 	if time == -INF:
