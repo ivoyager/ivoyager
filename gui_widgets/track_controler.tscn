@@ -12,18 +12,25 @@ __meta__ = {
 
 [node name="Label" type="Label" parent="."]
 margin_top = 13.0
-margin_right = 196.0
+margin_right = 131.0
 margin_bottom = 27.0
-text = "LABEL_TRACK_ORBIT_GROUND"
+text = "LABEL_TRACK_ORBIT"
 
 [node name="Orbit" type="CheckBox" parent="."]
-margin_left = 200.0
-margin_right = 224.0
+margin_left = 135.0
+margin_right = 159.0
 margin_bottom = 40.0
 action_mode = 0
 
+[node name="Label2" type="Label" parent="."]
+margin_left = 163.0
+margin_top = 13.0
+margin_right = 267.0
+margin_bottom = 27.0
+text = "LABEL_GROUND"
+
 [node name="Ground" type="CheckBox" parent="."]
-margin_left = 228.0
-margin_right = 252.0
+margin_left = 271.0
+margin_right = 295.0
 margin_bottom = 40.0
 action_mode = 0

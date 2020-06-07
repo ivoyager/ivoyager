@@ -105,7 +105,7 @@ func get_true_anomaly(time := -INF) -> float:
 	if time == -INF:
 		time = _times[0]
 	var elements := _get_elements(time)
-	# see get_position_from_elements()
+	# see true anomaly (nu) calculation in get_position_from_elements()
 	var e: float = elements[1]  # eccentricity
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
@@ -116,8 +116,7 @@ func get_true_anomaly(time := -INF) -> float:
 	while abs(dE) > 1e-5:
 		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
 		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0))
-	return nu
+	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 
 func get_position(time := -INF) -> Vector3:
 	if time == -INF:

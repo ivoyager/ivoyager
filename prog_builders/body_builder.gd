@@ -223,7 +223,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var basis_at_epoch := math.rotate_basis_z(Basis.IDENTITY, model_geometry.north_pole)
 	var total_rotation := 0.0
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
-		# By definition, longitude 0 is the mean parent facing side.
+		# By definition, longitude 0.0 is the mean parent facing side.
 		var mean_anomaly_at_epoch: float = orbit.elements_at_epoch[5]
 		total_rotation = mean_anomaly_at_epoch
 	elif orbit:

@@ -52,7 +52,7 @@ var _working_basis: Basis
 
 func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
 	# Order is flipped from standard spherical (RA, Dec), and we wrap longitude
-	# from -PI (East) to PI (West).
+	# from -PI (West) to PI (East).
 	var ground_basis := get_ground_ref_basis(time)
 	var spherical := math.get_rotated_spherical3(translation, ground_basis)
 	var latitude: float = spherical[1]
