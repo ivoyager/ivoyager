@@ -1,4 +1,5 @@
-﻿"# Keplarian elements and rates for approximate position calculation from 3000BC to 3000AD from https://ssd.jpl.nasa.gov/?planet_pos. ""Earth"" is really Earth-Moon barycenter.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+﻿# Keplarian elements and rates for approximate position calculation from 3000BC to 3000AD from,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"# https://ssd.jpl.nasa.gov/?planet_pos. ""Earth"" is really Earth-Moon barycenter.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Hack note: I reversed polarity of Uranus & Pluto rotation (- to +) so they rotate with moon orbits. It may be moon orbits that are wrong instead.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 "# Ceres was added using AstDyS-2 proper elements a, e, sin(i), n and non-proper Om, w & M0",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 "# Units are optional when using sim standard units: s, km, kg, radians and their derivations (km/s, etc.). See ivoyager/static/conv.gd for allowed symbols.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

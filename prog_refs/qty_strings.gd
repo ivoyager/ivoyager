@@ -303,16 +303,10 @@ func latitude_longitude(lat: float, long: float, decimal_pl := 0, long_form := f
 
 func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
-	if long_form:
-		if x >= 0.0 or is_zero_approx(x):
-			suffix = tr("TXT_NORTH")
-		else:
-			suffix = tr("TXT_SOUTH")
+	if x > -0.0001:
+		suffix = tr("TXT_NORTH") if long_form else tr("TXT_NORTH_SHORT")
 	else:
-		if x >= 0.0 or is_zero_approx(x):
-			suffix = tr("TXT_NORTH_SHORT")
-		else:
-			suffix = tr("TXT_SOUTH_SHORT")
+		suffix = tr("TXT_SOUTH") if long_form else tr("TXT_SOUTH_SHORT")
 	if case_type == CASE_LOWER:
 		suffix = suffix.to_lower()
 	elif case_type == CASE_UPPER:
@@ -322,16 +316,10 @@ func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_M
 
 func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
-	if long_form:
-		if x >= 0.0 or is_zero_approx(x):
-			suffix = tr("TXT_EAST")
-		else:
-			suffix = tr("TXT_WEST")
+	if x > -0.0001 and x < PI - 0.0001: # nearly 0 is E; nearly PI is W
+		suffix = tr("TXT_EAST") if long_form else tr("TXT_EAST_SHORT")
 	else:
-		if x >= 0.0 or is_zero_approx(x):
-			suffix = tr("TXT_EAST_SHORT")
-		else:
-			suffix = tr("TXT_WEST_SHORT")
+		suffix = tr("TXT_WEST") if long_form else tr("TXT_WEST_SHORT")
 	if case_type == CASE_LOWER:
 		suffix = suffix.to_lower()
 	elif case_type == CASE_UPPER:

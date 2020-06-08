@@ -1,4 +1,7 @@
-﻿"# Pw, Pnode are apsidal and nodal precession, or period of rotation of w and Om (?). s, g ???",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+﻿# https://ssd.jpl.nasa.gov/?sat_elem,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"# Pw for the Moon from above source (5.997) is in conflict with other sources (eg, Wiki: 8.85). WTH?",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"# Pw, Pnode are apsidal and nodal precession, or period of rotation of w and Om.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+# Apsidal precession is in the direction of orbit; nodal precession is in the opposite direction!,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 # Sort each planet's moons by semi_major axis (a) for proper selection order.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 #,,,,,,,,,,,,,,,,,,,,apsidal precession,nodal precession,,,,,,,to orbit plane,,,,,,what is this for?
 #,,,,lost->9676,,all default,,,benefit of the doubt,TODO: implement!,,,,,,,,,,,,,,,,,,,,,,V0 or R,,
@@ -6,7 +9,7 @@ key,file_prefix,wiki_en,symbol,symbol_tempfix,parent,class_type,model_type,force
 DataType,STRING,STRING,STRING,INT,BODY,DATA,DATA,X,KnowTypes,STRING,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,STRING,REAL,REAL,REAL,BOOL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,X
 Default,,,\u25CC,-1,,CLASS_MOON,MODEL_SMALL_C_TYPE,,NO,,0,,,,,,,,,,,,,,,TRUE,,0,0,0,0,0,0,
 Units,,,,,,,,,,,d,km,,deg,deg,deg,deg,deg/d,d,a,a,,deg,deg,deg,,d,deg,km^3/s^2,km,g/cm^3,,,
-MOON_MOON,Moon,Moon,\u263E,9790,PLANET_EARTH,,MODEL_ROCKY_WORLD,,YES,2000 Jan. 1.50 TT,,384400,0.0554,5.16,125.08,318.15,135.27,13.176358,27.322,5.997,18.6,Ecliptic,,,,,,6.687,4902.801,1737.5,3.344,-12.74,0.12,
+MOON_MOON,Moon,Moon,\u263E,9790,PLANET_EARTH,,MODEL_ROCKY_WORLD,,YES,2000 Jan. 1.50 TT,,384400,0.0554,5.16,125.08,318.15,135.27,13.176358,27.322,5.997,18.613,Ecliptic,,,,,,6.687,4902.801,1737.5,3.344,-12.74,0.12,
 MOON_PHOBOS,Phobos,Phobos (moon),I,,PLANET_MARS,,,x,,1950 Jan. 1.00 TT,,9376,0.0151,1.075,207.784,150.057,91.059,1128.844757,0.3189,1.1316,2.2617,Laplace,317.671,52.893,0.009,,,,0.0007112,11.1,1.872,11.4,0.071,
 MOON_DEIMOS,Deimos,Deimos (moon),II,,PLANET_MARS,,,x,,1950 Jan. 1.00 TT,,23458,0.0002,1.788,24.525,260.729,325.329,285.161879,1.2624,27.3703,54.5367,Laplace,316.657,53.529,0.889,,,,0.0000985,6.2,1.471,12.45,0.068,
 MOON_METIS,Metis,Metis (moon),XVI,,PLANET_JUPITER,,,,,1997 Jan. 16.00 TT,,128000,0.0012,0.019,146.912,297.177,276.047,1221.254598,0.295,0.057,0.115,Laplace,268.057,64.496,0,,,,0.008,21.5,3,17.5,0.061,

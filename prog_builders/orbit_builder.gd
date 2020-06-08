@@ -159,6 +159,9 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 				assert(m_modifiers.min() != null) # all present
 		elif _Pw != -INF: # moon format
 			assert(_Pnode != -INF) # both or neither
+			# Pw, Pnode don't tell us the direction of precession! However, I
+			# believe that it is always the case that Pw is in the direction of
+			# orbit and Pnode is in the opposite direction.
 			# Some values are tiny leading to div/0 or excessive updating. These
 			# correspond to near-circular and/or non-inclined orbits (where Om & w
 			# are technically undefined and updates are irrelevant).
@@ -166,9 +169,14 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 				_Pnode = 0.0
 			if elements[1] < MIN_E_FOR_APSIDAL_PRECESSION:
 				_Pw = 0.0
-			if _Pw != 0.0 or _Pnode != 0.0:
-				_Om_rate = TAU / _Pnode if _Pnode > 0.0 else 0.0
-				_w_rate = TAU / _Pw if _Pw > 0.0 else 0.0
+			var orbit_sign := sign(PI / 2.0 - _i) # prograde +1; retrograde -1
+			_Om_rate = 0.0
+			_w_rate = 0.0
+			if _Pnode != 0.0:
+				_Om_rate = -orbit_sign * TAU / _Pnode # opposite to orbit!
+			if _Pw != 0.0:
+				_w_rate = orbit_sign * TAU / _Pw
+			if _Om_rate or _w_rate:
 				element_rates = [0.0, 0.0, 0.0, _Om_rate, _w_rate]
 		if element_rates:
 			orbit.element_rates = element_rates
@@ -176,11 +184,11 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 				orbit.m_modifiers = m_modifiers
 			# Set update_frequency based on fastest element rate. We normalize to
 			# values roughly meaning "parts per second".
-			var a_pps: float = element_rates[0] / elements[0]
-			var e_pps: float = element_rates[1] / 0.1 # arbitrary
-			var i_pps: float = element_rates[2] / TAU
-			var Om_pps: float = element_rates[3] / TAU
-			var w_pps: float = element_rates[4] / TAU
+			var a_pps: float = abs(element_rates[0]) / elements[0]
+			var e_pps: float = abs(element_rates[1]) / 0.1 # arbitrary
+			var i_pps: float = abs(element_rates[2]) / TAU
+			var Om_pps: float = abs(element_rates[3]) / TAU
+			var w_pps: float = abs(element_rates[4]) / TAU
 			var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
 			orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
 	# reference plane (moons!)

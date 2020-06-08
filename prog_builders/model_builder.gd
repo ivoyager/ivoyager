@@ -169,7 +169,7 @@ func _set_rotations(model: Spatial, file_name: String) -> void:
 				"longitude_offset", asset_row)
 		if longitude_offset != -INF:
 			model.rotate(Vector3(0.0, 1.0, 0.0), -longitude_offset)
-	model.rotate(Vector3(0.0, 1.0, 0.0), PI) # adjust for centered prime meridian
+	model.rotate(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # PI) # adjust for centered prime meridian
 	model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 
 func _clear_procedural() -> void:
