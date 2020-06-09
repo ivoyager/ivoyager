@@ -83,8 +83,8 @@ func is_retrograde(time := -INF) -> bool:
 func get_normal(time := -INF) -> Vector3:
 	if time == -INF:
 		time = _times[0]
-	# Orbit normal is specified by "rotation" elements Om & i. This vector
-	# precesses around the reference_normal.
+	# Orbit normal is defined by Om & i. This vector precesses around the
+	# reference_normal.
 	var elements := _get_elements(time)
 	var relative_normal := math.convert_spherical2(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
@@ -105,7 +105,6 @@ func get_true_anomaly(time := -INF) -> float:
 	if time == -INF:
 		time = _times[0]
 	var elements := _get_elements(time)
-	# see true anomaly (nu) calculation in get_position_from_elements()
 	var e: float = elements[1]  # eccentricity
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
@@ -118,21 +117,17 @@ func get_true_anomaly(time := -INF) -> float:
 		E -= dE
 	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 
-func get_total_precessions(time := -INF) -> float:
-	if !element_rates:
-		return 0.0
-	if time == -INF:
-		time = _times[0]
-	var Om_rate: float = element_rates[3]
-	var w_rate: float = element_rates[4]
-	return time * (Om_rate + w_rate)
-
-func get_total_true_rotation(time := -INF) -> float:
-	# true anomaly plus orbit precessions (Om-rate & w-rate)
+func get_mean_longitude(time := -INF) -> float:
 	if time == -INF:
 		time = _times[0]
 	var elements := _get_elements(time)
-	# see true anomaly (nu) calculation in get_position_from_elements()
+	var M: float = elements[6] * time + elements[5]
+	return wrapf(M + elements[3] + elements[4], -PI, PI) # M + Om + w
+
+func get_true_longitude(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
+	var elements := _get_elements(time)
 	var e: float = elements[1]  # eccentricity
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
@@ -144,12 +139,7 @@ func get_total_true_rotation(time := -INF) -> float:
 		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
 		E -= dE
 	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
-	if !element_rates:
-		return nu
-	var Om_rate: float = element_rates[3]
-	var w_rate: float = element_rates[4]
-	return nu + time * (Om_rate + w_rate)
-
+	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
 
 func get_position(time := -INF) -> Vector3:
 	if time == -INF:

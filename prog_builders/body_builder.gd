@@ -221,22 +221,17 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		model_geometry.rotation_period = -model_geometry.rotation_period
 	# body reference basis
 	var basis_at_epoch := math.rotate_basis_z(Basis.IDENTITY, model_geometry.north_pole)
-	var total_rotation := -PI / 2.0
+	var total_rotation: float
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		# By definition, longitude 0.0 is the mean parent facing side.
-		var mean_anomaly_at_epoch: float = orbit.elements_at_epoch[5]
-		
-		total_rotation += mean_anomaly_at_epoch
+		total_rotation = orbit.get_mean_longitude(0.0) - PI
 	elif orbit:
 		# Table value "longitude_at_epoch" is planetocentric longitude facing
-		# solar system barycenter at epoch. So we need that plus orbit rotation
-		# to get total rotation.
-#		var true_anomaly_at_epoch: float = orbit.get_true_anomaly(0.0)
-		total_rotation += orbit.get_true_anomaly(0.0)
+		# solar system barycenter at epoch.
+		total_rotation = orbit.get_true_longitude(0.0) - PI
 		var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
 		if longitude_at_epoch and !is_inf(longitude_at_epoch):
 			total_rotation += longitude_at_epoch
-			
 	basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, total_rotation)
 	model_geometry.set_basis_at_epoch(basis_at_epoch)
 	# file import info
