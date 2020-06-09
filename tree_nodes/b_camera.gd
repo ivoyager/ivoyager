@@ -84,7 +84,7 @@ var is_camera_lock := true
 # public - read only! (these are "to" during camera move)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
-var track_type := TRACK_ORBIT
+var track_type := TRACK_GROUND
 var view_position := VECTOR3_ZERO # spherical; relative to orbit or ground ref
 var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
 var focal_length: float
@@ -144,7 +144,7 @@ var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE
 var _from_view_rotations := VECTOR3_ZERO
-var _from_track_type := TRACK_ORBIT
+var _from_track_type := TRACK_GROUND
 
 var _last_dist := 0.0
 

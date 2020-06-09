@@ -110,6 +110,7 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
+var home_view_from_user_time_zone := false
 var disable_pause := false
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
