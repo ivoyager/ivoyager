@@ -38,8 +38,11 @@ func _disconnect_camera() -> void:
 		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
 	_camera = null
 
-func _on_latitude_longitude_changed(lat: float, long: float) -> void:
-	text = _qty_strings.latitude_longitude(lat, long, 1)
+func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool) -> void:
+	var new_text := _qty_strings.latitude_longitude(lat_long, 1)
+	if is_ecliptic:
+		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
+	text = new_text
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	visible = is_locked

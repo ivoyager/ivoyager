@@ -37,7 +37,7 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 signal move_started(to_body, is_camera_lock)
 signal parent_changed(new_body)
 signal range_changed(new_range)
-signal latitude_longitude_changed(latitude, longitude)
+signal latitude_longitude_changed(lat_long, is_ecliptic)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
@@ -81,7 +81,7 @@ const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitu
 # public - read only except project init
 var is_camera_lock := true
 
-# public - read only! (these are "to" during camera move)
+# public - read only! (these are "to" during body-to-body transfer)
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
@@ -115,7 +115,7 @@ var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation
 
 # public read-only
-var parent: Spatial # always current
+var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
 # private
@@ -294,10 +294,6 @@ func tree_manager_process(engine_delta: float) -> void:
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 	_camera_info[2] = global_transform.origin
-	
-	# temp
-	var lat_long := selection_item.get_latitude_longitude(translation)
-	emit_signal("latitude_longitude_changed", lat_long[0], lat_long[1])
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
@@ -357,12 +353,21 @@ func _process_transferring() -> void:
 		_interpolate_cartesian_path(progress)
 	else: # PATH_SPHERICAL
 		_interpolate_spherical_path(progress)
-	var dist := _transform.origin.length()
+	var gui_translation := translation
+	var dist := gui_translation.length()
 	near = dist * NEAR_DIST_MULTIPLIER
 	far = dist * FAR_DIST_MULTIPLIER
 	if parent != _to_spatial: # GUI is already showing _to_spatial
-		dist = (global_transform.origin - _to_spatial.global_transform.origin).length()
+		gui_translation = global_transform.origin - _to_spatial.global_transform.origin
+		dist = gui_translation.length()
 	emit_signal("range_changed", dist)
+	var is_ecliptic := dist > _track_dist
+	var lat_long: Vector2
+	if is_ecliptic:
+		lat_long = math.get_latitude_longitude(global_transform.origin)
+	else:
+		lat_long = selection_item.get_latitude_longitude(gui_translation)
+	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
 
 func _do_camera_handoff() -> void:
 	parent.remove_child(self)
@@ -440,6 +445,14 @@ func _process_not_transferring(delta: float) -> void:
 		emit_signal("range_changed", dist)
 		near = dist * NEAR_DIST_MULTIPLIER
 		far = dist * FAR_DIST_MULTIPLIER
+	var is_ecliptic := dist > _track_dist
+	if is_camera_bump or (!is_ecliptic and track_type != TRACK_GROUND):
+		var lat_long: Vector2
+		if is_ecliptic:
+			lat_long = math.get_latitude_longitude(global_transform.origin)
+		else:
+			lat_long = selection_item.get_latitude_longitude(translation)
+		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
 
 func _process_move_action(delta: float) -> void:
 	var action_proportion := action_immediacy * delta
@@ -607,6 +620,13 @@ func _send_gui_refresh() -> void:
 	emit_signal("focal_length_changed", focal_length)
 #	emit_signal("camera_lock_changed", is_camera_lock) # triggers camera move
 	emit_signal("view_type_changed", view_type)
+	var is_ecliptic := translation.length() > _track_dist
+	var lat_long: Vector2
+	if is_ecliptic:
+		lat_long = math.get_latitude_longitude(global_transform.origin)
+	else:
+		lat_long = selection_item.get_latitude_longitude(translation)
+	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

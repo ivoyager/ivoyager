@@ -296,10 +296,10 @@ func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num
 	assert(false, "Unkknown option_type: " + String(option_type))
 	return String(x)
 
-func latitude_longitude(lat: float, long: float, decimal_pl := 0, long_form := false,
+func latitude_longitude(lat_long: Vector2, decimal_pl := 0, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	return latitude(lat, decimal_pl, long_form, case_type) + " " \
-			+ longitude(long, decimal_pl, long_form, case_type)
+	return latitude(lat_long[0], decimal_pl, long_form, case_type) + " " \
+			+ longitude(lat_long[1], decimal_pl, long_form, case_type)
 
 func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String

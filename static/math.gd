@@ -197,6 +197,11 @@ static func wrap_spherical3(spherical3: Vector3) -> Vector3:
 	spherical3[1] = dec
 	return spherical3
 
+static func get_latitude_longitude(translation: Vector3) -> Vector2:
+	# Convinience function; order & wrapping differ from spherical2 
+	var spherical := get_spherical2(translation)
+	return Vector2(spherical[1], wrapf(spherical[0], -PI, PI))
+
 # DEPRECIATE
 static func get_relative_spherical3(translation: Vector3, north: Vector3,
 		ref_spherical2 := VECTOR2_ZERO) -> Vector3:
