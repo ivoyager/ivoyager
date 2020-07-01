@@ -56,7 +56,7 @@ const TRACK_ORBIT = Enums.TrackTypes.TRACK_ORBIT
 const TRACK_GROUND = Enums.TrackTypes.TRACK_GROUND
 
 # TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
-# circumstances, PATH_CARTESION may look better.
+# circumstances, PATH_CARTESION looks better.
 enum {
 	PATH_CARTESIAN,
 	PATH_SPHERICAL,
@@ -110,6 +110,7 @@ var ease_exponent := 5.0
 var track_dist: float = 4e7 * UnitDefs.KM # km after dividing by fov
 var use_local_up: float = 5e7 * UnitDefs.KM # must be > track_dist
 var use_ecliptic_up: float = 5e10 * UnitDefs.KM # must be > use_local_up
+var max_compensated_dist: float = 5e7 * UnitDefs.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation
@@ -128,6 +129,7 @@ var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
 var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
+var _max_compensated_dist: float
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -193,7 +195,7 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
 			elif _from_selection_item != selection_item \
-					and view_position[2] < _use_ecliptic_up_dist:
+					and view_position[2] < _max_compensated_dist:
 				# partial distance compensation
 				var from_radius := _from_selection_item.get_radius_for_camera()
 				var to_radius := selection_item.get_radius_for_camera()
@@ -261,6 +263,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_track_dist = track_dist / fov
+	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if !suppress_move:
 		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
@@ -325,6 +328,7 @@ func _on_ready():
 	_track_dist = track_dist / fov
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
+	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_camera_info[0] = self
 	_camera_info[1] = fov

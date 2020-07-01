@@ -41,6 +41,19 @@ enum TrackTypes {
 	TRACK_GROUND,
 }
 
+enum ZoomTypes {
+	ZOOM_ZOOM,
+	ZOOM_MEDIUM,
+	ZOOM_FAR,
+	ZOOM_SYSTEM,
+}
+
+enum LatitudeTypes {
+	LAT_EQUATORIAL,
+	LAT_45,
+	LAT_TOP,
+}
+
 enum GUISizes {
 	GUI_SMALL,
 	GUI_MEDIUM,
