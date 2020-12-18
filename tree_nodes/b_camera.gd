@@ -73,8 +73,12 @@ const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
-const NEAR_DIST_MULTIPLIER := 0.1 
-const FAR_DIST_MULTIPLIER := 1e9 # far/near seems to allow ~10 orders-of-magnitude
+const NEAR_MULTIPLIER := 0.1
+const FAR_MULTIPLIER := 1e6 # see Note below
+
+# Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
+# It used to be that ~10 orders of magnitude was allowed between near and far,
+# but perhaps that is now only 7.
 
 # ******************************* PERSISTED ***********************************
 
@@ -314,8 +318,8 @@ func _on_ready():
 	Global.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
 	var dist := _transform.origin.length()
-	near = dist * NEAR_DIST_MULTIPLIER
-	far = dist * FAR_DIST_MULTIPLIER
+	near = dist * NEAR_MULTIPLIER
+	far = dist * FAR_MULTIPLIER
 	pause_mode = PAUSE_MODE_PROCESS
 	parent = get_parent()
 	_to_spatial = parent
@@ -359,8 +363,8 @@ func _process_transferring() -> void:
 		_interpolate_spherical_path(progress)
 	var gui_translation := translation
 	var dist := gui_translation.length()
-	near = dist * NEAR_DIST_MULTIPLIER
-	far = dist * FAR_DIST_MULTIPLIER
+	near = dist * NEAR_MULTIPLIER
+	far = dist * FAR_MULTIPLIER
 	if parent != _to_spatial: # GUI is already showing _to_spatial
 		gui_translation = global_transform.origin - _to_spatial.global_transform.origin
 		dist = gui_translation.length()
@@ -447,8 +451,8 @@ func _process_not_transferring(delta: float) -> void:
 	if !is_equal_approx(dist, _last_dist):
 		_last_dist = dist
 		emit_signal("range_changed", dist)
-		near = dist * NEAR_DIST_MULTIPLIER
-		far = dist * FAR_DIST_MULTIPLIER
+		near = dist * NEAR_MULTIPLIER
+		far = dist * FAR_MULTIPLIER
 	var is_ecliptic := dist > _track_dist
 	if is_camera_bump or (!is_ecliptic and track_type != TRACK_GROUND):
 		var lat_long: Vector2
