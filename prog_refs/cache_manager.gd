@@ -1,4 +1,4 @@
-# cached_items_manager.gd
+# cache_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Abstract base class for managing user cached items.
-# Subclasses: SettingsManager, InputMapManager
+# Abstract base class for managing user cached items. Subclasses include
+# SettingsManager & InputMapManager.
 
 extends Reference
-class_name CachedItemsManager
+class_name CacheManager
 
 
 # project vars - set in subclass _init(); project can modify at init

@@ -22,7 +22,7 @@
 #
 # This node and HotkeysPopup are unaware of actions defined in project.godot.
 
-extends CachedItemsManager
+extends CacheManager
 class_name InputMapManager
 
 # project vars

@@ -20,7 +20,7 @@
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
 
-extends CachedItemsManager
+extends CacheManager
 class_name SettingsManager
 
 
