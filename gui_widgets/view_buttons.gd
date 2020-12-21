@@ -69,7 +69,7 @@ func _on_zoom_pressed() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_zoom_button.pressed = true
 
@@ -77,7 +77,7 @@ func _on_45_pressed() -> void:
 	if !_camera:
 		return
 	if _45_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_45_button.pressed = true
 
@@ -85,7 +85,7 @@ func _on_top_pressed() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_top_button.pressed = true
 
@@ -93,7 +93,7 @@ func _on_outward_pressed() -> void:
 	if !_camera:
 		return
 	if _outward_button.pressed:
-		_camera.move(null, ViewTypes.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewTypes.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_outward_button.pressed = true
 

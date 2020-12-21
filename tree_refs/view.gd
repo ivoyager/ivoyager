@@ -15,16 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Specifies (optionally) target identity and where and how camera tracks its
+# target object. Passing a null-equivalent value (= init values) tells the
+# camera to maintain its current value. We use selection_name to facilitate
+# cache persistence.
 
 class_name View
 
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
-
-var selection_name: String
-var track_type: int
-var view_position: Vector3 # spherical; relative to orbit or ground ref
-var view_rotations: Vector3 # euler; relative to looking_at(-origin, north)
+var selection_name := ""
+var track_type := -1 # Enums.TrackTypes
+var view_type := -1 # Enums.ViewTypes (may or may not specify var values below)
+var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
+var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := []
+const PERSIST_PROPERTIES := ["selection_name", "track_type", "view_type",
+	"view_position", "view_rotations"]
+
+func program_init() -> void:
+	pass
 

@@ -118,7 +118,7 @@ func _on_run_state_changed(is_running: bool) -> void:
 
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
-		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
 
 func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 	if is_camera_lock:
@@ -128,7 +128,7 @@ func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock and !_suppress_camera_move:
-		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
 
 func _ready() -> void:
 	set_process(false)
@@ -213,17 +213,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
-				_camera.move(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+				_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_45_view"):
-				_camera.move(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+				_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_top_view"):
-				_camera.move(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+				_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
 			
 			# TODO: VIEW_OUTWARD
 			
 			
 			elif event.is_action_pressed("recenter"):
-				_camera.move(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
+				_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_left"):
 				_move_pressed.x = -_key_move_rate
 			elif event.is_action_pressed("camera_right"):

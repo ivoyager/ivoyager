@@ -161,6 +161,7 @@ var procedural_classes := {
 	_Properties_ = Properties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,
+	_View_ = View,
 	_AsteroidGroup_ = AsteroidGroup,
 	_BodyList_ = BodyList, # WIP
 }

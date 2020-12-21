@@ -157,6 +157,8 @@ var _last_dist := 0.0
 var _universe: Spatial = Global.program.universe
 onready var _viewport := get_viewport()
 onready var _tree := get_tree()
+var _View_: Script = Global.script_classes._View_
+
 # settings
 onready var _transfer_time: float = _settings.camera_transfer_time
 
@@ -168,12 +170,43 @@ func add_move_action(move_action: Vector3) -> void:
 func add_rotate_action(rotate_action: Vector3) -> void:
 	_rotate_action += rotate_action
 
-func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_view(view: View, is_instant_move := false) -> void:
+	var to_selection_item: SelectionItem
+	if view.selection_name:
+		to_selection_item = _registrar.selection_items.get(view.selection_name)
+		assert(to_selection_item)
+	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
+			view.track_type, is_instant_move)
+
+func create_view(use_current_selection := true) -> View:
+	# View object is useful for cache or save persistence
+	var view: View = SaverLoader.make_object_or_scene(_View_)
+	if use_current_selection:
+		view.selection_name = selection_item.name
+	view.track_type = track_type
+	view.view_type = view_type
+	match view_type:
+		VIEW_BUMPED, VIEW_BUMPED_ROTATED, VIEW_OUTWARD:
+			view.view_position = view_position
+			continue
+		VIEW_BUMPED_ROTATED, VIEW_OUTWARD:
+			view.view_rotations = view_rotations
+	return view
+
+func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
+	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
+			to_view_rotations, to_track_type, is_instant_move) or true)
+	var to_selection_item := _registrar.get_selection_for_body(to_body)
+	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
+			is_instant_move)
+
+func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override all or some components of view_position &
 	# view_rotations.
-	assert(DPRINT and prints("move", to_selection_item, to_view_type, to_view_position,
+	assert(DPRINT and prints("move_to_selection", to_selection_item, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
 	_from_selection_item = selection_item
 	_from_spatial = parent
@@ -233,14 +266,6 @@ func move(to_selection_item: SelectionItem, to_view_type := -1, to_view_position
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
 
-func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
-	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
-			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection_item := _registrar.get_selection_for_body(to_body)
-	move(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
-			is_instant_move)
-
 func change_track_type(new_track_type: int) -> void:
 	# changes tracking without a "move"
 	if new_track_type == track_type:
@@ -270,7 +295,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if !suppress_move:
-		move(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
 
 func change_camera_lock(new_lock: bool) -> void:
@@ -313,7 +338,7 @@ func _on_ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_send_gui_refresh")
-	Global.connect("move_camera_to_selection_requested", self, "move")
+	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
@@ -340,11 +365,11 @@ func _on_ready():
 	print("BCamera ready...")
 
 func _start_sim(_is_new_game: bool) -> void:
-	move(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
-	Global.disconnect("move_camera_to_selection_requested", self, "move")
+	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
 	selection_item = null
 	parent = null
