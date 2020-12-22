@@ -121,6 +121,7 @@ var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 var unit_multipliers := UnitDefs.MULTIPLIERS
 var unit_functions := UnitDefs.FUNCTIONS
 var is_electron_app := false
+var cache_dir := "user://cache"
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
