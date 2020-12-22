@@ -1,4 +1,4 @@
-# main.gd
+# state_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -19,7 +19,7 @@
 # signals and functions here (for safety when saving, exiting, quiting etc.). 
 
 extends Node
-class_name Main
+class_name StateManager
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
@@ -262,7 +262,7 @@ func _finish_init() -> void:
 	_environment_builder.add_world_environment() # this is really slow!!!
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
-	print("Main inited...")
+	print("StateManager inited...")
 	Global.emit_signal("main_inited")
 	if Global.skip_splash_screen:
 		build_system_tree()

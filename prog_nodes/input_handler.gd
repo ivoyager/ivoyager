@@ -32,7 +32,7 @@ var _allow_time_reversal: bool
 var _allow_dev_tools: bool
 var _allow_fullscreen_toggle: bool
 var _tree: SceneTree
-var _main: Main
+var _state_manager: StateManager
 var _tree_manager: TreeManager
 var _timekeeper: Timekeeper
 var _selection_manager: SelectionManager
@@ -60,7 +60,7 @@ func project_init():
 	_allow_dev_tools = Global.allow_dev_tools
 	_allow_fullscreen_toggle = Global.allow_fullscreen_toggle
 	_tree = Global.program.tree
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 	_tree_manager = Global.program.TreeManager
 	_timekeeper = Global.program.Timekeeper
 
@@ -100,17 +100,17 @@ func _on_input(event: InputEvent) -> void:
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
 	elif event.is_action_pressed("quick_save"):
-		_main.quick_save()
+		_state_manager.quick_save()
 	elif event.is_action_pressed("save_as"):
-		_main.save_game("")
+		_state_manager.save_game("")
 	elif event.is_action_pressed("quick_load"):
-		_main.quick_load()
+		_state_manager.quick_load()
 	elif event.is_action_pressed("load_game"):
-		_main.load_game("")
+		_state_manager.load_game("")
 	elif event.is_action_pressed("quit"):
-		_main.quit(false)
+		_state_manager.quit(false)
 	elif event.is_action_pressed("save_quit"):
-		_main.save_quit()
+		_state_manager.save_quit()
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
 		_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
@@ -167,13 +167,13 @@ func _input_for_splash_screen(event: InputEvent) -> void:
 	if _allow_dev_tools and event.is_action_pressed("write_debug_logs_now"):
 		Debug.force_logging()
 	elif event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
-		_main.load_game("")
+		_state_manager.load_game("")
 	elif event.is_action_pressed("toggle_options"):
 		Global.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
 		Global.emit_signal("hotkeys_requested")
 	elif event.is_action_pressed("quit"):
-		_main.quit(true)
+		_state_manager.quit(true)
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()

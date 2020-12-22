@@ -115,7 +115,7 @@ var program_references := {
 var program_nodes := {
 	# ProjectBuilder instances one of each and adds as child to Global. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
-	_Main_ = Main,
+	_StateManager_ = StateManager,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
 	_BCameraInput_ = BCameraInput, # remove or replace if not using BCamera

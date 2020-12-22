@@ -47,7 +47,7 @@ var line_codes := {
 	"    " : BLOCK_TEXT,
 	}
 
-var _main: Main
+var _state_manager: StateManager
 var _header: Label
 var _content: VBoxContainer
 var _close_button: Button
@@ -60,7 +60,7 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("credits_requested", self, "_open")
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
 		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
@@ -76,9 +76,9 @@ func _on_ready() -> void:
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_main.require_stop(self)
+	_state_manager.require_stop(self)
 	if !_build_content():
-		_main.allow_run(self)
+		_state_manager.allow_run(self)
 		return
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
@@ -90,7 +90,7 @@ func _on_popup_hide() -> void:
 	_text = ""
 	for child in _content.get_children():
 		child.queue_free()
-	_main.allow_run(self)
+	_state_manager.allow_run(self)
 
 func _build_content() -> bool:
 	var file := File.new()

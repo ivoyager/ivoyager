@@ -23,7 +23,7 @@
 
 extends Node
 
-# ProjectBuilder & Main broadcasts (program/simulator state)
+# ProjectBuilder & StateManager broadcasts (program/simulator state)
 signal project_builder_finished()
 signal table_data_imported()
 signal main_inited()
@@ -48,7 +48,7 @@ signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # sim state control
-signal sim_stop_required(who) # see Main for external thread coordination
+signal sim_stop_required(who) # see StateManager for external thread coordination
 signal sim_run_allowed(who) # all requiring stop must allow!
 
 # camera control
@@ -72,7 +72,7 @@ signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object indicated; safe to keep container reference
-var state := {} # Main; keys include is_inited, is_running, etc.
+var state := {} # StateManager; keys include is_inited, is_running, etc.
 var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)

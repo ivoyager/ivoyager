@@ -28,19 +28,19 @@ var add_quick_save_button := false
 var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
 var _timekeeper: Timekeeper
-var _main: Main
+var _state_manager: StateManager
 
 func project_init() -> void:
 	if !Global.enable_save_load:
 		return
 	_settings_manager = Global.program.SettingsManager
 	_timekeeper = Global.program.Timekeeper
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 	var main_menu: MainMenu = Global.program.get("MainMenu")
 	if main_menu:
-		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _main, "save_game", [""])
+		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
 		if add_quick_save_button:
-			main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _main, "quick_save")
+			main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
 	connect("file_selected", self, "_save_file")
@@ -52,7 +52,7 @@ func _ready():
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_main.require_stop(self)
+	_state_manager.require_stop(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
 	var save_dir = file_utils.get_save_dir_path(Global.is_modded, _settings.save_dir)
@@ -73,11 +73,11 @@ func _save_file(path: String) -> void:
 	if cache_settings:
 		_settings_manager.cache_now()
 	Global.emit_signal("close_main_menu_requested")
-	_main.save_game(path)
+	_state_manager.save_game(path)
 
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
-	_main.allow_run(self)
+	_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)
