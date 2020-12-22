@@ -473,7 +473,7 @@ func _process_not_transferring(delta: float) -> void:
 			view_type = VIEW_BUMPED
 			emit_signal("view_type_changed", view_type)
 	var dist := view_position[2]
-	if !is_equal_approx(dist, _last_dist):
+	if dist != _last_dist:
 		_last_dist = dist
 		emit_signal("range_changed", dist)
 		near = dist * NEAR_MULTIPLIER
@@ -567,8 +567,7 @@ func _process_rotate_action(delta: float) -> void:
 	var dist := view_position[2]
 	var up := _get_up(selection_item, dist, track_type)
 	_transform = _transform.looking_at(-_transform.origin, up)
-#	_transform.basis *= Basis(view_rotations)
-	_transform.basis = _transform.basis * Basis(view_rotations)
+	_transform.basis *= Basis(view_rotations)
 
 func _reset_view_position_and_rotations() -> void:
 	# update for current _transform, selection_item & track_type
