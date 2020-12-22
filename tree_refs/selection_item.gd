@@ -43,12 +43,9 @@ var n_comets := -1
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
 
-var ground_view_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-var orbit_view_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-
-
-# DEPRECIATE
-var camera_view_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
+var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
+var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
+var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 
 var spatial: Spatial # for camera reference
 var body: Body # = spatial if is_body else null
@@ -58,7 +55,7 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
-	"camera_view_positions", "ground_view_positions", "orbit_view_positions"]
+	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions"]
 const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 
 # read-only

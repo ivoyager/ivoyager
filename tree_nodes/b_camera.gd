@@ -148,7 +148,7 @@ var _transfer_ref_spatial: Spatial
 var _transfer_ref_basis: Basis
 var _from_selection_item: SelectionItem
 var _from_view_type := VIEW_ZOOM
-var _from_view_position := Vector3.ONE
+var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
 
@@ -186,10 +186,10 @@ func create_view(use_current_selection := true) -> View:
 	view.track_type = track_type
 	view.view_type = view_type
 	match view_type:
-		VIEW_BUMPED, VIEW_BUMPED_ROTATED, VIEW_OUTWARD:
+		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
 			view.view_position = view_position
 			continue
-		VIEW_BUMPED_ROTATED, VIEW_OUTWARD:
+		VIEW_BUMPED_ROTATED:
 			view.view_rotations = view_rotations
 	return view
 
@@ -218,16 +218,24 @@ func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_
 		selection_item = to_selection_item
 		_to_spatial = to_selection_item.spatial
 		_min_dist = selection_item.view_min_distance * 50.0 / fov
+	if to_track_type != -1 and track_type != to_track_type:
+		track_type = to_track_type
+		emit_signal("track_type_changed", to_track_type)
 	if to_view_type != -1:
 		view_type = to_view_type
 	match view_type:
-		VIEW_ZOOM, VIEW_45, VIEW_TOP:
-			view_position = selection_item.camera_view_positions[view_type]
+		VIEW_ZOOM, VIEW_45, VIEW_TOP, VIEW_OUTWARD:
+			if track_type == TRACK_GROUND:
+				view_position = selection_item.track_ground_positions[view_type]
+			elif track_type == TRACK_ORBIT:
+				view_position = selection_item.track_orbit_positions[view_type]
+			else:
+				view_position = selection_item.track_ecliptic_positions[view_type]
 			view_position[2] /= fov
-			view_rotations = VECTOR3_ZERO
-		VIEW_OUTWARD:
-			view_position[2] = _min_dist # TODO: _min_dist = 0 if looking away?
-			view_rotations = OUTWARD_VIEW_ROTATION
+			if view_type == VIEW_OUTWARD:
+				view_rotations = OUTWARD_VIEW_ROTATION
+			else:
+				view_rotations = VECTOR3_ZERO
 		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
@@ -249,9 +257,6 @@ func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_
 	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
-	if to_track_type != -1 and track_type != to_track_type:
-		track_type = to_track_type
-		emit_signal("track_type_changed", to_track_type)
 	if is_instant_move:
 		_move_progress = _transfer_time # finishes move on next frame
 	elif !is_moving:
