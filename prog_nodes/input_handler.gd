@@ -15,12 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Most actions are defined in prog_refs/input_map_manager.gd, not in
+# project.godot!
+#
 # I, Voyager handles input in three  ways:
 #   - here as _input()
-#   - various GUI as _gui_input() or _unhandled_key_input()
-#   - BCameraInput as _unhandled_input()
+#   - VygrCameraHandler as _unhandled_input()
+#   - various GUIs as _gui_input() or _unhandled_key_input()
 #
-# Most actions are defined at runtime by InputMapManager (not project.godot!).
 
 extends Node
 class_name InputHandler

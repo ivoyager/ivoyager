@@ -16,8 +16,8 @@
 # limitations under the License.
 # *****************************************************************************
 # Manages processing and visibility of system tree nodes. This node expects a
-# lot of interface specific to BCamera (search '_camera' below). You can
-# replace with your own Camera class but you will need to match some BCamera
+# lot of interface specific to VygrCamera (search '_camera' below). You can
+# replace with your own Camera class but you will need to match some VygrCamera
 # API or modify functios below.
 
 extends Node

@@ -118,7 +118,7 @@ var program_nodes := {
 	_StateManager_ = StateManager,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
-	_BCameraInput_ = BCameraInput, # remove or replace if not using BCamera
+	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using VygrCamera
 	_Registrar_ = Registrar,
 	_TreeManager_ = TreeManager,
 	_PointsManager_ = PointsManager,
@@ -151,7 +151,7 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = Body,
 	_LPoint_ = LPoint,
-	_Camera_ = BCamera, # Camera ok, but see comments in b_camera.gd
+	_Camera_ = VygrCamera, # a few classes expect VygrCamera, but could be replaced
 	_HUDLabel_ = HUDLabel,
 	_HUDOrbit_ = HUDOrbit,
 	_HUDPoints_ = HUDPoints,

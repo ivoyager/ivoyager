@@ -1,4 +1,4 @@
-# b_camera.gd
+# vygr_camera.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -19,7 +19,7 @@
 # that Body's orbit around its parent. You can replace this with another Camera
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
-#    BCameraInput (program_nodes/b_camera_input.gd); replace this!
+#    VygrCameraHandler (program_nodes/vygr_camera_handler.gd); replace this!
 #    TreeManager (program_nodes/tree_manager.gd); modify as needed
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
@@ -28,7 +28,7 @@
 # target body w/ north up.
 
 extends Camera
-class_name BCamera # rename VygrCamera?
+class_name VygrCamera
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
@@ -71,7 +71,7 @@ const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
-const DPRINT := true
+const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
@@ -351,7 +351,7 @@ func _ready() -> void:
 
 func _on_ready():
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
-	name = "BCamera"
+	name = "VygrCamera"
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	Global.connect("gui_refresh_requested", self, "_send_gui_refresh")
@@ -379,7 +379,7 @@ func _on_ready():
 	_camera_info[0] = self
 	_camera_info[1] = fov
 	Global.emit_signal("camera_ready", self)
-	print("BCamera ready...")
+	print("VygrCamera ready...")
 
 func _start_sim(_is_new_game: bool) -> void:
 	if cache_view:

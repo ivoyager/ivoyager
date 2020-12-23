@@ -1,4 +1,4 @@
-# b_camera_input.gd
+# vygr_camera_handler.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for BCamera movements and click selection. Remove or replace
+# Handles input for VygrCamera movements and click selection. Remove or replace
 # this class if you have a different camera.
 
 extends Node
-class_name BCameraInput
+class_name VygrCameraHandler
 
 enum {
 	DRAG_MOVE,
@@ -57,7 +57,7 @@ var hybrid_drag_center_zone := 0.2 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _camera: BCamera
+var _camera: VygrCamera
 var _selection_manager: SelectionManager
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
@@ -95,7 +95,7 @@ func _restore_init_state() -> void:
 		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
 		_selection_manager = null
 
-func _connect_camera(camera: BCamera) -> void:
+func _connect_camera(camera: VygrCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
 	_camera.connect("move_started", self, "_on_camera_move_started")
