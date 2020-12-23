@@ -83,13 +83,19 @@ func select_body(body_: Body) -> void:
 	select(selection_item_)
 
 func get_name() -> String:
-	return selection_item.name
+	if selection_item:
+		return selection_item.name
+	return ""
 	
 func get_texture_2d() -> Texture:
-	return selection_item.texture_2d
+	if selection_item:
+		return selection_item.texture_2d
+	return null
 
 func get_body() -> Body:
-	return selection_item.body
+	if selection_item:
+		return selection_item.body
+	return null
 	
 func is_body() -> bool:
 	return selection_item.is_body

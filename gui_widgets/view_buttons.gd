@@ -22,7 +22,7 @@ extends HBoxContainer
 
 const ViewTypes := Enums.ViewTypes
 
-var use_small_txt := false
+var use_small_txt := true
 
 var _camera: Camera
 onready var _zoom_button: Button = $Zoom
