@@ -78,8 +78,7 @@ func _finish_build() -> void:
 	for body in _registrar.top_bodies:
 		_universe.add_child(body)
 	if add_camera:
-		var start_body: Body = _registrar.bodies_by_name[Global.start_body_name]
-		start_body.add_child(_camera)
+		_camera.add_to_tree()
 	_thread = null
 	if _main_prog_bar:
 		_main_prog_bar.stop()

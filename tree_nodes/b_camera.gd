@@ -28,7 +28,7 @@
 # target body w/ north up.
 
 extends Camera
-class_name BCamera
+class_name BCamera # rename VygrCamera?
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
@@ -71,7 +71,7 @@ const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
-const DPRINT := false
+const DPRINT := true
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
@@ -123,6 +123,9 @@ var size_ratio_exponent := 0.8 # 1.0 is full size compensation
 var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
+# public cache init
+var cache_view: View
+
 # private
 var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
@@ -163,6 +166,15 @@ var _View_: Script = Global.script_classes._View_
 onready var _transfer_time: float = _settings.camera_transfer_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
+
+func add_to_tree() -> void:
+	var start_body_name: String
+	if cache_view:
+		start_body_name = cache_view.selection_name
+	else:
+		start_body_name = Global.start_body_name
+	var start_body: Body = _registrar.bodies_by_name[start_body_name]
+	start_body.add_child(self)
 
 func add_move_action(move_action: Vector3) -> void:
 	_move_action += move_action
@@ -370,7 +382,10 @@ func _on_ready():
 	print("BCamera ready...")
 
 func _start_sim(_is_new_game: bool) -> void:
-	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+	if cache_view:
+		move_to_view(cache_view, true)
+	else:
+		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 func _prepare_to_free() -> void:
 	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
