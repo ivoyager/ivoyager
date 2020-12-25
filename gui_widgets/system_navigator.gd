@@ -20,13 +20,20 @@
 extends HBoxContainer
 
 const DPRINT := false
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const IS_PLANET := Enums.BodyFlags.IS_TRUE_PLANET | Enums.BodyFlags.IS_DWARF_PLANET
 const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05
 
 var size_proportions_exponent := 0.4 # 1.0 is "true" proportions
-var horizontal_expansion := 550.0 # affects growth to right
-var min_width := 30.0
+
+# RECODE FOR THESE...
+var horizontal_size := 600.0
+var min_width_proportion := 0.05 # roughly, min h size as proportion of total
+
+# DEPRECIATE
+var horizontal_expansion := 550.0 # 550.0 # affects growth to right
+var min_button_width := 30.0
+
 
 var _registrar: Registrar
 var _selection_manager: SelectionManager # get from ancestor selection_manager
@@ -51,39 +58,44 @@ func _build_navigation_tree() -> void:
 	var star_slice_size := pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER,
 			size_proportions_exponent)
 	total_size += star_slice_size
-	# calcultate planet relative sizes
+	# count & calcultate planet relative sizes
+	var n_planets := 0
 	var biggest_size := 0.0 # used for planet vertical spacer
 	for planet in star.satellites:
+		if not planet.flags & IS_PLANET:
+			continue
+		n_planets += 1
 		var size := pow(planet.properties.m_radius, size_proportions_exponent)
 		total_size += size
 		if biggest_size < size:
 			biggest_size = size
-	var expansion := horizontal_expansion - (star.satellites.size() * 5)
+	var expansion := horizontal_expansion - (n_planets * 5)
 	var biggest_image_size := floor(biggest_size * expansion / total_size)
 	total_size *= 1.09 # TODO: something less ad hoc for procedural
 	# build the system button tree
-	var image_size := floor(pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER,
+	var image_size := round(pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER,
 			size_proportions_exponent) * expansion / total_size)
 	_add_nav_button(self, star, image_size, true)
 	for planet in star.satellites: # vertical box for each planet w/ its moons
+		if not planet.flags & IS_PLANET:
+			continue
 		var planet_vbox := VBoxContainer.new()
 		planet_vbox.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		add_child(planet_vbox)
-		image_size = floor(pow(planet.properties.m_radius, size_proportions_exponent) * expansion / total_size)
-		var v_spacer_size := floor((biggest_image_size - image_size) / 2) + 13 # plus adds space above planets
+		image_size = round(pow(planet.properties.m_radius,
+				size_proportions_exponent) * expansion / total_size)
+		var v_spacer_size := round((biggest_image_size - image_size) / 2.0) + 13.0 # plus adds space above planets
 		var spacer := Control.new()
-		spacer.rect_min_size = Vector2(min_width, v_spacer_size)
+		spacer.rect_min_size = Vector2(min_button_width, v_spacer_size)
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, image_size, false)
 		for moon in planet.satellites:
 			if not moon.flags & IS_NAVIGATOR_MOON:
 				continue
-			image_size = floor(pow(moon.properties.m_radius, size_proportions_exponent) * expansion / total_size)
+			image_size = round(pow(moon.properties.m_radius,
+					size_proportions_exponent) * expansion / total_size)
 			_add_nav_button(planet_vbox, moon, image_size, false)
 	assert(DPRINT and call_deferred("debug_print") or true)
-			
-func debug_print():
-	print("SystemNavigator size = ", rect_size)
 
 func _add_nav_button(control: Control, body: Body, image_size: float, is_star_slice: bool) -> void:
 	assert(DPRINT and prints("NavButton", tr(body.name), image_size) or true)
@@ -107,7 +119,10 @@ class NavButton extends Button:
 		set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		add_constant_override("hseparation", 0)
 		set("custom_fonts/font", Global.fonts.two_pt) # hack to allow smaller button height
-		rect_min_size = Vector2(image_size, image_size) # smallest is really >>1 (~5?)
+		# TODO: there is no minimum image_size in our code here, but Godot seems
+		# to force a minimum >> 1 pixel (perhaps ~5?). We should code it to avoid
+		# future problems.
+		rect_min_size = Vector2(image_size, image_size)
 		flat = true
 		focus_mode = FOCUS_ALL
 		var texture_box := TextureRect.new()
