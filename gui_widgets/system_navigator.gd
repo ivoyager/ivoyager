@@ -19,7 +19,6 @@
 
 extends HBoxContainer
 
-const DPRINT := false
 const IS_PLANET := Enums.BodyFlags.IS_TRUE_PLANET | Enums.BodyFlags.IS_DWARF_PLANET
 const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
@@ -40,25 +39,28 @@ var _selection_manager: SelectionManager # get from ancestor selection_manager
 func _ready():
 	_registrar = Global.program.Registrar
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("setting_changed", self, "_settings_listener")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	_selection_manager = GUIUtils.get_selection_manager(self)
-	assert(_selection_manager)
 	var gui_size: int = Global.settings.gui_size
-	_build_navigation_columns(gui_size)
+	_build(gui_size)
+
+func _clear() -> void: # on exit or game load
+	_selection_manager = null
+	for child in get_children():
+		child.queue_free()
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"gui_size":
 			if Global.state.is_system_built:
-				_build_navigation_columns(value)
+				_clear()
+				_build(value)
 
-func _build_navigation_columns(gui_size: int) -> void:
-	assert(DPRINT and prints("_build_navigation_columns") or true)
-	# Discard existing children (in case of GUI resize) and rebuild from scratch
-	for child in get_children():
-		child.queue_free()
+func _build(gui_size: int) -> void:
+	_selection_manager = GUIUtils.get_selection_manager(self)
+	assert(_selection_manager)
 	rect_min_size = Vector2(0.0, min_vertical_sizes[gui_size])
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
@@ -77,42 +79,42 @@ func _build_navigation_columns(gui_size: int) -> void:
 		column_widths.append(size)
 		total_width += size
 	var min_width := min_button_width_proportion * total_width
-	for i in range(n_planets + 1):
-		if column_widths[i] < min_width:
-			total_width += min_width - column_widths[i]
-			column_widths[i] = min_width
+	for column in range(n_planets + 1):
+		if column_widths[column] < min_width:
+			total_width += min_width - column_widths[column]
+			column_widths[column] = min_width
 	# scale everything to fit specified GUI horizontal size
 	var scale: float = (horizontal_sizes[gui_size] - 4.0 * n_planets) / total_width
 	var min_body_size: float = min_body_sizes[gui_size]
 	var max_planet_size := 0.0
-	for i in range(n_planets + 1):
-		column_widths[i] = round(column_widths[i] * scale)
-		if i == 0:
+	for column in range(n_planets + 1):
+		column_widths[column] = round(column_widths[column] * scale)
+		if column == 0:
 			continue
-		planet_sizes[i] = round(planet_sizes[i] * scale)
-		if planet_sizes[i] < min_body_size:
-			planet_sizes[i] = min_body_size
-		if max_planet_size < planet_sizes[i]:
-			max_planet_size = planet_sizes[i]
+		planet_sizes[column] = round(planet_sizes[column] * scale)
+		if planet_sizes[column] < min_body_size:
+			planet_sizes[column] = min_body_size
+		if max_planet_size < planet_sizes[column]:
+			max_planet_size = planet_sizes[column]
 	# build the system button tree
 	# For the star "slice", column_widths[0] sets the button and image width.
 	_add_nav_button(self, star, column_widths[0], true)
-	# For each planet column, column_widths[i] sets the top Spacer width (and
-	# therefore the column width) and planet_sizes[i] sets the planet image size.
-	var i := 0
+	# For each planet column, column_widths[column] sets the top Spacer width (and
+	# therefore the column width) and planet_sizes[column] sets the planet image size.
+	var column := 0
 	for planet in star.satellites: # vertical box for each planet w/ its moons
 		if not planet.flags & IS_PLANET:
 			continue
-		i += 1
+		column += 1
 		var planet_vbox := VBoxContainer.new()
 		planet_vbox.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		add_child(planet_vbox)
 		var spacer := Control.new()
-		var spacer_height := round((max_planet_size - planet_sizes[i]) / 2.0 \
+		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0 \
 				+ over_planet_spacers[gui_size])
-		spacer.rect_min_size = Vector2(column_widths[i], spacer_height)
+		spacer.rect_min_size = Vector2(column_widths[column], spacer_height)
 		planet_vbox.add_child(spacer)
-		_add_nav_button(planet_vbox, planet, planet_sizes[i], false)
+		_add_nav_button(planet_vbox, planet, planet_sizes[column], false)
 		for moon in planet.satellites:
 			if not moon.flags & IS_NAVIGATOR_MOON:
 				continue
@@ -122,7 +124,6 @@ func _build_navigation_columns(gui_size: int) -> void:
 			_add_nav_button(planet_vbox, moon, size, false)
 
 func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float, is_star_slice: bool) -> void:
-	assert(DPRINT and prints("NavButton", tr(body.name), image_size) or true)
 	var selection_item := _registrar.get_selection_for_body(body)
 	var nav_button := NavButton.new(selection_item, _selection_manager, image_size, is_star_slice)
 	box_container.add_child(nav_button)

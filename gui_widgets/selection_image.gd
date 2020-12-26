@@ -24,13 +24,15 @@ var image_sizes := [200, 280, 360]
 var _selection_manager: SelectionManager
 
 func _ready() -> void:
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("setting_changed", self, "_settings_listener")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-	_resize(280)
+	var gui_size: int = Global.settings.gui_size
+	_resize(image_sizes[gui_size])
+	_on_selection_changed()
 
 func _on_selection_changed() -> void:
 	var texture_2d := _selection_manager.get_texture_2d()

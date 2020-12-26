@@ -29,8 +29,3 @@
 extends Spatial
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-
-func _ready(): # convenient for test prints
-#	print(OS.get_time_zone_info())
-	pass
-

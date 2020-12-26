@@ -22,7 +22,7 @@ extends Label
 var _selection_manager: SelectionManager
 
 func _ready() -> void:
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
