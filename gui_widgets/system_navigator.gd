@@ -27,10 +27,11 @@ const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 var size_exponent := 0.4 # smaller values reduce differences in object sizes
 var min_button_width_proportion := 0.05 # as proportion of total (roughly)
 # Triplets below for GUI_SMALL, _MEDIUM & _LARGE.
-var horizontal_sizes := [400.0, 500.0, 650.0] # true within a pixel or so for values 300 - 700
-var min_vertical_sizes := [200.0, 250.0, 325.0] # actual may be expanded by moons
-var over_planet_spacers := [12.0, 15.0, 20.0] # space above the largest planet
+var horizontal_sizes := [420.0, 560.0, 700.0] # true within a pixel or so for values 300 - 700
+var min_vertical_sizes := [270.0, 360.0, 450.0] # actual may be expanded by moons
+var over_planet_spacers := [18.0, 24.0, 30.0] # space above the largest planet
 var min_body_sizes := [4.0, 5.0, 6.0] # Godot forces min size, but here in case that changes
+var separations := [3, 4, 5]
 
 # private
 var _registrar: Registrar
@@ -61,7 +62,9 @@ func _settings_listener(setting: String, value) -> void:
 func _build(gui_size: int) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
-	rect_min_size = Vector2(0.0, min_vertical_sizes[gui_size])
+	var separation: int = separations[gui_size]
+	set("custom_constants/separation", separation)
+	rect_min_size.y = min_vertical_sizes[gui_size]
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
 	var size := pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER, size_exponent)
@@ -84,7 +87,7 @@ func _build(gui_size: int) -> void:
 			total_width += min_width - column_widths[column]
 			column_widths[column] = min_width
 	# scale everything to fit specified GUI horizontal size
-	var scale: float = (horizontal_sizes[gui_size] - 4.0 * n_planets) / total_width
+	var scale: float = (horizontal_sizes[gui_size] - (separation * n_planets)) / total_width
 	var min_body_size: float = min_body_sizes[gui_size]
 	var max_planet_size := 0.0
 	for column in range(n_planets + 1):

@@ -3,17 +3,24 @@
 [ext_resource path="res://ivoyager/gui_widgets/asteroid_group_buttons.gd" type="Script" id=1]
 
 [node name="AsteroidGroupButtons" type="HBoxContainer"]
-margin_left = 9.0
-margin_top = 6.0
-margin_right = 536.0
-margin_bottom = 50.0
-rect_min_size = Vector2( 0, 38 )
+margin_right = 484.0
+margin_bottom = 40.0
 size_flags_horizontal = 8
+custom_constants/separation = 0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Spacer1" type="Control" parent="."]
+margin_right = 2.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 2, 0 )
 
 [node name="AllAsteroids" type="Button" parent="."]
-margin_right = 80.0
-margin_bottom = 44.0
+margin_left = 2.0
+margin_right = 82.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 80, 0 )
 toggle_mode = true
 
@@ -31,17 +38,20 @@ text = "All
 Asteroids"
 align = 1
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="Spacer0" type="Control" parent="."]
-margin_left = 84.0
-margin_right = 86.0
-margin_bottom = 44.0
+[node name="Spacer2" type="Control" parent="."]
+margin_left = 82.0
+margin_right = 84.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 2, 0 )
 
 [node name="NearEarth" type="Button" parent="."]
-margin_left = 90.0
-margin_right = 140.0
-margin_bottom = 44.0
+margin_left = 84.0
+margin_right = 134.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 50, 0 )
 toggle_mode = true
 
@@ -59,16 +69,19 @@ text = "Near
 Earth"
 align = 1
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="Spacer1" type="Control" parent="."]
-margin_left = 144.0
-margin_right = 144.0
-margin_bottom = 44.0
+[node name="Spacer3" type="Control" parent="."]
+margin_left = 134.0
+margin_right = 134.0
+margin_bottom = 40.0
 
 [node name="MarsCros" type="Button" parent="."]
-margin_left = 148.0
-margin_right = 188.0
-margin_bottom = 44.0
+margin_left = 134.0
+margin_right = 174.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 40, 0 )
 toggle_mode = true
 
@@ -86,17 +99,20 @@ text = "Mars
 Cros."
 align = 1
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="Spacer2" type="Control" parent="."]
-margin_left = 192.0
-margin_right = 192.0
-margin_bottom = 44.0
+[node name="Spacer4" type="Control" parent="."]
+margin_left = 174.0
+margin_right = 174.0
+margin_bottom = 40.0
 
 [node name="MainBelt" type="Button" parent="."]
-margin_left = 196.0
-margin_right = 236.0
-margin_bottom = 44.0
-rect_min_size = Vector2( 40, 10 )
+margin_left = 174.0
+margin_right = 214.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 40, 0 )
 toggle_mode = true
 
 [node name="MainBelt" type="Label" parent="MainBelt"]
@@ -114,53 +130,61 @@ text = "Main
 Belt"
 align = 1
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="Spacer3" type="Control" parent="."]
-margin_left = 240.0
-margin_right = 240.0
-margin_bottom = 44.0
+[node name="Spacer5" type="Control" parent="."]
+margin_left = 214.0
+margin_right = 214.0
+margin_bottom = 40.0
 
 [node name="Trojans" type="VBoxContainer" parent="."]
-margin_left = 244.0
-margin_right = 303.0
-margin_bottom = 44.0
+margin_left = 214.0
+margin_right = 274.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 60, 0 )
+custom_constants/separation = 0
 
 [node name="L4" type="Button" parent="Trojans"]
-margin_right = 59.0
+margin_right = 60.0
 margin_bottom = 20.0
+size_flags_vertical = 3
 toggle_mode = true
 text = "Troj. L4"
 
 [node name="L5" type="Button" parent="Trojans"]
-margin_top = 24.0
-margin_right = 59.0
-margin_bottom = 44.0
+margin_top = 20.0
+margin_right = 60.0
+margin_bottom = 40.0
+size_flags_vertical = 3
 toggle_mode = true
 text = "Troj. L5"
 
-[node name="Spacer4" type="Control" parent="."]
-margin_left = 307.0
-margin_right = 337.0
-margin_bottom = 44.0
+[node name="Spacer6" type="Control" parent="."]
+margin_left = 274.0
+margin_right = 304.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 30, 0 )
 
 [node name="Centaurs" type="Button" parent="."]
-margin_left = 341.0
-margin_right = 409.0
-margin_bottom = 44.0
+margin_left = 304.0
+margin_right = 374.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 70, 0 )
 toggle_mode = true
 text = "Centaurs"
 
-[node name="Spacer5" type="Control" parent="."]
-margin_left = 413.0
-margin_right = 443.0
-margin_bottom = 44.0
+[node name="Spacer7" type="Control" parent="."]
+margin_left = 374.0
+margin_right = 404.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 30, 0 )
 
 [node name="TransNeptune" type="Button" parent="."]
-margin_left = 447.0
-margin_right = 527.0
-margin_bottom = 44.0
+margin_left = 404.0
+margin_right = 484.0
+margin_bottom = 40.0
 rect_min_size = Vector2( 80, 0 )
 toggle_mode = true
 
@@ -178,3 +202,6 @@ text = "Trans-
 Neptune"
 align = 1
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

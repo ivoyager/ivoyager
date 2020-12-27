@@ -26,9 +26,9 @@ var fixed_sizes := {
 	medium = 22,
 	large = 28,
 	}
-var gui_main_sizes := [14, 16, 20] # Settings.UISizes
-var gui_medium_sizes := [18, 20, 24]
-var gui_large_sizes := [22, 24, 28] 
+var gui_main_sizes := [12, 16, 20] # GUI_SMALL, GUI_MEDIUM, GUI_LARGE
+var gui_medium_sizes := [15, 20, 25]
+var gui_large_sizes := [18, 24, 31] 
 
 # private
 var _fonts: Dictionary = Global.fonts
