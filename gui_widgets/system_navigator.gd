@@ -24,18 +24,28 @@ const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 
 # project vars
+var resize_self := true # if false, you must call build_to_size() externally
+var widget_width_presets := [420.0, 560.0, 700.0] # GUI_SMALL, _MEDIUM, _LARGE
+var widget_min_height_presets := [277.0, 340.0, 407.0] # GUI_SMALL, _MEDIUM, _LARGE
 var size_exponent := 0.4 # smaller values reduce differences in object sizes
 var min_button_width_proportion := 0.05 # as proportion of total (roughly)
-# Triplets below for GUI_SMALL, GUI_MEDIUM & GUI_LARGE.
-var widget_widths := [420.0, 560.0, 700.0] # within a pixel or so for values 300 - 700
-var widget_min_heights := [277.0, 340.0, 407.0]
-var over_planet_spacers := [18.0, 24.0, 30.0] # space above the largest planet
-var min_body_sizes := [4.0, 5.0, 6.0] # Godot forces min size, but here in case that changes
-var column_separations := [3, 4, 5]
+var over_planet_spacer_ratio := 0.04286 # proportion of widget width, rounded
+var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
+var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
 var _registrar: Registrar
 var _selection_manager: SelectionManager # get from ancestor selection_manager
+
+func build_to_size(widget_width: float, widget_min_height := 0.0) -> void:
+	# Final widget width will be approximately widget_width (+- ~2 pixels)
+	# as long as widget_width is within a reasonable range.
+	# Vertical size will expand to fit "navigator" moons or widget_min_height.
+	var over_planet_spacer := round(widget_width * over_planet_spacer_ratio)
+	var min_body_size := round(widget_width * min_body_size_ratio)
+	var column_separation := int(widget_width * column_separation_ratio + 0.5)
+#	prints(widget_width, widget_min_height, over_planet_spacer, min_body_size, column_separation)
+	_build(widget_width, widget_min_height, over_planet_spacer, min_body_size, column_separation)
 
 func _ready():
 	_registrar = Global.program.Registrar
@@ -44,10 +54,11 @@ func _ready():
 	Global.connect("setting_changed", self, "_settings_listener")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	var gui_size: int = Global.settings.gui_size
-	_build(gui_size)
+	if resize_self:
+		var gui_size: int = Global.settings.gui_size
+		_build_preset_size(gui_size)
 
-func _clear() -> void: # on exit or game load
+func _clear() -> void:
 	_selection_manager = null
 	for child in get_children():
 		child.queue_free()
@@ -55,16 +66,21 @@ func _clear() -> void: # on exit or game load
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"gui_size":
-			if Global.state.is_system_built:
-				_clear()
-				_build(value)
+			if resize_self and Global.state.is_system_built:
+				_build_preset_size(value)
 
-func _build(gui_size: int) -> void:
+func _build_preset_size(gui_size: int) -> void:
+	var widget_width: float = widget_width_presets[gui_size]
+	var widget_min_height: float = widget_min_height_presets[gui_size]
+	build_to_size(widget_width, widget_min_height)
+
+func _build(widget_width: float, widget_min_height: float, over_planet_spacer: float,
+		min_body_size: float, column_separation: int) -> void:
+	_clear()
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
-	var separation: int = column_separations[gui_size]
-	set("custom_constants/separation", separation)
-	rect_min_size.y = widget_min_heights[gui_size]
+	set("custom_constants/separation", column_separation)
+	rect_min_size.y = widget_min_height
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
 	var size := pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER, size_exponent)
@@ -87,8 +103,7 @@ func _build(gui_size: int) -> void:
 			total_width += min_width - column_widths[column]
 			column_widths[column] = min_width
 	# scale everything to fit specified widget width
-	var scale: float = (widget_widths[gui_size] - (separation * n_planets)) / total_width
-	var min_body_size: float = min_body_sizes[gui_size]
+	var scale: float = (widget_width - (column_separation * n_planets)) / total_width
 	var max_planet_size := 0.0
 	for column in range(n_planets + 1):
 		column_widths[column] = round(column_widths[column] * scale)
@@ -113,8 +128,7 @@ func _build(gui_size: int) -> void:
 		planet_vbox.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		add_child(planet_vbox)
 		var spacer := Control.new()
-		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0 \
-				+ over_planet_spacers[gui_size])
+		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0 + over_planet_spacer)
 		spacer.rect_min_size = Vector2(column_widths[column], spacer_height)
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column], false)

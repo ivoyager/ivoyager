@@ -33,11 +33,9 @@ enum {
 	ENUM
 }
 
-# modify these (and rect_min_size) before "system_tree_ready"
+# project vars
 var enable_wiki_links := false # Global.enable_wiki must also be set
 var max_data_items := 15
-var labels_width := 120
-var values_width := 120
 var show_data := [
 	# [0] property [1] display label [2-4] type-specific (see code)
 	# [5] flags test (show) [6] flags test (is approximate value)
@@ -87,15 +85,16 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	while grid_index < max_data_items:
 		if enable_wiki_links:
 			var label_label := RichTextLabel.new()
-			label_label.rect_min_size.x = labels_width
+#			label_label.rect_min_size.x = labels_width
 			label_label.scroll_active = false
 			label_label.bbcode_enabled = true
+			label_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			label_label.connect("meta_clicked", self, "_on_meta_clicked")
 			label_label.hide()
 			_labels.append(label_label)
 			add_child(label_label)
 			var value_label := RichTextLabel.new()
-			value_label.rect_min_size.x = values_width
+#			value_label.rect_min_size.x = values_width
 			value_label.scroll_active = false
 			value_label.bbcode_enabled = true
 			value_label.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -105,19 +104,21 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 			add_child(value_label)
 		else:
 			var label_label := Label.new()
-			label_label.rect_min_size.x = labels_width
+#			label_label.rect_min_size.x = labels_width
+			label_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			label_label.clip_text = true
 			label_label.hide()
 			_labels.append(label_label)
 			add_child(label_label)
 			var value_label := Label.new()
-			value_label.rect_min_size.x = values_width
+#			value_label.rect_min_size.x = values_width
+			value_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			value_label.clip_text = true
 			value_label.hide()
 			_values.append(value_label)
 			add_child(value_label)
 		grid_index += 1
-	_set_text_height()
+	_force_richtextlabel_height()
 	_on_selection_changed()
 
 func _on_selection_changed() -> void:
@@ -222,10 +223,12 @@ func _on_meta_clicked(meta: String) -> void:
 	var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[value_wiki])
 	OS.shell_open(url)
 
-func _set_text_height() -> void:
-	# Arghhh...! Need this for RichTextLabels!
+func _force_richtextlabel_height() -> void:
+	# Arghhh...! As of Godot 3.2.2, RichTextLabel has no height unless min size
+	# is specified! Retest using Planetarium to see when we can remove this.
 	if !enable_wiki_links:
 		return
+	yield(get_tree(), "idle_frame") # allows font change before height test
 	var font: Font = Global.fonts.gui_main
 	var font_height := font.get_height()
 	for label_label in _labels:
@@ -234,5 +237,4 @@ func _set_text_height() -> void:
 func _settings_listener(setting: String, _value) -> void:
 	match setting:
 		"gui_size":
-			_set_text_height()
-
+			_force_richtextlabel_height()

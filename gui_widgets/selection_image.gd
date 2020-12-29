@@ -15,23 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. An ancestor Control must have member selection_manager.
+# GUI widget. An ancestor Control must have member "selection_manager".
 
 extends TextureRect
-
-#var image_sizes := [180, 228, 275]
 
 var _selection_manager: SelectionManager
 
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-#	Global.connect("setting_changed", self, "_settings_listener")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-	var gui_size: int = Global.settings.gui_size
-#	_resize(image_sizes[gui_size])
 	_on_selection_changed()
 
 func _on_selection_changed() -> void:
@@ -41,14 +36,6 @@ func _on_selection_changed() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
+		# image click centers and "levels" the target body
 		Global.emit_signal("move_camera_to_selection_requested", _selection_manager.selection_item,
 				-1, Vector3.ZERO, Vector3.ZERO, -1)
-
-func _resize(_size: int) -> void:
-	pass
-#	rect_min_size = Vector2(size, size)
-
-#func _settings_listener(setting: String, value) -> void:
-#	match setting:
-#		"gui_size":
-#			_resize(image_sizes[value])
