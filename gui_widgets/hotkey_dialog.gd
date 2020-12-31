@@ -69,7 +69,7 @@ func _on_confirmed() -> void:
 		emit_signal("hotkey_confirmed", _action, _index, -1, false, false, false, false)
 		return
 	var scancode := _input_event_key.scancode
-	assert(scancode == _input_map_manager.strip_scancode_modifiers(scancode))
+	assert(scancode == _input_map_manager.strip_scancode_mods(scancode))
 	var control := _input_event_key.control
 	var alt := _input_event_key.alt
 	var shift := _input_event_key.shift
@@ -126,11 +126,11 @@ func _input(event: InputEvent) -> void:
 		_delete.hide()
 
 func _scancode_is_valid(scancode: int) -> bool:
-	scancode = _input_map_manager.strip_scancode_modifiers(scancode)
+	scancode = _input_map_manager.strip_scancode_mods(scancode)
 	return ![KEY_SHIFT, KEY_CONTROL, KEY_ALT, KEY_META].has(scancode)
 
 func _scancode_is_reserved(scancode: int) -> bool:
-	scancode = _input_map_manager.strip_scancode_modifiers(scancode)
+	scancode = _input_map_manager.strip_scancode_mods(scancode)
 	return _input_map_manager.reserved_scancodes.has(scancode)
 
 func _scancode_is_present_action(scancode_w_mods: int) -> bool:

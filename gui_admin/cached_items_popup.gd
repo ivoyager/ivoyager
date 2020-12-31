@@ -25,9 +25,9 @@ const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 var layout: Array # subclass sets in _init()
 
 var _state_manager: StateManager
-var _header: Label
-var _aux_button: Button
-var _spacer: Control
+var _header_left: MarginContainer
+var _header_label: Label
+var _header_right: MarginContainer
 var _content_container: HBoxContainer
 var _cancel: Button
 var _confirm_changes: Button
@@ -113,9 +113,9 @@ func project_init() -> void:
 func _on_ready() -> void:
 	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
-	_header = $VBox/TopHBox/Header
-	_aux_button = $VBox/TopHBox/AuxButton
-	_spacer = $VBox/TopHBox/Spacer
+	_header_left = $VBox/TopHBox/HeaderLeft
+	_header_label = $VBox/TopHBox/HeaderLabel
+	_header_right = $VBox/TopHBox/HeaderRight
 	_content_container = $VBox/Content
 	_cancel = $VBox/BottomHBox/Cancel
 	_confirm_changes = $VBox/BottomHBox/ConfirmChanges

@@ -62,6 +62,7 @@ signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)
 signal toggle_show_hide_gui_requested()
+signal gui_nav_checkbox_toggled(is_pressed)
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
@@ -87,7 +88,7 @@ var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
 var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, 50.0, 0.0] # Camera; [Camera, fov, global_translation]
+var camera_info := [null, 50.0, null] # Camera; [Camera, fov, global_translation]
 var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 

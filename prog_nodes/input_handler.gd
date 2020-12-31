@@ -86,8 +86,7 @@ func _on_input(event: InputEvent) -> void:
 		_input_for_splash_screen(event)
 		return
 	if !_state.is_running:
-		return # e.g., main menu has input control
-	
+		return # MainMenu or some other admin GUI has input control
 	# Order matters! E.g., cntr-S must be captured before S. This could be
 	# troublesome for player modified hotkeys. One way to solve is to match
 	# event.get_scancode_with_modifiers().
@@ -127,42 +126,46 @@ func _on_input(event: InputEvent) -> void:
 		_tree_manager.set_show_symbols(!_tree_manager.show_symbols)
 	elif event.is_action_pressed("toggle_names"):
 		_tree_manager.set_show_names(!_tree_manager.show_names)
+	elif _selection_manager:
+		_input_for_selection_manager(event)
+		return
 	else:
-		if _selection_manager:
-			if event.is_action_pressed("select_forward"):
-				_selection_manager.forward()
-			elif event.is_action_pressed("select_back"):
-				_selection_manager.back()
-			elif event.is_action_pressed("select_left"):
-				_selection_manager.next_last(-1)
-			elif event.is_action_pressed("select_right"):
-				_selection_manager.next_last(1)
-			elif event.is_action_pressed("select_up"):
-				_selection_manager.up()
-			elif event.is_action_pressed("select_down"):
-				_selection_manager.down()
-			elif event.is_action_pressed("next_star"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
-			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
-			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
-			elif event.is_action_pressed("previous_nav_moon"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-			elif event.is_action_pressed("next_nav_moon"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
-			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
-			elif event.is_action_pressed("previous_spacecraft"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
-			elif event.is_action_pressed("next_spacecraft"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
-			else:
-				return # input NOT handled!
-		else:
-			return # input NOT handled!
+		return # input NOT handled!
+	_tree.set_input_as_handled()
+
+func _input_for_selection_manager(event: InputEvent) -> void:
+	if event.is_action_pressed("select_forward"):
+		_selection_manager.forward()
+	elif event.is_action_pressed("select_back"):
+		_selection_manager.back()
+	elif event.is_action_pressed("select_left"):
+		_selection_manager.next_last(-1)
+	elif event.is_action_pressed("select_right"):
+		_selection_manager.next_last(1)
+	elif event.is_action_pressed("select_up"):
+		_selection_manager.up()
+	elif event.is_action_pressed("select_down"):
+		_selection_manager.down()
+	elif event.is_action_pressed("next_star"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
+	elif event.is_action_pressed("previous_planet"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
+	elif event.is_action_pressed("next_planet"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
+	elif event.is_action_pressed("previous_nav_moon"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("next_nav_moon"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("previous_moon"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
+	elif event.is_action_pressed("next_moon"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
+	elif event.is_action_pressed("previous_spacecraft"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
+	elif event.is_action_pressed("next_spacecraft"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
+	else:
+		return # input NOT handled!
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:

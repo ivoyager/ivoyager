@@ -96,15 +96,15 @@ func project_init() -> void:
 
 func _on_ready() -> void:
 	._on_ready()
-	_header.text = "LABEL_OPTIONS"
-	_aux_button.show()
-	_aux_button.text = "BUTTON_HOTKEYS"
-	_aux_button.connect("pressed", self, "_open_hotkeys")
-	_spacer.show()
+	_header_label.text = "LABEL_OPTIONS"
+	var hotkeys_button := Button.new()
+	hotkeys_button.size_flags_horizontal = SIZE_SHRINK_END
+	hotkeys_button.text = "BUTTON_HOTKEYS"
+	hotkeys_button.connect("pressed", self, "_open_hotkeys")
+	_header_right.add_child(hotkeys_button)
 
 func _open() -> void:
 	._open()
-	_spacer.rect_min_size.x = _aux_button.rect_size.x
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	var setting_hbox := HBoxContainer.new()

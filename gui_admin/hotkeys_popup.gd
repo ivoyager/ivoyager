@@ -88,8 +88,10 @@ func _on_init():
 			},
 			{
 				header = "LABEL_GUI",
-				obtain_gui_focus = "LABEL_OBTAIN_GUI_FOCUS",
-				release_gui_focus = "LABEL_RELEASE_GUI_FOCUS",
+				ui_up = "LABEL_GUI_UP",
+				ui_down = "LABEL_GUI_DOWN",
+				ui_left = "LABEL_GUI_LEFT",
+				ui_right = "LABEL_GUI_RIGHT",
 			},
 		],
 		[ # column 3
@@ -125,6 +127,7 @@ func project_init() -> void:
 	if main_menu:
 		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
+	Global.connect("gui_nav_checkbox_toggled", self, "_on_gui_nav_checkbox_toggled")
 	if Global.disable_pause:
 		remove_item("toggle_pause")
 	if !Global.allow_time_reversal:
@@ -142,11 +145,19 @@ func project_init() -> void:
 
 func _on_ready():
 	._on_ready()
-	_header.text = "LABEL_HOTKEYS"
-	_aux_button.show()
-	_aux_button.text = "BUTTON_OPTIONS"
-	_aux_button.connect("pressed", self, "_open_options")
-	_spacer.show()
+	_header_label.text = "LABEL_HOTKEYS"
+	var options_button := Button.new()
+	options_button.size_flags_horizontal = SIZE_SHRINK_END
+	options_button.text = "BUTTON_OPTIONS"
+	options_button.connect("pressed", self, "_open_options")
+	_header_right.add_child(options_button)
+	
+	var gui_nav_checkbox: GUINavCheckbox = SaverLoader.make_object_or_scene(GUINavCheckbox)
+	gui_nav_checkbox.size_flags_horizontal = 0
+	_header_left.add_child(gui_nav_checkbox)
+	
+	print("test print: ", gui_nav_checkbox.text)
+	
 	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
@@ -163,7 +174,7 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 	action_label.size_flags_horizontal = BoxContainer.SIZE_EXPAND_FILL
 	action_label.text = action_label_str
 	var index := 0
-	var scancodes := _input_map_manager.get_scancodes_with_modifiers(action)
+	var scancodes := _input_map_manager.get_scancodes_w_mods_for_action(action)
 	for scancode in scancodes:
 		var key_button := Button.new()
 		action_hbox.add_child(key_button)
@@ -187,7 +198,7 @@ func _restore_default(action: String) -> void:
 func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
 	if scancode == -1:
-		_input_map_manager.remove_event_dict(action, "InputEventKey", index, true)
+		_input_map_manager.remove_event_dict_by_index(action, "InputEventKey", index, true)
 	else:
 		var event_dict := {event_class = "InputEventKey", scancode = scancode}
 		if control:
@@ -199,7 +210,7 @@ func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		if meta:
 			event_dict.meta = true
 		print("Set ", action, ": ", event_dict)
-		_input_map_manager.set_action_event_dict(action, event_dict, "InputEventKey", index, true)
+		_input_map_manager.set_action_event_dict(action, event_dict, index, true)
 	_build_content()
 
 func _on_restore_defaults() -> void:
@@ -218,3 +229,6 @@ func _open_options() -> void:
 	if !is_connected("popup_hide", Global, "emit_signal"):
 		connect("popup_hide", Global, "emit_signal", ["options_requested"], CONNECT_ONESHOT)
 	_on_cancel()
+
+func _on_gui_nav_checkbox_toggled(_is_pressed: bool) -> void:
+	call_deferred("_build_content")

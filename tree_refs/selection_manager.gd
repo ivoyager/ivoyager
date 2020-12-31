@@ -16,8 +16,9 @@
 # limitations under the License.
 # *****************************************************************************
 # Has currently selected item and keeps selection history. You can have >1 of
-# these. GUI widgets search up for the 1st selection_manager in the ancestor
-# tree. VygrCameraHandler grabs selection_manager from Global.program.ProjectGUI.
+# these. GUI widgets search up their ancestor tree and grab a SelectionManager
+# from the first control with a "selection_manager" member. InputHandler and
+# VygrCameraHandler grab selection_manager from Global.program.ProjectGUI.
 
 extends Reference
 class_name SelectionManager
