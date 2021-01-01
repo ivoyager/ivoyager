@@ -163,31 +163,34 @@ func _on_init() -> void:
 		# Each "event_dict" must have event_class; all other keys are properties
 		# to be set on the InputEvent. Don't erase an action - just give it an
 		# empty event_array to disable.
-		ui_up = [],
-		ui_down = [],
-		ui_left = [],
-		ui_right = [],
-		
+		#
+		# Note: I'M TOTALLY IGNORANT ABOUT JOYPAD CONTROLLERS! SOMEONE PLEASE
+		# HELP!
+		#
+#		ui_up = [
+#			{event_class = "InputEventKey", scancode = KEY_UP, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 12},
+#			],
+#		ui_down = [
+#			{event_class = "InputEventKey", scancode = KEY_DOWN, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 13},
+#			],
+#		ui_left = [
+#			{event_class = "InputEventKey", scancode = KEY_LEFT, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 14},
+#			],
+#		ui_right = [
+#			{event_class = "InputEventKey", scancode = KEY_RIGHT, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 15},
+#			],
 		
 		camera_zoom_view = [{event_class = "InputEventKey", scancode = KEY_HOME}],
 		camera_45_view = [{event_class = "InputEventKey", scancode = KEY_DELETE}],
 		camera_top_view = [{event_class = "InputEventKey", scancode = KEY_END}],
-		camera_up = [
-			{event_class = "InputEventKey", scancode = KEY_UP},
-			{event_class = "InputEventJoypadButton", button_index = 12},
-			],
-		camera_down = [
-			{event_class = "InputEventKey", scancode = KEY_DOWN},
-			{event_class = "InputEventJoypadButton", button_index = 13},
-			],
-		camera_left = [
-			{event_class = "InputEventKey", scancode = KEY_LEFT},
-			{event_class = "InputEventJoypadButton", button_index = 14},
-			],
-		camera_right = [
-			{event_class = "InputEventKey", scancode = KEY_RIGHT},
-			{event_class = "InputEventJoypadButton", button_index = 15},
-			],
+		camera_up = [{event_class = "InputEventKey", scancode = KEY_UP}],
+		camera_down = [{event_class = "InputEventKey", scancode = KEY_DOWN}],
+		camera_left = [{event_class = "InputEventKey", scancode = KEY_LEFT}],
+		camera_right = [{event_class = "InputEventKey", scancode = KEY_RIGHT}],
 		camera_in = [{event_class = "InputEventKey", scancode = KEY_PAGEDOWN}],
 		camera_out = [{event_class = "InputEventKey", scancode = KEY_PAGEUP}],
 		
@@ -282,7 +285,6 @@ func _on_init() -> void:
 
 func project_init() -> void:
 	.project_init()
-	Global.connect("gui_nav_checkbox_toggled", self, "_on_gui_nav_checkbox_toggled")
 	_init_actions()
 
 func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:
@@ -332,14 +334,14 @@ func _init_actions() -> void:
 	for action in current:
 		var scancodes := get_scancodes_w_mods_for_action(action)
 		for scancode_w_mods in scancodes:
-			# Below asserts on restart after hotkey change. Is this a problem?
 #			assert(!actions_by_scancode_w_mods.has(scancode_w_mods))
 			actions_by_scancode_w_mods[scancode_w_mods] = action
 		_set_input_map(action)
 
 func _set_input_map(action: String) -> void:
 	if InputMap.has_action(action):
-		InputMap.action_erase_events(action)
+		pass
+#		InputMap.action_erase_events(action)
 	else:
 		InputMap.add_action(action)
 	var events_array: Array = current[action]
@@ -349,24 +351,3 @@ func _set_input_map(action: String) -> void:
 			if key != "event_class":
 				event.set(key, event_dict[key])
 		InputMap.action_add_event(action, event)
-
-func _on_gui_nav_checkbox_toggled(is_pressed: bool) -> void:
-	if is_pressed: # set arrows to navigate GUI
-		remove_event_dict_by_match("camera_up", "InputEventKey", KEY_UP, -1, true)
-		remove_event_dict_by_match("camera_down", "InputEventKey", KEY_DOWN, -1, true)
-		remove_event_dict_by_match("camera_left", "InputEventKey", KEY_LEFT, -1, true)
-		remove_event_dict_by_match("camera_right", "InputEventKey", KEY_RIGHT, -1, true)
-		set_action_event_dict("ui_up", {event_class = "InputEventKey", scancode = KEY_UP}, 999, true)
-		set_action_event_dict("ui_down", {event_class = "InputEventKey", scancode = KEY_DOWN}, 999, true)
-		set_action_event_dict("ui_left", {event_class = "InputEventKey", scancode = KEY_LEFT}, 999, true)
-		set_action_event_dict("ui_right", {event_class = "InputEventKey", scancode = KEY_RIGHT}, 999, true)
-	else: # set arrows to move camera
-		remove_event_dict_by_match("ui_up", "InputEventKey", KEY_UP, -1, true)
-		remove_event_dict_by_match("ui_down", "InputEventKey", KEY_DOWN, -1, true)
-		remove_event_dict_by_match("ui_left", "InputEventKey", KEY_LEFT, -1, true)
-		remove_event_dict_by_match("ui_right", "InputEventKey", KEY_RIGHT, -1, true)
-		set_action_event_dict("camera_up", {event_class = "InputEventKey", scancode = KEY_UP}, 999, true)
-		set_action_event_dict("camera_down", {event_class = "InputEventKey", scancode = KEY_DOWN}, 999, true)
-		set_action_event_dict("camera_left", {event_class = "InputEventKey", scancode = KEY_LEFT}, 999, true)
-		set_action_event_dict("camera_right", {event_class = "InputEventKey", scancode = KEY_RIGHT}, 999, true)
-	cache_now()

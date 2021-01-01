@@ -86,13 +86,13 @@ func _on_init():
 #				next_spacecraft = "Next Spacecraft",
 #				previous_spacecraft = "Last Spacecraft",
 			},
-			{
-				header = "LABEL_GUI",
-				ui_up = "LABEL_GUI_UP",
-				ui_down = "LABEL_GUI_DOWN",
-				ui_left = "LABEL_GUI_LEFT",
-				ui_right = "LABEL_GUI_RIGHT",
-			},
+#			{
+#				header = "LABEL_GUI",
+#				ui_up = "LABEL_GUI_UP",
+#				ui_down = "LABEL_GUI_DOWN",
+#				ui_left = "LABEL_GUI_LEFT",
+#				ui_right = "LABEL_GUI_RIGHT",
+#			},
 		],
 		[ # column 3
 			{
@@ -127,7 +127,6 @@ func project_init() -> void:
 	if main_menu:
 		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
-	Global.connect("gui_nav_checkbox_toggled", self, "_on_gui_nav_checkbox_toggled")
 	if Global.disable_pause:
 		remove_item("toggle_pause")
 	if !Global.allow_time_reversal:
@@ -151,13 +150,6 @@ func _on_ready():
 	options_button.text = "BUTTON_OPTIONS"
 	options_button.connect("pressed", self, "_open_options")
 	_header_right.add_child(options_button)
-	
-	var gui_nav_checkbox: GUINavCheckbox = SaverLoader.make_object_or_scene(GUINavCheckbox)
-	gui_nav_checkbox.size_flags_horizontal = 0
-	_header_left.add_child(gui_nav_checkbox)
-	
-	print("test print: ", gui_nav_checkbox.text)
-	
 	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
@@ -229,6 +221,3 @@ func _open_options() -> void:
 	if !is_connected("popup_hide", Global, "emit_signal"):
 		connect("popup_hide", Global, "emit_signal", ["options_requested"], CONNECT_ONESHOT)
 	_on_cancel()
-
-func _on_gui_nav_checkbox_toggled(_is_pressed: bool) -> void:
-	call_deferred("_build_content")
