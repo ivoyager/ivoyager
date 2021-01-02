@@ -161,12 +161,16 @@ func _on_init() -> void:
 	cache_file_name = "input_map.vbinary"
 	defaults = {
 		# Each "event_dict" must have event_class; all other keys are properties
-		# to be set on the InputEvent. Don't erase an action - just give it an
-		# empty event_array to disable.
+		# to be set on the InputEvent. Don't remove an action -- just give it an
+		# empty array to disable.
 		#
 		# Note: I'M TOTALLY IGNORANT ABOUT JOYPAD CONTROLLERS! SOMEONE PLEASE
 		# HELP!
 		#
+		# Note 2: ui_xxx actions have hard-coding problems; see issue #43663.
+		# We can't set them here and (even in godot.project) we can't use key
+		# modifiers. Hopefully in 4.0 these can be fully customized.
+		
 #		ui_up = [
 #			{event_class = "InputEventKey", scancode = KEY_UP, alt = true},
 #			{event_class = "InputEventJoypadButton", button_index = 12},
@@ -187,10 +191,22 @@ func _on_init() -> void:
 		camera_zoom_view = [{event_class = "InputEventKey", scancode = KEY_HOME}],
 		camera_45_view = [{event_class = "InputEventKey", scancode = KEY_DELETE}],
 		camera_top_view = [{event_class = "InputEventKey", scancode = KEY_END}],
-		camera_up = [{event_class = "InputEventKey", scancode = KEY_UP}],
-		camera_down = [{event_class = "InputEventKey", scancode = KEY_DOWN}],
-		camera_left = [{event_class = "InputEventKey", scancode = KEY_LEFT}],
-		camera_right = [{event_class = "InputEventKey", scancode = KEY_RIGHT}],
+		camera_up = [
+			{event_class = "InputEventKey", scancode = KEY_UP},
+			{event_class = "InputEventKey", scancode = KEY_UP, control = true},
+			],
+		camera_down = [
+			{event_class = "InputEventKey", scancode = KEY_DOWN},
+			{event_class = "InputEventKey", scancode = KEY_DOWN, control = true},
+			],
+		camera_left = [
+			{event_class = "InputEventKey", scancode = KEY_LEFT},
+			{event_class = "InputEventKey", scancode = KEY_LEFT, control = true},
+			],
+		camera_right = [
+			{event_class = "InputEventKey", scancode = KEY_RIGHT},
+			{event_class = "InputEventKey", scancode = KEY_RIGHT, control = true},
+			],
 		camera_in = [{event_class = "InputEventKey", scancode = KEY_PAGEDOWN}],
 		camera_out = [{event_class = "InputEventKey", scancode = KEY_PAGEUP}],
 		

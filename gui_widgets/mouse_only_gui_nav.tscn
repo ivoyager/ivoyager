@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.gd" type="Script" id=1]
+
+[node name="MouseOnlyGUINav" type="CheckBox"]
+margin_right = 24.0
+margin_bottom = 24.0
+text = "CHECKBOX_MOUSE_ONLY_GUI_NAVIGATION"
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

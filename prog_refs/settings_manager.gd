@@ -70,6 +70,7 @@ func _on_init():
 		# cached but not in base OptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
+		mouse_only_gui_nav = false,
 		
 		# TODO:
 #		planet_label_color

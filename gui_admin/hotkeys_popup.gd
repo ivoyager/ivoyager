@@ -145,11 +145,24 @@ func project_init() -> void:
 func _on_ready():
 	._on_ready()
 	_header_label.text = "LABEL_HOTKEYS"
+	# Options button
 	var options_button := Button.new()
 	options_button.size_flags_horizontal = SIZE_SHRINK_END
 	options_button.text = "BUTTON_OPTIONS"
 	options_button.connect("pressed", self, "_open_options")
 	_header_right.add_child(options_button)
+	# Mouse-only GUI Nav checkbox
+	var checkbox_res := preload("res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn")
+	var checkbox: CheckBox = checkbox_res.instance()
+	_header_left.add_child(checkbox)
+	# comment text below header
+	var note_label := Label.new()
+	note_label.autowrap = true
+	note_label.anchor_left = 0
+	note_label.anchor_right = 1
+	note_label.text = "TXT_GUI_HOTKEY_NOTE"
+	$VBox.add_child_below_node($VBox/TopHBox, note_label)
+	# hotkey dialog
 	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")

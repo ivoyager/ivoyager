@@ -24,6 +24,7 @@ const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 
 # project vars
+var grab_focus := true # if no GUI has focus, grabs currently selected on ui_ actions
 var resize_self := true # if false, you must call build_to_size() externally
 var widget_width_presets := [420.0, 560.0, 700.0] # GUI_SMALL, _MEDIUM, _LARGE
 var widget_min_height_presets := [277.0, 340.0, 407.0] # GUI_SMALL, _MEDIUM, _LARGE
@@ -34,8 +35,10 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-var _registrar: Registrar
+onready var _registrar: Registrar = Global.program.Registrar
+onready var _mouse_only_gui_nav: bool = Global.settings.mouse_only_gui_nav
 var _selection_manager: SelectionManager # get from ancestor selection_manager
+var _currently_selected: Button
 
 func build_to_size(widget_width: float, widget_min_height := 0.0) -> void:
 	# Final widget width will be approximately widget_width (+- ~2 pixels)
@@ -48,7 +51,6 @@ func build_to_size(widget_width: float, widget_min_height := 0.0) -> void:
 	_build(widget_width, widget_min_height, over_planet_spacer, min_body_size, column_separation)
 
 func _ready():
-	_registrar = Global.program.Registrar
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("setting_changed", self, "_settings_listener")
@@ -62,12 +64,6 @@ func _clear() -> void:
 	_selection_manager = null
 	for child in get_children():
 		child.queue_free()
-
-func _settings_listener(setting: String, value) -> void:
-	match setting:
-		"gui_size":
-			if resize_self and Global.state.is_system_built:
-				_build_preset_size(value)
 
 func _build_preset_size(gui_size: int) -> void:
 	var widget_width: float = widget_width_presets[gui_size]
@@ -143,11 +139,30 @@ func _build(widget_width: float, widget_min_height: float, over_planet_spacer: f
 func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float, is_star_slice: bool) -> void:
 	var selection_item := _registrar.get_selection_for_body(body)
 	var nav_button := NavButton.new(selection_item, _selection_manager, image_size, is_star_slice)
+	nav_button.connect("selected", self, "_change_selection", [nav_button])
 	box_container.add_child(nav_button)
+
+func _change_selection(selected: Button) -> void:
+	_currently_selected = selected
+	if !_mouse_only_gui_nav and !get_focus_owner():
+		selected.grab_focus()
+
+func _settings_listener(setting: String, value) -> void:
+	match setting:
+		"gui_size":
+			if resize_self and Global.state.is_system_built:
+				_build_preset_size(value)
+		"mouse_only_gui_nav":
+			_mouse_only_gui_nav = value
+			if !_mouse_only_gui_nav and _currently_selected:
+				yield(get_tree(), "idle_frame") # wait for _mouse_only_gui_nav.gd
+				_currently_selected.grab_focus()
 
 # ****************************** INNER CLASS **********************************
 
 class NavButton extends Button:
+	
+	signal selected()
 	
 	var _has_mouse := false
 	var _selection_item: SelectionItem
@@ -189,6 +204,8 @@ class NavButton extends Button:
 	func _update_selection() -> void:
 		var is_selected := _selection_manager.selection_item == _selection_item
 		pressed = is_selected
+		if is_selected:
+			emit_signal("selected")
 		flat = !is_selected and !_has_mouse
 
 	func _on_mouse_entered() -> void:
