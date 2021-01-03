@@ -32,3 +32,4 @@ I, Voyager wants to become an official nonprofit entity!
 
 For details and to help, follow the \'Support Us!\' link
 on our web page or under the main menu of this app."
+TXT_GUI_HOTKEY_NOTE,"Note: GUI navigation and control hotkeys (\u2190 \u2191 \u2193 \u2192 Tab Shift-Tab Home PgUp PgDown Enter Space Esc) cannot be configured here due to hardcoding in the Godot Engine. This will likely be fixed in Godot 4.0 (see issue #43663). To prevent GUI from ""grabbing"" the arrow keys, select the ""Mouse-only GUI navigation"" checkbox in top-left corner."

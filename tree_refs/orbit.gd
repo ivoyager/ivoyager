@@ -56,69 +56,116 @@ var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _future_elements := {}
 var _flush_indexes := []
 
-func get_semimajor_axis(time: float) -> float:
-	# returns scaled value, not km!
+func get_semimajor_axis(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return elements[0]
 
-func get_inclination(time: float) -> float:
+func get_inclination(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return elements[2]
 
-func get_mean_motion(time: float) -> float:
+func get_mean_motion(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return elements[6]
 
-func is_retrograde(time: float) -> bool:
+func is_retrograde(time := -INF) -> bool:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return elements[2] > PI / 2.0 # inclination > 90 degrees
 
-func get_normal(time: float) -> Vector3:
-	# Orbit normal is specified by "rotation" elements Om & i. This vector
-	# precesses around the reference_normal.
+func get_normal(time := -INF) -> Vector3:
+	if time == -INF:
+		time = _times[0]
+	# Orbit normal is defined by Om & i. This vector precesses around the
+	# reference_normal.
 	var elements := _get_elements(time)
-	var relative_normal := math.convert_equatorial_coordinates2(
+	var relative_normal := math.convert_spherical2(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
 	var orbit_normal: Vector3
 	if elements[2] > PI / 2.0: # retrograde
-		orbit_normal = -math.rotate_vector_pole(relative_normal, reference_normal)
+		orbit_normal = -math.rotate_vector_z(relative_normal, reference_normal)
 	else:
-		orbit_normal = math.rotate_vector_pole(reference_normal, relative_normal)
+		orbit_normal = math.rotate_vector_z(reference_normal, relative_normal)
 	return orbit_normal
 
-func get_mean_anomaly(time: float) -> float:
+func get_mean_anomaly(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return wrapf(elements[6] * time + elements[5], -PI, PI) # M = n * time + M0
-	
-func get_anomaly_for_camera(time: float) -> float:
-	var elements := _get_elements(time)
-	var M: float = elements[6] * time + elements[5] # M = n * time + M0
-	var Om: float = elements[3]
-	var w: float = elements[4]
-	var anomaly := wrapf(M + Om + w, -PI, PI)
-	if elements[2] > PI / 2.0:
-		return -anomaly
-	return anomaly
 
-func get_position(time: float) -> Vector3:
+func get_true_anomaly(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
+	var elements := _get_elements(time)
+	var e: float = elements[1]  # eccentricity
+	var M0: float = elements[5] # mean anomaly at epoch
+	var n: float = elements[6]  # mean motion
+	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
+	var E := M + e * sin(M) # eccentric anomaly
+	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
+	E -= dE
+	while abs(dE) > 1e-5:
+		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
+		E -= dE
+	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+
+func get_mean_longitude(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
+	var elements := _get_elements(time)
+	var M: float = elements[6] * time + elements[5]
+	return wrapf(M + elements[3] + elements[4], -PI, PI) # M + Om + w
+
+func get_true_longitude(time := -INF) -> float:
+	if time == -INF:
+		time = _times[0]
+	var elements := _get_elements(time)
+	var e: float = elements[1]  # eccentricity
+	var M0: float = elements[5] # mean anomaly at epoch
+	var n: float = elements[6]  # mean motion
+	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
+	var E := M + e * sin(M) # eccentric anomaly
+	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
+	E -= dE
+	while abs(dE) > 1e-5:
+		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
+		E -= dE
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
+
+func get_position(time := -INF) -> Vector3:
+	if time == -INF:
+		time = _times[0]
 	# returns Vector3(x, y, z)
 	var elements := _get_elements(time)
 	var R := get_position_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
-		R = math.rotate_vector_pole(R, reference_normal)
+		R = math.rotate_vector_z(R, reference_normal)
 	return R
 
-func get_position_velocity(time: float) -> Array:
+func get_position_velocity(time := -INF) -> Array:
+	if time == -INF:
+		time = _times[0]
 	# returns [Vector3(x, y, z), Vector3(vx, vy, vz)]
 	# NOT TESTED!
 	var elements := _get_elements(time)
 	var RV := get_vectors_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
-		RV[0] = math.rotate_vector_pole(RV[0], reference_normal)
-		RV[1] = math.rotate_vector_pole(RV[1], reference_normal)
+		RV[0] = math.rotate_vector_z(RV[0], reference_normal)
+		RV[1] = math.rotate_vector_z(RV[1], reference_normal)
 	return RV
 
-func get_elements(time: float) -> Array:
+func get_elements(time := -INF) -> Array:
+	if time == -INF:
+		time = _times[0]
 	var elements := _get_elements(time)
 	return elements.duplicate() # safe
 

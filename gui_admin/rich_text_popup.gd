@@ -22,7 +22,7 @@ extends PopupPanel
 class_name RichTextPopup
 const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
-var _main: Main
+var _state_manager: StateManager
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
 
@@ -30,7 +30,7 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("rich_text_popup_requested", self, "_open")
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 
 func _on_ready() -> void:
 	theme = Global.themes.main
@@ -39,7 +39,7 @@ func _on_ready() -> void:
 
 func _open(header_text: String, bbcode_text: String) -> void:
 	set_process_unhandled_key_input(true)
-	_main.require_stop(self)
+	_state_manager.require_stop(self)
 	_header.text = header_text
 	_rt_label.bbcode_text = tr(bbcode_text)
 	popup()
@@ -48,7 +48,7 @@ func _open(header_text: String, bbcode_text: String) -> void:
 func _on_popup_hide() -> void:
 	_rt_label.bbcode_text = ""
 	set_process_unhandled_key_input(false)
-	_main.allow_run(self)
+	_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

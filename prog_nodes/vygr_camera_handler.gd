@@ -1,4 +1,4 @@
-# b_camera_input.gd
+# vygr_camera_handler.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for BCamera movements and click selection. Remove or replace
+# Handles input for VygrCamera movements and click selection. Remove or replace
 # this class if you have a different camera.
 
 extends Node
-class_name BCameraInput
+class_name VygrCameraHandler
 
 enum {
 	DRAG_MOVE,
@@ -31,8 +31,9 @@ enum {
 const VIEW_ZOOM = Enums.ViewTypes.VIEW_ZOOM
 const VIEW_45 = Enums.ViewTypes.VIEW_45
 const VIEW_TOP = Enums.ViewTypes.VIEW_TOP
-const VIEW_CENTERED = Enums.ViewTypes.VIEW_CENTERED
-const VIEW_UNCENTERED = Enums.ViewTypes.VIEW_UNCENTERED
+const VIEW_OUTWARD = Enums.ViewTypes.VIEW_OUTWARD
+const VIEW_BUMPED = Enums.ViewTypes.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = Enums.ViewTypes.VIEW_BUMPED_ROTATED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
@@ -56,7 +57,7 @@ var hybrid_drag_center_zone := 0.2 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _camera: BCamera
+var _camera: VygrCamera
 var _selection_manager: SelectionManager
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
@@ -94,7 +95,7 @@ func _restore_init_state() -> void:
 		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
 		_selection_manager = null
 
-func _connect_camera(camera: BCamera) -> void:
+func _connect_camera(camera: VygrCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
 	_camera.connect("move_started", self, "_on_camera_move_started")
@@ -117,7 +118,7 @@ func _on_run_state_changed(is_running: bool) -> void:
 
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
-		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
 
 func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 	if is_camera_lock:
@@ -127,7 +128,7 @@ func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock and !_suppress_camera_move:
-		_camera.move(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
 
 func _ready() -> void:
 	set_process(false)
@@ -212,13 +213,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
-				_camera.move(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, false)
+				_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_45_view"):
-				_camera.move(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, false)
+				_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_top_view"):
-				_camera.move(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, false)
+				_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+			
+			# TODO: VIEW_OUTWARD
+			
+			
 			elif event.is_action_pressed("recenter"):
-				_camera.move(null, -1, Vector3.ZERO, Vector3.ZERO, false)
+				_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_left"):
 				_move_pressed.x = -_key_move_rate
 			elif event.is_action_pressed("camera_right"):

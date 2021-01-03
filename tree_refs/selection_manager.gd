@@ -16,8 +16,9 @@
 # limitations under the License.
 # *****************************************************************************
 # Has currently selected item and keeps selection history. You can have >1 of
-# these. GUI widgets search up for the 1st selection_manager in the ancestor
-# tree. BCameraInput grabs selection_manager from Global.program.ProjectGUI.
+# these. GUI widgets search up their ancestor tree and grab a SelectionManager
+# from the first control with a "selection_manager" member. InputHandler and
+# VygrCameraHandler grab selection_manager from Global.program.ProjectGUI.
 
 extends Reference
 class_name SelectionManager
@@ -83,13 +84,19 @@ func select_body(body_: Body) -> void:
 	select(selection_item_)
 
 func get_name() -> String:
-	return selection_item.name
+	if selection_item:
+		return selection_item.name
+	return ""
 	
 func get_texture_2d() -> Texture:
-	return selection_item.texture_2d
+	if selection_item:
+		return selection_item.texture_2d
+	return null
 
 func get_body() -> Body:
-	return selection_item.body
+	if selection_item:
+		return selection_item.body
+	return null
 	
 func is_body() -> bool:
 	return selection_item.is_body

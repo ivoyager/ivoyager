@@ -24,15 +24,17 @@
 # and GUI (see program_refs/qty_strings.gd for generating quantity strings).
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
-# CAUTION! Setting METER = 1.0 breaks the engine with AABB and other errors.
-# Small values 1e-9 to 1e-15 work fine as far as I can tell, even when zoomed
-# up to asteroid-sized bodies.
+# Note 1: Setting METER = 1.0 breaks the engine with AABB and other errors.
+# Need to test values at extreems of distance (zoomed to asteroid to far solar
+# system view). For Godot 3.2.2 and before, 1e-9 or smaller worked well. With
+# Godot 3.2.3, we needed to decrease to 1e-13 to prevent distant objects
+# disappearing.
 
 class_name UnitDefs
 
 # SI base units - all sim units derived from these!
 const SECOND := 1.0 # some code comments assume 1.0; Timekeeper sets sim speed
-const METER := 1e-9 # translation/sim_meter (scale); see caution above
+const METER := 1e-13 # translation units per meter; see Note 1 above
 const KG := 1.0
 const AMPERE := 1.0
 const KELVIN := 1.0

@@ -136,19 +136,6 @@ static func find_and_load_resource(dir_paths: Array, file_prefix: String) -> Res
 		return load(path)
 	return null
 
-static func get_scale_from_file_path(path: String) -> float:
-	# File name ending in _1_1000 is scaled 1 length unit / 1000 m.
-	var split := path.get_basename().split("_")
-	if split.size() < 2:
-		return 1.0
-	var numerator: String = split[-2]
-	if !numerator.is_valid_integer():
-		return 1.0
-	var denominator: String = split[-1]
-	if !denominator.is_valid_integer():
-		return 1.0
-	return float(numerator) / float(denominator)
-
 static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")

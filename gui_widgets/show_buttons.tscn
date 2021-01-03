@@ -3,11 +3,14 @@
 [ext_resource path="res://ivoyager/gui_widgets/show_buttons.gd" type="Script" id=1]
 
 [node name="ShowButtons" type="VBoxContainer"]
-margin_right = 40.0
-margin_bottom = 40.0
+margin_right = 376.0
+margin_bottom = 20.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="HBox" type="HBoxContainer" parent="."]
 margin_right = 376.0

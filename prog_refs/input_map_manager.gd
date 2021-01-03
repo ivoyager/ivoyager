@@ -22,7 +22,7 @@
 #
 # This node and HotkeysPopup are unaware of actions defined in project.godot.
 
-extends CachedItemsManager
+extends CacheManager
 class_name InputMapManager
 
 # project vars
@@ -35,11 +35,13 @@ var event_classes := { # we'll expand this as needed
 # read-only!
 var actions_by_scancode_w_mods := {}
 
-func set_action_event_dict(action: String, event_dict: Dictionary, event_class: String,
-		index: int, suppress_caching := false) -> void:
+func set_action_event_dict(action: String, event_dict: Dictionary, index: int,
+		suppress_caching := false) -> void:
+	# index can be arbitrarily large to add to end.
 	# If suppress_caching = true, be sure to call cache_now() later.
 	var events_array: Array = current[action]
 	_about_to_change_current(action) # un-indexes scancodes, if any
+	var event_class: String = event_dict.event_class
 	var event_array_index := get_event_array_index(action, event_class, index)
 	if event_array_index == events_array.size():
 		events_array.append(event_dict)
@@ -71,11 +73,12 @@ func get_event_dicts(action: String, event_class: String) -> Array:
 			result.append(event_dict)
 	return result
 
-func remove_event_dict(action: String, event_class: String, index: int, suppress_caching := false) -> void:
-	# if index >= number of key dicts, nothing happens
+func remove_event_dict_by_index(action: String, event_class: String, index: int,
+		suppress_caching := false) -> void:
+	# index is for event dicts of specified event_class (not array index!)
 	var scancodes_w_mods: Array
 	if event_class == "InputEventKey":
-		scancodes_w_mods = get_scancodes_with_modifiers(action)
+		scancodes_w_mods = get_scancodes_w_mods_for_action(action)
 	var events_array: Array = current[action]
 	var i := 0
 	var class_index := 0
@@ -93,29 +96,63 @@ func remove_event_dict(action: String, event_class: String, index: int, suppress
 	if !suppress_caching:
 		cache_now()
 
-func get_scancodes_with_modifiers(action: String) -> Array:
+func remove_event_dict_by_match(action: String, event_class: String, scancode_w_mods := -1,
+		button_index := -1, suppress_caching := false) -> void:
+	# NOT TESTED!!!
+	# supply scancode_w_mods or button_index, depending on event_class
+	var events_array: Array = current[action]
+	var i := 0
+	while i < events_array.size():
+		var event_dict: Dictionary = events_array[i]
+		if event_dict.event_class == event_class:
+			if event_class == "InputEventKey":
+				if scancode_w_mods == get_scancode_w_mods_for_event_dict(event_dict):
+					events_array.remove(i)
+					actions_by_scancode_w_mods.erase(scancode_w_mods)
+					break
+			elif event_class == "InputEventJoypadButton":
+				if button_index == event_dict.button_index:
+					events_array.remove(i)
+					break
+		i += 1
+	if !suppress_caching:
+		cache_now()
+
+func get_scancodes_w_mods_for_action(action: String) -> Array:
 	var scancodes := []
 	var events_array: Array = current[action]
 	for event_dict in events_array:
 		if event_dict.event_class == "InputEventKey":
-			var scancode: int = event_dict.scancode
-			# logic below same as input_event.cpp
-			if event_dict.get("control"):
-				scancode |= KEY_MASK_CTRL
-			if event_dict.get("alt"):
-				scancode |= KEY_MASK_ALT
-			if event_dict.get("shift"):
-				scancode |= KEY_MASK_SHIFT
-			if event_dict.get("meta"):
-				scancode |= KEY_MASK_META
+			var scancode := get_scancode_w_mods_for_event_dict(event_dict)
 			scancodes.append(scancode)
 	return scancodes
 
-static func strip_scancode_modifiers(scancode: int) -> int:
+static func get_scancode_w_mods_for_event_dict(event_dict: Dictionary) -> int:
+	assert(event_dict.event_class == "InputEventKey")
+	var scancode: int = event_dict.scancode
+	var shift: bool = event_dict.get("shift", false)
+	var control: bool = event_dict.get("control", false)
+	var alt: bool = event_dict.get("alt", false)
+	var meta: bool = event_dict.get("meta", false)
+	return get_scancode_w_mods(scancode, shift, control, alt, meta)
+
+static func get_scancode_w_mods(scancode: int, shift := false, control := false,
+		alt := false, meta := false) -> int:
+	if shift:
+		scancode |= KEY_MASK_SHIFT
+	if control:
+		scancode |= KEY_MASK_CTRL
+	if alt:
+		scancode |= KEY_MASK_ALT
+	if meta:
+		scancode |= KEY_MASK_META
+	return scancode
+
+static func strip_scancode_mods(scancode: int) -> int:
 	# Note: InputEventKey.scancode is already stripped.
 	scancode &= ~KEY_MASK_SHIFT
-	scancode &= ~KEY_MASK_ALT
 	scancode &= ~KEY_MASK_CTRL
+	scancode &= ~KEY_MASK_ALT
 	scancode &= ~KEY_MASK_META
 	return scancode
 
@@ -124,26 +161,51 @@ func _on_init() -> void:
 	cache_file_name = "input_map.vbinary"
 	defaults = {
 		# Each "event_dict" must have event_class; all other keys are properties
-		# to be set on the InputEvent. Don't erase an action - just give it an
-		# empty event_array to disable.
+		# to be set on the InputEvent. Don't remove an action -- just give it an
+		# empty array to disable.
+		#
+		# Note: I'M TOTALLY IGNORANT ABOUT JOYPAD CONTROLLERS! SOMEONE PLEASE
+		# HELP!
+		#
+		# Note 2: ui_xxx actions have hard-coding problems; see issue #43663.
+		# We can't set them here and (even in godot.project) we can't use key
+		# modifiers. Hopefully in 4.0 these can be fully customized.
+		
+#		ui_up = [
+#			{event_class = "InputEventKey", scancode = KEY_UP, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 12},
+#			],
+#		ui_down = [
+#			{event_class = "InputEventKey", scancode = KEY_DOWN, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 13},
+#			],
+#		ui_left = [
+#			{event_class = "InputEventKey", scancode = KEY_LEFT, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 14},
+#			],
+#		ui_right = [
+#			{event_class = "InputEventKey", scancode = KEY_RIGHT, alt = true},
+#			{event_class = "InputEventJoypadButton", button_index = 15},
+#			],
+		
 		camera_zoom_view = [{event_class = "InputEventKey", scancode = KEY_HOME}],
 		camera_45_view = [{event_class = "InputEventKey", scancode = KEY_DELETE}],
 		camera_top_view = [{event_class = "InputEventKey", scancode = KEY_END}],
 		camera_up = [
 			{event_class = "InputEventKey", scancode = KEY_UP},
-			{event_class = "InputEventJoypadButton", button_index = 12},
+			{event_class = "InputEventKey", scancode = KEY_UP, control = true},
 			],
 		camera_down = [
 			{event_class = "InputEventKey", scancode = KEY_DOWN},
-			{event_class = "InputEventJoypadButton", button_index = 13},
+			{event_class = "InputEventKey", scancode = KEY_DOWN, control = true},
 			],
 		camera_left = [
 			{event_class = "InputEventKey", scancode = KEY_LEFT},
-			{event_class = "InputEventJoypadButton", button_index = 14},
+			{event_class = "InputEventKey", scancode = KEY_LEFT, control = true},
 			],
 		camera_right = [
 			{event_class = "InputEventKey", scancode = KEY_RIGHT},
-			{event_class = "InputEventJoypadButton", button_index = 15},
+			{event_class = "InputEventKey", scancode = KEY_RIGHT, control = true},
 			],
 		camera_in = [{event_class = "InputEventKey", scancode = KEY_PAGEDOWN}],
 		camera_out = [{event_class = "InputEventKey", scancode = KEY_PAGEUP}],
@@ -221,10 +283,7 @@ func _on_init() -> void:
 			{event_class = "InputEventKey", scancode = KEY_BACKSPACE},
 			{event_class = "InputEventKey", scancode = KEY_BACKSLASH},
 			],
-		
-		obtain_gui_focus = [{event_class = "InputEventKey", scancode = KEY_TAB}],
-		release_gui_focus = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT}],
-		
+			
 		toggle_options = [{event_class = "InputEventKey", scancode = KEY_O, control = true}],
 		toggle_hotkeys = [{event_class = "InputEventKey", scancode = KEY_H, control = true}],
 		load_game = [{event_class = "InputEventKey", scancode = KEY_L, control = true}],
@@ -277,38 +336,28 @@ func _is_event_dict_equal(event_dict_1: Dictionary, event_dict_2: Dictionary) ->
 	return true
 
 func _about_to_change_current(action: String) -> void:
-	var scancodes := get_scancodes_with_modifiers(action)
+	var scancodes := get_scancodes_w_mods_for_action(action)
 	for scancode_w_mods in scancodes:
 		actions_by_scancode_w_mods.erase(scancode_w_mods)
 
 func _on_change_current(action: String) -> void:
-	var scancodes := get_scancodes_with_modifiers(action)
+	var scancodes := get_scancodes_w_mods_for_action(action)
 	for scancode_w_mods in scancodes:
 		actions_by_scancode_w_mods[scancode_w_mods] = action
 	_set_input_map(action)
 
 func _init_actions() -> void:
 	for action in current:
-		var scancodes := get_scancodes_with_modifiers(action)
+		var scancodes := get_scancodes_w_mods_for_action(action)
 		for scancode_w_mods in scancodes:
-			assert(!actions_by_scancode_w_mods.has(scancode_w_mods))
+#			assert(!actions_by_scancode_w_mods.has(scancode_w_mods))
 			actions_by_scancode_w_mods[scancode_w_mods] = action
 		_set_input_map(action)
 
-#func _update_scancode(action: String, index: int) -> void:
-#	var scancodes := get_scancodes_with_modifiers(action)
-#	var scancode_w_mods: int = scancodes[index]
-#	actions_by_scancode_w_mods[scancode_w_mods] = action
-#
-#func _add_scancodes(action: String) -> void:
-#	var scancodes := get_scancodes_with_modifiers(action)
-#	var scancode_w_mods: int = scancodes[index]
-#	actions_by_scancode_w_mods[scancode_w_mods] = action
-
-
 func _set_input_map(action: String) -> void:
 	if InputMap.has_action(action):
-		InputMap.action_erase_events(action)
+		pass
+#		InputMap.action_erase_events(action)
 	else:
 		InputMap.add_action(action)
 	var events_array: Array = current[action]

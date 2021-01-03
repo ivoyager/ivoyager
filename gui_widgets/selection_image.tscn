@@ -3,11 +3,21 @@
 [ext_resource path="res://ivoyager/gui_widgets/selection_image.gd" type="Script" id=1]
 
 [node name="SelectionImage" type="TextureRect"]
-margin_top = 18.0
-margin_right = 280.0
-margin_bottom = 298.0
-rect_min_size = Vector2( 280, 280 )
-size_flags_horizontal = 0
-size_flags_vertical = 0
-stretch_mode = 4
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -114.0
+margin_top = -114.0
+margin_right = 114.0
+margin_bottom = 114.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+expand = true
+stretch_mode = 5
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

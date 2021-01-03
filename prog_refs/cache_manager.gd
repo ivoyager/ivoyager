@@ -1,4 +1,4 @@
-# cached_items_manager.gd
+# cache_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,20 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Abstract base class for managing user cached items.
-# Subclasses: SettingsManager, InputMapManager
+# Abstract base class for managing user cached items. Subclasses include
+# SettingsManager & InputMapManager.
 
 extends Reference
-class_name CachedItemsManager
+class_name CacheManager
 
 
 # project vars - set in subclass _init(); project can modify at init
-var cache_dir := "user://cache"
 var cache_file_name := "generic_item.vbinary" # change in subclass
 var defaults: Dictionary # subclass defines in _init()
 var current: Dictionary # subclass makes or references an existing dict
 
 # private
+var _cache_dir: String = Global.cache_dir
 var _is_references := false # subclass change in _init() if needed
 
 
@@ -100,8 +100,8 @@ func _on_init() -> void:
 
 func project_init() -> void:
 	var dir = Directory.new()
-	if dir.open(cache_dir) != OK:
-		dir.make_dir(cache_dir)
+	if dir.open(_cache_dir) != OK:
+		dir.make_dir(_cache_dir)
 	for item_name in defaults:
 		var default = defaults[item_name] # unknown type
 		current[item_name] = default.duplicate(true) if _is_references else default
@@ -138,7 +138,7 @@ func _write_cache() -> void:
 	file.store_var(cached_values)
 
 func _get_file(flags: int) -> File:
-	var file_path := cache_dir.plus_file(cache_file_name)
+	var file_path := _cache_dir.plus_file(cache_file_name)
 	var file := File.new()
 	if file.open(file_path, flags) != OK:
 		if flags == File.WRITE:

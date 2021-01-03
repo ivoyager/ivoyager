@@ -86,11 +86,13 @@ func _on_init():
 #				next_spacecraft = "Next Spacecraft",
 #				previous_spacecraft = "Last Spacecraft",
 			},
-			{
-				header = "LABEL_GUI",
-				obtain_gui_focus = "LABEL_OBTAIN_GUI_FOCUS",
-				release_gui_focus = "LABEL_RELEASE_GUI_FOCUS",
-			},
+#			{
+#				header = "LABEL_GUI",
+#				ui_up = "LABEL_GUI_UP",
+#				ui_down = "LABEL_GUI_DOWN",
+#				ui_left = "LABEL_GUI_LEFT",
+#				ui_right = "LABEL_GUI_RIGHT",
+#			},
 		],
 		[ # column 3
 			{
@@ -142,11 +144,25 @@ func project_init() -> void:
 
 func _on_ready():
 	._on_ready()
-	_header.text = "LABEL_HOTKEYS"
-	_aux_button.show()
-	_aux_button.text = "BUTTON_OPTIONS"
-	_aux_button.connect("pressed", self, "_open_options")
-	_spacer.show()
+	_header_label.text = "LABEL_HOTKEYS"
+	# Options button
+	var options_button := Button.new()
+	options_button.size_flags_horizontal = SIZE_SHRINK_END
+	options_button.text = "BUTTON_OPTIONS"
+	options_button.connect("pressed", self, "_open_options")
+	_header_right.add_child(options_button)
+	# Mouse-only GUI Nav checkbox
+	var checkbox_res := preload("res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn")
+	var checkbox: CheckBox = checkbox_res.instance()
+	_header_left.add_child(checkbox)
+	# comment text below header
+	var note_label := Label.new()
+	note_label.autowrap = true
+	note_label.anchor_left = 0
+	note_label.anchor_right = 1
+	note_label.text = "TXT_GUI_HOTKEY_NOTE"
+	$VBox.add_child_below_node($VBox/TopHBox, note_label)
+	# hotkey dialog
 	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
@@ -163,7 +179,7 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 	action_label.size_flags_horizontal = BoxContainer.SIZE_EXPAND_FILL
 	action_label.text = action_label_str
 	var index := 0
-	var scancodes := _input_map_manager.get_scancodes_with_modifiers(action)
+	var scancodes := _input_map_manager.get_scancodes_w_mods_for_action(action)
 	for scancode in scancodes:
 		var key_button := Button.new()
 		action_hbox.add_child(key_button)
@@ -187,7 +203,7 @@ func _restore_default(action: String) -> void:
 func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
 	if scancode == -1:
-		_input_map_manager.remove_event_dict(action, "InputEventKey", index, true)
+		_input_map_manager.remove_event_dict_by_index(action, "InputEventKey", index, true)
 	else:
 		var event_dict := {event_class = "InputEventKey", scancode = scancode}
 		if control:
@@ -199,7 +215,7 @@ func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		if meta:
 			event_dict.meta = true
 		print("Set ", action, ": ", event_dict)
-		_input_map_manager.set_action_event_dict(action, event_dict, "InputEventKey", index, true)
+		_input_map_manager.set_action_event_dict(action, event_dict, index, true)
 	_build_content()
 
 func _on_restore_defaults() -> void:

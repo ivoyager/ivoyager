@@ -29,7 +29,7 @@ var setting_enums := {
 }
 
 var format_overrides := {
-	camera_transition_time = {max_value = 10.0},
+	camera_transfer_time = {max_value = 10.0},
 	viewport_names_size = {min_value = 4.0, max_value = 50.0},
 	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
 }
@@ -50,7 +50,7 @@ func _on_init():
 			},
 			{
 				header = "LABEL_CAMERA",
-				camera_transition_time = "LABEL_TRANSITION_TIME",
+				camera_transfer_time = "LABEL_TRANSFER_TIME",
 				camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
 				camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
 				camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",
@@ -96,15 +96,15 @@ func project_init() -> void:
 
 func _on_ready() -> void:
 	._on_ready()
-	_header.text = "LABEL_OPTIONS"
-	_aux_button.show()
-	_aux_button.text = "BUTTON_HOTKEYS"
-	_aux_button.connect("pressed", self, "_open_hotkeys")
-	_spacer.show()
+	_header_label.text = "LABEL_OPTIONS"
+	var hotkeys_button := Button.new()
+	hotkeys_button.size_flags_horizontal = SIZE_SHRINK_END
+	hotkeys_button.text = "BUTTON_HOTKEYS"
+	hotkeys_button.connect("pressed", self, "_open_hotkeys")
+	_header_right.add_child(hotkeys_button)
 
 func _open() -> void:
 	._open()
-	_spacer.rect_min_size.x = _aux_button.rect_size.x
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	var setting_hbox := HBoxContainer.new()

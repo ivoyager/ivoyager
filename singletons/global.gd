@@ -23,7 +23,7 @@
 
 extends Node
 
-# ProjectBuilder & Main broadcasts (program/simulator state)
+# ProjectBuilder & StateManager broadcasts (program/simulator state)
 signal project_builder_finished()
 signal table_data_imported()
 signal main_inited()
@@ -48,14 +48,14 @@ signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 
 # sim state control
-signal sim_stop_required(who) # see Main for external thread coordination
+signal sim_stop_required(who) # see StateManager for external thread coordination
 signal sim_run_allowed(who) # all requiring stop must allow!
 
 # camera control
 signal move_camera_to_selection_requested(selection_item, view_type, view_position,
-		view_orientation, is_instant_move) # 1st arg can be null; all others optional
-signal move_camera_to_body_requested(body, view_type, view_position, view_orientation,
-		is_instant_move) # 1st arg can be null; all others optional
+		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
+		track_type, is_instant_move) # 1st arg can be null; all others optional
 
 # GUI requests
 signal open_main_menu_requested()
@@ -72,7 +72,7 @@ signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object indicated; safe to keep container reference
-var state := {} # Main; keys include is_inited, is_running, etc.
+var state := {} # StateManager; keys include is_inited, is_running, etc.
 var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
@@ -87,7 +87,7 @@ var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # Registrar; indexed by body_id
 var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, 50.0, 0.0] # Camera; [Camera, fov, global_translation]
+var camera_info := [null, 50.0, null] # Camera; [Camera, fov, global_translation]
 var project := {} # available for extension "project"
 var addon := {} # available for extension "addons"
 
@@ -110,6 +110,7 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
+var home_view_from_user_time_zone := false
 var disable_pause := false
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
@@ -120,6 +121,7 @@ var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 var unit_multipliers := UnitDefs.MULTIPLIERS
 var unit_functions := UnitDefs.FUNCTIONS
 var is_electron_app := false
+var cache_dir := "user://cache"
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
@@ -146,6 +148,7 @@ var table_import := {
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
 	classes = "res://ivoyager/data/solar_system/classes.csv",
 	models = "res://ivoyager/data/solar_system/models.csv",
+	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.csv",
 }
 var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 

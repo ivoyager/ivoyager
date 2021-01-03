@@ -36,7 +36,7 @@ func _connect_camera(camera: Camera) -> void:
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("range_changed", self, "_update")
+		_camera.disconnect("range_changed", self, "_on_range_changed")
 		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
 	_camera = null
 

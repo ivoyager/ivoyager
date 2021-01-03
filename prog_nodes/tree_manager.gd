@@ -16,8 +16,8 @@
 # limitations under the License.
 # *****************************************************************************
 # Manages processing and visibility of system tree nodes. This node expects a
-# lot of interface specific to BCamera (search '_camera' below). You can
-# replace with your own Camera class but you will need to match some BCamera
+# lot of interface specific to VygrCamera (search '_camera' below). You can
+# replace with your own Camera class but you will need to match some VygrCamera
 # API or modify functios below.
 
 extends Node
@@ -35,9 +35,9 @@ const IS_STAR := Enums.BodyFlags.IS_STAR
 const IS_STAR_ORBITING := Enums.BodyFlags.IS_STAR_ORBITING
 
 # public - read-only except for project init
-var show_orbits := false
-var show_symbols := false
-var show_names := false
+var show_orbits := true
+var show_symbols := false # exclusive w/ show_symbols
+var show_names := true # exclusive w/ show_symbols
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_symbols", "show_names"]

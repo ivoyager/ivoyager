@@ -40,7 +40,7 @@ const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
 
 # project vars
-var start_real_world_time := false # true verrides other start settings
+var start_real_world_time := false # true overrides other start settings
 var speeds := [ # sim_units / delta
 		UnitDefs.SECOND, # real-time if UnitDefs.SECOND = 1.0
 		UnitDefs.MINUTE,

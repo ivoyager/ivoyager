@@ -20,7 +20,7 @@
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
 
-extends CachedItemsManager
+extends CacheManager
 class_name SettingsManager
 
 
@@ -37,7 +37,7 @@ func _on_init():
 	#	autosave_minutes = 30,
 	
 		# camera
-		camera_transition_time = 1.0,
+		camera_transfer_time = 1.0,
 		camera_mouse_in_out_rate = 1.0,
 		camera_mouse_move_rate = 1.0,
 		camera_mouse_pitch_yaw_rate = 1.0,
@@ -70,6 +70,7 @@ func _on_init():
 		# cached but not in base OptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
+		mouse_only_gui_nav = false,
 		
 		# TODO:
 #		planet_label_color

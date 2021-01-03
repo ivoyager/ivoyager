@@ -84,7 +84,8 @@ var init_sequence := [
 
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
-	# treated exactly like program_references (separate for organization).
+	# treated exactly like program_references below, but separated here for
+	# project organization.
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
 	_SaverLoader_ = SaverLoader,
@@ -115,10 +116,10 @@ var program_references := {
 var program_nodes := {
 	# ProjectBuilder instances one of each and adds as child to Global. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
-	_Main_ = Main,
+	_StateManager_ = StateManager,
 	_Timekeeper_ = Timekeeper,
 	_InputHandler_ = InputHandler,
-	_BCameraInput_ = BCameraInput, # remove or replace if not using BCamera
+	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using VygrCamera
 	_Registrar_ = Registrar,
 	_TreeManager_ = TreeManager,
 	_PointsManager_ = PointsManager,
@@ -128,11 +129,12 @@ var program_nodes := {
 var gui_controls := {
 	# ProjectBuilder instances one of each and adds as child to Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted. Last in list
-	# is "on top" for viewing and 1st for input processing. (Since you can't
-	# "insert" into dictionary, you might need to reorder children of Universe
-	# after project start.)
+	# is "on top" for viewing and 1st for input processing. Since you can't
+	# "insert" into dictionary, to change order you will need to either rebuild
+	# this dictionary on init or reorder children of Universe after project
+	# start.
 	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_ProjectGUI_ = GameGUI, # Control ok (e.g., = PlanetariumGUI in Planetarium)
+	_ProjectGUI_ = null, # Project must supply a Control here!!!
 	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
 	_MainMenu_ = MainMenu, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove
@@ -145,22 +147,23 @@ var gui_controls := {
 }
 
 var procedural_classes := {
-	# Nodes and references not instantiated by ProjectBuilder. These classes
+	# Nodes and references NOT instantiated by ProjectBuilder. These classes
 	# plus all above can be accessed from Global.script_classes (keys still
 	# have underscores). 
 	# tree_nodes
 	_Body_ = Body,
 	_LPoint_ = LPoint,
-	_Camera_ = BCamera, # Camera ok, but see comments in b_camera.gd
+	_Camera_ = VygrCamera, # some classes expect VygrCamera, but could be replaced
 	_HUDLabel_ = HUDLabel,
 	_HUDOrbit_ = HUDOrbit,
 	_HUDPoints_ = HUDPoints,
 	# tree_refs
 	_Orbit_ = Orbit,
-	_ModelManager_ = ModelManager,
+	_ModelGeometry_ = ModelGeometry,
 	_Properties_ = Properties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,
+	_View_ = View,
 	_AsteroidGroup_ = AsteroidGroup,
 	_BodyList_ = BodyList, # WIP
 }

@@ -26,21 +26,21 @@ margin_bottom = 144.0
 margin_right = 40.0
 margin_bottom = 40.0
 
-[node name="Spacer" type="Control" parent="VBox/TopHBox"]
-visible = false
+[node name="HeaderLeft" type="MarginContainer" parent="VBox/TopHBox"]
 margin_right = 40.0
 margin_bottom = 40.0
+size_flags_horizontal = 3
 
-[node name="Header" type="Label" parent="VBox/TopHBox"]
+[node name="HeaderLabel" type="Label" parent="VBox/TopHBox"]
 margin_right = 400.0
 margin_bottom = 14.0
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 align = 1
 
-[node name="AuxButton" type="Button" parent="VBox/TopHBox"]
-visible = false
-margin_right = 12.0
-margin_bottom = 20.0
+[node name="HeaderRight" type="MarginContainer" parent="VBox/TopHBox"]
+margin_right = 40.0
+margin_bottom = 40.0
+size_flags_horizontal = 3
 
 [node name="Content" type="HBoxContainer" parent="VBox"]
 margin_top = 18.0

@@ -30,9 +30,30 @@ enum ViewTypes {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
-	VIEW_CENTERED, # unspecified view_position
-	VIEW_UNCENTERED # unspecified view_position & view_orientation
+	VIEW_OUTWARD,
+	VIEW_BUMPED, # unspecified view_position
+	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
 }
+
+enum TrackTypes {
+	TRACK_NONE,
+	TRACK_ORBIT,
+	TRACK_GROUND,
+}
+
+# TODO maybe???: split ViewTypes into range & angle enums???
+#enum ZoomTypes {
+#	ZOOM_ZOOM,
+#	ZOOM_MEDIUM,
+#	ZOOM_FAR,
+#	ZOOM_SYSTEM,
+#}
+#
+#enum LatitudeTypes {
+#	LAT_EQUATORIAL,
+#	LAT_45,
+#	LAT_TOP,
+#}
 
 enum GUISizes {
 	GUI_SMALL,

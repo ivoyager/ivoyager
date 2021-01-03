@@ -121,6 +121,7 @@ static func make_object_or_scene(script: Script) -> Object:
 	# "SCENE_OVERRIDE". We create the scene and return the root node.
 	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
 	var pkd_scene: PackedScene = load(scene_path)
+	assert(pkd_scene, "Expected scene path at: " + scene_path)
 	var root_node: Node = pkd_scene.instance()
 	if root_node.script != script: # root_node.script may be parent class
 		root_node.set_script(script)

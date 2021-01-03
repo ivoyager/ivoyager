@@ -3,6 +3,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.gd" type="Script" id=1]
 
 [node name="SelectionData" type="GridContainer"]
+size_flags_horizontal = 3
 columns = 2
 script = ExtResource( 1 )
 __meta__ = {

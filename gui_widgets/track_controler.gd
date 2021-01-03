@@ -1,4 +1,4 @@
-# camera_lock.gd
+# track_controler.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,32 +15,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Expects the camera to have signal "camera_lock_changed" and
-# function "change_camera_lock".
+# GUI Widget
 
-extends Button
+extends HBoxContainer
 
+const TRACK_NONE = Enums.TrackTypes.TRACK_NONE
+const TRACK_ORBIT = Enums.TrackTypes.TRACK_ORBIT
+const TRACK_GROUND = Enums.TrackTypes.TRACK_GROUND
+
+onready var _orbit_checkbox: CheckBox = $Orbit
+onready var _ground_checkbox: CheckBox = $Ground
 var _camera: Camera
+
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
-	pressed = true
+	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
+	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+		_camera.connect("track_type_changed", self, "_update_track_type")
+		_update_track_type(_camera.track_type)
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
+		_camera.disconnect("track_type_changed", self, "_update_track_type")
 	_camera = null
 
-func _pressed() -> void:
-	if _camera:
-		_camera.change_camera_lock(pressed)
+func _update_track_type(track_type: int) -> void:
+	_orbit_checkbox.pressed = track_type == TRACK_ORBIT
+	_ground_checkbox.pressed = track_type == TRACK_GROUND
 
-func _on_camera_lock_changed(is_locked: bool) -> void:
-	pressed = is_locked
+func _on_orbit_pressed() -> void:
+	if !_camera:
+		return
+	if _orbit_checkbox.pressed:
+		_camera.change_track_type(TRACK_ORBIT)
+	else:
+		_camera.change_track_type(TRACK_NONE)
+
+func _on_ground_pressed() -> void:
+	if !_camera:
+		return
+	if _ground_checkbox.pressed:
+		_camera.change_track_type(TRACK_GROUND)
+	else:
+		_camera.change_track_type(TRACK_NONE)
+

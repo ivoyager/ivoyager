@@ -54,6 +54,9 @@ enum { # option_type for number_option()
 	# velocity
 	VELOCITY_MPS_KMPS, # km/s if >= 1.0 km/s
 	VELOCITY_MPS_KMPS_C, # km/s if >= 1.0 km/s; c if >= 0.1 c
+	# misc
+	LATITUDE,
+	LONGITUDE,
 }
 
 const LOG_OF_10 := log(10.0)
@@ -78,15 +81,16 @@ var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRIL
 # converse is not true.
 
 var short_forms := {
-	# If missing here, we fallback to the unit string itself (which is usually
-	# the desired short form).
+	# If missing here, we fallback to the unit string itself, which is usually
+	# the desired short form. Asterisk before TXT_KEY means no space before
+	# unit.
 	"century" : "TXT_CENTURIES",
-	"deg" : "TXT_DEG",
+	"deg" : "*TXT_DEG",
 	"degC" : "TXT_DEG_C",
 	"degF" : "TXT_DEG_F",
-	"deg/d" : "TXT_DEG_PER_DAY",
-	"deg/a" : "TXT_DEG_PER_YEAR",
-	"deg/century" : "TXT_DEG_PER_CENTURY",
+	"deg/d" : "*TXT_DEG_PER_DAY",
+	"deg/a" : "*TXT_DEG_PER_YEAR",
+	"deg/century" : "*TXT_DEG_PER_CENTURY",
 	"_g" : "g",
 }
 
@@ -207,6 +211,14 @@ func project_init():
 	_n_lg_numbers = large_numbers.size()
 	for i in range(_n_lg_numbers):
 		large_numbers[i] = tr(large_numbers[i])
+	for unit in short_forms:
+		var txt_key: String = short_forms[unit]
+		if txt_key.begins_with("*"):
+			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
+		else:
+			short_forms[unit] = " " + tr(short_forms[unit])
+	for unit in long_forms:
+		long_forms[unit] = " " + tr(long_forms[unit])
 
 func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
@@ -276,8 +288,44 @@ func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num
 			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
 				return number_unit(x, "c", sig_digits, num_type, long_form, case_type)
 			return number_unit(x, "km/s", sig_digits, num_type, long_form, case_type)
+		LATITUDE:
+			return latitude(x, sig_digits, long_form, case_type)
+		LONGITUDE:
+			return longitude(x, sig_digits, long_form, case_type)
+			
 	assert(false, "Unkknown option_type: " + String(option_type))
 	return String(x)
+
+func latitude_longitude(lat_long: Vector2, decimal_pl := 0, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	return latitude(lat_long[0], decimal_pl, long_form, case_type) + " " \
+			+ longitude(lat_long[1], decimal_pl, long_form, case_type)
+
+func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+	var suffix: String
+	if x > -0.0001:
+		suffix = tr("TXT_NORTH") if long_form else tr("TXT_NORTH_SHORT")
+	else:
+		suffix = tr("TXT_SOUTH") if long_form else tr("TXT_SOUTH_SHORT")
+	if case_type == CASE_LOWER:
+		suffix = suffix.to_lower()
+	elif case_type == CASE_UPPER:
+		suffix = suffix.to_upper()
+	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
+	return (num_str + suffix).lstrip("-")
+
+func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+	var suffix: String
+	if x > -0.0001 and x < PI - 0.0001: # nearly 0 is E; nearly PI is W
+		suffix = tr("TXT_EAST") if long_form else tr("TXT_EAST_SHORT")
+	else:
+		suffix = tr("TXT_WEST") if long_form else tr("TXT_WEST_SHORT")
+	if case_type == CASE_LOWER:
+		suffix = suffix.to_lower()
+	elif case_type == CASE_UPPER:
+		suffix = suffix.to_upper()
+	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
+	return (num_str + suffix).lstrip("-")
 
 func number(x: float, sig_digits := -1, num_type := NUM_DYNAMIC) -> String:
 	# sig_digets = -1 displays decimal precision "as is".
@@ -338,14 +386,16 @@ func number_unit(x: float, unit: String, sig_digits := -1, num_type := NUM_DYNAM
 	x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
 	var number_str := number(x, sig_digits, num_type)
 	if long_form and long_forms.has(unit):
-		unit = tr(long_forms[unit])
+		unit = long_forms[unit]
 	elif short_forms.has(unit):
-		unit = tr(short_forms[unit])
+		unit = short_forms[unit]
+	else:
+		unit = " " + unit
 	if case_type == CASE_LOWER:
 		unit = unit.to_lower()
 	elif case_type == CASE_UPPER:
 		unit = unit.to_upper()
-	return number_str + " " + unit
+	return number_str + unit
 
 func number_prefixed_unit(x: float, unit: String, sig_digits := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
@@ -370,10 +420,15 @@ func number_prefixed_unit(x: float, unit: String, sig_digits := -1, num_type := 
 		exp_div_3 = si_index - _prefix_offset
 	x /= pow(10.0, exp_div_3 * 3)
 	var number_str := number(x, sig_digits, num_type)
+	var prepend_space := true
 	if long_form and long_forms.has(unit):
-		unit = tr(long_forms[unit])
+		unit = long_forms[unit].lstrip(" ")
 	elif short_forms.has(unit):
-		unit = tr(short_forms[unit])
+		unit = short_forms[unit]
+		if unit.begins_with(" "):
+			unit = unit.lstrip(" ")
+		else:
+			prepend_space = false
 	if long_form:
 		unit = prefix_names[si_index] + unit
 	else:
@@ -382,4 +437,6 @@ func number_prefixed_unit(x: float, unit: String, sig_digits := -1, num_type := 
 		unit = unit.to_lower()
 	elif case_type == CASE_UPPER:
 		unit = unit.to_upper()
-	return number_str + " " + unit
+	if prepend_space:
+		return number_str + " " + unit
+	return number_str + unit

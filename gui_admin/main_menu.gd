@@ -25,7 +25,7 @@ var button_infos := [] # shouldn't need but public just in case
 var planetarium_mode := false
 
 var _state: Dictionary = Global.state
-var _main: Main
+var _state_manager: StateManager
 
 func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
 		press_object: Object, press_method: String, press_args := []) -> Button:
@@ -45,12 +45,12 @@ func project_init():
 		Global.connect("system_tree_built_or_loaded", self, "_set_running_config")
 		Global.connect("simulator_exited", self, "_set_splash_screen_config")
 	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 	if !Global.skip_splash_screen:
 		make_button("BUTTON_START", 1000, true, false, self, "_on_start_pressed")
-		make_button("BUTTON_EXIT", 300, false, true, _main, "exit", [false])
+		make_button("BUTTON_EXIT", 300, false, true, _state_manager, "exit", [false])
 	if !Global.disable_quit:
-		make_button("BUTTON_QUIT", 200, true, true, _main, "quit", [false])
+		make_button("BUTTON_QUIT", 200, true, true, _state_manager, "quit", [false])
 	if !planetarium_mode:
 		make_button("BUTTON_RESUME", 100, false, true, self, "_close")
 	# Other admin GUI's init their own buttons
@@ -101,7 +101,7 @@ func _grab_focus() -> void:
 
 func _on_start_pressed() -> void:
 	_close()
-	_main.build_system_tree()
+	_state_manager.build_system_tree()
 
 func _toggle_open_close() -> void:
 	if is_visible_in_tree():
@@ -110,7 +110,7 @@ func _toggle_open_close() -> void:
 		_open()
 		
 func _open() -> void:
-	_main.require_stop(self)
+	_state_manager.require_stop(self)
 	Global.emit_signal("show_hide_gui_requested", false)
 	show()
 	_grab_focus()
@@ -118,7 +118,7 @@ func _open() -> void:
 func _close() -> void:
 	hide()
 	Global.emit_signal("show_hide_gui_requested", true) # always show again
-	_main.allow_run(self)
+	_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

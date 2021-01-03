@@ -1,4 +1,4 @@
-# camera_lock.gd
+# body_builder.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,32 +15,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Expects the camera to have signal "camera_lock_changed" and
-# function "change_camera_lock".
 
-extends Button
+extends Label
 
+onready var _qty_strings: QtyStrings = Global.program.QtyStrings
 var _camera: Camera
 
 func _ready():
 	Global.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
-	pressed = true
-
+	
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
+		_camera.connect("latitude_longitude_changed", self, "_on_latitude_longitude_changed")
 		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
+		_camera.disconnect("range_changed", self, "_on_latitude_longitude_changed")
+		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
 	_camera = null
 
-func _pressed() -> void:
-	if _camera:
-		_camera.change_camera_lock(pressed)
+func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool) -> void:
+	var new_text := _qty_strings.latitude_longitude(lat_long, 1)
+	if is_ecliptic:
+		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
+	text = new_text
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
-	pressed = is_locked
+	visible = is_locked

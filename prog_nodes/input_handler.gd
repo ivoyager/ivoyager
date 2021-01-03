@@ -15,12 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Most actions are defined in prog_refs/input_map_manager.gd, not in
+# project.godot!
+#
 # I, Voyager handles input in three  ways:
 #   - here as _input()
-#   - various GUI as _gui_input() or _unhandled_key_input()
-#   - BCameraInput as _unhandled_input()
+#   - VygrCameraHandler as _unhandled_input()
+#   - various GUIs as _gui_input() or _unhandled_key_input()
 #
-# Most actions are defined at runtime by InputMapManager (not project.godot!).
 
 extends Node
 class_name InputHandler
@@ -32,7 +34,7 @@ var _allow_time_reversal: bool
 var _allow_dev_tools: bool
 var _allow_fullscreen_toggle: bool
 var _tree: SceneTree
-var _main: Main
+var _state_manager: StateManager
 var _tree_manager: TreeManager
 var _timekeeper: Timekeeper
 var _selection_manager: SelectionManager
@@ -60,7 +62,7 @@ func project_init():
 	_allow_dev_tools = Global.allow_dev_tools
 	_allow_fullscreen_toggle = Global.allow_fullscreen_toggle
 	_tree = Global.program.tree
-	_main = Global.program.Main
+	_state_manager = Global.program.StateManager
 	_tree_manager = Global.program.TreeManager
 	_timekeeper = Global.program.Timekeeper
 
@@ -84,8 +86,7 @@ func _on_input(event: InputEvent) -> void:
 		_input_for_splash_screen(event)
 		return
 	if !_state.is_running:
-		return # e.g., main menu has input control
-	
+		return # MainMenu or some other admin GUI has input control
 	# Order matters! E.g., cntr-S must be captured before S. This could be
 	# troublesome for player modified hotkeys. One way to solve is to match
 	# event.get_scancode_with_modifiers().
@@ -100,17 +101,17 @@ func _on_input(event: InputEvent) -> void:
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
 	elif event.is_action_pressed("quick_save"):
-		_main.quick_save()
+		_state_manager.quick_save()
 	elif event.is_action_pressed("save_as"):
-		_main.save_game("")
+		_state_manager.save_game("")
 	elif event.is_action_pressed("quick_load"):
-		_main.quick_load()
+		_state_manager.quick_load()
 	elif event.is_action_pressed("load_game"):
-		_main.load_game("")
+		_state_manager.load_game("")
 	elif event.is_action_pressed("quit"):
-		_main.quit(false)
+		_state_manager.quit(false)
 	elif event.is_action_pressed("save_quit"):
-		_main.save_quit()
+		_state_manager.save_quit()
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
 		_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
@@ -125,55 +126,59 @@ func _on_input(event: InputEvent) -> void:
 		_tree_manager.set_show_symbols(!_tree_manager.show_symbols)
 	elif event.is_action_pressed("toggle_names"):
 		_tree_manager.set_show_names(!_tree_manager.show_names)
+	elif _selection_manager:
+		_input_for_selection_manager(event)
+		return
 	else:
-		if _selection_manager:
-			if event.is_action_pressed("select_forward"):
-				_selection_manager.forward()
-			elif event.is_action_pressed("select_back"):
-				_selection_manager.back()
-			elif event.is_action_pressed("select_left"):
-				_selection_manager.next_last(-1)
-			elif event.is_action_pressed("select_right"):
-				_selection_manager.next_last(1)
-			elif event.is_action_pressed("select_up"):
-				_selection_manager.up()
-			elif event.is_action_pressed("select_down"):
-				_selection_manager.down()
-			elif event.is_action_pressed("next_star"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
-			elif event.is_action_pressed("previous_planet"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
-			elif event.is_action_pressed("next_planet"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
-			elif event.is_action_pressed("previous_nav_moon"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-			elif event.is_action_pressed("next_nav_moon"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-			elif event.is_action_pressed("previous_moon"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
-			elif event.is_action_pressed("next_moon"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
-			elif event.is_action_pressed("previous_spacecraft"):
-				_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
-			elif event.is_action_pressed("next_spacecraft"):
-				_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
-			else:
-				return # input NOT handled!
-		else:
-			return # input NOT handled!
+		return # input NOT handled!
+	_tree.set_input_as_handled()
+
+func _input_for_selection_manager(event: InputEvent) -> void:
+	if event.is_action_pressed("select_forward"):
+		_selection_manager.forward()
+	elif event.is_action_pressed("select_back"):
+		_selection_manager.back()
+	elif event.is_action_pressed("select_left"):
+		_selection_manager.next_last(-1)
+	elif event.is_action_pressed("select_right"):
+		_selection_manager.next_last(1)
+	elif event.is_action_pressed("select_up"):
+		_selection_manager.up()
+	elif event.is_action_pressed("select_down"):
+		_selection_manager.down()
+	elif event.is_action_pressed("next_star"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
+	elif event.is_action_pressed("previous_planet"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
+	elif event.is_action_pressed("next_planet"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
+	elif event.is_action_pressed("previous_nav_moon"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("next_nav_moon"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("previous_moon"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
+	elif event.is_action_pressed("next_moon"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
+	elif event.is_action_pressed("previous_spacecraft"):
+		_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
+	elif event.is_action_pressed("next_spacecraft"):
+		_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
+	else:
+		return # input NOT handled!
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:
 	if _allow_dev_tools and event.is_action_pressed("write_debug_logs_now"):
 		Debug.force_logging()
 	elif event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
-		_main.load_game("")
+		_state_manager.load_game("")
 	elif event.is_action_pressed("toggle_options"):
 		Global.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
 		Global.emit_signal("hotkeys_requested")
 	elif event.is_action_pressed("quit"):
-		_main.quit(true)
+		_state_manager.quit(true)
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
