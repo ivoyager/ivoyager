@@ -5,7 +5,6 @@
 [node name="AsteroidGroupButtons" type="HBoxContainer"]
 margin_right = 484.0
 margin_bottom = 40.0
-size_flags_horizontal = 8
 custom_constants/separation = 0
 script = ExtResource( 1 )
 __meta__ = {
@@ -15,13 +14,15 @@ __meta__ = {
 [node name="Spacer1" type="Control" parent="."]
 margin_right = 2.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 2, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
 
 [node name="AllAsteroids" type="Button" parent="."]
 margin_left = 2.0
 margin_right = 82.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 80, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 80.0
 toggle_mode = true
 
 [node name="AllAsteroids" type="Label" parent="AllAsteroids"]
@@ -46,13 +47,15 @@ __meta__ = {
 margin_left = 82.0
 margin_right = 84.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 2, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
 
 [node name="NearEarth" type="Button" parent="."]
 margin_left = 84.0
 margin_right = 134.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 50, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 50.0
 toggle_mode = true
 
 [node name="NearEarth" type="Label" parent="NearEarth"]
@@ -77,12 +80,15 @@ __meta__ = {
 margin_left = 134.0
 margin_right = 134.0
 margin_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.0
 
 [node name="MarsCros" type="Button" parent="."]
 margin_left = 134.0
 margin_right = 174.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 40, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 40.0
 toggle_mode = true
 
 [node name="MarsCros" type="Label" parent="MarsCros"]
@@ -107,12 +113,15 @@ __meta__ = {
 margin_left = 174.0
 margin_right = 174.0
 margin_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.0
 
 [node name="MainBelt" type="Button" parent="."]
 margin_left = 174.0
 margin_right = 214.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 40, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 40.0
 toggle_mode = true
 
 [node name="MainBelt" type="Label" parent="MainBelt"]
@@ -138,12 +147,15 @@ __meta__ = {
 margin_left = 214.0
 margin_right = 214.0
 margin_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.0
 
 [node name="Trojans" type="VBoxContainer" parent="."]
 margin_left = 214.0
 margin_right = 274.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 60, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 60.0
 custom_constants/separation = 0
 
 [node name="L4" type="Button" parent="Trojans"]
@@ -165,13 +177,15 @@ text = "Troj. L5"
 margin_left = 274.0
 margin_right = 304.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 30, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 30.0
 
 [node name="Centaurs" type="Button" parent="."]
 margin_left = 304.0
 margin_right = 374.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 70, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 70.0
 toggle_mode = true
 text = "Centaurs"
 
@@ -179,13 +193,15 @@ text = "Centaurs"
 margin_left = 374.0
 margin_right = 404.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 30, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 30.0
 
 [node name="TransNeptune" type="Button" parent="."]
 margin_left = 404.0
 margin_right = 484.0
 margin_bottom = 40.0
-rect_min_size = Vector2( 80, 0 )
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 80.0
 toggle_mode = true
 
 [node name="TransNeptune" type="Label" parent="TransNeptune"]

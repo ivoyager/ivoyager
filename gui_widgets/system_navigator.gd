@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget
+# GUI widget. Builds itself from an existing solar system!
 
 extends HBoxContainer
 
@@ -26,8 +26,10 @@ const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 # project vars
 var grab_focus := true # if no GUI has focus, grabs currently selected on ui_ actions
 var resize_self := true # if false, you must call build_to_size() externally
+
 var widget_width_presets := [420.0, 560.0, 700.0] # GUI_SMALL, _MEDIUM, _LARGE
 var widget_min_height_presets := [277.0, 340.0, 407.0] # GUI_SMALL, _MEDIUM, _LARGE
+
 var size_exponent := 0.4 # smaller values reduce differences in object sizes
 var min_button_width_proportion := 0.05 # as proportion of total (roughly)
 var over_planet_spacer_ratio := 0.04286 # proportion of widget width, rounded
