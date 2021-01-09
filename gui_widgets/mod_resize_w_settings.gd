@@ -21,7 +21,7 @@
 # the parent container is fixed-size for a given gui_size and not expected to
 # stretch with screen resize).
 #
-# For draggable and user resizable windows, use ModFullDynamic instead.
+# For draggable and user resizable windows, use ModDynamic instead.
 
 extends Node
 
