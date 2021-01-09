@@ -1,4 +1,4 @@
-# settings_sized_window.gd
+# mod_resize_w_settings.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -17,34 +17,35 @@
 # *****************************************************************************
 # This widget will resize a Container (e.g., a GUI PanelContainer) with changes
 # in Settings.gui_size, maintaining position based on existing anchors.
-# For  
+# Assumes anchor_left == anchor_right and anchor_top == anchor_bottom (i.e.,
+# the parent container is fixed-size for a given gui_size and not expected to
+# stretch with screen resize).
+#
+# For draggable and user resizable windows, use ModFullDynamic instead.
 
 extends Node
 
-var default_sizes := [
+var sizes := [
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
 
+var _settings: Dictionary = Global.settings
+onready var _viewport := get_viewport()
 onready var _parent: Container = get_parent()
 
-#func _ready() -> void:
-#	Global.connect("gui_refresh_requested", self, "_resize")
-#	Global.connect("setting_changed", self, "_settings_listener")
-#	# widget mods here
-#	$VBox/BottomHBox/ViewButtons/Outward.hide()
-#
-#func _resize() -> void:
-#	# assumes anchor_left == anchor_right and anchor_top == anchor_bottom
-#	var gui_size: int = Global.settings.gui_size
-#	var viewport := get_viewport()
-#	rect_size = default_sizes[gui_size]
-#	rect_position.x = anchor_left * (viewport.size.x - rect_size.x)
-#	rect_position.y = anchor_top * (viewport.size.y - rect_size.y)
-#
-#func _settings_listener(setting: String, _value) -> void:
-#	match setting:
-#		"gui_size":
-#			_resize()
+func _ready() -> void:
+	Global.connect("gui_refresh_requested", self, "_resize")
+	Global.connect("setting_changed", self, "_settings_listener")
 
+func _resize() -> void:
+	var gui_size: int = _settings.gui_size
+	_parent.rect_size = sizes[gui_size]
+	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
+	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
+
+func _settings_listener(setting: String, _value) -> void:
+	match setting:
+		"gui_size":
+			_resize()
