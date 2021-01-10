@@ -1,0 +1,111 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://ivoyager/gui_example/nav_panel.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_widgets/asteroid_group_buttons.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/camera_lock.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ivoyager/gui_widgets/mod_dynamic.tscn" type="PackedScene" id=8]
+
+
+
+[node name="NavPanel" type="PanelContainer"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -14.0
+margin_top = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SystemNavigator" parent="." instance=ExtResource( 2 )]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 617.0
+margin_bottom = 75.0
+
+[node name="TopHBox" type="HBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 617.0
+margin_bottom = 27.0
+size_flags_vertical = 0
+
+[node name="Control" type="Control" parent="TopHBox"]
+margin_right = 234.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+
+[node name="CameraLock" parent="TopHBox/Control" instance=ExtResource( 5 )]
+margin_left = 0.0
+margin_top = 0.0
+margin_right = 97.0
+margin_bottom = 20.0
+align = 0
+
+[node name="DateTime" parent="TopHBox" instance=ExtResource( 6 )]
+margin_left = 238.0
+margin_right = 372.0
+align = 1
+
+[node name="TimeControl" parent="TopHBox" instance=ExtResource( 4 )]
+margin_left = 376.0
+margin_top = 0.0
+margin_right = 610.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="BottomVBox" type="VBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 617.0
+margin_bottom = 75.0
+size_flags_vertical = 8
+
+[node name="AsteroidGroupButtons" parent="BottomVBox" instance=ExtResource( 3 )]
+margin_right = 610.0
+
+[node name="HBox" type="HBoxContainer" parent="BottomVBox"]
+margin_top = 44.0
+margin_right = 610.0
+margin_bottom = 68.0
+alignment = 2
+
+[node name="Spacer1" type="Control" parent="BottomVBox/HBox"]
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="MouseOnlyGUINav" parent="BottomVBox/HBox" instance=ExtResource( 7 )]
+margin_left = 4.0
+margin_right = 316.0
+
+[node name="Spacer2" type="Control" parent="BottomVBox/HBox"]
+margin_left = 320.0
+margin_right = 320.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+
+[node name="Hotkeys" type="Button" parent="BottomVBox/HBox"]
+margin_left = 324.0
+margin_right = 453.0
+margin_bottom = 24.0
+text = "BUTTON_HOTKEYS"
+
+[node name="MainMenu" type="Button" parent="BottomVBox/HBox"]
+margin_left = 457.0
+margin_right = 610.0
+margin_bottom = 24.0
+text = "BUTTON_MAIN_MENU"
+
+[node name="ModDynamic" parent="." instance=ExtResource( 8 )]
+margin_right = 617.0
+margin_bottom = 75.0

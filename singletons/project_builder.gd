@@ -134,7 +134,7 @@ var gui_controls := {
 	# this dictionary on init or reorder children of Universe after project
 	# start.
 	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_ProjectGUI_ = null, # Project must supply a Control here!!!
+	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control
 	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
 	_MainMenu_ = MainMenu, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove

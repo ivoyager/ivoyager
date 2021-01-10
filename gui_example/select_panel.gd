@@ -1,4 +1,4 @@
-# selection_panel.gd
+# select_panel.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,7 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# You can modify widget functionality, including changing widget init values,
+# in _ready() here.
 
-extends DraggablePanel
-class_name SelectionPanel
-const SCENE := "res://ivoyager/gui_game/selection_panel.tscn"
+extends PanelContainer
+
+func _ready() -> void:
+	$VBox/BottomHBox/ViewButtons/Outward.hide() # under dev for astronomy in the Planetarium

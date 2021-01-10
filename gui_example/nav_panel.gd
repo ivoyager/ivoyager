@@ -1,4 +1,4 @@
-# navigation_panel.gd
+# nav_panel.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,18 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# You can modify widgets or set widget init values in _ready() here. The
+# NavPanel mainly fits to the SystemNavigator & AsteroidGroupButtons widgets,
+# which have their own GUI size presets. Other content is strategically
+# placed above and below planets and mooons and can adapt to panel size.
 
-extends DraggablePanel
-class_name NavigationPanel
-const SCENE := "res://ivoyager/gui_game/navigation_panel.tscn"
+extends PanelContainer
 
-func _on_ready() -> void:
-	._on_ready()
-	if Global.program.has("MainMenu"):
-		$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
-	else:
-		$BottomVBox/BottomHBox/MainMenu.hide()
-	if Global.program.has("HotkeysPopup"):
-		$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
-	else:
-		$BottomVBox/BottomHBox/Hotkeys.hide()
+func _ready() -> void:
+	# widget mods here (if any)
+	# additional new node (non-widget) hookups
+	$BottomVBox/HBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
+	$BottomVBox/HBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
