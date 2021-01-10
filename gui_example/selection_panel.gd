@@ -1,4 +1,4 @@
-# select_panel.gd
+# selection_panel.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,8 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# You can modify widget functionality, including changing widget init values,
-# in _ready() here.
+#
+# THIS IS AN EXAMPLE GUI SCENE! It may change in the future. You should
+# duplicate this scene or build your own GUI scenes outside of the ivoyager
+# directory.
 
 extends PanelContainer
 

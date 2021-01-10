@@ -1,4 +1,4 @@
-# nav_panel.gd
+# navigation_panel.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,10 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# You can modify widgets or set widget init values in _ready() here. The
-# NavPanel mainly fits to the SystemNavigator & AsteroidGroupButtons widgets,
-# which have their own GUI size presets. Other content is strategically
-# placed above and below planets and mooons and can adapt to panel size.
+#
+# THIS IS AN EXAMPLE GUI SCENE! It may change in the future. You should
+# duplicate this scene or build your own GUI scenes outside of the ivoyager
+# directory.
 
 extends PanelContainer
 

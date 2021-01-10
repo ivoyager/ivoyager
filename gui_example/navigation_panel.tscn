@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=2]
 
-[ext_resource path="res://ivoyager/gui_example/nav_panel.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_example/navigation_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/asteroid_group_buttons.tscn" type="PackedScene" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=4]
@@ -9,9 +9,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn" type="PackedScene" id=7]
 [ext_resource path="res://ivoyager/gui_widgets/mod_dynamic.tscn" type="PackedScene" id=8]
 
-
-
-[node name="NavPanel" type="PanelContainer"]
+[node name="NavigationPanel" type="PanelContainer"]
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0

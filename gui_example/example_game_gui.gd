@@ -1,4 +1,4 @@
-# gui_parent.gd
+# example_game_gui.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2020 Charlie Whitfield
@@ -15,9 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# This node is parent to our game template gui panels. You most likely want
-# to replace these entirely with your own GUI. But see code and comments for
-# how to interface with I, Voyager core systems and GUI widgets.
+#
+# THIS IS AN EXAMPLE GUI SCENE! It may change in the future. You should
+# duplicate this scene or build your own GUI scenes outside of the ivoyager
+# directory.
 
 extends Control
 class_name ExampleGameGUI

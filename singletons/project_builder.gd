@@ -40,10 +40,6 @@
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
 #    be accessed after instantiation in the "program" dictionary.
-# 4. Modify init values in GameGUI (following instruction #3) to remove or
-#    add individual GUI scenes. (Or make your own ProjectGUI.)
-# 5. Hook up to Global signal "gui_entered_tree" to modify init values of
-#    individual GUI scenes (not defined here) before their _ready() call.  
 
 extends Node
 
@@ -153,7 +149,7 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = Body,
 	_LPoint_ = LPoint,
-	_Camera_ = VygrCamera, # some classes expect VygrCamera, but could be replaced
+	_Camera_ = VygrCamera, # possible to replace, but look for dependencies
 	_HUDLabel_ = HUDLabel,
 	_HUDOrbit_ = HUDOrbit,
 	_HUDPoints_ = HUDPoints,
