@@ -1,4 +1,4 @@
-# mod_resize_w_settings.gd
+# win_mgr_simple.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -21,16 +21,20 @@
 # the parent container is fixed-size for a given gui_size and not expected to
 # stretch with screen resize).
 #
-# For draggable and user resizable windows, use ModDynamic instead.
+# Modify sizes values from _ready() in the parent Container.
+#
+# For draggable and user resizable windows, use WinMgrDynamic instead.
 
 extends Node
 
+# project vars
 var sizes := [
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
 
+# private
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
 onready var _parent: Container = get_parent()

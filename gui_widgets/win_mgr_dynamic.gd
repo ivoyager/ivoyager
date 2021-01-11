@@ -1,4 +1,4 @@
-# mod_dynamic.gd
+# win_mgr_dynamic.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -19,15 +19,15 @@
 # resizing margins. This should be the last child so margin controls are on
 # top.
 #
-# This component replaces ModResizeWSettings. (Having both might crash.)
+# Modify default sizes and snap values from _ready() in the parent Container.
+#
+# This component replaces WinMgrSimple. (Having both might crash.)
 
 extends Control
 
-signal user_resized()
-
 enum {MARGIN_TL, MARGIN_T, MARGIN_TR, MARGIN_R, MARGIN_BR, MARGIN_B, MARGIN_BL, MARGIN_L}
 
-# init vars
+# project vars
 var screen_edge_snap := 100.0
 var panel_edge_snap := 40.0
 var default_sizes := [
@@ -36,6 +36,7 @@ var default_sizes := [
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
 
+# private
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
 onready var _parent: Container = get_parent()
@@ -78,7 +79,7 @@ func _snap_horizontal() -> void:
 	var bottom := top + _parent.rect_size.y
 	for child in _parent.get_parent().get_children():
 		var test_panel := child as PanelContainer
-		if test_panel == _parent:
+		if !test_panel or test_panel == _parent:
 			continue
 		var panel_top := test_panel.rect_position.y
 		if bottom < panel_top:
@@ -109,7 +110,7 @@ func _snap_vertical() -> void:
 	var right := left + _parent.rect_size.x
 	for child in _parent.get_parent().get_children():
 		var test_panel := child as PanelContainer
-		if test_panel == _parent:
+		if !test_panel or test_panel == _parent:
 			continue
 		var panel_left := test_panel.rect_position.x
 		if right < panel_left:
