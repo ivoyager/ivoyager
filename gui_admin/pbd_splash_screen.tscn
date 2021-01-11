@@ -16,6 +16,9 @@ size_flags_vertical = 3
 texture = ExtResource( 2 )
 expand = true
 stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Info" type="Label" parent="."]
 anchor_top = 1.0
@@ -28,7 +31,7 @@ grow_vertical = 0
 text = "I, Voyager
 v0.0.0
 
-(c) 2017-2020
+(c) 2017-2021
 Charlie Whitfield"
 valign = 2
 __meta__ = {
