@@ -39,12 +39,12 @@ func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
-	if Global.state.is_system_built:
-		_on_system_built(false)
+	if Global.state.is_inited:
+		_configure()
 	else:
-		Global.connect("system_tree_built_or_loaded", self, "_on_system_built", [], CONNECT_ONESHOT)
+		Global.connect("state_manager_inited", self, "_configure", [], CONNECT_ONESHOT)
 
-func _on_system_built(_is_loaded_game: bool) -> void:
+func _configure() -> void:
 	if !include_game_speed_label:
 		_game_speed.queue_free()
 	if include_reverse_time_button:
