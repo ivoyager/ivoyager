@@ -60,10 +60,11 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("credits_requested", self, "_open")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	_state_manager = Global.program.StateManager
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
+	var main_menu_manager: MainMenuManager = Global.program.get("MainMenuManager")
+	if main_menu_manager:
+		main_menu_manager.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
 
 func _on_ready() -> void:
 	theme = Global.themes.main

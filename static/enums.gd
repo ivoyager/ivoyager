@@ -18,13 +18,6 @@
 
 class_name Enums
 
-enum KnowTypes {
-	NO,
-	DOUBTFUL,
-	UNKNOWN,
-	PROBABLY,
-	YES,
-}
 
 enum ViewTypes {
 	VIEW_ZOOM,
@@ -64,6 +57,14 @@ enum GUISizes {
 enum StarmapSizes {
 	STARMAP_8K,
 	STARMAP_16K,
+}
+
+enum KnowTypes {
+	NO,
+	DOUBTFUL,
+	UNKNOWN,
+	PROBABLY,
+	YES,
 }
 
 enum BodyFlags {

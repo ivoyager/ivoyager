@@ -36,13 +36,14 @@ func project_init() -> void:
 	_settings_manager = Global.program.SettingsManager
 	_timekeeper = Global.program.Timekeeper
 	_state_manager = Global.program.StateManager
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
+	var main_menu_manager: MainMenuManager = Global.program.get("MainMenuManager")
+	if main_menu_manager:
+		main_menu_manager.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
 		if add_quick_save_button:
-			main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
+			main_menu_manager.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	connect("file_selected", self, "_save_file")
 	connect("popup_hide", self, "_on_hide")
 

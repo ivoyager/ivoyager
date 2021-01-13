@@ -86,9 +86,9 @@ func _on_init():
 
 func project_init() -> void:
 	.project_init()
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_OPTIONS", 500, true, true, self, "_open")
+	var main_menu_manager: MainMenuManager = Global.program.get("MainMenuManager")
+	if main_menu_manager:
+		main_menu_manager.make_button("BUTTON_OPTIONS", 500, true, true, self, "_open")
 	Global.connect("options_requested", self, "_open")
 	Global.connect("setting_changed", self, "_settings_listener")
 	if !Global.enable_save_load:

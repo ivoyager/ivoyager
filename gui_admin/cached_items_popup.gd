@@ -109,6 +109,7 @@ func project_init() -> void:
 	_state_manager = Global.program.StateManager
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 
 func _on_ready() -> void:
 	theme = Global.themes.main

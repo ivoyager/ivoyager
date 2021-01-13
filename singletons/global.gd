@@ -16,17 +16,18 @@
 # limitations under the License.
 # *****************************************************************************
 # Singleton "Global".
-# References to containers and non-container init values are set and safe to
-# read before non-autoload objects are created (see ProjectBuilder). It's good
-# practice to make local references to whatever you need near the top of your
-# class and keep "Global" out of your non-init functions.
+# References to Global containers are immutable. Global init values should be
+# modified by extension in their extension_init() function and treated as
+# immutable thereafter. It's good practice to make local references to whatever
+# you need near the top of your class and keep "Global" out of your non-init
+# functions.
 
 extends Node
 
 # ProjectBuilder & StateManager broadcasts (program/simulator state)
 signal project_builder_finished()
 signal table_data_imported()
-signal main_inited()
+signal state_manager_inited()
 signal system_tree_built_or_loaded(is_new_game)
 signal system_tree_ready(is_new_game)
 signal about_to_start_simulator(is_new_game)
@@ -46,6 +47,7 @@ signal gui_entered_tree(control) # depreciate?
 signal gui_ready(control) # depreciate?
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
+signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # sim state control
 signal sim_stop_required(who) # see StateManager for external thread coordination
@@ -68,28 +70,29 @@ signal credits_requested()
 signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
+signal close_all_admin_popups_requested() # main menu, options, etc.
 signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object indicated; safe to keep container reference
-var state := {} # StateManager; keys include is_inited, is_running, etc.
-var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
-var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
-var program := {} # program nodes & refs populated by ProjectBuilder
-var script_classes := {} # classes defined in ProjectBuilder dictionaries
-var assets := {} # populated by this node project_init()
-var settings := {} # SettingsManager
-var table_rows := {} # TableImporter; row ints for ALL row keys
-var table_row_dicts := {} # TableImporter; a row dict for each table
-var wiki_titles := {} # TableImporter; Wiki url identifiers by item key
-var themes := {} # ThemeManager
-var fonts := {} # FontManager
-var bodies := [] # Registrar; indexed by body_id
-var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, 50.0, null] # Camera; [Camera, fov, global_translation]
-var project := {} # available for extension "project"
-var addon := {} # available for extension "addons"
+const state := {} # StateManager; keys include is_inited, is_running, etc.
+const times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
+const date := [] # Timekeeper; Gregorian [year, month, day] (ints)
+const clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
+const program := {} # program nodes & refs populated by ProjectBuilder
+const script_classes := {} # classes defined in ProjectBuilder dictionaries
+const assets := {} # populated by this node project_init()
+const settings := {} # SettingsManager
+const table_rows := {} # TableImporter; row ints for ALL row keys
+const table_row_dicts := {} # TableImporter; a row dict for each table
+const wiki_titles := {} # TableImporter; Wiki url identifiers by item key
+const themes := {} # ThemeManager
+const fonts := {} # FontManager
+const bodies := [] # Registrar; indexed by body_id
+const bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
+const camera_info := [null, 50.0, null] # Camera; [Camera, fov, global_translation]
+const project := {} # available for extension "project"
+const addon := {} # available for extension "addons"
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := "I, Voyager"
@@ -123,7 +126,7 @@ var unit_functions := UnitDefs.FUNCTIONS
 var is_electron_app := false
 var cache_dir := "user://cache"
 
-var colors := { # user settable colors in program_refs/settings_manager.gd
+const colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
 	good = Color.green,
 	warning = Color.yellow,
@@ -140,7 +143,7 @@ var shared_resources := {
 }
 
 # Data table import
-var table_import := {
+const table_import := {
 	stars = "res://ivoyager/data/solar_system/stars.csv",
 	planets = "res://ivoyager/data/solar_system/planets.csv",
 	moons = "res://ivoyager/data/solar_system/moons.csv",
@@ -150,7 +153,7 @@ var table_import := {
 	models = "res://ivoyager/data/solar_system/models.csv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.csv",
 }
-var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
+const table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing
@@ -161,23 +164,23 @@ var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 
-var models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
-var maps_search := ["res://ivoyager_assets/maps"]
-var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
-var rings_search := ["res://ivoyager_assets/rings"]
+const models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
+const maps_search := ["res://ivoyager_assets/maps"]
+const bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
+const rings_search := ["res://ivoyager_assets/rings"]
 
-var asset_paths := {
+const asset_paths := {
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
-var asset_paths_for_load := { # loaded into "assets" dict at project init
+const asset_paths_for_load := { # loaded into "assets" dict at project init
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 }
-var translations := [ # added here so extensions can modify
+const translations := [ # added here so extensions can modify
 	"res://ivoyager/data/text/entities_text.en.translation",
 	"res://ivoyager/data/text/gui_text.en.translation",
 	"res://ivoyager/data/text/long_text.en.translation",

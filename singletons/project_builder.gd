@@ -107,6 +107,7 @@ var program_references := {
 	_MouseClickSelector_ = MouseClickSelector,
 	_QtyStrings_ = QtyStrings,
 	_TableReader_ = TableReader,
+	_MainMenuManager_ = MainMenuManager,
 }
 
 var program_nodes := {
@@ -124,15 +125,14 @@ var program_nodes := {
 
 var gui_controls := {
 	# ProjectBuilder instances one of each and adds as child to Universe. Use
-	# PERSIST_AS_PROCEDURAL_OBJECT = false if save/load persisted. Last in list
-	# is "on top" for viewing and 1st for input processing. Since you can't
-	# "insert" into dictionary, to change order you will need to either rebuild
-	# this dictionary on init or reorder children of Universe after project
-	# start.
-	_HUD2dSurface_ = HUD2dSurface, # Control ok
-	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control
-	_SplashScreen_ = PBDSplashScreen, # Control ok; safe to remove
-	_MainMenu_ = MainMenu, # safe to remove
+	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
+	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
+	# processing. To reorder, either: 1) clear and rebuild this dictionary on
+	# project init, or 2) reorder children of Universe after project build.
+	_HUD2dSurface_ = HUD2dSurface, # Control ok; TODO: Rename to ProjectionSurface
+	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control!
+	_SplashScreen_ = PBDSplashScreen, # Control ok
+	_MainMenuPopup_ = MainMenuPopup, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove
 	_SaveDialog_ = SaveDialog, # safe to remove
 	_OptionsPopup_ = OptionsPopup, # safe to remove

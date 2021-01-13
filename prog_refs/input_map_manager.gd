@@ -293,7 +293,8 @@ func _on_init() -> void:
 		quit = [{event_class = "InputEventKey", scancode = KEY_Q, control = true}],
 		save_quit = [{event_class = "InputEventKey", scancode = KEY_Q, alt = true}],
 		
-		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
+		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_L, control = true, shift = true}],
+		emit_debug_signal = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
 	}
 
 	current = {}

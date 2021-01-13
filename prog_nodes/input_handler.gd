@@ -76,23 +76,23 @@ func _on_about_to_free_procedural_nodes() -> void:
 
 func _input(event: InputEvent) -> void:
 	_on_input(event)
-	
+
 func _on_input(event: InputEvent) -> void:
-	if _suppressors:
-		return
 	if !event.is_action_type() or !event.is_pressed():
+		return
+	if _allow_dev_tools and _test_input_for_debug(event):
+		return
+	if _suppressors:
 		return
 	if _state.is_splash_screen and _state.is_inited:
 		_input_for_splash_screen(event)
 		return
 	if !_state.is_running:
-		return # MainMenu or some other admin GUI has input control
+		return # main menu or some other admin GUI has input control
 	# Order matters! E.g., cntr-S must be captured before S. This could be
 	# troublesome for player modified hotkeys. One way to solve is to match
 	# event.get_scancode_with_modifiers().
-	if _allow_dev_tools and event.is_action_pressed("write_debug_logs_now"):
-		Debug.force_logging()
-	elif event.is_action_pressed("toggle_options"):
+	if event.is_action_pressed("toggle_options"):
 		Global.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
 		Global.emit_signal("hotkeys_requested")
@@ -132,6 +132,16 @@ func _on_input(event: InputEvent) -> void:
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
+
+func _test_input_for_debug(event: InputEvent) -> bool:
+	if event.is_action_pressed("write_debug_logs_now"):
+		Debug.force_logging()
+	elif _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
+		Global.emit_signal("debug_pressed")
+	else:
+		return false # input NOT handled!
+	_tree.set_input_as_handled()
+	return true
 
 func _input_for_selection_manager(event: InputEvent) -> void:
 	if event.is_action_pressed("select_forward"):

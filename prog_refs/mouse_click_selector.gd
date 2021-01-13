@@ -17,6 +17,9 @@
 # *****************************************************************************
 # This is a work-around for not using ray casting and collision bodies. Only
 # bodies with visible == true (and their children) need to be tested.
+#
+# TODO: Consider using the HUD2dSurface for mouse clicks. That way we could
+# have mouse-over cursur effects.
 
 extends Reference
 class_name MouseClickSelector
