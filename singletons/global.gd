@@ -90,7 +90,7 @@ const themes := {} # ThemeManager
 const fonts := {} # FontManager
 const bodies := [] # Registrar; indexed by body_id
 const bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-const camera_info := [null, 50.0, null] # Camera; [Camera, fov, global_translation]
+const camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
 const project := {} # available for extension "project"
 const addon := {} # available for extension "addons"
 

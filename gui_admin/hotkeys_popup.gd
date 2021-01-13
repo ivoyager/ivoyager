@@ -124,9 +124,8 @@ func _on_init():
 
 func project_init() -> void:
 	.project_init()
-	var main_menu_manager: MainMenuManager = Global.program.get("MainMenuManager")
-	if main_menu_manager:
-		main_menu_manager.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
+	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+	main_menu_manager.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
 	if Global.disable_pause:
 		remove_item("toggle_pause")

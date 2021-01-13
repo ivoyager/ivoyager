@@ -23,24 +23,21 @@ const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 # project var
-var add_quick_save_button := false
+var add_quick_save_button := true
 
 var _settings: Dictionary = Global.settings
-var _settings_manager: SettingsManager
-var _timekeeper: Timekeeper
+onready var _settings_manager: SettingsManager = Global.program.SettingsManager
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 var _state_manager: StateManager
 
 func project_init() -> void:
 	if !Global.enable_save_load:
 		return
-	_settings_manager = Global.program.SettingsManager
-	_timekeeper = Global.program.Timekeeper
 	_state_manager = Global.program.StateManager
-	var main_menu_manager: MainMenuManager = Global.program.get("MainMenuManager")
-	if main_menu_manager:
-		main_menu_manager.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
-		if add_quick_save_button:
-			main_menu_manager.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
+	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+	main_menu_manager.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
+	if add_quick_save_button:
+		main_menu_manager.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
 	Global.connect("close_all_admin_popups_requested", self, "hide")
