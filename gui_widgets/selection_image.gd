@@ -20,6 +20,7 @@
 extends TextureRect
 
 var _selection_manager: SelectionManager
+var _hint_extension := "\n\n" + tr("HINT_SELECTION_IMAGE")
 
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
@@ -30,6 +31,7 @@ func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_on_selection_changed()
 
 func _on_selection_changed() -> void:
+	hint_tooltip = tr(_selection_manager.get_name()) + _hint_extension
 	var texture_2d := _selection_manager.get_texture_2d()
 	if texture_2d:
 		texture = texture_2d

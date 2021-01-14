@@ -11,6 +11,7 @@ script = ExtResource( 1 )
 [node name="Minus" type="Button" parent="."]
 margin_right = 17.0
 margin_bottom = 20.0
+hint_tooltip = "HINT_DECREASE_FOCAL_LENGTH"
 shortcut_in_tooltip = false
 action_mode = 0
 text = "-"
@@ -19,6 +20,7 @@ text = "-"
 margin_left = 21.0
 margin_right = 41.0
 margin_bottom = 20.0
+hint_tooltip = "HINT_INCREASE_FOCAL_LENGTH"
 shortcut_in_tooltip = false
 action_mode = 0
 text = "+"

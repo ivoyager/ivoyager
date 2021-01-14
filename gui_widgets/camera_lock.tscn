@@ -7,6 +7,7 @@ margin_left = 7.0
 margin_top = 7.0
 margin_right = 100.0
 margin_bottom = 27.0
+hint_tooltip = "HINT_CAMERA_LOCK"
 size_flags_horizontal = 0
 size_flags_vertical = 0
 toggle_mode = true

@@ -183,6 +183,7 @@ const asset_paths_for_load := { # loaded into "assets" dict at project init
 const translations := [ # added here so extensions can modify
 	"res://ivoyager/data/text/entities_text.en.translation",
 	"res://ivoyager/data/text/gui_text.en.translation",
+	"res://ivoyager/data/text/hints_text.en.translation",
 	"res://ivoyager/data/text/long_text.en.translation",
 ]
 

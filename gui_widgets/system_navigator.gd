@@ -192,6 +192,7 @@ class NavButton extends Button:
 		_selection_item = selection_item
 		_selection_manager = selection_manager
 		toggle_mode = true
+		hint_tooltip = selection_item.name
 		set("custom_fonts/font", Global.fonts.two_pt) # hack to allow smaller button height
 		rect_min_size = Vector2(image_size, image_size)
 		flat = true

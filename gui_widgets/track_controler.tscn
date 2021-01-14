@@ -20,6 +20,7 @@ text = "LABEL_TRACK_COLON"
 margin_left = 142.0
 margin_right = 289.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TRACK_GROUND"
 action_mode = 0
 text = "BUTTON_GROUND"
 
@@ -27,5 +28,6 @@ text = "BUTTON_GROUND"
 margin_left = 293.0
 margin_right = 421.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TRACK_ORBIT"
 action_mode = 0
 text = "BUTTON_ORBIT"
