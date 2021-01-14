@@ -17,11 +17,10 @@
 # *****************************************************************************
 # Add to Container (e.g., a GUI PanelContainer) for draggablity and window
 # resizing margins. This should be the last child so margin controls are on
-# top.
+# top. This component replaces WinMgrSimple (having both may crash). Modify
+# default sizes and snap values from _ready() in the parent Container.
 #
-# Modify default sizes and snap values from _ready() in the parent Container.
-#
-# This component replaces WinMgrSimple. (Having both might crash.)
+# This widget is used in the Planetarium.
 
 extends Control
 

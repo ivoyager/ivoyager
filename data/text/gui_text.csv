@@ -49,6 +49,7 @@ GAME_SPEED_WEEK_PER_SECOND,week/s
 GUI_LARGE,Large
 GUI_MEDIUM,Medium
 GUI_SMALL,Small
+HINT_VIS_ON_MO_CKBX,Uncheck for visibility\non mouse-over only
 LABEL_45_VIEW,45\u00B0 view
 LABEL_ADMIN,Admin
 LABEL_ALBEDO,Albedo

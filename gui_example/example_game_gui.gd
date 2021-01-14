@@ -47,6 +47,17 @@ func project_init() -> void:
 	Global.connect("simulator_exited", self, "_on_simulator_exited")
 	hide()
 
+func _ready():
+	pass
+	# Example code below assigns a transparent style to all panels
+#	var style_box := StyleBoxFlat.new()
+#	style_box.bg_color = Color(1.0, 1.0, 1.0, 0.0)
+#	for child in get_children():
+#		var panel_container := child as PanelContainer
+#		if !panel_container:
+#			continue
+#		panel_container.set("custom_styles/panel", style_box)
+
 func _on_project_builder_finished() -> void:
 	# We hook up to a theme managed by ThemeManager so that fonts can resize if
 	# user changes GUI size in options

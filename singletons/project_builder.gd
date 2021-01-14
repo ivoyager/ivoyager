@@ -40,6 +40,9 @@
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
 #    be accessed after instantiation in the "program" dictionary.
+#
+# See comments in ivoyager/gui_example/example_game_gui.gd for project GUI
+# construction and how to use I, Voyager GUI widgets.
 
 extends Node
 
