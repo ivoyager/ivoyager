@@ -21,7 +21,9 @@
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
 # To find properites, we search first in SelectionItem, then Body, then
 # Properties, then ModelGeometry.
-
+#
+# For most applicatios, you'll want to put this in a ScrollContainer.
+#
 # TODO: Mouse-over array.
 
 extends GridContainer

@@ -4,12 +4,11 @@
 
 [node name="SelectionWiki" type="RichTextLabel"]
 margin_top = 275.0
-margin_right = 352.0
+margin_right = 100.0
 margin_bottom = 305.0
-rect_min_size = Vector2( 100, 30 )
 bbcode_enabled = true
 bbcode_text = "[url]Wikipedia[/url]"
-text = "Wikipedia"
+fit_content_height = true
 scroll_active = false
 script = ExtResource( 1 )
 __meta__ = {

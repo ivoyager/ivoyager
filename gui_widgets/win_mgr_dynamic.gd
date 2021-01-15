@@ -24,16 +24,19 @@
 
 extends Control
 
-enum {MARGIN_TL, MARGIN_T, MARGIN_TR, MARGIN_R, MARGIN_BR, MARGIN_B, MARGIN_BL, MARGIN_L}
+enum {TL, T, TR, R, BR, B, BL, L}
 
 # project vars
 var screen_edge_snap := 100.0
 var panel_edge_snap := 40.0
 var default_sizes := [
+	# Use rounded floats. Values applied at runtime may be reduced by
+	# max_default_screen_proportions, below.
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
+var max_default_screen_proportions := Vector2(0.33, 0.33)
 
 # private
 var _settings: Dictionary = Global.settings
@@ -43,19 +46,26 @@ var _margin_drag_x := 0.0
 var _margin_drag_y := 0.0
 var _drag_point := Vector2.ZERO
 var _custom_size := Vector2.ZERO
+var _default_size: Vector2
 
 func _ready():
-	Global.connect("gui_refresh_requested", self, "_resize")
+	Global.connect("gui_refresh_requested", self, "_on_gui_refresh_requested")
 	Global.connect("setting_changed", self, "_settings_listener")
+	_viewport.connect("size_changed", self, "_resize_to_default")
 	_parent.connect("gui_input", self, "_on_parent_input")
-	$TL.connect("gui_input", self, "_on_margin_input", [MARGIN_TL])
-	$T.connect("gui_input", self, "_on_margin_input", [MARGIN_T])
-	$TR.connect("gui_input", self, "_on_margin_input", [MARGIN_TR])
-	$R.connect("gui_input", self, "_on_margin_input", [MARGIN_R])
-	$BR.connect("gui_input", self, "_on_margin_input", [MARGIN_BR])
-	$B.connect("gui_input", self, "_on_margin_input", [MARGIN_B])
-	$BL.connect("gui_input", self, "_on_margin_input", [MARGIN_BL])
-	$L.connect("gui_input", self, "_on_margin_input", [MARGIN_L])
+	$TL.connect("gui_input", self, "_on_margin_input", [TL])
+	$T.connect("gui_input", self, "_on_margin_input", [T])
+	$TR.connect("gui_input", self, "_on_margin_input", [TR])
+	$R.connect("gui_input", self, "_on_margin_input", [R])
+	$BR.connect("gui_input", self, "_on_margin_input", [BR])
+	$B.connect("gui_input", self, "_on_margin_input", [B])
+	$BL.connect("gui_input", self, "_on_margin_input", [BL])
+	$L.connect("gui_input", self, "_on_margin_input", [L])
+
+func _on_gui_refresh_requested() -> void:
+	yield(get_tree(), "idle_frame")
+	_resize_to_default()
+	_finish_move()
 
 func _finish_move() -> void:
 	_drag_point = Vector2.ZERO
@@ -153,17 +163,30 @@ func _reposition_to_anchors() -> void:
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
-func _resize() -> void:
+func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
-	_parent.rect_min_size = default_sizes[gui_size]
+	var default_size: Vector2 = default_sizes[gui_size]
+	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
+	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
+	if default_size.x > max_x:
+		default_size.x = max_x
+	if default_size.y > max_y:
+		default_size.y = max_y
+	return default_size
+
+func _resize_to_default() -> void:
+	var default_size := _get_default_size()
+	if _default_size == default_size:
+		return
+	_default_size = default_size
+	_parent.rect_min_size = default_size
 	_parent.rect_size = _custom_size # only matters if custom > default in x or y
 	_reposition_to_anchors()
 
 func _update_for_user_resize() -> void:
 	# If user resized to minimum (= settings default) in either dimension, we
 	# assume that they want the panel to resize again with settings changes.
-	var gui_size: int = _settings.gui_size
-	var default_size: Vector2 = default_sizes[gui_size]
+	var default_size := _get_default_size()
 	_custom_size = _parent.rect_size
 	if _custom_size.x == default_size.x:
 		_custom_size.x = 0.0
@@ -173,7 +196,7 @@ func _update_for_user_resize() -> void:
 func _settings_listener(setting: String, _value) -> void:
 	match setting:
 		"gui_size":
-			_resize()
+			_resize_to_default()
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -194,14 +217,14 @@ func _on_margin_input(event: InputEvent, location: int) -> void:
 			var mouse_pos := get_global_mouse_position()
 			if event.pressed:
 				match location:
-					MARGIN_TL, MARGIN_T, MARGIN_TR:
+					TL, T, TR:
 						_margin_drag_y = mouse_pos.y - _parent.margin_top
-					MARGIN_BL, MARGIN_B, MARGIN_BR:
+					BL, B, BR:
 						_margin_drag_y = mouse_pos.y - _parent.margin_bottom
 				match location:
-					MARGIN_TL, MARGIN_L, MARGIN_BL:
+					TL, L, BL:
 						_margin_drag_x = mouse_pos.x - _parent.margin_left
-					MARGIN_TR, MARGIN_R, MARGIN_BR:
+					TR, R, BR:
 						_margin_drag_x = mouse_pos.x - _parent.margin_right
 			else:
 				_margin_drag_x = 0.0
@@ -212,12 +235,12 @@ func _on_margin_input(event: InputEvent, location: int) -> void:
 		accept_event()
 		var mouse_pos := get_global_mouse_position()
 		match location:
-			MARGIN_TL, MARGIN_T, MARGIN_TR:
+			TL, T, TR:
 				_parent.margin_top = mouse_pos.y - _margin_drag_y
-			MARGIN_BL, MARGIN_B, MARGIN_BR:
+			BL, B, BR:
 				_parent.margin_bottom = mouse_pos.y - _margin_drag_y
 		match location:
-			MARGIN_TL, MARGIN_L, MARGIN_BL:
+			TL, L, BL:
 				_parent.margin_left = mouse_pos.x - _margin_drag_x
-			MARGIN_TR, MARGIN_R, MARGIN_BR:
+			TR, R, BR:
 				_parent.margin_right = mouse_pos.x - _margin_drag_x

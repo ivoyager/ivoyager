@@ -1,13 +1,14 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://ivoyager/gui_example/navigation_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/system_navigator.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/asteroid_group_buttons.tscn" type="PackedScene" id=3]
-[ext_resource path="res://ivoyager/gui_widgets/time_control.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/speed_label.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/camera_lock.tscn" type="PackedScene" id=5]
-[ext_resource path="res://ivoyager/gui_widgets/date_time.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/date_time_label.tscn" type="PackedScene" id=6]
 [ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn" type="PackedScene" id=7]
 [ext_resource path="res://ivoyager/gui_widgets/win_mgr_simple.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ivoyager/gui_widgets/speed_buttons.tscn" type="PackedScene" id=9]
 
 [node name="NavigationPanel" type="PanelContainer"]
 anchor_left = 1.0
@@ -26,54 +27,67 @@ __meta__ = {
 [node name="SystemNavigator" parent="." instance=ExtResource( 2 )]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 617.0
+margin_right = 581.0
 margin_bottom = 75.0
 
 [node name="TopHBox" type="HBoxContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 617.0
+margin_right = 581.0
 margin_bottom = 27.0
 size_flags_vertical = 0
 
-[node name="Control" type="Control" parent="TopHBox"]
-margin_right = 234.0
-margin_bottom = 20.0
-size_flags_horizontal = 3
-
-[node name="CameraLock" parent="TopHBox/Control" instance=ExtResource( 5 )]
+[node name="CameraLock" parent="TopHBox" instance=ExtResource( 5 )]
 margin_left = 0.0
 margin_top = 0.0
-margin_right = 97.0
+margin_right = 93.0
 margin_bottom = 20.0
 align = 0
 
-[node name="DateTime" parent="TopHBox" instance=ExtResource( 6 )]
-margin_left = 238.0
-margin_right = 372.0
-align = 1
-
-[node name="TimeControl" parent="TopHBox" instance=ExtResource( 4 )]
-margin_left = 376.0
-margin_top = 0.0
-margin_right = 610.0
+[node name="Spacer1" type="Control" parent="TopHBox"]
+margin_left = 97.0
+margin_right = 200.0
 margin_bottom = 20.0
+mouse_filter = 2
 size_flags_horizontal = 3
-alignment = 2
+
+[node name="DateTimeLabel" parent="TopHBox" instance=ExtResource( 6 )]
+margin_left = 204.0
+margin_top = 3.0
+margin_right = 338.0
+margin_bottom = 17.0
+
+[node name="Spacer2" type="Control" parent="TopHBox"]
+margin_left = 342.0
+margin_right = 446.0
+margin_bottom = 20.0
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="SpeedLabel" parent="TopHBox" instance=ExtResource( 4 )]
+margin_left = 450.0
+margin_top = 3.0
+margin_right = 475.0
+margin_bottom = 17.0
+
+[node name="SpeedButtons" parent="TopHBox" instance=ExtResource( 9 )]
+margin_left = 479.0
+margin_right = 574.0
+margin_bottom = 20.0
 
 [node name="BottomVBox" type="VBoxContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 617.0
+margin_right = 581.0
 margin_bottom = 75.0
 size_flags_vertical = 8
 
 [node name="AsteroidGroupButtons" parent="BottomVBox" instance=ExtResource( 3 )]
-margin_right = 610.0
+margin_right = 574.0
 
 [node name="HBox" type="HBoxContainer" parent="BottomVBox"]
 margin_top = 44.0
-margin_right = 610.0
+margin_right = 574.0
 margin_bottom = 68.0
 alignment = 2
 
@@ -84,23 +98,23 @@ size_flags_stretch_ratio = 3.0
 
 [node name="MouseOnlyGUINav" parent="BottomVBox/HBox" instance=ExtResource( 7 )]
 margin_left = 4.0
-margin_right = 316.0
+margin_right = 280.0
 
 [node name="Spacer2" type="Control" parent="BottomVBox/HBox"]
-margin_left = 320.0
-margin_right = 320.0
+margin_left = 284.0
+margin_right = 284.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="Hotkeys" type="Button" parent="BottomVBox/HBox"]
-margin_left = 324.0
-margin_right = 453.0
+margin_left = 288.0
+margin_right = 417.0
 margin_bottom = 24.0
 text = "BUTTON_HOTKEYS"
 
 [node name="MainMenu" type="Button" parent="BottomVBox/HBox"]
-margin_left = 457.0
-margin_right = 610.0
+margin_left = 421.0
+margin_right = 574.0
 margin_bottom = 24.0
 text = "BUTTON_MAIN_MENU"
 

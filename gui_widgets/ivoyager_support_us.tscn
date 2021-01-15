@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/ivoyager_support_us.gd" type="Script" id=1]
+
+[node name="IVoyagerSupportUs" type="RichTextLabel"]
+margin_top = 4.0
+margin_right = 84.0
+margin_bottom = 19.0
+bbcode_enabled = true
+bbcode_text = "[url]Support Us![/url]"
+text = "Support Us!"
+fit_content_height = true
+scroll_active = false
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

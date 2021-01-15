@@ -5,6 +5,7 @@
 [node name="SystemNavigator" type="HBoxContainer"]
 margin_right = 560.0
 margin_bottom = 340.0
+mouse_filter = 2
 custom_constants/separation = 0
 script = ExtResource( 1 )
 __meta__ = {

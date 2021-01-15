@@ -140,6 +140,7 @@ func _build(_is_new_game: bool) -> void:
 		var spacer := Control.new()
 		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0 + over_planet_spacer)
 		spacer.rect_min_size.y = spacer_height
+		spacer.mouse_filter = MOUSE_FILTER_IGNORE
 		_resize_control_multipliers[spacer] = Vector2(0.0, spacer_height / INIT_WIDTH)
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column], false)

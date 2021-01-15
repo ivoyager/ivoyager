@@ -6,7 +6,7 @@
 margin_right = 24.0
 margin_bottom = 24.0
 hint_tooltip = "HINT_MOUSE_ONLY_GUI_NAV"
-text = "CHECKBOX_MOUSE_ONLY_GUI_NAVIGATION"
+text = "CKBX_MOUSE_ONLY_GUI_NAVIGATION"
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false

@@ -4,9 +4,15 @@
 
 [node name="FocalLengthButtons" type="HBoxContainer"]
 margin_top = 18.0
-margin_right = 50.0
+margin_right = 41.0
 margin_bottom = 38.0
+mouse_filter = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Minus" type="Button" parent="."]
 margin_right = 17.0
