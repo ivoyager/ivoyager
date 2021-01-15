@@ -32,6 +32,7 @@ enum {
 	}
 
 # project vars - modify on project_objects_instantiated signal
+var stop_sim := true
 var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 var scroll_size := Vector2(950, 630)
 var autowrap_reduction := 15
@@ -76,7 +77,8 @@ func _on_ready() -> void:
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_state_manager.require_stop(self)
+	if stop_sim:
+		_state_manager.require_stop(self)
 	if !_build_content():
 		_state_manager.allow_run(self)
 		return
@@ -90,7 +92,8 @@ func _on_popup_hide() -> void:
 	_text = ""
 	for child in _content.get_children():
 		child.queue_free()
-	_state_manager.allow_run(self)
+	if stop_sim:
+		_state_manager.allow_run(self)
 
 func _build_content() -> bool:
 	var file := File.new()

@@ -24,6 +24,7 @@ class_name MainMenuPopup
 const SCENE := "res://ivoyager/gui_admin/main_menu_popup.tscn"
 
 var center := false # set for centered; otherwise, set $MainMenu margins
+var stop_sim := true
 
 var _state: Dictionary = Global.state
 onready var _state_manager: StateManager = Global.program.StateManager
@@ -44,11 +45,13 @@ func _ready() -> void:
 		$MainMenu.grow_vertical = GROW_DIRECTION_BOTH
 
 func _open() -> void:
-	_state_manager.require_stop(self)
+	if stop_sim:
+		_state_manager.require_stop(self)
 	popup()
 
 func _on_popup_hide() -> void:
-	_state_manager.allow_run(self)
+	if stop_sim:
+		_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	if !_state.is_system_built:
