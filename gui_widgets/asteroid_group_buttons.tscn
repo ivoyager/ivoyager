@@ -27,14 +27,8 @@ size_flags_stretch_ratio = 80.0
 toggle_mode = true
 
 [node name="AllAsteroids" type="Label" parent="AllAsteroids"]
-anchor_left = 0.5
-anchor_top = 0.3
-anchor_right = 0.5
-anchor_bottom = 0.3
-margin_left = -31.0
-margin_top = -7.2
-margin_right = 30.0
-margin_bottom = 23.8
+anchor_right = 1.0
+anchor_bottom = 1.0
 custom_constants/line_spacing = -1
 text = "All
 Asteroids"
@@ -61,14 +55,8 @@ size_flags_stretch_ratio = 50.0
 toggle_mode = true
 
 [node name="NearEarth" type="Label" parent="NearEarth"]
-anchor_left = 0.5
-anchor_top = 0.3
-anchor_right = 0.5
-anchor_bottom = 0.3
-margin_left = -20.0
-margin_top = -7.2
-margin_right = 20.0
-margin_bottom = 23.8
+anchor_right = 1.0
+anchor_bottom = 1.0
 custom_constants/line_spacing = -1
 text = "Near
 Earth"
@@ -95,14 +83,8 @@ size_flags_stretch_ratio = 40.0
 toggle_mode = true
 
 [node name="MarsCros" type="Label" parent="MarsCros"]
-anchor_left = 0.5
-anchor_top = 0.3
-anchor_right = 0.5
-anchor_bottom = 0.3
-margin_left = -20.0
-margin_top = -6.7
-margin_right = 20.0
-margin_bottom = 24.3
+anchor_right = 1.0
+anchor_bottom = 1.0
 custom_constants/line_spacing = -1
 text = "Mars
 Cros."
@@ -129,15 +111,8 @@ size_flags_stretch_ratio = 40.0
 toggle_mode = true
 
 [node name="MainBelt" type="Label" parent="MainBelt"]
-anchor_left = 0.5
-anchor_top = 0.3
-anchor_right = 0.5
-anchor_bottom = 0.3
-margin_left = -20.0
-margin_top = -6.7
-margin_right = 20.0
-margin_bottom = 24.3
-size_flags_horizontal = 4
+anchor_right = 1.0
+anchor_bottom = 1.0
 custom_constants/line_spacing = -1
 text = "Main
 Belt"
@@ -213,14 +188,8 @@ size_flags_stretch_ratio = 80.0
 toggle_mode = true
 
 [node name="TransNeptune" type="Label" parent="TransNeptune"]
-anchor_left = 0.5
-anchor_top = 0.3
-anchor_right = 0.5
-anchor_bottom = 0.3
-margin_left = -27.5
-margin_top = -6.7
-margin_right = 27.5
-margin_bottom = 24.3
+anchor_right = 1.0
+anchor_bottom = 1.0
 custom_constants/line_spacing = -1
 text = "Trans-
 Neptune"
