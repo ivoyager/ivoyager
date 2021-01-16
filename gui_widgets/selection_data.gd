@@ -1,7 +1,7 @@
 # selection_buttons.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@
 # -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
 # To find properites, we search first in SelectionItem, then Body, then
 # Properties, then ModelGeometry.
-
+#
+# For most applicatios, you'll want to put this in a ScrollContainer.
+#
 # TODO: Mouse-over array.
 
 extends GridContainer
@@ -75,7 +77,7 @@ var _values := []
 var _meta_lookup := {}
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("setting_changed", self, "_settings_listener")
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:

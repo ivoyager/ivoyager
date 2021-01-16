@@ -1,7 +1,7 @@
 # state_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains high-level simulator state. Non-main threads should coordinate with
-# signals and functions here (for safety when saving, exiting, quiting etc.). 
+# Maintains high-level simulator state and publishes Global.state values:
+#   is_inited: bool
+#   is_running: bool
+#   is_splash_screen: bool
+#   is_system_built: bool
+#   is_loaded_game: bool
+#   last_save_path: String
+#
+# Non-main threads should coordinate with signals and functions here for
+# thread-safety when saving, exiting, quiting etc. 
 
 extends Node
 class_name StateManager
@@ -54,7 +62,7 @@ var _active_threads := []
 
 func project_init() -> void:
 	connect("ready", self, "_on_ready")
-	Global.connect("project_builder_finished", self, "_import_table_data", [], CONNECT_ONESHOT)
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
 	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
@@ -121,16 +129,17 @@ func exit(exit_now: bool) -> void:
 		OneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
 		return
 	require_stop(self)
+	_state.is_system_built = false
+	_state.is_running = false
+	_state.is_loaded_game = false
+	_state.last_save_path = ""
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
+	Global.emit_signal("close_all_admin_popups_requested")
 	_state.is_splash_screen = true
-	_state.is_system_built = false
-	_state.is_running = false
-	_state.is_loaded_game = false
-	_state.last_save_path = ""
 	_was_paused = false
 	Global.emit_signal("simulator_exited")
 
@@ -251,8 +260,11 @@ func _on_init() -> void:
 func _on_ready() -> void:
 	require_stop(self)
 
-func _import_table_data() -> void:
+func _on_project_builder_finished() -> void:
 	yield(_tree, "idle_frame")
+	_import_table_data()
+
+func _import_table_data() -> void:
 	var table_importer: TableImporter = Global.program.TableImporter
 	table_importer.import_table_data()
 	Global.program.erase("TableImporter")
@@ -263,7 +275,7 @@ func _finish_init() -> void:
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
 	print("StateManager inited...")
-	Global.emit_signal("main_inited")
+	Global.emit_signal("state_manager_inited")
 	if Global.skip_splash_screen:
 		build_system_tree()
 

@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/speed_buttons.gd" type="Script" id=1]
+
+[node name="SpeedButtons" type="HBoxContainer"]
+margin_right = 40.0
+margin_bottom = 40.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Minus" type="Button" parent="."]
+margin_right = 17.0
+margin_bottom = 40.0
+text = "-"
+
+[node name="Plus" type="Button" parent="."]
+margin_left = 21.0
+margin_right = 41.0
+margin_bottom = 40.0
+text = "+"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Pause" type="Button" parent="."]
+margin_left = 45.0
+margin_right = 71.0
+margin_bottom = 40.0
+toggle_mode = true
+text = "||"
+
+[node name="Reverse" type="Button" parent="."]
+margin_left = 75.0
+margin_right = 95.0
+margin_bottom = 40.0
+toggle_mode = true
+text = "<"

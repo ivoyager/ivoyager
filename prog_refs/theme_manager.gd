@@ -1,7 +1,7 @@
 # theme_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,13 +30,9 @@ var _themes: Dictionary = Global.themes
 var _fonts: Dictionary = Global.fonts
 
 func project_init() -> void:
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
-			[], CONNECT_ONESHOT)
 	_themes.main = Theme.new()
 	_themes.main_menu = Theme.new()
 	_themes.splash_screen = Theme.new()
-
-func _on_project_builder_finished() -> void:
 	_themes.main.default_font = _fonts[global_font]
 	_themes.main_menu.default_font = _fonts[main_menu_font]
 	_themes.splash_screen.default_font = _fonts[splash_screen_font]

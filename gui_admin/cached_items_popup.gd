@@ -1,7 +1,7 @@
 # cashed_items_popup.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ extends PopupPanel
 class_name CachedItemsPopup
 const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 
+var stop_sim := true
 var layout: Array # subclass sets in _init()
 
 var _state_manager: StateManager
@@ -109,6 +110,7 @@ func project_init() -> void:
 	_state_manager = Global.program.StateManager
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 
 func _on_ready() -> void:
 	theme = Global.themes.main
@@ -126,7 +128,8 @@ func _on_ready() -> void:
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_state_manager.require_stop(self)
+	if stop_sim:
+		_state_manager.require_stop(self)
 	_build_content()
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
@@ -182,7 +185,8 @@ func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)
 	for child in _content_container.get_children():
 		child.free()
-	_state_manager.allow_run(self)
+	if stop_sim:
+		_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

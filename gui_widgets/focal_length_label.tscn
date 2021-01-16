@@ -5,5 +5,9 @@
 [node name="FocalLengthLabel" type="Label"]
 margin_right = 50.0
 margin_bottom = 14.0
+size_flags_horizontal = 4
 text = "00 mm"
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

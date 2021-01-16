@@ -1,7 +1,7 @@
 # credits_popup.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ enum {
 	}
 
 # project vars - modify on project_objects_instantiated signal
+var stop_sim := true
 var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 var scroll_size := Vector2(950, 630)
 var autowrap_reduction := 15
@@ -60,10 +61,10 @@ func project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("credits_requested", self, "_open")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	_state_manager = Global.program.StateManager
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_CREDITS", 400, true, false, self, "_open")
+	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+	main_menu_manager.make_button("BUTTON_CREDITS", 400, true, true, self, "_open")
 
 func _on_ready() -> void:
 	theme = Global.themes.main
@@ -76,7 +77,8 @@ func _on_ready() -> void:
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_state_manager.require_stop(self)
+	if stop_sim:
+		_state_manager.require_stop(self)
 	if !_build_content():
 		_state_manager.allow_run(self)
 		return
@@ -90,7 +92,8 @@ func _on_popup_hide() -> void:
 	_text = ""
 	for child in _content.get_children():
 		child.queue_free()
-	_state_manager.allow_run(self)
+	if stop_sim:
+		_state_manager.allow_run(self)
 
 func _build_content() -> bool:
 	var file := File.new()

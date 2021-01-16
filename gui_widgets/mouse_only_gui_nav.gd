@@ -1,7 +1,7 @@
 # mouse_only_gui_nav.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ func _toggled(button_pressed):
 	if button_pressed != _settings.mouse_only_gui_nav:
 		_settings_manager.change_current("mouse_only_gui_nav", button_pressed)
 		_change_focus_mode_recursive(_project_gui, button_pressed)
-		print("Toggle change:", button_pressed)
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_remember_focus_mode_recursive(_project_gui)

@@ -1,7 +1,7 @@
 # view_buttons.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ func _ready():
 	if Global.state.is_system_built:
 		_on_system_built(false)
 	else:
-		Global.connect("system_tree_built_or_loaded", self, "_on_system_built", [], CONNECT_ONESHOT)
+		Global.connect("system_tree_built_or_loaded", self, "_on_system_built")
 	_connect_camera(get_viewport().get_camera())
 
 func _on_system_built(_is_loaded_game: bool) -> void:

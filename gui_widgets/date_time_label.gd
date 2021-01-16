@@ -1,7 +1,7 @@
-# date_time.gd
+# date_time_label.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ extends Label
 
 var show_pause := true
 var date_format := "%02d/%02d/%02d"
-var clock_hms_format := "  %02d:%02d:%02d"
-var clock_hm_format := "  %02d:%02d"
+var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
+var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
 
 var _date: Array = Global.date
 var _clock: Array = Global.clock

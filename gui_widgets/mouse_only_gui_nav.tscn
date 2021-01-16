@@ -5,7 +5,8 @@
 [node name="MouseOnlyGUINav" type="CheckBox"]
 margin_right = 24.0
 margin_bottom = 24.0
-text = "CHECKBOX_MOUSE_ONLY_GUI_NAVIGATION"
+hint_tooltip = "HINT_MOUSE_ONLY_GUI_NAV"
+text = "CKBX_MOUSE_ONLY_GUI_NAVIGATION"
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false

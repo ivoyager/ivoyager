@@ -1,0 +1,163 @@
+[gd_scene load_steps=14 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/selection_image.tscn" type="PackedScene" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/selection_label.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_example/selection_panel.gd" type="Script" id=3]
+[ext_resource path="res://ivoyager/gui_widgets/selection_buttons.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/range_label.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/track_orbit_ground_ckbxs.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/view_buttons.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ivoyager/gui_widgets/lat_long_label.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ivoyager/gui_widgets/focal_length_buttons.tscn" type="PackedScene" id=9]
+[ext_resource path="res://ivoyager/gui_widgets/focal_length_label.tscn" type="PackedScene" id=10]
+[ext_resource path="res://ivoyager/gui_widgets/orbits_names_symbols_ckbxs.tscn" type="PackedScene" id=11]
+[ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=12]
+[ext_resource path="res://ivoyager/gui_widgets/win_mgr_simple.tscn" type="PackedScene" id=13]
+
+[node name="SelectionPanel" type="PanelContainer"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_top = -354.0
+margin_right = 893.0
+script = ExtResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBox" type="VBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1020.0
+margin_bottom = 347.0
+
+[node name="MainHBox" type="HBoxContainer" parent="VBox"]
+margin_right = 1013.0
+margin_bottom = 304.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/separation = 10
+
+[node name="LeftVBox" type="VBoxContainer" parent="VBox/MainHBox"]
+margin_right = 501.0
+margin_bottom = 304.0
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="VBox/MainHBox/LeftVBox"]
+margin_right = 501.0
+margin_bottom = 20.0
+
+[node name="SelectionButtons" parent="VBox/MainHBox/LeftVBox/HBox" instance=ExtResource( 4 )]
+margin_right = 67.0
+margin_bottom = 20.0
+size_flags_horizontal = 2
+
+[node name="SelectionLabel" parent="VBox/MainHBox/LeftVBox/HBox" instance=ExtResource( 2 )]
+margin_left = 234.0
+margin_top = 3.0
+margin_right = 266.0
+margin_bottom = 17.0
+align = 1
+
+[node name="Spacer" type="Control" parent="VBox/MainHBox/LeftVBox/HBox"]
+margin_left = 270.0
+margin_right = 501.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+
+[node name="HBox2" type="HBoxContainer" parent="VBox/MainHBox/LeftVBox"]
+margin_top = 24.0
+margin_right = 501.0
+margin_bottom = 38.0
+
+[node name="RangeLabel" parent="VBox/MainHBox/LeftVBox/HBox2" instance=ExtResource( 5 )]
+margin_right = 248.0
+size_flags_horizontal = 3
+align = 1
+
+[node name="LatLongLabel" parent="VBox/MainHBox/LeftVBox/HBox2" instance=ExtResource( 8 )]
+margin_left = 252.0
+margin_right = 501.0
+size_flags_horizontal = 3
+text = "0.0 N 0.0 W"
+
+[node name="SelectionImage" parent="VBox/MainHBox/LeftVBox" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 0.0
+margin_top = 42.0
+margin_right = 501.0
+margin_bottom = 304.0
+stretch_mode = 6
+
+[node name="RightVBox" type="VBoxContainer" parent="VBox/MainHBox"]
+margin_left = 511.0
+margin_right = 1013.0
+margin_bottom = 304.0
+size_flags_horizontal = 3
+
+[node name="OrbitsNamesSymbolsCkbxs" parent="VBox/MainHBox/RightVBox" instance=ExtResource( 11 )]
+margin_right = 361.0
+margin_bottom = 24.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox/MainHBox/RightVBox"]
+margin_top = 28.0
+margin_right = 502.0
+margin_bottom = 304.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_horizontal_enabled = false
+
+[node name="SelectionData" parent="VBox/MainHBox/RightVBox/ScrollContainer" instance=ExtResource( 12 )]
+margin_right = 502.0
+
+[node name="VSpacer" type="Control" parent="VBox"]
+margin_top = 308.0
+margin_right = 1013.0
+margin_bottom = 312.0
+rect_min_size = Vector2( 0, 4 )
+
+[node name="BottomHBox" type="HBoxContainer" parent="VBox"]
+margin_top = 316.0
+margin_right = 1013.0
+margin_bottom = 340.0
+
+[node name="ViewButtons" parent="VBox/BottomHBox" instance=ExtResource( 7 )]
+margin_top = 2.0
+margin_right = 485.0
+margin_bottom = 22.0
+
+[node name="Spacer1" type="Control" parent="VBox/BottomHBox"]
+margin_left = 489.0
+margin_right = 489.0
+margin_bottom = 24.0
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="TrackOrbitGroudCkbxs" parent="VBox/BottomHBox" instance=ExtResource( 6 )]
+margin_left = 493.0
+margin_right = 914.0
+margin_bottom = 24.0
+
+[node name="Spacer2" type="Control" parent="VBox/BottomHBox"]
+margin_left = 918.0
+margin_right = 918.0
+margin_bottom = 24.0
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="FocalLengthLabel" parent="VBox/BottomHBox" instance=ExtResource( 10 )]
+margin_left = 922.0
+margin_top = 5.0
+margin_right = 968.0
+margin_bottom = 19.0
+
+[node name="FocalLengthButtons" parent="VBox/BottomHBox" instance=ExtResource( 9 )]
+margin_left = 972.0
+margin_top = 2.0
+margin_right = 1013.0
+margin_bottom = 22.0
+
+[node name="WinMgrSimple" parent="." instance=ExtResource( 13 )]

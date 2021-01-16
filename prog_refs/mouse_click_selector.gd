@@ -1,7 +1,7 @@
 # mouse_click_selector.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 # *****************************************************************************
 # This is a work-around for not using ray casting and collision bodies. Only
 # bodies with visible == true (and their children) need to be tested.
+#
+# TODO: Consider using the HUD2dSurface for mouse clicks. That way we could
+# have mouse-over cursur effects.
 
 extends Reference
 class_name MouseClickSelector

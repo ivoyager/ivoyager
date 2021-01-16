@@ -1,7 +1,7 @@
 # rich_text_popup.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ extends PopupPanel
 class_name RichTextPopup
 const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
+var stop_sim := true
+
 var _state_manager: StateManager
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
@@ -39,7 +41,8 @@ func _on_ready() -> void:
 
 func _open(header_text: String, bbcode_text: String) -> void:
 	set_process_unhandled_key_input(true)
-	_state_manager.require_stop(self)
+	if stop_sim:
+		_state_manager.require_stop(self)
 	_header.text = header_text
 	_rt_label.bbcode_text = tr(bbcode_text)
 	popup()
@@ -48,7 +51,8 @@ func _open(header_text: String, bbcode_text: String) -> void:
 func _on_popup_hide() -> void:
 	_rt_label.bbcode_text = ""
 	set_process_unhandled_key_input(false)
-	_state_manager.allow_run(self)
+	if stop_sim:
+		_state_manager.allow_run(self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

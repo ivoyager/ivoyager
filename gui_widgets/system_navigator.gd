@@ -1,7 +1,7 @@
 # system_navigator.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,19 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget
+# GUI widget. Builds itself from an existing solar system!
 
 extends HBoxContainer
 
 const IS_PLANET := Enums.BodyFlags.IS_TRUE_PLANET | Enums.BodyFlags.IS_DWARF_PLANET
 const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
+const INIT_WIDTH := 560.0
 
 # project vars
 var grab_focus := true # if no GUI has focus, grabs currently selected on ui_ actions
-var resize_self := true # if false, you must call build_to_size() externally
-var widget_width_presets := [420.0, 560.0, 700.0] # GUI_SMALL, _MEDIUM, _LARGE
-var widget_min_height_presets := [277.0, 340.0, 407.0] # GUI_SMALL, _MEDIUM, _LARGE
 var size_exponent := 0.4 # smaller values reduce differences in object sizes
 var min_button_width_proportion := 0.05 # as proportion of total (roughly)
 var over_planet_spacer_ratio := 0.04286 # proportion of widget width, rounded
@@ -39,50 +37,63 @@ onready var _registrar: Registrar = Global.program.Registrar
 onready var _mouse_only_gui_nav: bool = Global.settings.mouse_only_gui_nav
 var _selection_manager: SelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
-
-func build_to_size(widget_width: float, widget_min_height := 0.0) -> void:
-	# Final widget width will be approximately widget_width (+- ~2 pixels)
-	# as long as widget_width is within a reasonable range.
-	# Vertical size will expand to fit "navigator" moons or widget_min_height.
-	var over_planet_spacer := round(widget_width * over_planet_spacer_ratio)
-	var min_body_size := round(widget_width * min_body_size_ratio)
-	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-#	prints(widget_width, widget_min_height, over_planet_spacer, min_body_size, column_separation)
-	_build(widget_width, widget_min_height, over_planet_spacer, min_body_size, column_separation)
+var _resize_control_multipliers := {}
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("system_tree_ready", self, "_build")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("setting_changed", self, "_settings_listener")
-
-func _on_system_tree_ready(_is_loaded_game: bool) -> void:
-	if resize_self:
-		var gui_size: int = Global.settings.gui_size
-		_build_preset_size(gui_size)
+	connect("resized", self, "_resize")
 
 func _clear() -> void:
 	_selection_manager = null
+	_currently_selected = null
+	_resize_control_multipliers.clear()
 	for child in get_children():
 		child.queue_free()
 
-func _build_preset_size(gui_size: int) -> void:
-	var widget_width: float = widget_width_presets[gui_size]
-	var widget_min_height: float = widget_min_height_presets[gui_size]
-	build_to_size(widget_width, widget_min_height)
+func _resize() -> void:
+	# Column widths are mostly controled by size_flags_stretch_ratio. However,
+	# some planets are smaller than the minimum button width so we can't depend
+	# on that for image sizing. We also need to resize the vertical spacer
+	# above planets.
+	# WARNING: Shrinking by user mouse drag works, but I think it is a little
+	# iffy. We have a few images already smaller than their bounding buttons
+	# (Ceres & Pluto, depending on min_button_width_proportion) and this is why
+	# it is possible to shrink the widget before image resizing.
+	var widget_width := rect_size.x
+	var column_separation := int(widget_width * column_separation_ratio + 0.5)
+	set("custom_constants/separation", column_separation)
+	for key in _resize_control_multipliers:
+		var control := key as Control
+		var multipliers: Vector2 = _resize_control_multipliers[control]
+		control.rect_min_size = multipliers * widget_width
 
-func _build(widget_width: float, widget_min_height: float, over_planet_spacer: float,
-		min_body_size: float, column_separation: int) -> void:
+func _settings_resize() -> void:
+	# It's a hack, but but we hide our content so the widget can shrink with
+	# its bounding container. The _resize() function then resizes images to fit
+	# the widget.
+	for child in get_children():
+		child.hide()
+	yield(get_tree(), "idle_frame")
+	_resize()
+	for child in get_children():
+		child.show()
+
+func _build(_is_new_game: bool) -> void:
 	_clear()
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
+	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
-	rect_min_size.y = widget_min_height
 	# calculate star "slice" relative size
 	var star: Body = _registrar.top_bodies[0]
 	var size := pow(star.properties.m_radius * STAR_SLICE_MULTIPLIER, size_exponent)
 	var column_widths := [size] # index 1, 2,... will be planet/moon columns
 	var total_width := size
 	# count & calcultate planet relative sizes
+	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
+	var over_planet_spacer := round(INIT_WIDTH * over_planet_spacer_ratio)
 	var planet_sizes := [0.0] # index 0 is not used
 	var n_planets := 0
 	for planet in star.satellites:
@@ -99,7 +110,7 @@ func _build(widget_width: float, widget_min_height: float, over_planet_spacer: f
 			total_width += min_width - column_widths[column]
 			column_widths[column] = min_width
 	# scale everything to fit specified widget width
-	var scale: float = (widget_width - (column_separation * n_planets)) / total_width
+	var scale: float = (INIT_WIDTH - (column_separation * n_planets)) / total_width
 	var max_planet_size := 0.0
 	for column in range(n_planets + 1):
 		column_widths[column] = round(column_widths[column] * scale)
@@ -112,7 +123,9 @@ func _build(widget_width: float, widget_min_height: float, over_planet_spacer: f
 			max_planet_size = planet_sizes[column]
 	# build the system button tree
 	# For the star "slice", column_widths[0] sets the button and image width.
-	_add_nav_button(self, star, column_widths[0], true)
+	var star_button := _add_nav_button(self, star, column_widths[0], true)
+	star_button.size_flags_horizontal = SIZE_EXPAND_FILL
+	star_button.size_flags_stretch_ratio = column_widths[0]
 	# For each planet column, column_widths[column] sets the top Spacer width (and
 	# therefore the column width) and planet_sizes[column] sets the planet image size.
 	var column := 0
@@ -121,11 +134,14 @@ func _build(widget_width: float, widget_min_height: float, over_planet_spacer: f
 			continue
 		column += 1
 		var planet_vbox := VBoxContainer.new()
-		planet_vbox.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
+		planet_vbox.size_flags_horizontal = SIZE_EXPAND_FILL
+		planet_vbox.size_flags_stretch_ratio = column_widths[column]
 		add_child(planet_vbox)
 		var spacer := Control.new()
 		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0 + over_planet_spacer)
-		spacer.rect_min_size = Vector2(column_widths[column], spacer_height)
+		spacer.rect_min_size.y = spacer_height
+		spacer.mouse_filter = MOUSE_FILTER_IGNORE
+		_resize_control_multipliers[spacer] = Vector2(0.0, spacer_height / INIT_WIDTH)
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column], false)
 		for moon in planet.satellites:
@@ -136,11 +152,15 @@ func _build(widget_width: float, widget_min_height: float, over_planet_spacer: f
 				size = min_body_size
 			_add_nav_button(planet_vbox, moon, size, false)
 
-func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float, is_star_slice: bool) -> void:
+func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float, is_star_slice: bool) -> NavButton:
 	var selection_item := _registrar.get_selection_for_body(body)
-	var nav_button := NavButton.new(selection_item, _selection_manager, image_size, is_star_slice)
-	nav_button.connect("selected", self, "_change_selection", [nav_button])
-	box_container.add_child(nav_button)
+	var button := NavButton.new(selection_item, _selection_manager, image_size, is_star_slice)
+	button.connect("selected", self, "_change_selection", [button])
+	button.size_flags_horizontal = SIZE_FILL
+	box_container.add_child(button)
+	var size_multiplier := image_size / INIT_WIDTH
+	_resize_control_multipliers[button] = Vector2(size_multiplier, 0.0 if is_star_slice else size_multiplier)
+	return button
 
 func _change_selection(selected: Button) -> void:
 	_currently_selected = selected
@@ -150,8 +170,8 @@ func _change_selection(selected: Button) -> void:
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"gui_size":
-			if resize_self and Global.state.is_system_built:
-				_build_preset_size(value)
+			if Global.state.is_system_built:
+				_settings_resize()
 		"mouse_only_gui_nav":
 			_mouse_only_gui_nav = value
 			if !_mouse_only_gui_nav and _currently_selected:
@@ -173,7 +193,7 @@ class NavButton extends Button:
 		_selection_item = selection_item
 		_selection_manager = selection_manager
 		toggle_mode = true
-		set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
+		hint_tooltip = selection_item.name
 		set("custom_fonts/font", Global.fonts.two_pt) # hack to allow smaller button height
 		rect_min_size = Vector2(image_size, image_size)
 		flat = true
@@ -187,7 +207,7 @@ class NavButton extends Button:
 		else:
 			texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			texture_box.texture = selection_item.texture_2d
-		texture_box.rect_min_size = Vector2(image_size, image_size)
+#		texture_box.rect_min_size = Vector2(image_size, image_size)
 		texture_box.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(texture_box)
 		connect("mouse_entered", self, "_on_mouse_entered")

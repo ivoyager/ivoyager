@@ -1,7 +1,7 @@
 # body.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -149,7 +149,9 @@ func set_hud_too_close(hide_hud_when_close: bool) -> void:
 
 func tree_manager_process(time: float, camera: Camera, camera_global_translation: Vector3,
 		show_orbits: bool, show_label: bool) -> void:
-	# TODO: Need viewport size correction
+	# TODO: We really need a simpler, _process() based approach that is "drag-
+	# and-drop" and still reasonably optimized.
+	# TODO: Need viewport size correction.
 	var global_translation := global_transform.origin
 	var camera_dist := global_translation.distance_to(camera_global_translation)
 	var hud_dist_ok := camera_dist > hud_too_close

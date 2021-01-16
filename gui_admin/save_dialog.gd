@@ -1,7 +1,7 @@
 # save_dialog.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,26 +23,24 @@ const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 # project var
-var add_quick_save_button := false
+var add_quick_save_button := true
 
 var _settings: Dictionary = Global.settings
-var _settings_manager: SettingsManager
-var _timekeeper: Timekeeper
+onready var _settings_manager: SettingsManager = Global.program.SettingsManager
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 var _state_manager: StateManager
 
 func project_init() -> void:
 	if !Global.enable_save_load:
 		return
-	_settings_manager = Global.program.SettingsManager
-	_timekeeper = Global.program.Timekeeper
 	_state_manager = Global.program.StateManager
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
-		if add_quick_save_button:
-			main_menu.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
+	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+	main_menu_manager.make_button("BUTTON_SAVE_AS", 900, false, true, _state_manager, "save_game", [""])
+	if add_quick_save_button:
+		main_menu_manager.make_button("BUTTON_QUICK_SAVE", 800, false, true, _state_manager, "quick_save")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	connect("file_selected", self, "_save_file")
 	connect("popup_hide", self, "_on_hide")
 

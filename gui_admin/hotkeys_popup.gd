@@ -1,7 +1,7 @@
 # hotkeys_popup.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -117,15 +117,15 @@ func _on_init():
 			{
 				header = "LABEL_DEVELOPER",
 				write_debug_logs_now = "LABEL_FORCE_LOG_PRINT",
+				emit_debug_signal = "LABEL_EMIT_DEBUG_SIGNAL",
 			}
 		],
 	]
 
 func project_init() -> void:
 	.project_init()
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
+	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+	main_menu_manager.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
 	Global.connect("hotkeys_requested", self, "_open")
 	if Global.disable_pause:
 		remove_item("toggle_pause")

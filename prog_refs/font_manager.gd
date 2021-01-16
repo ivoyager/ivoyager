@@ -1,7 +1,7 @@
 # font_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,8 +36,6 @@ var _settings: Dictionary = Global.settings
 var _primary_font_data: DynamicFontData
 
 func project_init() -> void:
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
-			[], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_primary_font_data = Global.assets.primary_font_data
 	for key in fixed_sizes:
@@ -54,8 +52,6 @@ func project_init() -> void:
 	_fonts.gui_large.font_data = _primary_font_data
 	_fonts.hud_names.font_data = _primary_font_data
 	_fonts.hud_symbols.font_data = _primary_font_data
-
-func _on_project_builder_finished() -> void:
 	_fonts.gui_main.size = gui_main_sizes[_settings.gui_size]
 	_fonts.gui_medium.size = gui_medium_sizes[_settings.gui_size]
 	_fonts.gui_large.size = gui_large_sizes[_settings.gui_size]

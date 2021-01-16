@@ -1,7 +1,7 @@
 # load_dialog.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,31 +23,34 @@ const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
 # project var
-var add_quick_load_button := false
+var add_quick_load_button := true
 
 var _state: Dictionary = Global.state
 var _state_manager: StateManager
-var _quick_load_button: Button
+var _main_menu_manager: MainMenuManager
 
 func project_init():
 	if !Global.enable_save_load:
 		return
 	_state_manager = Global.program.StateManager
-	var main_menu: MainMenu = Global.program.get("MainMenu")
-	if main_menu:
-		main_menu.make_button("BUTTON_LOAD_FILE", 700, true, true, _state_manager, "load_game", [""])
-		if add_quick_load_button:
-			_quick_load_button = main_menu.make_button("BUTTON_QUICK_LOAD", 600, false, true, _state_manager, "quick_load")
+	_main_menu_manager = Global.program.MainMenuManager
+	_main_menu_manager.make_button("BUTTON_LOAD_FILE", 700, true, true, _state_manager, "load_game", [""])
+	if add_quick_load_button:
+		_main_menu_manager.make_button("BUTTON_QUICK_LOAD", 600, false, true, _state_manager, "quick_load")
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("load_dialog_requested", self, "_open")
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("game_save_finished", self, "_on_game_save")
+	Global.connect("game_save_finished", self, "_update_quick_load_button")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	connect("file_selected", self, "_load_file")
 	connect("popup_hide", self, "_on_hide")
 
 func _ready():
 	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
+
+func _on_system_tree_ready(_is_new_game: bool) -> void:
+	_update_quick_load_button()
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
@@ -64,17 +67,14 @@ func _load_file(path: String) -> void:
 	Global.emit_signal("close_main_menu_requested")
 	_state_manager.load_game(path)
 
+func _update_quick_load_button() -> void:
+	if add_quick_load_button and _main_menu_manager:
+		var button_state := _main_menu_manager.DISABLED if !_state.last_save_path else _main_menu_manager.ACTIVE
+		_main_menu_manager.change_button_state("BUTTON_QUICK_LOAD", button_state)
+
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
 	_state_manager.allow_run(self)
-
-func _on_system_tree_ready(_is_new_game: bool) -> void:
-	if _quick_load_button:
-		_quick_load_button.disabled = !_state.last_save_path
-
-func _on_game_save() -> void:
-	if _quick_load_button:
-		_quick_load_button.disabled = !_state.last_save_path
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

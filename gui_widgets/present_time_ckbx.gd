@@ -1,7 +1,7 @@
-# navigation_panel.gd
+# present_time_ckbx.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# UI widget. Used in Planetarium to select real-world present time.
 
-extends DraggablePanel
-class_name NavigationPanel
-const SCENE := "res://ivoyager/gui_game/navigation_panel.tscn"
+extends CheckBox
 
-func _on_ready() -> void:
-	._on_ready()
-	if Global.program.has("MainMenu"):
-		$BottomVBox/BottomHBox/MainMenu.connect("pressed", Global, "emit_signal", ["open_main_menu_requested"])
-	else:
-		$BottomVBox/BottomHBox/MainMenu.hide()
-	if Global.program.has("HotkeysPopup"):
-		$BottomVBox/BottomHBox/Hotkeys.connect("pressed", Global, "emit_signal", ["hotkeys_requested"])
-	else:
-		$BottomVBox/BottomHBox/Hotkeys.hide()
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
+
+func _ready() -> void:
+	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	_timekeeper.connect("time_altered", self, "_on_time_altered")
+	connect("pressed", self, "_set_real_world")
+
+func _on_speed_changed(_speed_index: int, _is_reversed: bool, _is_paused: bool,
+		_show_clock: bool, _show_seconds: bool) -> void:
+	pressed = _timekeeper.is_real_world_time
+
+func _on_time_altered() -> void:
+	pressed = _timekeeper.is_real_world_time
+	
+func _set_real_world() -> void:
+	_timekeeper.set_real_world()
+	pressed = true

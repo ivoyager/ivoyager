@@ -1,7 +1,7 @@
 # input_map_manager.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -293,7 +293,8 @@ func _on_init() -> void:
 		quit = [{event_class = "InputEventKey", scancode = KEY_Q, control = true}],
 		save_quit = [{event_class = "InputEventKey", scancode = KEY_Q, alt = true}],
 		
-		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
+		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_L, control = true, shift = true}],
+		emit_debug_signal = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
 	}
 
 	current = {}

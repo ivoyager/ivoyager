@@ -1,7 +1,7 @@
 # pbd_splash_screen.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
-# Copyright (c) 2017-2020 Charlie Whitfield
+# Copyright (c) 2017-2021 Charlie Whitfield
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Example splash screen with Pale Blue Dot image and interactive text. You
+# probably want to replace this.
+
 
 extends Control
 class_name PBDSplashScreen
@@ -22,22 +25,22 @@ const SCENE := "res://ivoyager/gui_admin/pbd_splash_screen.tscn"
 
 var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
-var _main_menu: MainMenu
+#var _main_menu_popup: MainMenuPopup
 onready var _info: Label = $Info
 onready var _pbd_caption: Label = $PBDCaption
 
 func project_init():
-	connect("ready", self, "_on_ready")
 	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
 			[], CONNECT_ONESHOT)
-	Global.connect("main_inited", self, "_on_main_inited", [], CONNECT_ONESHOT)
+	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("simulator_exited", self, "show")
 	_settings_manager = Global.program.SettingsManager
-	_main_menu = Global.program.get("MainMenu")
+#	_main_menu_popup = Global.program.get("MainMenuPopup")
 
-func _on_ready():
+func _ready():
 	theme = Global.themes.splash_screen
+	$MainMenu.is_splash_config = true
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
 	_pbd_caption.connect("gui_input", self, "_pbd_caption_input")
@@ -49,10 +52,10 @@ func _on_ready():
 
 func _on_project_builder_finished() -> void:
 	_info.text = _info.text.replace("0.0.0", Global.ivoyager_version)
-	_info.margin_left = _main_menu.margin_left if _main_menu else 35.0
+#	_info.margin_left = _main_menu_popup.margin_left if _main_menu_popup else 35.0
 	_info.show()
 
-func _on_main_inited() -> void:
+func _on_state_manager_inited() -> void:
 	pass
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:

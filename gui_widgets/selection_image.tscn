@@ -13,6 +13,7 @@ margin_right = 114.0
 margin_bottom = 114.0
 grow_horizontal = 2
 grow_vertical = 2
+focus_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 expand = true
