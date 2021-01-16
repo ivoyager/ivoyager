@@ -40,17 +40,19 @@ func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("track_type_changed", self, "_update_track_type")
-		_update_track_type(_camera.track_type)
+		_camera.connect("tracking_changed", self, "_update_tracking")
+#		_update_tracking(_camera.track_type)
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("track_type_changed", self, "_update_track_type")
+		_camera.disconnect("tracking_changed", self, "_update_tracking")
 	_camera = null
 
-func _update_track_type(track_type: int) -> void:
+func _update_tracking(track_type: int, is_ecliptic: bool) -> void:
 	_orbit_checkbox.pressed = track_type == TRACK_ORBIT
+	_ground_checkbox.disabled = is_ecliptic
 	_ground_checkbox.pressed = track_type == TRACK_GROUND
+	_orbit_checkbox.disabled = is_ecliptic
 
 func _on_orbit_pressed() -> void:
 	if !_camera:

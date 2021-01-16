@@ -41,7 +41,7 @@ signal latitude_longitude_changed(lat_long, is_ecliptic)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
-signal track_type_changed(track_type)
+signal tracking_changed(track_type, is_ecliptic)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
@@ -155,6 +155,7 @@ var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
 
+var _is_ecliptic := false
 var _last_dist := 0.0
 
 var _universe: Spatial = Global.program.universe
@@ -232,7 +233,7 @@ func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_
 		_min_dist = selection_item.view_min_distance * 50.0 / fov
 	if to_track_type != -1 and track_type != to_track_type:
 		track_type = to_track_type
-		emit_signal("track_type_changed", to_track_type)
+		emit_signal("tracking_changed", to_track_type, _is_ecliptic)
 	if to_view_type != -1:
 		view_type = to_view_type
 	match view_type:
@@ -290,7 +291,7 @@ func change_track_type(new_track_type: int) -> void:
 	track_type = new_track_type
 	view_type = VIEW_BUMPED_ROTATED
 	_reset_view_position_and_rotations()
-	emit_signal("track_type_changed", track_type)
+	emit_signal("tracking_changed", track_type, _is_ecliptic)
 	emit_signal("view_type_changed", view_type)
 
 func increment_focal_length(increment: int) -> void:
@@ -372,6 +373,7 @@ func _on_ready():
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
 	_track_dist = track_dist / fov
+	_is_ecliptic = dist > _track_dist
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
@@ -415,6 +417,9 @@ func _process_transferring() -> void:
 		dist = gui_translation.length()
 	emit_signal("range_changed", dist)
 	var is_ecliptic := dist > _track_dist
+	if _is_ecliptic != is_ecliptic:
+		_is_ecliptic = is_ecliptic
+		emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
@@ -499,6 +504,9 @@ func _process_not_transferring(delta: float) -> void:
 		near = dist * NEAR_MULTIPLIER
 		far = dist * FAR_MULTIPLIER
 	var is_ecliptic := dist > _track_dist
+	if _is_ecliptic != is_ecliptic:
+		_is_ecliptic = is_ecliptic
+		emit_signal("tracking_changed", track_type, is_ecliptic)
 	if is_camera_bump or (!is_ecliptic and track_type != TRACK_GROUND):
 		var lat_long: Vector2
 		if is_ecliptic:
@@ -673,6 +681,7 @@ func _send_gui_refresh() -> void:
 #	emit_signal("camera_lock_changed", is_camera_lock) # triggers camera move
 	emit_signal("view_type_changed", view_type)
 	var is_ecliptic := translation.length() > _track_dist
+	emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
