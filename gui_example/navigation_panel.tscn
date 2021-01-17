@@ -7,7 +7,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/camera_lock.tscn" type="PackedScene" id=5]
 [ext_resource path="res://ivoyager/gui_widgets/date_time_label.tscn" type="PackedScene" id=6]
 [ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn" type="PackedScene" id=7]
-[ext_resource path="res://ivoyager/gui_widgets/win_mgr_simple.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ivoyager/gui_mods/container_sized_by_settings.tscn" type="PackedScene" id=8]
 [ext_resource path="res://ivoyager/gui_widgets/speed_buttons.tscn" type="PackedScene" id=9]
 
 [node name="NavigationPanel" type="PanelContainer"]
@@ -118,4 +118,4 @@ margin_right = 574.0
 margin_bottom = 24.0
 text = "BUTTON_MAIN_MENU"
 
-[node name="WinMgrSimple" parent="." instance=ExtResource( 8 )]
+[node name="ContainerSizedBySettings" parent="." instance=ExtResource( 8 )]

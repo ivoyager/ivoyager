@@ -1,4 +1,4 @@
-# win_mgr_simple.gd
+# container_sized_by_settings.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -23,7 +23,7 @@
 #
 # Modify sizes values from _ready() in the parent Container.
 #
-# For draggable and user resizable windows, use WinMgrDynamic instead.
+# For draggable and user resizable windows, use ContainerDynamic instead.
 
 extends Node
 

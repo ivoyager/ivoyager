@@ -1,4 +1,4 @@
-# vis_on_mo_ckbx.gd
+# panel_vis_on_mouse_over_ckbx.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -15,12 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. PanelContainer can be locked visible (toggle on) or visible on
-# mouse-over only (toggle off). This widget is used in Planetarium.
+# This is a PanelContainer mod and (by default) a GUI widget. PanelContainer
+# can be locked visible (toggle on) or visible on mouse-over only (toggle off).
+# 
+# Call set_ckbx_hidden() to hide the checkbox and make panel always visible on
+# mouse-over only.
 #
-# Target will be the first PanelContainer in this widget's ancestor tree. This
-# widget uses _input() while in mouse-over mode; it's best not to use _input()
-# where avoidable!
+# Target control will be the first PanelContainer in this widget's ancestor
+# tree unless set otherwise by explicit call to set_panel_container().
+#
+# This widget is used in Planetarium.
 
 extends CheckBox
 
@@ -32,23 +36,36 @@ var _is_running := false
 var _is_mouse_button_pressed := false
 var _is_panel_visible := true
 
+func set_ckbx_hidden():
+	hide()
+	set_process_input(true)
+
+func set_panel_container(panel_container: PanelContainer):
+	if _panel_container:
+		_panel_container.disconnect("item_rect_changed", self, "_adjust_detection_rect")
+	_panel_container = panel_container
+	_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")
+
 func _ready():
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
-	_panel_container = _get_panel_container()
-	_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")
+	_set_ancestor_panel_container()
+	if _panel_container:
+		_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")
 	connect("toggled", self, "_on_toggled")
 	set_process_input(false)
 
 func _on_run_state_changed(is_running: bool) -> void:
 	_is_running = is_running
 
-func _get_panel_container() -> PanelContainer:
-	var parent: Control = get_parent() # if error here, see useage above
+func _set_ancestor_panel_container() -> void:
+	var parent: Node = get_parent()
 	var panel_container := parent as PanelContainer
 	while !panel_container:
-		parent = parent.get_parent()
+		parent = parent.get_parent() as Control
+		if !parent:
+			return
 		panel_container = parent as PanelContainer
-	return panel_container
+	_panel_container = panel_container
 
 func _adjust_detection_rect() -> void:
 	_detection_rect.position = _panel_container.rect_position - detection_margins

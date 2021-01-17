@@ -34,7 +34,7 @@ var _is_project_built := false
 func _ready() -> void:
 	theme = Global.themes.main_menu
 	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	Global.connect("state_manager_inited", self, "_update_button_states", [], CONNECT_ONESHOT)
+	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	_main_menu_manager.connect("button_added", self, "_build")
 	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
 	connect("visibility_changed", self, "_grab_button_focus")
@@ -42,6 +42,10 @@ func _ready() -> void:
 func _on_project_builder_finished() -> void:
 	_is_project_built = true
 	_build()
+
+func _on_state_manager_inited() -> void:
+	_update_button_states()
+	_grab_button_focus()
 
 func _clear() -> void:
 	for child in get_children():
@@ -63,7 +67,7 @@ func _build() -> void:
 		var target_method: String = button_info[5]
 		var target_args: Array = button_info[6]
 		var button_state: int = button_info[7]
-		button.theme = theme
+		button.focus_mode = Control.FOCUS_ALL
 		button.text = text
 		button.connect("pressed", target_object, target_method, target_args)
 		button.visible = button_state != _main_menu_manager.HIDDEN
@@ -85,13 +89,17 @@ func _update_button_states() -> void:
 				button.visible = button_state != _main_menu_manager.HIDDEN
 				button.disabled = button_state == _main_menu_manager.DISABLED
 				break
-	_grab_button_focus() # could happen when already visible
 
 func _grab_button_focus() -> void:
-	# Needed when MainMenu widget is not child of Popup
+	# Only grabs if no one else has focus
 	if !is_visible_in_tree():
 		return
+	if get_focus_owner():
+		return
 	for child in get_children():
-		if child is Button and child.visible and !child.disabled:
-			child.grab_focus() # top menu button that is not disabled
+		var button := child as Button
+		if !button:
+			continue
+		if button.visible and !button.disabled:
+			button.grab_focus() # top menu button that is not disabled
 			return
