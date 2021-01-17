@@ -47,18 +47,30 @@ func _on_init():
 				save_quit = "LABEL_SAVE_AND_QUIT",
 			},
 			{
+				header = "LABEL_GUI",
+				toggle_orbits = "LABEL_SHOW_HIDE_ORBITS",
+				toggle_names = "LABEL_SHOW_HIDE_NAMES",
+				toggle_symbols = "LABEL_SHOW_HIDE_SYMBOLS",
+				toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
+				
+				# Below two should be added by extension add_item(), if used.
+				# See Planetarim project (planetarium/planetarium.gd).
+#				cycle_next_panel = "LABEL_CYCLE_NEXT_PANEL",
+#				cycle_prev_panel = "LABEL_CYCLE_PREV_PANEL",
+				
+				# Below UI controls have some engine hardcoding as of
+				# Godot 3.2.2, so can't be user defined.
+#				ui_up = "LABEL_GUI_UP",
+#				ui_down = "LABEL_GUI_DOWN",
+#				ui_left = "LABEL_GUI_LEFT",
+#				ui_right = "LABEL_GUI_RIGHT",
+			},
+			{
 				header = "LABEL_TIME",
 				incr_speed = "LABEL_SPEED_UP",
 				decr_speed = "LABEL_SLOW_DOWN",
 				toggle_pause = "LABEL_PAUSE",
 				reverse_time = "LABEL_REVERSE_TIME",
-			},
-			{
-				header = "LABEL_SHOW_HIDE",
-				toggle_orbits = "LABEL_ORBITS",
-				toggle_symbols = "LABEL_SYMBOLS",
-				toggle_names = "LABEL_NAMES",
-				toggle_all_gui = "LABEL_ALL_GUI",
 			},
 		],
 		[ # column 2
@@ -86,13 +98,6 @@ func _on_init():
 #				next_spacecraft = "Next Spacecraft",
 #				previous_spacecraft = "Last Spacecraft",
 			},
-#			{
-#				header = "LABEL_GUI",
-#				ui_up = "LABEL_GUI_UP",
-#				ui_down = "LABEL_GUI_DOWN",
-#				ui_left = "LABEL_GUI_LEFT",
-#				ui_right = "LABEL_GUI_RIGHT",
-#			},
 		],
 		[ # column 3
 			{

@@ -12,7 +12,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/focal_length_label.tscn" type="PackedScene" id=10]
 [ext_resource path="res://ivoyager/gui_widgets/orbits_names_symbols_ckbxs.tscn" type="PackedScene" id=11]
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.tscn" type="PackedScene" id=12]
-[ext_resource path="res://ivoyager/gui_widgets/win_mgr_simple.tscn" type="PackedScene" id=13]
+[ext_resource path="res://ivoyager/gui_mods/container_sized_by_settings.tscn" type="PackedScene" id=13]
 
 [node name="SelectionPanel" type="PanelContainer"]
 anchor_top = 1.0
@@ -160,4 +160,4 @@ margin_top = 2.0
 margin_right = 1013.0
 margin_bottom = 22.0
 
-[node name="WinMgrSimple" parent="." instance=ExtResource( 13 )]
+[node name="ContainerSizedBySettings" parent="." instance=ExtResource( 13 )]

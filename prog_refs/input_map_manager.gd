@@ -293,6 +293,11 @@ func _on_init() -> void:
 		quit = [{event_class = "InputEventKey", scancode = KEY_Q, control = true}],
 		save_quit = [{event_class = "InputEventKey", scancode = KEY_Q, alt = true}],
 		
+		# Used by ProjectCyclablePanels GUI mod (which is used by Planetarium)
+		cycle_next_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT}],
+		cycle_prev_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT, shift = true}],
+		
+		# dev
 		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_L, control = true, shift = true}],
 		emit_debug_signal = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
 	}

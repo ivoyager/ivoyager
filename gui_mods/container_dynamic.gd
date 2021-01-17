@@ -1,4 +1,4 @@
-# win_mgr_dynamic.gd
+# container_dynamic.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -17,8 +17,10 @@
 # *****************************************************************************
 # Add to Container (e.g., a GUI PanelContainer) for draggablity and window
 # resizing margins. This should be the last child so margin controls are on
-# top. This component replaces WinMgrSimple (having both may crash). Modify
-# default sizes and snap values from _ready() in the parent Container.
+# top.
+#
+# This mod replaces ContainerSizedBySettings (having both may crash).
+# Modify default sizes and snap values from _ready() in the parent Container.
 #
 # This widget is used in the Planetarium.
 
