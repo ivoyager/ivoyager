@@ -37,7 +37,7 @@ func _ready() -> void:
 	Global.connect("state_manager_inited", self, "_update_button_states", [], CONNECT_ONESHOT)
 	_main_menu_manager.connect("button_added", self, "_build")
 	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
-	connect("visibility_changed", self, "_grab_button_focus")
+#	connect("visibility_changed", self, "_grab_button_focus")
 
 func _on_project_builder_finished() -> void:
 	_is_project_built = true
@@ -63,7 +63,8 @@ func _build() -> void:
 		var target_method: String = button_info[5]
 		var target_args: Array = button_info[6]
 		var button_state: int = button_info[7]
-		button.theme = theme
+		button.focus_mode = Control.FOCUS_ALL
+#		button.theme = theme
 		button.text = text
 		button.connect("pressed", target_object, target_method, target_args)
 		button.visible = button_state != _main_menu_manager.HIDDEN
@@ -85,13 +86,14 @@ func _update_button_states() -> void:
 				button.visible = button_state != _main_menu_manager.HIDDEN
 				button.disabled = button_state == _main_menu_manager.DISABLED
 				break
-	_grab_button_focus() # could happen when already visible
-
-func _grab_button_focus() -> void:
-	# Needed when MainMenu widget is not child of Popup
-	if !is_visible_in_tree():
-		return
-	for child in get_children():
-		if child is Button and child.visible and !child.disabled:
-			child.grab_focus() # top menu button that is not disabled
-			return
+#	_grab_button_focus() # could happen when already visible
+#
+#func _grab_button_focus() -> void:
+#	# Needed when MainMenu widget is not child of Popup
+#	if !is_visible_in_tree():
+#		return
+#	for child in get_children():
+#		if child is Button and child.visible and !child.disabled:
+##			prints("MainMenu item: ", child, child.focus_mode)
+#			child.grab_focus() # top menu button that is not disabled
+#			return

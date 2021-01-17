@@ -16,6 +16,11 @@
 # limitations under the License.
 # *****************************************************************************
 # Admin GUI's should call make_button() in their project_init().
+#
+# Note: as of Godot 3.2.3, passing a Reference (rather than a Node) to
+# make_button() causes "ObjectDB leaked at exit" errors on quit. This should
+# probably be opened as a Godot issue if we can narrow the probelm to a minimal
+# project.
 
 extends Reference
 class_name MainMenuManager
@@ -31,7 +36,8 @@ func make_button(text: String, priority: int, is_splash_button: bool, is_running
 		target_object: Object, target_method: String, target_args := [],
 		button_state := ACTIVE) -> void:
 	# Highest priority will be top menu item; target_object cannot be a
-	# procedural object!
+	# procedural object! See Note above - until this is resolved, it is best
+	# to pass Node rather than Reference.
 	button_infos.append([text, priority, is_splash_button, is_running_button,
 			target_object, target_method, target_args, button_state])
 	button_infos.sort_custom(self, "_sort_button_infos")
