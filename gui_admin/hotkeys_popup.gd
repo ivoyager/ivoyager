@@ -56,7 +56,7 @@ func _on_init():
 				# Below two should be added by extension add_item(), if used.
 				# See Planetarim project (planetarium/planetarium.gd).
 #				cycle_next_panel = "LABEL_CYCLE_NEXT_PANEL",
-#				cycle_prev_panel = "LABEL_CYCLE_PREV_PANEL",
+#				cycle_prev_panel = "LABEL_CYCLE_LAST_PANEL",
 				
 				# Below UI controls have some engine hardcoding as of
 				# Godot 3.2.2, so can't be user defined.
