@@ -75,24 +75,24 @@ signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - managing object indicated; safe to keep container reference
-const state := {} # StateManager; keys include is_inited, is_running, etc.
-const times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
-const date := [] # Timekeeper; Gregorian [year, month, day] (ints)
-const clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
-const program := {} # program nodes & refs populated by ProjectBuilder
-const script_classes := {} # classes defined in ProjectBuilder dictionaries
-const assets := {} # populated by this node project_init()
-const settings := {} # SettingsManager
-const table_rows := {} # TableImporter; row ints for ALL row keys
-const table_row_dicts := {} # TableImporter; a row dict for each table
-const wiki_titles := {} # TableImporter; Wiki url identifiers by item key
-const themes := {} # ThemeManager
-const fonts := {} # FontManager
-const bodies := [] # Registrar; indexed by body_id
-const bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-const camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
-const project := {} # available for extension "project"
-const addon := {} # available for extension "addons"
+var state := {} # StateManager; keys include is_inited, is_running, etc.
+var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
+var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
+var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
+var program := {} # program nodes & refs populated by ProjectBuilder
+var script_classes := {} # classes defined in ProjectBuilder dictionaries
+var assets := {} # populated by this node project_init()
+var settings := {} # SettingsManager
+var table_rows := {} # TableImporter; row ints for ALL row keys
+var table_row_dicts := {} # TableImporter; a row dict for each table
+var wiki_titles := {} # TableImporter; Wiki url identifiers by item key
+var themes := {} # ThemeManager
+var fonts := {} # FontManager
+var bodies := [] # Registrar; indexed by body_id
+var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
+var camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
+var project := {} # available for extension "project"
+var addon := {} # available for extension "addons"
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := "I, Voyager"
@@ -126,7 +126,7 @@ var unit_functions := UnitDefs.FUNCTIONS
 var is_electron_app := false
 var cache_dir := "user://cache"
 
-const colors := { # user settable colors in program_refs/settings_manager.gd
+var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
 	good = Color.green,
 	warning = Color.yellow,
@@ -143,7 +143,7 @@ var shared_resources := {
 }
 
 # Data table import
-const table_import := {
+var table_import := {
 	stars = "res://ivoyager/data/solar_system/stars.csv",
 	planets = "res://ivoyager/data/solar_system/planets.csv",
 	moons = "res://ivoyager/data/solar_system/moons.csv",
@@ -153,7 +153,7 @@ const table_import := {
 	models = "res://ivoyager/data/solar_system/models.csv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.csv",
 }
-const table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
+var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing
@@ -164,23 +164,23 @@ const table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.c
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 
-const models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
-const maps_search := ["res://ivoyager_assets/maps"]
-const bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
-const rings_search := ["res://ivoyager_assets/rings"]
+var models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
+var maps_search := ["res://ivoyager_assets/maps"]
+var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
+var rings_search := ["res://ivoyager_assets/rings"]
 
-const asset_paths := {
+var asset_paths := {
 	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
-const asset_paths_for_load := { # loaded into "assets" dict at project init
+var asset_paths_for_load := { # loaded into "assets" dict at project init
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 }
-const translations := [ # added here so extensions can modify
+var translations := [ # added here so extensions can modify
 	"res://ivoyager/data/text/entities_text.en.translation",
 	"res://ivoyager/data/text/gui_text.en.translation",
 	"res://ivoyager/data/text/hints_text.en.translation",
