@@ -22,6 +22,7 @@ extends HBoxContainer
 
 const ViewTypes := Enums.ViewTypes
 
+var enable_outward := false # under dev for astronomy; it's pretty crappy now
 var use_small_txt := false
 
 var _camera: Camera
@@ -43,6 +44,8 @@ func _ready():
 	_connect_camera(get_viewport().get_camera())
 
 func _on_system_built(_is_loaded_game: bool) -> void:
+	if enable_outward:
+		_outward_button.show()
 	if use_small_txt:
 		_zoom_button.text = "BUTTON_ZM"
 		_top_button.text = "BUTTON_TP"

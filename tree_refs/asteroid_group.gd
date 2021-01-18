@@ -108,6 +108,9 @@ func finish_binary_import() -> void:
 	assert(DPRINT and _debug_print() or true)
 	assert(VPRINT and _verbose_print() or true)
 
+func get_number() -> int:
+	return _index
+
 # ***************** PUBLIC FUNCTIONS FOR AsteroidImporter **********************
 
 func expand_arrays(n: int) -> void:
