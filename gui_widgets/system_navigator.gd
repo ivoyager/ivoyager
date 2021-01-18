@@ -165,7 +165,8 @@ func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float,
 func _change_selection(selected: Button) -> void:
 	_currently_selected = selected
 	if !_mouse_only_gui_nav and !get_focus_owner():
-		selected.grab_focus()
+		if selected.focus_mode != FOCUS_NONE:
+			selected.grab_focus()
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
@@ -176,7 +177,8 @@ func _settings_listener(setting: String, value) -> void:
 			_mouse_only_gui_nav = value
 			if !_mouse_only_gui_nav and _currently_selected:
 				yield(get_tree(), "idle_frame") # wait for _mouse_only_gui_nav.gd
-				_currently_selected.grab_focus()
+				if _currently_selected.focus_mode != FOCUS_NONE:
+					_currently_selected.grab_focus()
 
 # ****************************** INNER CLASS **********************************
 

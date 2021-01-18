@@ -44,6 +44,7 @@ action_mode = 0
 text = "BUTTON_TOP"
 
 [node name="Outward" type="Button" parent="."]
+visible = false
 margin_left = 345.0
 margin_right = 485.0
 margin_bottom = 20.0

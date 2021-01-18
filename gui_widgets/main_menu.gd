@@ -100,6 +100,6 @@ func _grab_button_focus() -> void:
 		var button := child as Button
 		if !button:
 			continue
-		if button.visible and !button.disabled:
+		if button.visible and !button.disabled and button.focus_mode != Control.FOCUS_NONE:
 			button.grab_focus() # top menu button that is not disabled
 			return

@@ -40,6 +40,8 @@ var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
 var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
+var _running_count := 0
+
 # ************************ PUBLIC FUNCTIONS ***********************************
 
 func project_init() -> void:
@@ -59,6 +61,7 @@ func build() -> void:
 	print("Adding minor bodies...")
 	var star: Body = _registrar.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
+	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")
 
 # ************************ PRIVATE FUNCTIONS **********************************
@@ -117,6 +120,7 @@ func _load_group_binaries(star: Body, group: String, table_row: int, l_point := 
 		else:
 			break
 	asteroid_group.finish_binary_import()
+	_running_count += asteroid_group.get_number()
 	# register in MinorBodiesManager
 	if is_trojans:
 		_minor_bodies_manager.lagrange_points[group] = lagrange_point

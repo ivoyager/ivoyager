@@ -23,4 +23,5 @@
 extends PanelContainer
 
 func _ready() -> void:
-	$VBox/BottomHBox/ViewButtons/Outward.hide() # under dev for astronomy in the Planetarium
+	# Modify widgets here
+	pass
