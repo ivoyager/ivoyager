@@ -38,7 +38,7 @@ var default_sizes := [
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
-var max_default_screen_proportions := Vector2(0.33, 0.33)
+var max_default_screen_proportions := Vector2(0.45, 0.45)
 
 # private
 var _settings: Dictionary = Global.settings
