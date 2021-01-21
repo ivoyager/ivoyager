@@ -1,4 +1,4 @@
-# camera_lock.gd
+# camera_lock_ckbx.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -18,7 +18,7 @@
 # GUI widget. Expects the camera to have signal "camera_lock_changed" and
 # function "change_camera_lock".
 
-extends Button
+extends CheckBox
 
 var _camera: Camera
 

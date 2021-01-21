@@ -50,6 +50,5 @@ func _resize() -> void:
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
 func _settings_listener(setting: String, _value) -> void:
-	match setting:
-		"gui_size":
-			_resize()
+	if setting == "gui_size":
+		_resize()

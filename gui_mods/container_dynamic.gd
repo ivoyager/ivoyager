@@ -196,9 +196,8 @@ func _update_for_user_resize() -> void:
 		_custom_size.y = 0.0
 
 func _settings_listener(setting: String, _value) -> void:
-	match setting:
-		"gui_size":
-			_resize_to_default()
+	if setting == "gui_size":
+		_resize_to_default()
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
