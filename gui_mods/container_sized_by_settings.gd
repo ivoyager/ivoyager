@@ -15,8 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# Use only one of the container mods:
+#    ContainerSizedBySettings - resizes with Options/GUI Size
+#    ContainerDraggable - above plus user draggable
+#    ContainerDynamic - above plus user resizing margins
+#
 # This widget will resize a Container (e.g., a GUI PanelContainer) with changes
-# in Settings.gui_size, maintaining position based on existing anchors.
+# in Options/gui_size, maintaining position based on existing anchors.
 # Assumes anchor_left == anchor_right and anchor_top == anchor_bottom (i.e.,
 # the parent container is fixed-size for a given gui_size and not expected to
 # stretch with screen resize).
@@ -28,26 +33,49 @@
 extends Node
 
 # project vars
-var sizes := [
+var default_sizes := [
+	# Use rounded floats. Values applied at runtime may be reduced by
+	# max_default_screen_proportions, below.
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
+var max_default_screen_proportions := Vector2(0.45, 0.45)
 
 # private
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
 onready var _parent: Container = get_parent()
+var _default_size: Vector2
 
 func _ready() -> void:
 	Global.connect("gui_refresh_requested", self, "_resize")
 	Global.connect("setting_changed", self, "_settings_listener")
+	_viewport.connect("size_changed", self, "_resize")
 
 func _resize() -> void:
-	var gui_size: int = _settings.gui_size
-	_parent.rect_size = sizes[gui_size]
+	var default_size := _get_default_size()
+	if _default_size == default_size:
+		return
+	_default_size = default_size
+	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
+	# conform to its parent container). Other content needs delayed resize.
+	_parent.rect_size = default_size
+	yield(get_tree(), "idle_frame")
+	_parent.rect_size = default_size 
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
+
+func _get_default_size() -> Vector2:
+	var gui_size: int = _settings.gui_size
+	var default_size: Vector2 = default_sizes[gui_size]
+	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
+	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
+	if default_size.x > max_x:
+		default_size.x = max_x
+	if default_size.y > max_y:
+		default_size.y = max_y
+	return default_size
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":

@@ -1,4 +1,4 @@
-# container_dynamic.gd
+# container_draggable.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -20,17 +20,16 @@
 #    ContainerDraggable - above plus user draggable
 #    ContainerDynamic - above plus user resizing margins
 #
-# Add to Container (e.g., a GUI PanelContainer) for draggablity and window
-# resizing margins. This should be the last child so margin controls are on
-# top. This mod assumes parent container has anchor_left == anchor_right and
+# Add to Container (e.g., a GUI PanelContainer) for draggablity. This mod
+# assumes parent container has anchor_left == anchor_right and
 # anchor_top == anchor_bottom (ie, panels aren't intended to strech if viewport
 # stretches).
 #
 # Modify default sizes and snap values from _ready() in the parent Container.
+#
+# This widget is used in the Planetarium.
 
-extends Control
-
-enum {TL, T, TR, R, BR, B, BL, L}
+extends Node
 
 # project vars
 var screen_edge_snap := 100.0
@@ -48,10 +47,7 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
 onready var _parent: Container = get_parent()
-var _margin_drag_x := 0.0
-var _margin_drag_y := 0.0
 var _drag_point := Vector2.ZERO
-var _custom_size := Vector2.ZERO
 var _default_size: Vector2
 
 func _ready():
@@ -59,14 +55,6 @@ func _ready():
 	Global.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
-	$TL.connect("gui_input", self, "_on_margin_input", [TL])
-	$T.connect("gui_input", self, "_on_margin_input", [T])
-	$TR.connect("gui_input", self, "_on_margin_input", [TR])
-	$R.connect("gui_input", self, "_on_margin_input", [R])
-	$BR.connect("gui_input", self, "_on_margin_input", [BR])
-	$B.connect("gui_input", self, "_on_margin_input", [B])
-	$BL.connect("gui_input", self, "_on_margin_input", [BL])
-	$L.connect("gui_input", self, "_on_margin_input", [L])
 
 func _on_gui_refresh_requested() -> void:
 	_resize()
@@ -140,7 +128,7 @@ func _snap_vertical() -> void:
 
 func _fix_offscreen() -> void:
 	var rect := _parent.get_rect()
-	var screen_rect := get_viewport_rect()
+	var screen_rect := _parent.get_viewport_rect()
 	if screen_rect.encloses(rect):
 		return
 	if rect.position.x < 0.0:
@@ -168,15 +156,11 @@ func _resize() -> void:
 	if _default_size == default_size:
 		return
 	_default_size = default_size
-	_parent.rect_min_size = default_size
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
-	# _custom_size may be (0, 0) or smaller than rect_min_size now, but code
-	# below will trigger immediate and delayed size refreshes in any case. 
-	_parent.rect_size = _custom_size
+	_parent.rect_size = default_size
 	yield(get_tree(), "idle_frame")
-	_parent.rect_size = _custom_size
-	# reposition to anchors given new actual size
+	_parent.rect_size = default_size
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
@@ -191,17 +175,6 @@ func _get_default_size() -> Vector2:
 		default_size.y = max_y
 	return default_size
 
-func _update_custom_size() -> void:
-	# If user resized to (or near) minimum in either dimension, we assume
-	# they want default sizing (so it can shrink again on settings change).
-	_custom_size = _parent.rect_size
-	var default_size := _get_default_size()
-	prints(default_size, _custom_size) # test whether defaults need y expansion
-	if _custom_size.x < default_size.x + 5.0:
-		_custom_size.x = 0.0
-	if _custom_size.y < default_size.y + 5.0:
-		_custom_size.y = 0.0
-
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
 		_resize()
@@ -209,46 +182,11 @@ func _settings_listener(setting: String, _value) -> void:
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == BUTTON_LEFT:
-			accept_event()
+			_parent.accept_event()
 			if event.pressed:
-				_drag_point = get_global_mouse_position() - _parent.rect_position
+				_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
 			else:
 				_finish_move()
 	elif event is InputEventMouseMotion and _drag_point:
-		accept_event()
-		_parent.rect_position = get_global_mouse_position() - _drag_point
-
-func _on_margin_input(event: InputEvent, location: int) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT:
-			accept_event()
-			var mouse_pos := get_global_mouse_position()
-			if event.pressed:
-				match location:
-					TL, T, TR:
-						_margin_drag_y = mouse_pos.y - _parent.margin_top
-					BL, B, BR:
-						_margin_drag_y = mouse_pos.y - _parent.margin_bottom
-				match location:
-					TL, L, BL:
-						_margin_drag_x = mouse_pos.x - _parent.margin_left
-					TR, R, BR:
-						_margin_drag_x = mouse_pos.x - _parent.margin_right
-			else:
-				_margin_drag_x = 0.0
-				_margin_drag_y = 0.0
-				_update_custom_size()
-				_finish_move()
-	elif event is InputEventMouseMotion and (_margin_drag_x or _margin_drag_y):
-		accept_event()
-		var mouse_pos := get_global_mouse_position()
-		match location:
-			TL, T, TR:
-				_parent.margin_top = mouse_pos.y - _margin_drag_y
-			BL, B, BR:
-				_parent.margin_bottom = mouse_pos.y - _margin_drag_y
-		match location:
-			TL, L, BL:
-				_parent.margin_left = mouse_pos.x - _margin_drag_x
-			TR, R, BR:
-				_parent.margin_right = mouse_pos.x - _margin_drag_x
+		_parent.accept_event()
+		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
