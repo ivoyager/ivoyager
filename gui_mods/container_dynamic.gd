@@ -67,6 +67,7 @@ func _ready():
 	$B.connect("gui_input", self, "_on_margin_input", [B])
 	$BL.connect("gui_input", self, "_on_margin_input", [BL])
 	$L.connect("gui_input", self, "_on_margin_input", [L])
+	set_process_input(false) # only during drag
 
 func _on_gui_refresh_requested() -> void:
 	_resize()
@@ -74,6 +75,7 @@ func _on_gui_refresh_requested() -> void:
 
 func _finish_move() -> void:
 	_drag_point = Vector2.ZERO
+	set_process_input(false)
 	_snap_horizontal()
 	_snap_vertical()
 	_fix_offscreen()
@@ -208,15 +210,20 @@ func _settings_listener(setting: String, _value) -> void:
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT:
+		if event.pressed and event.button_index == BUTTON_LEFT:
 			accept_event()
-			if event.pressed:
-				_drag_point = get_global_mouse_position() - _parent.rect_position
-			else:
-				_finish_move()
+			_drag_point = get_global_mouse_position() - _parent.rect_position
+			set_process_input(true)
 	elif event is InputEventMouseMotion and _drag_point:
 		accept_event()
 		_parent.rect_position = get_global_mouse_position() - _drag_point
+
+func _input(event):
+	# We process input only during drag. It is posible for the parent control
+	# to never get the button-up event (happens in HTML5 builds).
+	if event is InputEventMouseButton:
+		if !event.pressed and event.button_index == BUTTON_LEFT:
+			_finish_move()
 
 func _on_margin_input(event: InputEvent, location: int) -> void:
 	if event is InputEventMouseButton:
