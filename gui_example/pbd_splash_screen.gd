@@ -21,7 +21,7 @@
 
 extends Control
 class_name PBDSplashScreen
-const SCENE := "res://ivoyager/gui_admin/pbd_splash_screen.tscn"
+const SCENE := "res://ivoyager/gui_example/pbd_splash_screen.tscn"
 
 var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager

@@ -1,0 +1,121 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://ivoyager/gui_example/example_navigation_panel.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/camera_lock_ckbx.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_mods/container_sized_by_settings.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_widgets/sun_slice_button.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/speed_buttons.tscn" type="PackedScene" id=5]
+[ext_resource path="res://ivoyager/gui_widgets/speed_label.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/planet_moon_buttons.tscn" type="PackedScene" id=7]
+[ext_resource path="res://ivoyager/gui_widgets/date_time_label.tscn" type="PackedScene" id=8]
+[ext_resource path="res://ivoyager/gui_widgets/sssbs_ckbxs.tscn" type="PackedScene" id=9]
+
+[node name="ExampleNavigationPanel" type="PanelContainer"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -14.0
+margin_top = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBox" type="HBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 514.0
+margin_bottom = 87.0
+
+[node name="SunSliceButton" parent="HBox" instance=ExtResource( 4 )]
+margin_right = 12.0
+margin_bottom = 80.0
+size_flags_horizontal = 3
+
+[node name="RightSideContent" type="MarginContainer" parent="HBox"]
+margin_left = 16.0
+margin_right = 507.0
+margin_bottom = 80.0
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 9.0
+custom_constants/margin_right = 0
+custom_constants/margin_top = 0
+custom_constants/margin_left = 0
+custom_constants/margin_bottom = 0
+
+[node name="TopVBox" type="VBoxContainer" parent="HBox/RightSideContent"]
+margin_right = 491.0
+margin_bottom = 32.0
+mouse_filter = 2
+size_flags_vertical = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TopHBox" type="HBoxContainer" parent="HBox/RightSideContent/TopVBox"]
+margin_right = 491.0
+margin_bottom = 24.0
+mouse_filter = 2
+size_flags_vertical = 0
+
+[node name="CameraLockCkbx" parent="HBox/RightSideContent/TopVBox/TopHBox" instance=ExtResource( 2 )]
+margin_right = 160.0
+
+[node name="Spacer1" type="Control" parent="HBox/RightSideContent/TopVBox/TopHBox"]
+margin_left = 164.0
+margin_right = 192.0
+margin_bottom = 24.0
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="DateTimeLabel" parent="HBox/RightSideContent/TopVBox/TopHBox" instance=ExtResource( 8 )]
+margin_left = 196.0
+margin_top = 5.0
+margin_right = 330.0
+margin_bottom = 19.0
+
+[node name="Spacer2" type="Control" parent="HBox/RightSideContent/TopVBox/TopHBox"]
+margin_left = 334.0
+margin_right = 363.0
+margin_bottom = 24.0
+mouse_filter = 2
+size_flags_horizontal = 3
+
+[node name="SpeedLabel" parent="HBox/RightSideContent/TopVBox/TopHBox" instance=ExtResource( 6 )]
+margin_left = 367.0
+margin_top = 5.0
+margin_right = 392.0
+margin_bottom = 19.0
+
+[node name="SpeedButtons" parent="HBox/RightSideContent/TopVBox/TopHBox" instance=ExtResource( 5 )]
+margin_left = 396.0
+margin_top = 2.0
+margin_right = 491.0
+margin_bottom = 22.0
+
+[node name="PlanetMoonButtons" parent="HBox/RightSideContent/TopVBox" instance=ExtResource( 7 )]
+margin_top = 28.0
+margin_right = 491.0
+margin_bottom = 28.0
+size_flags_horizontal = 3
+
+[node name="UnderMoonsSpacer" type="Control" parent="HBox/RightSideContent/TopVBox"]
+margin_top = 32.0
+margin_right = 491.0
+margin_bottom = 32.0
+
+[node name="BottomVBox" type="VBoxContainer" parent="HBox/RightSideContent"]
+margin_right = 491.0
+margin_bottom = 80.0
+mouse_filter = 2
+size_flags_vertical = 8
+
+[node name="SSSBsCkbxs" parent="HBox/RightSideContent/BottomVBox" instance=ExtResource( 9 )]
+margin_right = 491.0
+margin_bottom = 80.0
+
+[node name="ContainerSizedBySettings" parent="." instance=ExtResource( 3 )]

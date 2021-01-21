@@ -1,0 +1,160 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/sssbs_ckbxs.gd" type="Script" id=1]
+
+[node name="SSSBsCkbxs" type="VBoxContainer"]
+margin_right = 671.0
+margin_bottom = 52.0
+size_flags_vertical = 8
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBox1" type="HBoxContainer" parent="."]
+margin_right = 671.0
+margin_bottom = 24.0
+mouse_filter = 2
+
+[node name="AllAsteroids" type="CheckBox" parent="HBox1"]
+margin_right = 167.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_ALL_ASTEROIDS"
+text = "CKBX_ALL_ASTEROIDS"
+
+[node name="Spacer" type="Control" parent="HBox1"]
+margin_left = 171.0
+margin_right = 671.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+
+[node name="Comets" type="CheckBox" parent="HBox1"]
+visible = false
+margin_left = 594.0
+margin_right = 671.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_COMETS"
+text = "CKBX_COMETS"
+
+[node name="HBox2" type="HBoxContainer" parent="."]
+margin_top = 28.0
+margin_right = 671.0
+margin_bottom = 52.0
+
+[node name="Spacer1" type="Control" parent="HBox2"]
+margin_right = 24.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+
+[node name="NE" type="CheckBox" parent="HBox2"]
+margin_left = 28.0
+margin_right = 176.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_NEAR_EARTH"
+size_flags_horizontal = 3
+text = "CKBX_NEAR_EARTH"
+
+[node name="Spacer2" type="Control" parent="HBox2"]
+margin_left = 180.0
+margin_right = 183.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.1
+
+[node name="MB" type="CheckBox" parent="HBox2"]
+margin_left = 187.0
+margin_right = 326.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_MAIN_BELT"
+size_flags_horizontal = 3
+text = "CKBX_MAIN_BELT"
+
+[node name="Spacer3" type="Control" parent="HBox2"]
+margin_left = 330.0
+margin_right = 430.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+
+[node name="CE" type="CheckBox" parent="HBox2"]
+margin_left = 434.0
+margin_right = 567.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_CENTAURS"
+size_flags_horizontal = 3
+text = "CKBX_CENTAURS"
+
+[node name="Spacer4" type="Control" parent="HBox2"]
+margin_left = 571.0
+margin_right = 671.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+
+[node name="HBox3" type="HBoxContainer" parent="."]
+margin_top = 56.0
+margin_right = 671.0
+margin_bottom = 80.0
+
+[node name="Spacer1" type="Control" parent="HBox3"]
+margin_right = 51.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MC" type="CheckBox" parent="HBox3"]
+margin_left = 55.0
+margin_right = 227.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_MARS_CROSSERS"
+size_flags_horizontal = 3
+text = "CKBX_MARS_CROSSERS"
+
+[node name="Spacer2" type="Control" parent="HBox3"]
+margin_left = 231.0
+margin_right = 231.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="JT" type="CheckBox" parent="HBox3"]
+margin_left = 235.0
+margin_right = 357.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_TROJANS"
+size_flags_horizontal = 3
+text = "CKBX_TROJANS"
+
+[node name="Spacer3" type="Control" parent="HBox3"]
+margin_left = 361.0
+margin_right = 489.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TN" type="CheckBox" parent="HBox3"]
+margin_left = 493.0
+margin_right = 666.0
+margin_bottom = 24.0
+hint_tooltip = "HINT_TRANS_NEPTUNE"
+size_flags_horizontal = 3
+text = "CKBX_TRANS_NEPTUNE"
+
+[node name="Spacer4" type="Control" parent="HBox3"]
+margin_left = 670.0
+margin_right = 671.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.0
+__meta__ = {
+"_edit_use_anchors_": false
+}

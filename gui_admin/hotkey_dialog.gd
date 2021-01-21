@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget.
+# Used by HotkeysPopup.
 
 extends ConfirmationDialog
 class_name HotkeyDialog
-const SCENE := "res://ivoyager/gui_widgets/hotkey_dialog.tscn"
+const SCENE := "res://ivoyager/gui_admin/hotkey_dialog.tscn"
 
 signal hotkey_confirmed(action, scancode, control, alt, shift, meta)
 

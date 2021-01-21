@@ -48,6 +48,7 @@ func set_panel_container(panel_container: PanelContainer):
 
 func _ready():
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
+	Global.connect("setting_changed", self, "_settings_listener")
 	_set_ancestor_panel_container()
 	if _panel_container:
 		_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")
@@ -77,6 +78,19 @@ func _on_toggled(is_pressed: bool) -> void:
 		_panel_container.show()
 	else:
 		set_process_input(true)
+
+func _temp_show_for_resize() -> void:
+	if _panel_container.visible:
+		return
+	# Container mods need up to 2 frames to resize
+	_panel_container.show()
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
+	_panel_container.hide()
+
+func _settings_listener(setting: String, _value) -> void:
+	if setting == "gui_size":
+		_temp_show_for_resize()
 
 func _input(event: InputEvent) -> void:
 	# We process input only when in mouse-over mode

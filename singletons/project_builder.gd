@@ -134,7 +134,7 @@ var gui_controls := {
 	# project init, or 2) reorder children of Universe after project build.
 	_HUD2dSurface_ = HUD2dSurface, # Control ok; TODO: Rename to ProjectionSurface
 	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control!
-	_SplashScreen_ = PBDSplashScreen, # Control ok
+	_SplashScreen_ = PBDSplashScreen, # Replace or remove (set Global.skip_splash_screen)
 	_MainMenuPopup_ = MainMenuPopup, # safe to remove
 	_LoadDialog_ = LoadDialog, # safe to remove
 	_SaveDialog_ = SaveDialog, # safe to remove

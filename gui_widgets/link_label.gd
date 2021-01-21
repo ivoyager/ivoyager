@@ -1,4 +1,4 @@
-# camera_lock.gd
+# ivoyager_homepage.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -15,32 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Expects the camera to have signal "camera_lock_changed" and
-# function "change_camera_lock".
+# GUI widget. A hyperlink!
 
-extends Button
+extends RichTextLabel
 
-var _camera: Camera
+var _link_url := "https://ivoyager.dev"
 
-func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
-	pressed = true
+func set_hyperlink(link_text: String, link_url: String) -> void:
+	bbcode_text = "[url]" + link_text + "[/url]"
+	_link_url = link_url
 
-func _connect_camera(camera: Camera) -> void:
-	if _camera != camera:
-		_disconnect_camera()
-		_camera = camera
-		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+func _ready() -> void:
+	connect("meta_clicked", self, "_on_meta_clicked")
 
-func _disconnect_camera() -> void:
-	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
-	_camera = null
-
-func _pressed() -> void:
-	if _camera:
-		_camera.change_camera_lock(pressed)
-
-func _on_camera_lock_changed(is_locked: bool) -> void:
-	pressed = is_locked
+func _on_meta_clicked(_meta: String) -> void:
+	OS.shell_open(_link_url)

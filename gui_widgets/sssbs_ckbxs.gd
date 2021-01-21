@@ -1,4 +1,4 @@
-# asteroid_group_buttons.gd
+# sssbs_ckbxs.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
@@ -15,40 +15,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Unlike almost all other GUI, this one is hard-coded for our
-# specific Solar System composition. TODO: Make this "procedural" from new
-# data columns in asteroid_groups.csv (this will be needed if anyone develops
-# a procedural generator for alien star/planetary systems).
+# GUI widget. Small Solar System Bodies. This one is hard-coded for our
+# specific Solar System composition.
 #
-# TODO 4.0: Remove button/label hack for multiline button text (if Godot #2967
-# fixed).
+# Comets check box is present but hidden (until they are implemented). 
 
-extends HBoxContainer
+extends VBoxContainer
 
 onready var _points_manager: PointsManager = Global.program.PointsManager
 onready var _buttons := {
-	all_asteroids = $AllAsteroids,
-	NE = $NearEarth,
-	MC = $MarsCros,
-	MB = $MainBelt,
-	JT4 = $Trojans/L4,
-	JT5 = $Trojans/L5,
-	CE = $Centaurs,
-	TN = $TransNeptune,
+	all_asteroids = $HBox1/AllAsteroids,
+	NE = $HBox2/NE,
+	MC = $HBox3/MC,
+	MB = $HBox2/MB,
+	JT = $HBox3/JT, # this button controls both JT4 AND JT5 groups
+	CE = $HBox2/CE,
+	TN = $HBox3/TN,
 }
 
 func _ready() -> void:
 	_points_manager.connect("show_points_changed", self, "_on_show_points_changed")
 	for key in _buttons:
 		var button: Button = _buttons[key]
-		button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		button.connect("pressed", self, "_on_pressed", [key, button])
 
 func _on_pressed(group_or_category: String, button: Button) -> void:
-	_points_manager.show_points(group_or_category, button.pressed)
+	if group_or_category == "JT":
+		_points_manager.show_points("JT4", button.pressed)
+		_points_manager.show_points("JT5", button.pressed)
+	else:
+		_points_manager.show_points(group_or_category, button.pressed)
 
 func _on_show_points_changed(group_or_category: String, is_show: bool) -> void:
-	_buttons[group_or_category].pressed = is_show
+	if group_or_category == "JT4" or group_or_category == "JT5":
+		_buttons.JT.pressed = is_show
+	else:
+		_buttons[group_or_category].pressed = is_show
 	if group_or_category == "all_asteroids":
 		return
 	if !is_show:

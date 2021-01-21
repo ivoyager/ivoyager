@@ -25,6 +25,7 @@ HINT_TIME_REAL,Real time
 HINT_TRACK_GROUND,Camera will maintain latitude & longitude
 HINT_TRACK_ORBIT,Camera will track orbit of the selected object
 HINT_TRANS_NEPTUNE,Show/hide trans-Neptunian asteroids
+HINT_TROJANS,Show/hide Jupiter Trojans
 HINT_VIEW_45,View from 45\u00B0 above
 HINT_VIEW_OUTWARD,Look outward from current selection
 HINT_VIEW_TOP,View from top
