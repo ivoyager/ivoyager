@@ -15,12 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. A hyperlink to our homepage!
+# GUI widget. A hyperlink!
 
 extends RichTextLabel
+
+var _link_url := "https://ivoyager.dev"
+
+func set_hyperlink(link_text: String, link_url: String) -> void:
+	bbcode_text = "[url]" + link_text + "[/url]"
+	_link_url = link_url
 
 func _ready() -> void:
 	connect("meta_clicked", self, "_on_meta_clicked")
 
 func _on_meta_clicked(_meta: String) -> void:
-	OS.shell_open("https://ivoyager.dev")
+	OS.shell_open(_link_url)
