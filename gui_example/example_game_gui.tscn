@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://ivoyager/gui_example/example_game_gui.gd" type="Script" id=1]
-[ext_resource path="res://ivoyager/gui_example/selection_panel.tscn" type="PackedScene" id=2]
-[ext_resource path="res://ivoyager/gui_example/navigation_panel.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_example/example_navigation_panel.tscn" type="PackedScene" id=2]
+[ext_resource path="res://ivoyager/gui_example/example_selection_panel.tscn" type="PackedScene" id=3]
 
 [node name="ExampleGameGUI" type="Control"]
 anchor_right = 1.0
@@ -13,9 +13,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="SelectionPanel" parent="." instance=ExtResource( 2 )]
-margin_right = 1019.0
+[node name="ExampleNavigationPanel" parent="." instance=ExtResource( 2 )]
 
-[node name="NavigationPanel" parent="." instance=ExtResource( 3 )]
-margin_left = -624.0
-margin_top = -82.0
+[node name="ExampleSelectionPanel" parent="." instance=ExtResource( 3 )]

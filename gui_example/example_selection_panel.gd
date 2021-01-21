@@ -1,4 +1,4 @@
-# selection_panel.gd
+# example_selection_panel.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
