@@ -16,7 +16,7 @@
 # limitations under the License.
 # *****************************************************************************
 # Use only one of the container mods:
-#    ContainerSizedBySettings - resizes with Options/GUI Size
+#    ContainerSized - resizes with Options/GUI Size
 #    ContainerDraggable - above plus user draggable
 #    ContainerDynamic - above plus user resizing margins
 #
