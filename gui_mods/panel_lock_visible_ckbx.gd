@@ -1,4 +1,4 @@
-# panel_vis_on_mouse_over_ckbx.gd
+# panel_lock_visible_ckbx.gd
 # This file is part of I, Voyager (https://ivoyager.dev)
 # *****************************************************************************
 # Copyright (c) 2017-2021 Charlie Whitfield
