@@ -27,7 +27,7 @@
 #
 # Modify default sizes and snap values from _ready() in the parent Container.
 #
-# This widget is used in the Planetarium.
+# This mod is used in the Planetarium.
 
 extends Node
 
@@ -55,6 +55,7 @@ func _ready():
 	Global.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
+	set_process_input(false) # only during drag
 
 func _on_gui_refresh_requested() -> void:
 	_resize()
@@ -62,6 +63,7 @@ func _on_gui_refresh_requested() -> void:
 
 func _finish_move() -> void:
 	_drag_point = Vector2.ZERO
+	set_process_input(false)
 	_snap_horizontal()
 	_snap_vertical()
 	_fix_offscreen()
@@ -181,12 +183,17 @@ func _settings_listener(setting: String, _value) -> void:
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == BUTTON_LEFT:
+		if event.pressed and event.button_index == BUTTON_LEFT:
 			_parent.accept_event()
-			if event.pressed:
-				_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
-			else:
-				_finish_move()
+			_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
+			set_process_input(true)
 	elif event is InputEventMouseMotion and _drag_point:
 		_parent.accept_event()
 		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
+
+func _input(event):
+	# We process input only during drag. It is posible for the parent control
+	# to never get the button-up event (happens in HTML5 builds).
+	if event is InputEventMouseButton:
+		if !event.pressed and event.button_index == BUTTON_LEFT:
+			_finish_move()
