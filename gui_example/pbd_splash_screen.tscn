@@ -1,9 +1,9 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://ivoyager/gui_example/pbd_splash_screen.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager_assets/misc/pale_blue_dot.P36254.nasa_jpl-caltech.png" type="Texture" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/main_menu.tscn" type="PackedScene" id=3]
-
+[ext_resource path="res://ivoyager/gui_widgets/version_label.tscn" type="PackedScene" id=4]
 
 [node name="PBDSplashScreen" type="Control"]
 anchor_right = 1.0
@@ -22,23 +22,15 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Info" type="Label" parent="."]
+[node name="VersionLabel" parent="." instance=ExtResource( 4 )]
 anchor_top = 1.0
 anchor_bottom = 1.0
-margin_left = 47.5942
-margin_top = -136.891
-margin_right = 155.594
-margin_bottom = -54.8905
+margin_left = 53.7272
+margin_top = -159.545
+margin_right = 161.727
+margin_bottom = -57.5453
 grow_vertical = 0
-text = "I, Voyager
-v0.0.0
-
-(c) 2017-2021
-Charlie Whitfield"
 valign = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="PBDCaption" type="Label" parent="."]
 anchor_left = 0.8

@@ -21,7 +21,8 @@
 extends Label
 
 func set_version_label(extension_name := "", include_name := true,
-		prepend_v := true) -> void:
+		prepend_v := true, name_version_separator := " ",
+		prepend_text := "", append_text := "") -> void:
 	# extension_name = "" will display I, Voyager version
 	var program_name := ""
 	var version := ""
@@ -37,12 +38,12 @@ func set_version_label(extension_name := "", include_name := true,
 				break
 	if !version:
 		return # failed to find extension
-	var label_text := ""
+	var label_text := prepend_text
 	if include_name:
-		label_text = program_name + " "
+		label_text += program_name + name_version_separator
 	if prepend_v:
 		label_text += "v"
-	label_text += version
+	label_text += version + append_text
 	text = label_text
 
 func _ready():

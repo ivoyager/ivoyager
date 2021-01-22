@@ -17,7 +17,8 @@
 # *****************************************************************************
 # Example splash screen with Pale Blue Dot image and interactive text. You
 # probably want to replace this.
-
+#
+# TODO: Rebuild this using Containers. (Now that I know how to use them!)
 
 extends Control
 class_name PBDSplashScreen
@@ -25,21 +26,18 @@ const SCENE := "res://ivoyager/gui_example/pbd_splash_screen.tscn"
 
 var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
-#var _main_menu_popup: MainMenuPopup
-onready var _info: Label = $Info
 onready var _pbd_caption: Label = $PBDCaption
 
 func project_init():
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished",
-			[], CONNECT_ONESHOT)
 	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("simulator_exited", self, "show")
 	_settings_manager = Global.program.SettingsManager
-#	_main_menu_popup = Global.program.get("MainMenuPopup")
 
 func _ready():
 	theme = Global.themes.splash_screen
+	$VersionLabel.set_version_label("", true, true, "\n", "",
+			"\n\n(c) 2017-2021\nCharlie Whitfield")
 	$MainMenu.is_splash_config = true
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
@@ -48,12 +46,6 @@ func _ready():
 	_pbd_caption.text = "TXT_PBD_LONG" if _settings.pbd_splash_caption_open else "TXT_PBD_SHORT"
 	if Global.skip_splash_screen:
 		hide()
-	_info.hide()
-
-func _on_project_builder_finished() -> void:
-	_info.text = _info.text.replace("0.0.0", Global.ivoyager_version)
-#	_info.margin_left = _main_menu_popup.margin_left if _main_menu_popup else 35.0
-	_info.show()
 
 func _on_state_manager_inited() -> void:
 	pass
