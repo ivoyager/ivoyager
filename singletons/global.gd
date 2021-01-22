@@ -92,7 +92,8 @@ var bodies := [] # Registrar; indexed by body_id
 var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
 var camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
 var project := {} # available for extension "project"
-var addon := {} # available for extension "addons"
+var addons := {} # available for extension "addons"
+var extensions := [] # [[EXTENSION_NAME, EXTENSION_VERSION, EXTENSION_VERSION_YMD], ...]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := "I, Voyager"
@@ -190,7 +191,7 @@ var translations := [ # added here so extensions can modify
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
-var ivoyager_version := "0.0.7-alpha dev"
+var ivoyager_version := "0.0.7-alpha"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false

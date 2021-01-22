@@ -195,6 +195,8 @@ func init_extensions() -> void:
 		dir_name = dir.get_next()
 	for extension in extensions:
 		extension.extension_init() # extension files must have this method!
+		Global.extensions.append([extension.EXTENSION_NAME,
+				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
 	emit_signal("extentions_inited")
 	Global.after_extensions_inited()
 
