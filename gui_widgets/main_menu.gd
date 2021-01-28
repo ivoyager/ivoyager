@@ -37,7 +37,7 @@ func _ready() -> void:
 	theme = Global.themes.main_menu
 	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
 	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
-	_main_menu_manager.connect("button_added", self, "_build")
+	_main_menu_manager.connect("buttons_changed", self, "_build")
 	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
 	connect("visibility_changed", self, "_grab_button_focus")
 

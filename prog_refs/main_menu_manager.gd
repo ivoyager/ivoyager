@@ -27,7 +27,7 @@
 extends Reference
 class_name MainMenuManager
 
-signal button_added()
+signal buttons_changed()
 signal button_state_changed()
 
 enum {ACTIVE, DISABLED, HIDDEN} # button_state
@@ -43,7 +43,16 @@ func make_button(text: String, priority: int, is_splash_button: bool, is_running
 	button_infos.append([text, priority, is_splash_button, is_running_button,
 			target_object, target_method, target_args, button_state])
 	button_infos.sort_custom(self, "_sort_button_infos")
-	emit_signal("button_added")
+	emit_signal("buttons_changed")
+
+func remove_button(text: String) -> void:
+	var i := 0
+	while i < button_infos.size():
+		if button_infos[i][0] == text:
+			button_infos.remove(i)
+			emit_signal("buttons_changed")
+			return
+		i += 1
 
 func change_button_state(text: String, button_state: int) -> void:
 	for button_info in button_infos:

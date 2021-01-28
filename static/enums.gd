@@ -21,6 +21,21 @@
 class_name Enums
 
 
+enum NetworkStates {
+	NO_NETWORK,
+	IS_SERVER,
+	IS_CLIENT,
+}
+
+enum NetworkSyncType {
+	BUILD_SYSTEM,
+	SAVE,
+	LOAD,
+	NEW_PLAYER, # needs save to enter in-progress game
+	EXIT,
+	QUIT,
+}
+
 enum ViewTypes {
 	VIEW_ZOOM,
 	VIEW_45,
@@ -35,20 +50,6 @@ enum TrackTypes {
 	TRACK_ORBIT,
 	TRACK_GROUND,
 }
-
-# TODO maybe???: split ViewTypes into range & angle enums???
-#enum ZoomTypes {
-#	ZOOM_ZOOM,
-#	ZOOM_MEDIUM,
-#	ZOOM_FAR,
-#	ZOOM_SYSTEM,
-#}
-#
-#enum LatitudeTypes {
-#	LAT_EQUATORIAL,
-#	LAT_45,
-#	LAT_TOP,
-#}
 
 enum GUISizes {
 	GUI_SMALL,
