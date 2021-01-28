@@ -31,7 +31,7 @@ extends Node
 class_name Timekeeper
 
 signal processed(sim_time, engine_delta) # this drives the simulator
-signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds)
+signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
 signal date_changed() # normal day rollover
 signal time_altered() # someone manipulated time!
 
@@ -39,7 +39,11 @@ const SECOND := UnitDefs.SECOND # sim_time conversion
 const MINUTE := UnitDefs.MINUTE
 const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
-const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
+const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
+const SYNC_TOLERANCE := 0.1
+const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
+const IS_SERVER = Enums.NetworkStates.IS_SERVER
+const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
 
 # project vars
 var start_real_world_time := false # true overrides other start settings
@@ -101,6 +105,7 @@ var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
+var _network_state := NO_NETWORK
 var _date_time_regex := RegEx.new()
 var _signal_engine_times := []
 var _signal_infos := []
@@ -144,6 +149,8 @@ func get_time_from_ut1(ut1_: float) -> float:
 	return (ut1_ - 0.5) * DAY
 
 func set_ut1_clock(ut1_: float, clock_: Array) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	# Expects clock_ of size 3
 	ut1_ = fposmod(ut1_, 1.0)
 	var total_seconds := int(ut1_ * 86400.0)
@@ -154,6 +161,8 @@ func set_ut1_clock(ut1_: float, clock_: Array) -> void:
 	clock_[2] = total_seconds % 60
 
 func set_gregorian_date2(ut1_: float, date_: Array) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	# Expects date_ of size 3
 	var jdn := int(floor(ut1_)) + J2000_JDN 
 	# warning-ignore:integer_division
@@ -177,6 +186,8 @@ func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 func set_real_world() -> void:
+	if _network_state == IS_CLIENT:
+		return
 	if !_allow_real_world_time:
 		return
 	if !is_real_world_time:
@@ -188,20 +199,27 @@ func set_real_world() -> void:
 	emit_signal("time_altered")
 
 func set_time(new_time: float) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	time = new_time
 	is_real_world_time = false
 	_reset_time()
 	emit_signal("time_altered")
 
 func set_time_reversed(new_is_reversed: bool) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	if !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
 	is_real_world_time = false
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func change_speed(delta_index: int, new_index := -1) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	# Supply [0, new_index] to set a specific index
 	if new_index == -1:
 		new_index = speed_index + delta_index
@@ -214,7 +232,8 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	speed_index = new_index
 	is_real_world_time = false
 	_reset_speed()
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func can_incr_speed() -> bool:
 	return speed_index < speeds.size() - 1
@@ -265,8 +284,12 @@ func recycle_engine_interval_signal(signal_str: String) -> void:
 func _ready() -> void:
 	_on_ready() # subclass can override
 
-func _process(delta: float) -> void:
-	_on_process(delta) # subclass can override
+func _on_ready() -> void:
+	connect("speed_changed", self, "_on_speed_changed")
+	set_process(false) # changes with "run_state_changed" signal
+
+func _on_network_state_changed(network_state: int) -> void: # hooked up from StateManager
+	_network_state = network_state
 
 func _set_init_state() -> void:
 	for signal_info in _signal_infos:
@@ -306,10 +329,8 @@ func _reset_speed() -> void:
 	show_seconds = show_clock and speed_index <= show_seconds_speed
 
 func _refresh_gui() -> void:
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
-
-func _on_ready() -> void:
-	set_process(false) # changes with "run_state_changed" signal
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	if start_real_world_time:
@@ -321,11 +342,47 @@ func _on_run_state_changed(is_running: bool) -> void:
 		yield(_tree, "idle_frame")
 		set_real_world()
 
+remote func _time_sync(time_: float, engine_time_: float, ut1_: float,
+		speed_multiplier_: float) -> void:
+	if _tree.get_rpc_sender_id() != 1:
+		return # from server only
+	# TODO: If jittery, we can smooth...
+	time = time_
+	engine_time = engine_time_
+	ut1 = ut1_
+	speed_multiplier = speed_multiplier_
+
+remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
+		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+	if _tree.get_rpc_sender_id() != 1:
+		return # from server only
+	speed_index = speed_index_
+	speed_name = speed_names[speed_index_]
+	speed_symbol = speed_symbols[speed_index_]
+	is_reversed = is_reversed_
+	is_paused = is_paused_
+	_tree.paused = is_paused_
+	show_clock = show_clock_
+	show_seconds = show_seconds_
+	is_real_world_time = is_real_world_time_
+	emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
+			show_seconds_, is_real_world_time_)
+
+func _on_speed_changed(speed_index_: int, is_reversed_: bool, is_paused_: bool,
+		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+	if _network_state != IS_SERVER:
+		return
+	rpc("_speed_changed_sync", speed_index_, is_reversed_, is_paused_, show_clock_,
+			show_seconds_, is_real_world_time_)
+
+func _process(delta: float) -> void:
+	_on_process(delta) # subclass can override
+
 func _on_process(delta: float) -> void:
 	if is_paused != _tree.paused:
 		is_paused = !is_paused
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
-				show_clock, show_seconds)
+				show_clock, show_seconds, is_real_world_time)
 	engine_time += delta
 	times[1] = engine_time
 	var is_date_change := false
@@ -339,6 +396,10 @@ func _on_process(delta: float) -> void:
 		ut1 = new_ut1
 		times[0] = time
 		times[2] = new_ut1
+	# network sync
+	if _network_state == IS_SERVER:
+		rpc_unreliable("_time_sync", time, engine_time, ut1)
+
 	# We normally stagger engine interval signals to spread out the load on the
 	# main thread (under assumption these trigger GUI or other computations).
 	var process_one := true

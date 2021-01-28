@@ -22,6 +22,7 @@
 #
 #   is_inited: bool
 #   is_running: bool
+#   is_quitting: bool
 #   is_splash_screen: bool
 #   is_system_built: bool
 #   is_loaded_game: bool
@@ -97,6 +98,7 @@ func project_init() -> void:
 	_system_builder = Global.program.SystemBuilder
 	_environment_builder = Global.program.EnvironmentBuilder
 	_timekeeper = Global.program.Timekeeper
+	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
 
 func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)

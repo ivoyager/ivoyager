@@ -56,7 +56,7 @@ func _ready() -> void:
 		_reverse = null
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
-		_show_clock: bool, _show_seconds: bool) -> void:
+		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
 	if _pause:
 		_pause.pressed = is_paused
 	if _reverse:

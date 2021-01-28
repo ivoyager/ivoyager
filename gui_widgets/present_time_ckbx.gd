@@ -29,7 +29,7 @@ func _ready() -> void:
 	connect("pressed", self, "_set_real_world")
 
 func _on_speed_changed(_speed_index: int, _is_reversed: bool, _is_paused: bool,
-		_show_clock: bool, _show_seconds: bool) -> void:
+		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
 	pressed = _timekeeper.is_real_world_time
 
 func _on_time_altered() -> void:
