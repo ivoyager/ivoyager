@@ -30,11 +30,10 @@
 #   network_state: int (Enums.NetworkStates) - if exists, NetworkLobby also writes
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
-# specific manager that you'll need to code yourself, but see:
+# specific manager that you'll have to code yourself, but see:
 # https://docs.godotengine.org/en/stable/tutorials/networking/high_level_multiplayer.html
-# (Or ask on forum and I'll share what I'm using in my own game project.)
-# Be sure to set Global.state.network_state and emit/coordinate with network
-# signals here.
+# Be sure to set Global.state.network_state and coordinate with network signals
+# here. NetworkLobby must tell this node to emit network_state_changed.
 #
 # IMPORTANT! Non-main threads should coordinate with signals and functions here
 # for thread-safety. We wait for all threads to finish before proceding to save,
@@ -44,13 +43,13 @@ extends Node
 class_name StateManager
 
 
-signal active_threads_allowed()
-signal finish_threads_requested()
+signal active_threads_allowed() # can start threads in external projct
+signal finish_threads_required() # finish threads for any external projects
 signal threads_finished()
-signal network_state_changed(network_state) # Enums.NetworkStates
-signal server_about_to_stop(network_sync_type) # Enums.NetworkSyncType; server only
+signal network_state_changed(network_state) # Enums.NetworkStates; from NetworkLobby only
+signal client_is_dropping_out(is_exit)
+signal server_about_to_stop(network_sync_type) # Enums.NetworkSyncTypes; server only
 signal server_about_to_run() # server only
-
 
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
@@ -58,10 +57,13 @@ const DPRINT := false
 const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
 const IS_SERVER = Enums.NetworkStates.IS_SERVER
 const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
-const NetworkSyncType = Enums.NetworkSyncType
+const NetworkSyncTypes = Enums.NetworkSyncTypes
 
-# ****************************** UNPERSISTED **********************************
+# public - read-only!
+var allow_threads := false
+var active_threads := []
 
+# private
 var _state: Dictionary = Global.state
 var _settings: Dictionary = Global.settings
 var _enable_save_load: bool = Global.enable_save_load
@@ -76,7 +78,6 @@ var _timekeeper: Timekeeper
 var _has_been_saved := false
 var _was_paused := false
 var _nodes_requiring_stop := []
-var _active_threads := []
 
 # *************************** PUBLIC FUNCTIONS ********************************
 # Multithreading note: Godot's SceneTree and all I, Voyager public functions
@@ -84,59 +85,44 @@ var _active_threads := []
 # another thread unless the function is guaranteed to be thread-safe (e.g,
 # read-only). Most functions are NOT thread-safe!
 
-func project_init() -> void:
-	connect("ready", self, "_on_ready")
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
-	Global.connect("sim_stop_required", self, "require_stop")
-	Global.connect("sim_run_allowed", self, "allow_run")
-	_tree = Global.program.tree
-	_saver_loader = Global.program.get("SaverLoader")
-	if _saver_loader:
-		_saver_loader.use_thread = Global.use_threads
-	_main_prog_bar = Global.program.get("MainProgBar")
-	_system_builder = Global.program.SystemBuilder
-	_environment_builder = Global.program.EnvironmentBuilder
-	_timekeeper = Global.program.Timekeeper
-	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
-
 func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
 	# to wait until these are removed.
-	_active_threads.append(thread)
+	active_threads.append(thread)
 
 func remove_active_thread(thread: Thread) -> void:
-	_active_threads.erase(thread)
-	test_active_threads()
+	active_threads.erase(thread)
 
-func test_active_threads() -> void:
-	if !_active_threads:
-		assert(DPRINT and prints("signal threads_finished") or true)
-		emit_signal("threads_finished")
+func signal_when_threads_finished() -> void:
+	set_process(true) # next frame at soonest
 
-func require_stop(who: Object, network_sync_type := -1) -> void:
-	# network_sync_type used only if we are the network server
-	if !_popops_can_stop_sim and (who is Popup):
-		return
-	if _state.network_state == IS_SERVER:
-		if _limit_stops_in_multiplayer:
-			if who != self and !(who is Node and who.name == "NetworkLobby"):
-				return # only this node or NetworkLobby can stop
-		emit_signal("server_about_to_stop", network_sync_type) # for NetworkLobby sync
-	elif _state.network_state == IS_CLIENT:
-		if who != self and !(who is Node and who.name == "NetworkLobby"):
-			return # only this node or NetworkLobby can stop
+func require_stop(who: Object, network_sync_type := -1) -> bool:
+	# network_sync_type used only if we are the network server.
+	# Returns false if the caller doesn't have authority to stop the sim for
+	# some reason. This node and NetworkLobby (if exists) always have authority.
+	if !_popops_can_stop_sim and who is Popup:
+		return false
+	if _state.network_state != NO_NETWORK:
+		var is_network_lobby: bool = who is Node and who.name == "NetworkLobby"
+		if _state.network_state == IS_SERVER:
+			if _limit_stops_in_multiplayer:
+				if who != self and !is_network_lobby:
+					return false
+			if !is_network_lobby:
+				emit_signal("server_about_to_stop", network_sync_type)
+		elif _state.network_state == IS_CLIENT:
+			if who != self and !is_network_lobby:
+				return false
 	# "Stopped" means the game is paused, the player is locked out from most
 	# input, and non-main threads have finished. In many cases you should yield
 	# to "threads_finished" after calling this function before proceeding.
 	assert(DPRINT and prints("require_stop", who, network_sync_type) or true)
-	assert(DPRINT and prints("signal finish_threads_requested") or true)
-	emit_signal("finish_threads_requested")
 	if !_nodes_requiring_stop.has(who):
 		_nodes_requiring_stop.append(who)
 	if _state.is_running:
 		_stop_simulator()
-	call_deferred("test_active_threads")
+	signal_when_threads_finished()
+	return true
 
 func allow_run(who: Object) -> void:
 	assert(DPRINT and prints("allow_run", who) or true)
@@ -148,7 +134,7 @@ func allow_run(who: Object) -> void:
 	_run_simulator()
 
 func build_system_tree() -> void:
-	require_stop(self, NetworkSyncType.BUILD_SYSTEM)
+	require_stop(self, NetworkSyncTypes.BUILD_SYSTEM)
 	_state.is_splash_screen = false
 	_system_builder.build()
 	yield(_system_builder, "finished")
@@ -178,21 +164,22 @@ func exit(force_exit := false) -> void:
 			return
 	if _state.network_state == IS_CLIENT:
 		if _tree.get_rpc_sender_id() != 1:
-			_tree.network_peer = null # client is dropping out
-			_state.network_state = NO_NETWORK
-			emit_signal("network_state_changed", NO_NETWORK)
-	require_stop(self, NetworkSyncType.EXIT)
+			emit_signal("client_is_dropping_out", true)
+#			_tree.network_peer = null # client is dropping out
+#			_state.network_state = NO_NETWORK
+#			emit_signal("network_state_changed", NO_NETWORK)
+	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
+	require_stop(self, NetworkSyncTypes.EXIT)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	Global.emit_signal("close_all_admin_popups_requested")
-	_state.is_splash_screen = true
 	_was_paused = false
 	Global.emit_signal("simulator_exited")
 
@@ -215,7 +202,7 @@ func save_game(path: String) -> void:
 		Global.emit_signal("save_dialog_requested")
 		return
 	print("Saving " + path)
-	require_stop(self, NetworkSyncType.SAVE)
+	require_stop(self, NetworkSyncTypes.SAVE)
 	yield(self, "threads_finished")
 	assert(Debug.rprint("Node count before save: ", _tree.get_node_count()))
 	assert(!print_stray_nodes())
@@ -262,7 +249,7 @@ func load_game(path: String, network_gamesave := []) -> void:
 		print("Loading game from network sync...")
 	_state.is_splash_screen = false
 	_state.is_system_built = false
-	require_stop(self, NetworkSyncType.LOAD)
+	require_stop(self, NetworkSyncTypes.LOAD)
 	yield(self, "threads_finished")
 	_state.is_loaded_game = true
 	if _main_prog_bar:
@@ -300,15 +287,16 @@ func quit(force_quit: bool) -> void:
 		if _state.network_state == IS_CLIENT:
 			OneUseConfirm.new("Disconnect from multiplayer game?", self, "quit", [true]) # TODO: text key
 			return
-		elif _enable_save_load: # NO_NETWORK or IS_SERVER and save is possible
+		elif _enable_save_load and !_state.is_splash_screen:
 			OneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
-		_tree.network_peer = null # client is dropping out
-		_state.network_state = NO_NETWORK
-		emit_signal("network_state_changed", NO_NETWORK)
+		emit_signal("client_is_dropping_out", false)
+#		_tree.network_peer = null # client is dropping out
+#		_state.network_state = NO_NETWORK
+#		emit_signal("network_state_changed", NO_NETWORK)
 	_state.is_quitting = true
-	require_stop(self, NetworkSyncType.QUIT)
+	require_stop(self, NetworkSyncTypes.QUIT)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
@@ -325,6 +313,21 @@ func save_quit() -> void:
 	Global.connect("game_save_finished", self, "quit", [true])
 	quick_save()
 
+func project_init() -> void:
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
+	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("sim_stop_required", self, "require_stop")
+	Global.connect("sim_run_allowed", self, "allow_run")
+	_tree = Global.program.tree
+	_saver_loader = Global.program.get("SaverLoader")
+	if _saver_loader:
+		_saver_loader.use_thread = Global.use_threads
+	_main_prog_bar = Global.program.get("MainProgBar")
+	_system_builder = Global.program.SystemBuilder
+	_environment_builder = Global.program.EnvironmentBuilder
+	_timekeeper = Global.program.Timekeeper
+	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
+
 # *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
 func _init() -> void:
@@ -340,8 +343,22 @@ func _on_init() -> void:
 	_state.last_save_path = ""
 	_state.network_state = NO_NETWORK
 
+func _ready():
+	_on_ready()
+
 func _on_ready() -> void:
+	set_process(false)
 	require_stop(self)
+
+func _process(delta: float)-> void:
+	_on_process(delta)
+
+func _on_process(_delta: float)-> void:
+	# We use only for _signal_when_threads_finished()
+	if active_threads:
+		return
+	set_process(false)
+	emit_signal("threads_finished")
 
 func _on_project_builder_finished() -> void:
 	yield(_tree, "idle_frame")
@@ -366,6 +383,9 @@ func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
 	# particular, persist vars during save/load).
 	print("Stop simulator")
+	assert(DPRINT and prints("signal finish_threads_required") or true)
+	allow_threads = false
+	emit_signal("finish_threads_required")
 	_was_paused = _tree.paused
 	_tree.paused = true
 	_state.is_running = false
@@ -377,6 +397,7 @@ func _run_simulator() -> void:
 	Global.emit_signal("run_state_changed", true)
 	_tree.paused = _was_paused
 	assert(DPRINT and prints("signal active_threads_allowed") or true)
+	allow_threads = true
 	emit_signal("active_threads_allowed")
 
 func _test_load_version_warning() -> void:

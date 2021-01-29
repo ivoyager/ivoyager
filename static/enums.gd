@@ -20,6 +20,7 @@
 
 class_name Enums
 
+# TODO: Change all plaural names to singular?
 
 enum NetworkStates {
 	NO_NETWORK,
@@ -27,7 +28,7 @@ enum NetworkStates {
 	IS_CLIENT,
 }
 
-enum NetworkSyncType {
+enum NetworkSyncTypes {
 	BUILD_SYSTEM,
 	SAVE,
 	LOAD,
@@ -62,7 +63,7 @@ enum StarmapSizes {
 	STARMAP_16K,
 }
 
-enum KnowTypes {
+enum KnowTypes { # TODO: Rename UncertaintyType
 	NO,
 	DOUBTFUL,
 	UNKNOWN,
@@ -105,7 +106,7 @@ enum BodyFlags {
 # This should work but isn't tested yet...
 
 static func get_reverse_enum(enum_name: String, value: int) -> String:
-	# This is not fast! intended mostly for GUI
+	# This is not fast! It's intended mostly for GUI.
 	var dict: Dictionary = Global.enums[enum_name]
 	for key in dict:
 		if dict[key] == value:
