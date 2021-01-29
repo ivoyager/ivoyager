@@ -151,7 +151,7 @@ func build_system_tree() -> void:
 	yield(_tree, "idle_frame")
 	Global.emit_signal("gui_refresh_requested")
 
-func exit(force_exit := false) -> void:
+func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
 	if Global.disable_exit:
 		return
@@ -163,11 +163,8 @@ func exit(force_exit := false) -> void:
 			OneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
-		if _tree.get_rpc_sender_id() != 1:
+		if !following_server:
 			emit_signal("client_is_dropping_out", true)
-#			_tree.network_peer = null # client is dropping out
-#			_state.network_state = NO_NETWORK
-#			emit_signal("network_state_changed", NO_NETWORK)
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
