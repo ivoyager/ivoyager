@@ -21,10 +21,10 @@
 # writes Global.state except where noted:
 #
 #   is_inited: bool
-#   is_running: bool
-#   is_quitting: bool
 #   is_splash_screen: bool
 #   is_system_built: bool
+#   is_running: bool # follows _run_simulator() / _stop_simulator()
+#   is_quitting: bool
 #   is_loaded_game: bool
 #   last_save_path: String
 #   network_state: int (Enums.NetworkStates) - if exists, NetworkLobby also writes
@@ -159,7 +159,9 @@ func build_system_tree() -> void:
 	yield(_tree, "idle_frame")
 	Global.emit_signal("about_to_start_simulator", true)
 	Global.emit_signal("close_all_admin_popups_requested")
+	yield(_tree, "idle_frame")
 	allow_run(self)
+	Global.emit_signal("simulator_started")
 	yield(_tree, "idle_frame")
 	Global.emit_signal("gui_refresh_requested")
 
@@ -284,8 +286,11 @@ func load_game(path: String, network_gamesave := []) -> void:
 	assert(Debug.rprint("Node count after load: ", _tree.get_node_count()))
 	assert(!print_stray_nodes())
 	Global.emit_signal("about_to_start_simulator", false)
+	Global.emit_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	allow_run(self)
+	Global.emit_signal("simulator_started")
+	yield(_tree, "idle_frame")
 	Global.emit_signal("gui_refresh_requested")
 
 func quit(force_quit: bool) -> void:

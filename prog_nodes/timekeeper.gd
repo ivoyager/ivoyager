@@ -40,7 +40,7 @@ const MINUTE := UnitDefs.MINUTE
 const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const SYNC_TOLERANCE := 0.1 # s
+const SYNC_TOLERANCE := 0.2 # seconds engine time
 const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
 const IS_SERVER = Enums.NetworkStates.IS_SERVER
 const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
@@ -112,6 +112,7 @@ onready var _allow_time_reversal: bool = Global.allow_time_reversal
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
+var _sync_tolerance := 0.0
 var _prev_ut1_floor := -INF
 var _signal_engine_times := []
 var _signal_infos := []
@@ -346,14 +347,17 @@ remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: flo
 	if engine_time_ < _sync_engine_time: # out-of-order packet
 		return
 	_sync_engine_time = engine_time_
-	speed_multiplier = speed_multiplier_
+	if speed_multiplier != speed_multiplier_:
+		speed_multiplier = speed_multiplier_
+		_sync_tolerance = SYNC_TOLERANCE * abs(speed_multiplier_)
 	var time_diff := time_ - time
-	if abs(time_diff) < SYNC_TOLERANCE:
+	if abs(time_diff) < _sync_tolerance:
 		return
+	# <1% in LAN test w/ SYNC_TOLERANCE = 0.1
 	_is_sync = true
-	# adjust by half the difference
-	time = time_ - time_diff / 2.0
-	engine_time = (engine_time + engine_time_) / 2.0
+	# move 1/4 toward the sync value
+	time = time_ - 0.75 * time_diff
+	engine_time = 0.75 * engine_time + 0.25 * engine_time_
 
 remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
