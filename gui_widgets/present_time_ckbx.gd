@@ -21,6 +21,9 @@
 
 extends CheckBox
 
+const IS_CLIENT := Enums.NetworkStates.IS_CLIENT
+
+var _state: Dictionary = Global.state
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 
 func _ready() -> void:
@@ -36,5 +39,6 @@ func _on_time_altered() -> void:
 	pressed = _timekeeper.is_real_world_time
 	
 func _set_real_world() -> void:
-	_timekeeper.set_real_world()
-	pressed = true
+	if _state.network_state != IS_CLIENT:
+		_timekeeper.set_real_world()
+		pressed = true

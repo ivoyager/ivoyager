@@ -40,7 +40,7 @@ const MINUTE := UnitDefs.MINUTE
 const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const SYNC_TOLERANCE := 0.1
+const SYNC_TOLERANCE := 0.1 # s
 const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
 const IS_SERVER = Enums.NetworkStates.IS_SERVER
 const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
@@ -105,52 +105,21 @@ var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _network_state := NO_NETWORK
 var _date_time_regex := RegEx.new()
+onready var _tree := get_tree()
+onready var _allow_real_world_time: bool = Global.allow_real_world_time
+onready var _allow_time_reversal: bool = Global.allow_time_reversal
+var _network_state := NO_NETWORK
+var _is_sync := false
+var _sync_engine_time := -INF
+var _prev_ut1_floor := -INF
 var _signal_engine_times := []
 var _signal_infos := []
 var _signal_recycle := []
 var _signal_counter := 0
-onready var _tree := get_tree()
-onready var _allow_real_world_time: bool = Global.allow_real_world_time
-onready var _allow_time_reversal: bool = Global.allow_time_reversal
 
 
-func project_init() -> void: # this is before _ready()
-	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	Global.connect("game_load_finished", self, "_set_ready_state")
-	Global.connect("simulator_exited", self, "_set_ready_state")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("gui_refresh_requested", self, "_refresh_gui")
-	_date_time_regex.compile(regexpr)
-	times.resize(3)
-	date.resize(3)
-	clock.resize(3)
-	_set_init_state()
-	_set_ready_state()
-
-func get_real_world_time() -> float:
-	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
-	var j2000_s := (sys_msec - 946728000000) * 0.001
-	return j2000_s * SECOND # this is sim_time
-
-func get_ut1(sim_time: float) -> float:
-	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
-	# significantly from solar days. Note that our sim solar days are somewhat
-	# but not entirely simplified: sidereal day is constant but orbit is
-	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
-	# simulated Earth's solar day, whatever that happens to be. To do so, we
-	# would need to account for Earth's dynamic orbit (rates of Om & w).
-	return sim_time / DAY + 0.5
-
-func get_time_from_ut1(ut1_: float) -> float:
-	# see comment above
-	return (ut1_ - 0.5) * DAY
-
-func set_ut1_clock(ut1_: float, clock_: Array) -> void:
-	if _network_state == IS_CLIENT:
-		return
+static func set_ut1_clock_array(ut1_: float, clock_: Array) -> void:
 	# Expects clock_ of size 3
 	ut1_ = fposmod(ut1_, 1.0)
 	var total_seconds := int(ut1_ * 86400.0)
@@ -160,9 +129,7 @@ func set_ut1_clock(ut1_: float, clock_: Array) -> void:
 	clock_[1] = (total_seconds / 60) % 60
 	clock_[2] = total_seconds % 60
 
-func set_gregorian_date2(ut1_: float, date_: Array) -> void:
-	if _network_state == IS_CLIENT:
-		return
+static func set_gregorian_date_array(ut1_: float, date_: Array) -> void:
 	# Expects date_ of size 3
 	var jdn := int(floor(ut1_)) + J2000_JDN 
 	# warning-ignore:integer_division
@@ -181,6 +148,24 @@ func set_gregorian_date2(ut1_: float, date_: Array) -> void:
 	date_[1] = m # month
 	# warning-ignore:integer_division
 	date_[2] = ((h % 153) / 5) + 1 # day
+
+func get_real_world_time() -> float:
+	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
+	var j2000_s := (sys_msec - 946728000000) * 0.001
+	return j2000_s * SECOND # this is sim_time
+
+func get_ut1(sim_time: float) -> float:
+	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
+	# significantly from solar days. Note that our sim solar days are somewhat
+	# but not entirely simplified: sidereal day is constant but orbit is
+	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
+	# simulated Earth's solar day, whatever that happens to be. To do so, we
+	# would need to account for Earth's dynamic orbit (rates of Om & w).
+	return sim_time / DAY + 0.5
+
+func get_time_from_ut1(ut1_: float) -> float:
+	# see comment above
+	return (ut1_ - 0.5) * DAY
 
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date
@@ -241,6 +226,7 @@ func can_incr_speed() -> bool:
 func can_decr_speed() -> bool:
 	return speed_index > 0
 
+# Next two were developed a long time ago and not used recently. Need testing.
 func make_engine_interval_signal(interval_s: float, offset_s: float) -> String:
 	# Returns a signal string for caller to connect to. This is useful if you
 	# have many GUIs updating at some interval and want them offset (so not on
@@ -276,8 +262,19 @@ func recycle_engine_interval_signal(signal_str: String) -> void:
 		index += 1
 	assert(false, "Attempted to recycle non-existing signal")
 
-# PUBLIC FUNCTIONS BELOW HAVE NOT BEEN TESTED!!!
-
+func project_init() -> void:
+	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	Global.connect("game_load_finished", self, "_set_ready_state")
+	Global.connect("simulator_exited", self, "_set_ready_state")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("gui_refresh_requested", self, "_refresh_gui")
+	_date_time_regex.compile(regexpr)
+	times.resize(3)
+	date.resize(3)
+	clock.resize(3)
+	_set_init_state()
+	_set_ready_state()
 
 # **************************** VIRTUAL & PRIVATE ******************************
 
@@ -288,7 +285,8 @@ func _on_ready() -> void:
 	connect("speed_changed", self, "_on_speed_changed")
 	set_process(false) # changes with "run_state_changed" signal
 
-func _on_network_state_changed(network_state: int) -> void: # hooked up from StateManager
+func _on_network_state_changed(network_state: int) -> void:
+	# this function is hooked up from StateManager
 	_network_state = network_state
 
 func _set_init_state() -> void:
@@ -316,8 +314,8 @@ func _reset_time() -> void:
 	ut1 = get_ut1(time)
 	times[0] = time
 	times[2] = ut1
-	set_gregorian_date2(ut1, date)
-	set_ut1_clock(ut1, clock)
+	set_gregorian_date_array(ut1, date)
+	set_ut1_clock_array(ut1, clock)
 
 func _reset_speed() -> void:
 	speed_multiplier = speeds[speed_index]
@@ -342,15 +340,20 @@ func _on_run_state_changed(is_running: bool) -> void:
 		yield(_tree, "idle_frame")
 		set_real_world()
 
-remote func _time_sync(time_: float, engine_time_: float, ut1_: float,
-		speed_multiplier_: float) -> void:
+remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
 	if _tree.get_rpc_sender_id() != 1:
 		return # from server only
-	# TODO: If jittery, we can smooth...
-	time = time_
-	engine_time = engine_time_
-	ut1 = ut1_
+	if engine_time_ < _sync_engine_time: # out-of-order packet
+		return
+	_sync_engine_time = engine_time_
 	speed_multiplier = speed_multiplier_
+	var time_diff := time_ - time
+	if abs(time_diff) < SYNC_TOLERANCE:
+		return
+	_is_sync = true
+	# adjust by half the difference
+	time = time_ - time_diff / 2.0
+	engine_time = (engine_time + engine_time_) / 2.0
 
 remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
@@ -383,22 +386,27 @@ func _on_process(delta: float) -> void:
 		is_paused = !is_paused
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
 				show_clock, show_seconds, is_real_world_time)
-	engine_time += delta
+	if !_is_sync:
+		engine_time += delta
 	times[1] = engine_time
 	var is_date_change := false
 	if !is_paused:
-		time += delta * speed_multiplier
+		if !_is_sync:
+			time += delta * speed_multiplier
 		var new_ut1 := get_ut1(time)
-		if floor(new_ut1) != floor(ut1): # new solar day
-			set_gregorian_date2(new_ut1, date)
+		var new_ut1_floor := floor(new_ut1)
+		if new_ut1_floor != _prev_ut1_floor: # new solar day
+			set_gregorian_date_array(new_ut1_floor, date)
 			is_date_change = true
-		set_ut1_clock(new_ut1, clock)
+			_prev_ut1_floor = new_ut1_floor
+		set_ut1_clock_array(new_ut1, clock)
 		ut1 = new_ut1
 		times[0] = time
 		times[2] = new_ut1
 	# network sync
 	if _network_state == IS_SERVER:
-		rpc_unreliable("_time_sync", time, engine_time, ut1)
+		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
+	_is_sync = false
 
 	# We normally stagger engine interval signals to spread out the load on the
 	# main thread (under assumption these trigger GUI or other computations).
@@ -418,6 +426,7 @@ func _on_process(delta: float) -> void:
 		emit_signal(signal_str)
 		if process_one:
 			break
+	
 	if is_date_change:
 		emit_signal("date_changed")
 	emit_signal("processed", time, delta)

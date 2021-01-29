@@ -118,7 +118,7 @@ func _on_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("save_quit"):
 		_state_manager.save_quit()
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
-		if _state.network_state != IS_CLIENT:
+		if _state.network_state != IS_CLIENT: # need for pause everywhere!
 			_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
 		_timekeeper.change_speed(1)
