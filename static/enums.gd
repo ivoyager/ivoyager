@@ -20,6 +20,22 @@
 
 class_name Enums
 
+# TODO: Change all plaural names to singular?
+
+enum NetworkStates {
+	NO_NETWORK,
+	IS_SERVER,
+	IS_CLIENT,
+}
+
+enum NetworkSyncTypes {
+	BUILD_SYSTEM,
+	SAVE,
+	LOAD,
+	NEW_PLAYER, # needs save to enter in-progress game
+	EXIT,
+	QUIT,
+}
 
 enum ViewTypes {
 	VIEW_ZOOM,
@@ -36,20 +52,6 @@ enum TrackTypes {
 	TRACK_GROUND,
 }
 
-# TODO maybe???: split ViewTypes into range & angle enums???
-#enum ZoomTypes {
-#	ZOOM_ZOOM,
-#	ZOOM_MEDIUM,
-#	ZOOM_FAR,
-#	ZOOM_SYSTEM,
-#}
-#
-#enum LatitudeTypes {
-#	LAT_EQUATORIAL,
-#	LAT_45,
-#	LAT_TOP,
-#}
-
 enum GUISizes {
 	GUI_SMALL,
 	GUI_MEDIUM,
@@ -61,7 +63,7 @@ enum StarmapSizes {
 	STARMAP_16K,
 }
 
-enum KnowTypes {
+enum KnowTypes { # TODO: Rename UncertaintyType
 	NO,
 	DOUBTFUL,
 	UNKNOWN,
@@ -104,7 +106,7 @@ enum BodyFlags {
 # This should work but isn't tested yet...
 
 static func get_reverse_enum(enum_name: String, value: int) -> String:
-	# This is not fast! intended mostly for GUI
+	# This is not fast! It's intended mostly for GUI.
 	var dict: Dictionary = Global.enums[enum_name]
 	for key in dict:
 		if dict[key] == value:
