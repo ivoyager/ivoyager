@@ -26,6 +26,9 @@
 # example, a Martian calendar/clock.
 # This node processes during pause, but stops and starts processing on
 # "run_state_changed" signal.
+#
+# Also provides dynamic signal creation for timer function, using either engine
+# time (w/ or w/out pause) or sim time.
 
 extends Node
 class_name Timekeeper
@@ -114,10 +117,6 @@ var _is_sync := false
 var _sync_engine_time := -INF
 var _sync_tolerance := 0.0
 var _prev_ut1_floor := -INF
-var _signal_engine_times := []
-var _signal_infos := []
-var _signal_recycle := []
-var _signal_counter := 0
 
 
 static func set_ut1_clock_array(ut1_: float, clock_: Array) -> void:
@@ -227,42 +226,6 @@ func can_incr_speed() -> bool:
 func can_decr_speed() -> bool:
 	return speed_index > 0
 
-# Next two were developed a long time ago and not used recently. Need testing.
-func make_engine_interval_signal(interval_s: float, offset_s: float) -> String:
-	# Returns a signal string for caller to connect to. This is useful if you
-	# have many GUIs updating at some interval and want them offset (so not on
-	# same frame). The subscription is not persisted so must be renewed in a
-	# loaded game.
-	assert(interval_s > 0.3, "Use _process() for shorter intervals!")
-	assert(offset_s <= interval_s)
-	var signal_str: String
-	if _signal_recycle:
-		signal_str = _signal_recycle.pop_back()
-	else:
-		_signal_counter += 1
-		signal_str = String(_signal_counter)
-		add_user_signal(signal_str)
-	var signal_info := [signal_str, interval_s]
-	var next_signal := engine_time - fmod(engine_time, interval_s) + offset_s
-	if next_signal <= engine_time:
-		next_signal += interval_s
-	_insert_engine_interval_signal(signal_info, next_signal)
-	return signal_str
-
-func recycle_engine_interval_signal(signal_str: String) -> void:
-	# Recycle signal when it is safe for another subscriber to change & use.
-	var n_signals := _signal_infos.size()
-	var index := 0
-	while index < n_signals:
-		var test_signal_str: String = _signal_infos[index][0]
-		if test_signal_str == signal_str:
-			_signal_engine_times.remove(index)
-			_signal_infos.remove(index)
-			_signal_recycle.append(signal_str)
-			return
-		index += 1
-	assert(false, "Attempted to recycle non-existing signal")
-
 func project_init() -> void:
 	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
@@ -291,12 +254,6 @@ func _on_network_state_changed(network_state: int) -> void:
 	_network_state = network_state
 
 func _set_init_state() -> void:
-	for signal_info in _signal_infos:
-		var signal_str: String = signal_info[0]
-		_signal_recycle.append(signal_str)
-	_signal_infos.clear()
-	_signal_engine_times.clear()
-	_signal_engine_times.append(INF)
 	if start_real_world_time:
 		time = get_real_world_time()
 	else:
@@ -342,6 +299,7 @@ func _on_run_state_changed(is_running: bool) -> void:
 		set_real_world()
 
 remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
+	# client-side network game only
 	if _tree.get_rpc_sender_id() != 1:
 		return # from server only
 	if engine_time_ < _sync_engine_time: # out-of-order packet
@@ -361,6 +319,7 @@ remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: flo
 
 remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+	# client-side network game only
 	if _tree.get_rpc_sender_id() != 1:
 		return # from server only
 	speed_index = speed_index_
@@ -411,31 +370,7 @@ func _on_process(delta: float) -> void:
 	if _network_state == IS_SERVER:
 		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
 	_is_sync = false
-
-	# We normally stagger engine interval signals to spread out the load on the
-	# main thread (under assumption these trigger GUI or other computations).
-	var process_one := true
-	while engine_time > _signal_engine_times[0]: # fast negative result!
-		var signal_time: float = _signal_engine_times.pop_front()
-		var signal_info: Array = _signal_infos.pop_front()
-		var signal_str: String = signal_info[0]
-		var interval_s: float = signal_info[1]
-		signal_time += interval_s
-		if signal_time < engine_time: # we are behind for some reason!
-			process_one = false
-			signal_time += interval_s
-			while signal_time < engine_time:
-				signal_time += interval_s
-		_insert_engine_interval_signal(signal_info, signal_time)
-		emit_signal(signal_str)
-		if process_one:
-			break
-	
+	# signal time and date
 	if is_date_change:
 		emit_signal("date_changed")
 	emit_signal("processed", time, delta)
-
-func _insert_engine_interval_signal(signal_info: Array, next_signal: float) -> void:
-	var index := _signal_engine_times.bsearch(next_signal, false) # after equal value
-	_signal_engine_times.insert(index, next_signal)
-	_signal_infos.insert(index, signal_info)

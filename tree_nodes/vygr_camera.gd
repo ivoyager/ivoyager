@@ -125,9 +125,6 @@ var size_ratio_exponent := 0.8 # 1.0 is full size compensation
 var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
-# public cache init
-var cache_view: View
-
 # private
 var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
@@ -139,6 +136,7 @@ var _track_dist: float
 var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
 var _max_compensated_dist: float
+var _init_view: View
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -170,12 +168,16 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
+func set_start_view(view: View) -> void:
+	# Set before about_to_start_simulator to start camera at this View.
+	_init_view = view
+
 func add_to_tree() -> void:
 	var start_body_name: String
-	if cache_view:
-		start_body_name = cache_view.selection_name
-	else:
-		start_body_name = Global.start_body_name
+#	if _init_view:
+#		start_body_name = _init_view.selection_name
+#	else:
+	start_body_name = Global.start_body_name
 	var start_body: Body = _registrar.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
@@ -386,8 +388,8 @@ func _on_ready():
 	print("VygrCamera ready...")
 
 func _start_sim(_is_new_game: bool) -> void:
-	if cache_view:
-		move_to_view(cache_view, true)
+	if _init_view:
+		move_to_view(_init_view, true)
 	else:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
