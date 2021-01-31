@@ -61,6 +61,7 @@ const DDPRINT := false # prints even more debug info
 
 # ****************************** SIGNALS **************************************
 
+signal game_loaded_from_file(gamesave) # for network sync
 signal finished() # yield to this after calling save_game() or load_game()
 
 # **************************** PUBLIC VARS ************************************
@@ -146,6 +147,7 @@ func project_init():
 	pass
 
 func save_game(save_file: File, tree: SceneTree) -> void: # Assumes save_file already open
+	_clear()
 	_tree = tree
 	_root = _tree.get_root()
 	_current_scene = _tree.get_current_scene()
@@ -153,12 +155,20 @@ func save_game(save_file: File, tree: SceneTree) -> void: # Assumes save_file al
 	_prog_serialized = 0
 	if use_thread:
 		_thread = Thread.new()
-		# warning-ignore:return_value_discarded
 		_thread.start(self, "_threaded_save", save_file)
 	else:
 		_threaded_save(save_file)
 
-func load_game(save_file: File, tree: SceneTree) -> void:
+func load_game(save_file: File, tree: SceneTree, network_gamesave := []) -> void:
+	# save_file can be null if network_gamesave supplied
+	_clear()
+	var gamesave: Array
+	if save_file:
+		gamesave = save_file.get_var()
+		emit_signal("game_loaded_from_file", gamesave) # for network sync
+		save_file.close()
+	else:
+		gamesave = network_gamesave
 	_tree = tree
 	_root = _tree.get_root()
 	_tag_size = object_tag.length()
@@ -185,9 +195,9 @@ func load_game(save_file: File, tree: SceneTree) -> void:
 	if use_thread:
 		_thread = Thread.new()
 		# warning-ignore:return_value_discarded
-		_thread.start(self, "_threaded_load", save_file)
+		_thread.start(self, "_threaded_load", gamesave)
 	else:
-		_threaded_load(save_file)
+		_threaded_load(gamesave)
 
 # ***************************** DEBUG LOGGING *********************************
 
@@ -261,14 +271,14 @@ func _threaded_save(save_file: File) -> void:
 	_register_tree_for_save(_root)
 	assert(DPRINT and print("* Serializing Tree for Save *") or true)
 	_serialize_tree(_root)
-	var save_data := [
+	var gamesave := [
 		_sfile_n_objects,
 		_sfile_serialized_nodes,
 		_sfile_serialized_references,
 		_sfile_script_paths,
 		_sfile_current_scene_id
 		]
-	save_file.store_var(save_data)
+	save_file.store_var(gamesave)
 	save_file.close()
 	call_deferred("_finish_save")
 
@@ -277,18 +287,15 @@ func _finish_save() -> void:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
 	print("Objects saved: ", _sfile_n_objects)
-	_clear()
 	yield(_tree, "idle_frame")
 	emit_signal("finished")
 
-func _threaded_load(save_file: File) -> void:
-	var save_data: Array = save_file.get_var()
-	save_file.close()
-	_sfile_n_objects = save_data[0]
-	_sfile_serialized_nodes = save_data[1]
-	_sfile_serialized_references = save_data[2]
-	_sfile_script_paths = save_data[3]
-	_sfile_current_scene_id = save_data[4]
+func _threaded_load(gamesave: Array) -> void:
+	_sfile_n_objects = gamesave[0]
+	_sfile_serialized_nodes = gamesave[1]
+	_sfile_serialized_references = gamesave[2]
+	_sfile_script_paths = gamesave[3]
+	_sfile_current_scene_id = gamesave[4]
 	_objects.resize(_sfile_n_objects)
 	_register_and_instance_load_objects()
 	_deserialize_load_objects()
@@ -301,7 +308,6 @@ func _finish_load() -> void:
 	_build_tree()
 	_set_current_scene()
 	print("Objects loaded: ", _sfile_n_objects)
-	_clear()
 	yield(_tree, "idle_frame")
 	emit_signal("finished")
 

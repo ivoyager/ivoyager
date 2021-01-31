@@ -26,12 +26,15 @@
 # example, a Martian calendar/clock.
 # This node processes during pause, but stops and starts processing on
 # "run_state_changed" signal.
+#
+# Also provides dynamic signal creation for timer function, using either engine
+# time (w/ or w/out pause) or sim time.
 
 extends Node
 class_name Timekeeper
 
 signal processed(sim_time, engine_delta) # this drives the simulator
-signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds)
+signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
 signal date_changed() # normal day rollover
 signal time_altered() # someone manipulated time!
 
@@ -39,7 +42,11 @@ const SECOND := UnitDefs.SECOND # sim_time conversion
 const MINUTE := UnitDefs.MINUTE
 const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
-const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time 
+const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
+const SYNC_TOLERANCE := 0.2 # seconds engine time
+const NO_NETWORK = Enums.NetworkState.NO_NETWORK
+const IS_SERVER = Enums.NetworkState.IS_SERVER
+const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 
 # project vars
 var start_real_world_time := false # true overrides other start settings
@@ -102,48 +109,17 @@ var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
 var _date_time_regex := RegEx.new()
-var _signal_engine_times := []
-var _signal_infos := []
-var _signal_recycle := []
-var _signal_counter := 0
 onready var _tree := get_tree()
 onready var _allow_real_world_time: bool = Global.allow_real_world_time
 onready var _allow_time_reversal: bool = Global.allow_time_reversal
+var _network_state := NO_NETWORK
+var _is_sync := false
+var _sync_engine_time := -INF
+var _sync_tolerance := 0.0
+var _prev_ut1_floor := -INF
 
 
-func project_init() -> void: # this is before _ready()
-	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	Global.connect("game_load_finished", self, "_set_ready_state")
-	Global.connect("simulator_exited", self, "_set_ready_state")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("gui_refresh_requested", self, "_refresh_gui")
-	_date_time_regex.compile(regexpr)
-	times.resize(3)
-	date.resize(3)
-	clock.resize(3)
-	_set_init_state()
-	_set_ready_state()
-
-func get_real_world_time() -> float:
-	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
-	var j2000_s := (sys_msec - 946728000000) * 0.001
-	return j2000_s * SECOND # this is sim_time
-
-func get_ut1(sim_time: float) -> float:
-	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
-	# significantly from solar days. Note that our sim solar days are somewhat
-	# but not entirely simplified: sidereal day is constant but orbit is
-	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
-	# simulated Earth's solar day, whatever that happens to be. To do so, we
-	# would need to account for Earth's dynamic orbit (rates of Om & w).
-	return sim_time / DAY + 0.5
-
-func get_time_from_ut1(ut1_: float) -> float:
-	# see comment above
-	return (ut1_ - 0.5) * DAY
-
-func set_ut1_clock(ut1_: float, clock_: Array) -> void:
+static func set_ut1_clock_array(ut1_: float, clock_: Array) -> void:
 	# Expects clock_ of size 3
 	ut1_ = fposmod(ut1_, 1.0)
 	var total_seconds := int(ut1_ * 86400.0)
@@ -153,7 +129,7 @@ func set_ut1_clock(ut1_: float, clock_: Array) -> void:
 	clock_[1] = (total_seconds / 60) % 60
 	clock_[2] = total_seconds % 60
 
-func set_gregorian_date2(ut1_: float, date_: Array) -> void:
+static func set_gregorian_date_array(ut1_: float, date_: Array) -> void:
 	# Expects date_ of size 3
 	var jdn := int(floor(ut1_)) + J2000_JDN 
 	# warning-ignore:integer_division
@@ -173,10 +149,30 @@ func set_gregorian_date2(ut1_: float, date_: Array) -> void:
 	# warning-ignore:integer_division
 	date_[2] = ((h % 153) / 5) + 1 # day
 
+func get_real_world_time() -> float:
+	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
+	var j2000_s := (sys_msec - 946728000000) * 0.001
+	return j2000_s * SECOND # this is sim_time
+
+func get_ut1(sim_time: float) -> float:
+	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
+	# significantly from solar days. Note that our sim solar days are somewhat
+	# but not entirely simplified: sidereal day is constant but orbit is
+	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
+	# simulated Earth's solar day, whatever that happens to be. To do so, we
+	# would need to account for Earth's dynamic orbit (rates of Om & w).
+	return sim_time / DAY + 0.5
+
+func get_time_from_ut1(ut1_: float) -> float:
+	# see comment above
+	return (ut1_ - 0.5) * DAY
+
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 func set_real_world() -> void:
+	if _network_state == IS_CLIENT:
+		return
 	if !_allow_real_world_time:
 		return
 	if !is_real_world_time:
@@ -188,20 +184,27 @@ func set_real_world() -> void:
 	emit_signal("time_altered")
 
 func set_time(new_time: float) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	time = new_time
 	is_real_world_time = false
 	_reset_time()
 	emit_signal("time_altered")
 
 func set_time_reversed(new_is_reversed: bool) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	if !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
 	is_real_world_time = false
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func change_speed(delta_index: int, new_index := -1) -> void:
+	if _network_state == IS_CLIENT:
+		return
 	# Supply [0, new_index] to set a specific index
 	if new_index == -1:
 		new_index = speed_index + delta_index
@@ -214,7 +217,8 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	speed_index = new_index
 	is_real_world_time = false
 	_reset_speed()
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func can_incr_speed() -> bool:
 	return speed_index < speeds.size() - 1
@@ -222,59 +226,34 @@ func can_incr_speed() -> bool:
 func can_decr_speed() -> bool:
 	return speed_index > 0
 
-func make_engine_interval_signal(interval_s: float, offset_s: float) -> String:
-	# Returns a signal string for caller to connect to. This is useful if you
-	# have many GUIs updating at some interval and want them offset (so not on
-	# same frame). The subscription is not persisted so must be renewed in a
-	# loaded game.
-	assert(interval_s > 0.3, "Use _process() for shorter intervals!")
-	assert(offset_s <= interval_s)
-	var signal_str: String
-	if _signal_recycle:
-		signal_str = _signal_recycle.pop_back()
-	else:
-		_signal_counter += 1
-		signal_str = String(_signal_counter)
-		add_user_signal(signal_str)
-	var signal_info := [signal_str, interval_s]
-	var next_signal := engine_time - fmod(engine_time, interval_s) + offset_s
-	if next_signal <= engine_time:
-		next_signal += interval_s
-	_insert_engine_interval_signal(signal_info, next_signal)
-	return signal_str
-
-func recycle_engine_interval_signal(signal_str: String) -> void:
-	# Recycle signal when it is safe for another subscriber to change & use.
-	var n_signals := _signal_infos.size()
-	var index := 0
-	while index < n_signals:
-		var test_signal_str: String = _signal_infos[index][0]
-		if test_signal_str == signal_str:
-			_signal_engine_times.remove(index)
-			_signal_infos.remove(index)
-			_signal_recycle.append(signal_str)
-			return
-		index += 1
-	assert(false, "Attempted to recycle non-existing signal")
-
-# PUBLIC FUNCTIONS BELOW HAVE NOT BEEN TESTED!!!
-
+func project_init() -> void:
+	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	Global.connect("game_load_finished", self, "_set_ready_state")
+	Global.connect("simulator_exited", self, "_set_ready_state")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("gui_refresh_requested", self, "_refresh_gui")
+	_date_time_regex.compile(regexpr)
+	times.resize(3)
+	date.resize(3)
+	clock.resize(3)
+	_set_init_state()
+	_set_ready_state()
 
 # **************************** VIRTUAL & PRIVATE ******************************
 
 func _ready() -> void:
 	_on_ready() # subclass can override
 
-func _process(delta: float) -> void:
-	_on_process(delta) # subclass can override
+func _on_ready() -> void:
+	connect("speed_changed", self, "_on_speed_changed")
+	set_process(false) # changes with "run_state_changed" signal
+
+func _on_network_state_changed(network_state: int) -> void:
+	# this function is hooked up from StateManager
+	_network_state = network_state
 
 func _set_init_state() -> void:
-	for signal_info in _signal_infos:
-		var signal_str: String = signal_info[0]
-		_signal_recycle.append(signal_str)
-	_signal_infos.clear()
-	_signal_engine_times.clear()
-	_signal_engine_times.append(INF)
 	if start_real_world_time:
 		time = get_real_world_time()
 	else:
@@ -293,8 +272,8 @@ func _reset_time() -> void:
 	ut1 = get_ut1(time)
 	times[0] = time
 	times[2] = ut1
-	set_gregorian_date2(ut1, date)
-	set_ut1_clock(ut1, clock)
+	set_gregorian_date_array(ut1, date)
+	set_ut1_clock_array(ut1, clock)
 
 func _reset_speed() -> void:
 	speed_multiplier = speeds[speed_index]
@@ -306,10 +285,8 @@ func _reset_speed() -> void:
 	show_seconds = show_clock and speed_index <= show_seconds_speed
 
 func _refresh_gui() -> void:
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock, show_seconds)
-
-func _on_ready() -> void:
-	set_process(false) # changes with "run_state_changed" signal
+	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+			show_seconds, is_real_world_time)
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	if start_real_world_time:
@@ -321,47 +298,79 @@ func _on_run_state_changed(is_running: bool) -> void:
 		yield(_tree, "idle_frame")
 		set_real_world()
 
+remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
+	# client-side network game only
+	if _tree.get_rpc_sender_id() != 1:
+		return # from server only
+	if engine_time_ < _sync_engine_time: # out-of-order packet
+		return
+	_sync_engine_time = engine_time_
+	if speed_multiplier != speed_multiplier_:
+		speed_multiplier = speed_multiplier_
+		_sync_tolerance = SYNC_TOLERANCE * abs(speed_multiplier_)
+	var time_diff := time_ - time
+	if abs(time_diff) < _sync_tolerance:
+		return
+	# <1% in LAN test w/ SYNC_TOLERANCE = 0.1
+	_is_sync = true
+	# move 1/4 toward the sync value
+	time = time_ - 0.75 * time_diff
+	engine_time = 0.75 * engine_time + 0.25 * engine_time_
+
+remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
+		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+	# client-side network game only
+	if _tree.get_rpc_sender_id() != 1:
+		return # from server only
+	speed_index = speed_index_
+	speed_name = speed_names[speed_index_]
+	speed_symbol = speed_symbols[speed_index_]
+	is_reversed = is_reversed_
+	is_paused = is_paused_
+	_tree.paused = is_paused_
+	show_clock = show_clock_
+	show_seconds = show_seconds_
+	is_real_world_time = is_real_world_time_
+	emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
+			show_seconds_, is_real_world_time_)
+
+func _on_speed_changed(speed_index_: int, is_reversed_: bool, is_paused_: bool,
+		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+	if _network_state != IS_SERVER:
+		return
+	rpc("_speed_changed_sync", speed_index_, is_reversed_, is_paused_, show_clock_,
+			show_seconds_, is_real_world_time_)
+
+func _process(delta: float) -> void:
+	_on_process(delta) # subclass can override
+
 func _on_process(delta: float) -> void:
 	if is_paused != _tree.paused:
 		is_paused = !is_paused
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
-				show_clock, show_seconds)
-	engine_time += delta
+				show_clock, show_seconds, is_real_world_time)
+	if !_is_sync:
+		engine_time += delta
 	times[1] = engine_time
 	var is_date_change := false
 	if !is_paused:
-		time += delta * speed_multiplier
+		if !_is_sync:
+			time += delta * speed_multiplier
 		var new_ut1 := get_ut1(time)
-		if floor(new_ut1) != floor(ut1): # new solar day
-			set_gregorian_date2(new_ut1, date)
+		var new_ut1_floor := floor(new_ut1)
+		if new_ut1_floor != _prev_ut1_floor: # new solar day
+			set_gregorian_date_array(new_ut1_floor, date)
 			is_date_change = true
-		set_ut1_clock(new_ut1, clock)
+			_prev_ut1_floor = new_ut1_floor
+		set_ut1_clock_array(new_ut1, clock)
 		ut1 = new_ut1
 		times[0] = time
 		times[2] = new_ut1
-	# We normally stagger engine interval signals to spread out the load on the
-	# main thread (under assumption these trigger GUI or other computations).
-	var process_one := true
-	while engine_time > _signal_engine_times[0]: # fast negative result!
-		var signal_time: float = _signal_engine_times.pop_front()
-		var signal_info: Array = _signal_infos.pop_front()
-		var signal_str: String = signal_info[0]
-		var interval_s: float = signal_info[1]
-		signal_time += interval_s
-		if signal_time < engine_time: # we are behind for some reason!
-			process_one = false
-			signal_time += interval_s
-			while signal_time < engine_time:
-				signal_time += interval_s
-		_insert_engine_interval_signal(signal_info, signal_time)
-		emit_signal(signal_str)
-		if process_one:
-			break
+	# network sync
+	if _network_state == IS_SERVER:
+		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
+	_is_sync = false
+	# signal time and date
 	if is_date_change:
 		emit_signal("date_changed")
 	emit_signal("processed", time, delta)
-
-func _insert_engine_interval_signal(signal_info: Array, next_signal: float) -> void:
-	var index := _signal_engine_times.bsearch(next_signal, false) # after equal value
-	_signal_engine_times.insert(index, next_signal)
-	_signal_infos.insert(index, signal_info)

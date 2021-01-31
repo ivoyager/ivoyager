@@ -20,8 +20,22 @@
 
 class_name Enums
 
+enum NetworkState {
+	NO_NETWORK,
+	IS_SERVER,
+	IS_CLIENT,
+}
 
-enum ViewTypes {
+enum NetworkStopSync {
+	BUILD_SYSTEM,
+	SAVE,
+	LOAD,
+	NEW_PLAYER, # needs save to enter in-progress game
+	EXIT,
+	QUIT,
+}
+
+enum ViewType {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
@@ -30,38 +44,24 @@ enum ViewTypes {
 	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
 }
 
-enum TrackTypes {
+enum CameraTrackType {
 	TRACK_NONE,
 	TRACK_ORBIT,
 	TRACK_GROUND,
 }
 
-# TODO maybe???: split ViewTypes into range & angle enums???
-#enum ZoomTypes {
-#	ZOOM_ZOOM,
-#	ZOOM_MEDIUM,
-#	ZOOM_FAR,
-#	ZOOM_SYSTEM,
-#}
-#
-#enum LatitudeTypes {
-#	LAT_EQUATORIAL,
-#	LAT_45,
-#	LAT_TOP,
-#}
-
-enum GUISizes {
+enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,
 	GUI_LARGE,
 }
 
-enum StarmapSizes {
+enum StarmapSize {
 	STARMAP_8K,
 	STARMAP_16K,
 }
 
-enum KnowTypes {
+enum ConfidenceType {
 	NO,
 	DOUBTFUL,
 	UNKNOWN,
@@ -104,7 +104,7 @@ enum BodyFlags {
 # This should work but isn't tested yet...
 
 static func get_reverse_enum(enum_name: String, value: int) -> String:
-	# This is not fast! intended mostly for GUI
+	# This is not fast! It's intended mostly for GUI.
 	var dict: Dictionary = Global.enums[enum_name]
 	for key in dict:
 		if dict[key] == value:

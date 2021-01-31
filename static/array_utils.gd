@@ -1,4 +1,4 @@
-# present_time_ckbx.gd
+# array_utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,28 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# UI widget. Used in Planetarium to select real-world present time.
 
-extends CheckBox
+class_name ArrayUtils
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
-
-var _state: Dictionary = Global.state
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
-
-func _ready() -> void:
-	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
-	_timekeeper.connect("time_altered", self, "_on_time_altered")
-	connect("pressed", self, "_set_real_world")
-
-func _on_speed_changed(_speed_index: int, _is_reversed: bool, _is_paused: bool,
-		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
-	pressed = _timekeeper.is_real_world_time
-
-func _on_time_altered() -> void:
-	pressed = _timekeeper.is_real_world_time
-	
-func _set_real_world() -> void:
-	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_real_world()
-		pressed = true
+static func init(size: int, init_value) -> Array:
+	var array := []
+	array.resize(size)
+	var i := 0
+	while i < size:
+		array[i] = init_value
+		i += 1
+	return array

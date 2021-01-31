@@ -21,6 +21,9 @@
 
 extends HBoxContainer
 
+const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+
+var _state: Dictionary = Global.state
 onready var _tree: SceneTree = get_tree()
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 onready var _minus: Button = $Minus
@@ -56,10 +59,20 @@ func _ready() -> void:
 		_reverse = null
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
-		_show_clock: bool, _show_seconds: bool) -> void:
+		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
+	if _state.network_state == IS_CLIENT:
+		if _pause:
+			_pause.disabled = true
+		if _reverse:
+			_reverse.disabled = true
+		_plus.disabled = true
+		_minus.disabled = true
+		return
 	if _pause:
+		_pause.disabled = false
 		_pause.pressed = is_paused
 	if _reverse:
+		_reverse.disabled = false
 		_reverse.pressed = is_reversed
 	_plus.disabled = !_timekeeper.can_incr_speed()
 	_minus.disabled = !_timekeeper.can_decr_speed()
@@ -68,7 +81,8 @@ func _increment_speed(increment: int) -> void:
 	_timekeeper.change_speed(increment)
 
 func _change_paused() -> void:
-	_tree.paused = _pause.pressed
+	if _state.network_state != IS_CLIENT: # need for pause everywhere!
+		_tree.paused = _pause.pressed
 
 func _change_reversed() -> void:
 	_timekeeper.set_time_reversed(_reverse.pressed)

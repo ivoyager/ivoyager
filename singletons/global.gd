@@ -33,6 +33,7 @@ signal state_manager_inited()
 signal system_tree_built_or_loaded(is_new_game)
 signal system_tree_ready(is_new_game)
 signal about_to_start_simulator(is_new_game)
+signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_exit()
 signal simulator_exited()
@@ -76,14 +77,14 @@ signal close_all_admin_popups_requested() # main menu, options, etc.
 signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
-# containers - managing object indicated; safe to keep container reference
-var state := {} # StateManager; keys include is_inited, is_running, etc.
+# containers - write authority indicated; safe to keep container reference
+var state := {} # StateManager (& NetworkLobby, if exists); is_running, etc.
 var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
-var program := {} # program nodes & refs populated by ProjectBuilder
-var script_classes := {} # classes defined in ProjectBuilder dictionaries
-var assets := {} # populated by this node project_init()
+var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 
+var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
+var assets := {} # Global; loaded here from dynamic paths
 var settings := {} # SettingsManager
 var table_rows := {} # TableImporter; row ints for ALL row keys
 var table_row_dicts := {} # TableImporter; a row dict for each table
@@ -95,7 +96,7 @@ var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
 var camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # [[EXTENSION_NAME, EXTENSION_VERSION, EXTENSION_VERSION_YMD], ...]
+var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := "I, Voyager"
@@ -116,8 +117,12 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
-var home_view_from_user_time_zone := false
+var home_view_from_user_time_zone := false # grab user latitude (in Planetarium)
 var disable_pause := false
+var popops_can_stop_sim := true # false overrides stop_sim member in all popups
+var limit_stops_in_multiplayer := true # overrides most stops
+#var multiplayer_disables_pause := false # server can pause if false, no one if true
+#var multiplayer_min_speed := 1
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
 var vertecies_per_orbit: int = 500

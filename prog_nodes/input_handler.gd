@@ -29,6 +29,9 @@
 extends Node
 class_name InputHandler
 
+
+const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+
 var _state: Dictionary = Global.state
 var _script_classes: Dictionary = Global.script_classes
 var _disable_pause: bool
@@ -115,7 +118,8 @@ func _on_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("save_quit"):
 		_state_manager.save_quit()
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
-		_tree.paused = !_tree.paused
+		if _state.network_state != IS_CLIENT: # need for pause everywhere!
+			_tree.paused = !_tree.paused
 	elif event.is_action_pressed("incr_speed"):
 		_timekeeper.change_speed(1)
 	elif event.is_action_pressed("decr_speed"):

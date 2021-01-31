@@ -42,9 +42,9 @@ func get_environment(_env_type: int) -> Environment:
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
 	match _settings.starmap:
-		Enums.StarmapSizes.STARMAP_8K:
+		Enums.StarmapSize.STARMAP_8K:
 			starmap_file = _asset_paths.starmap_8k
-		Enums.StarmapSizes.STARMAP_16K:
+		Enums.StarmapSize.STARMAP_16K:
 			starmap_file = _asset_paths.starmap_16k
 	if !FileUtils.exists(starmap_file):
 		starmap_file = _asset_paths[fallback_starmap]

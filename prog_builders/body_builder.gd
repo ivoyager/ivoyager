@@ -118,7 +118,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_enum(table_name, "hydrostatic_equilibrium", row)
-	if hydrostatic_equilibrium >= Enums.KnowTypes.PROBABLY:
+	if hydrostatic_equilibrium >= Enums.ConfidenceType.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match table_name:
 		"stars":

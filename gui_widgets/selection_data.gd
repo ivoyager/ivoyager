@@ -49,7 +49,7 @@ var show_data := [
 	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyStrings.UNIT, "km"],
 	["p_radius", "LABEL_POLAR_RADIUS", QtyStrings.UNIT, "km"],
 	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
-	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "KnowTypes", null,
+	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType", null,
 			BodyFlags.IS_MOON, null, true],
 	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyStrings.UNIT, "_g"],
 	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],

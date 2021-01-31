@@ -25,6 +25,11 @@
 #
 # TODO: Make LPoint into Body instances
 # TODO: barycenters
+#
+# TODO: Make this node "drag-and_drop". Maybe we need to depreciate TreeManager.
+#
+# TODO: Implement network sync! This will mainly involve synching Orbit
+# anytime it changes (e.g., impulse from a rocket engine).
 
 extends Spatial
 class_name Body
