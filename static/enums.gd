@@ -20,15 +20,13 @@
 
 class_name Enums
 
-# TODO: Change all plaural names to singular?
-
-enum NetworkStates {
+enum NetworkState {
 	NO_NETWORK,
 	IS_SERVER,
 	IS_CLIENT,
 }
 
-enum NetworkSyncTypes {
+enum NetworkStopSync {
 	BUILD_SYSTEM,
 	SAVE,
 	LOAD,
@@ -37,7 +35,7 @@ enum NetworkSyncTypes {
 	QUIT,
 }
 
-enum ViewTypes {
+enum ViewType {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
@@ -46,24 +44,24 @@ enum ViewTypes {
 	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
 }
 
-enum TrackTypes {
+enum CameraTrackType {
 	TRACK_NONE,
 	TRACK_ORBIT,
 	TRACK_GROUND,
 }
 
-enum GUISizes {
+enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,
 	GUI_LARGE,
 }
 
-enum StarmapSizes {
+enum StarmapSize {
 	STARMAP_8K,
 	STARMAP_16K,
 }
 
-enum KnowTypes { # TODO: Rename UncertaintyType
+enum ConfidenceType {
 	NO,
 	DOUBTFUL,
 	UNKNOWN,

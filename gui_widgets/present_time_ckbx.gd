@@ -21,7 +21,7 @@
 
 extends CheckBox
 
-const IS_CLIENT := Enums.NetworkStates.IS_CLIENT
+const IS_CLIENT := Enums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = Global.state
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper

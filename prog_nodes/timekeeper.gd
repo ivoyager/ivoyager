@@ -41,9 +41,9 @@ const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
 const SYNC_TOLERANCE := 0.2 # seconds engine time
-const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
-const IS_SERVER = Enums.NetworkStates.IS_SERVER
-const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
+const NO_NETWORK = Enums.NetworkState.NO_NETWORK
+const IS_SERVER = Enums.NetworkState.IS_SERVER
+const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 
 # project vars
 var start_real_world_time := false # true overrides other start settings

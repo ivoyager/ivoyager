@@ -30,7 +30,7 @@ extends Node
 class_name InputHandler
 
 
-const IS_CLIENT := Enums.NetworkStates.IS_CLIENT
+const IS_CLIENT := Enums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = Global.state
 var _script_classes: Dictionary = Global.script_classes

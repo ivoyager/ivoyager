@@ -22,7 +22,7 @@
 
 extends HBoxContainer
 
-const ViewTypes := Enums.ViewTypes
+const ViewType := Enums.ViewType
 
 var enable_outward := false # under dev for astronomy; it's pretty crappy now
 var use_small_txt := false
@@ -65,16 +65,16 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _update_view_type(view_type: int) -> void:
-	_zoom_button.pressed = view_type == ViewTypes.VIEW_ZOOM
-	_45_button.pressed = view_type == ViewTypes.VIEW_45
-	_top_button.pressed = view_type == ViewTypes.VIEW_TOP
-	_outward_button.pressed = view_type == ViewTypes.VIEW_OUTWARD
+	_zoom_button.pressed = view_type == ViewType.VIEW_ZOOM
+	_45_button.pressed = view_type == ViewType.VIEW_45
+	_top_button.pressed = view_type == ViewType.VIEW_TOP
+	_outward_button.pressed = view_type == ViewType.VIEW_OUTWARD
 
 func _on_zoom_pressed() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move_to_selection(null, ViewTypes.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewType.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_zoom_button.pressed = true
 
@@ -82,7 +82,7 @@ func _on_45_pressed() -> void:
 	if !_camera:
 		return
 	if _45_button.pressed:
-		_camera.move_to_selection(null, ViewTypes.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewType.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_45_button.pressed = true
 
@@ -90,7 +90,7 @@ func _on_top_pressed() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move_to_selection(null, ViewTypes.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewType.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_top_button.pressed = true
 
@@ -98,7 +98,7 @@ func _on_outward_pressed() -> void:
 	if !_camera:
 		return
 	if _outward_button.pressed:
-		_camera.move_to_selection(null, ViewTypes.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to_selection(null, ViewType.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
 	else:
 		_outward_button.pressed = true
 

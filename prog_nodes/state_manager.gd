@@ -27,7 +27,7 @@
 #   is_quitting: bool
 #   is_loaded_game: bool
 #   last_save_path: String
-#   network_state: int (Enums.NetworkStates) - if exists, NetworkLobby also writes
+#   network_state: int (Enums.NetworkState) - if exists, NetworkLobby also writes
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
@@ -46,18 +46,18 @@ class_name StateManager
 signal active_threads_allowed() # can start threads in external projct
 signal finish_threads_required() # finish threads for any external projects
 signal threads_finished()
-signal network_state_changed(network_state) # Enums.NetworkStates; from NetworkLobby only
+signal network_state_changed(network_state) # Enums.NetworkState; from NetworkLobby only
 signal client_is_dropping_out(is_exit)
-signal server_about_to_stop(network_sync_type) # Enums.NetworkSyncTypes; server only
+signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
 signal server_about_to_run() # server only
 
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const DPRINT := false
-const NO_NETWORK = Enums.NetworkStates.NO_NETWORK
-const IS_SERVER = Enums.NetworkStates.IS_SERVER
-const IS_CLIENT = Enums.NetworkStates.IS_CLIENT
-const NetworkSyncTypes = Enums.NetworkSyncTypes
+const NO_NETWORK = Enums.NetworkState.NO_NETWORK
+const IS_SERVER = Enums.NetworkState.IS_SERVER
+const IS_CLIENT = Enums.NetworkState.IS_CLIENT
+const NetworkStopSync = Enums.NetworkStopSync
 
 # public - read-only!
 var allow_threads := false
@@ -134,7 +134,7 @@ func allow_run(who: Object) -> void:
 	_run_simulator()
 
 func build_system_tree() -> void:
-	require_stop(self, NetworkSyncTypes.BUILD_SYSTEM)
+	require_stop(self, NetworkStopSync.BUILD_SYSTEM)
 	_state.is_splash_screen = false
 	_system_builder.build()
 	yield(_system_builder, "finished")
@@ -170,7 +170,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
-	require_stop(self, NetworkSyncTypes.EXIT)
+	require_stop(self, NetworkStopSync.EXIT)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
@@ -199,7 +199,7 @@ func save_game(path: String) -> void:
 		Global.emit_signal("save_dialog_requested")
 		return
 	print("Saving " + path)
-	require_stop(self, NetworkSyncTypes.SAVE)
+	require_stop(self, NetworkStopSync.SAVE)
 	yield(self, "threads_finished")
 	assert(Debug.rprint("Node count before save: ", _tree.get_node_count()))
 	assert(!print_stray_nodes())
@@ -246,7 +246,7 @@ func load_game(path: String, network_gamesave := []) -> void:
 		print("Loading game from network sync...")
 	_state.is_splash_screen = false
 	_state.is_system_built = false
-	require_stop(self, NetworkSyncTypes.LOAD)
+	require_stop(self, NetworkStopSync.LOAD)
 	yield(self, "threads_finished")
 	_state.is_loaded_game = true
 	if _main_prog_bar:
@@ -293,7 +293,7 @@ func quit(force_quit: bool) -> void:
 #		_state.network_state = NO_NETWORK
 #		emit_signal("network_state_changed", NO_NETWORK)
 	_state.is_quitting = true
-	require_stop(self, NetworkSyncTypes.QUIT)
+	require_stop(self, NetworkStopSync.QUIT)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())

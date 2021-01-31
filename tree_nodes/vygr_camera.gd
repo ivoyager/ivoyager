@@ -47,15 +47,15 @@ signal tracking_changed(track_type, is_ecliptic)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-const VIEW_ZOOM = Enums.ViewTypes.VIEW_ZOOM
-const VIEW_45 = Enums.ViewTypes.VIEW_45
-const VIEW_TOP = Enums.ViewTypes.VIEW_TOP
-const VIEW_OUTWARD = Enums.ViewTypes.VIEW_OUTWARD
-const VIEW_BUMPED = Enums.ViewTypes.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = Enums.ViewTypes.VIEW_BUMPED_ROTATED
-const TRACK_NONE = Enums.TrackTypes.TRACK_NONE
-const TRACK_ORBIT = Enums.TrackTypes.TRACK_ORBIT
-const TRACK_GROUND = Enums.TrackTypes.TRACK_GROUND
+const VIEW_ZOOM = Enums.ViewType.VIEW_ZOOM
+const VIEW_45 = Enums.ViewType.VIEW_45
+const VIEW_TOP = Enums.ViewType.VIEW_TOP
+const VIEW_OUTWARD = Enums.ViewType.VIEW_OUTWARD
+const VIEW_BUMPED = Enums.ViewType.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = Enums.ViewType.VIEW_BUMPED_ROTATED
+const TRACK_NONE = Enums.CameraTrackType.TRACK_NONE
+const TRACK_ORBIT = Enums.CameraTrackType.TRACK_ORBIT
+const TRACK_GROUND = Enums.CameraTrackType.TRACK_GROUND
 
 # TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
 # circumstances, PATH_CARTESION looks better.
