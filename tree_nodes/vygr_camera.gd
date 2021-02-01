@@ -329,30 +329,6 @@ func change_camera_lock(new_lock: bool) -> void:
 			if view_type > VIEW_OUTWARD:
 				view_type = _view_type_memory
 
-func tree_manager_process(delta: float) -> void:
-	pass
-
-func _process(delta: float) -> void:
-	# We process our working _transform, then update transform
-	if is_moving:
-		_move_progress += delta
-		if _move_progress < _transfer_time:
-			_process_transferring()
-		else: # end the move
-			is_moving = false
-			if parent != _to_spatial:
-				_do_camera_handoff() # happened already unless is_instant_move
-	if !is_moving:
-		_process_not_transferring(delta)
-	if UNIVERSE_SHIFTING:
-		# Camera parent will be at global translation (0,0,0) after this step.
-		# The -= operator works because current Universe translation is part
-		# of parent.global_transform.origin, so we are removing old shift at
-		# the same time we add our new shift. 
-		_universe.translation -= parent.global_transform.origin
-	transform = _transform
-	_camera_info[1] = global_transform.origin
-
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
 func _ready() -> void:
@@ -407,9 +383,30 @@ func _prepare_to_free() -> void:
 	_from_spatial = null
 	_transfer_ref_spatial = null
 
-func _process_transferring() -> void:
+func _process(delta: float) -> void:
+	# We process our working _transform, then update transform
+	if is_moving:
+		_process_move_in_progress(delta)
+	if !is_moving:
+		_process_at_target(delta)
+	if UNIVERSE_SHIFTING:
+		# Camera parent will be at global translation (0,0,0) after this step.
+		# The -= operator works because current Universe translation is part
+		# of parent.global_transform.origin, so we are removing old shift at
+		# the same time we add our new shift. 
+		_universe.translation -= parent.global_transform.origin
+	transform = _transform
+	_camera_info[1] = global_transform.origin
+
+func _process_move_in_progress(delta: float) -> void:
+	_move_progress += delta
+	if _move_progress >= _transfer_time: # end the move
+		is_moving = false
+		if parent != _to_spatial:
+			_do_camera_handoff()
+		return
 	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
-	# Hand-off at halfway point avoids imprecision shakes at either end
+	# Hand-off at halfway point avoids precision shakes at either end
 	if parent != _to_spatial and progress > 0.5:
 		_do_camera_handoff()
 	if _path_type == PATH_CARTESIAN:
@@ -487,7 +484,7 @@ func _interpolate_spherical_path(progress: float) -> void:
 	# interpolate basis
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
 
-func _process_not_transferring(delta: float) -> void:
+func _process_at_target(delta: float) -> void:
 	var is_camera_bump := false
 	# maintain present "position" based on track_type
 	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
