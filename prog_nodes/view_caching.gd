@@ -17,8 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Add to ProjectBuilder.program_nodes if you want camera view to be cached and
-# restored on start. Used by Planetarium.
+# [Not added in core ivoyager!] Add to ProjectBuilder.program_nodes in your
+# extension file if you want camera view to be cached and restored on start.
+# Used by Planetarium.
 #
 # You only need to set cache_interval if Global.disable_quit = true. Otherwise,
 # cache happens on quit and we don't use the Timer function.
