@@ -118,11 +118,11 @@ func _disconnect_camera() -> void:
 		assert(DPRINT and prints("disconnected camera:", _camera) or true)
 	_camera = null
 
-func _timekeeper_process(time: float, e_delta: float) -> void:
+func _timekeeper_process(time: float, _e_delta: float) -> void:
 	if !_camera:
 		return
 	_time = time
-	_camera.tree_manager_process(e_delta)
+#	_camera.tree_manager_process(e_delta)
 	_camera_global_translation = _camera.global_transform.origin
 	for body in _registrar.top_bodies:
 		_process_body_recursive(body)

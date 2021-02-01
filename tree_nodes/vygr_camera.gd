@@ -91,7 +91,7 @@ var is_camera_lock := true
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
-var view_position := VECTOR3_ZERO # spherical; relative to orbit or ground ref
+var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
 var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
@@ -127,7 +127,7 @@ var is_moving := false # body to body move in progress
 
 # private
 var _times: Array = Global.times
-var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
+var _camera_info: Array = Global.camera_info # [self, global_translation, fov]
 var _settings: Dictionary = Global.settings
 var _registrar: Registrar = Global.program.Registrar
 var _max_dist: float = Global.max_camera_distance
@@ -316,6 +316,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
+	_camera_info[2] = fov
 	if !suppress_move:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
@@ -328,10 +329,13 @@ func change_camera_lock(new_lock: bool) -> void:
 			if view_type > VIEW_OUTWARD:
 				view_type = _view_type_memory
 
-func tree_manager_process(engine_delta: float) -> void:
+func tree_manager_process(delta: float) -> void:
+	pass
+
+func _process(delta: float) -> void:
 	# We process our working _transform, then update transform
 	if is_moving:
-		_move_progress += engine_delta
+		_move_progress += delta
 		if _move_progress < _transfer_time:
 			_process_transferring()
 		else: # end the move
@@ -339,7 +343,7 @@ func tree_manager_process(engine_delta: float) -> void:
 			if parent != _to_spatial:
 				_do_camera_handoff() # happened already unless is_instant_move
 	if !is_moving:
-		_process_not_transferring(engine_delta)
+		_process_not_transferring(delta)
 	if UNIVERSE_SHIFTING:
 		# Camera parent will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
@@ -347,7 +351,7 @@ func tree_manager_process(engine_delta: float) -> void:
 		# the same time we add our new shift. 
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
-	_camera_info[2] = global_transform.origin
+	_camera_info[1] = global_transform.origin
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
@@ -383,7 +387,7 @@ func _on_ready():
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_camera_info[0] = self
-	_camera_info[1] = fov
+	_camera_info[2] = fov
 	Global.emit_signal("camera_ready", self)
 	print("VygrCamera ready...")
 
@@ -626,6 +630,7 @@ func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3
 	var up := _get_up(selection_item_, dist, track_type_)
 	var tracking_basis := _get_tracking_basis(selection_item_, dist, track_type_)
 	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
+	assert(view_translation)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, up)
 	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis
