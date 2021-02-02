@@ -184,10 +184,15 @@ func _on_init() -> void:
 
 func _on_ready() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
+	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
 		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
 
+func _prepare_to_free() -> void:
+	set_process(false)
+	Global.disconnect("setting_changed", self, "_settings_listener")
+	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _process(_delta: float) -> void:
 	var global_translation := global_transform.origin

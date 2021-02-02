@@ -366,21 +366,23 @@ func _on_ready():
 	Global.emit_signal("camera_ready", self)
 	print("VygrCamera ready...")
 
-func _start_sim(_is_new_game: bool) -> void:
-	if _init_view:
-		move_to_view(_init_view, true)
-	else:
-		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
-
 func _prepare_to_free() -> void:
+	set_process(false)
 	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
 	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
+	Global.disconnect("setting_changed", self, "_settings_listener")
 	selection_item = null
 	parent = null
 	_to_spatial = null
 	_from_spatial = null
 	_transfer_ref_spatial = null
+
+func _start_sim(_is_new_game: bool) -> void:
+	if _init_view:
+		move_to_view(_init_view, true)
+	else:
+		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 func _process(delta: float) -> void:
 	# We process our working _transform, then update transform
