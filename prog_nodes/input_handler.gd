@@ -38,10 +38,10 @@ var _disable_pause: bool
 var _allow_time_reversal: bool
 var _allow_dev_tools: bool
 var _allow_fullscreen_toggle: bool
-var _tree: SceneTree
-var _state_manager: StateManager
-var _tree_manager: TreeManager
-var _timekeeper: Timekeeper
+onready var _tree: SceneTree = Global.program.tree
+onready var _state_manager: StateManager = Global.program.StateManager
+onready var _huds_manager: HUDsManager = Global.program.HUDsManager
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 var _selection_manager: SelectionManager
 var _suppressors := []
 
@@ -66,10 +66,6 @@ func project_init():
 	_allow_time_reversal = Global.allow_time_reversal
 	_allow_dev_tools = Global.allow_dev_tools
 	_allow_fullscreen_toggle = Global.allow_fullscreen_toggle
-	_tree = Global.program.tree
-	_state_manager = Global.program.StateManager
-	_tree_manager = Global.program.TreeManager
-	_timekeeper = Global.program.Timekeeper
 
 func _on_system_ready(_is_new_game: bool) -> void:
 	var project_gui = Global.program.ProjectGUI
@@ -127,11 +123,11 @@ func _on_input(event: InputEvent) -> void:
 	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
 		_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
 	elif event.is_action_pressed("toggle_orbits"):
-		_tree_manager.set_show_orbits(!_tree_manager.show_orbits)
+		_huds_manager.set_show_orbits(!_huds_manager.show_orbits)
 	elif event.is_action_pressed("toggle_symbols"):
-		_tree_manager.set_show_symbols(!_tree_manager.show_symbols)
+		_huds_manager.set_show_symbols(!_huds_manager.show_symbols)
 	elif event.is_action_pressed("toggle_names"):
-		_tree_manager.set_show_names(!_tree_manager.show_names)
+		_huds_manager.set_show_names(!_huds_manager.show_names)
 	elif _selection_manager:
 		_input_for_selection_manager(event)
 		return

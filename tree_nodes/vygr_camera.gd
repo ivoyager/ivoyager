@@ -22,7 +22,6 @@
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
 #    VygrCameraHandler (program_nodes/vygr_camera_handler.gd); replace this!
-#    TreeManager (program_nodes/tree_manager.gd); modify as needed
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground

@@ -26,7 +26,7 @@
 # TODO: Make LPoint into Body instances
 # TODO: barycenters
 #
-# TODO: Make this node "drag-and_drop". Maybe we need to depreciate TreeManager.
+# TODO: Make this node "drag-and_drop" as much as possible.
 #
 # TODO: Implement network sync! This will mainly involve synching Orbit
 # anytime it changes (e.g., impulse from a rocket engine).
@@ -37,7 +37,6 @@ class_name Body
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
 const DPRINT := false
-const HACKFIX_MOVE_HIDDEN_FAR_AWAY := false # This *seems* to help as of Godot 3.2.1
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
@@ -51,6 +50,7 @@ const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
 const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
+const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 
 # persisted
 # name is table row key ("MOON_EUROPA", etc.), which is localization key
@@ -62,7 +62,6 @@ var light_type := -1 # lights.csv (probably -1 except stars)
 var flags := 0 # see Enums.BodyFlags
 
 var system_radius := 0.0 # widest orbiting satellite
-
 var file_info := [""] # [file_prefix, icon [REMOVED], rings, rings_radius], 1st required
 
 var properties: Properties
@@ -88,10 +87,14 @@ var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
 var hud_too_close := 0.0
 var satellite_indexes: Dictionary # one dict shared by all Bodies
+var is_asleep := false
 
 # private
 var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info
+onready var _huds_manager: HUDsManager = Global.program.HUDsManager
+var _show_orbit := true
+var _show_label := true
 var _visible := false
 var _model_visible := false
 var _aux_graphic_visible := false
@@ -154,22 +157,56 @@ func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	else:
 		hud_too_close = 0.0
 
-func tree_manager_process(time: float, camera: Camera, camera_global_translation: Vector3,
-		show_orbits: bool, show_label: bool) -> void:
-	# TODO: We really need a simpler, _process() based approach that is "drag-
-	# and-drop" and still reasonably optimized.
-	# TODO: Need viewport size correction.
+func set_sleep(sleep: bool) -> void:
+	if flags & NEVER_SLEEP or sleep == is_asleep:
+		return
+	if sleep:
+		is_asleep = true
+		set_process(false)
+		_visible = false
+		visible = false
+		if hud_orbit: # not a child of this node!
+			_hud_orbit_visible = false
+			hud_orbit.visible = false
+		if hud_label: # not a child of this node!
+			_hud_label_visible = false
+			hud_label.visible = false
+	else:
+		is_asleep = false
+		set_process(true) # will show on next _process()
+
+func _init():
+	_on_init()
+
+func _on_init() -> void:
+	connect("ready", self, "_on_ready")
+	hide()
+
+func _on_ready() -> void:
+	Global.connect("setting_changed", self, "_settings_listener")
+	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
+	if orbit:
+		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
+
+
+func _process(_delta: float) -> void:
 	var global_translation := global_transform.origin
+	var camera_global_translation: Vector3 = _camera_info[1]
 	var camera_dist := global_translation.distance_to(camera_global_translation)
 	var hud_dist_ok := camera_dist > hud_too_close
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
-	var hud_label_visible := show_label and hud_dist_ok and hud_label \
-			and !camera.is_position_behind(global_translation)
-	if hud_label_visible: # position 2D node before 3D translation!
-		var position_2d := camera.unproject_position(global_translation)
-		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
+	var hud_label_visible := _show_label and hud_dist_ok and hud_label
+	if hud_label_visible:
+		var camera: Camera = _camera_info[0]
+		if camera.is_position_behind(global_translation):
+			hud_label_visible = false
+		else:
+			# position 2D Label before 3D translation!
+			var position_2d := camera.unproject_position(global_translation)
+			hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
+	var time: float = _times[0]
 	if orbit:
 		translation = orbit.get_position(time)
 	if model_geometry:
@@ -185,7 +222,7 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 			_aux_graphic_visible = aux_graphic_visible
 			aux_graphic.visible = aux_graphic_visible
 	if hud_orbit:
-		var hud_orbit_visible := show_orbits and hud_dist_ok
+		var hud_orbit_visible := _show_orbit and hud_dist_ok
 		if _hud_orbit_visible != hud_orbit_visible:
 			_hud_orbit_visible = hud_orbit_visible
 			hud_orbit.visible = hud_orbit_visible
@@ -197,36 +234,26 @@ func tree_manager_process(time: float, camera: Camera, camera_global_translation
 		_visible = true
 		visible = true
 
-func hide_visuals() -> void:
-	_visible = false
-	visible = false # hides all tree descendants, including model
-	if HACKFIX_MOVE_HIDDEN_FAR_AWAY:
-		translation = Vector3(1e12, 1e12, 1e12)
-	if hud_orbit: # not a child of this node!
-		_hud_orbit_visible = false
-		hud_orbit.visible = false
-	if hud_label: # not a child of this node!
-		_hud_label_visible = false
-		hud_label.visible = false
+#func hide_visuals() -> void:
+#	_visible = false
+#	visible = false # hides all tree descendants, including model
+#	if hud_orbit: # not a child of this node!
+#		_hud_orbit_visible = false
+#		hud_orbit.visible = false
+#	if hud_label: # not a child of this node!
+#		_hud_label_visible = false
+#		hud_label.visible = false
 	# Note: Visibility is NOT propagated from 3D to 2D nodes! So we can't just
 	# add HUD label as child of this node.
 	# TODO: We could add 2D labels in our tree-structure so visibility is
 	# propagated that way. I think something like "set_is_top" would prevent
 	# inheritin position.
 
-func _init():
-	_on_init()
+func _on_show_huds_changed() -> void:
+	_show_orbit = _huds_manager.show_orbits
+	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
-func _on_init() -> void:
-	connect("ready", self, "_on_ready")
-	hide()
-
-func _on_ready() -> void:
-	Global.connect("setting_changed", self, "_settings_listener")
-	if orbit:
-		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
-
-func _update_orbit_change():
+func _update_orbit_change() -> void:
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
 		if model_geometry.axial_tilt != 0.0:

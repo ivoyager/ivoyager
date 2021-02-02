@@ -113,6 +113,7 @@ var program_references := {
 	_QtyStrings_ = QtyStrings,
 	_TableReader_ = TableReader,
 	_MainMenuManager_ = MainMenuManager,
+	_SleepManager_ = SleepManager,
 }
 
 var program_nodes := {
@@ -123,7 +124,7 @@ var program_nodes := {
 	_InputHandler_ = InputHandler,
 	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using VygrCamera
 	_Registrar_ = Registrar,
-	_TreeManager_ = TreeManager,
+	_HUDsManager_ = HUDsManager,
 	_PointsManager_ = PointsManager,
 	_MinorBodiesManager_ = MinorBodiesManager,
 }

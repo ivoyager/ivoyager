@@ -80,7 +80,7 @@ enum BodyFlags {
 	IS_COMET = 0b1000000,
 	IS_SPACECRAFT = 0b10000000,
 	# properties (3 bytes reserved)
-	FORCE_PROCESS = 0b1 * 0x10000, # Not implemented!: this body & all above it always process
+	NEVER_SLEEP = 0b1 * 0x10000, # won't work correctly if ancestor node sleeps
 	IS_TOP = 0b10 * 0x10000, # is in Registar.top_bodies
 	PROXY_STAR_SYSTEM = 0b100 * 0x10000, # top star or barycenter of system
 	IS_PRIMARY_STAR = 0b1000 * 0x10000,
