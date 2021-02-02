@@ -92,6 +92,7 @@ var is_asleep := false
 # private
 var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info
+var _scheduler: Scheduler # added in _init()
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
@@ -100,6 +101,7 @@ var _model_visible := false
 var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
+
 
 func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
 	if !model_geometry:
@@ -149,6 +151,14 @@ func get_orbit_ref_basis(time := -INF) -> Basis:
 #		return VECTOR2_ZERO # "Primary direction" in ecliptic2 spherical
 #	return model_geometry.get_geo_ref_ecliptic2(time)
 
+
+func set_orbit(orbit_: Orbit) -> void:
+	orbit = orbit_
+	var update_frequency := orbit.update_frequency
+	if update_frequency > 0.0:
+		var update_interval := 1.0 / orbit.update_frequency
+		_scheduler.interval_connect(update_interval, orbit, "scheduler_update")
+
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
 		hud_too_close = properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
@@ -157,7 +167,7 @@ func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	else:
 		hud_too_close = 0.0
 
-func set_sleep(sleep: bool) -> void:
+func set_sleep(sleep: bool) -> void: # called by SleepManager
 	if flags & NEVER_SLEEP or sleep == is_asleep:
 		return
 	if sleep:
@@ -179,6 +189,7 @@ func _init():
 	_on_init()
 
 func _on_init() -> void:
+	_scheduler = Global.program.Scheduler
 	connect("ready", self, "_on_ready")
 	hide()
 
@@ -187,7 +198,7 @@ func _on_ready() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
-		orbit.connect("changed_for_graphics", self, "_update_orbit_change")
+		orbit.connect("changed", self, "_on_orbit_changed")
 
 func _prepare_to_free() -> void:
 	set_process(false)
@@ -239,26 +250,12 @@ func _process(_delta: float) -> void:
 		_visible = true
 		visible = true
 
-#func hide_visuals() -> void:
-#	_visible = false
-#	visible = false # hides all tree descendants, including model
-#	if hud_orbit: # not a child of this node!
-#		_hud_orbit_visible = false
-#		hud_orbit.visible = false
-#	if hud_label: # not a child of this node!
-#		_hud_label_visible = false
-#		hud_label.visible = false
-	# Note: Visibility is NOT propagated from 3D to 2D nodes! So we can't just
-	# add HUD label as child of this node.
-	# TODO: We could add 2D labels in our tree-structure so visibility is
-	# propagated that way. I think something like "set_is_top" would prevent
-	# inheritin position.
-
 func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
-func _update_orbit_change() -> void:
+func _on_orbit_changed() -> void:
+#	prints("Orbit change: ", (1.0 / orbit.update_frequency) / UnitDefs.HOUR, "hr", tr(name))
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
 		if model_geometry.axial_tilt != 0.0:

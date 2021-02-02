@@ -142,7 +142,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
-		body.orbit = orbit
+		body.set_orbit(orbit)
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties

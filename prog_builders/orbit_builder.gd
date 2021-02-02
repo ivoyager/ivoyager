@@ -30,6 +30,8 @@ const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
 const UPDATE_ORBIT_TOLERANCE := 0.0002
 
+var update_frequency_limitor := 1.0 / UnitDefs.HOUR # up to +10% to prevent schedular clumping
+
 var property_fields := {
 	# property = table_field
 	_a = "a",
@@ -191,8 +193,13 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 			var i_pps: float = abs(element_rates[2]) / TAU
 			var Om_pps: float = abs(element_rates[3]) / TAU
 			var w_pps: float = abs(element_rates[4]) / TAU
-			var max_pps = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
-			orbit.update_frequency = max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
+			var max_pps: float = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
+			var update_frequency := max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
+			if update_frequency > update_frequency_limitor:
+				var adj := (1.0 - update_frequency_limitor / update_frequency) / 10.0 # 0.1 to >0.0
+				update_frequency = update_frequency_limitor * (1.0 + adj)
+			orbit.update_frequency = update_frequency
+
 	# reference plane (moons!)
 	if _ref_plane == "Equatorial":
 		orbit.reference_normal = parent.model_geometry.north_pole
