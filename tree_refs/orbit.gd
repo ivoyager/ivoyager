@@ -30,7 +30,7 @@ class_name Orbit
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
-signal changed_for_graphics() # does not signal if no one is looking!
+signal changed()
 
 const DPRINT := false
 const FLUSH_AT_N_MEMOIZED := 200
@@ -43,7 +43,7 @@ var reference_normal := ECLIPTIC_UP # moons are often different
 var elements_at_epoch: Array # [a, e, i, Om, w, M0, n]; required
 var element_rates: Array # [a, e, i, Om, w]; optional
 var m_modifiers: Array # [b, c, s, f] for planets Jupiter to Pluto only
-var update_frequency: float # based on fastest changing element_rates
+var update_frequency: float # inverse of scheduler update interval
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
@@ -57,6 +57,7 @@ var _present_time_index := -INF
 var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _future_elements := {}
 var _flush_indexes := []
+
 
 func get_semimajor_axis(time := -INF) -> float:
 	if time == -INF:
@@ -171,6 +172,11 @@ func get_elements(time := -INF) -> Array:
 	var elements := _get_elements(time)
 	return elements.duplicate() # safe
 
+func scheduler_update() -> void:
+	_get_elements(_times[0])
+	emit_signal("changed")
+	
+
 static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	# Derived from https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf. However,
 	# we use M modifiers (b, c, s, f) to modify M0 in our dynamic orbital
@@ -283,9 +289,7 @@ func _get_elements(time: float) -> Array:
 	# WARNING! This function returns the same array (modified) on subsequent
 	# calls! Duplicate it if you need a stable result.
 	#
-	# Also, THIS FUNCTION HAS SIDE-EFFECTS! We take advantage of the knowledge
-	# that *someone is looking* to signal "changed_for_graphics" (intended for
-	# graphic hookup only!) if we are changing present-time elements.
+	# TODO: Recode so "change" signal is no longer a get "side-effect".
 	#
 	# Based on https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf (time range
 	# 3000 BCE - 3000 CE) except we apply Jupiter to Pluto M modifiers to
@@ -304,7 +308,6 @@ func _get_elements(time: float) -> Array:
 		if is_present:
 			_present_elements = _future_elements[time_index]
 			_future_elements.erase(time_index)
-			emit_signal("changed_for_graphics") # may cause repeat call!
 			return _present_elements
 		else:
 			return _future_elements[time_index] # caller not asking for "now"
@@ -341,7 +344,7 @@ func _get_elements(time: float) -> Array:
 		_present_elements[4] = w
 		_present_elements[5] = M0
 		_present_elements[6] = n
-		emit_signal("changed_for_graphics") # may trigger repeat call!
+#		emit_signal("changed") # may trigger repeat call!
 		return _present_elements
 	# Non-extended I, Voyager never reaches code below. We get here if we are
 	# asking for elements from non-present time. If future, we memoize in

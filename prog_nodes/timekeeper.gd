@@ -43,12 +43,12 @@ const MINUTE := UnitDefs.MINUTE
 const HOUR := UnitDefs.HOUR
 const DAY := UnitDefs.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const SYNC_TOLERANCE := 0.2 # seconds engine time
 const NO_NETWORK = Enums.NetworkState.NO_NETWORK
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 
 # project vars
+var sync_tolerance := 0.2 # engine time (seconds)
 var start_real_world_time := false # true overrides other start settings
 var speeds := [ # sim_units / delta
 		UnitDefs.SECOND, # real-time if UnitDefs.SECOND = 1.0
@@ -115,7 +115,7 @@ onready var _allow_time_reversal: bool = Global.allow_time_reversal
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
-var _sync_tolerance := 0.0
+var _adj_sync_tolerance := 0.0
 var _prev_ut1_floor := -INF
 
 
@@ -307,11 +307,11 @@ remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: flo
 	_sync_engine_time = engine_time_
 	if speed_multiplier != speed_multiplier_:
 		speed_multiplier = speed_multiplier_
-		_sync_tolerance = SYNC_TOLERANCE * abs(speed_multiplier_)
+		_adj_sync_tolerance = sync_tolerance * abs(speed_multiplier_)
 	var time_diff := time_ - time
-	if abs(time_diff) < _sync_tolerance:
+	if abs(time_diff) < _adj_sync_tolerance:
 		return
-	# <1% in LAN test w/ SYNC_TOLERANCE = 0.1
+	# <1% in LAN test w/ sync_tolerance = 0.1
 	_is_sync = true
 	# move 1/4 toward the sync value
 	time = time_ - 0.75 * time_diff

@@ -79,7 +79,7 @@ func add_orbit(body: Body) -> void:
 	hud_orbit.orbit_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP,
 			_orbit_mesh_arrays, [], ORBIT_ARRAY_FLAGS)
 	hud_orbit.mesh = hud_orbit.orbit_mesh
-	hud_orbit.orbit.connect("changed_for_graphics", hud_orbit, "draw_orbit")
+	hud_orbit.orbit.connect("changed", hud_orbit, "draw_orbit")
 	hud_orbit.change_color(color)
 	hud_orbit.draw_orbit()
 	hud_orbit.hide()
