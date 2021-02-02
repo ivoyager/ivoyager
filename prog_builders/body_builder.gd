@@ -85,6 +85,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _scheduler: Scheduler
 var _table_reader: TableReader
 var _Body_: Script
 var _ModelGeometry_: Script
@@ -103,6 +104,7 @@ func project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_scheduler = Global.program.Scheduler
 	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
 	_ModelGeometry_ = Global.script_classes._ModelGeometry_
@@ -257,13 +259,13 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.hide()
 	return body
 
-func _init_unpersisted(_is_new_game: bool) -> void:
+func _init_unpersisted(is_new_game: bool) -> void:
 	_satellite_indexes.clear()
 	for body in _body_registry.bodies:
 		if body:
-			_build_unpersisted(body)
+			_build_unpersisted(body, is_new_game)
 
-func _build_unpersisted(body: Body) -> void:
+func _build_unpersisted(body: Body, is_new_game: bool) -> void:
 	body.satellite_indexes = _satellite_indexes
 	var satellites := body.satellites
 	var satellite_index := 0
@@ -283,6 +285,12 @@ func _build_unpersisted(body: Body) -> void:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
+		if !is_new_game:
+			var orbit := body.orbit
+			var update_frequency := orbit.update_frequency
+			if update_frequency > 0.0:
+				var update_interval := 1.0 / orbit.update_frequency
+				_scheduler.interval_connect(update_interval, orbit, "scheduler_update")
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	var file_prefix: String = body.file_info[0]

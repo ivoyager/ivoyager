@@ -194,8 +194,8 @@ func _on_init() -> void:
 	hide()
 
 func _on_ready() -> void:
-	Global.connect("setting_changed", self, "_settings_listener")
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
 		orbit.connect("changed", self, "_on_orbit_changed")

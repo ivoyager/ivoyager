@@ -31,14 +31,3 @@ extends Spatial
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 
-func _ready():
-	add_user_signal("TEST")
-	connect("TEST", self, "_on_test")
-	
-	print(get_signal_connection_list("TEST"))
-#	print(get_signal_list())
-
-func _on_test():
-	print("test")
-
-
