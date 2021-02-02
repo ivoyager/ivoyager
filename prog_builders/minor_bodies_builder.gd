@@ -36,7 +36,7 @@ var _table_reader: TableReader
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
-var _registrar: Registrar
+var _body_registry: BodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
@@ -52,7 +52,7 @@ func project_init() -> void:
 	_l_point_builder = Global.program.LPointBuilder
 	_minor_bodies_manager = Global.program.MinorBodiesManager
 	_points_manager = Global.program.PointsManager
-	_registrar = Global.program.Registrar
+	_body_registry = Global.program.BodyRegistry
 	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
 	_HUDPoints_ = Global.script_classes._HUDPoints_
 	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
@@ -61,7 +61,7 @@ func build() -> void:
 	if Global.skip_asteroids:
 		return
 	print("Adding minor bodies...")
-	var star: Body = _registrar.top_bodies[0] # TODO: multistar
+	var star: Body = _body_registry.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")

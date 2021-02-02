@@ -128,7 +128,7 @@ var is_moving := false # body to body move in progress
 var _times: Array = Global.times
 var _camera_info: Array = Global.camera_info # [self, global_translation, fov]
 var _settings: Dictionary = Global.settings
-var _registrar: Registrar = Global.program.Registrar
+var _body_registry: BodyRegistry = Global.program.BodyRegistry
 var _max_dist: float = Global.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
@@ -177,7 +177,7 @@ func add_to_tree() -> void:
 #		start_body_name = _init_view.selection_name
 #	else:
 	start_body_name = Global.start_body_name
-	var start_body: Body = _registrar.bodies_by_name[start_body_name]
+	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
 func add_move_action(move_action: Vector3) -> void:
@@ -189,7 +189,7 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 func move_to_view(view: View, is_instant_move := false) -> void:
 	var to_selection_item: SelectionItem
 	if view.selection_name:
-		to_selection_item = _registrar.selection_items.get(view.selection_name)
+		to_selection_item = _body_registry.selection_items.get(view.selection_name)
 		assert(to_selection_item)
 	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
@@ -213,7 +213,7 @@ func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection_item := _registrar.get_selection_for_body(to_body)
+	var to_selection_item := _body_registry.get_selection_for_body(to_body)
 	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
@@ -350,7 +350,7 @@ func _on_ready():
 	parent = get_parent()
 	_to_spatial = parent
 	_from_spatial = parent
-	selection_item = _registrar.get_selection_for_body(parent)
+	selection_item = _body_registry.get_selection_for_body(parent)
 	_from_selection_item = selection_item
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]

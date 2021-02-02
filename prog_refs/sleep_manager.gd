@@ -53,8 +53,8 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	var registrar: Registrar = Global.program.Registrar
-	for body in registrar.top_bodies:
+	var body_registry: BodyRegistry = Global.program.BodyRegistry
+	for body in body_registry.top_bodies:
 		_change_sleep_recursive(body, true)
 
 func _on_camera_parent_changed(body: Body) -> void:

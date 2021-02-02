@@ -1,4 +1,4 @@
-# registrar.gd
+# body_registry.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,12 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Holds SelectionItems (so they aren't freed) and indexes Bodies.
-#
-# TODO: Change name to BodyRegistry
+# Indexes Body and SelectionItem instances. Also holds SelectionItems so they
+# aren't freed (they are References that need at least one reference).
 
 extends Node
-class_name Registrar
+class_name BodyRegistry
 
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR

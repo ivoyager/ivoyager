@@ -40,7 +40,7 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-onready var _registrar: Registrar = Global.program.Registrar
+onready var _body_registry: BodyRegistry = Global.program.BodyRegistry
 onready var _mouse_only_gui_nav: bool = Global.settings.mouse_only_gui_nav
 var _selection_manager: SelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
@@ -94,7 +94,7 @@ func _build(_is_new_game: bool) -> void:
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
 	# calculate star "slice" relative size
-	var star: Body = _registrar.top_bodies[0]
+	var star: Body = _body_registry.top_bodies[0]
 	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
 	var size := 0.0
@@ -154,7 +154,7 @@ func _build(_is_new_game: bool) -> void:
 		column += 1
 
 func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float) -> void:
-	var selection_item := _registrar.get_selection_for_body(body)
+	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
 	button.connect("selected", self, "_change_selection", [button])
 	button.size_flags_horizontal = SIZE_FILL

@@ -36,7 +36,7 @@ var _universe: Spatial
 var _main_prog_bar: MainProgBar
 var _body_builder: BodyBuilder
 var _minor_bodies_builder: MinorBodiesBuilder
-var _registrar: Registrar
+var _body_registry: BodyRegistry
 var _table_reader: TableReader
 var _Camera_: Script
 var _progress_bodies := 0
@@ -49,7 +49,7 @@ func project_init():
 	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_body_builder = Global.program.BodyBuilder
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-	_registrar = Global.program.Registrar
+	_body_registry = Global.program.BodyRegistry
 	_table_reader = Global.program.TableReader
 	if add_camera:
 		_Camera_ = Global.script_classes._Camera_
@@ -77,7 +77,7 @@ func _finish_build() -> void:
 	if _use_thread:
 		_thread.wait_to_finish()
 	yield(_tree, "idle_frame")
-	for body in _registrar.top_bodies:
+	for body in _body_registry.top_bodies:
 		_universe.add_child(body)
 	if add_camera:
 		_camera.add_to_tree()
