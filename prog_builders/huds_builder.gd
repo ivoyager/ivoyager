@@ -33,7 +33,7 @@ const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY
 var _settings: Dictionary = Global.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
-var _tree_manager: TreeManager
+var _huds_manager: HUDsManager
 var _hud_2d_surface: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
@@ -41,7 +41,7 @@ var _orbit_mesh_arrays := []
 func project_init() -> void:
 	_HUDLabel_ = Global.script_classes._HUDLabel_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
-	_tree_manager = Global.program.TreeManager
+	_huds_manager = Global.program.HUDsManager
 	_hud_2d_surface = Global.program.HUD2dSurface
 	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
@@ -50,8 +50,8 @@ func add_label(body: Body) -> void:
 	var hud_label: HUDLabel = _HUDLabel_.new()
 	hud_label.set_body_name(body.name)
 	hud_label.set_body_symbol(body.symbol)
-	_tree_manager.connect("show_names_changed", hud_label, "_on_show_names_changed")
-	_tree_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
+#	_huds_manager.connect("show_names_changed", hud_label, "_on_show_names_changed")
+#	_huds_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
 	hud_label.hide()
 	body.hud_label = hud_label
 	_hud_2d_surface.add_child(hud_label)

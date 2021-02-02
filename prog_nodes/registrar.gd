@@ -18,6 +18,8 @@
 # limitations under the License.
 # *****************************************************************************
 # Holds SelectionItems (so they aren't freed) and indexes Bodies.
+#
+# TODO: Change name to BodyRegistry
 
 extends Node
 class_name Registrar

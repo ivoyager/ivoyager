@@ -31,3 +31,6 @@
 extends Spatial
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
+
+func _ready():
+	print(name)
