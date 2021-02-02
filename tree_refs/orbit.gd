@@ -30,6 +30,9 @@ class_name Orbit
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
+signal changed()
+
+# DEPRECIATE
 signal changed_for_graphics() # does not signal if no one is looking!
 
 const DPRINT := false
@@ -57,6 +60,7 @@ var _present_time_index := -INF
 var _present_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _future_elements := {}
 var _flush_indexes := []
+
 
 func get_semimajor_axis(time := -INF) -> float:
 	if time == -INF:

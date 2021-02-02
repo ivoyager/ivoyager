@@ -81,7 +81,7 @@ var init_sequence := [
 # item at runtime might be a project-specific subclass (or in some cases
 # replacement) for the original class. For objects instantiated by
 # ProjectBuilder, edge underscores are removed to form keys in the
-# Global.program dictionary (and name property for nodes).
+# Global.program dictionary (and "name" property for nodes).
 
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
@@ -114,6 +114,7 @@ var program_references := {
 	_TableReader_ = TableReader,
 	_MainMenuManager_ = MainMenuManager,
 	_SleepManager_ = SleepManager,
+	_Scheduler_ = Scheduler,
 }
 
 var program_nodes := {
