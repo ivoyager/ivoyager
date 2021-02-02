@@ -67,7 +67,7 @@ const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # private
 var _root: Viewport = Global.get_tree().get_root()
-var _registrar: Registrar = Global.program.Registrar
+var _body_registry: BodyRegistry = Global.program.BodyRegistry
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
@@ -82,7 +82,7 @@ func select(selection_item_: SelectionItem) -> void:
 
 func select_body(body_: Body) -> void:
 	var name := body_.name
-	var selection_item_: SelectionItem = _registrar.selection_items[name]
+	var selection_item_: SelectionItem = _body_registry.selection_items[name]
 	select(selection_item_)
 
 func get_name() -> String:
@@ -129,7 +129,7 @@ func forward() -> void:
 	
 func up() -> void:
 	if selection_item.up_selection_name:
-		var new_selection: SelectionItem = _registrar.selection_items[selection_item.up_selection_name]
+		var new_selection: SelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
 		select(new_selection)
 
 func can_go_back() -> bool:
@@ -152,30 +152,30 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 	var index := -1
 	match selection_type:
 		-1:
-			var up_body := _registrar.get_body_above_selection(selection_item)
+			var up_body := _body_registry.get_body_above_selection(selection_item)
 			iteration_array = up_body.satellites
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
 			 # TODO: code for multistar systems
-			var sun: Body = _registrar.top_bodies[0]
+			var sun: Body = _body_registry.top_bodies[0]
 			select_body(sun)
 			return
 		SELECTION_PLANET:
-			var star := _registrar.get_selection_star(selection_item)
+			var star := _body_registry.get_selection_star(selection_item)
 			if !star:
 				return
 			iteration_array = star.satellites
-			var planet := _registrar.get_selection_planet(selection_item)
+			var planet := _body_registry.get_selection_planet(selection_item)
 			if planet:
 				index = iteration_array.find(planet)
 				if planet != current_body and incr == 1:
 					index -= 1
 		SELECTION_NAVIGATOR_MOON, SELECTION_MOON:
-			var planet := _registrar.get_selection_planet(selection_item)
+			var planet := _body_registry.get_selection_planet(selection_item)
 			if !planet:
 				return
 			iteration_array = planet.satellites
-			var moon := _registrar.get_selection_moon(selection_item)
+			var moon := _body_registry.get_selection_moon(selection_item)
 			if moon:
 				index = iteration_array.find(moon)
 				if moon != current_body and incr == 1:
@@ -184,7 +184,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			if current_body:
 				iteration_array = current_body.satellites
 			else:
-				var up_body := _registrar.get_body_above_selection(selection_item)
+				var up_body := _body_registry.get_body_above_selection(selection_item)
 				iteration_array = up_body.satellites
 	if !iteration_array:
 		return

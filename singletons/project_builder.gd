@@ -81,7 +81,7 @@ var init_sequence := [
 # item at runtime might be a project-specific subclass (or in some cases
 # replacement) for the original class. For objects instantiated by
 # ProjectBuilder, edge underscores are removed to form keys in the
-# Global.program dictionary (and name property for nodes).
+# Global.program dictionary (and "name" property for nodes).
 
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
@@ -113,6 +113,8 @@ var program_references := {
 	_QtyStrings_ = QtyStrings,
 	_TableReader_ = TableReader,
 	_MainMenuManager_ = MainMenuManager,
+	_SleepManager_ = SleepManager,
+	_Scheduler_ = Scheduler,
 }
 
 var program_nodes := {
@@ -120,10 +122,10 @@ var program_nodes := {
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
 	_StateManager_ = StateManager,
 	_Timekeeper_ = Timekeeper,
+	_BodyRegistry_ = BodyRegistry,
 	_InputHandler_ = InputHandler,
 	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using VygrCamera
-	_Registrar_ = Registrar,
-	_TreeManager_ = TreeManager,
+	_HUDsManager_ = HUDsManager,
 	_PointsManager_ = PointsManager,
 	_MinorBodiesManager_ = MinorBodiesManager,
 }

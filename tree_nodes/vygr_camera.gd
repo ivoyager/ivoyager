@@ -22,7 +22,6 @@
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
 #    VygrCameraHandler (program_nodes/vygr_camera_handler.gd); replace this!
-#    TreeManager (program_nodes/tree_manager.gd); modify as needed
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground
@@ -91,7 +90,7 @@ var is_camera_lock := true
 var selection_item: SelectionItem
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
-var view_position := VECTOR3_ZERO # spherical; relative to orbit or ground ref
+var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
 var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
@@ -127,9 +126,9 @@ var is_moving := false # body to body move in progress
 
 # private
 var _times: Array = Global.times
-var _camera_info: Array = Global.camera_info # [self, fov, global_translation]
+var _camera_info: Array = Global.camera_info # [self, global_translation, fov]
 var _settings: Dictionary = Global.settings
-var _registrar: Registrar = Global.program.Registrar
+var _body_registry: BodyRegistry = Global.program.BodyRegistry
 var _max_dist: float = Global.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
@@ -178,7 +177,7 @@ func add_to_tree() -> void:
 #		start_body_name = _init_view.selection_name
 #	else:
 	start_body_name = Global.start_body_name
-	var start_body: Body = _registrar.bodies_by_name[start_body_name]
+	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
 func add_move_action(move_action: Vector3) -> void:
@@ -190,7 +189,7 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 func move_to_view(view: View, is_instant_move := false) -> void:
 	var to_selection_item: SelectionItem
 	if view.selection_name:
-		to_selection_item = _registrar.selection_items.get(view.selection_name)
+		to_selection_item = _body_registry.selection_items.get(view.selection_name)
 		assert(to_selection_item)
 	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
@@ -214,7 +213,7 @@ func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection_item := _registrar.get_selection_for_body(to_body)
+	var to_selection_item := _body_registry.get_selection_for_body(to_body)
 	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
@@ -316,6 +315,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
+	_camera_info[2] = fov
 	if !suppress_move:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
@@ -327,27 +327,6 @@ func change_camera_lock(new_lock: bool) -> void:
 		if new_lock:
 			if view_type > VIEW_OUTWARD:
 				view_type = _view_type_memory
-
-func tree_manager_process(engine_delta: float) -> void:
-	# We process our working _transform, then update transform
-	if is_moving:
-		_move_progress += engine_delta
-		if _move_progress < _transfer_time:
-			_process_transferring()
-		else: # end the move
-			is_moving = false
-			if parent != _to_spatial:
-				_do_camera_handoff() # happened already unless is_instant_move
-	if !is_moving:
-		_process_not_transferring(engine_delta)
-	if UNIVERSE_SHIFTING:
-		# Camera parent will be at global translation (0,0,0) after this step.
-		# The -= operator works because current Universe translation is part
-		# of parent.global_transform.origin, so we are removing old shift at
-		# the same time we add our new shift. 
-		_universe.translation -= parent.global_transform.origin
-	transform = _transform
-	_camera_info[2] = global_transform.origin
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
@@ -371,7 +350,7 @@ func _on_ready():
 	parent = get_parent()
 	_to_spatial = parent
 	_from_spatial = parent
-	selection_item = _registrar.get_selection_for_body(parent)
+	selection_item = _body_registry.get_selection_for_body(parent)
 	_from_selection_item = selection_item
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
@@ -383,9 +362,21 @@ func _on_ready():
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_camera_info[0] = self
-	_camera_info[1] = fov
+	_camera_info[2] = fov
 	Global.emit_signal("camera_ready", self)
 	print("VygrCamera ready...")
+
+func _prepare_to_free() -> void:
+	set_process(false)
+	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
+	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
+	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
+	Global.disconnect("setting_changed", self, "_settings_listener")
+	selection_item = null
+	parent = null
+	_to_spatial = null
+	_from_spatial = null
+	_transfer_ref_spatial = null
 
 func _start_sim(_is_new_game: bool) -> void:
 	if _init_view:
@@ -393,19 +384,30 @@ func _start_sim(_is_new_game: bool) -> void:
 	else:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
-func _prepare_to_free() -> void:
-	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
-	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
-	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
-	selection_item = null
-	parent = null
-	_to_spatial = null
-	_from_spatial = null
-	_transfer_ref_spatial = null
+func _process(delta: float) -> void:
+	# We process our working _transform, then update transform
+	if is_moving:
+		_process_move_in_progress(delta)
+	if !is_moving:
+		_process_at_target(delta)
+	if UNIVERSE_SHIFTING:
+		# Camera parent will be at global translation (0,0,0) after this step.
+		# The -= operator works because current Universe translation is part
+		# of parent.global_transform.origin, so we are removing old shift at
+		# the same time we add our new shift. 
+		_universe.translation -= parent.global_transform.origin
+	transform = _transform
+	_camera_info[1] = global_transform.origin
 
-func _process_transferring() -> void:
+func _process_move_in_progress(delta: float) -> void:
+	_move_progress += delta
+	if _move_progress >= _transfer_time: # end the move
+		is_moving = false
+		if parent != _to_spatial:
+			_do_camera_handoff()
+		return
 	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
-	# Hand-off at halfway point avoids imprecision shakes at either end
+	# Hand-off at halfway point avoids precision shakes at either end
 	if parent != _to_spatial and progress > 0.5:
 		_do_camera_handoff()
 	if _path_type == PATH_CARTESIAN:
@@ -483,7 +485,7 @@ func _interpolate_spherical_path(progress: float) -> void:
 	# interpolate basis
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
 
-func _process_not_transferring(delta: float) -> void:
+func _process_at_target(delta: float) -> void:
 	var is_camera_bump := false
 	# maintain present "position" based on track_type
 	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
@@ -626,6 +628,7 @@ func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3
 	var up := _get_up(selection_item_, dist, track_type_)
 	var tracking_basis := _get_tracking_basis(selection_item_, dist, track_type_)
 	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
+	assert(view_translation)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, up)
 	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis

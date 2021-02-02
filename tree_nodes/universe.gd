@@ -20,8 +20,7 @@
 # Universe is the main scene root node. It provides spatial reference for top
 # Body instances, which could be the Sun or a collection of stars or something
 # else. Get the Universe instance from Global.program.universe. Get specific
-# Body instances by name or id from Registrar (program_nodes/registrar.gd)
-# which you can access via Global.program.Registrar.
+# Body instances by name or id from Global.program.BodyRegistry.
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
@@ -31,3 +30,4 @@
 extends Spatial
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
+

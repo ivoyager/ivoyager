@@ -46,8 +46,6 @@ signal about_to_quit()
 
 # other broadcasts
 signal setting_changed(setting, value)
-signal gui_entered_tree(control) # depreciate?
-signal gui_ready(control) # depreciate?
 signal camera_ready(camera)
 signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
@@ -91,9 +89,9 @@ var table_row_dicts := {} # TableImporter; a row dict for each table
 var wiki_titles := {} # TableImporter; Wiki url identifiers by item key
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
-var bodies := [] # Registrar; indexed by body_id
-var bodies_by_name := {} # Registrar; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, 50.0, null] # NOT IMPLEMENTED!!! Camera; [Camera, fov, global_translation]
+var bodies := [] # BodyRegistry; indexed by body_id
+var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var camera_info := [null, Vector3.ZERO, 50.0] # Camera; [Camera, global_translation, fov]
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]

@@ -29,7 +29,7 @@ class_name MouseClickSelector
 const MOUSE_CLICK_RANGE_SQ := 500.0 # in viewport pixels
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
-var _registrar: Registrar
+var _body_registry: BodyRegistry
 var _mouse_position: Vector2
 var _camera: Camera
 var _camera_global_translation: Vector3
@@ -39,7 +39,7 @@ var _closest_dist_sq := INF
 
 func project_init() -> void:
 	Global.connect("mouse_clicked_viewport_at", self, "select_at")
-	_registrar = Global.program.Registrar
+	_body_registry = Global.program.BodyRegistry
 
 func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) -> void:
 	_mouse_position = mouse_position
@@ -48,7 +48,7 @@ func select_at(mouse_position: Vector2, camera: Camera, _is_left_click: bool) ->
 	_viewport_height = camera.get_viewport().get_visible_rect().size.y
 	_body = null
 	_closest_dist_sq = INF
-	for body in _registrar.top_bodies:
+	for body in _body_registry.top_bodies:
 		_test_body_recursive(body)
 	if _body:
 		Global.emit_signal("move_camera_to_body_requested", _body, -1, Vector3.ZERO,

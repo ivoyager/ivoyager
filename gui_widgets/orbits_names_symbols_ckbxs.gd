@@ -21,7 +21,7 @@
 
 extends HBoxContainer
 
-onready var _tree_manager: TreeManager = Global.program.TreeManager
+onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 onready var _orbits_button: CheckBox = $Orbits
 onready var _names_button: CheckBox = $Names
 onready var _symbols_button: CheckBox = $Symbols
@@ -30,24 +30,18 @@ func _ready() -> void:
 	_orbits_button.connect("pressed", self, "_show_hide_orbits")
 	_names_button.connect("pressed", self, "_show_hide_names")
 	_symbols_button.connect("pressed", self, "_show_hide_symbols")
-	_tree_manager.connect("show_orbits_changed", self, "_update_show_orbits")
-	_tree_manager.connect("show_names_changed", self, "_update_show_names")
-	_tree_manager.connect("show_symbols_changed", self, "_update_show_symbols")
+	_huds_manager.connect("show_huds_changed", self, "_update_ckbxs")
 
 func _show_hide_orbits() -> void:
-	_tree_manager.set_show_orbits(_orbits_button.pressed)
+	_huds_manager.set_show_orbits(_orbits_button.pressed)
 
 func _show_hide_names() -> void:
-	_tree_manager.set_show_names(_names_button.pressed)
+	_huds_manager.set_show_names(_names_button.pressed)
 
 func _show_hide_symbols() -> void:
-	_tree_manager.set_show_symbols(_symbols_button.pressed)
+	_huds_manager.set_show_symbols(_symbols_button.pressed)
 
-func _update_show_orbits(is_show: bool) -> void:
-	_orbits_button.pressed = is_show
-
-func _update_show_names(is_show: bool) -> void:
-	_names_button.pressed = is_show
-
-func _update_show_symbols(is_show: bool) -> void:
-	_symbols_button.pressed = is_show
+func _update_ckbxs() -> void:
+	_orbits_button.pressed = _huds_manager.show_orbits
+	_names_button.pressed = _huds_manager.show_names
+	_symbols_button.pressed = _huds_manager.show_symbols

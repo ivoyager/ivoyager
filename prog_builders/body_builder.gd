@@ -78,13 +78,14 @@ var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 var _settings: Dictionary = Global.settings
 var _bodies_2d_search: Array = Global.bodies_2d_search
 var _times: Array = Global.times
-var _registrar: Registrar
+var _body_registry: BodyRegistry
 var _model_builder: ModelBuilder
 var _rings_builder: RingsBuilder
 var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _scheduler: Scheduler
 var _table_reader: TableReader
 var _Body_: Script
 var _ModelGeometry_: Script
@@ -96,13 +97,14 @@ var _satellite_indexes := {} # passed to & shared by Body instances
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_registrar = Global.program.Registrar
+	_body_registry = Global.program.BodyRegistry
 	_model_builder = Global.program.ModelBuilder
 	_rings_builder = Global.program.RingsBuilder
 	_light_builder = Global.program.LightBuilder
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_scheduler = Global.program.Scheduler
 	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
 	_ModelGeometry_ = Global.script_classes._ModelGeometry_
@@ -115,7 +117,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:
-		flags |= BodyFlags.IS_TOP # must be in Registrar.top_bodies
+		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_enum(table_name, "hydrostatic_equilibrium", row)
 	if hydrostatic_equilibrium >= Enums.ConfidenceType.PROBABLY:
@@ -125,12 +127,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 			flags |= BodyFlags.IS_STAR
 			if flags & BodyFlags.IS_TOP:
 				flags |= BodyFlags.IS_PRIMARY_STAR
-			flags |= BodyFlags.FORCE_PROCESS
+			flags |= BodyFlags.NEVER_SLEEP
 		"planets":
 			flags |= BodyFlags.IS_STAR_ORBITING
 			if not flags & BodyFlags.IS_DWARF_PLANET:
 				flags |= BodyFlags.IS_TRUE_PLANET
-			flags |= BodyFlags.FORCE_PROCESS
+			flags |= BodyFlags.NEVER_SLEEP
 		"moons":
 			flags |= BodyFlags.IS_MOON
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
@@ -142,7 +144,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
-		body.orbit = orbit
+		body.set_orbit(orbit)
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
@@ -251,19 +253,19 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		if parent.system_radius < semimajor_axis:
 			parent.system_radius = semimajor_axis
 	if !parent:
-		_registrar.register_top_body(body)
-	_registrar.register_body(body)
+		_body_registry.register_top_body(body)
+	_body_registry.register_body(body)
 	_selection_builder.build_and_register(body, parent)
 	body.hide()
 	return body
 
-func _init_unpersisted(_is_new_game: bool) -> void:
+func _init_unpersisted(is_new_game: bool) -> void:
 	_satellite_indexes.clear()
-	for body in _registrar.bodies:
+	for body in _body_registry.bodies:
 		if body:
-			_build_unpersisted(body)
+			_build_unpersisted(body, is_new_game)
 
-func _build_unpersisted(body: Body) -> void:
+func _build_unpersisted(body: Body, is_new_game: bool) -> void:
 	body.satellite_indexes = _satellite_indexes
 	var satellites := body.satellites
 	var satellite_index := 0
@@ -283,6 +285,12 @@ func _build_unpersisted(body: Body) -> void:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
+		if !is_new_game:
+			var orbit := body.orbit
+			var update_frequency := orbit.update_frequency
+			if update_frequency > 0.0:
+				var update_interval := 1.0 / orbit.update_frequency
+				_scheduler.interval_connect(update_interval, orbit, "scheduler_update")
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	var file_prefix: String = body.file_info[0]

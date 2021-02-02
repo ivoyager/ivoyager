@@ -51,12 +51,12 @@ var system_radius_multiplier_top := 1.5
 
 # private
 var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
-var _registrar: Registrar
+var _body_registry: BodyRegistry
 var _SelectionItem_: Script
 
 func project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
-	_registrar = Global.program.Registrar
+	_body_registry = Global.program.BodyRegistry
 	_SelectionItem_ = Global.script_classes._SelectionItem_
 
 func build_and_register(body: Body, parent_body: Body) -> void:
@@ -81,7 +81,7 @@ func build_and_register(body: Body, parent_body: Body) -> void:
 		selection_item.n_moons = 0
 #		selection_item.n_asteroids = 0
 #		selection_item.n_comets = 0
-	_registrar.register_selection_item(selection_item)
+	_body_registry.register_selection_item(selection_item)
 
 func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
 	var use_ground_longitude_offset: float
@@ -129,14 +129,14 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 
 func _set_system_counts(is_new_game: bool) -> void:
 	if is_new_game:
-		for body in _registrar.top_bodies:
+		for body in _body_registry.top_bodies:
 			_set_counts_recursive(body)
 
 func _set_counts_recursive(body: Body) -> void:
 	if body.flags & IS_STAR:
 		for child in body.satellites:
 			_set_counts_recursive(child)
-	var selection_item := _registrar.get_selection_for_body(body)
+	var selection_item := _body_registry.get_selection_for_body(body)
 	if body.flags & IS_PLANET:
 		for child in body.satellites:
 			if child.flags & IS_MOON:
@@ -148,5 +148,5 @@ func _set_counts_recursive(body: Body) -> void:
 			elif child.flags & IS_TRUE_PLANET:
 				selection_item.n_planets += 1
 			if child.satellites:
-				var child_selection_item := _registrar.get_selection_for_body(child)
+				var child_selection_item := _body_registry.get_selection_for_body(child)
 				selection_item.n_moons += child_selection_item.n_moons

@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# HUDsBuilder hooks up text change functions; Body sets visibility.
+# Body sets its own HUDLabel visibility during _process().
 
 extends Label
 class_name HUDLabel
@@ -26,6 +26,7 @@ var _body_name: String
 var _body_symbol: String
 var _name_font: Font
 var _symbol_font: Font
+onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 
 func set_body_name(body_name: String) -> void:
 	_body_name = body_name
@@ -34,17 +35,26 @@ func set_body_symbol(body_symbol: String) -> void:
 	_body_symbol = body_symbol
 
 func _ready() -> void:
+	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	_name_font = Global.fonts.hud_names
 	_symbol_font = Global.fonts.hud_symbols
 	align = ALIGN_CENTER
 	valign = VALIGN_CENTER
 
-func _on_show_names_changed(is_show: bool) -> void:
-	if is_show:
+func _on_show_huds_changed() -> void:
+	if _huds_manager.show_names:
 		text = _body_name
 		set("custom_fonts/font", _name_font)
-
-func _on_show_symbols_changed(is_show: bool) -> void:
-	if is_show:
+	elif _huds_manager.show_symbols:
 		text = _body_symbol
 		set("custom_fonts/font", _symbol_font)
+
+#func _on_show_names_changed(is_show: bool) -> void:
+#	if is_show:
+#		text = _body_name
+#		set("custom_fonts/font", _name_font)
+#
+#func _on_show_symbols_changed(is_show: bool) -> void:
+#	if is_show:
+#		text = _body_symbol
+#		set("custom_fonts/font", _symbol_font)
