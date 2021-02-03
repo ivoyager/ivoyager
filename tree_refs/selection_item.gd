@@ -67,7 +67,7 @@ var texture_slice_2d: Texture # stars only
 var _times: Array = Global.times
 
 
-func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
+func get_latitude_longitude(translation: Vector3, time := NAN) -> Vector2:
 	if !is_body:
 		return VECTOR2_ZERO
 	return body.get_latitude_longitude(translation, time)
@@ -80,22 +80,22 @@ func get_flags() -> int:
 		return body.flags
 	return 0
 
-func get_orbit_normal(time := -INF) -> Vector3:
+func get_orbit_normal(time := NAN) -> Vector3:
 	if !is_body:
 		return ECLIPTIC_Z
 	return body.get_orbit_normal(time)
 
-func get_north(time := -INF) -> Vector3:
+func get_north(time := NAN) -> Vector3:
 	if !is_body:
 		return ECLIPTIC_Z
 	return body.get_north(time)
 
-func get_ground_ref_basis(time := -INF) -> Basis:
+func get_ground_ref_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
 	return body.get_ground_ref_basis(time)
 
-func get_orbit_ref_basis(time := -INF) -> Basis:
+func get_orbit_ref_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
 	return body.get_orbit_ref_basis(time)

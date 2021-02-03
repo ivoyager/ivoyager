@@ -39,7 +39,7 @@ func change_color(color: Color) -> void:
 		_color = color
 		shader_material.set_shader_param("color", Vector3(color.r, color.g, color.b))
 
-func draw_orbit() -> void:
+func draw_orbit(_dummy: bool) -> void:
 	if _reference_normal != orbit.reference_normal:
 		_reference_normal = orbit.reference_normal
 		shader_material.set_shader_param("reference_normal", _reference_normal)

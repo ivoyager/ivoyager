@@ -20,9 +20,11 @@
 
 class_name ArrayUtils
 
-static func init(size: int, init_value) -> Array:
+static func init(size: int, init_value = null) -> Array:
 	var array := []
 	array.resize(size)
+	if init_value == null:
+		return array
 	var i := 0
 	while i < size:
 		array[i] = init_value

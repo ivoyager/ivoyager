@@ -286,11 +286,7 @@ func _build_unpersisted(body: Body, is_new_game: bool) -> void:
 	if body.orbit:
 		_huds_builder.add_orbit(body)
 		if !is_new_game:
-			var orbit := body.orbit
-			var update_frequency := orbit.update_frequency
-			if update_frequency > 0.0:
-				var update_interval := 1.0 / orbit.update_frequency
-				_scheduler.interval_connect(update_interval, orbit, "scheduler_update")
+			body.reset_orbit()
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
 	var file_prefix: String = body.file_info[0]

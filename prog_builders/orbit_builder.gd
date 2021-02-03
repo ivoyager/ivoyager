@@ -28,9 +28,9 @@ const DPRINT := false
 #const MIN_APSIDAL_OR_NODAL_PERIOD := 1.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
-const UPDATE_ORBIT_TOLERANCE := 0.0002
 
-var update_frequency_limitor := 1.0 / UnitDefs.HOUR # up to +10% to prevent schedular clumping
+#const UPDATE_ORBIT_TOLERANCE := 0.0002
+#var update_frequency_limitor := 1.0 / UnitDefs.HOUR # up to +10% to prevent schedular clumping
 
 var property_fields := {
 	# property = table_field
@@ -188,17 +188,17 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 				orbit.m_modifiers = m_modifiers
 			# Set update_frequency based on fastest element rate. We normalize to
 			# values roughly meaning "parts per second".
-			var a_pps: float = abs(element_rates[0]) / elements[0]
-			var e_pps: float = abs(element_rates[1]) / 0.1 # arbitrary
-			var i_pps: float = abs(element_rates[2]) / TAU
-			var Om_pps: float = abs(element_rates[3]) / TAU
-			var w_pps: float = abs(element_rates[4]) / TAU
-			var max_pps: float = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
-			var update_frequency := max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
-			if update_frequency > update_frequency_limitor:
-				var adj := (1.0 - update_frequency_limitor / update_frequency) / 10.0 # 0.1 to >0.0
-				update_frequency = update_frequency_limitor * (1.0 + adj)
-			orbit.update_frequency = update_frequency
+#			var a_pps: float = abs(element_rates[0]) / elements[0]
+#			var e_pps: float = abs(element_rates[1]) / 0.1 # arbitrary
+#			var i_pps: float = abs(element_rates[2]) / TAU
+#			var Om_pps: float = abs(element_rates[3]) / TAU
+#			var w_pps: float = abs(element_rates[4]) / TAU
+#			var max_pps: float = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
+#			var update_frequency := max_pps / UPDATE_ORBIT_TOLERANCE # 1/s (tiny!)
+#			if update_frequency > update_frequency_limitor:
+#				var adj := (1.0 - update_frequency_limitor / update_frequency) / 10.0 # 0.1 to >0.0
+#				update_frequency = update_frequency_limitor * (1.0 + adj)
+#			orbit.update_frequency = update_frequency
 
 	# reference plane (moons!)
 	if _ref_plane == "Equatorial":

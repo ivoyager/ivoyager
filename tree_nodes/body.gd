@@ -51,6 +51,7 @@ const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
 const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
+const IS_SERVER = Enums.NetworkState.IS_SERVER
 
 # persisted
 # name is table row key ("MOON_EUROPA", etc.), which is localization key
@@ -91,8 +92,9 @@ var is_asleep := false
 
 # private
 var _times: Array = Global.times
+var _state: Dictionary = Global.state
 var _camera_info: Array = Global.camera_info
-var _scheduler: Scheduler # added in _init()
+onready var _tree := get_tree()
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
@@ -103,61 +105,57 @@ var _hud_orbit_visible := false
 var _hud_label_visible := false
 
 
-func get_latitude_longitude(translation: Vector3, time := -INF) -> Vector2:
+func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 	if !model_geometry:
 		return VECTOR2_ZERO
-	return model_geometry.get_latitude_longitude(translation, time)
+	return model_geometry.get_latitude_longitude(translation_, time)
 
-func get_north(_time := -INF) -> Vector3:
+func get_north(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates.
 	# TODO: North precession
 	if !model_geometry:
 		return ECLIPTIC_Z
 	return model_geometry.north_pole
 
-func get_orbit_normal(time := -INF) -> Vector3:
+func get_orbit_normal(time := NAN) -> Vector3:
 	if !orbit:
 		return ECLIPTIC_Z
+	if is_nan(time):
+		time = _times[0]
 	return orbit.get_normal(time)
 
-func get_ground_ref_basis(time := -INF) -> Basis:
+func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
 	if !model_geometry:
 		return IDENTITY_BASIS
 	return model_geometry.get_ground_ref_basis(time)
 
-func get_orbit_ref_basis(time := -INF) -> Basis:
+func get_orbit_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to parent body
 	if !orbit:
 		return IDENTITY_BASIS
+	if is_nan(time):
+		time = _times[0]
 	var x_axis := -orbit.get_position(time).normalized()
 	var up := orbit.get_normal(time)
 	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
 
-#func get_orbit_ref_ecliptic2(time := -INF) -> Vector2:
-#	# Returns ecliptic2 spherical coordinates (RA, Dec) of parent body.
-#	if !orbit:
-#		return VECTOR2_ZERO # "Primary direction" in ecliptic2 spherical
-#	var parent_ecliptic := -orbit.get_position(time)
-#	return math.get_spherical2(parent_ecliptic)
-#
-#func get_geo_ref_ecliptic2(time := -INF) -> Vector2:
-#	# Returns ecliptic2 spherical coordinates (RA, Dec) of lat,long = 0,0.
-#	# For tidally locked bodies, this is nearly same as get_orbit_ref_ecliptic2(),
-#	# but varies with librations (see wiki Lunar Libration).
-#	if !model_geometry:
-#		return VECTOR2_ZERO # "Primary direction" in ecliptic2 spherical
-#	return model_geometry.get_geo_ref_ecliptic2(time)
-
-
 func set_orbit(orbit_: Orbit) -> void:
+	if orbit == orbit_:
+		return
+	if orbit:
+		orbit.clear_for_disposal()
+	orbit_.reset()
 	orbit = orbit_
-	var update_frequency := orbit.update_frequency
-	if update_frequency > 0.0:
-		var update_interval := 1.0 / orbit.update_frequency
-		_scheduler.interval_connect(update_interval, orbit, "scheduler_update")
+
+# *****************************************************************************
+# ivoyager mechanics & private
+
+func reset_orbit():
+	if orbit:
+		orbit.reset()
 
 func set_hud_too_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
@@ -186,12 +184,13 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		set_process(true) # will show on next _process()
 
 func _init():
-	_on_init()
+	_on_init() # can override
 
 func _on_init() -> void:
-	_scheduler = Global.program.Scheduler
-	connect("ready", self, "_on_ready")
 	hide()
+
+func _ready():
+	_on_ready() # can override
 
 func _on_ready() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
@@ -254,7 +253,7 @@ func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
-func _on_orbit_changed() -> void:
+func _on_orbit_changed(is_scheduled: bool) -> void:
 #	prints("Orbit change: ", (1.0 / orbit.update_frequency) / UnitDefs.HOUR, "hr", tr(name))
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
@@ -263,6 +262,15 @@ func _on_orbit_changed() -> void:
 			new_north_pole = new_north_pole.rotated(correction_axis, model_geometry.axial_tilt)
 		model_geometry.north_pole = new_north_pole
 		# TODO: Adjust basis_at_epoch???
+	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
+		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
+				orbit.m_modifiers)
+
+remote func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
+		element_rates: Array, m_modifiers: Array) -> void: # client-side network game only
+	if _tree.get_rpc_sender_id() != 1:
+		return # from server only
+	orbit.orbit_sync(reference_normal, elements_at_epoch, element_rates, m_modifiers)
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
