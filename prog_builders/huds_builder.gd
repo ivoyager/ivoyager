@@ -81,7 +81,7 @@ func add_orbit(body: Body) -> void:
 	hud_orbit.mesh = hud_orbit.orbit_mesh
 	hud_orbit.orbit.connect("changed", hud_orbit, "draw_orbit")
 	hud_orbit.change_color(color)
-	hud_orbit.draw_orbit()
+	hud_orbit.draw_orbit(false)
 	hud_orbit.hide()
 	body.hud_orbit = hud_orbit
 	var parent: Spatial = body.get_parent()

@@ -18,16 +18,15 @@
 # limitations under the License.
 # *****************************************************************************
 # Creates interval signals using simulation time. Max signal frequency will be
-# once per frame if interval very small and/or game speed very fast.
+# once per frame if interval is very small and/or game speed is very fast.
 # There is no save/load persistence! Interval connections must be remade.
 
 class_name Scheduler
 
 var _times: Array = Global.times
-var _timekeeper: Timekeeper
 var _ordered_signal_infos := [] # array "top" is always the next signal
-var _counter := 0 # only increments
-var _signal_intervals := [] # _signal_intervals.size() == _counter
+var _counter := 0
+var _signal_intervals := []
 var _available_signals := []
 var _is_reversed := false
 
@@ -60,6 +59,15 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 	if !signal_str: # doesn't exist; return w/out error
 		return
 	_remove_active_interval_signal(signal_str)
+
+# *****************************************************************************
+
+func project_init() -> void:
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	var timekeeper: Timekeeper = Global.program.Timekeeper
+	timekeeper.connect("processed", self, "_timekeeper_process")
+	if Global.allow_time_reversal:
+		timekeeper.connect("speed_changed", self, "_on_speed_changed")
 
 func _make_interval_signal(interval: float, oneshot := false) -> String:
 	var signal_str: String
@@ -95,14 +103,6 @@ func _remove_active_interval_signal(signal_str: String) -> void:
 		i += 1
 	assert(false, "Attept to remove non-active signal")
 
-
-func project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	_timekeeper = Global.program.Timekeeper
-	_timekeeper.connect("processed", self, "_timekeeper_process")
-	if Global.allow_time_reversal:
-		_timekeeper.connect("speed_changed", self, "_on_speed_changed")
-
 func _clear() -> void:
 	_ordered_signal_infos.clear()
 	_signal_intervals.clear()
@@ -136,7 +136,7 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 	_ordered_signal_infos.sort_custom(self, "_sort_reverse" if is_reversed else "_sort_forward")
 
 func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
-	if !_ordered_signal_infos: # usually empty
+	if !_ordered_signal_infos:
 		return
 	if !_is_reversed:
 		while sim_time > _ordered_signal_infos[-1][0]: # test last element
