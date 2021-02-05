@@ -60,28 +60,28 @@ var property_fields := {
 }
 
 # import data values
-var _a := -INF
-var _e := -INF
-var _i := -INF
-var _Om := -INF
-var _w := -INF
-var _w_hat := -INF
-var _M0 := -INF
-var _L0 := -INF
-var _T0 := -INF
-var _n := -INF
-var _L_rate := -INF
-var _a_rate := -INF
-var _e_rate := -INF
-var _i_rate := -INF
-var _Om_rate := -INF
-var _w_rate := -INF
-var _M_adj_b := -INF
-var _M_adj_c := -INF
-var _M_adj_s := -INF
-var _M_adj_f := -INF
-var _Pw := -INF
-var _Pnode := -INF
+var _a := NAN
+var _e := NAN
+var _i := NAN
+var _Om := NAN
+var _w := NAN
+var _w_hat := NAN
+var _M0 := NAN
+var _L0 := NAN
+var _T0 := NAN
+var _n := NAN
+var _L_rate := NAN
+var _a_rate := NAN
+var _e_rate := NAN
+var _i_rate := NAN
+var _Om_rate := NAN
+var _w_rate := NAN
+var _M_adj_b := NAN
+var _M_adj_c := NAN
+var _M_adj_s := NAN
+var _M_adj_f := NAN
+var _Pw := NAN
+var _Pnode := NAN
 var _ref_plane := ""
 
 # project inits
@@ -123,21 +123,21 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	# Or better, dynamically fit to either 1800-2050AD or 3000BC-3000AD range.
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
-	_table_reader.build_object(self, table_name, table_row, property_fields)
+	_table_reader.build_object2(self, table_name, table_row, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
 	var mu := parent.properties.gm
-	if _w == -INF:
-		assert(_w_hat != -INF)
+	if is_nan(_w):
+		assert(!is_nan(_w_hat))
 		_w = _w_hat - _Om
-	if _n == -INF:
-		if _L_rate != -INF:
+	if is_nan(_n):
+		if !is_nan(_L_rate):
 			_n = _L_rate
 		else:
 			_n = sqrt(mu / (_a * _a * _a))
-	if _M0 == -INF:
-		if _L0 != -INF:
+	if is_nan(_M0):
+		if !is_nan(_L0):
 			_M0 = _L0 - _w - _Om
-		elif _T0 != -INF:
+		elif !is_nan(_T0):
 			_M0 = -_n * _T0
 		else:
 			assert(false, "Elements must include M0, L0 or T0")
@@ -154,15 +154,15 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 		# Rate info (if given) must matches one or the other format.
 		var element_rates: Array # optional
 		var m_modifiers: Array # optional
-		if _a_rate != -INF: # is planet w/ rates
+		if !is_nan(_a_rate): # is planet w/ rates
 			element_rates = [_a_rate, _e_rate, _i_rate, _Om_rate, _w_rate]
-			assert(element_rates.min() != -INF) # all rates present
+			assert(!is_nan(_e_rate) && !is_nan(_i_rate) && !is_nan(_Om_rate) && !is_nan(_w_rate))
 			# M modifiers are additional modifiers for Jupiter to Pluto.
-			if _M_adj_b != -INF: # must also have c, s, f
+			if !is_nan(_M_adj_b): # must also have c, s, f
 				m_modifiers = [_M_adj_b, _M_adj_c, _M_adj_s, _M_adj_f]
-				assert(m_modifiers.min() != null) # all present
-		elif _Pw != -INF: # moon format
-			assert(_Pnode != -INF) # both or neither
+				assert(!is_nan(_M_adj_c) && !is_nan(_M_adj_s) && !is_nan(_M_adj_f))
+		elif !is_nan(_Pw): # moon format
+			assert(!is_nan(_Pnode)) # both or neither
 			# Pw, Pnode don't tell us the direction of precession! However, I
 			# believe that it is always the case that Pw is in the direction of
 			# orbit and Pnode is in the opposite direction.
@@ -214,6 +214,6 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	# reset for next orbit build
 	for property in property_fields:
 		if property != "_ref_plane":
-			set(property, -INF)
+			set(property, NAN)
 	_ref_plane = ""
 	return orbit

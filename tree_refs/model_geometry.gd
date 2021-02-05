@@ -34,8 +34,8 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
 
 var axial_tilt := 0.0
-var right_ascension := -INF
-var declination := -INF
+var right_ascension := NAN
+var declination := NAN
 var rotation_period := 0.0
 var north_pole := Vector3(0.0, 0.0, 1.0)
 var basis_at_epoch := Basis.IDENTITY # north_pole and longitude_at_epoch rotations

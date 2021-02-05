@@ -123,7 +123,6 @@ func _on_init():
 			},
 			{
 				header = "LABEL_DEVELOPER",
-				write_debug_logs_now = "LABEL_FORCE_LOG_PRINT",
 				emit_debug_signal = "LABEL_EMIT_DEBUG_SIGNAL",
 			}
 		],

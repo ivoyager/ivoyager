@@ -113,7 +113,7 @@ func project_init() -> void:
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var body: Body = SaverLoader.make_object_or_scene(_Body_)
-	_table_reader.build_object(body, table_name, row, body_fields, body_fields_req)
+	_table_reader.build_object2(body, table_name, row, body_fields, body_fields_req)
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
 	if !parent:
@@ -148,43 +148,43 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
-	_table_reader.build_object(properties, table_name, row, properties_fields, properties_fields_req)
+	_table_reader.build_object2(properties, table_name, row, properties_fields, properties_fields_req)
 	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
-	if !is_inf(properties.e_radius):
+	if !is_nan(properties.e_radius):
 		properties.p_radius = 3.0 * properties.m_radius - 2.0 * properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_inf(properties.mass):
+	if is_nan(properties.mass):
 		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
 		if sig_digits > 1:
 			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
 			properties.mass = math.set_decimal_precision(mass, sig_digits)
-	if is_inf(properties.gm): # planets table has mass, not GM
+	if is_nan(properties.gm): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
 			var gm := G * properties.mass
 			properties.gm = math.set_decimal_precision(gm, sig_digits)
-	if is_inf(properties.esc_vel) or is_inf(properties.surface_gravity):
+	if is_nan(properties.esc_vel) or is_nan(properties.surface_gravity):
 		if _table_reader.has_value(table_name, "GM", row):
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
 			if sig_digits > 2:
-				if is_inf(properties.esc_vel):
+				if is_nan(properties.esc_vel):
 					var esc_vel := sqrt(2.0 * properties.gm / properties.m_radius)
 					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_inf(properties.surface_gravity):
+				if is_nan(properties.surface_gravity):
 					var surface_gravity := properties.gm / pow(properties.m_radius, 2.0)
 					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
 			if sig_digits > 2:
-				if is_inf(properties.esc_vel):
+				if is_nan(properties.esc_vel):
 					if sig_digits > 6:
 						sig_digits = 6
 					var esc_vel := sqrt(2.0 * G * properties.mass / properties.m_radius)
 					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_inf(properties.surface_gravity):
+				if is_nan(properties.surface_gravity):
 					var surface_gravity := G * properties.mass / pow(properties.m_radius, 2.0)
 					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 	# orbit and rotations
@@ -194,9 +194,9 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# intentionally flipped.
 	var model_geometry: ModelGeometry = _ModelGeometry_.new()
 	body.model_geometry = model_geometry
-	_table_reader.build_object(model_geometry, table_name, row, rotations_fields)
+	_table_reader.build_object2(model_geometry, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(!is_inf(model_geometry.right_ascension) and !is_inf(model_geometry.declination))
+		assert(!is_nan(model_geometry.right_ascension) and !is_nan(model_geometry.declination))
 		model_geometry.north_pole = _ecliptic_rotation * math.convert_spherical2(
 				model_geometry.right_ascension, model_geometry.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
@@ -234,7 +234,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 		# solar system barycenter at epoch.
 		total_rotation = orbit.get_true_longitude(0.0) - PI
 		var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
-		if longitude_at_epoch and !is_inf(longitude_at_epoch):
+		if longitude_at_epoch and !is_nan(longitude_at_epoch):
 			total_rotation += longitude_at_epoch
 	basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, total_rotation)
 	model_geometry.set_basis_at_epoch(basis_at_epoch)

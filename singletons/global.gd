@@ -193,6 +193,9 @@ var translations := [ # added here so extensions can modify
 	"res://ivoyager/data/text/long_text.en.translation",
 ]
 
+var debug_log := File.new() # set null to disable debug log
+var debug_log_path := "user://logs/debug.log"
+
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for save debuging
@@ -217,6 +220,8 @@ var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
 	prints(project_name, ivoyager_version, project_version)
+	if debug_log:
+		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
 	_load_assets()
 	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"

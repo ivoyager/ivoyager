@@ -300,7 +300,6 @@ func _on_init() -> void:
 		cycle_prev_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT, shift = true}],
 		
 		# dev
-		write_debug_logs_now = [{event_class = "InputEventKey", scancode = KEY_L, control = true, shift = true}],
 		emit_debug_signal = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
 	}
 

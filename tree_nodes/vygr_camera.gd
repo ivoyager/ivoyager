@@ -394,7 +394,7 @@ func _process(delta: float) -> void:
 		# Camera parent will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
 		# of parent.global_transform.origin, so we are removing old shift at
-		# the same time we add our new shift. 
+		# the same time we add our new shift.
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
 	_camera_info[1] = global_transform.origin

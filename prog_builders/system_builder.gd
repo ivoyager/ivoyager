@@ -87,7 +87,7 @@ func _finish_build() -> void:
 	emit_signal("finished")
 
 func _add_bodies(table_name: String) -> void:
-	var n_rows := _table_reader.get_n_table_rows(table_name)
+	var n_rows := _table_reader.get_n_rows(table_name)
 	var row := 0
 	while row < n_rows:
 		var parent := _table_reader.get_body(table_name, "parent", row) # null for Sun
