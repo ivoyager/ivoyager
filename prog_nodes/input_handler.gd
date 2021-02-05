@@ -136,9 +136,7 @@ func _on_input(event: InputEvent) -> void:
 	_tree.set_input_as_handled()
 
 func _test_input_for_debug(event: InputEvent) -> bool:
-	if event.is_action_pressed("write_debug_logs_now"):
-		Debug.force_logging()
-	elif _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
+	if _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
 		Global.emit_signal("debug_pressed")
 	else:
 		return false # input NOT handled!
@@ -181,9 +179,7 @@ func _input_for_selection_manager(event: InputEvent) -> void:
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:
-	if _allow_dev_tools and event.is_action_pressed("write_debug_logs_now"):
-		Debug.force_logging()
-	elif event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
+	if event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
 		_state_manager.load_game("")
 	elif event.is_action_pressed("toggle_options"):
 		Global.emit_signal("options_requested")

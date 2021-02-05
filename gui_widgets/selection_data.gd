@@ -18,15 +18,22 @@
 # limitations under the License.
 # *****************************************************************************
 # GUI widget. Requires Control ancestor with member "selection_manager".
-# Certain property values are interpreted as unknown (dispay "?") or not
-# applicable (don't display label or value). For floats, these are INF and
-# -INF, respectively. For ints: -99 and -1. For strings: "?" and "".
+#
+# Typed values interpreted as n/a; widget skips row and doesn't display:
+#   NAN
+#   -1
+#   ""
+#
+# Typed values interpreted as unknown; widget displays as "?":
+#   INF or -INF
+#   -9999
+#
 # To find properites, we search first in SelectionItem, then Body, then
 # Properties, then ModelGeometry.
 #
-# For most applicatios, you'll want to put this in a ScrollContainer.
+# For most applicatios, you'll want to put this widget in a ScrollContainer.
 #
-# TODO: Mouse-over array.
+# TODO: tooltips.
 
 extends GridContainer
 
@@ -162,7 +169,7 @@ func _on_selection_changed() -> void:
 		var value_wiki: String
 		match typeof(value):
 			TYPE_INT:
-				if value == -99:
+				if value == -9999:
 					value_str = "?"
 				elif value == -1:
 					pass
@@ -182,9 +189,9 @@ func _on_selection_changed() -> void:
 				else:
 					value_str = str(value)
 			TYPE_REAL:
-				if value == INF:
+				if is_inf(value):
 					value_str = "?"
-				elif value == -INF:
+				elif is_nan(value):
 					pass
 				elif datum_size > 2 and show_datum[2] != null:
 					# expects elements 2, 3, 4

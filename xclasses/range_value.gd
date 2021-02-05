@@ -19,28 +19,34 @@
 # *****************************************************************************
 # WIP - NOT IMPLEMENTED YET!
 # Holds and creates display string for value that may have min, mean, max.
-# Use -INF for not applicable (i.e., don't show). Use INF for ?.
+# Use NAN for not applicable (i.e., don't show). Use INF for ?.
 
 class_name RangeValue
 
-var mean := -INF
-var minimum := -INF
-var maximum := -INF
+var mean := NAN
+var minimum := NAN
+var maximum := NAN
 
 var _qty_strings: QtyStrings = Global.program.QtyStrings
 
 func get_one_liner(option_type: int, unit := "", sig_digits := -1, num_type := QtyStrings.NUM_DYNAMIC,
 		long_form := false, case_type := QtyStrings.CASE_MIXED) -> String:
-	# See args list in QtyStrings.number_option()
-	var mean_str := "" if mean != INF else "?"
-	var min_str := "" if mean != INF else "?"
-	var max_str := "" if mean != INF else "?"
-	if !is_inf(mean):
+	var mean_str := ""
+	var min_str := ""
+	var max_str := ""
+	if is_inf(mean):
+		mean_str = "?"
+	elif !is_nan(mean):
 		mean_str = _qty_strings.number_option(mean, option_type, unit, sig_digits, num_type, long_form, case_type)
-	if !is_inf(minimum):
-		min_str = _qty_strings.number_option(mean, option_type, unit, sig_digits, num_type, long_form, case_type)
-	if !is_inf(maximum):
-		max_str = _qty_strings.number_option(mean, option_type, unit, sig_digits, num_type, long_form, case_type)
+	if is_inf(minimum):
+		mean_str = "?"
+	elif !is_nan(minimum):
+		min_str = _qty_strings.number_option(minimum, option_type, unit, sig_digits, num_type, long_form, case_type)
+	if is_inf(maximum):
+		mean_str = "?"
+	elif !is_nan(maximum):
+		max_str = _qty_strings.number_option(maximum, option_type, unit, sig_digits, num_type, long_form, case_type)
+	
 	var result_str := ""
 	if min_str:
 		result_str = tr("MIN") + ": " + min_str

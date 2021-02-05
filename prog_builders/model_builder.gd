@@ -132,7 +132,7 @@ func get_model_or_placeholder(model_type: int, file_prefix: String, m_radius: fl
 		model.set_surface_material(0, surface)
 		if !albedo_map and !emission_map:
 			albedo_map = _fallback_albedo_map
-		_table_reader.build_object(surface, "models", model_type, _material_fields)
+		_table_reader.build_object2(surface, "models", model_type, _material_fields)
 		if albedo_map:
 			surface.albedo_texture = albedo_map
 		if emission_map:
@@ -157,8 +157,8 @@ func _set_model_scale(model: Spatial, file_name: String) -> void:
 	else:
 		model.scale = METER * Vector3.ONE
 
-func _set_ellipsoid_scale(model: Spatial, m_radius := -INF, e_radius := -INF) -> void:
-	if !is_inf(e_radius):
+func _set_ellipsoid_scale(model: Spatial, m_radius := NAN, e_radius := NAN) -> void:
+	if !is_nan(e_radius):
 		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
 		model.scale = Vector3(e_radius, polar_radius, e_radius)
 	else:
@@ -169,7 +169,7 @@ func _set_rotations(model: Spatial, file_name: String) -> void:
 	if asset_row != -1:
 		var longitude_offset := _table_reader.get_real("asset_adjustments",
 				"longitude_offset", asset_row)
-		if longitude_offset != -INF:
+		if !is_nan(longitude_offset):
 			model.rotate(Vector3(0.0, 1.0, 0.0), -longitude_offset)
 	model.rotate(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # PI) # adjust for centered prime meridian
 	model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!

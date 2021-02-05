@@ -17,29 +17,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For floats: INF means unknown, -INF means not applicable. All physical bodies
-# have mass & m_radius (although possibly unknown). Other properties may apply
-# by body type.
+# For float, NAN means not applicable (or don't display) and INF means unknown.
+# For int, -1 means not applicable. All physical bodies have mass & m_radius
+# (although possibly unknown). Other properties may apply by body type.
 
 class_name Properties
 
 var mass := INF
 var m_radius := INF
-var gm := -INF
-var surface_gravity := -INF
-var esc_vel := -INF
-var e_radius := -INF
-var p_radius := -INF
+var gm := NAN
+var surface_gravity := NAN
+var esc_vel := NAN
+var e_radius := NAN
+var p_radius := NAN
 var hydrostatic_equilibrium := -1 # Enums.ConfidenceType
 var mean_density := INF
-var albedo := -INF
-var surf_pres := -INF
-var surf_t := -INF # NA for gas giants
-var min_t := -INF
-var max_t := -INF
-var one_bar_t := -INF # venus, gas giants
-var half_bar_t := -INF # earth, venus, gas giants
-var tenth_bar_t := -INF # gas giants
+var albedo := NAN
+var surf_pres := NAN
+var surf_t := NAN # NA for gas giants
+var min_t := NAN
+var max_t := NAN
+var one_bar_t := NAN # venus, gas giants
+var half_bar_t := NAN # earth, venus, gas giants
+var tenth_bar_t := NAN # gas giants
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["mass", "m_radius",

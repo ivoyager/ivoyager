@@ -86,7 +86,7 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 
 func _load_binaries(star: Body) -> void:
 	_running_count = 0
-	var n_asteroid_groups := _table_reader.get_n_table_rows("asteroid_groups")
+	var n_asteroid_groups := _table_reader.get_n_rows("asteroid_groups")
 	var row := 0
 	while row < n_asteroid_groups:
 		var group := _table_reader.get_string("asteroid_groups", "group", row)
