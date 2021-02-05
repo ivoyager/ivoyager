@@ -194,8 +194,9 @@ func build_object(object: Object, table_name: String, row: int, debug_required :
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
 	var row_data: Array = _table_data[table_name][row]
-	var properties: Array = object.get_script().get_property_list()
-	for property in properties:
+	var properties: Array = object.get_script().get_script_property_list()
+	for property_dict in properties:
+		var property: String = property_dict.name
 		var column: int = fields.get(property, -1)
 		if column == -1:
 			assert(!debug_required.has(property), "Missing column: " + table_name + " " + property)
