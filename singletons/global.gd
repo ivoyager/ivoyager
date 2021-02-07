@@ -98,7 +98,6 @@ var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := ""
-var project_website := ""
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
@@ -204,7 +203,7 @@ var debug_log_path := "user://logs/debug.log"
 
 # ******************************* PERSISTED ***********************************
 
-var project_version := "" # external project can set for save debuging
+var project_version := "" # external project can set for gamesave debuging
 var ivoyager_version := "0.0.8-dev"
 var is_modded := false # this is aspirational
 
@@ -223,18 +222,16 @@ var is_html5: bool = OS.has_feature('JavaScript')
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
+func _ready():
+	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
+	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
+
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
-	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
-	if project_name and project_website:
-		prints(project_name, project_version, "-", project_website)
-	elif project_name:
-		prints(project_name, project_version)
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
 	_load_assets()
-	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:

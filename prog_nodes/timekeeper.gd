@@ -75,7 +75,7 @@ var speed_symbols := [
 	"GAME_SPEED_MONTH_PER_SECOND",
 ]
 var real_time_speed := 0
-var default_speed := 2
+var start_speed := 2
 var show_clock_speed := 2 # this index and lower
 var show_seconds_speed := 1 # this index and lower
 var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
@@ -263,7 +263,7 @@ func _set_init_state() -> void:
 	times[0] = time
 	times[1] = engine_time
 	is_paused = true
-	speed_index = default_speed
+	speed_index = start_speed
 
 func _set_ready_state() -> void:
 	_reset_time()
