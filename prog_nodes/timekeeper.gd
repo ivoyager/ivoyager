@@ -239,6 +239,7 @@ func _ready() -> void:
 	_on_ready() # subclass can override
 
 func _on_ready() -> void:
+	Global.connect("network_state_changed", self, "_on_network_state_changed")
 	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")

@@ -26,7 +26,7 @@
 
 extends Node
 
-# ProjectBuilder & StateManager broadcasts (program/simulator state)
+# ProjectBuilder/StateManager/NetworkLobby broadcasts - "state"
 signal project_builder_finished()
 signal table_data_imported()
 signal state_manager_inited()
@@ -43,6 +43,7 @@ signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
+signal network_state_changed(network_state) # Enums.NetworkState
 
 # other broadcasts
 signal setting_changed(setting, value)
@@ -97,6 +98,7 @@ var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := ""
+var project_website := ""
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
@@ -223,10 +225,11 @@ var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
-	if project_name:
-		print("%s %s (I, Voyager %s)" % [project_name, project_version, ivoyager_version])
-	else:
-		prints("I, Voyager", ivoyager_version)
+	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
+	if project_name and project_website:
+		prints(project_name, project_version, "-", project_website)
+	elif project_name:
+		prints(project_name, project_version)
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()

@@ -144,9 +144,9 @@ func _get_file(flags: int) -> File:
 	var file := File.new()
 	if file.open(file_path, flags) != OK:
 		if flags == File.WRITE:
-			print("ERROR! Could not open ", file_path, " for write!")
+			prints("ERROR! Could not open", file_path, "for write!")
 		else:
-			print("No cache (ok if never changed): ", file_path)
+			prints("No cache file", file_path, "(ok if no changes)")
 		return null
 	return file
 

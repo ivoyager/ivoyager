@@ -32,8 +32,8 @@
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
 # https://docs.godotengine.org/en/stable/tutorials/networking/high_level_multiplayer.html
-# Be sure to set Global.state.network_state and coordinate with network signals
-# here. NetworkLobby must tell this node to emit network_state_changed.
+# Be sure to set Global.state.network_state and emit Global signal
+# "network_state_changed".
 #
 # IMPORTANT! Non-main threads should coordinate with signals and functions here
 # for thread-safety. We wait for all threads to finish before proceding to save,
@@ -45,7 +45,6 @@ class_name StateManager
 signal active_threads_allowed() # can start threads in external projct
 signal finish_threads_required() # finish threads for any external projects
 signal threads_finished()
-signal network_state_changed(network_state) # Enums.NetworkState; from NetworkLobby only
 signal client_is_dropping_out(is_exit)
 signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
 signal server_about_to_run() # server only
@@ -331,7 +330,6 @@ func _on_ready() -> void:
 	Global.connect("sim_run_allowed", self, "allow_run")
 	if _saver_loader:
 		_saver_loader.use_thread = Global.use_threads
-	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
 	set_process(false)
 	require_stop(self)
 
