@@ -45,7 +45,7 @@ var _camera: Camera
 
 
 func project_init():
-	_universe = Global.program.universe
+	_universe = Global.program.Universe
 	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_body_builder = Global.program.BodyBuilder
 	_minor_bodies_builder = Global.program.MinorBodiesBuilder

@@ -215,11 +215,7 @@ func instantiate_and_index() -> void:
 				object.name = object_key
 	assert(!program.has("Universe"))
 	universe = get_node("/root/Universe")
-	program.universe = universe
-	assert(!program.has("tree"))
-	program.tree = get_tree()
-	assert(!program.has("root"))
-	program.root = get_tree().get_root()
+	program.Universe = universe
 	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))

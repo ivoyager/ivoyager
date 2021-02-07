@@ -35,7 +35,7 @@ func add_world_environment(env_type := 0) -> void:
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
 	world_env.environment = get_environment(env_type)
-	Global.program.universe.add_child(world_env)
+	Global.program.Universe.add_child(world_env)
 
 func get_environment(_env_type: int) -> Environment:
 	# TODO: Read env settings from data table!

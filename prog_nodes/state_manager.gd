@@ -69,12 +69,12 @@ var _settings: Dictionary = Global.settings
 var _enable_save_load: bool = Global.enable_save_load
 var _popops_can_stop_sim: bool = Global.popops_can_stop_sim
 var _limit_stops_in_multiplayer: bool = Global.limit_stops_in_multiplayer
-var _tree: SceneTree
-var _saver_loader: SaverLoader
-var _main_prog_bar: MainProgBar
-var _system_builder: SystemBuilder
-var _environment_builder: EnvironmentBuilder
-var _timekeeper: Timekeeper
+onready var _tree := get_tree()
+onready var _saver_loader: SaverLoader = Global.program.get("SaverLoader")
+onready var _main_prog_bar: MainProgBar = Global.program.get("MainProgBar")
+onready var _system_builder: SystemBuilder = Global.program.SystemBuilder
+onready var _environment_builder: EnvironmentBuilder = Global.program.EnvironmentBuilder
+onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 var _has_been_saved := false
 var _was_paused := false
 var _nodes_requiring_stop := []
@@ -287,9 +287,6 @@ func quit(force_quit: bool) -> void:
 			return
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
-#		_tree.network_peer = null # client is dropping out
-#		_state.network_state = NO_NETWORK
-#		emit_signal("network_state_changed", NO_NETWORK)
 	_state.is_quitting = true
 	require_stop(self, NetworkStopSync.QUIT)
 	yield(self, "threads_finished")
@@ -309,19 +306,7 @@ func save_quit() -> void:
 	quick_save()
 
 func project_init() -> void:
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
-	Global.connect("sim_stop_required", self, "require_stop")
-	Global.connect("sim_run_allowed", self, "allow_run")
-	_tree = Global.program.tree
-	_saver_loader = Global.program.get("SaverLoader")
-	if _saver_loader:
-		_saver_loader.use_thread = Global.use_threads
-	_main_prog_bar = Global.program.get("MainProgBar")
-	_system_builder = Global.program.SystemBuilder
-	_environment_builder = Global.program.EnvironmentBuilder
-	_timekeeper = Global.program.Timekeeper
-	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
+	pass
 
 # *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
@@ -342,6 +327,14 @@ func _ready():
 	_on_ready()
 
 func _on_ready() -> void:
+	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [],
+			CONNECT_ONESHOT)
+	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("sim_stop_required", self, "require_stop")
+	Global.connect("sim_run_allowed", self, "allow_run")
+	if _saver_loader:
+		_saver_loader.use_thread = Global.use_threads
+	connect("network_state_changed", _timekeeper, "_on_network_state_changed")
 	set_process(false)
 	require_stop(self)
 

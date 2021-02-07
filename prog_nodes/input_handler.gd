@@ -38,7 +38,7 @@ var _disable_pause: bool
 var _allow_time_reversal: bool
 var _allow_dev_tools: bool
 var _allow_fullscreen_toggle: bool
-onready var _tree: SceneTree = Global.program.tree
+onready var _tree: SceneTree = get_tree()
 onready var _state_manager: StateManager = Global.program.StateManager
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
