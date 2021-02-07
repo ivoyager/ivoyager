@@ -45,7 +45,7 @@
 #    4. Non-procedural nodes must have stable names (path cannot change).
 #    5. Inner classes can't be persist objects
 #    6. For references, PERSIST_AS_PROCEDURAL_OBJECT = true
-#    7. Virtual method _init() cannot have any args.
+#    7. Virtual method _init() cannot have any required args.
 # Warnings:
 #    1. A single table or dict persisted in two places will become two on load
 #    2. Persisted strings cannot begin with object_tag.

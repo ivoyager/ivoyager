@@ -26,7 +26,7 @@
 
 extends Node
 
-# ProjectBuilder & StateManager broadcasts (program/simulator state)
+# ProjectBuilder/StateManager/NetworkLobby broadcasts - "state"
 signal project_builder_finished()
 signal table_data_imported()
 signal state_manager_inited()
@@ -43,6 +43,7 @@ signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running)
 signal about_to_quit()
+signal network_state_changed(network_state) # Enums.NetworkState
 
 # other broadcasts
 signal setting_changed(setting, value)
@@ -202,7 +203,7 @@ var debug_log_path := "user://logs/debug.log"
 
 # ******************************* PERSISTED ***********************************
 
-var project_version := "" # external project can set for save debuging
+var project_version := "" # external project can set for gamesave debuging
 var ivoyager_version := "0.0.8-dev"
 var is_modded := false # this is aspirational
 
@@ -221,17 +222,16 @@ var is_html5: bool = OS.has_feature('JavaScript')
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
+func _ready():
+	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
+	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
+
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
-	if project_name:
-		print("%s %s (I, Voyager %s)" % [project_name, project_version, ivoyager_version])
-	else:
-		prints("I, Voyager", ivoyager_version)
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
 	_load_assets()
-	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:
