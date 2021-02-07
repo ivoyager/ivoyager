@@ -55,6 +55,7 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 				if target == connection_dict.target and method == connection_dict.method:
 					signal_str = test_signal_str
 					disconnect(signal_str, target, method)
+					break
 		i += 1
 	if !signal_str: # doesn't exist; return w/out error
 		return
