@@ -34,12 +34,6 @@ var _cache_dir: String = Global.cache_dir
 var _camera: VygrCamera
 
 func project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("camera_ready", self, "_set_camera")
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("simulator_started", self, "start")
-	Global.connect("about_to_quit", self, "_cache_now")
-	connect("timeout", self, "_cache_now")
 	var dir = Directory.new()
 	if dir.open(_cache_dir) != OK:
 		dir.make_dir(_cache_dir)
@@ -47,6 +41,14 @@ func project_init() -> void:
 		wait_time = cache_interval
 	else:
 		paused = true # start() order won't do anything
+
+func _ready():
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	Global.connect("camera_ready", self, "_set_camera")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("simulator_started", self, "start")
+	Global.connect("about_to_quit", self, "_cache_now")
+	connect("timeout", self, "_cache_now")
 
 func _clear() -> void:
 	_camera = null

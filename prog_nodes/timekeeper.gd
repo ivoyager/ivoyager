@@ -226,27 +226,27 @@ func can_incr_speed() -> bool:
 func can_decr_speed() -> bool:
 	return speed_index > 0
 
+# *****************************************************************************
+
 func project_init() -> void:
+	_date_time_regex.compile(regexpr)
+	times.resize(3)
+	date.resize(3)
+	clock.resize(3)
+	_set_init_state()
+
+func _ready() -> void:
+	_on_ready() # subclass can override
+
+func _on_ready() -> void:
 	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("gui_refresh_requested", self, "_refresh_gui")
-	_date_time_regex.compile(regexpr)
-	times.resize(3)
-	date.resize(3)
-	clock.resize(3)
-	_set_init_state()
-	_set_ready_state()
-
-# **************************** VIRTUAL & PRIVATE ******************************
-
-func _ready() -> void:
-	_on_ready() # subclass can override
-
-func _on_ready() -> void:
 	connect("speed_changed", self, "_on_speed_changed")
+	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
 
 func _on_network_state_changed(network_state: int) -> void:

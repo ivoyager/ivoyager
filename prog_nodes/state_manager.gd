@@ -42,7 +42,6 @@
 extends Node
 class_name StateManager
 
-
 signal active_threads_allowed() # can start threads in external projct
 signal finish_threads_required() # finish threads for any external projects
 signal threads_finished()
@@ -50,7 +49,6 @@ signal network_state_changed(network_state) # Enums.NetworkState; from NetworkLo
 signal client_is_dropping_out(is_exit)
 signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
 signal server_about_to_run() # server only
-
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const DPRINT := false
@@ -79,7 +77,6 @@ var _has_been_saved := false
 var _was_paused := false
 var _nodes_requiring_stop := []
 
-# *************************** PUBLIC FUNCTIONS ********************************
 # Multithreading note: Godot's SceneTree and all I, Voyager public functions
 # run in the main thread. Use call_defered() to invoke any function from
 # another thread unless the function is guaranteed to be thread-safe (e.g,
@@ -305,10 +302,10 @@ func save_quit() -> void:
 	Global.connect("game_save_finished", self, "quit", [true])
 	quick_save()
 
+# *****************************************************************************
+
 func project_init() -> void:
 	pass
-
-# *********************** VIRTUAL & PRIVATE FUNCTIONS *************************
 
 func _init() -> void:
 	_on_init()

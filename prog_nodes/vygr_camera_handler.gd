@@ -85,11 +85,16 @@ var _suppress_camera_move := false
 
 
 func project_init() -> void:
+	pass
+
+func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
 	Global.connect("setting_changed", self, "_settings_listener")
+	set_process(false)
+	set_process_unhandled_input(false)
 
 func _restore_init_state() -> void:
 	_disconnect_camera()
@@ -131,10 +136,6 @@ func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock and !_suppress_camera_move:
 		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
-
-func _ready() -> void:
-	set_process(false)
-	set_process_unhandled_input(false)
 
 func _process(delta: float) -> void:
 	if _drag_vector:
