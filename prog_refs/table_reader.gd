@@ -30,8 +30,8 @@ var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
 var _table_fields: Dictionary # a dict of columns for each table
 var _table_data_types: Dictionary # an array for each table
 var _table_units: Dictionary # an array for each table
+var _table_row_dicts: Dictionary
 var _table_rows: Dictionary = Global.table_rows # indexed by ALL table rows
-var _table_row_dicts: Dictionary = Global.table_row_dicts
 var _bodies_by_name: Dictionary = Global.bodies_by_name
 var _enums: Script
 var _unit_multipliers: Dictionary
@@ -48,10 +48,16 @@ func get_row_name(table_name: String, row: int) -> String:
 
 func get_row(table_name: String, row_name: String) -> int:
 	# Returns -1 if missing.
+	# Since all table row names are checked to be globaly unique, you can
+	# obtain the same result using Global.table_rows[row_name]. 
 	var table_rows: Dictionary = _table_row_dicts[table_name]
 	if table_rows.has(row_name):
 		return table_rows[row_name]
 	return -1
+
+func get_rows_dict(table_name: String) -> Dictionary:
+	# Returns an enum-like dict of row number keyed by row names. Don't modify!
+	return _table_row_dicts[table_name]
 
 func has_row_name(table_name: String, row_name: String) -> bool:
 	var table_rows: Dictionary = _table_row_dicts[table_name]
@@ -338,9 +344,10 @@ func project_init() -> void:
 	_unit_functions = Global.unit_functions
 
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
-		table_units: Dictionary, values: Array) -> void:
+		table_units: Dictionary, table_row_dicts: Dictionary, values: Array) -> void:
 	_table_data = table_data
 	_table_fields = table_fields
 	_table_data_types = table_data_types
 	_table_units = table_units
+	_table_row_dicts = table_row_dicts
 	_values = values

@@ -113,7 +113,12 @@ func remove_selection_item(selection_item: SelectionItem) -> void:
 	assert(selection_items.has(name_))
 	selection_items.erase(name_)
 
+# *****************************************************************************
+
 func project_init():
+	pass
+
+func _ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("game_load_finished", self, "_index_bodies")
 

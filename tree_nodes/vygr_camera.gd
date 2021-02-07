@@ -157,7 +157,7 @@ var _from_track_type := TRACK_GROUND
 var _is_ecliptic := false
 var _last_dist := 0.0
 
-var _universe: Spatial = Global.program.universe
+var _universe: Spatial = Global.program.Universe
 onready var _viewport := get_viewport()
 onready var _tree := get_tree()
 var _View_: Script = Global.script_classes._View_

@@ -136,7 +136,7 @@ var gui_controls := {
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
 	# project init, or 2) reorder children of Universe after project build.
-	_HUD2dSurface_ = HUD2dSurface, # Control ok; TODO: Rename to ProjectionSurface
+	_ProjectionSurface_ = ProjectionSurface, # Control ok
 	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control!
 	_SplashScreen_ = PBDSplashScreen, # Replace or remove (set Global.skip_splash_screen)
 	_MainMenuPopup_ = MainMenuPopup, # safe to remove
@@ -215,11 +215,7 @@ func instantiate_and_index() -> void:
 				object.name = object_key
 	assert(!program.has("Universe"))
 	universe = get_node("/root/Universe")
-	program.universe = universe
-	assert(!program.has("tree"))
-	program.tree = get_tree()
-	assert(!program.has("root"))
-	program.root = get_tree().get_root()
+	program.Universe = universe
 	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))

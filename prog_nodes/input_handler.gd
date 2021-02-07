@@ -34,11 +34,11 @@ const IS_CLIENT := Enums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = Global.state
 var _script_classes: Dictionary = Global.script_classes
-var _disable_pause: bool
-var _allow_time_reversal: bool
-var _allow_dev_tools: bool
-var _allow_fullscreen_toggle: bool
-onready var _tree: SceneTree = Global.program.tree
+var _disable_pause: bool = Global.disable_pause
+var _allow_time_reversal: bool = Global.allow_time_reversal
+var _allow_dev_tools: bool = Global.allow_dev_tools
+var _allow_fullscreen_toggle: bool = Global.allow_fullscreen_toggle
+onready var _tree: SceneTree = get_tree()
 onready var _state_manager: StateManager = Global.program.StateManager
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
@@ -59,13 +59,14 @@ func make_action(action: String, is_pressed := true) -> void:
 	event.pressed = is_pressed
 	_tree.input_event(event)
 
+# *****************************************************************************
+
 func project_init():
+	pass
+
+func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
-	_disable_pause = Global.disable_pause
-	_allow_time_reversal = Global.allow_time_reversal
-	_allow_dev_tools = Global.allow_dev_tools
-	_allow_fullscreen_toggle = Global.allow_fullscreen_toggle
 
 func _on_system_ready(_is_new_game: bool) -> void:
 	var project_gui = Global.program.ProjectGUI

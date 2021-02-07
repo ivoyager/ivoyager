@@ -19,12 +19,18 @@
 # *****************************************************************************
 # Universe is the main scene root node. It provides spatial reference for top
 # Body instances, which could be the Sun or a collection of stars or something
-# else. Get the Universe instance from Global.program.universe. Get specific
-# Body instances by name or id from Global.program.BodyRegistry.
+# else.
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# !!!!!!!!          Developers! The place to start is:                 !!!!!!!!
-# !!!!!!!!          ivoyager/singletons/project_builder.gd             !!!!!!!!
+# !!!!!!!!                                                             !!!!!!!!
+# !!!!!!!!     Developers! The place to start is:                      !!!!!!!!
+# !!!!!!!!       ivoyager/singletons/project_builder.gd                !!!!!!!!
+# !!!!!!!!       ivoyager/singletons/global.gd                         !!!!!!!!
+# !!!!!!!!                                                             !!!!!!!!
+# !!!!!!!!     Program-related objects are in Global.program           !!!!!!!!
+# !!!!!!!!     Body instances can be obtained by name or id from       !!!!!!!!
+# !!!!!!!!       BodyRegistry (ivoyager/prog_nodes/body_registry.gd)   !!!!!!!!                                     !!!!!!!!
+# !!!!!!!!                                                             !!!!!!!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 extends Spatial

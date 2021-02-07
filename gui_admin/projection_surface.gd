@@ -1,4 +1,4 @@
-# hud_2d_surface.gd
+# projection_surface.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,19 +17,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Parent control for HUD labels or similar 2D objects.
+# Parent control for HUD labels or similar 2D objects. All children are freed
+# on exit or game load.
 
 extends Control
-class_name HUD2dSurface
+class_name ProjectionSurface
 
 func project_init():
-	connect("ready", self, "_on_ready")
-	Global.connect("about_to_free_procedural_nodes", self, "_free_2d_huds")
+	pass
+
+func _ready():
+	Global.connect("about_to_free_procedural_nodes", self, "_free_children")
+	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_IGNORE
 
-func _on_ready():
-	set_anchors_and_margins_preset(Control.PRESET_WIDE)
-
-func _free_2d_huds():
+func _free_children():
 	for child in get_children():
 		child.queue_free()

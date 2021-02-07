@@ -32,7 +32,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	_stop_sim = stop_sim
 	if _stop_sim:
 		Global.emit_signal("sim_stop_required", self)
-	Global.program.universe.add_child(self)
+	Global.program.Universe.add_child(self)
 	theme = Global.themes.main
 	popup_centered()
 

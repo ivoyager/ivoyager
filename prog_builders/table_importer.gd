@@ -19,7 +19,6 @@
 # *****************************************************************************
 # Reads external data tables (.csv files) and adds results to:
 #    Global.table_rows
-#    Global.table_row_dicts
 #    Global.wiki_titles (if Global.wiki_enabled)
 #    private table containers in TableReader via init_tables()
 #
@@ -48,8 +47,8 @@ var _table_data := {}
 var _table_fields := {}
 var _table_data_types := {}
 var _table_units := {}
+var _table_row_dicts := {}
 var _table_rows: Dictionary = Global.table_rows # Global shared
-var _table_row_dicts: Dictionary = Global.table_row_dicts # Global shared
 var _wiki_titles: Dictionary = Global.wiki_titles # Global shared
 var _value_indexes := {"" : 0} # preloaded 0-index is null value
 var _values := [""]
@@ -73,7 +72,8 @@ var _count := 0
 
 func project_init() -> void:
 	var table_reader: TableReader = Global.program.TableReader
-	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _values)
+	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, 
+			_table_row_dicts, _values)
 
 func import_table_data() -> void:
 	if _enable_wiki:
@@ -101,7 +101,7 @@ func import_table_data() -> void:
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
 			_table_rows[item_key] = _rows[item_key]
-	print("Imported ", _count, " table values (", _values.size(), " unique strings)...")
+	print("Imported %s table values (%s unique strings)..." % [_count, _values.size()])
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)

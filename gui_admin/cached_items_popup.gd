@@ -27,7 +27,7 @@ const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 var stop_sim := true
 var layout: Array # subclass sets in _init()
 
-var _state_manager: StateManager
+onready var _state_manager: StateManager = Global.program.StateManager
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer
@@ -102,19 +102,23 @@ func remove_item(item: String) -> void:
 				dict_index -= 1
 			dict_index += 1
 
+# *****************************************************************************
+
+func project_init() -> void:
+	pass
+
 func _init():
 	_on_init()
 
 func _on_init():
 	pass
 
-func project_init() -> void:
-	_state_manager = Global.program.StateManager
-	connect("ready", self, "_on_ready")
-	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
+func _ready():
+	_on_ready()
 
 func _on_ready() -> void:
+	connect("popup_hide", self, "_on_popup_hide")
+	Global.connect("close_all_admin_popups_requested", self, "hide")
 	theme = Global.themes.main
 	set_process_unhandled_key_input(false)
 	_header_left = $VBox/TopHBox/HeaderLeft

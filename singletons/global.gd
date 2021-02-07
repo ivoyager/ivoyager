@@ -84,9 +84,8 @@ var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs
 var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
 var assets := {} # Global; loaded here from dynamic paths
 var settings := {} # SettingsManager
-var table_rows := {} # TableImporter; row ints for ALL row keys
-var table_row_dicts := {} # TableImporter; a row dict for each table
-var wiki_titles := {} # TableImporter; Wiki url identifiers by item key
+var table_rows := {} # TableImporter; row number for all row names (key column)
+var wiki_titles := {} # TableImporter; Wiki url identifiers by item name
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # BodyRegistry; indexed by body_id
@@ -97,7 +96,7 @@ var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
-var project_name := "I, Voyager"
+var project_name := ""
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
@@ -186,7 +185,12 @@ var asset_paths_for_load := { # loaded into "assets" dict at project init
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 }
-var translations := [ # added here so extensions can modify
+var translations := [
+	# Added here so extensions can modify. Note that TranslationImporter will
+	# process text (eg, interpret \uXXXX) and report duplicate keys only if
+	# import file has compress=false. For duplicates, 1st in array below will
+	# be kept. So prepend this array if you want to override an ivoyager text
+	# key.
 	"res://ivoyager/data/text/entities_text.en.translation",
 	"res://ivoyager/data/text/gui_text.en.translation",
 	"res://ivoyager/data/text/hints_text.en.translation",
@@ -219,7 +223,10 @@ var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations
-	prints(project_name, ivoyager_version, project_version)
+	if project_name:
+		print("%s %s (I, Voyager %s)" % [project_name, project_version, ivoyager_version])
+	else:
+		prints("I, Voyager", ivoyager_version)
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
