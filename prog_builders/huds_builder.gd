@@ -34,7 +34,7 @@ var _settings: Dictionary = Global.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _huds_manager: HUDsManager
-var _hud_2d_surface: Control
+var _projection_surface: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
@@ -42,7 +42,7 @@ func project_init() -> void:
 	_HUDLabel_ = Global.script_classes._HUDLabel_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_huds_manager = Global.program.HUDsManager
-	_hud_2d_surface = Global.program.HUD2dSurface
+	_projection_surface = Global.program.ProjectionSurface
 	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
 	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
@@ -54,7 +54,7 @@ func add_label(body: Body) -> void:
 #	_huds_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
 	hud_label.hide()
 	body.hud_label = hud_label
-	_hud_2d_surface.add_child(hud_label)
+	_projection_surface.add_child(hud_label)
 
 func add_orbit(body: Body) -> void:
 	if !body.orbit:
