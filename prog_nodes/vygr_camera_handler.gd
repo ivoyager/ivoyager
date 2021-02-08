@@ -92,6 +92,8 @@ func _ready():
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
+#	Global.connect("projection_unhandled_mouse_event", self,
+#			"_on_projection_unhandled_mouse_event")
 	Global.connect("setting_changed", self, "_settings_listener")
 	set_process(false)
 	set_process_unhandled_input(false)
@@ -125,7 +127,8 @@ func _on_run_state_changed(is_running: bool) -> void:
 
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				NULL_ROTATION, -1)
 
 func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 	if is_camera_lock:
@@ -135,7 +138,8 @@ func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock and !_suppress_camera_move:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO, NULL_ROTATION, -1)
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				NULL_ROTATION, -1)
 
 func _process(delta: float) -> void:
 	if _drag_vector:
@@ -172,6 +176,22 @@ func _process(delta: float) -> void:
 	if _rotate_pressed:
 		_camera.add_rotate_action(_rotate_pressed * delta)
 
+#func _on_projection_unhandled_mouse_event(event: InputEventMouse) -> void:
+#	if !_camera:
+#		return
+#	var is_handled := false
+#	if event is InputEventMouseButton:
+#		var button_index: int = event.button_index
+#		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
+#		if button_index == BUTTON_WHEEL_UP:
+#			_mwheel_turning = _mouse_in_out_rate
+#			is_handled = true
+#		elif button_index == BUTTON_WHEEL_DOWN:
+#			_mwheel_turning = -_mouse_in_out_rate
+#			is_handled = true
+#	if is_handled:
+#		_tree.set_input_as_handled()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if !_camera:
 		return
@@ -202,7 +222,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					_drag_mode = l_button_drag
 			else: # end of drag, or button-up after a mouse click selection
 				if _drag_start == event.position: # was a mouse click!
-					Global.emit_signal("mouse_clicked_viewport_at", event.position, _camera, true)
+					Global.emit_signal("mouse_clicked_viewport_at", event.position, _camera,
+							true)
 				_drag_start = VECTOR2_ZERO
 				_drag_segment_start = VECTOR2_ZERO
 				_drag_mode = -1
