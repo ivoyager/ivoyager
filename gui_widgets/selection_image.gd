@@ -26,6 +26,7 @@ var _hint_extension := "\n\n" + tr("HINT_SELECTION_IMAGE")
 
 func _ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 func _on_system_tree_ready(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)

@@ -213,11 +213,10 @@ func _settings_listener(setting: String, _value) -> void:
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == BUTTON_LEFT:
-			accept_event()
 			_drag_point = get_global_mouse_position() - _parent.rect_position
 			set_process_input(true)
+			_parent.set_default_cursor_shape(CURSOR_MOVE)
 	elif event is InputEventMouseMotion and _drag_point:
-		accept_event()
 		_parent.rect_position = get_global_mouse_position() - _drag_point
 
 func _input(event):
@@ -226,11 +225,11 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if !event.pressed and event.button_index == BUTTON_LEFT:
 			_finish_move()
+			_parent.set_default_cursor_shape(CURSOR_ARROW)
 
 func _on_margin_input(event: InputEvent, location: int) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == BUTTON_LEFT:
-			accept_event()
 			var mouse_pos := get_global_mouse_position()
 			if event.pressed:
 				match location:
@@ -249,7 +248,6 @@ func _on_margin_input(event: InputEvent, location: int) -> void:
 				_update_custom_size()
 				_finish_move()
 	elif event is InputEventMouseMotion and (_margin_drag_x or _margin_drag_y):
-		accept_event()
 		var mouse_pos := get_global_mouse_position()
 		match location:
 			TL, T, TR:

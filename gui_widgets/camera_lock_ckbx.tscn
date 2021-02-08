@@ -5,6 +5,7 @@
 [node name="CameraLockCkbx" type="CheckBox"]
 margin_right = 24.0
 margin_bottom = 24.0
+hint_tooltip = "HINT_CAMERA_LOCK"
 text = "CKBX_LOCK_CAMERA"
 script = ExtResource( 1 )
 __meta__ = {

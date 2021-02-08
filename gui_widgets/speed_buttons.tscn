@@ -15,12 +15,14 @@ __meta__ = {
 [node name="Minus" type="Button" parent="."]
 margin_right = 17.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TIME_SLOW"
 text = "-"
 
 [node name="Plus" type="Button" parent="."]
 margin_left = 21.0
 margin_right = 41.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TIME_SPEED"
 text = "+"
 __meta__ = {
 "_edit_use_anchors_": false
@@ -30,6 +32,7 @@ __meta__ = {
 margin_left = 45.0
 margin_right = 71.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TIME_PAUSE"
 toggle_mode = true
 text = "||"
 
@@ -37,5 +40,6 @@ text = "||"
 margin_left = 75.0
 margin_right = 95.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_TIME_REVERSE"
 toggle_mode = true
 text = "<"

@@ -48,13 +48,3 @@ func _on_show_huds_changed() -> void:
 	elif _huds_manager.show_symbols:
 		text = _body_symbol
 		set("custom_fonts/font", _symbol_font)
-
-#func _on_show_names_changed(is_show: bool) -> void:
-#	if is_show:
-#		text = _body_name
-#		set("custom_fonts/font", _name_font)
-#
-#func _on_show_symbols_changed(is_show: bool) -> void:
-#	if is_show:
-#		text = _body_symbol
-#		set("custom_fonts/font", _symbol_font)

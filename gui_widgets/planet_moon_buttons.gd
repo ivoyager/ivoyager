@@ -214,6 +214,7 @@ class NavButton extends Button:
 		Global.connect("gui_refresh_requested", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 	func _pressed() -> void:
 		_selection_manager.select(_selection_item)
