@@ -30,6 +30,4 @@ func _ready():
 	load_message.set("custom_fonts/font", font)
 	var pbd_caption: Label = $VBox/PBDCaption
 	pbd_caption.set("custom_fonts/font", font)
-	# Actual Earth pixel sample: c8a0de
-	# This one from beam (lightened): ffbdee
-	pbd_caption.set("custom_colors/font_color", Color("c8a0de"))
+	pbd_caption.set("custom_colors/font_color", Color(0.740906, 0.828778, 0.953125))
