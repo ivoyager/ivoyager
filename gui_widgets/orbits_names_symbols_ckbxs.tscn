@@ -16,16 +16,19 @@ __meta__ = {
 [node name="Orbits" type="CheckBox" parent="."]
 margin_right = 114.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_ORBITS"
 text = "CKBX_ORBITS"
 
 [node name="Names" type="CheckBox" parent="."]
 margin_left = 118.0
 margin_right = 230.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_NAMES"
 text = "CKBX_NAMES"
 
 [node name="Symbols" type="CheckBox" parent="."]
 margin_left = 234.0
 margin_right = 361.0
 margin_bottom = 40.0
+hint_tooltip = "HINT_SYMBOLS"
 text = "CKBX_SYMBOLS"

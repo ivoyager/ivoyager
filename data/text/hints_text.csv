@@ -1,31 +1,31 @@
 id,en
-HINT_ALL_ASTEROIDS,Show/hide all asteroids
-HINT_CAMERA_LOCK,Camera follows selection in Navigation Panel
-HINT_CENTAURS,Show/hide Centaurs
+HINT_ALL_ASTEROIDS,Show all asteroids
+HINT_CAMERA_LOCK,Camera follows selection
+HINT_CENTAURS,Show Centaurs
 HINT_DECREASE_FOCAL_LENGTH,Decrease camera focal length
 HINT_INCREASE_FOCAL_LENGTH,Increase camera focal length
-HINT_L4_TROJANS,Show/hide Jupiter L4 (Greek Camp) Trojans
-HINT_L5_TROJANS,Show/hide Jupiter L5 (Trojan Camp) Trojans
-HINT_MAIN_BELT,Show/hide Main Belt asteroids
-HINT_MARS_CROSSERS,Show/hide Mars-crossing asteroids
+HINT_L4_TROJANS,Show Jupiter L4 (Greek Camp) Trojans
+HINT_L5_TROJANS,Show Jupiter L5 (Trojan Camp) Trojans
+HINT_MAIN_BELT,Show Main Belt asteroids
+HINT_MARS_CROSSERS,Show Mars-crossing asteroids
 HINT_MOUSE_ONLY_GUI_NAV,"If checked, arrow keys move camera only;\notherwise, arrows navigate GUI controls"
-HINT_NAMES,Show/hide names
-HINT_NEAR_EARTH,Show/hide near-Earth asteroids
-HINT_ORBITS,Show/hide orbits
+HINT_NAMES,Show names
+HINT_NEAR_EARTH,Show near-Earth asteroids
+HINT_ORBITS,Show orbits
 HINT_SELECTION_IMAGE,Click to center and orient
 HINT_SELECTION_BACK,Select last
 HINT_SELECTION_FORWARD,Select next
 HINT_SELECTION_UP,Select parent object
-HINT_SYMBOLS,Show/hide symbols
-HINT_TIME_SLOW,Slow time
-HINT_TIME_SPEED,Speed time
+HINT_SYMBOLS,Show symbols
+HINT_TIME_SLOW,Decrease speed
+HINT_TIME_SPEED,Increase speed
 HINT_TIME_REVERSE,Reverse time
 HINT_TIME_PAUSE,Pause
-HINT_TIME_REAL,Real time
+HINT_TIME_REAL,Set actual time (UT)
 HINT_TRACK_GROUND,Camera will maintain latitude & longitude
 HINT_TRACK_ORBIT,Camera will track orbit of the selected object
-HINT_TRANS_NEPTUNE,Show/hide trans-Neptunian asteroids
-HINT_TROJANS,Show/hide Jupiter Trojans
+HINT_TRANS_NEPTUNE,Show trans-Neptunian asteroids
+HINT_TROJANS,Show Jupiter Trojans
 HINT_VIEW_45,View from 45\u00B0 above
 HINT_VIEW_OUTWARD,Look outward from current selection
 HINT_VIEW_TOP,View from top
