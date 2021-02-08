@@ -48,7 +48,6 @@ signal network_state_changed(network_state) # Enums.NetworkState
 # other broadcasts
 signal setting_changed(setting, value)
 signal camera_ready(camera)
-signal mouse_clicked_viewport_at(position, camera, is_left_click)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # sim state control
@@ -91,7 +90,8 @@ var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # BodyRegistry; indexed by body_id
 var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, Vector3.ZERO, 50.0] # Camera; [Camera, global_translation, fov]
+var camera_info := [null, Vector3.ZERO, 50.0, 1080.0] # Camera; [Camera, global_translation, fov, viewport.size.y]
+var mouse_target := [Vector2.ZERO, null, INF] # ProjectionSurface & Body; [mouse_pos, target, dist]
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]

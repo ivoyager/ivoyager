@@ -29,7 +29,7 @@
 # !!!!!!!!                                                             !!!!!!!!
 # !!!!!!!!     Program-related objects are in Global.program           !!!!!!!!
 # !!!!!!!!     Body instances can be obtained by name or id from       !!!!!!!!
-# !!!!!!!!       BodyRegistry (ivoyager/prog_nodes/body_registry.gd)   !!!!!!!!                                     !!!!!!!!
+# !!!!!!!!       BodyRegistry (ivoyager/prog_nodes/body_registry.gd)   !!!!!!!!
 # !!!!!!!!                                                             !!!!!!!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
