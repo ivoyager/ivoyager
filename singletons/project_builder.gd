@@ -109,7 +109,6 @@ var program_references := {
 	_InputMapManager_ = InputMapManager,
 	_FontManager_ = FontManager, # ok to replace
 	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
-	_MouseClickSelector_ = MouseClickSelector,
 	_QtyStrings_ = QtyStrings,
 	_TableReader_ = TableReader,
 	_MainMenuManager_ = MainMenuManager,

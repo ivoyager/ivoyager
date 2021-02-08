@@ -50,21 +50,24 @@ var key_in_out_adj := 3.0
 var key_move_adj := 0.7
 var key_pitch_yaw_adj := 2.0
 var key_roll_adj := 3.0
-var l_button_drag := DRAG_MOVE
-var r_button_drag := DRAG_PITCH_YAW_ROLL_HYBRID
-var cntr_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as r_button_drag for Mac!
+var left_drag := DRAG_MOVE
+var right_drag := DRAG_PITCH_YAW_ROLL_HYBRID
+var ctrl_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as right_drag for Mac!
+var cmd_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as above?
 var shift_drag := DRAG_PITCH_YAW
 var alt_drag := DRAG_ROLL
-var hybrid_drag_center_zone := 0.2 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
-var hybrid_drag_outside_zone := 0.7 # for _drag_mode = DRAG_PITCH_YAW_ROLL_HYBRID
+var hybrid_drag_center_zone := 0.2 # for DRAG_PITCH_YAW_ROLL_HYBRID
+var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _camera: VygrCamera
-var _selection_manager: SelectionManager
+var _mouse_target: Array = Global.mouse_target
+var _settings: Dictionary = Global.settings
+onready var _projection_surface: ProjectionSurface = Global.program.ProjectionSurface
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
+var _camera: VygrCamera
+var _selection_manager: SelectionManager
 
-var _settings: Dictionary = Global.settings
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
 onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
 onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
@@ -75,8 +78,6 @@ onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * k
 onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
 
 var _drag_mode := -1 # one of DRAG_ enums when active
-var _drag_start := VECTOR2_ZERO
-var _drag_segment_start := VECTOR2_ZERO
 var _drag_vector := VECTOR2_ZERO
 var _mwheel_turning := 0.0
 var _move_pressed := VECTOR3_ZERO
@@ -92,9 +93,10 @@ func _ready():
 	Global.connect("run_state_changed", self, "_on_run_state_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("camera_ready", self, "_connect_camera")
-#	Global.connect("projection_unhandled_mouse_event", self,
-#			"_on_projection_unhandled_mouse_event")
 	Global.connect("setting_changed", self, "_settings_listener")
+	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
+	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
+	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
 	set_process(false)
 	set_process_unhandled_input(false)
 
@@ -151,18 +153,19 @@ func _process(delta: float) -> void:
 				_drag_vector *= delta * _mouse_pitch_yaw_rate
 				_camera.add_rotate_action(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
-				var mouse_position := _drag_segment_start + _drag_vector
+#				var mouse_position := _drag_segment_start + _drag_vector
+				var mouse_position: Vector2 = _mouse_target[0]
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				_drag_vector *= delta * _mouse_roll_rate
 				_camera.add_rotate_action(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
 			DRAG_PITCH_YAW_ROLL_HYBRID:
 				# one or a mix of two above based on mouse position
+				var mouse_position: Vector2 = _mouse_target[0]
 				var mouse_rotate := _drag_vector * delta
-				var z_proportion := (2.0 * _drag_start - _viewport.size).length() / _viewport.size.x
+				var z_proportion := (2.0 * mouse_position - _viewport.size).length() / _viewport.size.x
 				z_proportion -= hybrid_drag_center_zone
 				z_proportion /= hybrid_drag_outside_zone - hybrid_drag_center_zone
 				z_proportion = clamp(z_proportion, 0.0, 1.0)
-				var mouse_position := _drag_segment_start + _drag_vector
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
@@ -176,65 +179,36 @@ func _process(delta: float) -> void:
 	if _rotate_pressed:
 		_camera.add_rotate_action(_rotate_pressed * delta)
 
-#func _on_projection_unhandled_mouse_event(event: InputEventMouse) -> void:
-#	if !_camera:
-#		return
-#	var is_handled := false
-#	if event is InputEventMouseButton:
-#		var button_index: int = event.button_index
-#		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
-#		if button_index == BUTTON_WHEEL_UP:
-#			_mwheel_turning = _mouse_in_out_rate
-#			is_handled = true
-#		elif button_index == BUTTON_WHEEL_DOWN:
-#			_mwheel_turning = -_mouse_in_out_rate
-#			is_handled = true
-#	if is_handled:
-#		_tree.set_input_as_handled()
+
+func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
+	# We only handle Body as target object for now (this could change).
+	var body := target as Body
+	if body and _camera:
+		_camera.move_to_body(body)
+
+func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:
+	_drag_vector += drag_vector
+	if key_modifier_mask & KEY_MASK_CMD:
+		_drag_mode = cmd_drag
+	elif key_modifier_mask & KEY_MASK_CTRL:
+		_drag_mode = ctrl_drag
+	elif key_modifier_mask & KEY_MASK_ALT:
+		_drag_mode = alt_drag
+	elif key_modifier_mask & KEY_MASK_SHIFT:
+		_drag_mode = shift_drag
+	elif button_mask & BUTTON_MASK_RIGHT:
+		_drag_mode = right_drag
+	else:
+		_drag_mode = left_drag
+
+func _on_mouse_wheel_turned(is_up: bool) -> void:
+	_mwheel_turning = _mouse_in_out_rate * (1.0 if is_up else -1.0)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if !_camera:
 		return
 	var is_handled := false
-	if event is InputEventMouseButton:
-		var button_index: int = event.button_index
-		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
-		if button_index == BUTTON_WHEEL_UP:
-			_mwheel_turning = _mouse_in_out_rate
-			is_handled = true
-		elif button_index == BUTTON_WHEEL_DOWN:
-			_mwheel_turning = -_mouse_in_out_rate
-			is_handled = true
-		# start/stop mouse drag or process a mouse click
-		elif button_index == BUTTON_LEFT or button_index == BUTTON_RIGHT:
-			if event.pressed: # possible drag start (but may be a click selection!)
-				_drag_start = event.position
-				_drag_segment_start = _drag_start
-				if event.control:
-					_drag_mode = cntr_drag
-				elif event.shift:
-					_drag_mode = shift_drag
-				elif event.alt:
-					_drag_mode = alt_drag
-				elif button_index == BUTTON_RIGHT:
-					_drag_mode = r_button_drag
-				else:
-					_drag_mode = l_button_drag
-			else: # end of drag, or button-up after a mouse click selection
-				if _drag_start == event.position: # was a mouse click!
-					Global.emit_signal("mouse_clicked_viewport_at", event.position, _camera,
-							true)
-				_drag_start = VECTOR2_ZERO
-				_drag_segment_start = VECTOR2_ZERO
-				_drag_mode = -1
-			is_handled = true
-	elif event is InputEventMouseMotion:
-		if _drag_segment_start: # accumulate mouse drag motion
-			var current_mouse_pos: Vector2 = event.position
-			_drag_vector += current_mouse_pos - _drag_segment_start
-			_drag_segment_start = current_mouse_pos
-			is_handled = true
-	elif event.is_action_type():
+	if event.is_action_type():
 		if event.is_pressed():
 			if event.is_action_pressed("camera_zoom_view"):
 				_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
@@ -242,10 +216,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_top_view"):
 				_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
-			
-			# TODO: VIEW_OUTWARD
-			
-			
 			elif event.is_action_pressed("recenter"):
 				_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
 			elif event.is_action_pressed("camera_left"):

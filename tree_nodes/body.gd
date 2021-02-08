@@ -40,10 +40,12 @@ const DPRINT := false
 const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
 const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
 const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
+const MIN_CLICK_RADIUS := 20.0
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_Z := IDENTITY_BASIS.z
 const VECTOR2_ZERO := Vector2.ZERO
+const VECTOR2_NULL := Vector2(-INF, -INF)
 const BodyFlags := Enums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
@@ -94,6 +96,7 @@ var is_asleep := false
 var _times: Array = Global.times
 var _state: Dictionary = Global.state
 var _camera_info: Array = Global.camera_info
+var _mouse_target: Array = Global.mouse_target
 onready var _tree := get_tree()
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
@@ -193,7 +196,8 @@ func _ready():
 	_on_ready() # can override
 
 func _on_ready() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
+			CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
@@ -208,19 +212,35 @@ func _process(_delta: float) -> void:
 	var global_translation := global_transform.origin
 	var camera_global_translation: Vector3 = _camera_info[1]
 	var camera_dist := global_translation.distance_to(camera_global_translation)
+	var is_mouse_near := false
+	var position_2d := VECTOR2_NULL
+	var camera: Camera = _camera_info[0]
+	if !camera.is_position_behind(global_translation):
+		position_2d = camera.unproject_position(global_translation)
+		var mouse_dist := position_2d.distance_to(_mouse_target[0])
+		var click_radius := MIN_CLICK_RADIUS
+		var divisor: float = _camera_info[2] * camera_dist
+		if divisor > 0.0:
+			var radius: float = 55.0 * properties.m_radius * _camera_info[3] / divisor
+			if click_radius < radius:
+				click_radius = radius
+		if mouse_dist < click_radius:
+			is_mouse_near = true
+			if camera_dist < _mouse_target[2]:
+				_mouse_target[1] = self
+				_mouse_target[2] = camera_dist
+	if !is_mouse_near and _mouse_target[1] == self:
+		_mouse_target[1] = null
+		_mouse_target[2] = INF
 	var hud_dist_ok := camera_dist > hud_too_close
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
-	var hud_label_visible := _show_label and hud_dist_ok and hud_label
+	var hud_label_visible := _show_label and hud_dist_ok and hud_label \
+			and position_2d != VECTOR2_NULL
 	if hud_label_visible:
-		var camera: Camera = _camera_info[0]
-		if camera.is_position_behind(global_translation):
-			hud_label_visible = false
-		else:
-			# position 2D Label before 3D translation!
-			var position_2d := camera.unproject_position(global_translation)
-			hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
+		# position 2D Label before 3D translation!
+		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
 	var time: float = _times[0]
 	if orbit:
 		translation = orbit.get_position(time)

@@ -126,7 +126,7 @@ var is_moving := false # body to body move in progress
 
 # private
 var _times: Array = Global.times
-var _camera_info: Array = Global.camera_info # [self, global_translation, fov]
+var _camera_info: Array = Global.camera_info # [self, global_translation, fov, viewport.size.y]
 var _settings: Dictionary = Global.settings
 var _body_registry: BodyRegistry = Global.program.BodyRegistry
 var _max_dist: float = Global.max_camera_distance
@@ -158,8 +158,6 @@ var _is_ecliptic := false
 var _last_dist := 0.0
 
 var _universe: Spatial = Global.program.Universe
-onready var _viewport := get_viewport()
-onready var _tree := get_tree()
 var _View_: Script = Global.script_classes._View_
 
 # settings
@@ -173,9 +171,6 @@ func set_start_view(view: View) -> void:
 
 func add_to_tree() -> void:
 	var start_body_name: String
-#	if _init_view:
-#		start_body_name = _init_view.selection_name
-#	else:
 	start_body_name = Global.start_body_name
 	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
@@ -342,6 +337,9 @@ func _on_ready():
 	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
+	var viewport := get_viewport()
+	viewport.connect("size_changed", self, "_on_viewport_size_changed")
+	_camera_info[3] = viewport.size.y
 	transform = _transform
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
@@ -695,6 +693,9 @@ func _send_gui_refresh() -> void:
 	else:
 		lat_long = selection_item.get_latitude_longitude(translation)
 	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
+
+func _on_viewport_size_changed() -> void:
+	_camera_info[3] = get_viewport().size.y
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
