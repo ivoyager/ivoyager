@@ -50,13 +50,6 @@ enum CameraTrackType {
 	TRACK_GROUND,
 }
 
-enum DragMode {
-	CNTR_DRAG,
-	SHIFT_DRAG,
-	ALT_DRAG,
-	LEFT_DRAG,
-	RIGHT_DRAG}
-
 enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,

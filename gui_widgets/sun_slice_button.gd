@@ -41,6 +41,7 @@ func _ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
+	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 func _clear() -> void:
 	_selection_manager = null

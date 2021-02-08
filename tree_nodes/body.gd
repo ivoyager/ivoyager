@@ -176,6 +176,9 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		set_process(false)
 		_visible = false
 		visible = false
+		if _mouse_target[1] == self:
+			_mouse_target[1] = null
+			_mouse_target[2] = INF
 		if hud_orbit: # not a child of this node!
 			_hud_orbit_visible = false
 			hud_orbit.visible = false

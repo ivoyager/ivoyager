@@ -186,11 +186,10 @@ func _settings_listener(setting: String, _value) -> void:
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == BUTTON_LEFT:
-			_parent.accept_event()
 			_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
 			set_process_input(true)
+			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
 	elif event is InputEventMouseMotion and _drag_point:
-		_parent.accept_event()
 		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
 
 func _input(event):
@@ -199,3 +198,4 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if !event.pressed and event.button_index == BUTTON_LEFT:
 			_finish_move()
+			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)

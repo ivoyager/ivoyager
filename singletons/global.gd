@@ -90,11 +90,13 @@ var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # BodyRegistry; indexed by body_id
 var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
-var camera_info := [null, Vector3.ZERO, 50.0, 1080.0] # Camera; [Camera, global_translation, fov, viewport.size.y]
-var mouse_target := [Vector2.ZERO, null, INF] # ProjectionSurface & Body; [mouse_pos, target, dist]
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
+# next two optimized for Body._process()
+var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # Camera [self, glb_trns, fov, vwpt_ht]
+var mouse_target := [Vector2.ZERO, null, INF] # ProjectionSurface, Body; [m_pos, body, dist]
+
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := ""

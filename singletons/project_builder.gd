@@ -138,14 +138,14 @@ var gui_controls := {
 	_ProjectionSurface_ = ProjectionSurface, # Control ok
 	_ProjectGUI_ = ExampleGameGUI, # Project should supply its own top Control!
 	_SplashScreen_ = PBDSplashScreen, # Replace or remove (set Global.skip_splash_screen)
-	_MainMenuPopup_ = MainMenuPopup, # safe to remove
-	_LoadDialog_ = LoadDialog, # safe to remove
-	_SaveDialog_ = SaveDialog, # safe to remove
-	_OptionsPopup_ = OptionsPopup, # safe to remove
-	_CreditsPopup_ = CreditsPopup, # safe to remove
-	_HotkeysPopup_ = HotkeysPopup, # safe to remove
-	_RichTextPopup_ = RichTextPopup, # safe to remove
-	_MainProgBar_ = MainProgBar, # safe to remove
+	_MainMenuPopup_ = MainMenuPopup, # safe to replace or remove
+	_LoadDialog_ = LoadDialog, # safe to replace or remove
+	_SaveDialog_ = SaveDialog, # safe to replace or remove
+	_OptionsPopup_ = OptionsPopup, # safe to replace or remove
+	_CreditsPopup_ = CreditsPopup, # safe to replace or remove
+	_HotkeysPopup_ = HotkeysPopup, # safe to replace or remove
+	_RichTextPopup_ = RichTextPopup, # safe to replace or remove
+	_MainProgBar_ = MainProgBar, # safe to replace or remove
 }
 
 var procedural_classes := {
