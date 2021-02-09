@@ -77,7 +77,7 @@ signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - write authority indicated; safe to keep container reference
 var state := {} # StateManager (& NetworkLobby, if exists); is_running, etc.
-var times := [] # Timekeeper; [time (s, J2000), engine_time (s), UT1 (d)] (floats)
+var times := [] # Timekeeper; [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
 var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 

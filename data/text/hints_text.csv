@@ -16,6 +16,7 @@ HINT_SELECTION_IMAGE,Click to center and orient
 HINT_SELECTION_BACK,Select last
 HINT_SELECTION_FORWARD,Select next
 HINT_SELECTION_UP,Select parent object
+HINT_SET_TIME,Set date & time
 HINT_SYMBOLS,Show symbols
 HINT_TIME_SLOW,Decrease speed
 HINT_TIME_SPEED,Increase speed

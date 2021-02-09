@@ -18,17 +18,28 @@
 # limitations under the License.
 # *****************************************************************************
 # Maintains "time" and provides Gregorian calendar & clock elements and related
-# conversion functions. For calendar calculations see:
+# conversion functions.
+#
+# For definitions of Julian Day and Julian Day Number (jdn: int), see:
+# https://en.wikipedia.org/wiki/Julian_day.
+#
+# "time" here always refers to sim time, which runs in seconds (assuming
+# UnitDefs.SECOND = 1.0) from J2000 epoch, which was at 2000-01-01 12:00.
+# "j2000days" is just time / UnitDefs.DAY. We avoid using Julian Day for
+# float calculations due to precision loss.
+#
+# In priciple, "UT", "UT1", etc., are all approximations (in some way) of solar
+# day, which is not equal to a Julian Day and (in the real world) varies. For
+# now, we are using ut = j2000days + 0.5. But UT conversion functions are non-
+# static in case we hook up to sim solar day in the future.
+#
+# For calendar calculations see:
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
-# The sim runs in s from J2000 (=2000-01-01 12:00). However, this class could
-# be subclassed to provide alternative time display and calendar signals, for
-# example, a Martian calendar/clock.
+#
+#
 # This node processes during pause, but stops and starts processing on
 # "run_state_changed" signal.
-#
-# Also provides dynamic signal creation for timer function, using either engine
-# time (w/ or w/out pause) or sim time.
 
 extends Node
 class_name Timekeeper
@@ -79,21 +90,17 @@ var start_speed := 2
 var show_clock_speed := 2 # this index and lower
 var show_seconds_speed := 1 # this index and lower
 var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
-# Regex format "2000-01-01 00:00:00:00". Optional [./-] for date separator.
-# Can truncate after any time element after year.
-var regexpr := "^(-?\\d+)(?:[\\.\\/\\-](\\d\\d))?(?:[\\.\\/\\-](\\d\\d))?(?: " \
-		+ "(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?(?::(\\d\\d))?$"
 
 # public persisted - read-only!
-var time: float # seconds from J2000 epoch (= 2000-01-01 12:00:00)
-var ut1: float # UT1 (mean solar days from J2000 - 0.5)
+var time: float # seconds from J2000 epoch
+var solar_day: float # calculate UT from the fractional part
 var speed_index: int
 var is_paused := true # lags 1 frame behind actual tree pause
 var is_reversed := false
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["time", "ut1", "speed_index", "is_paused", "is_reversed"]
+const PERSIST_PROPERTIES := ["time", "solar_day", "speed_index", "is_paused", "is_reversed"]
 
 # public - read only!
 var is_real_world_time := false
@@ -108,7 +115,6 @@ var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _date_time_regex := RegEx.new()
 onready var _tree := get_tree()
 onready var _allow_real_world_time: bool = Global.allow_real_world_time
 onready var _allow_time_reversal: bool = Global.allow_time_reversal
@@ -116,22 +122,47 @@ var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
 var _adj_sync_tolerance := 0.0
-var _prev_ut1_floor := -INF
+var _prev_whole_solar_day := NAN
 
 
-static func set_ut1_clock_array(ut1_: float, clock_: Array) -> void:
-	# Expects clock_ of size 3
-	ut1_ = fposmod(ut1_, 1.0)
-	var total_seconds := int(ut1_ * 86400.0)
+static func get_sim_time(Y: int, M: int, D: int, h := 12, m := 0, s := 0) -> float:
+	# Simulator "time" is seconds since J2000 epoch; see details above.
+	# Return not exact depending on input type (UT1, UTC, etc.) but very close.
+	# Does not test for valid input! Use is_valid_gregorian_date().
+	var jdn := gregorian2jdn(Y, M, D)
+	var j2000days := float(jdn - J2000_JDN)
+	var sim_time := (j2000days - 0.5) * DAY
+	sim_time += h * HOUR
+	sim_time += m * MINUTE
+	sim_time += s * SECOND
+	return sim_time
+
+static func is_valid_gregorian_date(Y: int, M: int, D: int) -> bool:
+	if M < 1 or M > 12 or D < 1 or D > 31:
+		return false
+	if D < 29:
+		return true
+	var jdn := gregorian2jdn(Y, M, D)
+	var test_date := [0, 0, 0]
+	set_gregorian_date_array(jdn, test_date)
+	return test_date == [Y, M, D]
+
+static func gregorian2jdn(Y: int, M: int, D: int) -> int:
+	# Does not test for valid input date!
 	# warning-ignore:integer_division
-	clock_[0] = total_seconds / 3600
 	# warning-ignore:integer_division
-	clock_[1] = (total_seconds / 60) % 60
-	clock_[2] = total_seconds % 60
+	var jdn := (1461 * (Y + 4800 + (M - 14) / 12)) / 4
+	# warning-ignore:integer_division
+	# warning-ignore:integer_division
+	jdn += (367 * (M - 2 - 12 * ((M - 14) / 12))) / 12
+	# warning-ignore:integer_division
+	# warning-ignore:integer_division
+	# warning-ignore:integer_division
+	jdn += -(3 * ((Y + 4900 + (M - 14) / 12) / 100)) / 4 + D - 32075
+	return jdn
 
-static func set_gregorian_date_array(ut1_: float, date_: Array) -> void:
-	# Expects date_ of size 3
-	var jdn := int(floor(ut1_)) + J2000_JDN 
+static func set_gregorian_date_array(jdn: int, date_array: Array) -> void:
+	# Expects date_array of size 3
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -143,29 +174,73 @@ static func set_gregorian_date_array(ut1_: float, date_: Array) -> void:
 	var m := (((h / 153) + 2) % 12) + 1
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
-	date_[0] = (e / 1461) - 4716 + ((14 - m) / 12) # year
+	date_array[0] = (e / 1461) - 4716 + ((14 - m) / 12) # year
 	# warning-ignore:integer_division
-	date_[1] = m # month
+	date_array[1] = m # month
 	# warning-ignore:integer_division
-	date_[2] = ((h % 153) / 5) + 1 # day
+	date_array[2] = ((h % 153) / 5) + 1 # day
+
+static func get_clock_elements(fractional_day: float) -> Array:
+	# returns [h, m, s]
+	var clock_array := [0, 0, 0]
+	set_clock_array(fractional_day, clock_array)
+	return clock_array
+	
+static func set_clock_array(fractional_day: float, clock_array: Array) -> void:
+	# Expects clock_ of size 3. It's possible to have second > 59 if fractional
+	# day > 1.0 (which can happen when solar day > Julian Day).
+	var total_seconds := int(fractional_day * 86400.0)
+	# warning-ignore:integer_division
+	var h := total_seconds / 3600
+	# warning-ignore:integer_division
+	var m := (total_seconds / 60) % 60
+	clock_array[0] = h
+	clock_array[1] = m
+	clock_array[2] = total_seconds - h * 3600 - m * 60
+
+func get_gregorian_date(sim_time := NAN) -> Array:
+	# returns [Y, M, D]
+	if is_nan(sim_time):
+		sim_time = time
+	var solar_day_ := get_solar_day(sim_time)
+	var jdn := get_jdn_for_solar_day(solar_day_)
+	var date_array := [0, 0, 0]
+	set_gregorian_date_array(jdn, date_array)
+	return date_array
+
+func get_gregorian_date_time(sim_time := NAN) -> Array:
+	# returns [[Y, M, D], [h, m, s]]
+	if is_nan(sim_time):
+		sim_time = time
+	var solar_day_ := get_solar_day(sim_time)
+	var jdn := get_jdn_for_solar_day(solar_day_)
+	var date_array := [0, 0, 0]
+	set_gregorian_date_array(jdn, date_array)
+	var fractional_day := fposmod(solar_day_, 1.0)
+	var clock_array := get_clock_elements(fractional_day)
+	return [date_array, clock_array]
+
+func get_solar_day(sim_time := NAN) -> float:
+	if is_nan(sim_time):
+		sim_time = time
+	# TODO: Return days corresponding to simulated Earth solar day.
+	# For now, we use approximation Julian Day == solar day.
+	return sim_time / DAY + 0.5
+
+func get_time_from_solar_day(solar_day_: float) -> float:
+	# Inverse of whatever we do above.
+	return (solar_day_ - 0.5) * DAY
+
+func get_jdn_for_solar_day(solar_day_: float) -> int:
+	var solar_day_noon := floor(solar_day_) + 0.5
+	var sim_time := get_time_from_solar_day(solar_day_noon)
+	var j2000day := sim_time / DAY
+	return int(floor(j2000day)) + J2000_JDN
 
 func get_real_world_time() -> float:
 	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
-	var j2000_s := (sys_msec - 946728000000) * 0.001
-	return j2000_s * SECOND # this is sim_time
-
-func get_ut1(sim_time: float) -> float:
-	# This is close for J2000 +- 1000 yrs. Beyond that, Julian days diverge
-	# significantly from solar days. Note that our sim solar days are somewhat
-	# but not entirely simplified: sidereal day is constant but orbit is
-	# adjusted from 3000BCE - 3000CE. Conceptually, UT1 should be coupled to
-	# simulated Earth's solar day, whatever that happens to be. To do so, we
-	# would need to account for Earth's dynamic orbit (rates of Om & w).
-	return sim_time / DAY + 0.5
-
-func get_time_from_ut1(ut1_: float) -> float:
-	# see comment above
-	return (ut1_ - 0.5) * DAY
+	var j2000sec := (sys_msec - 946728000000) * 0.001
+	return j2000sec * SECOND
 
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date
@@ -229,7 +304,6 @@ func can_decr_speed() -> bool:
 # *****************************************************************************
 
 func project_init() -> void:
-	_date_time_regex.compile(regexpr)
 	times.resize(3)
 	date.resize(3)
 	clock.resize(3)
@@ -251,7 +325,6 @@ func _on_ready() -> void:
 	set_process(false) # changes with "run_state_changed" signal
 
 func _on_network_state_changed(network_state: int) -> void:
-	# this function is hooked up from StateManager
 	_network_state = network_state
 
 func _set_init_state() -> void:
@@ -270,11 +343,12 @@ func _set_ready_state() -> void:
 	_reset_speed()
 
 func _reset_time() -> void:
-	ut1 = get_ut1(time)
+	solar_day = get_solar_day(time)
 	times[0] = time
-	times[2] = ut1
-	set_gregorian_date_array(ut1, date)
-	set_ut1_clock_array(ut1, clock)
+	times[2] = solar_day
+	var jdn := get_jdn_for_solar_day(solar_day)
+	set_gregorian_date_array(jdn, date)
+	set_clock_array(fposmod(solar_day, 1.0), clock)
 
 func _reset_speed() -> void:
 	speed_multiplier = speeds[speed_index]
@@ -357,16 +431,16 @@ func _on_process(delta: float) -> void:
 	if !is_paused:
 		if !_is_sync:
 			time += delta * speed_multiplier
-		var new_ut1 := get_ut1(time)
-		var new_ut1_floor := floor(new_ut1)
-		if new_ut1_floor != _prev_ut1_floor: # new solar day
-			set_gregorian_date_array(new_ut1_floor, date)
+		solar_day = get_solar_day(time)
+		var whole_solar_day := floor(solar_day)
+		if _prev_whole_solar_day != whole_solar_day:
+			var jdn := get_jdn_for_solar_day(solar_day)
+			set_gregorian_date_array(jdn, date)
 			is_date_change = true
-			_prev_ut1_floor = new_ut1_floor
-		set_ut1_clock_array(new_ut1, clock)
-		ut1 = new_ut1
+			_prev_whole_solar_day = whole_solar_day
+		set_clock_array(solar_day - whole_solar_day, clock)
 		times[0] = time
-		times[2] = new_ut1
+		times[2] = solar_day
 	# network sync
 	if _network_state == IS_SERVER:
 		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
