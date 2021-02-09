@@ -27,7 +27,7 @@
 # anchor_top == anchor_bottom (ie, panels aren't intended to strech if viewport
 # stretches).
 #
-# Modify default sizes and snap values from _ready() in the parent Container.
+# Modify default sizes and snap values from _ready() in the parent Control.
 #
 # This mod is used in the Planetarium.
 

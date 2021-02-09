@@ -2,7 +2,7 @@
 
 [ext_resource path="res://ivoyager/gui_example/example_navigation_panel.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/camera_lock_ckbx.tscn" type="PackedScene" id=2]
-[ext_resource path="res://ivoyager/gui_mods/container_sized.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_mods/control_sized.tscn" type="PackedScene" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/sun_slice_button.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/speed_buttons.tscn" type="PackedScene" id=5]
 [ext_resource path="res://ivoyager/gui_widgets/speed_label.tscn" type="PackedScene" id=6]
@@ -118,4 +118,4 @@ size_flags_vertical = 8
 margin_right = 491.0
 margin_bottom = 80.0
 
-[node name="ContainerSized" parent="." instance=ExtResource( 3 )]
+[node name="ControlSized" parent="." instance=ExtResource( 3 )]
