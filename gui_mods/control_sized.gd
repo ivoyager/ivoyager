@@ -1,4 +1,4 @@
-# container_sized.gd
+# control_sized.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,20 +17,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Use only one of the container mods:
-#    ContainerSized - resizes with Options/GUI Size
-#    ContainerDraggable - above plus user draggable
-#    ContainerDynamic - above plus user resizing margins
+# Use only one of the Control mods:
+#    ControlSized - resizes with Options/GUI Size
+#    ControlDraggable - above plus user draggable
+#    ControlDynamic - above plus user resizing margins
 #
-# This widget will resize a Container (e.g., a GUI PanelContainer) with changes
-# in Options/gui_size, maintaining position based on existing anchors.
+# This widget will resize a Control (eg, a PanelContainer or PopupPanel) with
+# changes in Options/gui_size, maintaining position based on existing anchors.
 # Assumes anchor_left == anchor_right and anchor_top == anchor_bottom (i.e.,
-# the parent container is fixed-size for a given gui_size and not expected to
+# the parent Control is fixed-size for a given gui_size and not expected to
 # stretch with screen resize).
 #
-# Modify sizes values from _ready() in the parent Container.
+# Modify sizes values from _ready() in the parent Control.
 #
-# For draggable and user resizable windows, use ContainerDynamic instead.
+# For draggable and user resizable windows, use ControlDynamic instead.
 
 extends Node
 
@@ -47,7 +47,7 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 # private
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
-onready var _parent: Container = get_parent()
+onready var _parent: Control = get_parent()
 var _default_size: Vector2
 
 func _ready() -> void:

@@ -1,4 +1,4 @@
-# container_dynamic.gd
+# control_dynamic.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,18 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Use only one of the container mods:
-#    ContainerSized - resizes with Options/GUI Size
-#    ContainerDraggable - above plus user draggable
-#    ContainerDynamic - above plus user resizing margins
+# Use only one of the Control mods:
+#    ControlSized - resizes with Options/GUI Size
+#    ControlDraggable - above plus user draggable
+#    ControlDynamic - above plus user resizing margins
 #
-# Add to Container (e.g., a GUI PanelContainer) for draggablity and window
+# Add to Control (eg, a PanelContainer or PopupPanel) for draggablity and window
 # resizing margins. This should be the last child so margin controls are on
-# top. This mod assumes parent container has anchor_left == anchor_right and
-# anchor_top == anchor_bottom (ie, panels aren't intended to strech if viewport
-# stretches).
+# top.  Assumes parent Control is NOT in a Container and has anchor_left ==
+# anchor_right and anchor_top == anchor_bottom (ie, panels aren't intended to
+# strech if viewport stretches).
 #
-# Modify default sizes and snap values from _ready() in the parent Container.
+# Modify default sizes and snap values from _ready() in the parent Control.
 
 extends Control
 
@@ -49,12 +49,16 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 # private
 var _settings: Dictionary = Global.settings
 onready var _viewport := get_viewport()
-onready var _parent: Container = get_parent()
+onready var _parent: Control = get_parent()
 var _margin_drag_x := 0.0
 var _margin_drag_y := 0.0
 var _drag_point := Vector2.ZERO
 var _custom_size := Vector2.ZERO
 var _default_size: Vector2
+
+func set_min_size() -> void:
+	for i in range(default_sizes.size()):
+		default_sizes[i] = Vector2.ZERO
 
 func _ready():
 	Global.connect("gui_refresh_requested", self, "_on_gui_refresh_requested")
