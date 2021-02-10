@@ -95,6 +95,7 @@ func remove_event_dict_by_index(action: String, event_class: String, index: int,
 				break
 			class_index += 1
 		i += 1
+	_on_change_current(action)
 	if !suppress_caching:
 		cache_now()
 
@@ -363,8 +364,7 @@ func _init_actions() -> void:
 
 func _set_input_map(action: String) -> void:
 	if InputMap.has_action(action):
-		pass
-#		InputMap.action_erase_events(action)
+		InputMap.action_erase_events(action)
 	else:
 		InputMap.add_action(action)
 	var events_array: Array = current[action]
