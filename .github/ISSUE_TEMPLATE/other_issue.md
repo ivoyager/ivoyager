@@ -1,5 +1,5 @@
 ---
-name: Other issue
+name: Documentation or other problem
 about: Describe another issue to help us improve
 title: ''
 labels: ''
