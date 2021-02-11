@@ -206,7 +206,7 @@ var debug_log_path := "user://logs/debug.log"
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for gamesave debuging
-var ivoyager_version := "0.0.8-dev"
+var ivoyager_version := "0.0.8-alpha"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
