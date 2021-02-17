@@ -29,6 +29,7 @@ margin_left = 7.0
 margin_top = 7.0
 margin_right = 514.0
 margin_bottom = 87.0
+mouse_filter = 2
 
 [node name="SunSliceButton" parent="HBox" instance=ExtResource( 4 )]
 margin_right = 12.0
@@ -107,6 +108,7 @@ size_flags_horizontal = 3
 margin_top = 32.0
 margin_right = 491.0
 margin_bottom = 32.0
+mouse_filter = 2
 
 [node name="BottomVBox" type="VBoxContainer" parent="HBox/RightSideContent"]
 margin_right = 491.0
