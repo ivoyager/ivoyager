@@ -29,10 +29,12 @@ margin_left = 7.0
 margin_top = 7.0
 margin_right = 886.0
 margin_bottom = 347.0
+mouse_filter = 2
 
 [node name="MainHBox" type="HBoxContainer" parent="VBox"]
 margin_right = 879.0
 margin_bottom = 304.0
+mouse_filter = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 10
@@ -40,12 +42,14 @@ custom_constants/separation = 10
 [node name="LeftVBox" type="VBoxContainer" parent="VBox/MainHBox"]
 margin_right = 434.0
 margin_bottom = 304.0
+mouse_filter = 2
 size_flags_horizontal = 3
 alignment = 1
 
 [node name="HBox" type="HBoxContainer" parent="VBox/MainHBox/LeftVBox"]
 margin_right = 434.0
 margin_bottom = 20.0
+mouse_filter = 2
 
 [node name="SelectionButtons" parent="VBox/MainHBox/LeftVBox/HBox" instance=ExtResource( 2 )]
 margin_right = 67.0
@@ -63,12 +67,14 @@ align = 1
 margin_left = 237.0
 margin_right = 434.0
 margin_bottom = 20.0
+mouse_filter = 2
 size_flags_horizontal = 3
 
 [node name="HBox2" type="HBoxContainer" parent="VBox/MainHBox/LeftVBox"]
 margin_top = 24.0
 margin_right = 434.0
 margin_bottom = 38.0
+mouse_filter = 2
 
 [node name="RangeLabel" parent="VBox/MainHBox/LeftVBox/HBox2" instance=ExtResource( 4 )]
 margin_right = 215.0
@@ -96,6 +102,7 @@ stretch_mode = 6
 margin_left = 444.0
 margin_right = 879.0
 margin_bottom = 304.0
+mouse_filter = 2
 size_flags_horizontal = 3
 
 [node name="OrbitsNamesSymbolsCkbxs" parent="VBox/MainHBox/RightVBox" instance=ExtResource( 11 )]
@@ -106,6 +113,7 @@ margin_bottom = 24.0
 margin_top = 28.0
 margin_right = 435.0
 margin_bottom = 304.0
+mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
@@ -118,11 +126,13 @@ margin_top = 308.0
 margin_right = 879.0
 margin_bottom = 312.0
 rect_min_size = Vector2( 0, 4 )
+mouse_filter = 2
 
 [node name="BottomHBox" type="HBoxContainer" parent="VBox"]
 margin_top = 316.0
 margin_right = 879.0
 margin_bottom = 340.0
+mouse_filter = 2
 
 [node name="ViewButtons" parent="VBox/BottomHBox" instance=ExtResource( 7 )]
 margin_top = 2.0

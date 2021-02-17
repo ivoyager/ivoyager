@@ -5,6 +5,7 @@
 [node name="SpeedButtons" type="HBoxContainer"]
 margin_right = 40.0
 margin_bottom = 40.0
+mouse_filter = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 script = ExtResource( 1 )
