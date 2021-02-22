@@ -92,23 +92,21 @@ func remove_active_thread(thread: Thread) -> void:
 func signal_when_threads_finished() -> void:
 	set_process(true) # next frame at soonest
 
-func require_stop(who: Object, network_sync_type := -1) -> bool:
+func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
 	# network_sync_type used only if we are the network server.
-	# Returns false if the caller doesn't have authority to stop the sim for
-	# some reason. This node and NetworkLobby (if exists) always have authority.
-	if !_popops_can_stop_sim and who is Popup:
-		return false
-	if _state.network_state != NO_NETWORK:
-		var is_network_lobby: bool = who is Node and who.name == "NetworkLobby"
-		if _state.network_state == IS_SERVER:
+	# bypass_checks intended for this node & NetworkLobby; could break sync.
+	# Returns false if the caller doesn't have authority to stop the sim.
+	if !bypass_checks:
+		if !_popops_can_stop_sim and who is Popup:
+			return false
+		if _state.network_state == IS_CLIENT:
+			return false
+		elif _state.network_state == IS_SERVER:
 			if _limit_stops_in_multiplayer:
-				if who != self and !is_network_lobby:
-					return false
-			if !is_network_lobby:
-				emit_signal("server_about_to_stop", network_sync_type)
-		elif _state.network_state == IS_CLIENT:
-			if who != self and !is_network_lobby:
 				return false
+	if _state.network_state == IS_SERVER:
+		if network_sync_type != NetworkStopSync.DONT_SYNC:
+			emit_signal("server_about_to_stop", network_sync_type)
 	# "Stopped" means the game is paused, the player is locked out from most
 	# input, and non-main threads have finished. In many cases you should yield
 	# to "threads_finished" after calling this function before proceeding.
@@ -130,7 +128,7 @@ func allow_run(who: Object) -> void:
 	_run_simulator()
 
 func build_system_tree() -> void:
-	require_stop(self, NetworkStopSync.BUILD_SYSTEM)
+	require_stop(self, NetworkStopSync.BUILD_SYSTEM, true)
 	_state.is_splash_screen = false
 	_system_builder.build()
 	yield(_system_builder, "finished")
@@ -166,7 +164,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.is_running = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
-	require_stop(self, NetworkStopSync.EXIT)
+	require_stop(self, NetworkStopSync.EXIT, true)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
@@ -195,7 +193,7 @@ func save_game(path: String) -> void:
 		Global.emit_signal("save_dialog_requested")
 		return
 	print("Saving " + path)
-	require_stop(self, NetworkStopSync.SAVE)
+	require_stop(self, NetworkStopSync.SAVE, true)
 	yield(self, "threads_finished")
 	assert(!print_stray_nodes())
 	assert(Debug.dlog("This is before save!"))
@@ -241,7 +239,7 @@ func load_game(path: String, network_gamesave := []) -> void:
 		print("Loading game from network sync...")
 	_state.is_splash_screen = false
 	_state.is_system_built = false
-	require_stop(self, NetworkStopSync.LOAD)
+	require_stop(self, NetworkStopSync.LOAD, true)
 	yield(self, "threads_finished")
 	_state.is_loaded_game = true
 	if _main_prog_bar:
@@ -284,7 +282,7 @@ func quit(force_quit: bool) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	require_stop(self, NetworkStopSync.QUIT)
+	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
@@ -331,7 +329,7 @@ func _on_ready() -> void:
 	if _saver_loader:
 		_saver_loader.use_thread = Global.use_threads
 	set_process(false)
-	require_stop(self)
+	require_stop(self, -1, true)
 
 func _process(delta: float)-> void:
 	_on_process(delta)
