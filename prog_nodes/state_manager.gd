@@ -130,6 +130,7 @@ func allow_run(who: Object) -> void:
 func build_system_tree() -> void:
 	require_stop(self, NetworkStopSync.BUILD_SYSTEM, true)
 	_state.is_splash_screen = false
+	Global.emit_signal("about_to_build_system_tree")
 	_system_builder.build()
 	yield(_system_builder, "finished")
 	_state.is_system_built = true

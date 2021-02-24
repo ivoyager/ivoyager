@@ -30,6 +30,7 @@ extends Node
 signal project_builder_finished()
 signal table_data_imported()
 signal state_manager_inited()
+signal about_to_build_system_tree()
 signal system_tree_built_or_loaded(is_new_game)
 signal system_tree_ready(is_new_game)
 signal about_to_start_simulator(is_new_game)
