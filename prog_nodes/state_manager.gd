@@ -83,7 +83,8 @@ var _nodes_requiring_stop := []
 
 func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
-	# to wait until these are removed.
+	# to wait until these are removed. This is essential for any thread that
+	# might change persist data used in gamesave.
 	active_threads.append(thread)
 
 func remove_active_thread(thread: Thread) -> void:
