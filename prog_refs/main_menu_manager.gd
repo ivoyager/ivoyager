@@ -63,8 +63,9 @@ func change_button_state(text: String, button_state: int) -> void:
 
 func project_init():
 	var state_manager: StateManager = Global.program.StateManager
+	var system_builder: SystemBuilder = Global.program.SystemBuilder
 	if !Global.skip_splash_screen:
-		make_button("BUTTON_START", 1000, true, false, state_manager, "build_system_tree")
+		make_button("BUTTON_START", 1000, true, false, system_builder, "build_system_tree")
 		make_button("BUTTON_EXIT", 300, false, true, state_manager, "exit", [false])
 	if !Global.disable_quit:
 		make_button("BUTTON_QUIT", 200, true, true, state_manager, "quit", [false])

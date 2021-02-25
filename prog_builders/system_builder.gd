@@ -19,74 +19,86 @@
 # *****************************************************************************
 # Builds the star system(s) from data tables & binaries.
 
-extends Reference
 class_name SystemBuilder
-
-signal finished()
 
 # project vars
 var add_camera := true
-var progress_bodies_denominator := 267 # set to something greater than expected
+var progress_multiplier := 0.9
 
-var progress := 0 # for MainProgBar
-var _use_thread: bool = Global.use_threads
-var _tree: SceneTree = Global.get_tree()
-var _root: Viewport = _tree.get_root()
-var _universe: Spatial
+ # read-only for MainProgBar
+var progress := 0
+
+# private
 var _main_prog_bar: MainProgBar
-var _body_builder: BodyBuilder
-var _minor_bodies_builder: MinorBodiesBuilder
-var _body_registry: BodyRegistry
 var _table_reader: TableReader
-var _Camera_: Script
-var _progress_bodies := 0
-var _thread: Thread
-var _camera: Camera
+var _body_builder: BodyBuilder
+var _progress_count := 0
+var _progress_denominator := 1
 
 
-func project_init():
-	_universe = Global.program.Universe
-	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
-	_body_builder = Global.program.BodyBuilder
-	_minor_bodies_builder = Global.program.MinorBodiesBuilder
-	_body_registry = Global.program.BodyRegistry
-	_table_reader = Global.program.TableReader
-	if add_camera:
-		_Camera_ = Global.script_classes._Camera_
-
-func build() -> void:
-	print("Building solar system...")
+func build_system_tree() -> void:
+	if !Global.state.is_splash_screen:
+		return
+	var state_manager: StateManager = Global.program.StateManager
+	state_manager.require_stop(state_manager, Enums.NetworkStopSync.BUILD_SYSTEM, true)
+	Global.emit_signal("about_to_build_system_tree")
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
-	if _use_thread:
-		_thread = Thread.new()
-		_thread.start(self, "_build_on_thread", 0)
-	else:
-		_build_on_thread(0)
+	var io_manager: IOManager = Global.program.IOManager
+	io_manager.callback(self, "build_on_io_callback", "io_finish")
 
-func _build_on_thread(_dummy: int) -> void:
+# *****************************************************************************
+# IOManager callbacks
+
+func build_on_io_callback(array: Array) -> void: # I/O thread!
+	array.append(OS.get_system_time_msecs())
+	_count_for_progress_bar()
 	_add_bodies("stars")
 	_add_bodies("planets")
 	_add_bodies("moons")
-	_minor_bodies_builder.build()
+	var minor_bodies_builder: MinorBodiesBuilder = Global.program.MinorBodiesBuilder
+	minor_bodies_builder.build()
 	if add_camera:
-		_camera = SaverLoader.make_object_or_scene(_Camera_)
-	call_deferred("_finish_build")
+		var camera_script: Script = Global.script_classes._Camera_
+		var camera: Camera = FileUtils.make_object_or_scene(camera_script)
+		array.append(camera) 
 
-func _finish_build() -> void:
-	if _use_thread:
-		_thread.wait_to_finish()
-	yield(_tree, "idle_frame")
-	for body in _body_registry.top_bodies:
-		_universe.add_child(body)
+func io_finish(array: Array) -> void: # Main thread
+	var body_registry: BodyRegistry = Global.program.BodyRegistry
+	var universe: Spatial = Global.program.Universe
+	for body in body_registry.top_bodies:
+		universe.add_child(body)
 	if add_camera:
-		_camera.add_to_tree()
-	_thread = null
+		var camera: Camera = array[1]
+		camera.add_to_tree() # FIXME: Camera shouldn't add itself
 	if _main_prog_bar:
 		_main_prog_bar.stop()
-	emit_signal("finished")
+	_progress_count = 0
+	var start_time: int = array[0]
+	var time := OS.get_system_time_msecs() - start_time
+	print("System tree built in %s msec" % time)
+	Global.emit_signal("system_tree_built_or_loaded", true)
 
-func _add_bodies(table_name: String) -> void:
+# *****************************************************************************
+# Init & private
+
+func project_init():
+	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
+	_body_builder = Global.program.BodyBuilder
+	_table_reader = Global.program.TableReader
+	Global.connect("state_manager_inited", self, "_on_state_manager_inited")
+
+func _on_state_manager_inited() -> void:
+	if Global.skip_splash_screen:
+		build_system_tree()
+
+func _count_for_progress_bar() -> void: # I/O thread!
+	_progress_denominator = _table_reader.get_n_rows("stars")
+	_progress_denominator += _table_reader.get_n_rows("planets")
+	_progress_denominator += _table_reader.get_n_rows("moons")
+	_progress_denominator = int(_progress_denominator / progress_multiplier)
+
+func _add_bodies(table_name: String) -> void: # I/O thread!
 	var n_rows := _table_reader.get_n_rows(table_name)
 	var row := 0
 	while row < n_rows:
@@ -95,8 +107,7 @@ func _add_bodies(table_name: String) -> void:
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
-		_progress_bodies += 1
+		_progress_count += 1
 		# warning-ignore:integer_division
-		progress = 100 * _progress_bodies / progress_bodies_denominator
+		progress = 100 * _progress_count / _progress_denominator
 		row += 1
-

@@ -85,6 +85,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _io_manager: IOManager
 var _scheduler: Scheduler
 var _table_reader: TableReader
 var _Body_: Script
@@ -92,7 +93,7 @@ var _ModelGeometry_: Script
 var _Properties_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
-var _satellite_indexes := {} # passed to & shared by Body instances
+
 
 
 func project_init() -> void:
@@ -104,6 +105,7 @@ func project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_io_manager = Global.program.IOManager
 	_scheduler = Global.program.Scheduler
 	_table_reader = Global.program.TableReader
 	_Body_ = Global.script_classes._Body_
@@ -112,7 +114,8 @@ func project_init() -> void:
 	_fallback_body_2d = Global.assets.fallback_body_2d
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
-	var body: Body = SaverLoader.make_object_or_scene(_Body_)
+	# Call on I/O thread!
+	var body: Body = FileUtils.make_object_or_scene(_Body_)
 	_table_reader.build_object2(body, table_name, row, body_fields, body_fields_req)
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
@@ -144,7 +147,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
-		body.set_orbit(orbit)
+		body.set_orbit(orbit, true)
 	# properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
@@ -259,40 +262,68 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.hide()
 	return body
 
-func _init_unpersisted(is_new_game: bool) -> void:
-	_satellite_indexes.clear()
-	for body in _body_registry.bodies:
+func _init_unpersisted(is_new_game: bool) -> void: # Main thread after build or load
+	var bodies := _body_registry.bodies
+	var n_bodies := bodies.size()
+	var i := 0
+	while i < n_bodies:
+		var body: Body = bodies[i]
 		if body:
-			_build_unpersisted(body, is_new_game)
+			_build_unpersisted(body)
+		i += 1
+	_io_manager.connect("finished", self, "_on_io_finished", [is_new_game], CONNECT_ONESHOT)
 
-func _build_unpersisted(body: Body, is_new_game: bool) -> void:
-	body.satellite_indexes = _satellite_indexes
-	var satellites := body.satellites
-	var satellite_index := 0
-	var n_satellites := satellites.size()
-	while satellite_index < n_satellites:
-		var satellite: Body = satellites[satellite_index]
-		if satellite:
-			_satellite_indexes[satellite] = satellite_index
-		satellite_index += 1
+func _on_io_finished(is_new_game: bool) -> void:
+	Global.emit_signal("system_tree_ready", is_new_game)
+
+func _build_unpersisted(body: Body) -> void:
 	if body.model_type != -1:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
-	if body.file_info.size() > 2 and body.file_info[2]:
+	if body.has_rings():
 		_rings_builder.add_rings(body)
 	if body.light_type != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
-		if !is_new_game:
-			body.reset_orbit()
+		body.reset_orbit()
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
-	var file_prefix: String = body.file_info[0]
-	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
-	if !body.texture_2d:
-		body.texture_2d = _fallback_body_2d
-	if body.flags & BodyFlags.IS_STAR:
+	
+	var file_prefix := body.get_file_prefix()
+	var is_star := bool(body.flags & BodyFlags.IS_STAR)
+	var array := [body, file_prefix, is_star]
+	_io_manager.callback(self, "load_textures_on_io_callback", "io_finish", array)
+
+func load_textures_on_io_callback(array: Array) -> void: # I/O thread
+	var file_prefix: String = array[1]
+	var is_star: bool = array[2]
+	var texture_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
+	if !texture_2d:
+		texture_2d = _fallback_body_2d
+	array.append(texture_2d)
+	if is_star:
 		var slice_name = file_prefix + "_slice"
-		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
+		var texture_slice_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
+		array.append(texture_slice_2d)
+
+func io_finish(array: Array) -> void: # Main thread
+	var body: Body = array[0]
+	var is_star: bool = array[2]
+	var texture_2d: Texture = array[3]
+	body.texture_2d = texture_2d
+	if is_star:
+		var texture_slice_2d: Texture = array[4]
+		body.texture_slice_2d = texture_slice_2d
+
+
+	
+	
+	
+#	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
+#	if !body.texture_2d:
+#		body.texture_2d = _fallback_body_2d
+#	if body.flags & BodyFlags.IS_STAR:
+#		var slice_name = file_prefix + "_slice"
+#		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)

@@ -18,40 +18,49 @@
 # limitations under the License.
 # *****************************************************************************
 # Manages a separate I/O thread for disk operations including resource loading.
-# All public functions work if Global.use_threads = false, but without the
-# thread.
+# As per Godot docs, loading a resource from multiple threads can crash. Thus,
+# you should not mix use of IOManager with resource loading on the Main thread.
+# Also, all interaction with the scene tree MUST happen on the Main thread; use
+# callback() and supply "finish_method" to do this. 
 
 class_name IOManager
+
+signal finished()
+
+const DPRINT := true
 
 var _use_threads: bool = Global.use_threads
 var _state_manager: StateManager
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
-var _call_queue := []
-var _io_queue := []
+var _callback_queue := []
+var _process_stack := []
 var _is_work := false
-var _stop_thread := true
+var _stop_thread := false
+var _callback_count := 0
 
 # *****************************************************************************
 # Thread-safe public
 
-func load_and_attach(file_path: String, instantiate: bool, is_scene: bool,
-		target_object: Object, property := "", as_child := false) -> void:
-	assert(property or as_child)
-	var args := [file_path, instantiate, is_scene, target_object, property, as_child]
+func callback(object: Object, io_method: String, finish_method := "", array := []) -> void:
+	# Callback to io_method will happen on the I/O thread. Callback to optional
+	# finish_method will subsequently happen on main thread. The array arg is
+	# optional here but is required in callback methods signatures.
+	# Will emit "finished" on a later frame (main thread) after all current
+	# callbacks have been fully processed.
+	_callback_count += 1
+	var args := [object, io_method, finish_method, array]
 	if !_use_threads:
-		_process_call(args)
+		_process_callback(args)
 		return
 	_mutex.lock()
-	_call_queue.append(args)
+	_callback_queue.append(args)
 	_is_work = true
 	_mutex.unlock()
 	_semaphore.post()
 
-func set_state_manager_lock(lock: bool) -> void:
-	# 
-	pass
+# TODO: Add specific I/O functions here, using callbacks to self.
 
 # *****************************************************************************
 # Init & private
@@ -60,73 +69,81 @@ func project_init() -> void:
 	_state_manager = Global.program.StateManager
 	if !_use_threads:
 		return
+	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
+	Global.connect("about_to_quit", self, "_on_about_to_quit")
 	_state_manager.connect("active_threads_allowed", self, "_on_active_threads_allowed")
 	_state_manager.connect("finish_threads_required", self, "_on_finish_threads_required")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
+	_thread.start(self, "_run_thread", 0)
+
+# Before sim starts, and on exit or load, we want thread to run while sim is
+# stopped. However, during runtime (after "active_threads_allowed") we want
+# thread to start/stop with the simulator. We also want to block quit until
+# thread finishes to avoid "leaked" warnings.
+
+func _on_about_to_free_procedural_nodes() -> void:
+	_stop_thread = false
+	_state_manager.remove_active_thread(_thread) # don't block
+	if !_thread.is_active():
+		_thread.start(self, "_run_thread", 0)
+
+func _on_about_to_quit() -> void:
+	_stop_thread = true
+	if _thread.is_active():
+		_state_manager.add_active_thread(_thread) # block quit
+		_semaphore.post()
+		_thread.wait_to_finish()
+		_state_manager.call_deferred("remove_active_thread", _thread)
 
 func _on_active_threads_allowed() -> void:
-	
-	# FIXME: How can this work when the sim is stopped ???
-	
 	_stop_thread = false
 	_state_manager.add_active_thread(_thread)
-	_thread.start(self, "_run_thread", 0)
+	if !_thread.is_active():
+		_thread.start(self, "_run_thread", 0)
 
 func _on_finish_threads_required() -> void:
 	_stop_thread = true
-	_semaphore.post()
-	_thread.wait_to_finish()
-	_state_manager.call_deferred("remove_active_thread", _thread)
+	if _thread.is_active():
+		_semaphore.post()
+		_thread.wait_to_finish()
+		_state_manager.call_deferred("remove_active_thread", _thread)
 
-func _attach(object: Object, args: Array) -> void:
-	var target_object: Object = args[3]
-	if !is_instance_valid(target_object):
-		return
-	var property: String = args[4]
-	var as_child: bool = args[5]
-	if property:
-		target_object.set(property, object)
-	if !as_child:
-		return
-	var target_node := target_object as Node
-	var node := object as Node
-	if node and target_node:
-		target_node.add_child(node)
+# I/O processing
 
-
-# *****************************************************************************
-# I/O thread (if Global.use_threads)
-
-func _run_thread(_dummy: int) -> void:
+func _run_thread(_dummy: int) -> void: # I/O thread
+	assert(DPRINT and print("Run I/O thread!") or true)
 	while !_stop_thread:
 		if _is_work:
 			_mutex.lock()
-			while _call_queue:
-				_io_queue.append(_call_queue.pop_back())
+			while _callback_queue:
+				_process_stack.append(_callback_queue.pop_back())
 			_is_work = false
 			_mutex.unlock()
-		while _io_queue:
-			var args: Array = _io_queue.pop_back()
-			_process_call(args)
+#		assert(DPRINT and print("I/O items to process: ", _process_stack.size()) or true)
+		while _process_stack:
+			var args: Array = _process_stack.pop_back()
+			_process_callback(args)
 		_semaphore.wait()
+	assert(DPRINT and print("Stop I/O thread!") or true)
 
-func _process_call(args: Array) -> void:
-	# file_path: String, target_object: Object, property := "", as_child := false
-	var file_path: String = args[0]
-	var instantiate: bool = args[1]
-	var is_scene: bool = args[2]
-	var resource: Resource = load(file_path)
-	var object: Object
-	if instantiate:
-		var script := resource as Script
-		assert(script)
-		if is_scene:
-			object = FileUtils.make_object_or_scene(script)
-		else:
-			object = script.new()
-	else:
-		object = resource
-	call_deferred("_attach", object, args) # on main thread
+func _process_callback(args: Array) -> void: # I/O thread (or Main if !_use_threads)
+	var object: Object = args[0]
+	var io_method: String = args[1]
+	var array: Array = args[3]
+	if is_instance_valid(object):
+		object.call(io_method, array)
+	call_deferred("_finish", args)
 
+func _finish(args: Array) -> void: # Main thread
+	var finish_method: String = args[2]
+	if finish_method:
+		var object: Object = args[0]
+		var array: Array = args[3]
+		if is_instance_valid(object):
+			object.call(finish_method, array)
+	_callback_count -= 1
+	if _callback_count == 0:
+		assert(DPRINT and print("I/O finished!") or true)
+		emit_signal("finished")

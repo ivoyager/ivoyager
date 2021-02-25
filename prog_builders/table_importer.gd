@@ -18,9 +18,13 @@
 # limitations under the License.
 # *****************************************************************************
 # Reads external data tables (.csv files) and adds results to:
-#    Global.table_rows
-#    Global.wiki_titles (if Global.wiki_enabled)
-#    private table containers in TableReader via init_tables()
+#    - Global.table_rows
+#    - Global.wiki_titles (if Global.wiki_enabled)
+#    - table containers in TableReader via init_tables()
+#
+# Use TableReader to interact with imported table data! This object removes
+# itself from Global.program after table import. No other object should
+# reference it.
 #
 # ivoyager/data/solar_system/*.csv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
@@ -74,8 +78,22 @@ func project_init() -> void:
 	var table_reader: TableReader = Global.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, 
 			_table_row_dicts, _values)
+	Global.connect("project_builder_finished", self, "import_tables")
 
-func import_table_data() -> void:
+func import_tables() -> void:
+	var _io_manager: IOManager = Global.program.IOManager
+	_io_manager.callback(self, "import_on_io_callback", "io_finish")
+
+func io_finish(array: Array) -> void: # Main thread
+	var start_time: int = array[0]
+	var time := OS.get_system_time_msecs() - start_time
+	print("Imported %s table values (%s unique) in %s msec" % [_count, _values.size(), time])
+	Global.emit_signal("table_data_imported")
+	Global.program.erase("TableImporter") # this Reference will cease to exist
+	Global.script_classes.erase("_TableImporter_")
+
+func import_on_io_callback(array: Array) -> void: # this and below on I/O thread!
+	array.append(OS.get_system_time_msecs())
 	if _enable_wiki:
 		for path in _wiki_only:
 			_path = path
@@ -101,7 +119,6 @@ func import_table_data() -> void:
 		for item_key in _rows:
 			assert(!_table_rows.has(item_key))
 			_table_rows[item_key] = _rows[item_key]
-	print("Imported %s table values (%s unique strings)..." % [_count, _values.size()])
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)

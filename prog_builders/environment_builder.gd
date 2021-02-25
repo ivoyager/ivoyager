@@ -24,30 +24,43 @@ class_name EnvironmentBuilder
 
 var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
 
-var _settings: Dictionary = Global.settings
-var _asset_paths: Dictionary = Global.asset_paths
 
 func project_init() -> void:
-	pass
+	Global.connect("table_data_imported", self, "add_world_environment")
 
-func add_world_environment(env_type := 0) -> void:
-	print("Adding WorldEnvironment...")
-	var world_env := WorldEnvironment.new()
-	world_env.name = "WorldEnvironment"
-	world_env.environment = get_environment(env_type)
-	Global.program.Universe.add_child(world_env)
+func add_world_environment() -> void:
+	var io_manager: IOManager = Global.program.IOManager
+	io_manager.callback(self, "io_callback", "io_finish")
 
-func get_environment(_env_type: int) -> Environment:
+func io_callback(array: Array) -> void: # I/O thread!
+	var start_time := OS.get_system_time_msecs()
+	var world_environment := WorldEnvironment.new()
+	world_environment.name = "WorldEnvironment"
+	world_environment.environment = _get_environment()
+	array.append(world_environment)
+	array.append(start_time)
+
+func io_finish(array: Array) -> void: # Main thread
+	var world_environment: WorldEnvironment = array[0]
+	var start_time: int = array[1]
+	Global.program.Universe.add_child(world_environment)
+	var time := OS.get_system_time_msecs() - start_time
+	print("Added WorldEnvironment in ", time, " msec")
+	Global.emit_signal("world_environment_added")
+
+func _get_environment() -> Environment: # I/O thread!
 	# TODO: Read env settings from data table!
+	var settings: Dictionary = Global.settings
+	var asset_paths: Dictionary = Global.asset_paths
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
-	match _settings.starmap:
+	match settings.starmap:
 		Enums.StarmapSize.STARMAP_8K:
-			starmap_file = _asset_paths.starmap_8k
+			starmap_file = asset_paths.starmap_8k
 		Enums.StarmapSize.STARMAP_16K:
-			starmap_file = _asset_paths.starmap_16k
+			starmap_file = asset_paths.starmap_16k
 	if !FileUtils.exists(starmap_file):
-		starmap_file = _asset_paths[fallback_starmap]
+		starmap_file = asset_paths[fallback_starmap]
 	var starmap: Texture = load(starmap_file)
 	panorama_sky.panorama = starmap
 	var env = Environment.new()

@@ -86,10 +86,10 @@ var _values := []
 var _meta_lookup := {}
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
+	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("setting_changed", self, "_settings_listener")
 
-func _on_system_tree_ready(_is_loaded_game: bool) -> void:
+func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	var grid_index := 0

@@ -23,21 +23,18 @@ class_name LightBuilder
 
 const METER := UnitDefs.METER
 
+# DEPRECIATE when TableReader.build_object() sets base class properties
 var omni_fields := {
 	omni_range = "omni_range",
 }
 
-var _table_reader: TableReader
-
-func project_init() -> void:
-	_table_reader = Global.program.TableReader
-
 func add_omni_light(body: Body) -> void:
+	var table_reader: TableReader = Global.program.TableReader
 	if body.light_type == -1:
 		return
 	var omni_light := OmniLight.new()
 	var light_type: int = body.light_type
-	_table_reader.build_object2(omni_light, "lights", light_type, omni_fields)
+	table_reader.build_object2(omni_light, "lights", light_type, omni_fields)
 	omni_light.shadow_enabled = true # FIXME: No shadows. Why not?
 #	omni_light.shadow_bias = 0.01 # Can't even generate shadow artifacts!
 	omni_light.omni_attenuation = 8.0
@@ -51,3 +48,7 @@ func add_omni_light(body: Body) -> void:
 		omni_light.omni_attenuation = 3.0
 	body.omni_light = omni_light
 	body.add_child(omni_light)
+
+func project_init() -> void:
+	pass
+

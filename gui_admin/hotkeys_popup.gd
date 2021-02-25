@@ -169,7 +169,7 @@ func _on_ready():
 	note_label.text = "TXT_GUI_HOTKEY_NOTE"
 	$VBox.add_child_below_node($VBox/TopHBox, note_label)
 	# hotkey dialog
-	_hotkey_dialog = SaverLoader.make_object_or_scene(HotkeyDialog)
+	_hotkey_dialog = FileUtils.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 

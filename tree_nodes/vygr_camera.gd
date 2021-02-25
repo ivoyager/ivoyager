@@ -191,7 +191,7 @@ func move_to_view(view: View, is_instant_move := false) -> void:
 
 func create_view(use_current_selection := true) -> View:
 	# View object is useful for cache or save persistence
-	var view: View = SaverLoader.make_object_or_scene(_View_)
+	var view: View = FileUtils.make_object_or_scene(_View_)
 	if use_current_selection:
 		view.selection_name = selection_item.name
 	view.track_type = track_type

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# All functions are thread-safe after Global signal "table_data_imported".
 # For get functions, table_name is "planets", "moons", etc. Supply either row
 # or row_name.
 
@@ -194,13 +195,19 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return conv_body(_values[row_data[column]])
 
 func build_object(object: Object, table_name: String, row: int, debug_required := []) -> void:
-	# Sets object script properties that exactly match fields in table. Missing
-	# value in table (without Default) will not be set.
+	# Sets object properties that exactly match fields in table. Missing value
+	# in table (without Default) will not be set.
+	
+	# TODO: Modify to also set base class properties. Instead of iterating object
+	# properites, we should iterate table columns.
+	
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
 	var row_data: Array = _table_data[table_name][row]
+	
 	var properties: Array = object.get_script().get_script_property_list()
+	
 	for property_dict in properties:
 		var property: String = property_dict.name
 		var column: int = fields.get(property, -1)
@@ -336,7 +343,7 @@ func conv_enum(value: String, enum_name: String) -> int:
 	return dict[value]
 
 # *****************************************************************************
-# ivoyager mechanics
+# init
 
 func project_init() -> void:
 	_enums = Global.enums

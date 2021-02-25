@@ -69,8 +69,8 @@ var _limit_stops_in_multiplayer: bool = Global.limit_stops_in_multiplayer
 onready var _tree := get_tree()
 onready var _saver_loader: SaverLoader = Global.program.get("SaverLoader")
 onready var _main_prog_bar: MainProgBar = Global.program.get("MainProgBar")
-onready var _system_builder: SystemBuilder = Global.program.SystemBuilder
-onready var _environment_builder: EnvironmentBuilder = Global.program.EnvironmentBuilder
+#onready var _system_builder: SystemBuilder = Global.program.SystemBuilder
+#onready var _environment_builder: EnvironmentBuilder = Global.program.EnvironmentBuilder
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 var _has_been_saved := false
 var _was_paused := false
@@ -85,7 +85,8 @@ func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
 	# to wait until these are removed. This is essential for any thread that
 	# might change persist data used in gamesave.
-	active_threads.append(thread)
+	if !active_threads.has(thread):
+		active_threads.append(thread)
 
 func remove_active_thread(thread: Thread) -> void:
 	active_threads.erase(thread)
@@ -128,24 +129,24 @@ func allow_run(who: Object) -> void:
 		emit_signal("server_about_to_run")
 	_run_simulator()
 
-func build_system_tree() -> void:
-	require_stop(self, NetworkStopSync.BUILD_SYSTEM, true)
-	_state.is_splash_screen = false
-	Global.emit_signal("about_to_build_system_tree")
-	_system_builder.build()
-	yield(_system_builder, "finished")
-	_state.is_system_built = true
-	Global.emit_signal("system_tree_built_or_loaded", true)
-	yield(_tree, "idle_frame")
-	Global.emit_signal("system_tree_ready", true)
-	yield(_tree, "idle_frame")
-	Global.emit_signal("about_to_start_simulator", true)
-	Global.emit_signal("close_all_admin_popups_requested")
-	yield(_tree, "idle_frame")
-	allow_run(self)
-	Global.emit_signal("simulator_started")
-	yield(_tree, "idle_frame")
-	Global.emit_signal("gui_refresh_requested")
+#func build_system_tree() -> void:
+#	require_stop(self, NetworkStopSync.BUILD_SYSTEM, true)
+#	_state.is_splash_screen = false
+#	Global.emit_signal("about_to_build_system_tree")
+#	_system_builder.build()
+#	yield(_system_builder, "finished")
+#	_state.is_system_built = true
+#	Global.emit_signal("system_tree_built_or_loaded", true)
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("system_tree_ready", true)
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("about_to_start_simulator", true)
+#	Global.emit_signal("close_all_admin_popups_requested")
+#	yield(_tree, "idle_frame")
+#	allow_run(self)
+#	Global.emit_signal("simulator_started")
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("gui_refresh_requested")
 
 func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
@@ -255,21 +256,21 @@ func load_game(path: String, network_gamesave := []) -> void:
 	if _main_prog_bar:
 		_main_prog_bar.stop()
 	_was_paused = _settings.loaded_game_is_paused or _timekeeper.is_paused
-	_state.is_system_built = true
-	Global.emit_signal("system_tree_built_or_loaded", false)
-	yield(_tree, "idle_frame")
-	Global.emit_signal("system_tree_ready", false)
-	yield(_tree, "idle_frame")
 	assert(Debug.dlog("This is after load & system_tree_ready!"))
 	assert(Debug.dlog(_saver_loader.debug_log(_tree)))
 	assert(!print_stray_nodes())
-	Global.emit_signal("about_to_start_simulator", false)
-	Global.emit_signal("close_all_admin_popups_requested")
-	yield(_tree, "idle_frame")
-	allow_run(self)
-	Global.emit_signal("simulator_started")
-	yield(_tree, "idle_frame")
-	Global.emit_signal("gui_refresh_requested")
+	_state.is_system_built = true
+	Global.emit_signal("system_tree_built_or_loaded", false)
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("system_tree_ready", false)
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("about_to_start_simulator", false)
+#	Global.emit_signal("close_all_admin_popups_requested")
+#	yield(_tree, "idle_frame")
+#	allow_run(self)
+#	Global.emit_signal("simulator_started")
+#	yield(_tree, "idle_frame")
+#	Global.emit_signal("gui_refresh_requested")
 
 func quit(force_quit: bool) -> void:
 	if Global.disable_quit:
@@ -284,14 +285,15 @@ func quit(force_quit: bool) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
+	Global.emit_signal("about_to_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
-	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
-	
-	# below recently started throwing error; removed Quit button
+	# Below throws error as of early 2021. I think it's a browser change.
+	# It's best for now to set Global.disable_quit (removes Quit button) in
+	# HTML builds.
 #	if Global.is_html5:
 #		JavaScript.eval("window.close()")
 
@@ -323,14 +325,15 @@ func _ready():
 	_on_ready()
 
 func _on_ready() -> void:
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [],
-			CONNECT_ONESHOT)
 	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
+	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
 	if _saver_loader:
 		_saver_loader.use_thread = Global.use_threads
-	set_process(false)
+	set_process(false) # only used when waiting for threads to finish
 	require_stop(self, -1, true)
 
 func _process(delta: float)-> void:
@@ -343,24 +346,31 @@ func _on_process(_delta: float)-> void:
 	set_process(false)
 	emit_signal("threads_finished")
 
-func _on_project_builder_finished() -> void:
-	yield(_tree, "idle_frame")
-	_import_table_data()
-
-func _import_table_data() -> void:
-	var table_importer: TableImporter = Global.program.TableImporter
-	table_importer.import_table_data()
-	Global.program.erase("TableImporter")
-	Global.emit_signal("table_data_imported")
-
 func _finish_init() -> void:
-	_environment_builder.add_world_environment() # this is really slow!!!
+#	_environment_builder.add_world_environment() # this is really slow!!!
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
 	print("StateManager inited...")
 	Global.emit_signal("state_manager_inited")
-	if Global.skip_splash_screen:
-		build_system_tree()
+#	if Global.skip_splash_screen:
+#		build_system_tree()
+
+func _on_about_to_build_system_tree() -> void:
+	_state.is_splash_screen = false
+
+func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
+	_state.is_system_built = true
+
+func _on_system_tree_ready(is_new_game: bool) -> void:
+	print("System tree ready...")
+	yield(_tree, "idle_frame")
+	Global.emit_signal("about_to_start_simulator", is_new_game)
+	Global.emit_signal("close_all_admin_popups_requested")
+	yield(_tree, "idle_frame")
+	allow_run(self)
+	Global.emit_signal("simulator_started")
+	yield(_tree, "idle_frame")
+	Global.emit_signal("gui_refresh_requested")
 
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in

@@ -36,7 +36,7 @@ var _selection_item: SelectionItem
 var _has_mouse := false
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_build")
+	Global.connect("about_to_start_simulator", self, "_build")
 	Global.connect("gui_refresh_requested", self, "_update_selection")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("mouse_entered", self, "_on_mouse_entered")
