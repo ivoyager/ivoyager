@@ -204,7 +204,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 				model_geometry.right_ascension, model_geometry.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
-		# the planets EXCEPT Uranus (flipped???) and Pluto (ah Pluto...).
+		# the planets EXCEPT Uranus (flipped???) and Pluto (ahhhh Pluto...).
 		if orbit:
 			model_geometry.axial_tilt = model_geometry.north_pole.angle_to(orbit.get_normal(time))
 		else: # sun
@@ -227,7 +227,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	if orbit and orbit.is_retrograde(time): # retrograde
 		model_geometry.rotation_period = -model_geometry.rotation_period
 	# body reference basis
-	var basis_at_epoch := math.rotate_basis_z(Basis.IDENTITY, model_geometry.north_pole)
+	var basis_at_epoch := math.rotate_basis_z(Basis(), model_geometry.north_pole)
 	var total_rotation: float
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		# By definition, longitude 0.0 is the mean parent facing side.
@@ -271,12 +271,14 @@ func _init_unpersisted(is_new_game: bool) -> void: # Main thread after build or 
 		if body:
 			_build_unpersisted(body)
 		i += 1
+	# We just sent a bunch of work to IOManager. It'll signal "finished" on a
+	# subsequent frame - theoretically, next frame at the soonest.
 	_io_manager.connect("finished", self, "_on_io_finished", [is_new_game], CONNECT_ONESHOT)
 
 func _on_io_finished(is_new_game: bool) -> void:
 	Global.emit_signal("system_tree_ready", is_new_game)
 
-func _build_unpersisted(body: Body) -> void:
+func _build_unpersisted(body: Body) -> void: # Main thread
 	if body.model_type != -1:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
@@ -316,14 +318,3 @@ func io_finish(array: Array) -> void: # Main thread
 	if is_star:
 		var texture_slice_2d: Texture = array[4]
 		body.texture_slice_2d = texture_slice_2d
-
-
-	
-	
-	
-#	body.texture_2d = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
-#	if !body.texture_2d:
-#		body.texture_2d = _fallback_body_2d
-#	if body.flags & BodyFlags.IS_STAR:
-#		var slice_name = file_prefix + "_slice"
-#		body.texture_slice_2d = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)

@@ -198,7 +198,6 @@ func save_game(path: String) -> void:
 	print("Saving " + path)
 	require_stop(self, NetworkStopSync.SAVE, true)
 	yield(self, "threads_finished")
-	assert(!print_stray_nodes())
 	assert(Debug.dlog("This is before save!"))
 	assert(Debug.dlog(_saver_loader.debug_log(_tree)))
 	var save_file := File.new()

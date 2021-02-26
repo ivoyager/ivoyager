@@ -37,7 +37,6 @@ static func make_object_or_scene(script: Script) -> Object:
 		root_node.set_script(script)
 	return root_node
 
-
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
 	var save_dir := override_dir
 	if save_dir:
