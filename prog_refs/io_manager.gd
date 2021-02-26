@@ -17,17 +17,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Manages a separate I/O thread for disk operations including resource loading.
+# Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,
 # you should not mix use of IOManager with resource loading on the Main thread.
-# Also, all interaction with the scene tree MUST happen on the Main thread; use
-# callback() and supply "finish_method" to do this. 
+#
+# The "io_method" supplied in callback() is handy for doing "I/O-adjacent" work
+# such as processing resources or assembling parts of scene trees. However, all
+# interaction with the current scene tree MUST happen on the Main thread. To do
+# so, supply the "finish_method" callback.
+#
+# All methods will work on the Main thread if Global.use_threads == false.
 
 class_name IOManager
 
 signal finished()
 
-const DPRINT := true
+const DPRINT := false
 
 var _use_threads: bool = Global.use_threads
 var _state_manager: StateManager
@@ -38,18 +43,19 @@ var _callback_queue := []
 var _process_stack := []
 var _is_work := false
 var _stop_thread := false
-var _callback_count := 0
+var _job_count := 0
 
 # *****************************************************************************
-# Thread-safe public
+# Not thread-safe! Call on Main thread.
 
 func callback(object: Object, io_method: String, finish_method := "", array := []) -> void:
 	# Callback to io_method will happen on the I/O thread. Callback to optional
-	# finish_method will subsequently happen on main thread. The array arg is
-	# optional here but is required in callback methods signatures.
-	# Will emit "finished" on a later frame (main thread) after all current
-	# callbacks have been fully processed.
-	_callback_count += 1
+	# finish_method will happen subsequently on the main thread. The array arg
+	# is optional here but is required in callback methods signatures.
+	# IOManager will emit "finished" on a later frame after all current
+	# callbacks have been processed. This is guaranteed to be delayed at least
+	# one frame.
+	_job_count += 1
 	var args := [object, io_method, finish_method, array]
 	if !_use_threads:
 		_process_callback(args)
@@ -60,7 +66,21 @@ func callback(object: Object, io_method: String, finish_method := "", array := [
 	_mutex.unlock()
 	_semaphore.post()
 
-# TODO: Add specific I/O functions here, using callbacks to self.
+func store_var_to_file(value, file_path: String) -> void:
+	callback(self, "_store_var_to_file", "", [value, file_path])
+
+
+# *****************************************************************************
+
+func _store_var_to_file(array: Array) -> void:
+	var value = array[0]
+	var file_path: String = array[1]
+	var file := File.new()
+	if file.open(file_path, File.WRITE) != OK:
+		prints("ERROR! Could not open", file_path, "for write!")
+		return
+	file.store_var(value)
+
 
 # *****************************************************************************
 # Init & private
@@ -121,10 +141,9 @@ func _run_thread(_dummy: int) -> void: # I/O thread
 				_process_stack.append(_callback_queue.pop_back())
 			_is_work = false
 			_mutex.unlock()
-#		assert(DPRINT and print("I/O items to process: ", _process_stack.size()) or true)
-		while _process_stack:
-			var args: Array = _process_stack.pop_back()
-			_process_callback(args)
+			while _process_stack:
+				var args: Array = _process_stack.pop_back()
+				_process_callback(args)
 		_semaphore.wait()
 	assert(DPRINT and print("Stop I/O thread!") or true)
 
@@ -143,7 +162,7 @@ func _finish(args: Array) -> void: # Main thread
 		var array: Array = args[3]
 		if is_instance_valid(object):
 			object.call(finish_method, array)
-	_callback_count -= 1
-	if _callback_count == 0:
+	_job_count -= 1
+	if _job_count == 0:
 		assert(DPRINT and print("I/O finished!") or true)
 		emit_signal("finished")

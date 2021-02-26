@@ -20,18 +20,20 @@
 # Abstract base class for managing user cached items. Subclasses include
 # SettingsManager & InputMapManager.
 
-extends Reference
 class_name CacheManager
-
 
 # project vars - set in subclass _init(); project can modify at init
 var cache_file_name := "generic_item.vbinary" # change in subclass
 var defaults: Dictionary # subclass defines in _init()
 var current: Dictionary # subclass makes or references an existing dict
 
+# subclass setting
+var _is_references := false # set if cache items are arrays or dicts
+
 # private
-var _cache_dir: String = Global.cache_dir
-var _is_references := false # subclass change in _init() if needed
+var _io_manager: IOManager
+var _file_path: String
+var _cached := {} # exact replica of disk cache notwithstanding I/O delay
 
 
 func change_current(item_name: String, value, suppress_caching := false) -> void:
@@ -66,8 +68,10 @@ func is_cached(item_name: String, cached_values: Dictionary) -> bool:
 	return _is_equal(current[item_name], defaults[item_name])
 
 func get_cached_values() -> Dictionary:
-	var file := _get_file(File.READ)
-	return file.get_var() if file else {}
+	return _cached
+	
+#	var file := _get_file(File.READ)
+#	return file.get_var() if file else {}
 
 func restore_default(item_name: String, suppress_caching := false) -> void:
 	if !is_default(item_name):
@@ -101,9 +105,12 @@ func _on_init() -> void:
 	pass
 
 func project_init() -> void:
+	_io_manager = Global.program.IOManager
+	var cache_dir: String = Global.cache_dir
+	_file_path = cache_dir.plus_file(cache_file_name)
 	var dir = Directory.new()
-	if dir.open(_cache_dir) != OK:
-		dir.make_dir(_cache_dir)
+	if dir.open(cache_dir) != OK:
+		dir.make_dir(cache_dir)
 	for item_name in defaults:
 		var default = defaults[item_name] # unknown type
 		current[item_name] = default.duplicate(true) if _is_references else default
@@ -120,33 +127,22 @@ func _on_change_current(_item_name: String) -> void:
 func _is_equal(value1, value2) -> bool:
 	return value1 == value2 # or supply subclass logic
 
-func _read_cache() -> void:
-	var file := _get_file(File.READ)
-	if !file:
-		return
-	var cached_values: Dictionary = file.get_var()
-	for item_name in cached_values:
-		if current.has(item_name): # possibly old verson obsoleted item_name
-			current[item_name] = cached_values[item_name] # reference ok
-
 func _write_cache() -> void:
-	var file := _get_file(File.WRITE)
-	if !file:
-		return
-	var cached_values := {}
+	_cached.clear()
 	for item_name in defaults:
 		if !_is_equal(current[item_name], defaults[item_name]): # cache non-default values
-			cached_values[item_name] = current[item_name] # reference ok
-	file.store_var(cached_values)
+			_cached[item_name] = current[item_name] # reference ok
+	_io_manager.store_var_to_file(_cached.duplicate(true), _file_path)
 
-func _get_file(flags: int) -> File:
-	var file_path := _cache_dir.plus_file(cache_file_name)
+func _read_cache() -> void:
+	# This happens on project_init() only. We want this on Main thread so that
+	# it does block until completed.
 	var file := File.new()
-	if file.open(file_path, flags) != OK:
-		if flags == File.WRITE:
-			prints("ERROR! Could not open", file_path, "for write!")
-		else:
-			prints("No cache file", file_path, "(ok if no changes)")
-		return null
-	return file
+	if file.open(_file_path, File.READ) != OK:
+		prints("No cache file", _file_path, "(ok if no changes)")
+		return
+	_cached = file.get_var()
+	for item_name in _cached:
+		if current.has(item_name): # possibly old verson obsoleted item_name
+			current[item_name] = _cached[item_name] # reference ok
 
