@@ -24,6 +24,7 @@
 #   is_splash_screen: bool
 #   is_system_built: bool
 #   is_running: bool # follows _run_simulator() / _stop_simulator()
+#   is_paused: bool # NOT set during simulator stop
 #   is_quitting: bool
 #   is_loaded_game: bool
 #   last_save_path: String
@@ -42,8 +43,8 @@
 extends Node
 class_name StateManager
 
-signal active_threads_allowed() # can start threads in external projct
-signal finish_threads_required() # finish threads for any external projects
+signal threads_allowed() # can start threads that affect gamestate
+signal finish_threads_required() # finish threads that affect gamestate
 signal threads_finished()
 signal client_is_dropping_out(is_exit)
 signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
@@ -57,14 +58,14 @@ const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 const NetworkStopSync = Enums.NetworkStopSync
 
 # public - read-only!
-var paused := false # pause state ignoring sim stop, restored on run
 var allow_threads := false
-var active_threads := []
+var blocking_threads := []
 
 # private
-onready var _tree := get_tree()
+onready var _tree: SceneTree = get_tree()
 var _state: Dictionary = Global.state
 var _nodes_requiring_stop := []
+var _signal_when_threads_finished := false
 
 # Multithreading note: Godot's SceneTree and almost all I, Voyager public
 # functions run in the main thread. Use call_defered() to invoke any function
@@ -72,32 +73,50 @@ var _nodes_requiring_stop := []
 # functions are NOT thread-safe!
 
 func set_paused(is_pause: bool, is_toggle := false) -> void:
-	# 1st arg ignored if is_toggle
+	# 1st arg ignored if is_toggle. StateManager has authority over pause, so
+	# all changes should use this function or Global signal "pause_requested".
+	prints("set_paused", is_pause, is_toggle)
+	var paused: bool
 	if is_toggle:
-		paused = !paused
+		paused = !_state.is_paused
 	else:
 		paused = is_pause
 	if _state.is_running:
 		_tree.paused = paused
+	if _state.is_paused != paused:
+		_state.is_paused = paused
+		Global.emit_signal("pause_changed", paused)
 
-func add_active_thread(thread: Thread) -> void:
+func add_blocking_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
 	# to wait until these are removed. This is essential for any thread that
 	# might change persist data used in gamesave.
-	if !active_threads.has(thread):
-		active_threads.append(thread)
+	if !blocking_threads.has(thread):
+		blocking_threads.append(thread)
 
-func remove_active_thread(thread: Thread) -> void:
-	active_threads.erase(thread)
+func remove_blocking_thread(thread: Thread) -> void:
+	# Call on main thread after your thread has finished.
+	if thread:
+		blocking_threads.erase(thread)
+	if _signal_when_threads_finished and !blocking_threads:
+		_signal_when_threads_finished = false
+		emit_signal("threads_finished")
 
-func signal_when_threads_finished() -> void:
-	# FIXME: Why did I do it this way? This is dumb.
-	set_process(true) # next frame at soonest
+func signal_threads_finished() -> void:
+	# Generates a delayed "threads_finished" signal if/when there are no
+	# blocking threads. Called by require_stop if not rejected.
+	yield(_tree, "idle_frame")
+	if !_signal_when_threads_finished:
+		_signal_when_threads_finished = true
+		remove_blocking_thread(null)
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
 	# network_sync_type used only if we are the network server.
 	# bypass_checks intended for this node & NetworkLobby; could break sync.
 	# Returns false if the caller doesn't have authority to stop the sim.
+	# "Stopped" means SceneTree is paused, the player is locked out from most
+	# input, and blocking threads (added above) have finished.
+	# In many cases, you should yield to "threads_finished" after calling this.
 	if !bypass_checks:
 		if !Global.popops_can_stop_sim and who is Popup:
 			return false
@@ -109,15 +128,12 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
 			emit_signal("server_about_to_stop", network_sync_type)
-	# "Stopped" means the game is paused, the player is locked out from most
-	# input, and non-main threads have finished. In many cases you should yield
-	# to "threads_finished" after calling this function before proceeding.
 	assert(DPRINT and prints("require_stop", who, network_sync_type) or true)
 	if !_nodes_requiring_stop.has(who):
 		_nodes_requiring_stop.append(who)
 	if _state.is_running:
 		_stop_simulator()
-	signal_when_threads_finished()
+	signal_threads_finished()
 	return true
 
 func allow_run(who: Object) -> void:
@@ -155,7 +171,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	Global.emit_signal("close_all_admin_popups_requested")
-	paused = false
+	_state.is_paused = false
 	Global.emit_signal("simulator_exited")
 
 func quit(force_quit: bool) -> void:
@@ -196,6 +212,7 @@ func _on_init() -> void:
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
+	_state.is_paused = false
 	_state.is_quitting = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
@@ -211,18 +228,10 @@ func _on_ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
-	set_process(false) # only used when waiting for threads to finish
+	Global.connect("pause_requested", self, "set_paused")
+	Global.connect("quit_requested", self, "quit")
+	Global.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
-
-func _process(delta: float)-> void:
-	_on_process(delta)
-
-func _on_process(_delta: float)-> void:
-	# We use only for _signal_when_threads_finished()
-	if active_threads:
-		return
-	set_process(false)
-	emit_signal("threads_finished")
 
 func _finish_init() -> void:
 #	_environment_builder.add_world_environment() # this is really slow!!!
@@ -257,7 +266,6 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal finish_threads_required") or true)
 	allow_threads = false
 	emit_signal("finish_threads_required")
-	paused = _tree.paused
 	_tree.paused = true
 	_state.is_running = false
 	Global.emit_signal("run_state_changed", false)
@@ -266,10 +274,10 @@ func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
-	_tree.paused = paused
-	assert(DPRINT and prints("signal active_threads_allowed") or true)
+	_tree.paused = _state.is_paused
+	assert(DPRINT and prints("signal threads_allowed") or true)
 	allow_threads = true
-	emit_signal("active_threads_allowed")
+	emit_signal("threads_allowed")
 
 func _test_load_version_warning() -> void:
 	if Global.current_project_version != Global.project_version \

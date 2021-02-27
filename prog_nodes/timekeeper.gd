@@ -37,9 +37,9 @@
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 #
-#
-# This node processes during pause, but stops and starts processing on
-# "run_state_changed" signal.
+# This node processes during SceneTree pause, but stops and starts processing
+# following StateManager "is_running" state. StateManager has authority over
+# pause, but we signal pause changes here as a "speed_changed" event.
 
 extends Node
 class_name Timekeeper
@@ -95,7 +95,7 @@ var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
 var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
-var is_paused := true # lags 1 frame behind actual tree pause
+var is_paused := true # follows Global.state.is_paused
 var is_reversed := false
 
 # persistence
@@ -315,6 +315,7 @@ func _ready() -> void:
 func _on_ready() -> void:
 	Global.connect("network_state_changed", self, "_on_network_state_changed")
 	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	Global.connect("pause_changed", self, "_on_pause_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
@@ -363,15 +364,25 @@ func _refresh_gui() -> void:
 	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
 			show_seconds, is_real_world_time)
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	if start_real_world_time:
-		set_real_world()
+func _on_about_to_start_simulator(is_new_game: bool) -> void:
+	if is_new_game:
+		if start_real_world_time:
+			set_real_world()
+	else:
+		var paused_after_load: bool = is_paused or Global.settings.loaded_game_is_paused
+		Global.emit_signal("pause_requested", paused_after_load)
 
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_real_world_time:
 		yield(_tree, "idle_frame")
 		set_real_world()
+
+func _on_pause_changed(is_paused_: bool) -> void:
+	if is_paused != is_paused_:
+		is_paused = is_paused_
+		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+				show_seconds, is_real_world_time)
 
 remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
 	# client-side network game only
@@ -401,13 +412,14 @@ remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused
 	speed_name = speed_names[speed_index_]
 	speed_symbol = speed_symbols[speed_index_]
 	is_reversed = is_reversed_
-	is_paused = is_paused_
-	_tree.paused = is_paused_
 	show_clock = show_clock_
 	show_seconds = show_seconds_
 	is_real_world_time = is_real_world_time_
-	emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
-			show_seconds_, is_real_world_time_)
+	if is_paused != is_paused_:
+		Global.emit_signal("pause_requested", is_paused_) # will trigger update
+	else:
+		emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
+				show_seconds_, is_real_world_time_)
 
 func _on_speed_changed(speed_index_: int, is_reversed_: bool, is_paused_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
@@ -420,10 +432,6 @@ func _process(delta: float) -> void:
 	_on_process(delta) # subclass can override
 
 func _on_process(delta: float) -> void:
-	if is_paused != _tree.paused:
-		is_paused = !is_paused
-		emit_signal("speed_changed", speed_index, is_reversed, is_paused,
-				show_clock, show_seconds, is_real_world_time)
 	if !_is_sync:
 		engine_time += delta
 	times[1] = engine_time

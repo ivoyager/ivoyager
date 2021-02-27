@@ -81,8 +81,8 @@ func _increment_speed(increment: int) -> void:
 	_timekeeper.change_speed(increment)
 
 func _change_paused() -> void:
-	if _state.network_state != IS_CLIENT: # need for pause everywhere!
-		_tree.paused = _pause.pressed
+	if _state.network_state != IS_CLIENT:
+		Global.emit_signal("pause_requested", _pause.pressed)
 
 func _change_reversed() -> void:
 	_timekeeper.set_time_reversed(_reverse.pressed)

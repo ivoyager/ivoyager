@@ -120,6 +120,7 @@ func load_game(path: String, network_gamesave := []) -> void:
 	_state.is_splash_screen = false
 	_state.is_system_built = false
 	_state_manager.require_stop(_state_manager, NetworkStopSync.LOAD, true)
+#	_state_manager.signal_threads_finished()
 	yield(_state_manager, "threads_finished")
 	_state.is_loaded_game = true
 	if _main_prog_bar:
@@ -132,7 +133,6 @@ func load_game(path: String, network_gamesave := []) -> void:
 	Global.emit_signal("game_load_finished")
 	if _main_prog_bar:
 		_main_prog_bar.stop()
-	_state_manager.set_paused(_settings.loaded_game_is_paused or _timekeeper.is_paused)
 	assert(Debug.dlog("This is after load & system_tree_ready!"))
 	assert(Debug.dlog(_saver_loader.debug_log(_tree)))
 	assert(!Global.print_stray_nodes())
