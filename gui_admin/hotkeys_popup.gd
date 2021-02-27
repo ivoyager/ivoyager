@@ -29,7 +29,8 @@ var key_box_min_size_x := 300
 
 onready var _input_map_manager: InputMapManager = Global.program.InputMapManager
 onready var _actions: Dictionary = _input_map_manager.current
-var _hotkey_dialog: HotkeyDialog
+var _hotkey_dialog: ConfirmationDialog = \
+		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()
 
 
 func _on_init():
@@ -169,7 +170,6 @@ func _on_ready():
 	note_label.text = "TXT_GUI_HOTKEY_NOTE"
 	$VBox.add_child_below_node($VBox/TopHBox, note_label)
 	# hotkey dialog
-	_hotkey_dialog = FileUtils.make_object_or_scene(HotkeyDialog)
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 
@@ -190,11 +190,13 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 		var key_button := Button.new()
 		action_hbox.add_child(key_button)
 		key_button.text = OS.get_scancode_string(scancode)
-		key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str, key_button.text, layout])
+		key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str,
+				key_button.text, layout])
 		index += 1
 	var empty_key_button := Button.new()
 	action_hbox.add_child(empty_key_button)
-	empty_key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str, "", layout])
+	empty_key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str,
+			"", layout])
 	var default_button := Button.new()
 	action_hbox.add_child(default_button)
 	default_button.text = "!"

@@ -115,7 +115,7 @@ func project_init() -> void:
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	# Call on I/O thread!
-	var body: Body = FileUtils.make_object_or_scene(_Body_)
+	var body: Body = _Body_.new()
 	_table_reader.build_object2(body, table_name, row, body_fields, body_fields_req)
 	# flags
 	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)

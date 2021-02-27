@@ -20,8 +20,6 @@
 # Used by HotkeysPopup.
 
 extends ConfirmationDialog
-class_name HotkeyDialog
-const SCENE := "res://ivoyager/gui_admin/hotkey_dialog.tscn"
 
 signal hotkey_confirmed(action, scancode, control, alt, shift, meta)
 

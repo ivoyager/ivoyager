@@ -194,7 +194,7 @@ func init_extensions() -> void:
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
 						and "EXTENSION_VERSION_YMD" in extension_script:
-					var extension: Object = FileUtils.make_object_or_scene(extension_script)
+					var extension: Object = extension_script.new()
 					extensions.append(extension)
 		dir_name = dir.get_next()
 	for extension in extensions:
@@ -209,7 +209,7 @@ func instantiate_and_index() -> void:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
-			var object: Object = FileUtils.make_object_or_scene(dict[key])
+			var object: Object = SaverLoader.make_object_or_scene(dict[key])
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key

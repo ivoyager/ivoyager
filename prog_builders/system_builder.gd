@@ -60,7 +60,7 @@ func build_on_io_callback(array: Array) -> void: # I/O thread!
 	minor_bodies_builder.build()
 	if add_camera:
 		var camera_script: Script = Global.script_classes._Camera_
-		var camera: Camera = FileUtils.make_object_or_scene(camera_script)
+		var camera: Camera = camera_script.new()
 		array.append(camera) 
 
 func io_finish(array: Array) -> void: # Main thread
