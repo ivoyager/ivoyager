@@ -69,6 +69,13 @@ var init_sequence := [
 	[self, "signal_finished", false]
 ]
 
+# Extension can assign another Spatial to var universe here. Code below will
+# assign this value to Global.program.Universe. I, Voyager always uses the
+# Global.program dictionary to find Universe and other program nodes, so node
+# names and tree locations don't matter.
+
+onready var universe: Spatial = get_node("/root/Universe")
+
 # Replace classes below with a subclass of the original unless comment
 # indicates otherwise. E.g., "Spatial ok", replace with a class that extends
 # Spatial.
@@ -174,7 +181,6 @@ var procedural_classes := {
 var extensions := []
 var program: Dictionary = Global.program
 var script_classes: Dictionary = Global.script_classes
-var universe: Spatial
 
 # **************************** INIT SEQUENCE **********************************
 
@@ -205,6 +211,7 @@ func init_extensions() -> void:
 	Global.after_extensions_inited()
 
 func instantiate_and_index() -> void:
+	program.Universe = universe
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
@@ -213,9 +220,6 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	assert(!program.has("Universe"))
-	universe = get_node("/root/Universe")
-	program.Universe = universe
 	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
