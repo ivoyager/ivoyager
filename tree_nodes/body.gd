@@ -89,7 +89,6 @@ var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var model_too_far := 0.0
 var aux_graphic_too_far := 0.0
 var hud_too_close := 0.0
-var satellite_indexes: Dictionary # one dict shared by all Bodies
 var is_asleep := false
 
 # private
@@ -107,6 +106,22 @@ var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
 
+
+func get_file_prefix() -> String:
+	return file_info[0]
+
+func has_rings() -> bool:
+	return file_info.size() > 2
+
+func get_rings_file() -> String:
+	if file_info.size() > 2:
+		return file_info[2]
+	return ""
+
+func get_rings_radius() -> float:
+	if file_info.size() > 2:
+		return file_info[3]
+	return 0.0
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 	if !model_geometry:
@@ -145,12 +160,13 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
 
-func set_orbit(orbit_: Orbit) -> void:
+func set_orbit(orbit_: Orbit, skip_reset := false) -> void:
 	if orbit == orbit_:
 		return
 	if orbit:
 		orbit.clear_for_disposal()
-	orbit_.reset()
+	if !skip_reset:
+		orbit_.reset()
 	orbit = orbit_
 
 # *****************************************************************************

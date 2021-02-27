@@ -67,8 +67,8 @@ var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _times: Array = Global.times
 var _scheduler: Scheduler
 var _update_interval := 0.0
-var _begin_current := 0.0
-var _end_current := 0.0
+var _begin_current := INF
+var _end_current := -INF
 
 
 # TODO:
@@ -319,6 +319,8 @@ func clear_for_disposal() -> void:
 		_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
 
 func reset() -> void:
+	# Sets current_elements, calculates update interval for element_rates, and
+	# connects or disconnects/connects to Schedular for updating.
 	var time: float = _times[0]
 	if !element_rates:
 		_init_elements(time, current_elements)
@@ -341,7 +343,7 @@ func reset() -> void:
 	_end_current = time + interval * 1.1
 	_init_elements(time + interval / 2.0, current_elements)
 	if _update_interval != interval:
-		if _update_interval:
+		if _update_interval: # already has a Schedular connection
 			_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
 		_scheduler.interval_connect(interval, self, "_scheduler_update")
 		_update_interval = interval

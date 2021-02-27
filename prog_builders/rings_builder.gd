@@ -24,18 +24,23 @@ class_name RingsBuilder
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-const RINGS_TOO_FAR_RADIUS_MULTIPLIER := 2e3
-const METER := UnitDefs.METER
+var rings_too_far_radius_multiplier := 2e3
 
-var _rings_search: Array = Global.rings_search
-
-func project_init() -> void:
-	pass
 
 func add_rings(body: Body) -> void:
-	var rings_file: String = body.file_info[2] + "_temp"
-	var radius: float = body.file_info[3]
-	var texture: Texture = file_utils.find_and_load_resource(_rings_search, rings_file)
+	var rings_file: String = body.get_rings_file()
+	var radius: float = body.get_rings_radius()
+	var north: Vector3 = body.get_north()
+	var array := [body, rings_file, radius, north]
+	var io_manager: IOManager = Global.program.IOManager
+	io_manager.callback(self, "make_rings_on_io_callback", "io_finish", array)
+
+func make_rings_on_io_callback(array: Array) -> void: # I/O thread
+	var rings_file: String = array[1]
+	var radius: float = array[2]
+	var north: Vector3 = array[3]
+	var rings_search: Array = Global.rings_search
+	var texture: Texture = file_utils.find_and_load_resource(rings_search, rings_file)
 	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()
@@ -44,15 +49,24 @@ func add_rings(body: Body) -> void:
 	rings_material.params_cull_mode = SpatialMaterial.CULL_DISABLED
 	rings_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
 	rings.scale = Vector3(radius * 2.0, radius * 2.0, 1.0)
-	var basis := math.rotate_basis_z(rings.transform.basis, body.model_geometry.north_pole)
+	var basis := math.rotate_basis_z(rings.transform.basis, north)
 	rings.transform.basis = basis
 	rings.cast_shadow = MeshInstance.SHADOW_CASTING_SETTING_ON
 	rings.mesh = QuadMesh.new()
 	rings.set_surface_material(0, rings_material)
 	rings.hide()
-	# modify body
+	array.append(rings)
+
+func io_finish(array: Array) -> void: # Main thread
+	var body: Body = array[0]
+	var radius: float = array[2]
+	var rings: MeshInstance = array[4]
+	body.aux_graphic_too_far = radius * rings_too_far_radius_multiplier
 	body.aux_graphic = rings
-	body.aux_graphic_too_far = radius * RINGS_TOO_FAR_RADIUS_MULTIPLIER
 	body.add_child(rings)
 	# FIXME! Should cast shadows, but it doesn't...
 #	prints(rings.cast_shadow, rings_material.flags_do_not_receive_shadows)
+
+
+func project_init() -> void:
+	pass

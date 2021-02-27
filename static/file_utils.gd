@@ -23,6 +23,7 @@
 
 class_name FileUtils
 
+
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
 	var save_dir := override_dir
 	if save_dir:

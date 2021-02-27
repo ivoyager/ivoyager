@@ -47,7 +47,7 @@ var _currently_selected: Button
 var _resize_control_multipliers := {}
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_build")
+	Global.connect("about_to_start_simulator", self, "_build")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("setting_changed", self, "_settings_listener")
 	connect("resized", self, "_resize")

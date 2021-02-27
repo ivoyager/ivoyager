@@ -24,7 +24,7 @@
 class_name Properties
 
 var mass := INF
-var m_radius := INF
+var m_radius := INF # some value required for game mechanics
 var gm := NAN
 var surface_gravity := NAN
 var esc_vel := NAN

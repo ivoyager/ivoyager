@@ -21,40 +21,24 @@
 # given time. We cull based on staleness of last visibility change. Use it for
 # minor moons, visited asteroids, spacecraft, etc. Project var max_lazy should
 # be set to something larger than the max number of lazy models likely to be
-# visible at a give time (however, a small value REALLY HELPS A LOT on low end
-# systems).
+# visible at a give time (however, a small value helps on low end systems).
 
 class_name ModelBuilder
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
-
-const MODEL_TOO_FAR_RADIUS_MULTIPLIER := 1e3
 const METER := UnitDefs.METER
 
-enum {
-	ASSET_MODEL,
-	ASSET_MAP,
-}
-
-# project vars
 var max_lazy := 20
+var model_too_far_radius_multiplier := 1e3
+var model_tables := ["stars", "planets", "moons"]
+var map_search_suffixes := [".albedo", ".emission"]
 var star_grow_dist := 2.0 * UnitDefs.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6
 var star_energy_ref_dist := 3.8e6 * UnitDefs.KM # ~4x radius works
 var star_energy_near := 10.0 # energy at _star_energy_ref_dist
 var star_energy_exponent := 1.9
 
-# private
-var _times: Array = Global.times
-var _models_search := Global.models_search
-var _maps_search := Global.maps_search
-var _globe_mesh: SphereMesh
-var _table_reader: TableReader
-var _fallback_albedo_map: Texture
-var _memoized_and_preloaded := {}
-var _lazy_tracker := {}
-var _n_lazy := 0
-var _material_fields := {
+var material_fields := { # DEPRECIATE w/ improved TableReader.build_object()
 	metallic = "metallic",
 	roughness = "roughness",
 	rim_enabled = "rim_enabled",
@@ -62,189 +46,224 @@ var _material_fields := {
 	rim_tint = "rim_tint",
 }
 
-func project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear_procedural")
-	_globe_mesh = Global.shared_resources.globe_mesh
-	_table_reader = Global.program.TableReader
-	_fallback_albedo_map = Global.assets.fallback_albedo_map
+# private
+var _times: Array = Global.times
+var _table_reader: TableReader
+var _io_manager: IOManager
+var _globe_mesh: SphereMesh
+var _fallback_albedo_map: Texture
 
-func add_model(body: Body, lazy_init: bool) -> void:
-	var properties := body.properties
+var _map_files := {}
+var _model_files := {}
+var _lazy_tracker := {}
+var _n_lazy := 0
+var _recycled_placeholders := [] # unmodified, un-treed Spatials
+
+
+func add_model(body: Body, lazy_init: bool) -> void: # Main thread
+	var file_prefix := body.get_file_prefix()
 	var model_geometry := body.model_geometry
-	var file_prefix: String = body.file_info[0]
-	var model: Spatial
+	var properties := body.properties
+	var m_radius := properties.m_radius
+	var e_radius := properties.e_radius
+	body.model_too_far = m_radius * model_too_far_radius_multiplier
+	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
+	model_geometry.set_model_reference_basis(model_basis)
 	if lazy_init:
-		# make a simple Spatial placeholder
-		model = get_model_or_placeholder(body.model_type, file_prefix, properties.m_radius,
-				properties.e_radius, true)
-		model.hide()
-		model.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
+		_add_placeholder(body, model_geometry)
+		return
+	var model_type := body.model_type
+	var array := [body, model_geometry, file_prefix, model_type, model_basis]
+	_io_manager.callback(self, "get_model_on_io_callback", "finish_model", array)
+
+func _add_placeholder(body: Body, model_geometry: ModelGeometry) -> void: # Main thread
+	var placeholder: Spatial
+	if _recycled_placeholders:
+		placeholder = _recycled_placeholders.pop_back()
 	else:
-		model = get_model_or_placeholder(body.model_type, file_prefix, properties.m_radius,
-				properties.e_radius)
+		placeholder = Spatial.new()
+	placeholder.hide()
+	placeholder.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
+	model_geometry.set_model(placeholder, false)
+	body.add_child(placeholder)
+
+func _lazy_init(body: Body) -> void: # Main thread
+	var file_prefix := body.get_file_prefix()
+	var model_type := body.model_type
+	var model_geometry := body.model_geometry
+	var model_basis: Basis = model_geometry.model_reference_basis
+	var array := [body, model_geometry, file_prefix, model_type, model_basis]
+	_io_manager.callback(self, "get_model_on_io_callback", "finish_lazy_model", array)
+
+func get_model_on_io_callback(array: Array) -> void: # I/O thread
+	var file_prefix: String = array[2]
+	var model_basis: Basis = array[4]
+	var model: Spatial
+	var model_file: String = _model_files.get(file_prefix, "")
+	if model_file:
+		var packed_scene: PackedScene = load(model_file)
+		model = packed_scene.instance()
+		model.transform.basis = model_basis
 		model.hide()
-	model_geometry.set_model(model)
-	if body.light_type == -1:
-		body.model_too_far = properties.m_radius * MODEL_TOO_FAR_RADIUS_MULTIPLIER
+		array.append(model)
+		return
+	var model_type: int = array[3]
+	# TODO: We need a fallback asteroid-like model for non-ellipsoid
+	# fallthrough to constructed ellipsoid model
+	var emission_map: Texture
+	var map_file: String = _map_files.get(file_prefix + ".emission", "")
+	if map_file:
+		emission_map = load(map_file)
+	var albedo_map: Texture
+	map_file = _map_files.get(file_prefix + ".albedo", "")
+	if map_file:
+		albedo_map = load(map_file)
+	if !albedo_map and !emission_map:
+		albedo_map = _fallback_albedo_map
+	model = MeshInstance.new()
+	model.transform.basis = model_basis
+	model.hide()
+	array.append(model)
+	model.mesh = _globe_mesh
+	var surface := SpatialMaterial.new()
+	model.set_surface_material(0, surface)
+	_table_reader.build_object2(surface, "models", model_type, material_fields)
+	if albedo_map:
+		surface.albedo_texture = albedo_map
+	if emission_map:
+		surface.emission_enabled = true
+		surface.emission_texture = emission_map
+	if _table_reader.get_bool("models", "starlight", model_type):
+		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
+		array.append(surface) # dynamic star surface
 	else:
+		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+		# FIXME! Should cast shadows, but it doesn't...!
+
+func finish_model(array: Array) -> void: # Main thread
+	var body: Body = array[0]
+	var model_geometry: ModelGeometry = array[1]
+	var model: Spatial = array[5]
+	model_geometry.set_model(model, false)
+	if body.light_type != -1: # is a star
 		body.model_too_far = INF
-		var star_surface := _get_star_surface(file_prefix)
-		if star_surface:
-			model_geometry.set_dynamic_star(star_surface, star_grow_dist,
-					star_grow_exponent, star_energy_ref_dist,
-					star_energy_near, star_energy_exponent)
+		if array.size() > 6: # has dynamic star surface
+			var surface: SpatialMaterial = array[6]
+			model_geometry.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
+					star_energy_ref_dist, star_energy_near, star_energy_exponent)
 	body.add_child(model)
 
-func get_model_or_placeholder(model_type: int, file_prefix: String, m_radius: float,
-		 e_radius: float, is_placeholder := false) -> Spatial:
-	# Radii used only for ellipsoid.
-	# We need correct scale and rotation even if it is a placeholder Spatial!
-	var model: Spatial
-	var resource_file := _get_resource_file(file_prefix, _models_search)
-	var is_ellipsoid: bool = _table_reader.get_bool("models", "ellipsoid", model_type)
-	if !resource_file and !is_ellipsoid:
-		# TODO: fallback_model for non-ellipsoid (for now, we fallthrough to ellipsoid)
-		pass
-	if resource_file:
-		var resource: Resource = _get_resource(file_prefix, _models_search)
-		if resource is PackedScene:
-			if is_placeholder:
-				model = Spatial.new()
-			else:
-				model = resource.instance() # model is the base of a scene
-		# TODO: models that are not PackedScene???
-		var file_name := resource_file.get_file()
-		_set_model_scale(model, file_name)
-		_set_rotations(model, file_name)
-		return model
-		
-	# fallthrough to ellipsoid model using the common Global.globe_mesh
-	assert(m_radius > 0.0)
-	var albedo_map_file: String = _get_resource_file(file_prefix + ".albedo", _maps_search)
-	var albedo_map: Texture = _get_resource(file_prefix + ".albedo", _maps_search)
-	var emission_map: Texture = _get_resource(file_prefix + ".emission", _maps_search)
-	if is_placeholder:
-		model = Spatial.new()
-	else:
-		model = MeshInstance.new() # this is the return Spatial
-		model.mesh = _globe_mesh
-		var surface := SpatialMaterial.new()
-		model.set_surface_material(0, surface)
-		if !albedo_map and !emission_map:
-			albedo_map = _fallback_albedo_map
-		_table_reader.build_object2(surface, "models", model_type, _material_fields)
-		if albedo_map:
-			surface.albedo_texture = albedo_map
-		if emission_map:
-			surface.emission_enabled = true
-			surface.emission_texture = emission_map
-		if _table_reader.get_bool("models", "starlight", model_type):
-			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-			_save_star_surface(file_prefix, surface)
-		else:
-			model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
-			# FIXME! Should cast shadows, but it doesn't...!
-	var file_name := albedo_map_file.get_file()
-	_set_ellipsoid_scale(model, m_radius, e_radius)
-	_set_rotations(model, file_name)
-	return model
-
-func _set_model_scale(model: Spatial, file_name: String) -> void:
-	var asset_row := _table_reader.get_row("asset_adjustments", file_name)
-	if asset_row != -1 and _table_reader.has_value("asset_adjustments", "model_scale", asset_row):
-		var model_scale := _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
-		model.scale = model_scale * Vector3.ONE
-	else:
-		model.scale = METER * Vector3.ONE
-
-func _set_ellipsoid_scale(model: Spatial, m_radius := NAN, e_radius := NAN) -> void:
-	if !is_nan(e_radius):
-		var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
-		model.scale = Vector3(e_radius, polar_radius, e_radius)
-	else:
-		model.scale = m_radius * Vector3.ONE
-
-func _set_rotations(model: Spatial, file_name: String) -> void:
-	var asset_row := _table_reader.get_row("asset_adjustments", file_name)
-	if asset_row != -1:
-		var longitude_offset := _table_reader.get_real("asset_adjustments",
-				"longitude_offset", asset_row)
-		if !is_nan(longitude_offset):
-			model.rotate(Vector3(0.0, 1.0, 0.0), -longitude_offset)
-	model.rotate(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # PI) # adjust for centered prime meridian
-	model.rotate(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
-
-func _clear_procedural() -> void:
-	_memoized_and_preloaded.clear()
-	_lazy_tracker.clear()
-	_n_lazy = 0
-
-func _lazy_init(body: Body) -> void:
-	var properties := body.properties
-	var model_geometry := body.model_geometry
+func finish_lazy_model(array: Array) -> void: # Main thread
+	var body: Body = array[0]
+	var model_geometry: ModelGeometry = array[1]
+	var model: Spatial = array[5]
 	var placeholder := model_geometry.model
-	assert(placeholder.visible)
-	placeholder.queue_free()
-	var file_prefix: String = body.file_info[0]
-	var model := get_model_or_placeholder(body.model_type, file_prefix, properties.m_radius, properties.e_radius)
-	model.connect("visibility_changed", self, "_update_lazy", [model])
-	model_geometry.replace_model(model)
+	body.remove_child(placeholder)
+	_recycled_placeholders.append(placeholder)
+	model.connect("visibility_changed", self, "_record_lazy_event", [model])
+	model_geometry.set_model(model, false)
 	body.add_child(model)
 	_n_lazy += 1
 	if _n_lazy > max_lazy:
 		_cull_lazy()
 	_lazy_tracker[model] = _times[1] # engine time
 
-func _lazy_uninit(model: Spatial) -> void:
+func _cull_lazy() -> void: # Main thread
+	# Cull models w/ last view earlier than average (easier than median)
+	var time_cutoff := 0.0
+	var tracker_keys := _lazy_tracker.keys()
+	for model in tracker_keys:
+		time_cutoff += _lazy_tracker[model]
+	time_cutoff /= max_lazy
+	for model in tracker_keys:
+		if _lazy_tracker[model] < time_cutoff:
+			_lazy_uninit(model)
+
+func _lazy_uninit(model: Spatial) -> void: # Main thread
 	if model.visible:
 		return
 	# swap back to a placeholder again
-	model.disconnect("visibility_changed", self, "_update_lazy")
+	model.disconnect("visibility_changed", self, "_record_lazy_event")
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
 	var body: Body = model.get_parent_spatial()
 	var model_geometry := body.model_geometry
-	var placeholder := Spatial.new()
-	placeholder.hide()
-	placeholder.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
-	model_geometry.replace_model(placeholder)
-	body.add_child(placeholder)
-	model.queue_free()
+	_add_placeholder(body, model_geometry)
+	model.queue_free() # it's now up to the Engine what to cache!
 
-func _update_lazy(model: Spatial) -> void:
+func _record_lazy_event(model: Spatial) -> void: # Main thread
 	_lazy_tracker[model] = _times[1] # engine time
 
-func _cull_lazy() -> void:
-	# we cull for < average update time (quicker than median)
-	var update_cutoff := 0.0
-	var tracker_keys := _lazy_tracker.keys()
-	for model in tracker_keys:
-		update_cutoff += _lazy_tracker[model]
-	update_cutoff /= max_lazy
-	for model in tracker_keys:
-		if _lazy_tracker[model] < update_cutoff:
-			_lazy_uninit(model)
+func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> Basis:
+	# radii used only for ellipsoid
+	var basis := Basis()
+	var model_file: String = _model_files.get(file_prefix, "")
+	if model_file:
+		var model_scale := NAN
+		var asset_row := _table_reader.get_row("asset_adjustments", model_file.get_file())
+#		prints(file_prefix, asset_row, model_file)
+		if asset_row != -1:
+			model_scale = _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
+#			prints(file_prefix, model_scale)
+		if !is_nan(model_scale):
+			basis = basis.scaled(model_scale * Vector3.ONE)
+#			prints(file_prefix, basis.scaled(1e12 * Vector3.ONE))
+		else:
+			basis = basis.scaled(METER * Vector3.ONE)
+	else: # constructed ellipsoid model
+		assert(!is_nan(m_radius) and !is_inf(m_radius))
+		if !is_nan(e_radius) and !is_inf(e_radius):
+			var polar_radius: = 3.0 * m_radius - 2.0 * e_radius
+			basis = basis.scaled(Vector3(e_radius, polar_radius, e_radius))
+		else:
+			basis = basis.scaled(m_radius * Vector3.ONE)
+		# map rotation - we only look for *.albedo file
+		var map_file: String = _map_files.get(file_prefix + ".albedo", "")
+		if map_file:
+			var asset_row := _table_reader.get_row("asset_adjustments", map_file.get_file())
+			if asset_row != -1:
+				var longitude_offset := _table_reader.get_real("asset_adjustments",
+						"longitude_offset", asset_row)
+				if !is_nan(longitude_offset):
+					basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -longitude_offset)
+	basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # adjust for centered prime meridian
+	basis = basis.rotated(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
+	return basis
 
-func _get_resource_file(file_prefix: String, dir_paths: Array) -> String:
-	# memoized & preloaded to prevent file searching and loading at runtime
-	if _memoized_and_preloaded.has(file_prefix):
-		return _memoized_and_preloaded[file_prefix]
-	var file_str: String = file_utils.find_resource_file(dir_paths, file_prefix)
-	_memoized_and_preloaded[file_prefix] = file_str # could be ""
-	if file_str:
-		_memoized_and_preloaded[file_str] = load(file_str)
-	return file_str
 
-func _get_resource(file_prefix: String, dir_paths: Array) -> Resource:
-	var file_str := _get_resource_file(file_prefix, dir_paths)
-	if file_str:
-		return _memoized_and_preloaded[file_str]
-	return null
+func project_init() -> void:
+	Global.connect("table_data_imported", self, "_preregister_files")
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	Global.connect("about_to_quit", self, "_clear")
+	_table_reader = Global.program.TableReader
+	_io_manager = Global.program.IOManager
+	_globe_mesh = Global.shared_resources.globe_mesh
+	_fallback_albedo_map = Global.assets.fallback_albedo_map
 
-func _save_star_surface(file_prefix: String, surface: SpatialMaterial) -> void:
-	_memoized_and_preloaded[file_prefix + "*"] = surface
+func _preregister_files() -> void:
+	# Just reading directory here so we don't need I/O thread
+	var models_search := Global.models_search
+	var maps_search := Global.maps_search
+	for table in model_tables:
+		var n_rows := _table_reader.get_n_rows(table)
+		var row := 0
+		while row < n_rows:
+			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
+			assert(file_prefix)
+			var model_file := FileUtils.find_resource_file(models_search, file_prefix)
+			if model_file:
+				_model_files[file_prefix] = model_file
+			for suffix in map_search_suffixes:
+				var file_match := file_prefix + (suffix as String)
+				var map_file := FileUtils.find_resource_file(maps_search, file_match)
+				if map_file:
+					_map_files[file_match] = map_file
+			row += 1
 
-func _get_star_surface(file_prefix: String) -> SpatialMaterial:
-	if _memoized_and_preloaded.has(file_prefix + "*"):
-		return _memoized_and_preloaded[file_prefix + "*"]
-	return null
+func _clear() -> void:
+	while _recycled_placeholders:
+		var placeholder: Spatial = _recycled_placeholders.pop_back()
+		placeholder.queue_free()
+	_lazy_tracker.clear()
+	_n_lazy = 0
+

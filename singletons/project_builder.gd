@@ -69,6 +69,13 @@ var init_sequence := [
 	[self, "signal_finished", false]
 ]
 
+# Extension can assign another Spatial to var universe here. Code below will
+# assign this value to Global.program.Universe. I, Voyager always uses the
+# Global.program dictionary to find Universe and other program nodes, so node
+# names and tree locations don't matter.
+
+onready var universe: Spatial = get_node("/root/Universe")
+
 # Replace classes below with a subclass of the original unless comment
 # indicates otherwise. E.g., "Spatial ok", replace with a class that extends
 # Spatial.
@@ -106,6 +113,7 @@ var program_builders := {
 var program_references := {
 	# ProjectBuilder instances one of each. No save/load persistence.
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
+	_IOManager_ = IOManager,
 	_InputMapManager_ = InputMapManager,
 	_FontManager_ = FontManager, # ok to replace
 	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
@@ -173,7 +181,6 @@ var procedural_classes := {
 var extensions := []
 var program: Dictionary = Global.program
 var script_classes: Dictionary = Global.script_classes
-var universe: Spatial
 
 # **************************** INIT SEQUENCE **********************************
 
@@ -193,7 +200,7 @@ func init_extensions() -> void:
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
 						and "EXTENSION_VERSION_YMD" in extension_script:
-					var extension: Object = SaverLoader.make_object_or_scene(extension_script)
+					var extension: Object = extension_script.new()
 					extensions.append(extension)
 		dir_name = dir.get_next()
 	for extension in extensions:
@@ -204,6 +211,7 @@ func init_extensions() -> void:
 	Global.after_extensions_inited()
 
 func instantiate_and_index() -> void:
+	program.Universe = universe
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
@@ -212,9 +220,6 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	assert(!program.has("Universe"))
-	universe = get_node("/root/Universe")
-	program.Universe = universe
 	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))

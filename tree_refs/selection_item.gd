@@ -33,7 +33,6 @@ const VECTOR2_ZERO := Vector2.ZERO
 var name: String # BodyRegistry guaranties these are unique
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
-var non_body_texture_2d_path := "" # not used if is_body
 # GUI data
 var n_stars := -1
 var n_planets := -1
@@ -55,7 +54,7 @@ var body: Body # = spatial if is_body else null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
-	"non_body_texture_2d_path", "n_stars", "n_planets", "n_dwarf_planets",
+	"n_stars", "n_planets", "n_dwarf_planets",
 	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
 	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions"]
 const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
@@ -63,6 +62,7 @@ const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
 # read-only
 var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
+
 # private
 var _times: Array = Global.times
 
@@ -106,12 +106,10 @@ func get_radius_for_camera() -> float:
 	return UnitDefs.KM
 
 func _init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted", [], CONNECT_ONESHOT)
+	Global.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:
 		texture_2d = body.texture_2d
 		texture_slice_2d = body.texture_slice_2d
-	else:
-		texture_2d = load(non_body_texture_2d_path)
 

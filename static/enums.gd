@@ -33,6 +33,7 @@ enum NetworkStopSync {
 	NEW_PLAYER, # needs save to enter in-progress game
 	EXIT,
 	QUIT,
+	DONT_SYNC,
 }
 
 enum ViewType {

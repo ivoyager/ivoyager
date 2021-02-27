@@ -50,8 +50,6 @@ func add_label(body: Body) -> void:
 	var hud_label: HUDLabel = _HUDLabel_.new()
 	hud_label.set_body_name(body.name)
 	hud_label.set_body_symbol(body.symbol)
-#	_huds_manager.connect("show_names_changed", hud_label, "_on_show_names_changed")
-#	_huds_manager.connect("show_symbols_changed", hud_label, "_on_show_symbols_changed")
 	hud_label.hide()
 	body.hud_label = hud_label
 	_projection_surface.add_child(hud_label)

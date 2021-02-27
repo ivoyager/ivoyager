@@ -26,13 +26,15 @@
 
 extends Node
 
-# ProjectBuilder/StateManager/NetworkLobby broadcasts - "state"
+# Sim builder & state manager broadcasts
 signal project_builder_finished()
 signal table_data_imported()
+signal world_environment_added()
 signal state_manager_inited()
-signal system_tree_built_or_loaded(is_new_game)
-signal system_tree_ready(is_new_game)
-signal about_to_start_simulator(is_new_game)
+signal about_to_build_system_tree()
+signal system_tree_built_or_loaded(is_new_game) # still some I/O tasks to do!
+signal system_tree_ready(is_new_game) # I/O thread has finished!
+signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_exit()
@@ -206,7 +208,7 @@ var debug_log_path := "user://logs/debug.log"
 # ******************************* PERSISTED ***********************************
 
 var project_version := "" # external project can set for gamesave debuging
-var ivoyager_version := "0.0.8-alpha"
+var ivoyager_version := "0.0.9-dev"
 var is_modded := false # this is aspirational
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false

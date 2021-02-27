@@ -46,11 +46,12 @@ const PERSIST_PROPERTIES := ["axial_tilt", "right_ascension", "declination",
 
 # unpersisted (rebuilt on load)
 var model: Spatial # program-built MeshInstance or imported Spatial scene
-var model_basis := Basis.IDENTITY # original model rotations & scale
+var model_reference_basis := Basis.IDENTITY
 
 var _times: Array = Global.times
 var _dynamic_star: Array
 var _working_basis: Basis
+var _is_visible := false
 
 func get_latitude_longitude(translation: Vector3, time := NAN) -> Vector2:
 	# Order is flipped from standard spherical (RA, Dec), and we wrap longitude
@@ -67,13 +68,19 @@ func get_ground_ref_basis(time := NAN) -> Basis:
 	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
 	return basis_at_epoch.rotated(north_pole, rotation_angle)
 
-func set_model(model_: Spatial) -> void:
+func set_model(model_: Spatial, use_basis_as_reference := true) -> void:
 	model = model_
-	_set_model_basis(model.transform.basis)
+	model.visible = _is_visible
+	if use_basis_as_reference:
+		set_model_reference_basis(model.transform.basis)
 
-func replace_model(model_: Spatial) -> void:
-	# assumes current model_basis is already correct (used for lazy init) 
-	model = model_
+func set_model_reference_basis(model_basis_: Basis) -> void:
+	model_reference_basis = model_basis_
+	_working_basis = basis_at_epoch * model_reference_basis
+
+func set_basis_at_epoch(basis_at_epoch_: Basis) -> void:
+	basis_at_epoch = basis_at_epoch_
+	_working_basis = basis_at_epoch * model_reference_basis
 
 func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent: float,
 		energy_ref_dist: float, energy_near: float, energy_exponent: float) -> void:
@@ -87,11 +94,9 @@ func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent:
 		energy_exponent
 	]
 
-func set_basis_at_epoch(basis_at_epoch_: Basis) -> void:
-	basis_at_epoch = basis_at_epoch_
-	_reset_working_basis()
-
 func process_visible(time: float, camera_dist: float) -> void:
+	if !model:
+		return
 	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
 	if !_dynamic_star:
 		model.transform.basis = _working_basis.rotated(north_pole, rotation_angle)
@@ -113,15 +118,9 @@ func process_visible(time: float, camera_dist: float) -> void:
 		var dist_ratio := camera_dist / emission_ref_dist
 		if dist_ratio < 1.0:
 			dist_ratio = 1.0
-		surface.emission_energy = emission_near * \
-				pow(dist_ratio, emission_exponent)
+		surface.emission_energy = emission_near * pow(dist_ratio, emission_exponent)
 
 func change_visibility(is_visible: bool) -> void:
-	model.visible = is_visible
-
-func _set_model_basis(model_basis_: Basis) -> void:
-	model_basis = model_basis_
-	_reset_working_basis()
-
-func _reset_working_basis() -> void:
-	_working_basis = basis_at_epoch * model_basis
+	_is_visible = is_visible
+	if model:
+		model.visible = is_visible
