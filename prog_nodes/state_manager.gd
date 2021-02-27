@@ -57,29 +57,28 @@ const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 const NetworkStopSync = Enums.NetworkStopSync
 
 # public - read-only!
+var paused := false # pause state ignoring sim stop, restored on run
 var allow_threads := false
 var active_threads := []
 
 # private
-var _state: Dictionary = Global.state
-var _settings: Dictionary = Global.settings
-var _enable_save_load: bool = Global.enable_save_load
-var _popops_can_stop_sim: bool = Global.popops_can_stop_sim
-var _limit_stops_in_multiplayer: bool = Global.limit_stops_in_multiplayer
 onready var _tree := get_tree()
-onready var _saver_loader: SaverLoader = Global.program.get("SaverLoader")
-onready var _main_prog_bar: MainProgBar = Global.program.get("MainProgBar")
-#onready var _system_builder: SystemBuilder = Global.program.SystemBuilder
-#onready var _environment_builder: EnvironmentBuilder = Global.program.EnvironmentBuilder
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
-var _has_been_saved := false
-var _was_paused := false
+var _state: Dictionary = Global.state
 var _nodes_requiring_stop := []
 
-# Multithreading note: Godot's SceneTree and all I, Voyager public functions
-# run in the main thread. Use call_defered() to invoke any function from
-# another thread unless the function is guaranteed to be thread-safe (e.g,
-# read-only). Most functions are NOT thread-safe!
+# Multithreading note: Godot's SceneTree and almost all I, Voyager public
+# functions run in the main thread. Use call_defered() to invoke any function
+# from another thread unless the function is guaranteed to be thread-safe. Most
+# functions are NOT thread-safe!
+
+func set_paused(is_pause: bool, is_toggle := false) -> void:
+	# 1st arg ignored if is_toggle
+	if is_toggle:
+		paused = !paused
+	else:
+		paused = is_pause
+	if _state.is_running:
+		_tree.paused = paused
 
 func add_active_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
@@ -92,6 +91,7 @@ func remove_active_thread(thread: Thread) -> void:
 	active_threads.erase(thread)
 
 func signal_when_threads_finished() -> void:
+	# FIXME: Why did I do it this way? This is dumb.
 	set_process(true) # next frame at soonest
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
@@ -99,12 +99,12 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	# bypass_checks intended for this node & NetworkLobby; could break sync.
 	# Returns false if the caller doesn't have authority to stop the sim.
 	if !bypass_checks:
-		if !_popops_can_stop_sim and who is Popup:
+		if !Global.popops_can_stop_sim and who is Popup:
 			return false
 		if _state.network_state == IS_CLIENT:
 			return false
 		elif _state.network_state == IS_SERVER:
-			if _limit_stops_in_multiplayer:
+			if Global.limit_stops_in_multiplayer:
 				return false
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
@@ -129,25 +129,6 @@ func allow_run(who: Object) -> void:
 		emit_signal("server_about_to_run")
 	_run_simulator()
 
-#func build_system_tree() -> void:
-#	require_stop(self, NetworkStopSync.BUILD_SYSTEM, true)
-#	_state.is_splash_screen = false
-#	Global.emit_signal("about_to_build_system_tree")
-#	_system_builder.build()
-#	yield(_system_builder, "finished")
-#	_state.is_system_built = true
-#	Global.emit_signal("system_tree_built_or_loaded", true)
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("system_tree_ready", true)
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("about_to_start_simulator", true)
-#	Global.emit_signal("close_all_admin_popups_requested")
-#	yield(_tree, "idle_frame")
-#	allow_run(self)
-#	Global.emit_signal("simulator_started")
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("gui_refresh_requested")
-
 func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
 	if Global.disable_exit:
@@ -156,7 +137,7 @@ func exit(force_exit := false, following_server := false) -> void:
 		if _state.network_state == IS_CLIENT:
 			OneUseConfirm.new("Disconnect from multiplayer game?", self, "exit", [true]) # TODO: text key
 			return
-		elif _enable_save_load: # single player or network server
+		elif Global.enable_save_load: # single player or network server
 			OneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
@@ -174,102 +155,8 @@ func exit(force_exit := false, following_server := false) -> void:
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	Global.emit_signal("close_all_admin_popups_requested")
-	_was_paused = false
+	paused = false
 	Global.emit_signal("simulator_exited")
-
-func quick_save() -> void:
-	if _state.network_state == IS_CLIENT:
-		return
-	if _has_been_saved and _settings.save_base_name and file_utils.is_valid_dir(_settings.save_dir):
-		Global.emit_signal("close_main_menu_requested")
-		var date_string: String = _timekeeper.get_current_date_for_file() \
-				if _settings.append_date_to_save else ""
-		save_game(file_utils.get_save_path(_settings.save_dir, _settings.save_base_name,
-				date_string, true))
-	else:
-		Global.emit_signal("save_dialog_requested")
-
-func save_game(path: String) -> void:
-	if _state.network_state == IS_CLIENT:
-		return
-	if !path:
-		Global.emit_signal("save_dialog_requested")
-		return
-	print("Saving " + path)
-	require_stop(self, NetworkStopSync.SAVE, true)
-	yield(self, "threads_finished")
-	assert(Debug.dlog("This is before save!"))
-	assert(Debug.dlog(_saver_loader.debug_log(_tree)))
-	var save_file := File.new()
-	save_file.open(path, File.WRITE)
-	_state.last_save_path = path
-	if _main_prog_bar:
-		_main_prog_bar.start(_saver_loader)
-	Global.emit_signal("game_save_started")
-	_saver_loader.save_game(save_file, _tree)
-	yield(_saver_loader, "finished")
-	Global.emit_signal("game_save_finished")
-	if _main_prog_bar:
-		_main_prog_bar.stop()
-	_has_been_saved = true
-	allow_run(self)
-
-func quick_load() -> void:
-	if _state.network_state == IS_CLIENT:
-		return
-	if _state.last_save_path:
-		Global.emit_signal("close_main_menu_requested")
-		load_game(_state.last_save_path)
-	else:
-		Global.emit_signal("load_dialog_requested")
-
-func load_game(path: String, network_gamesave := []) -> void:
-	if !network_gamesave and _state.network_state == IS_CLIENT:
-		return
-	if !network_gamesave and path == "":
-		Global.emit_signal("load_dialog_requested")
-		return
-	var save_file: File
-	if !network_gamesave:
-		print("Loading " + path)
-		save_file = File.new()
-		if !save_file.file_exists(path):
-			print("ERROR: Could not find " + path)
-			return
-		save_file.open(path, File.READ)
-	else:
-		print("Loading game from network sync...")
-	_state.is_splash_screen = false
-	_state.is_system_built = false
-	require_stop(self, NetworkStopSync.LOAD, true)
-	yield(self, "threads_finished")
-	_state.is_loaded_game = true
-	if _main_prog_bar:
-		_main_prog_bar.start(_saver_loader)
-	Global.emit_signal("about_to_free_procedural_nodes")
-	Global.emit_signal("game_load_started")
-	_saver_loader.load_game(save_file, _tree, network_gamesave)
-	yield(_saver_loader, "finished")
-	_test_load_version_warning()
-	Global.emit_signal("game_load_finished")
-	if _main_prog_bar:
-		_main_prog_bar.stop()
-	_was_paused = _settings.loaded_game_is_paused or _timekeeper.is_paused
-	assert(Debug.dlog("This is after load & system_tree_ready!"))
-	assert(Debug.dlog(_saver_loader.debug_log(_tree)))
-	assert(!print_stray_nodes())
-	_state.is_system_built = true
-	Global.emit_signal("system_tree_built_or_loaded", false)
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("system_tree_ready", false)
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("about_to_start_simulator", false)
-#	Global.emit_signal("close_all_admin_popups_requested")
-#	yield(_tree, "idle_frame")
-#	allow_run(self)
-#	Global.emit_signal("simulator_started")
-#	yield(_tree, "idle_frame")
-#	Global.emit_signal("gui_refresh_requested")
 
 func quit(force_quit: bool) -> void:
 	if Global.disable_quit:
@@ -278,7 +165,7 @@ func quit(force_quit: bool) -> void:
 		if _state.network_state == IS_CLIENT:
 			OneUseConfirm.new("Disconnect from multiplayer game?", self, "quit", [true]) # TODO: text key
 			return
-		elif _enable_save_load and !_state.is_splash_screen:
+		elif Global.enable_save_load and !_state.is_splash_screen:
 			OneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
@@ -295,12 +182,6 @@ func quit(force_quit: bool) -> void:
 	# HTML builds.
 #	if Global.is_html5:
 #		JavaScript.eval("window.close()")
-
-func save_quit() -> void:
-	if _state.network_state == IS_CLIENT:
-		return
-	Global.connect("game_save_finished", self, "quit", [true])
-	quick_save()
 
 # *****************************************************************************
 
@@ -330,8 +211,6 @@ func _on_ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
-	if _saver_loader:
-		_saver_loader.use_thread = Global.use_threads
 	set_process(false) # only used when waiting for threads to finish
 	require_stop(self, -1, true)
 
@@ -378,7 +257,7 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal finish_threads_required") or true)
 	allow_threads = false
 	emit_signal("finish_threads_required")
-	_was_paused = _tree.paused
+	paused = _tree.paused
 	_tree.paused = true
 	_state.is_running = false
 	Global.emit_signal("run_state_changed", false)
@@ -387,7 +266,7 @@ func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
-	_tree.paused = _was_paused
+	_tree.paused = paused
 	assert(DPRINT and prints("signal active_threads_allowed") or true)
 	allow_threads = true
 	emit_signal("active_threads_allowed")

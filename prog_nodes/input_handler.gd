@@ -103,17 +103,17 @@ func _on_input(event: InputEvent) -> void:
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
 	elif event.is_action_pressed("quick_save"):
-		_state_manager.quick_save()
+		Global.emit_signal("save_requested", "", true)
 	elif event.is_action_pressed("save_as"):
-		_state_manager.save_game("")
+		Global.emit_signal("save_requested", "", false)
 	elif event.is_action_pressed("quick_load"):
-		_state_manager.quick_load()
+		Global.emit_signal("load_requested", "", true)
 	elif event.is_action_pressed("load_game"):
-		_state_manager.load_game("")
+		Global.emit_signal("load_requested", "", false)
 	elif event.is_action_pressed("quit"):
 		_state_manager.quit(false)
 	elif event.is_action_pressed("save_quit"):
-		_state_manager.save_quit()
+		Global.emit_signal("save_quit_requested")
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
 		if _state.network_state != IS_CLIENT: # need for pause everywhere!
 			_tree.paused = !_tree.paused
@@ -180,8 +180,10 @@ func _input_for_selection_manager(event: InputEvent) -> void:
 	_tree.set_input_as_handled()
 
 func _input_for_splash_screen(event: InputEvent) -> void:
-	if event.is_action_pressed("load_game") or event.is_action_pressed("quick_load"):
-		_state_manager.load_game("")
+	if event.is_action_pressed("load_game"):
+		Global.emit_signal("load_requested", "", false)
+	elif event.is_action_pressed("quick_load"):
+		Global.emit_signal("load_requested", "", true)
 	elif event.is_action_pressed("toggle_options"):
 		Global.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):

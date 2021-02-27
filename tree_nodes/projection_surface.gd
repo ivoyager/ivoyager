@@ -49,7 +49,7 @@ func _clear() -> void:
 	for child in get_children():
 		child.queue_free()
 
-func _process(_delta) -> void:
+func _process(_delta: float) -> void:
 	if _drag_start:
 		set_default_cursor_shape(CURSOR_MOVE)
 	elif _mouse_target[1]: # there is a target object under the mouse!

@@ -113,8 +113,9 @@ var program_builders := {
 var program_references := {
 	# ProjectBuilder instances one of each. No save/load persistence.
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
-	_IOManager_ = IOManager,
 	_InputMapManager_ = InputMapManager,
+	_IOManager_ = IOManager,
+	_SaveLoadManager_ = SaveLoadManager,
 	_FontManager_ = FontManager, # ok to replace
 	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
 	_QtyStrings_ = QtyStrings,

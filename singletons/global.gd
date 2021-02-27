@@ -26,7 +26,7 @@
 
 extends Node
 
-# Sim builder & state manager broadcasts
+# state broadcasts from StateManager & program builders
 signal project_builder_finished()
 signal table_data_imported()
 signal world_environment_added()
@@ -52,17 +52,20 @@ signal setting_changed(setting, value)
 signal camera_ready(camera)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
-# sim state control
+# requests for state change
 signal sim_stop_required(who) # see StateManager for external thread coordination
-signal sim_run_allowed(who) # all requiring stop must allow!
+signal sim_run_allowed(who) # all objects requiring stop must allow!
+signal save_requested(path, is_quick_save) # ["", false] will trigger dialog
+signal load_requested(path, is_quick_load) # ["", false] will trigger dialog
+signal save_quit_requested()
 
-# camera control
+# requests for camera action
 signal move_camera_to_selection_requested(selection_item, view_type, view_position,
 		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
 signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
 		track_type, is_instant_move) # 1st arg can be null; all others optional
 
-# GUI requests
+# requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)

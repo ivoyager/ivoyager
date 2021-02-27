@@ -28,17 +28,17 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 var add_quick_load_button := true
 
 var _state: Dictionary = Global.state
-var _state_manager: StateManager
 var _main_menu_manager: MainMenuManager
 
 func project_init():
 	if !Global.enable_save_load:
 		return
-	_state_manager = Global.program.StateManager
 	_main_menu_manager = Global.program.MainMenuManager
-	_main_menu_manager.make_button("BUTTON_LOAD_FILE", 700, true, true, _state_manager, "load_game", [""])
+	_main_menu_manager.make_button("BUTTON_LOAD_FILE", 700, true, true,
+			Global, "emit_signal", ["load_requested", "", false])
 	if add_quick_load_button:
-		_main_menu_manager.make_button("BUTTON_QUICK_LOAD", 600, false, true, _state_manager, "quick_load")
+		_main_menu_manager.make_button("BUTTON_QUICK_LOAD", 600, false, true,
+				Global, "emit_signal", ["load_requested", "", true])
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("load_dialog_requested", self, "_open")
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
@@ -56,7 +56,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	_state_manager.require_stop(self)
+	Global.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
 	var save_dir := file_utils.get_save_dir_path(Global.is_modded, Global.settings.save_dir)
@@ -67,16 +67,18 @@ func _open() -> void:
 
 func _load_file(path: String) -> void:
 	Global.emit_signal("close_main_menu_requested")
-	_state_manager.load_game(path)
+	Global.emit_signal("load_requested", path, false)
 
 func _update_quick_load_button() -> void:
 	if add_quick_load_button and _main_menu_manager:
-		var button_state := _main_menu_manager.DISABLED if !_state.last_save_path else _main_menu_manager.ACTIVE
+		var button_state := _main_menu_manager.DISABLED
+		if _state.last_save_path:
+			button_state = _main_menu_manager.ACTIVE
 		_main_menu_manager.change_button_state("BUTTON_QUICK_LOAD", button_state)
 
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
-	_state_manager.allow_run(self)
+	Global.emit_signal("sim_run_allowed", self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)
