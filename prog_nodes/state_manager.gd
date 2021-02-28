@@ -21,14 +21,17 @@
 # writes Global.state except where noted:
 #
 #   is_inited: bool
-#   is_splash_screen: bool
-#   is_system_built: bool
-#   is_running: bool # follows _run_simulator() / _stop_simulator()
-#   is_paused: bool # NOT set during simulator stop
+#   is_splash_screen: bool - this node & SaveLoadManager
+#   is_system_built: bool - this node & SaveLoadManager
+#   is_running: bool - follows _run_simulator() / _stop_simulator()
+#   is_paused: bool - Timekeeper maintains; we don't use SceneTree.paused!
 #   is_quitting: bool
-#   is_loaded_game: bool
-#   last_save_path: String
-#   network_state: int (Enums.NetworkState) - if exists, NetworkLobby also writes
+#   is_loaded_game: bool - this node & SaveLoadManager
+#   last_save_path: String - this node & SaveLoadManager
+#   network_state: Enums.NetworkState - if exists, NetworkLobby also writes
+#
+# We don't use SceneTree.paused! However, if Global.pause_scene_tree = true,
+# we update SceneTree.paused = (state.is_paused or state.is_stopped).
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
@@ -43,7 +46,7 @@
 extends Node
 class_name StateManager
 
-signal threads_allowed() # can start threads that affect gamestate
+signal threads_allowed() # ok to start threads that affect gamestate
 signal finish_threads_required() # finish threads that affect gamestate
 signal threads_finished()
 signal client_is_dropping_out(is_exit)
@@ -67,25 +70,11 @@ var _state: Dictionary = Global.state
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
 
+
 # Multithreading note: Godot's SceneTree and almost all I, Voyager public
 # functions run in the main thread. Use call_defered() to invoke any function
 # from another thread unless the function is guaranteed to be thread-safe. Most
 # functions are NOT thread-safe!
-
-func set_paused(is_pause: bool, is_toggle := false) -> void:
-	# 1st arg ignored if is_toggle. StateManager has authority over pause, so
-	# all changes should use this function or Global signal "pause_requested".
-	prints("set_paused", is_pause, is_toggle)
-	var paused: bool
-	if is_toggle:
-		paused = !_state.is_paused
-	else:
-		paused = is_pause
-	if _state.is_running:
-		_tree.paused = paused
-	if _state.is_paused != paused:
-		_state.is_paused = paused
-		Global.emit_signal("pause_changed", paused)
 
 func add_blocking_thread(thread: Thread) -> void:
 	# Add before thread.start() if you want certain functions (e.g., save/load)
@@ -171,7 +160,6 @@ func exit(force_exit := false, following_server := false) -> void:
 	yield(_tree, "idle_frame")
 	SaverLoader.free_procedural_nodes(_tree.get_root())
 	Global.emit_signal("close_all_admin_popups_requested")
-	_state.is_paused = false
 	Global.emit_signal("simulator_exited")
 
 func quit(force_quit: bool) -> void:
@@ -212,7 +200,6 @@ func _on_init() -> void:
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
-	_state.is_paused = false
 	_state.is_quitting = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
@@ -228,7 +215,6 @@ func _on_ready() -> void:
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("sim_stop_required", self, "require_stop")
 	Global.connect("sim_run_allowed", self, "allow_run")
-	Global.connect("pause_requested", self, "set_paused")
 	Global.connect("quit_requested", self, "quit")
 	Global.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
@@ -266,7 +252,8 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal finish_threads_required") or true)
 	allow_threads = false
 	emit_signal("finish_threads_required")
-	_tree.paused = true
+	if Global.pause_scene_tree:
+		_tree.paused = true
 	_state.is_running = false
 	Global.emit_signal("run_state_changed", false)
 	
@@ -274,7 +261,8 @@ func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	Global.emit_signal("run_state_changed", true)
-	_tree.paused = _state.is_paused
+	if Global.pause_scene_tree:
+		_tree.paused = _state.is_paused
 	assert(DPRINT and prints("signal threads_allowed") or true)
 	allow_threads = true
 	emit_signal("threads_allowed")

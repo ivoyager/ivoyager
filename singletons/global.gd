@@ -45,7 +45,7 @@ signal game_save_finished()
 signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running)
-signal pause_changed(is_paused) # Global.state.is_paused, not SceneTree.paused!
+signal pause_changed(is_paused) # state.is_paused, not SceneTree.paused!
 signal network_state_changed(network_state) # Enums.NetworkState
 
 # other broadcasts
@@ -85,7 +85,7 @@ signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - write authority indicated; safe to keep container reference
-var state := {} # StateManager (& NetworkLobby if exists); is_running, etc.
+var state := {} # see comments in StateManager; is_inited, is_running, etc.
 var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
@@ -102,9 +102,9 @@ var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
-# next two optimized for fast Body._process()
-var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # Camera [self, glb_trns, fov, vwpt_ht]
-var mouse_target := [Vector2.ZERO, null, INF] # ProjectionSurface & Body [ms_pos, body, dist]
+# Camera, ProjectionSurface & Body write below; optimized for Body._process()
+var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # [Camera, glb_trns, fov, vwpt_ht]
+var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
@@ -126,6 +126,7 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
+var pause_scene_tree := false # SceneTree.pause when sim "paused" or "stopped"
 var home_view_from_user_time_zone := false # grab user latitude (in Planetarium)
 var disable_pause := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups

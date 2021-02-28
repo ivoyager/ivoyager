@@ -95,7 +95,7 @@ var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
 var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
-var is_paused := true # follows Global.state.is_paused
+var is_paused := false # always same as Global.state.is_paused
 var is_reversed := false
 
 # persistence
@@ -115,6 +115,7 @@ var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
+var _state: Dictionary = Global.state
 onready var _tree := get_tree()
 onready var _allow_real_world_time: bool = Global.allow_real_world_time
 onready var _allow_time_reversal: bool = Global.allow_time_reversal
@@ -245,6 +246,24 @@ func get_real_world_time() -> float:
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
+func set_paused(pause: bool, is_toggle := false) -> void:
+	# 1st arg ignored if is_toggle. Timekeeper has authority over pause, so
+	# all changes should use this function or Global signal "pause_requested".
+	var new_paused: bool
+	if is_toggle:
+		new_paused = !is_paused
+	else:
+		new_paused = pause
+	if _state.is_running:
+		if Global.pause_scene_tree:
+			_tree.paused = new_paused
+	if is_paused != new_paused:
+		is_paused = new_paused
+		_state.is_paused = new_paused
+		Global.emit_signal("pause_changed", new_paused)
+		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
+				show_seconds, is_real_world_time)
+
 func set_real_world() -> void:
 	if _network_state == IS_CLIENT:
 		return
@@ -313,9 +332,9 @@ func _ready() -> void:
 	_on_ready() # subclass can override
 
 func _on_ready() -> void:
+	Global.connect("pause_requested", self, "set_paused")
 	Global.connect("network_state_changed", self, "_on_network_state_changed")
 	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	Global.connect("pause_changed", self, "_on_pause_changed")
 	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
@@ -324,6 +343,7 @@ func _on_ready() -> void:
 	connect("speed_changed", self, "_on_speed_changed")
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
+	set_process_priority(-100) # always first!
 
 func _on_network_state_changed(network_state: int) -> void:
 	_network_state = network_state
@@ -336,7 +356,8 @@ func _set_init_state() -> void:
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
-	is_paused = true
+	is_paused = false
+	_state.is_paused = false
 	speed_index = start_speed
 
 func _set_ready_state() -> void:
@@ -369,20 +390,14 @@ func _on_about_to_start_simulator(is_new_game: bool) -> void:
 		if start_real_world_time:
 			set_real_world()
 	else:
-		var paused_after_load: bool = is_paused or Global.settings.loaded_game_is_paused
-		Global.emit_signal("pause_requested", paused_after_load)
+		is_paused = is_paused or Global.settings.loaded_game_is_paused
+		_state.is_paused = is_paused
 
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_real_world_time:
 		yield(_tree, "idle_frame")
 		set_real_world()
-
-func _on_pause_changed(is_paused_: bool) -> void:
-	if is_paused != is_paused_:
-		is_paused = is_paused_
-		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
-				show_seconds, is_real_world_time)
 
 remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
 	# client-side network game only
