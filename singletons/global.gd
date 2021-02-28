@@ -26,7 +26,7 @@
 
 extends Node
 
-# Sim builder & state manager broadcasts
+# simulator state broadcasts
 signal project_builder_finished()
 signal table_data_imported()
 signal world_environment_added()
@@ -37,6 +37,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
+signal about_to_quit()
 signal about_to_exit()
 signal simulator_exited()
 signal game_save_started()
@@ -44,7 +45,7 @@ signal game_save_finished()
 signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running)
-signal about_to_quit()
+signal pause_changed(is_paused) # state.is_paused, not SceneTree.paused!
 signal network_state_changed(network_state) # Enums.NetworkState
 
 # other broadcasts
@@ -52,17 +53,23 @@ signal setting_changed(setting, value)
 signal camera_ready(camera)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
-# sim state control
-signal sim_stop_required(who) # see StateManager for external thread coordination
-signal sim_run_allowed(who) # all requiring stop must allow!
+# requests for state change
+signal sim_stop_required(who, network_sync_type, bypass_checks) # see StateManager
+signal sim_run_allowed(who) # all objects requiring stop must allow!
+signal pause_requested(is_pause, is_toggle) # 1st arg ignored if is_toggle
+signal quit_requested(force_quit) # force_quit bypasses dialog
+signal exit_requested(force_exit) # force_exit bypasses dialog
+signal save_requested(path, is_quick_save) # ["", false] will trigger dialog
+signal load_requested(path, is_quick_load) # ["", false] will trigger dialog
+signal save_quit_requested()
 
-# camera control
+# requests for camera action
 signal move_camera_to_selection_requested(selection_item, view_type, view_position,
 		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
 signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
 		track_type, is_instant_move) # 1st arg can be null; all others optional
 
-# GUI requests
+# requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
 signal show_hide_gui_requested(is_show)
@@ -78,8 +85,8 @@ signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - write authority indicated; safe to keep container reference
-var state := {} # StateManager (& NetworkLobby, if exists); is_running, etc.
-var times := [] # Timekeeper; [time (s, J2000), engine_time (s), solar_day (d)] (floats)
+var state := {} # see comments in StateManager; is_inited, is_running, etc.
+var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
 var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 
@@ -94,10 +101,10 @@ var bodies := [] # BodyRegistry; indexed by body_id
 var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # ProjectBuilder; [[name, version, version_ymd], ...]
-# next two optimized for Body._process()
-var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # Camera [self, glb_trns, fov, vwpt_ht]
-var mouse_target := [Vector2.ZERO, null, INF] # ProjectionSurface, Body; [m_pos, body, dist]
+var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
+# Camera, ProjectionSurface & Body write below; optimized for Body._process()
+var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # [Camera, glb_trns, fov, vwpt_ht]
+var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
@@ -119,6 +126,7 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
+var pause_scene_tree := false # SceneTree.pause when sim "paused" or "stopped"
 var home_view_from_user_time_zone := false # grab user latitude (in Planetarium)
 var disable_pause := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups

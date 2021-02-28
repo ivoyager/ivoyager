@@ -292,11 +292,23 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 		body.reset_orbit()
 	_huds_builder.add_label(body)
 	body.set_hud_too_close(_settings.hide_hud_when_close)
-	
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
 	var array := [body, file_prefix, is_star]
 	_io_manager.callback(self, "load_textures_on_io_callback", "io_finish", array)
+	
+	
+	# FIXME: We have disappearing models (e.g., Hyperion) at high game speed on
+	# laptop!
+	
+#	if body.flags & BodyFlags.IS_TOP:
+#		body.set_process_priority(-10)
+#	elif is_star:
+#		body.set_process_priority(-9)
+#	elif body.flags & (BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET):
+#		body.set_process_priority(-8)
+#	if body.flags & BodyFlags.IS_MOON:
+#		body.set_process_priority(-7)
 
 func load_textures_on_io_callback(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]

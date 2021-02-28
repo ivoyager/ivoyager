@@ -102,7 +102,7 @@ func _add_bodies(table_name: String) -> void: # I/O thread!
 	var n_rows := _table_reader.get_n_rows(table_name)
 	var row := 0
 	while row < n_rows:
-		var parent := _table_reader.get_body(table_name, "parent", row) # null for Sun
+		var parent := _table_reader.get_body(table_name, "parent", row) # null for top
 		var body := _body_builder.build_from_table(table_name, row, parent)
 		if parent:
 			parent.add_child(body)

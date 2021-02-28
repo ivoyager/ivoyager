@@ -153,7 +153,6 @@ func _process(delta: float) -> void:
 				_drag_vector *= delta * _mouse_pitch_yaw_rate
 				_camera.add_rotate_action(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
-#				var mouse_position := _drag_segment_start + _drag_vector
 				var mouse_position: Vector2 = _mouse_target[0]
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				_drag_vector *= delta * _mouse_roll_rate
