@@ -252,6 +252,7 @@ func signal_finished() -> void:
 # ****************************** PROJECT BUILD ********************************
 
 func _ready() -> void:
+	get_tree().paused = true
 	call_deferred("_build_deferred")
 	
 func _build_deferred() -> void:

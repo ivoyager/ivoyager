@@ -29,6 +29,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	connect("popup_hide", self, "_on_hide")
 	dialog_text = text
 	popup_exclusive = true
+	pause_mode = PAUSE_MODE_PROCESS
 	_stop_sim = stop_sim
 	if _stop_sim:
 		Global.emit_signal("sim_stop_required", self)

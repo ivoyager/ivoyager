@@ -6,9 +6,13 @@
 [ext_resource path="res://ivoyager/gui_widgets/version_label.tscn" type="PackedScene" id=4]
 
 [node name="PBDSplashScreen" type="Control"]
+pause_mode = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="TextureRect" type="TextureRect" parent="."]
 anchor_right = 1.0

@@ -3,6 +3,7 @@
 [ext_resource path="res://ivoyager/gui_admin/cached_items_popup.gd" type="Script" id=1]
 
 [node name="CachedItemsPopup" type="PopupPanel"]
+pause_mode = 2
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
