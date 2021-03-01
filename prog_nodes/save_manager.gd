@@ -35,7 +35,6 @@ const IS_SERVER = Enums.NetworkState.IS_SERVER
 const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 const NetworkStopSync = Enums.NetworkStopSync
 
-
 # persistence - values will be replaced by file values on game load!
 var project_version: String = Global.project_version
 var ivoyager_version: String = Global.ivoyager_version
@@ -44,13 +43,11 @@ var is_modded: bool = Global.is_modded
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
-
 # private
 onready var _io_manager: IOManager = Global.program.IOManager
 onready var _state_manager: StateManager = Global.program.StateManager
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 onready var _save_builder: SaveBuilder = Global.program.SaveBuilder
-onready var _main_prog_bar: MainProgBar = Global.program.get("MainProgBar")
 onready var _universe: Spatial = Global.program.Universe
 onready var _tree := get_tree()
 var _state: Dictionary = Global.state
@@ -91,12 +88,13 @@ func save_game(path: String) -> void:
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
 	yield(_state_manager, "threads_finished")
 	Global.emit_signal("game_save_started")
-	if _main_prog_bar:
-		_main_prog_bar.start(_save_builder)
-	assert(Debug.dlog("This is before save!"))
+	assert(Debug.dlog("Tree status before save..."))
 	assert(Debug.dlog(_save_builder.debug_log(_universe)))
-	yield(_tree, "idle_frame")
-	_io_manager.callback(self, "save_on_io_callback", "finish_save", [path])
+	var gamesave := _save_builder.generate_gamesave(_universe)
+	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
+	Global.emit_signal("game_save_finished")
+	_has_been_saved = true
+	_state_manager.allow_run(self)
 
 func quick_load() -> void:
 	if _state.network_state == IS_CLIENT:
@@ -138,57 +136,32 @@ func load_game(path: String, network_gamesave := []) -> void:
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")
-	if _main_prog_bar:
-		_main_prog_bar.start(_save_builder)
-	_io_manager.callback(self, "load_on_io_callback", "finish_load", [save_file, path, network_gamesave])
+	if !network_gamesave:
+		_io_manager.get_var_from_file(path, self, "_load_callback")
+	else:
+		_load_callback(network_gamesave, OK)
 
 # *****************************************************************************
 # IOManager callbacks
 
-func save_on_io_callback(array: Array) -> void: # I/O thread
-	var path: String = array[0]
-	var save_file := File.new()
-	save_file.open(path, File.WRITE)
-	var gamesave := _save_builder.generate_gamesave(_universe)
-	save_file.store_var(gamesave)
+func _save_callback(err: int) -> void: # Main thread
+	if err != OK:
+		print("ERROR on Save; error code = ", err)
 
-func finish_save(_array: Array) -> void: # Main thread
-	Global.emit_signal("game_save_finished")
-	if _main_prog_bar:
-		_main_prog_bar.stop()
-	_has_been_saved = true
-	_state_manager.allow_run(self)
-
-func load_on_io_callback(array: Array) -> void: # I/O thread
-	var save_file: File = array[0]
-	var path: String = array[1]
-	var network_gamesave: Array = array[2]
-	var gamesave: Array
-	if !network_gamesave:
-		save_file.open(path, File.READ)
-		gamesave = save_file.get_var()
-	else:
-		gamesave = network_gamesave
-	var base_procedurals := _save_builder.build_tree(_universe, gamesave, true)
-	array.append(base_procedurals)
-	
-func finish_load(array: Array) -> void: # Main thread
-	var base_procedurals: Array = array[3]
-	while base_procedurals:
-		var base_procedural: Node = base_procedurals.pop_front()
-		_universe.add_child(base_procedural)
-	_test_version()
+func _load_callback(gamesave: Array, err: int) -> void:
+	if err != OK:
+		print("ERROR on Load; error code = ", err)
+		return # TODO: Exit and give user feedback
+	_save_builder.build_tree(_universe, gamesave)
 	Global.emit_signal("game_load_finished")
-	if _main_prog_bar:
-		_main_prog_bar.stop()
 	_state.is_system_built = true
 	Global.emit_signal("system_tree_built_or_loaded", false)
 	Global.connect("simulator_started", self, "_simulator_started_after_load", [], CONNECT_ONESHOT)
 
 func _simulator_started_after_load() -> void:
-	print("Nodes in tree after load: ", _tree.get_node_count(), ". If this differs from pre-save,",
-			"\n  set debug settings in SaveBuilder and check debug.log.")
-	assert(Debug.dlog("This is after load & simulator started!"))
+	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
+	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
+	assert(Debug.dlog("Tree status after load & simulator started..."))
 	assert(Debug.dlog(_save_builder.debug_log(_universe)))
 
 # *****************************************************************************

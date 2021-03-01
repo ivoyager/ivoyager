@@ -26,7 +26,7 @@ extends ProgressBar
 class_name MainProgBar
 const SCENE := "res://ivoyager/gui_admin/main_prog_bar.tscn"
 
-var delay_start_frames := 5
+var delay_start_frames := 0
 
 var _object: Object
 var _delay_count := 0

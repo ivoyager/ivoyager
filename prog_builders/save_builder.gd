@@ -19,7 +19,7 @@
 # *****************************************************************************
 # SaveBuilder can persist specified data (which may include nested objects) and
 # rebuild procedurally generated node trees and references on load. It can
-# persist four kinds of objects (in addition to built-in types):
+# persist built-in types and four kinds of objects:
 #    1. Non-procedural Nodes
 #    2. Procedural Nodes (including base nodes of scenes)
 #    3. Procedural References
@@ -40,7 +40,8 @@
 #    const SCENE_OVERRIDE: String # as above; override may be useful in subclass
 # Additional rules for persist objects:
 #    1. Nodes must be in the tree.
-#    2. All ancester nodes up to root must also be persist nodes.
+#    2. All ancester nodes up to "root" must also be persist nodes. ("Root" is
+#        specified in function calls; it may or may not be scene tree root.)
 #    3. A non-procedural node cannot be child of a procedural node.
 #    4. Non-procedural nodes must have stable names (path cannot change).
 #    5. Inner classes can't be persist objects
@@ -53,12 +54,16 @@
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
 
-extends Reference
 class_name SaveBuilder
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
 
+# debug printing/logging - these allow verbose writing to user://logs/debug.log
+var debug_log_persist_nodes := false
+var debug_log_all_nodes := false
+var debug_print_stray_nodes := false
+var debug_print_tree := false
 
 # project settings
 var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
@@ -73,12 +78,6 @@ var obj_properties_arrays := [
 	"PERSIST_OBJ_PROPERTIES_3",
 	]
 var object_tag := "@!~`#" # persisted strings must not start with this!
-
-# debug printing/logging
-var debug_log_persist_nodes := false
-var debug_log_all_nodes := false
-var debug_print_stray_nodes := false
-var debug_print_tree := false
 
 # read-only for external progress bar
 var progress := 0

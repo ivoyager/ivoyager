@@ -176,7 +176,7 @@ func reset_orbit():
 	if orbit:
 		orbit.reset()
 
-func set_hud_too_close(hide_hud_when_close: bool) -> void:
+func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
 		hud_too_close = properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
@@ -326,4 +326,4 @@ func _settings_listener(setting: String, value) -> void:
 			if flags & BodyFlags.IS_MOON and not flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
 				hud_orbit.change_color(value)
 		"hide_hud_when_close":
-			set_hud_too_close(value)
+			set_hide_hud_when_close(value)
