@@ -23,15 +23,16 @@
 #   is_inited: bool
 #   is_splash_screen: bool - this node & SaveManager
 #   is_system_built: bool - this node & SaveManager
-#   is_running: bool - follows _run_simulator() / _stop_simulator()
-#   is_paused: bool - Timekeeper maintains; we don't use SceneTree.paused!
+#   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
+#   is_paused: bool - Timekeeper maintains; NOT SceneTree.paused !!!!
 #   is_quitting: bool
 #   is_loaded_game: bool - this node & SaveManager
 #   last_save_path: String - this node & SaveManager
 #   network_state: Enums.NetworkState - if exists, NetworkLobby also writes
 #
-# We don't use SceneTree.paused! However, if Global.pause_scene_tree = true,
-# we update SceneTree.paused = (state.is_paused or state.is_stopped).
+# Note: SceneTree.paused is set only when simulatator "stopped". Simulator
+# "paused" is managed by Timekeeper and works more like a game speed (process
+# still happens so the camera can move, etc.).
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
@@ -105,7 +106,8 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	# bypass_checks intended for this node & NetworkLobby; could break sync.
 	# Returns false if the caller doesn't have authority to stop the sim.
 	# "Stopped" means SceneTree is paused, the player is locked out from most
-	# input, and blocking threads (added above) have finished.
+	# input, and we have signaled "finish_threads_required" (any Threads added
+	# via add_blocking_thread() should then be removed as they finish).
 	# In many cases, you should yield to "threads_finished" after calling this.
 	if !bypass_checks:
 		if !Global.popops_can_stop_sim and who is Popup:
@@ -152,6 +154,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
+	_tree.paused = true
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
 	require_stop(self, NetworkStopSync.EXIT, true)
@@ -200,7 +203,7 @@ func _on_init() -> void:
 	_state.is_inited = false
 	_state.is_splash_screen = true
 	_state.is_system_built = false
-	_state.is_running = false
+	_state.is_running = false # SceneTree.pause set in ProjectBuilder
 	_state.is_quitting = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
@@ -253,17 +256,15 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal finish_threads_required") or true)
 	allow_threads = false
 	emit_signal("finish_threads_required")
-	if Global.pause_scene_tree:
-		_tree.paused = true
 	_state.is_running = false
+	_tree.paused = true
 	Global.emit_signal("run_state_changed", false)
 	
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
+	_tree.paused = false
 	Global.emit_signal("run_state_changed", true)
-	if Global.pause_scene_tree:
-		_tree.paused = _state.is_paused
 	assert(DPRINT and prints("signal threads_allowed") or true)
 	allow_threads = true
 	emit_signal("threads_allowed")

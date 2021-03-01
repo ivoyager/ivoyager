@@ -33,9 +33,9 @@ func add_rings(body: Body) -> void:
 	var north: Vector3 = body.get_north()
 	var array := [body, rings_file, radius, north]
 	var io_manager: IOManager = Global.program.IOManager
-	io_manager.callback(self, "make_rings_on_io_callback", "io_finish", array)
+	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
 
-func make_rings_on_io_callback(array: Array) -> void: # I/O thread
+func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var rings_file: String = array[1]
 	var radius: float = array[2]
 	var north: Vector3 = array[3]
@@ -57,7 +57,7 @@ func make_rings_on_io_callback(array: Array) -> void: # I/O thread
 	rings.hide()
 	array.append(rings)
 
-func io_finish(array: Array) -> void: # Main thread
+func _io_finish(array: Array) -> void: # Main thread
 	var body: Body = array[0]
 	var radius: float = array[2]
 	var rings: MeshInstance = array[4]

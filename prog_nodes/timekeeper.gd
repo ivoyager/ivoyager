@@ -254,13 +254,10 @@ func set_paused(pause: bool, is_toggle := false) -> void:
 		new_paused = !is_paused
 	else:
 		new_paused = pause
-	if _state.is_running:
-		if Global.pause_scene_tree:
-			_tree.paused = new_paused
 	if is_paused != new_paused:
 		is_paused = new_paused
 		_state.is_paused = new_paused
-		Global.emit_signal("pause_changed", new_paused)
+		Global.emit_signal("sim_pause_changed", new_paused)
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
 				show_seconds, is_real_world_time)
 

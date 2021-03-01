@@ -17,6 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+# TODO: We need API to assist building Body not from table data.
+#
+# Note: below the huge build_from_table() function, we have functions that
+# build unpersisted parts of Body as they are added to the SceneTree, including
+# I/O threaded resource loading. These are rate-limiting for building the solar
+# system. Hence, we use these to determine and signal "system_ready" and to
+# run the progress bar.
 
 extends Reference
 class_name BodyBuilder
@@ -88,33 +95,32 @@ var _orbit_builder: OrbitBuilder
 var _io_manager: IOManager
 var _scheduler: Scheduler
 var _table_reader: TableReader
+var _main_prog_bar: MainProgBar
 var _Body_: Script
 var _ModelGeometry_: Script
 var _Properties_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
 
+var progress := 0 # external progress bar read-only
 
+var _is_building_system := false
+var _system_build_count: int
+var _system_finished_count: int
+var _system_build_start_msec: int
 
-func project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_body_registry = Global.program.BodyRegistry
-	_model_builder = Global.program.ModelBuilder
-	_rings_builder = Global.program.RingsBuilder
-	_light_builder = Global.program.LightBuilder
-	_huds_builder = Global.program.HUDsBuilder
-	_selection_builder = Global.program.SelectionBuilder
-	_orbit_builder = Global.program.OrbitBuilder
-	_io_manager = Global.program.IOManager
-	_scheduler = Global.program.Scheduler
-	_table_reader = Global.program.TableReader
-	_Body_ = Global.script_classes._Body_
-	_ModelGeometry_ = Global.script_classes._ModelGeometry_
-	_Properties_ = Global.script_classes._Properties_
-	_fallback_body_2d = Global.assets.fallback_body_2d
+func init_system_build() -> void:
+	# Track when Bodies are completely finished (including I/O threaded
+	# resource loading) to signal "system_ready" and run the progress bar.
+	progress = 0
+	_is_building_system = true
+	_system_build_count = 0
+	_system_finished_count = 0
+	_system_build_start_msec = OS.get_system_time_msecs()
+	if _main_prog_bar:
+		_main_prog_bar.start(self)
 
-func build_from_table(table_name: String, row: int, parent: Body) -> Body:
-	# Call on I/O thread!
+func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Main thread!
 	var body: Body = _Body_.new()
 	_table_reader.build_object2(body, table_name, row, body_fields, body_fields_req)
 	# flags
@@ -262,23 +268,36 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body:
 	body.hide()
 	return body
 
-func _init_unpersisted(is_new_game: bool) -> void: # Main thread after build or load
-	var bodies := _body_registry.bodies
-	var n_bodies := bodies.size()
-	var i := 0
-	while i < n_bodies:
-		var body: Body = bodies[i]
-		if body:
-			_build_unpersisted(body)
-		i += 1
-	# We just sent a bunch of work to IOManager. It'll signal "finished" on a
-	# subsequent frame - theoretically, next frame at the soonest.
-	_io_manager.connect("finished", self, "_on_io_finished", [is_new_game], CONNECT_ONESHOT)
+# *****************************************************************************
 
-func _on_io_finished(is_new_game: bool) -> void:
-	Global.emit_signal("system_tree_ready", is_new_game)
+func project_init() -> void:
+	Global.connect("game_load_started", self, "init_system_build")
+	Global.get_tree().connect("node_added", self, "_on_node_added")
+	_body_registry = Global.program.BodyRegistry
+	_model_builder = Global.program.ModelBuilder
+	_rings_builder = Global.program.RingsBuilder
+	_light_builder = Global.program.LightBuilder
+	_huds_builder = Global.program.HUDsBuilder
+	_selection_builder = Global.program.SelectionBuilder
+	_orbit_builder = Global.program.OrbitBuilder
+	_io_manager = Global.program.IOManager
+	_scheduler = Global.program.Scheduler
+	_table_reader = Global.program.TableReader
+	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
+	_Body_ = Global.script_classes._Body_
+	_ModelGeometry_ = Global.script_classes._ModelGeometry_
+	_Properties_ = Global.script_classes._Properties_
+	_fallback_body_2d = Global.assets.fallback_body_2d
+
+func _on_node_added(node: Node) -> void:
+	var body := node as Body
+	if body:
+		_build_unpersisted(body)
 
 func _build_unpersisted(body: Body) -> void: # Main thread
+	# Note: many builders called here ask for IOManager.callback. These are
+	# processed in order, so the last callback at the end of this function will
+	# have the last "finish" callback.
 	if body.model_type != -1:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
@@ -291,26 +310,15 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 		_huds_builder.add_orbit(body)
 		body.reset_orbit()
 	_huds_builder.add_label(body)
-	body.set_hud_too_close(_settings.hide_hud_when_close)
+	body.set_hide_hud_when_close(_settings.hide_hud_when_close)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
+	if _is_building_system:
+		_system_build_count += 1
 	var array := [body, file_prefix, is_star]
-	_io_manager.callback(self, "load_textures_on_io_callback", "io_finish", array)
-	
-	
-	# FIXME: We have disappearing models (e.g., Hyperion) at high game speed on
-	# laptop!
-	
-#	if body.flags & BodyFlags.IS_TOP:
-#		body.set_process_priority(-10)
-#	elif is_star:
-#		body.set_process_priority(-9)
-#	elif body.flags & (BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET):
-#		body.set_process_priority(-8)
-#	if body.flags & BodyFlags.IS_MOON:
-#		body.set_process_priority(-7)
+	_io_manager.callback(self, "_load_textures_on_io_thread", "_io_finish", array)
 
-func load_textures_on_io_callback(array: Array) -> void: # I/O thread
+func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
 	var texture_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
@@ -322,7 +330,7 @@ func load_textures_on_io_callback(array: Array) -> void: # I/O thread
 		var texture_slice_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
 		array.append(texture_slice_2d)
 
-func io_finish(array: Array) -> void: # Main thread
+func _io_finish(array: Array) -> void: # Main thread
 	var body: Body = array[0]
 	var is_star: bool = array[2]
 	var texture_2d: Texture = array[3]
@@ -330,3 +338,18 @@ func io_finish(array: Array) -> void: # Main thread
 	if is_star:
 		var texture_slice_2d: Texture = array[4]
 		body.texture_slice_2d = texture_slice_2d
+	if _is_building_system:
+		_system_finished_count += 1
+		# warning-ignore:integer_division
+		progress = 100 * _system_finished_count / _system_build_count
+		if _system_finished_count == _system_build_count:
+			_finish_system_build()
+
+func _finish_system_build() -> void: # Main thread
+		_is_building_system = false
+		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
+		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
+		var is_new_game: bool = !Global.state.is_loaded_game
+		Global.emit_signal("system_tree_ready", is_new_game)
+		if _main_prog_bar:
+			_main_prog_bar.stop()

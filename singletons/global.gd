@@ -44,8 +44,8 @@ signal game_save_started()
 signal game_save_finished()
 signal game_load_started()
 signal game_load_finished()
-signal run_state_changed(is_running)
-signal pause_changed(is_paused) # state.is_paused, not SceneTree.paused!
+signal run_state_changed(is_running) # is_running != SceneTree.paused
+signal sim_pause_changed(is_paused) # Sim pause! (Godot paused = Sim stopped)
 signal network_state_changed(network_state) # Enums.NetworkState
 
 # other broadcasts
@@ -129,7 +129,6 @@ var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # UT1 from user system seconds
 var allow_time_reversal := false
-var pause_scene_tree := false # SceneTree.pause when sim "paused" or "stopped"
 var home_view_from_user_time_zone := false # grab user latitude (in Planetarium)
 var disable_pause := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
@@ -229,7 +228,6 @@ var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func _ready():
 	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
-	pause_mode = PAUSE_MODE_PROCESS # inherited by all "program nodes"
 
 func after_extensions_inited():
 	# called by ProjectBuilder before all other class instantiations

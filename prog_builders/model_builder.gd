@@ -74,7 +74,7 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 		return
 	var model_type := body.model_type
 	var array := [body, model_geometry, file_prefix, model_type, model_basis]
-	_io_manager.callback(self, "get_model_on_io_callback", "finish_model", array)
+	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
 func _add_placeholder(body: Body, model_geometry: ModelGeometry) -> void: # Main thread
 	var placeholder: Spatial
@@ -93,9 +93,9 @@ func _lazy_init(body: Body) -> void: # Main thread
 	var model_geometry := body.model_geometry
 	var model_basis: Basis = model_geometry.model_reference_basis
 	var array := [body, model_geometry, file_prefix, model_type, model_basis]
-	_io_manager.callback(self, "get_model_on_io_callback", "finish_lazy_model", array)
+	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
 
-func get_model_on_io_callback(array: Array) -> void: # I/O thread
+func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[2]
 	var model_basis: Basis = array[4]
 	var model: Spatial
@@ -140,7 +140,7 @@ func get_model_on_io_callback(array: Array) -> void: # I/O thread
 		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
 		# FIXME! Should cast shadows, but it doesn't...!
 
-func finish_model(array: Array) -> void: # Main thread
+func _finish_model(array: Array) -> void: # Main thread
 	var body: Body = array[0]
 	var model_geometry: ModelGeometry = array[1]
 	var model: Spatial = array[5]
@@ -153,7 +153,7 @@ func finish_model(array: Array) -> void: # Main thread
 					star_energy_ref_dist, star_energy_near, star_energy_exponent)
 	body.add_child(model)
 
-func finish_lazy_model(array: Array) -> void: # Main thread
+func _finish_lazy_model(array: Array) -> void: # Main thread
 	var body: Body = array[0]
 	var model_geometry: ModelGeometry = array[1]
 	var model: Spatial = array[5]
@@ -230,6 +230,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 	basis = basis.rotated(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return basis
 
+# *****************************************************************************
 
 func project_init() -> void:
 	Global.connect("table_data_imported", self, "_preregister_files")
@@ -266,4 +267,3 @@ func _clear() -> void:
 		placeholder.queue_free()
 	_lazy_tracker.clear()
 	_n_lazy = 0
-

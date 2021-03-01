@@ -17,22 +17,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# It takes a while to load the environment depending on starmap size. 8k is
-# twice as fast as 16k, at least on my laptop.
+# It takes a while to load the environment depending on starmap size and
+# system. On my low-end laptop, 8k is much more than twice as fast as 16k.
 
 class_name EnvironmentBuilder
 
 var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
-
 
 func project_init() -> void:
 	Global.connect("table_data_imported", self, "add_world_environment")
 
 func add_world_environment() -> void:
 	var io_manager: IOManager = Global.program.IOManager
-	io_manager.callback(self, "io_callback", "io_finish")
+	io_manager.callback(self, "_io_callback", "_io_finish")
 
-func io_callback(array: Array) -> void: # I/O thread!
+func _io_callback(array: Array) -> void: # I/O thread!
 	var start_time := OS.get_system_time_msecs()
 	var world_environment := WorldEnvironment.new()
 	world_environment.name = "WorldEnvironment"
@@ -40,10 +39,10 @@ func io_callback(array: Array) -> void: # I/O thread!
 	array.append(world_environment)
 	array.append(start_time)
 
-func io_finish(array: Array) -> void: # Main thread
+func _io_finish(array: Array) -> void: # Main thread
 	var world_environment: WorldEnvironment = array[0]
 	var start_time: int = array[1]
-	Global.program.Universe.add_child(world_environment)
+	Global.program.Universe.add_child(world_environment) # this hangs a while!
 	var time := OS.get_system_time_msecs() - start_time
 	print("Added WorldEnvironment in ", time, " msec")
 	Global.emit_signal("world_environment_added")
