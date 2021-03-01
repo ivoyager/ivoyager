@@ -36,9 +36,9 @@ var selection_manager: SelectionManager
 onready var _SelectionManager_: Script = Global.script_classes._SelectionManager_
 
 # This node has an object we want to persist through game save/loads. Presence
-# of the first constant below tells SaverLoader that this node has something to
+# of the first constant below tells SaveBuilder that this node has something to
 # save ("= false" because THIS node is added by ProjectBuilder, not
-# procedurally). The second constant tells SaverLoader what to persist.
+# procedurally). The second constant tells SaveBuilder what to persist.
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_OBJ_PROPERTIES := ["selection_manager"]
 

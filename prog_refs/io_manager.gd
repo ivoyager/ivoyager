@@ -89,43 +89,17 @@ func project_init() -> void:
 	_state_manager = Global.program.StateManager
 	if !_use_threads:
 		return
-	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
 	Global.connect("about_to_quit", self, "_on_about_to_quit")
-	_state_manager.connect("threads_allowed", self, "_on_threads_allowed")
-	_state_manager.connect("finish_threads_required", self, "_on_finish_threads_required")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
 	_thread.start(self, "_run_thread", 0)
 
-# Before sim starts, and on exit or load, we want thread to run while sim is
-# stopped. However, during runtime (after "threads_allowed") we want
-# thread to start/stop with the simulator. We also want to block quit until
-# thread finishes to avoid "leaked" warnings.
-
-func _on_about_to_free_procedural_nodes() -> void:
-	_stop_thread = false
-	_state_manager.remove_blocking_thread(_thread) # don't block
-	if !_thread.is_active():
-		_thread.start(self, "_run_thread", 0)
-
 func _on_about_to_quit() -> void:
+	# Block the quit until we finish the thread; otherwise, we'll have leaks.
 	_stop_thread = true
 	if _thread.is_active():
 		_state_manager.add_blocking_thread(_thread) # block quit
-		_semaphore.post()
-		_thread.wait_to_finish()
-		_state_manager.call_deferred("remove_blocking_thread", _thread)
-
-func _on_threads_allowed() -> void:
-	_stop_thread = false
-	_state_manager.add_blocking_thread(_thread)
-	if !_thread.is_active():
-		_thread.start(self, "_run_thread", 0)
-
-func _on_finish_threads_required() -> void:
-	_stop_thread = true
-	if _thread.is_active():
 		_semaphore.post()
 		_thread.wait_to_finish()
 		_state_manager.call_deferred("remove_blocking_thread", _thread)

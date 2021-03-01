@@ -21,13 +21,13 @@
 # writes Global.state except where noted:
 #
 #   is_inited: bool
-#   is_splash_screen: bool - this node & SaveLoadManager
-#   is_system_built: bool - this node & SaveLoadManager
+#   is_splash_screen: bool - this node & SaveManager
+#   is_system_built: bool - this node & SaveManager
 #   is_running: bool - follows _run_simulator() / _stop_simulator()
 #   is_paused: bool - Timekeeper maintains; we don't use SceneTree.paused!
 #   is_quitting: bool
-#   is_loaded_game: bool - this node & SaveLoadManager
-#   last_save_path: String - this node & SaveLoadManager
+#   is_loaded_game: bool - this node & SaveManager
+#   last_save_path: String - this node & SaveManager
 #   network_state: Enums.NetworkState - if exists, NetworkLobby also writes
 #
 # We don't use SceneTree.paused! However, if Global.pause_scene_tree = true,
@@ -59,6 +59,7 @@ const NO_NETWORK = Enums.NetworkState.NO_NETWORK
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 const NetworkStopSync = Enums.NetworkStopSync
+
 
 # public - read-only!
 var allow_threads := false
@@ -158,7 +159,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	Global.emit_signal("about_to_exit")
 	Global.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
-	SaverLoader.free_procedural_nodes(_tree.get_root())
+	SaveBuilder.free_procedural_nodes(Global.program.Universe)
 	Global.emit_signal("close_all_admin_popups_requested")
 	Global.emit_signal("simulator_exited")
 
