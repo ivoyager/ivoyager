@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# SaverLoader can persist specified data (which may include nested objects) and
+# SaveBuilder can persist specified data (which may include nested objects) and
 # rebuild procedurally generated node trees and references on load. It can
 # persist four kinds of objects (in addition to built-in types):
 #    1. Non-procedural Nodes
@@ -27,8 +27,8 @@
 # A "persist" node or reference is identified by presence of the constant:
 #    const PERSIST_AS_PROCEDURAL_OBJECT: bool
 # Lists of properties to persists must be named in constant arrays:
-#    const PERSIST_PROPERTIES := [] # names of properties to persist (no nested objects!)
-#    const PERSIST_OBJ_PROPERTIES := [] # as above but allows nested persist objects
+#    const PERSIST_PROPERTIES := [] # properties to persist (no objects!)
+#    const PERSIST_OBJ_PROPERTIES := [] # as above; nested objects allowed
 #    const PERSIST_PROPERTIES_2 := []
 #    const PERSIST_OBJ_PROPERTIES_2 := []
 #    etc...
@@ -37,7 +37,7 @@
 #    parent class.)
 # To reconstruct a scene, the base node's gdscript must have one of:
 #    const SCENE: String = "<path to *.tscn>"
-#    const SCENE_OVERRIDE: String # as above; may be useful in a subclass
+#    const SCENE_OVERRIDE: String # as above; override may be useful in subclass
 # Additional rules for persist objects:
 #    1. Nodes must be in the tree.
 #    2. All ancester nodes up to root must also be persist nodes.
@@ -54,22 +54,13 @@
 #       persist reference after load.
 
 extends Reference
-class_name SaverLoader
+class_name SaveBuilder
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
 
-# ****************************** SIGNALS **************************************
-
-signal game_loaded_from_file(gamesave) # for network sync
-signal finished() # yield to this after calling save_game() or load_game()
-
-# **************************** PUBLIC VARS ************************************
-
-var progress := 0 # read-only! (for an external progress bar)
 
 # project settings
-var use_thread := true # true allows prog bar to work; false helps debugging
 var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
 var properties_arrays := [
 	"PERSIST_PROPERTIES",
@@ -81,32 +72,30 @@ var obj_properties_arrays := [
 	"PERSIST_OBJ_PROPERTIES_2",
 	"PERSIST_OBJ_PROPERTIES_3",
 	]
-var object_tag := "@!~`#" # persisted strings must not start with this
+var object_tag := "@!~`#" # persisted strings must not start with this!
 
 # debug printing/logging
-var debug_log_persist_nodes := true
+var debug_log_persist_nodes := false
 var debug_log_all_nodes := false
 var debug_print_stray_nodes := false
 var debug_print_tree := false
 
-# **************************** PRIVATE VARS ***********************************
+# read-only for external progress bar
+var progress := 0
 
-var _tree: SceneTree
-var _root: Viewport
-var _thread: Thread
-
-# save file
-var _sfile_n_objects := 0
-var _sfile_serialized_nodes := []
-var _sfile_serialized_references := []
-var _sfile_script_paths := []
-var _sfile_current_scene_id := -1 # set if procedural
+# gamesave contents
+var _gs_n_objects := 0
+var _gs_serialized_nodes := []
+var _gs_serialized_references := []
+var _gs_script_paths := []
 
 # save/load processing
+var _root: Node # save & load
 var _ids := {} # save; keyed by objects & script paths
 var _objects := [] # load
-var _current_scene: Node
-var _tag_size: int
+var _tag_size: int # load
+var _dont_attach: bool # load
+var _build_result := [] # load
 
 # progress & logging
 var _prog_serialized := 0
@@ -115,7 +104,6 @@ var _log_count := 0
 var _log_count_by_class := {}
 var _log := ""
 
-# *************************** PUBLIC FUNCTIONS ********************************
 
 static func make_object_or_scene(script: Script) -> Object:
 	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
@@ -130,93 +118,84 @@ static func make_object_or_scene(script: Script) -> Object:
 		root_node.set_script(script)
 	return root_node
 
-static func free_procedural_nodes(node: Node, is_root := true) -> void:
-	# call with node = root
-	if !is_root:
-		if node.PERSIST_AS_PROCEDURAL_OBJECT:
-			node.queue_free() # children will also be freed!
+static func free_procedural_nodes(root: Node) -> void:
+	# See "root" comments below; it may or may not be the main scene tree root.
+	if "PERSIST_AS_PROCEDURAL_OBJECT" in root:
+		if root.PERSIST_AS_PROCEDURAL_OBJECT:
+			root.queue_free() # children will also be freed!
 			return
-	else:
-		assert(node is Viewport)
-	for child in node.get_children():
+	for child in root.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			free_procedural_nodes(child, false)
+			free_procedural_nodes(child)
 
-func project_init():
-	# Ignore; required for I, Voyager compatibility
-	pass
-
-func save_game(save_file: File, tree: SceneTree) -> void: # Assumes save_file already open
-	_clear()
-	_tree = tree
-	_root = _tree.get_root()
-	_current_scene = _tree.get_current_scene()
+func generate_gamesave(root: Node) -> Array:
+	# "root" may or may not be the main scene tree root. Data in the result
+	# array includes the root (if it is a persist node) and the continuous tree
+	# of persist nodes below that.
 	progress = 0
 	_prog_serialized = 0
-	if use_thread:
-		_thread = Thread.new()
-		_thread.start(self, "_threaded_save", save_file)
-	else:
-		_threaded_save(save_file)
+	_root = root
+	assert(DPRINT and print("* Registering tree for gamesave *") or true)
+	_register_tree_for_save(root)
+	assert(DPRINT and print("* Serializing tree for gamesave *") or true)
+	_serialize_tree()
+	var gamesave := [
+		_gs_n_objects,
+		_gs_serialized_nodes,
+		_gs_serialized_references,
+		_gs_script_paths,
+		]
+	print("Persist objects saved: ", _gs_n_objects, "; nodes in tree: ",
+			root.get_tree().get_node_count())
+	_reset()
+	return gamesave
 
-func load_game(save_file: File, tree: SceneTree, network_gamesave := []) -> void:
-	# save_file can be null if network_gamesave supplied
-	_clear()
-	var gamesave: Array
-	if save_file:
-		gamesave = save_file.get_var()
-		emit_signal("game_loaded_from_file", gamesave) # for network sync
-		save_file.close()
-	else:
-		gamesave = network_gamesave
-	_tree = tree
-	_root = _tree.get_root()
-	_tag_size = object_tag.length()
+func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
+	# "root" must be the same node specified in generate_gamesave(root).
+	# Return array has the children of root, or the not-yet-added children
+	# if dont_attach = true.
+	#
+	# To call this function on another thread, either root can't be part of the
+	# current scene tree OR set dont_attach = true. If the latter, you can
+	# subsequently attach base procedural node(s) to root in the Main thread.
+	#
+	# If building for a loaded game, be sure to free the old procedural tree
+	# using free_procedural_nodes(). It is recommended to delay a few frames
+	# after that so old freeing objects are no longer recieving signals.
 	progress = 0
 	_prog_deserialized = 0
-	yield(_tree, "idle_frame")
-	free_procedural_nodes(_root)
-	# The reason for the delay below is to make sure that objects from previous
-	# game have completely freed themselves (after queue_free call) before we
-	# start generating signals in the loaded game. If old objects are still
-	# responding to signals before deleting themselves, that can be really bad!
-	# I don't know how many yields are really needed. (I tried to test this
-	# using print_stray_nodes(), but it fails to report nodes that are still
-	# alive and responding to signals.) The goal here was to avoid need for 
-	# "destructor" methods with extensive disconnect() statements in our
-	# procedural nodes; however, after much pain I still recommend explicit
-	# disconnection of signals in procedural objects about to be deleted.
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	if use_thread:
-		_thread = Thread.new()
-		# warning-ignore:return_value_discarded
-		_thread.start(self, "_threaded_load", gamesave)
-	else:
-		_threaded_load(gamesave)
+	_tag_size = object_tag.length()
+	_root = root
+	_dont_attach = dont_attach
+	_gs_n_objects = gamesave[0]
+	_gs_serialized_nodes = gamesave[1]
+	_gs_serialized_references = gamesave[2]
+	_gs_script_paths = gamesave[3]
+	_objects.resize(_gs_n_objects)
+	_register_and_instance_load_objects()
+	_deserialize_load_objects()
+	_build_tree()
+	print("Persist objects loaded: ", _gs_n_objects)
+	var result := _build_result
+	_reset()
+	return result
 
 # ***************************** DEBUG LOGGING *********************************
 
-func debug_log(tree: SceneTree) -> String:
-	# Call before and after ALL external save/load stuff completed. Wrap in
+func debug_log(root: Node) -> String:
+	# Call before and after all external save/load stuff completed. Wrap in
 	# in assert to compile only in debug builds, e.g.:
-	# assert(print(saver_loader.debug_log(get_tree())) or true)
-	_tree = tree
-	_root = tree.get_root()
-	_log += "Number tree nodes: %s\n" % _tree.get_node_count()
+	# assert(print(save_manager.debug_log(get_tree())) or true)
+	_log += "Number tree nodes: %s\n" % root.get_tree().get_node_count()
 	_log += "Memory usage: %s\n" % OS.get_dynamic_memory_usage()
 	# This doesn't work: OS.dump_memory_to_file(mem_dump_path)
 	if debug_print_stray_nodes:
 		print("Stray Nodes:")
-		_root.print_stray_nodes()
+		root.print_stray_nodes()
 		print("***********************")
 	if debug_print_tree:
 		print("Tree:")
-		_root.print_tree_pretty()
+		root.print_tree_pretty()
 		print("***********************")
 	if debug_log_all_nodes or debug_log_persist_nodes:
 		_log_count = 0
@@ -224,7 +203,7 @@ func debug_log(tree: SceneTree) -> String:
 		if _log_count_by_class:
 			last_log_count_by_class = _log_count_by_class.duplicate()
 		_log_count_by_class.clear()
-		_log_nodes(_root)
+		_log_nodes(root)
 		if last_log_count_by_class:
 			_log += "Class counts difference from last count:\n"
 			for class_ in _log_count_by_class:
@@ -250,146 +229,112 @@ func _log_nodes(node: Node) -> void:
 		_log_count_by_class[class_] += 1
 	else:
 		_log_count_by_class[class_] = 1
-	_log += "%s %s %s\n" % [_log_count, node, node.name]
+	var script_identifier := ""
+	if node.get_script():
+		var source_code: String = node.get_script().get_source_code()
+		if source_code:
+			var split := source_code.split("\n", false, 1)
+			script_identifier = split[0]
+	_log += "%s %s %s %s\n" % [_log_count, node, node.name, script_identifier]
 	for child in node.get_children():
 		if debug_log_all_nodes or "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_log_nodes(child)
 
 # ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
 
-func _clear():
-	_sfile_n_objects = 0
-	_sfile_serialized_nodes.clear()
-	_sfile_serialized_references.clear()
-	_sfile_script_paths.clear()
-	_sfile_current_scene_id = -1
+func _reset():
+	_gs_n_objects = 0
+	_gs_serialized_nodes = []
+	_gs_serialized_references = []
+	_gs_script_paths = []
+	_root = null
 	_ids.clear()
 	_objects.clear()
-	_current_scene = null
-
-func _threaded_save(save_file: File) -> void:
-	_register_tree_for_save(_root)
-	assert(DPRINT and print("* Serializing Tree for Save *") or true)
-	_serialize_tree(_root)
-	var gamesave := [
-		_sfile_n_objects,
-		_sfile_serialized_nodes,
-		_sfile_serialized_references,
-		_sfile_script_paths,
-		_sfile_current_scene_id
-		]
-	save_file.store_var(gamesave)
-	save_file.close()
-	call_deferred("_finish_save")
-
-func _finish_save() -> void:
-	if use_thread:
-		_thread.wait_to_finish()
-	yield(_tree, "idle_frame")
-	print("Objects saved: ", _sfile_n_objects)
-	yield(_tree, "idle_frame")
-	emit_signal("finished")
-
-func _threaded_load(gamesave: Array) -> void:
-	_sfile_n_objects = gamesave[0]
-	_sfile_serialized_nodes = gamesave[1]
-	_sfile_serialized_references = gamesave[2]
-	_sfile_script_paths = gamesave[3]
-	_sfile_current_scene_id = gamesave[4]
-	_objects.resize(_sfile_n_objects)
-	_register_and_instance_load_objects()
-	_deserialize_load_objects()
-	call_deferred("_finish_load")
-	
-func _finish_load() -> void:
-	if use_thread:
-		_thread.wait_to_finish()
-	yield(_tree, "idle_frame")
-	_build_tree()
-	_set_current_scene()
-	print("Objects loaded: ", _sfile_n_objects)
-	yield(_tree, "idle_frame")
-	emit_signal("finished")
+	_build_result = []
 
 # Procedural save
 
 func _register_tree_for_save(node: Node) -> void:
-	# Make a save_id for all persist nodes by indexing in _ids. We register
-	# root (so it can be a procedural node's parent) but don't serialize it. 
-	if node == _current_scene and node.PERSIST_AS_PROCEDURAL_OBJECT:
-		_sfile_current_scene_id = _sfile_n_objects
-	_ids[node] = _sfile_n_objects
-	_sfile_n_objects += 1
+	# Make a save_id for all persist nodes by indexing in _ids. Initial call
+	# is the tree root which may or may not be a persist node itself.
+	_ids[node] = _gs_n_objects
+	_gs_n_objects += 1
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_register_tree_for_save(child)
 
-func _serialize_tree(node: Node, is_root := true) -> void:
-	if !is_root:
-		_serialize_node(node)
+func _serialize_tree() -> void:
+	if "PERSIST_AS_PROCEDURAL_OBJECT" in _root:
+		_serialize_node(_root)
+	for child in _root.get_children():
+		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+			_serialize_tree_recursive(child)
+
+func _serialize_tree_recursive(node: Node) -> void:
+	_serialize_node(node)
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			_serialize_tree(child, false)
+			_serialize_tree_recursive(child)
 
 # Procedural load
 
 func _register_and_instance_load_objects() -> void:
-	# Instances procecural objects (nodes & references) without data.
-	# Indexes all persist objects (procedural and non-procedural) in _objects.
+	# Instantiates procecural objects (nodes & references) without data.
+	# Indexes root and all persist objects (procedural and non-procedural).
 	assert(DPRINT and print("* Registering(/Instancing) Objects for Load *") or true)
 	_objects[0] = _root
 	var scripts := []
-	for script_path in _sfile_script_paths:
+	for script_path in _gs_script_paths:
 		scripts.append(load(script_path))
-	for serialized_node in _sfile_serialized_nodes:
+	for serialized_node in _gs_serialized_nodes:
 		var save_id: int = serialized_node[0]
 		var script_id: int = serialized_node[1]
 		var node: Node
 		if script_id == -1: # non-procedural node; find it
-			var node_path: String = serialized_node[2]
+			var node_path: NodePath = serialized_node[2] # relative
 			node = _root.get_node(node_path)
 			assert(DPRINT and prints(save_id, node, node.name) or true)
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
 			node = make_object_or_scene(script)
-			assert(DPRINT and prints(save_id, node, script_id, _sfile_script_paths[script_id]) or true)
+			assert(DPRINT and prints(save_id, node, script_id, _gs_script_paths[script_id]) or true)
 		assert(node)
 		_objects[save_id] = node
-	for serialized_reference in _sfile_serialized_references:
+	for serialized_reference in _gs_serialized_references:
 		var save_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
 		var script: Script = scripts[script_id]
 		var reference: Reference = script.new()
 		assert(reference)
 		_objects[save_id] = reference
-		assert(DPRINT and prints(save_id, reference, script_id, _sfile_script_paths[script_id]) or true)
+		assert(DPRINT and prints(save_id, reference, script_id, _gs_script_paths[script_id]) or true)
 
 func _deserialize_load_objects() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
-	for serialized_node in _sfile_serialized_nodes:
+	for serialized_node in _gs_serialized_nodes:
 		_deserialize_object_data(serialized_node, 3)
 		_prog_deserialized += 1
 		# warning-ignore:integer_division
-		progress = progress_multiplier * _prog_deserialized / _sfile_n_objects
-	for serialized_reference in _sfile_serialized_references:
+		progress = progress_multiplier * _prog_deserialized / _gs_n_objects
+	for serialized_reference in _gs_serialized_references:
 		_deserialize_object_data(serialized_reference, 2)
 		_prog_deserialized += 1
 		# warning-ignore:integer_division
-		progress = progress_multiplier * _prog_deserialized / _sfile_n_objects
+		progress = progress_multiplier * _prog_deserialized / _gs_n_objects
 
 func _build_tree() -> void:
-	for serialized_node in _sfile_serialized_nodes:
+	for serialized_node in _gs_serialized_nodes:
 		var save_id: int = serialized_node[0]
 		var node: Node = _objects[save_id]
-		if node.PERSIST_AS_PROCEDURAL_OBJECT:
-			var parent_save_id: int = serialized_node[2]
-			var parent: Node = _objects[parent_save_id]
-			parent.add_child(node)
-
-func _set_current_scene() -> void:
-	if _sfile_current_scene_id != -1:
-		var new_current_scene = _objects[_sfile_current_scene_id]
-		_tree.set_current_scene(new_current_scene)
+		if "PERSIST_AS_PROCEDURAL_OBJECT" in node:
+			if node.PERSIST_AS_PROCEDURAL_OBJECT:
+				var parent_save_id: int = serialized_node[2]
+				if parent_save_id == 0: # root!
+					_build_result.append(node)
+					if _dont_attach:
+						continue
+				var parent: Node = _objects[parent_save_id]
+				parent.add_child(node)
 
 # Serialize/deserialize functions
 
@@ -400,7 +345,7 @@ func _serialize_node(node: Node):
 	var script_id := -1
 	if node.PERSIST_AS_PROCEDURAL_OBJECT:
 		script_id = _get_or_create_script_id(node)
-		assert(DPRINT and prints(save_id, node, script_id, _sfile_script_paths[script_id]) or true)
+		assert(DPRINT and prints(save_id, node, script_id, _gs_script_paths[script_id]) or true)
 	else:
 		assert(DPRINT and prints(save_id, node, node.name) or true)
 	serialized_node.append(script_id) # index 1
@@ -410,28 +355,29 @@ func _serialize_node(node: Node):
 		var parent_save_id: int = _ids[parent]
 		serialized_node.append(parent_save_id) # index 2
 	else:
-		serialized_node.append(node.get_path()) # index 2
+		var node_path := _root.get_path_to(node)
+		serialized_node.append(node_path) # index 2
 	_serialize_object_data(node, serialized_node)
-	_sfile_serialized_nodes.append(serialized_node)
+	_gs_serialized_nodes.append(serialized_node)
 	_prog_serialized += 1
 	# warning-ignore:integer_division
-	progress = progress_multiplier * _prog_serialized / _sfile_n_objects
+	progress = progress_multiplier * _prog_serialized / _gs_n_objects
 
 func _register_and_serialize_reference(reference: Reference) -> int:
 	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
-	var save_id := _sfile_n_objects
-	_sfile_n_objects += 1
+	var save_id := _gs_n_objects
+	_gs_n_objects += 1
 	_ids[reference] = save_id
 	var serialized_reference := []
 	serialized_reference.append(save_id) # index 0
 	var script_id := _get_or_create_script_id(reference)
-	assert(DPRINT and prints(save_id, reference, script_id, _sfile_script_paths[script_id]) or true)
+	assert(DPRINT and prints(save_id, reference, script_id, _gs_script_paths[script_id]) or true)
 	serialized_reference.append(script_id) # index 1
 	_serialize_object_data(reference, serialized_reference)
-	_sfile_serialized_references.append(serialized_reference)
+	_gs_serialized_references.append(serialized_reference)
 	_prog_serialized += 1
 	# warning-ignore:integer_division
-	progress = progress_multiplier * _prog_serialized / _sfile_n_objects
+	progress = progress_multiplier * _prog_serialized / _gs_n_objects
 	return save_id
 
 func _get_or_create_script_id(object: Object) -> int:
@@ -441,8 +387,8 @@ func _get_or_create_script_id(object: Object) -> int:
 	if _ids.has(script_path):
 		script_id = _ids[script_path]
 	else:
-		script_id = _sfile_script_paths.size()
-		_sfile_script_paths.append(script_path)
+		script_id = _gs_script_paths.size()
+		_gs_script_paths.append(script_path)
 		_ids[script_path] = script_id
 	return script_id
 
@@ -611,3 +557,6 @@ func _decode_object(test_string: String) -> Object:
 	var save_id := int(test_string.substr(_tag_size, test_string.length() - _tag_size))
 	var object: Object = _objects[save_id]
 	return object
+
+func project_init():
+	pass # Ignore; required for I, Voyager compatibility

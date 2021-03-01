@@ -109,6 +109,9 @@ var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 
 # project vars - set on extension_init(); see singletons/project_builder.gd
 var project_name := ""
+var project_version := "" # external project can set for gamesave debuging
+var ivoyager_version := "0.0.9-dev"
+var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
@@ -213,20 +216,10 @@ var translations := [
 var debug_log := File.new() # set null to disable debug log
 var debug_log_path := "user://logs/debug.log"
 
-# ******************************* PERSISTED ***********************************
-
-var project_version := "" # external project can set for gamesave debuging
-var ivoyager_version := "0.0.9-dev"
-var is_modded := false # this is aspirational
-
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
 
 # *****************************************************************************
 
 # read-only!
-var current_project_version := project_version
-var current_ivoyager_version := ivoyager_version
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 

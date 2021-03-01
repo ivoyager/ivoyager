@@ -87,7 +87,15 @@ var _meta_lookup := {}
 
 func _ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("setting_changed", self, "_settings_listener")
+
+func _clear() -> void:
+	_labels.clear()
+	_values.clear()
+	_meta_lookup.clear()
+	for child in get_children():
+		child.queue_free()
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)

@@ -92,11 +92,11 @@ onready var universe: Spatial = get_node("/root/Universe")
 
 var program_builders := {
 	# ProjectBuilder instances one of each. No save/load persistence. These are
-	# treated exactly like program_references below, but separated here for
-	# project organization.
+	# treated exactly like program_references below, but separated here and in
+	# the project directory for organization.
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
-	_SaverLoader_ = SaverLoader,
+	_SaveBuilder_ = SaveBuilder, # remove if you don't need game save
 	_EnvironmentBuilder_ = EnvironmentBuilder,
 	_SystemBuilder_ = SystemBuilder,
 	_BodyBuilder_ = BodyBuilder,
@@ -115,7 +115,6 @@ var program_references := {
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
 	_InputMapManager_ = InputMapManager,
 	_IOManager_ = IOManager,
-	_SaveLoadManager_ = SaveLoadManager,
 	_FontManager_ = FontManager, # ok to replace
 	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
 	_QtyStrings_ = QtyStrings,
@@ -126,9 +125,10 @@ var program_references := {
 }
 
 var program_nodes := {
-	# ProjectBuilder instances one of each and adds as child to Global. Use
+	# ProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
 	_StateManager_ = StateManager,
+	_SaveManager_ = SaveManager, # remove if you don't need game saves
 	_Timekeeper_ = Timekeeper,
 	_BodyRegistry_ = BodyRegistry,
 	_InputHandler_ = InputHandler,
@@ -139,7 +139,7 @@ var program_nodes := {
 }
 
 var gui_controls := {
-	# ProjectBuilder instances one of each and adds as child to Universe. Use
+	# ProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
@@ -217,7 +217,7 @@ func instantiate_and_index() -> void:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
-			var object: Object = SaverLoader.make_object_or_scene(dict[key])
+			var object: Object = SaveBuilder.make_object_or_scene(dict[key])
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
@@ -238,12 +238,10 @@ func init_project() -> void:
 	emit_signal("init_step_finished")
 
 func add_project_nodes() -> void:
-	for key in program_nodes:
-		var object_key = key.rstrip("_").lstrip("_")
-		Global.add_child(program[object_key])
-	for key in gui_controls:
-		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(program[object_key])
+	for dict in [program_nodes, gui_controls]:
+		for key in dict:
+			var object_key = key.rstrip("_").lstrip("_")
+			universe.add_child(program[object_key])
 	emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
