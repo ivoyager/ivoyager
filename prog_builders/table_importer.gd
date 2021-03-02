@@ -73,27 +73,19 @@ var _field: String
 var _cell: String
 var _count := 0
 
+func _init():
+	var start_time := OS.get_system_time_msecs()
+	_import()
+	var time := OS.get_system_time_msecs() - start_time
+	print("Imported %s table values (%s unique) in %s msec" % [_count, _values.size(), time])
 
 func project_init() -> void:
 	var table_reader: TableReader = Global.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, 
 			_table_row_dicts, _values)
-	Global.connect("project_builder_finished", self, "import_tables")
+	Global.program.erase("TableImporter") # this Reference will free itself
 
-func import_tables() -> void:
-	var _io_manager: IOManager = Global.program.IOManager
-	_io_manager.callback(self, "import_on_io_callback", "io_finish")
-
-func io_finish(array: Array) -> void: # Main thread
-	var start_time: int = array[0]
-	var time := OS.get_system_time_msecs() - start_time
-	print("Imported %s table values (%s unique) in %s msec" % [_count, _values.size(), time])
-	Global.emit_signal("table_data_imported")
-	Global.program.erase("TableImporter") # this Reference will cease to exist
-	Global.script_classes.erase("_TableImporter_")
-
-func import_on_io_callback(array: Array) -> void: # this and below on I/O thread!
-	array.append(OS.get_system_time_msecs())
+func _import() -> void: # this and below on I/O thread!
 	if _enable_wiki:
 		for path in _wiki_only:
 			_path = path

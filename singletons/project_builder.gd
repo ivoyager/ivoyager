@@ -38,7 +38,7 @@
 #     b. modify this node's dictionaries to extend (i.e., subclass) and replace
 #        existing classes, remove classes, or add new classes.
 #     (Above happens before anything else is instantiated!)
-# 3. Hook up to this node's "project_objects_instantiated" signal to modify
+# 3. Hook up to this Global "project_objects_instantiated" signal to modify
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
 #    be accessed after instantiation in the "program" dictionary.
@@ -50,10 +50,6 @@ extends Node
 
 const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-signal extentions_inited()
-signal project_objects_instantiated()
-signal project_inited()
-signal project_nodes_added()
 signal init_step_finished()
 
 # ******************** PROJECT VARS - EXTEND HERE !!! *************************
@@ -80,23 +76,24 @@ onready var universe: Spatial = get_node("/root/Universe")
 # indicates otherwise. E.g., "Spatial ok", replace with a class that extends
 # Spatial.
 #
-# Classes instantiated by ProjectBuilder (the next 3 dictionaries) must have
-# function "project_init". This is enforced to provide consistent expectation
-# when subclassing.
-#
 # Key formatting "_ClassName_" below is meant to be a reminder that the keyed
 # item at runtime might be a project-specific subclass (or in some cases
-# replacement) for the original class. For objects instantiated by
-# ProjectBuilder, edge underscores are removed to form keys in the
-# Global.program dictionary (and "name" property for nodes).
+# replacement) for the original class. For objects instanced by ProjectBuilder,
+# edge underscores are removed to form keys in the Global.program dictionary
+# and the "name" property of nodes.
 
-var program_builders := {
-	# ProjectBuilder instances one of each. No save/load persistence. These are
-	# treated exactly like program_references below, but separated here and in
-	# the project directory for organization.
+var program_importers := {
+	# Reference classes. ProjectBuilder instances these first. They may erase
+	# themselves from Global.program when done (thus, freeing themselves).
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
-	_SaveBuilder_ = SaveBuilder, # remove if you don't need game save
+}
+
+var program_builders := {
+	# Reference classes. ProjectBuilder instances one of each. No save/load
+	# persistence. These are treated exactly like program_references below, but
+	# separated for project organization.
+	_SaveBuilder_ = SaveBuilder, # ok to remove if you don't need game save
 	_EnvironmentBuilder_ = EnvironmentBuilder,
 	_SystemBuilder_ = SystemBuilder,
 	_BodyBuilder_ = BodyBuilder,
@@ -111,7 +108,8 @@ var program_builders := {
 }
 
 var program_references := {
-	# ProjectBuilder instances one of each. No save/load persistence.
+	# Reference classes. ProjectBuilder instances one of each. No save/load
+	# persistence.
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
 	_InputMapManager_ = InputMapManager,
 	_IOManager_ = IOManager,
@@ -137,6 +135,8 @@ var program_nodes := {
 	_PointsManager_ = PointsManager,
 	_MinorBodiesManager_ = MinorBodiesManager,
 }
+
+var keep_gui_under_existing_controls := true # add before other children
 
 var gui_controls := {
 	# ProjectBuilder instances one of each and adds as child of Universe. Use
@@ -208,12 +208,12 @@ func init_extensions() -> void:
 		extension.extension_init() # extension files must have this method!
 		Global.extensions.append([extension.EXTENSION_NAME,
 				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
-	emit_signal("extentions_inited")
-	Global.after_extensions_inited()
+	Global.load_assets() # here so extensions can alter paths
+	Global.emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:
 	program.Universe = universe
-	for dict in [program_builders, program_references, program_nodes, gui_controls]:
+	for dict in [program_importers, program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
@@ -221,28 +221,44 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	for dict in [program_builders,program_references, program_nodes, gui_controls, procedural_classes]:
+	for dict in [program_importers, program_builders,program_references, program_nodes, gui_controls,
+			procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
-	emit_signal("project_objects_instantiated")
+	Global.emit_signal("project_objects_instantiated")
+#	yield(get_tree(), "idle_frame")
+#	emit_signal("init_step_finished")
 
 func init_project() -> void:
+	for key in program_importers:
+		var object_key: String = key.rstrip("_").lstrip("_")
+		if program.has(object_key): # might have removed themselves already
+			var object: Object = program[object_key]
+			if object.has_method("project_init"):
+				object.project_init()
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = program[object_key]
-			object.project_init() # all defined here must have this method!
-	emit_signal("project_inited")
+			if object.has_method("project_init"):
+				object.project_init()
+	Global.emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
 func add_project_nodes() -> void:
-	for dict in [program_nodes, gui_controls]:
-		for key in dict:
-			var object_key = key.rstrip("_").lstrip("_")
-			universe.add_child(program[object_key])
-	emit_signal("project_nodes_added")
+	var index := 0
+	for key in gui_controls:
+		var object_key = key.rstrip("_").lstrip("_")
+		universe.add_child(program[object_key])
+		if keep_gui_under_existing_controls:
+			universe.move_child(program[object_key], index)
+		index += 1
+	for key in program_nodes:
+		var object_key = key.rstrip("_").lstrip("_")
+		universe.add_child(program[object_key])
+	Global.emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 

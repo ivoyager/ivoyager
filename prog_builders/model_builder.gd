@@ -233,16 +233,15 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 # *****************************************************************************
 
 func project_init() -> void:
-	Global.connect("table_data_imported", self, "_preregister_files")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("about_to_quit", self, "_clear")
 	_table_reader = Global.program.TableReader
 	_io_manager = Global.program.IOManager
 	_globe_mesh = Global.shared_resources.globe_mesh
 	_fallback_albedo_map = Global.assets.fallback_albedo_map
+	_preregister_files()
 
 func _preregister_files() -> void:
-	# Just reading directory here so we don't need I/O thread
 	var models_search := Global.models_search
 	var maps_search := Global.maps_search
 	for table in model_tables:

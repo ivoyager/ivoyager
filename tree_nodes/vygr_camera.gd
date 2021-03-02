@@ -333,7 +333,7 @@ func _on_ready():
 	name = "VygrCamera"
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
-	Global.connect("gui_refresh_requested", self, "_send_gui_refresh")
+	Global.connect("update_gui_needed", self, "_send_gui_refresh")
 	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
@@ -367,7 +367,7 @@ func _on_ready():
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	Global.disconnect("gui_refresh_requested", self, "_send_gui_refresh")
+	Global.disconnect("update_gui_needed", self, "_send_gui_refresh")
 	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
 	Global.disconnect("setting_changed", self, "_settings_listener")

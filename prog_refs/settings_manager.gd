@@ -27,7 +27,7 @@ class_name SettingsManager
 
 
 func _on_init():
-	# project vars - modify on ProjectBuilder signal "project_objects_instantiated"
+	# project vars - modify on signal project_objects_instantiated
 	cache_file_name = "settings.vbinary"
 	defaults = {
 		# save/load

@@ -213,7 +213,7 @@ func _ready():
 	_on_ready()
 
 func _on_ready() -> void:
-	Global.connect("table_data_imported", self, "_finish_init", [], CONNECT_ONESHOT)
+	Global.connect("project_builder_finished", self, "_finish_init", [], CONNECT_ONESHOT)
 	Global.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
@@ -224,13 +224,10 @@ func _on_ready() -> void:
 	require_stop(self, -1, true)
 
 func _finish_init() -> void:
-#	_environment_builder.add_world_environment() # this is really slow!!!
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
 	print("StateManager inited...")
 	Global.emit_signal("state_manager_inited")
-#	if Global.skip_splash_screen:
-#		build_system_tree()
 
 func _on_about_to_build_system_tree() -> void:
 	_state.is_splash_screen = false
@@ -245,9 +242,10 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	Global.emit_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	allow_run(self)
-	Global.emit_signal("simulator_started")
 	yield(_tree, "idle_frame")
-	Global.emit_signal("gui_refresh_requested")
+	Global.emit_signal("update_gui_needed")
+	yield(_tree, "idle_frame")
+	Global.emit_signal("simulator_started")
 
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in

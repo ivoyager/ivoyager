@@ -34,7 +34,7 @@ var _under_moons_spacer_sizes := [55.0, 66.0, 77.0]
 
 func _ready() -> void:
 	# modify widgets here
-	Global.connect("gui_refresh_requested", self, "_resize")
+	Global.connect("update_gui_needed", self, "_resize")
 	Global.connect("setting_changed", self, "_settings_listener")
 
 func _resize() -> void:
