@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# All functions are thread-safe after Global signal "table_data_imported".
 # For get functions, table_name is "planets", "moons", etc. Supply either row
 # or row_name.
 

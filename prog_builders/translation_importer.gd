@@ -30,11 +30,10 @@
 
 class_name TranslationImporter
 
-func project_init() -> void:
-	pass
-
 func _init():
 	_load_translations()
+	Global.emit_signal("translations_imported")
+	Global.program.erase("TranslationImporter") # this Reference will free itself
 
 func _load_translations() -> void:
 	var load_dict := {}
@@ -75,4 +74,3 @@ func _process_translation(translation: Translation,	load_dict: Dictionary,
 		var new_text := StrUtils.c_unescape_patch(text)
 		if new_text != text:
 			translation.add_message(txt_key, new_text)
-	

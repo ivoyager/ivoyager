@@ -27,10 +27,14 @@
 extends Node
 
 # simulator state broadcasts
-signal project_builder_finished()
-signal table_data_imported()
-signal world_environment_added()
+signal extentions_inited() # ProjectBuilder; nothing else added yet
+signal translations_imported() # TranslationImporter; useful for boot screen
+signal project_objects_instantiated() # ProjectBuilder; Global.program populated
+signal project_inited() # ProjectBuilder; after all project_init() calls
+signal project_nodes_added() # ProjectBuilder; program_nodes & gui_controls added
+signal project_builder_finished() # ProjectBuilder; 1 frame after above
 signal state_manager_inited()
+signal world_environment_added() # on Main after I/O thread finishes (slow!)
 signal about_to_build_system_tree()
 signal system_tree_built_or_loaded(is_new_game) # still some I/O tasks to do!
 signal system_tree_ready(is_new_game) # I/O thread has finished!
@@ -226,15 +230,15 @@ var is_html5: bool = OS.has_feature('JavaScript')
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
-func _ready():
-	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
-
-func after_extensions_inited():
+func load_assets():
 	# called by ProjectBuilder before all other class instantiations
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
 	_load_assets()
+
+func _ready():
+	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:

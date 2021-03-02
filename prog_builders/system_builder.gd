@@ -45,7 +45,6 @@ func build_system_tree() -> void:
 		var camera_script: Script = Global.script_classes._Camera_
 		var camera: Camera = camera_script.new()
 		camera.add_to_tree()
-	print("system_tree_built_or_loaded")
 	Global.emit_signal("system_tree_built_or_loaded", true)
 
 # *****************************************************************************

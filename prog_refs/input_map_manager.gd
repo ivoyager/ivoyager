@@ -160,7 +160,7 @@ static func strip_scancode_mods(scancode: int) -> int:
 	return scancode
 
 func _on_init() -> void:
-	# project vars - modify on ProjectBuilder signal "project_objects_instantiated"
+	# project vars - modify on signal project_objects_instantiated
 	cache_file_name = "input_map.vbinary"
 	defaults = {
 		# Each "event_dict" must have event_class; all other keys are properties

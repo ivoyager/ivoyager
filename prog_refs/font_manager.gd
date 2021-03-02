@@ -22,7 +22,7 @@
 extends Reference
 class_name FontManager
 
-# project vars - modify on "project_objects_instantiated" signal
+# project vars - modify on signal project_objects_instantiated
 var fixed_sizes := {
 	two_pt = 2, # hack to allow small button height (e.g., in SystemNavigator)
 	medium = 22,
