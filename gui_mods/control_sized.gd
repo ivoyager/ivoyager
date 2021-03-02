@@ -51,7 +51,7 @@ onready var _parent: Control = get_parent()
 var _default_size: Vector2
 
 func _ready() -> void:
-	Global.connect("gui_refresh_requested", self, "_resize")
+	Global.connect("update_gui_needed", self, "_resize")
 	Global.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 

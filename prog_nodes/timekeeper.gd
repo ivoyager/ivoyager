@@ -336,7 +336,7 @@ func _on_ready() -> void:
 	Global.connect("game_load_finished", self, "_set_ready_state")
 	Global.connect("simulator_exited", self, "_set_ready_state")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("gui_refresh_requested", self, "_refresh_gui")
+	Global.connect("update_gui_needed", self, "_refresh_gui")
 	connect("speed_changed", self, "_on_speed_changed")
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal

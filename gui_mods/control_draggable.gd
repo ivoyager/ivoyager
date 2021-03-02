@@ -57,13 +57,13 @@ func set_min_size() -> void:
 		default_sizes[i] = Vector2.ZERO
 
 func _ready():
-	Global.connect("gui_refresh_requested", self, "_on_gui_refresh_requested")
+	Global.connect("update_gui_needed", self, "_on_update_gui_needed")
 	Global.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag
 
-func _on_gui_refresh_requested() -> void:
+func _on_update_gui_needed() -> void:
 	_resize()
 	_finish_move()
 

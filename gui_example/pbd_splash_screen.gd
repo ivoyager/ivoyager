@@ -19,8 +19,6 @@
 # *****************************************************************************
 # Example splash screen with Pale Blue Dot image and interactive text. You
 # probably want to replace this.
-#
-# TODO: Rebuild this using Containers. (Now that I know how to use them!)
 
 extends Control
 class_name PBDSplashScreen
@@ -31,29 +29,25 @@ var _settings_manager: SettingsManager
 onready var _pbd_caption: Label = $PBDCaption
 
 func project_init():
-	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	Global.connect("simulator_started", self, "hide")
 	Global.connect("simulator_exited", self, "show")
 	_settings_manager = Global.program.SettingsManager
 
 func _ready():
 	theme = Global.themes.splash_screen
-	$VersionLabel.set_version_label("", true, true, "\n", "",
+	$LeftBox/VersionLabel.set_version_label("", true, true, "\n", "",
 			"\n\n(c) 2017-2021\nCharlie Whitfield")
-	$MainMenu.is_splash_config = true
+	$LeftBox/MainMenu.is_splash_config = true
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
 	_pbd_caption.connect("gui_input", self, "_pbd_caption_input")
 	_pbd_caption.set("custom_colors/font_color", Color.lightskyblue)
-	_pbd_caption.text = "TXT_PBD_LONG" if _settings.pbd_splash_caption_open else "TXT_PBD_SHORT"
+	if _settings.pbd_splash_caption_open:
+		_pbd_caption.text = "TXT_PBD_LONG"
+	else:
+		_pbd_caption.text = "TXT_PBD_SHORT"
 	if Global.skip_splash_screen:
 		hide()
-
-func _on_state_manager_inited() -> void:
-	pass
-
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	hide()
 
 func _pbd_mouse_entered() -> void:
 	_pbd_caption.set("custom_colors/font_color", Color.white)

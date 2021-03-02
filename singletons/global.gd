@@ -17,12 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "Global".
-# References to Global containers are immutable. Global init values should be
-# modified by extension in their extension_init() function and treated as
-# immutable thereafter. It's good practice to make local references to whatever
-# you need near the top of your class and keep "Global" out of your non-init
-# functions.
+# Singleton "Global"
+#
+# Global init values should be modified by extension in their extension_init()
+# function and treated as immutable thereafter.
+#
+# Containers here (arrays and dictionaries) are never replaced, so it is safe
+# to keep a local reference in class files.
 
 extends Node
 
@@ -39,6 +40,7 @@ signal about_to_build_system_tree()
 signal system_tree_built_or_loaded(is_new_game) # still some I/O tasks to do!
 signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
+signal update_gui_needed() # send signals with GUI info now!
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_quit()
@@ -85,7 +87,6 @@ signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
-signal gui_refresh_requested()
 signal rich_text_popup_requested(header_text, bbcode_text)
 
 # containers - write authority indicated; safe to keep container reference

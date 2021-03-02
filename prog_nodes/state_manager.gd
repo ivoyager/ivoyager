@@ -242,9 +242,10 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	Global.emit_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	allow_run(self)
-	Global.emit_signal("simulator_started")
 	yield(_tree, "idle_frame")
-	Global.emit_signal("gui_refresh_requested")
+	Global.emit_signal("update_gui_needed")
+	yield(_tree, "idle_frame")
+	Global.emit_signal("simulator_started")
 
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in

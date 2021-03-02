@@ -84,7 +84,7 @@ func project_init() -> void:
 
 func _ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	Global.connect("gui_refresh_requested", self, "_refresh_gui")
+	Global.connect("update_gui_needed", self, "_refresh_gui")
 
 func _restore_init_state() -> void:
 	_show_points.clear()

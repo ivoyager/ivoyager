@@ -57,8 +57,8 @@ func project_init() -> void:
 	pass
 
 func _ready():
-	Global.connect("gui_refresh_requested", self, "_gui_refresh")
+	Global.connect("update_gui_needed", self, "_refresh_gui")
 
-func _gui_refresh() -> void:
+func _refresh_gui() -> void:
 	emit_signal("show_huds_changed")
 

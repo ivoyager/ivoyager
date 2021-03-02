@@ -59,7 +59,7 @@ signal init_step_finished()
 var init_sequence := [
 	# [object, method, wait_for_signal]
 	[self, "init_extensions", false],
-	[self, "instantiate_and_index", true],
+	[self, "instantiate_and_index", false],
 	[self, "init_project", true],
 	[self, "add_project_nodes", true],
 	[self, "signal_finished", false]
@@ -227,8 +227,8 @@ func instantiate_and_index() -> void:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
 	Global.emit_signal("project_objects_instantiated")
-	yield(get_tree(), "idle_frame")
-	emit_signal("init_step_finished")
+#	yield(get_tree(), "idle_frame")
+#	emit_signal("init_step_finished")
 
 func init_project() -> void:
 	for key in program_importers:
