@@ -85,7 +85,7 @@ var _rotate_pressed := VECTOR3_ZERO
 var _suppress_camera_move := false
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _ready():

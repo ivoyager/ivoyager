@@ -46,7 +46,7 @@ var _running_count := 0
 
 # ************************ PUBLIC FUNCTIONS ***********************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
 	_table_reader = Global.program.TableReader
 	_l_point_builder = Global.program.LPointBuilder

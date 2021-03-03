@@ -344,7 +344,7 @@ func conv_enum(value: String, enum_name: String) -> int:
 # *****************************************************************************
 # init
 
-func project_init() -> void:
+func _project_init() -> void:
 	_enums = Global.enums
 	_unit_multipliers = Global.unit_multipliers
 	_unit_functions = Global.unit_functions

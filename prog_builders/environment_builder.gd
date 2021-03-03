@@ -24,7 +24,7 @@ class_name EnvironmentBuilder
 
 var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("project_inited", self, "add_world_environment")
 
 func add_world_environment() -> void:

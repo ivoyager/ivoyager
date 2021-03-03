@@ -307,8 +307,8 @@ func _on_init() -> void:
 	current = {}
 	_is_references = true
 
-func project_init() -> void:
-	.project_init()
+func _project_init() -> void:
+	._project_init()
 	_init_actions()
 
 func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:

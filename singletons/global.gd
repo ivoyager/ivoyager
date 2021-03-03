@@ -31,7 +31,7 @@ extends Node
 signal extentions_inited() # ProjectBuilder; nothing else added yet
 signal translations_imported() # TranslationImporter; useful for boot screen
 signal project_objects_instantiated() # ProjectBuilder; Global.program populated
-signal project_inited() # ProjectBuilder; after all project_init() calls
+signal project_inited() # ProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # ProjectBuilder; program_nodes & gui_controls added
 signal project_builder_finished() # ProjectBuilder; 1 frame after above
 signal state_manager_inited()

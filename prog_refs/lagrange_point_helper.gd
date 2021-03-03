@@ -23,7 +23,7 @@ class_name LPointBuilder
 
 var _LPoint_: Script
 
-func project_init() -> void:
+func _project_init() -> void:
 	_LPoint_ = Global.script_classes._LPoint_
 
 func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:

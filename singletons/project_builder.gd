@@ -205,7 +205,8 @@ func init_extensions() -> void:
 					extensions.append(extension)
 		dir_name = dir.get_next()
 	for extension in extensions:
-		extension.extension_init() # extension files must have this method!
+		if extension.has_method("_extension_init"):
+			extension._extension_init()
 		Global.extensions.append([extension.EXTENSION_NAME,
 				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
 	Global.load_assets() # here so extensions can alter paths
@@ -235,14 +236,14 @@ func init_project() -> void:
 		var object_key: String = key.rstrip("_").lstrip("_")
 		if program.has(object_key): # might have removed themselves already
 			var object: Object = program[object_key]
-			if object.has_method("project_init"):
-				object.project_init()
+			if object.has_method("_project_init"):
+				object._project_init()
 	for dict in [program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = program[object_key]
-			if object.has_method("project_init"):
-				object.project_init()
+			if object.has_method("_project_init"):
+				object._project_init()
 	Global.emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")

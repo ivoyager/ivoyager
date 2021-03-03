@@ -76,7 +76,7 @@ var prefix_symbols := [
 
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
-	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in project_init()
+	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
 # or functions dictionaries (by default, these are obtained from UnitDefs). The
@@ -203,7 +203,7 @@ var _format4 := [null, null, null, null] # scratch array
 var _multipliers: Dictionary
 var _functions: Dictionary
 
-func project_init():
+func _project_init():
 	_multipliers = Global.unit_multipliers
 	_functions = Global.unit_functions
 	_n_prefixes = prefix_symbols.size()

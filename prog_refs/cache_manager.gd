@@ -104,7 +104,7 @@ func _init() -> void:
 func _on_init() -> void:
 	pass
 
-func project_init() -> void:
+func _project_init() -> void:
 	_io_manager = Global.program.IOManager
 	var cache_dir: String = Global.cache_dir
 	_file_path = cache_dir.plus_file(cache_file_name)
@@ -135,7 +135,7 @@ func _write_cache() -> void:
 	_io_manager.store_var_to_file(_cached.duplicate(true), _file_path)
 
 func _read_cache() -> void:
-	# This happens on project_init() only. We want this on Main thread so that
+	# This happens on _project_init() only. We want this on Main thread so that
 	# it does block until completed.
 	var file := File.new()
 	if file.open(_file_path, File.READ) != OK:

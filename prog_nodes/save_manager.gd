@@ -166,7 +166,7 @@ func _simulator_started_after_load() -> void:
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _ready():

@@ -30,7 +30,7 @@ var add_quick_load_button := true
 var _state: Dictionary = Global.state
 var _main_menu_manager: MainMenuManager
 
-func project_init():
+func _project_init():
 	if !Global.enable_save_load:
 		return
 	_main_menu_manager = Global.program.MainMenuManager

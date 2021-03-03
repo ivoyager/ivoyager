@@ -54,7 +54,7 @@ var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
 var _body_registry: BodyRegistry
 var _SelectionItem_: Script
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
 	_body_registry = Global.program.BodyRegistry
 	_SelectionItem_ = Global.script_classes._SelectionItem_

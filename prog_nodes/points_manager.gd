@@ -79,7 +79,7 @@ func forget_points_category(category: String) -> void: # not needed for load
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _ready():

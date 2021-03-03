@@ -28,7 +28,7 @@ var _settings: Dictionary = Global.settings
 var _settings_manager: SettingsManager
 onready var _pbd_caption: Label = $PBDCaption
 
-func project_init():
+func _project_init():
 	Global.connect("simulator_started", self, "hide")
 	Global.connect("simulator_exited", self, "show")
 	_settings_manager = Global.program.SettingsManager

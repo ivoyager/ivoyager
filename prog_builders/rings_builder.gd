@@ -68,5 +68,5 @@ func _io_finish(array: Array) -> void: # Main thread
 #	prints(rings.cast_shadow, rings_material.flags_do_not_receive_shadows)
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass

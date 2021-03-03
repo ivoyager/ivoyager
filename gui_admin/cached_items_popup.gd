@@ -104,7 +104,7 @@ func remove_item(item: String) -> void:
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _init():

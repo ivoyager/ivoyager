@@ -90,7 +90,7 @@ var _Orbit_: Script
 var _dynamic_orbits: bool
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	_table_reader = Global.program.TableReader
 	_Orbit_ = Global.script_classes._Orbit_
 	_dynamic_orbits = Global.dynamic_orbits

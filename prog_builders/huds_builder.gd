@@ -38,7 +38,7 @@ var _projection_surface: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
-func project_init() -> void:
+func _project_init() -> void:
 	_HUDLabel_ = Global.script_classes._HUDLabel_
 	_HUDOrbit_ = Global.script_classes._HUDOrbit_
 	_huds_manager = Global.program.HUDsManager

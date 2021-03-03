@@ -33,7 +33,7 @@ var cache_file_name := "view.vbinary"
 var _cache_dir: String = Global.cache_dir
 var _camera: VygrCamera
 
-func project_init() -> void:
+func _project_init() -> void:
 	var dir = Directory.new()
 	if dir.open(_cache_dir) != OK:
 		dir.make_dir(_cache_dir)

@@ -115,7 +115,7 @@ func remove_selection_item(selection_item: SelectionItem) -> void:
 
 # *****************************************************************************
 
-func project_init():
+func _project_init():
 	pass
 
 func _ready():

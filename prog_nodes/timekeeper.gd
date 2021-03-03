@@ -319,7 +319,7 @@ func can_decr_speed() -> bool:
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	times.resize(3)
 	date.resize(3)
 	clock.resize(3)

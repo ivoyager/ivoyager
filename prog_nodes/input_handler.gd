@@ -61,7 +61,7 @@ func make_action(action: String, is_pressed := true) -> void:
 
 # *****************************************************************************
 
-func project_init():
+func _project_init():
 	pass
 
 func _ready():

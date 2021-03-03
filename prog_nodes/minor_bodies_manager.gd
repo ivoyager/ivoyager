@@ -35,7 +35,7 @@ const PERSIST_PROPERTIES := ["group_names", "ids_by_group"]
 const PERSIST_OBJ_PROPERTIES := ["group_refs_by_name", "lagrange_points"]
 
 
-func project_init():
+func _project_init():
 	pass
 
 func _ready():

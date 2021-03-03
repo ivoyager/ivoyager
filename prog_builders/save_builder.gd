@@ -557,5 +557,5 @@ func _decode_object(test_string: String) -> Object:
 	var object: Object = _objects[save_id]
 	return object
 
-func project_init():
+func _project_init():
 	pass # Ignore; required for I, Voyager compatibility

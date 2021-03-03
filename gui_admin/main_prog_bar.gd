@@ -42,7 +42,7 @@ func stop() -> void:
 	set_process(false)
 	_delay_count = 0
 
-func project_init():
+func _project_init():
 	connect("ready", self, "set_process", [false])
 
 func _ready() -> void:

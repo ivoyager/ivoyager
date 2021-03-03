@@ -49,7 +49,7 @@ func build_system_tree() -> void:
 
 # *****************************************************************************
 
-func project_init():
+func _project_init():
 	_body_builder = Global.program.BodyBuilder
 	_table_reader = Global.program.TableReader
 	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)

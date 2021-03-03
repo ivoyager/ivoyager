@@ -31,7 +31,7 @@ var stop_sim := true
 var _state: Dictionary = Global.state
 onready var _state_manager: StateManager = Global.program.StateManager
 
-func project_init():
+func _project_init():
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("open_main_menu_requested", self, "_open")
 	Global.connect("close_main_menu_requested", self, "hide")

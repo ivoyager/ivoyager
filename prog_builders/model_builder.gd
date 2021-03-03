@@ -232,7 +232,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("about_to_quit", self, "_clear")
 	_table_reader = Global.program.TableReader

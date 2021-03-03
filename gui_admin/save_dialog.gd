@@ -32,7 +32,7 @@ onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	if !Global.enable_save_load:
 		return
 	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager

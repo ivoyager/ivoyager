@@ -53,7 +53,7 @@ func set_show_symbols(is_show: bool) -> void:
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _ready():
