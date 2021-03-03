@@ -32,7 +32,7 @@ var _camera: Camera
 var _current_star_orbiter: Body
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("camera_ready", self, "_connect_camera")
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")

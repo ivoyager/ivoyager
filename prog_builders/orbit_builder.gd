@@ -89,12 +89,6 @@ var _table_reader: TableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
-
-func project_init() -> void:
-	_table_reader = Global.program.TableReader
-	_Orbit_ = Global.script_classes._Orbit_
-	_dynamic_orbits = Global.dynamic_orbits
-
 func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> Orbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
@@ -217,3 +211,10 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 			set(property, NAN)
 	_ref_plane = ""
 	return orbit
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	_table_reader = Global.program.TableReader
+	_Orbit_ = Global.script_classes._Orbit_
+	_dynamic_orbits = Global.dynamic_orbits

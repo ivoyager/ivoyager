@@ -79,7 +79,7 @@ func _init():
 	var time := OS.get_system_time_msecs() - start_time
 	print("Imported %s table values (%s unique) in %s msec" % [_count, _values.size(), time])
 
-func project_init() -> void:
+func _project_init() -> void:
 	var table_reader: TableReader = Global.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, 
 			_table_row_dicts, _values)

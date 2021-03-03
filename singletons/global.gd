@@ -19,7 +19,7 @@
 # *****************************************************************************
 # Singleton "Global"
 #
-# Global init values should be modified by extension in their extension_init()
+# Global init values should be modified by extension in their _extension_init()
 # function and treated as immutable thereafter.
 #
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
@@ -31,7 +31,7 @@ extends Node
 signal extentions_inited() # ProjectBuilder; nothing else added yet
 signal translations_imported() # TranslationImporter; useful for boot screen
 signal project_objects_instantiated() # ProjectBuilder; Global.program populated
-signal project_inited() # ProjectBuilder; after all project_init() calls
+signal project_inited() # ProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # ProjectBuilder; program_nodes & gui_controls added
 signal project_builder_finished() # ProjectBuilder; 1 frame after above
 signal state_manager_inited()
@@ -112,7 +112,7 @@ var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # [Camera, glb_trns, fov, v
 var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 
 
-# project vars - set on extension_init(); see singletons/project_builder.gd
+# project vars - set on _extension_init(); see singletons/project_builder.gd
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
 var ivoyager_version := "0.0.9-dev"

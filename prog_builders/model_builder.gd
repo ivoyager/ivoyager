@@ -76,6 +76,43 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 	var array := [body, model_geometry, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
+# *****************************************************************************
+
+func _project_init() -> void:
+	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	Global.connect("about_to_quit", self, "_clear")
+	_table_reader = Global.program.TableReader
+	_io_manager = Global.program.IOManager
+	_globe_mesh = Global.shared_resources.globe_mesh
+	_fallback_albedo_map = Global.assets.fallback_albedo_map
+	_preregister_files()
+
+func _preregister_files() -> void:
+	var models_search := Global.models_search
+	var maps_search := Global.maps_search
+	for table in model_tables:
+		var n_rows := _table_reader.get_n_rows(table)
+		var row := 0
+		while row < n_rows:
+			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
+			assert(file_prefix)
+			var model_file := FileUtils.find_resource_file(models_search, file_prefix)
+			if model_file:
+				_model_files[file_prefix] = model_file
+			for suffix in map_search_suffixes:
+				var file_match := file_prefix + (suffix as String)
+				var map_file := FileUtils.find_resource_file(maps_search, file_match)
+				if map_file:
+					_map_files[file_match] = map_file
+			row += 1
+
+func _clear() -> void:
+	while _recycled_placeholders:
+		var placeholder: Spatial = _recycled_placeholders.pop_back()
+		placeholder.queue_free()
+	_lazy_tracker.clear()
+	_n_lazy = 0
+
 func _add_placeholder(body: Body, model_geometry: ModelGeometry) -> void: # Main thread
 	var placeholder: Spatial
 	if _recycled_placeholders:
@@ -229,40 +266,3 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 	basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # adjust for centered prime meridian
 	basis = basis.rotated(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return basis
-
-# *****************************************************************************
-
-func project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_quit", self, "_clear")
-	_table_reader = Global.program.TableReader
-	_io_manager = Global.program.IOManager
-	_globe_mesh = Global.shared_resources.globe_mesh
-	_fallback_albedo_map = Global.assets.fallback_albedo_map
-	_preregister_files()
-
-func _preregister_files() -> void:
-	var models_search := Global.models_search
-	var maps_search := Global.maps_search
-	for table in model_tables:
-		var n_rows := _table_reader.get_n_rows(table)
-		var row := 0
-		while row < n_rows:
-			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
-			assert(file_prefix)
-			var model_file := FileUtils.find_resource_file(models_search, file_prefix)
-			if model_file:
-				_model_files[file_prefix] = model_file
-			for suffix in map_search_suffixes:
-				var file_match := file_prefix + (suffix as String)
-				var map_file := FileUtils.find_resource_file(maps_search, file_match)
-				if map_file:
-					_map_files[file_match] = map_file
-			row += 1
-
-func _clear() -> void:
-	while _recycled_placeholders:
-		var placeholder: Spatial = _recycled_placeholders.pop_back()
-		placeholder.queue_free()
-	_lazy_tracker.clear()
-	_n_lazy = 0

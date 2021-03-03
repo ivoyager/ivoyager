@@ -38,13 +38,6 @@ var _projection_surface: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
-func project_init() -> void:
-	_HUDLabel_ = Global.script_classes._HUDLabel_
-	_HUDOrbit_ = Global.script_classes._HUDOrbit_
-	_huds_manager = Global.program.HUDsManager
-	_projection_surface = Global.program.ProjectionSurface
-	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
-	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func add_label(body: Body) -> void:
 	var hud_label: HUDLabel = _HUDLabel_.new()
@@ -84,6 +77,16 @@ func add_orbit(body: Body) -> void:
 	body.hud_orbit = hud_orbit
 	var parent: Spatial = body.get_parent()
 	parent.call_deferred("add_child", hud_orbit)
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	_HUDLabel_ = Global.script_classes._HUDLabel_
+	_HUDOrbit_ = Global.script_classes._HUDOrbit_
+	_huds_manager = Global.program.HUDsManager
+	_projection_surface = Global.program.ProjectionSurface
+	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
+	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
 
 func _build_orbit_mesh_arrays(n_vertecies: int) -> void:
 	var verteces := PoolVector3Array()

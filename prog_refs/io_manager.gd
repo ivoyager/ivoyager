@@ -136,7 +136,7 @@ func _get_var_from_file_finish(array: Array) -> void:
 # *****************************************************************************
 # Init & private
 
-func project_init() -> void:
+func _project_init() -> void:
 	_state_manager = Global.program.StateManager
 	if !_use_threads:
 		return

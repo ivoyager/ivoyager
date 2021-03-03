@@ -79,9 +79,6 @@ func forget_points_category(category: String) -> void: # not needed for load
 
 # *****************************************************************************
 
-func project_init() -> void:
-	pass
-
 func _ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	Global.connect("update_gui_needed", self, "_refresh_gui")

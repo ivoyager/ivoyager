@@ -76,7 +76,7 @@ var prefix_symbols := [
 
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
-	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in project_init()
+	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
 # or functions dictionaries (by default, these are obtained from UnitDefs). The
@@ -203,24 +203,6 @@ var _format4 := [null, null, null, null] # scratch array
 var _multipliers: Dictionary
 var _functions: Dictionary
 
-func project_init():
-	_multipliers = Global.unit_multipliers
-	_functions = Global.unit_functions
-	_n_prefixes = prefix_symbols.size()
-	assert(_n_prefixes == prefix_names.size())
-	_prefix_offset = prefix_symbols.find("")
-	assert(_prefix_offset == prefix_names.find(""))
-	_n_lg_numbers = large_numbers.size()
-	for i in range(_n_lg_numbers):
-		large_numbers[i] = tr(large_numbers[i])
-	for unit in short_forms:
-		var txt_key: String = short_forms[unit]
-		if txt_key.begins_with("*"):
-			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
-		else:
-			short_forms[unit] = " " + tr(short_forms[unit])
-	for unit in long_forms:
-		long_forms[unit] = " " + tr(long_forms[unit])
 
 func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
@@ -442,3 +424,24 @@ func number_prefixed_unit(x: float, unit: String, sig_digits := -1, num_type := 
 	if prepend_space:
 		return number_str + " " + unit
 	return number_str + unit
+
+# *****************************************************************************
+
+func _project_init():
+	_multipliers = Global.unit_multipliers
+	_functions = Global.unit_functions
+	_n_prefixes = prefix_symbols.size()
+	assert(_n_prefixes == prefix_names.size())
+	_prefix_offset = prefix_symbols.find("")
+	assert(_prefix_offset == prefix_names.find(""))
+	_n_lg_numbers = large_numbers.size()
+	for i in range(_n_lg_numbers):
+		large_numbers[i] = tr(large_numbers[i])
+	for unit in short_forms:
+		var txt_key: String = short_forms[unit]
+		if txt_key.begins_with("*"):
+			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
+		else:
+			short_forms[unit] = " " + tr(short_forms[unit])
+	for unit in long_forms:
+		long_forms[unit] = " " + tr(long_forms[unit])

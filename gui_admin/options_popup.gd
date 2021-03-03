@@ -86,8 +86,8 @@ func _on_init():
 		],
 	]
 
-func project_init() -> void:
-	.project_init()
+func _project_init() -> void:
+	._project_init()
 	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
 	main_menu_manager.make_button("BUTTON_OPTIONS", 500, true, true, self, "_open")
 	Global.connect("options_requested", self, "_open")

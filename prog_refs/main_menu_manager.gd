@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Admin GUI's should call make_button() in their project_init().
+# Admin GUI's should call make_button() in their _project_init().
 #
 # Note: as of Godot 3.2.3, passing a Reference (rather than a Node) to
 # make_button() causes "ObjectDB leaked at exit" errors on quit. This should
@@ -61,7 +61,9 @@ func change_button_state(text: String, button_state: int) -> void:
 			break
 	emit_signal("button_state_changed")
 
-func project_init():
+# *****************************************************************************
+
+func _project_init():
 	var state_manager: StateManager = Global.program.StateManager
 	var system_builder: SystemBuilder = Global.program.SystemBuilder
 	if !Global.skip_splash_screen:

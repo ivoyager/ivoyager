@@ -44,19 +44,7 @@ var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
 
 var _running_count := 0
 
-# ************************ PUBLIC FUNCTIONS ***********************************
 
-func project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_table_reader = Global.program.TableReader
-	_l_point_builder = Global.program.LPointBuilder
-	_minor_bodies_manager = Global.program.MinorBodiesManager
-	_points_manager = Global.program.PointsManager
-	_body_registry = Global.program.BodyRegistry
-	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
-	_HUDPoints_ = Global.script_classes._HUDPoints_
-	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
-	
 func build() -> void:
 	if Global.skip_asteroids:
 		return
@@ -66,7 +54,18 @@ func build() -> void:
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")
 
-# ************************ PRIVATE FUNCTIONS **********************************
+# *****************************************************************************
+
+func _project_init() -> void:
+	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_table_reader = Global.program.TableReader
+	_l_point_builder = Global.program.LPointBuilder
+	_minor_bodies_manager = Global.program.MinorBodiesManager
+	_points_manager = Global.program.PointsManager
+	_body_registry = Global.program.BodyRegistry
+	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
+	_HUDPoints_ = Global.script_classes._HUDPoints_
+	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	var group_refs_by_name := _minor_bodies_manager.group_refs_by_name

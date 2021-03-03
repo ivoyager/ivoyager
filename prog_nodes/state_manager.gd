@@ -193,9 +193,6 @@ func quit(force_quit: bool) -> void:
 
 # *****************************************************************************
 
-func project_init() -> void:
-	pass
-
 func _init() -> void:
 	_on_init()
 

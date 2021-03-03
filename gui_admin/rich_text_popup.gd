@@ -30,7 +30,7 @@ var _state_manager: StateManager
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
 
-func project_init() -> void:
+func _project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	Global.connect("rich_text_popup_requested", self, "_open")

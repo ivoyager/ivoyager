@@ -270,7 +270,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("game_load_started", self, "init_system_build")
 	Global.get_tree().connect("node_added", self, "_on_node_added")
 	_body_registry = Global.program.BodyRegistry

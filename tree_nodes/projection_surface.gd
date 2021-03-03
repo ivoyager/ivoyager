@@ -35,7 +35,7 @@ var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	pass
 
 func _ready() -> void:

@@ -42,8 +42,8 @@ onready var _SelectionManager_: Script = Global.script_classes._SelectionManager
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_OBJ_PROPERTIES := ["selection_manager"]
 
-# All objects added by ProjectBuilder need a "project_init" function.
-func project_init() -> void:
+# All objects added by ProjectBuilder need a "_project_init" function.
+func _project_init() -> void:
 	Global.connect("project_builder_finished", self, "_on_project_builder_finished")
 	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	Global.connect("simulator_exited", self, "_on_simulator_exited")

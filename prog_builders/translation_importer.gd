@@ -26,7 +26,6 @@
 # Processing modifications:
 #
 #   1. Interpret unicode escape "\uHHHH" (patches Godot issue #38716)
-#
 
 class_name TranslationImporter
 

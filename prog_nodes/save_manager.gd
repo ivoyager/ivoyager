@@ -166,9 +166,6 @@ func _simulator_started_after_load() -> void:
 
 # *****************************************************************************
 
-func project_init() -> void:
-	pass
-
 func _ready():
 	Global.connect("save_requested", self, "_on_save_requested")
 	Global.connect("load_requested", self, "_on_load_requested")

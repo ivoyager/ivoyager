@@ -159,6 +159,8 @@ static func strip_scancode_mods(scancode: int) -> int:
 	scancode &= ~KEY_MASK_META
 	return scancode
 
+# *****************************************************************************
+
 func _on_init() -> void:
 	# project vars - modify on signal project_objects_instantiated
 	cache_file_name = "input_map.vbinary"
@@ -307,8 +309,8 @@ func _on_init() -> void:
 	current = {}
 	_is_references = true
 
-func project_init() -> void:
-	.project_init()
+func _project_init() -> void:
+	._project_init()
 	_init_actions()
 
 func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:

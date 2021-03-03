@@ -37,7 +37,7 @@ var _fonts: Dictionary = Global.fonts
 var _settings: Dictionary = Global.settings
 var _primary_font_data: DynamicFontData
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("setting_changed", self, "_settings_listener")
 	_primary_font_data = Global.assets.primary_font_data
 	for key in fixed_sizes:

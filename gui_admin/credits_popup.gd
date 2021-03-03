@@ -33,7 +33,7 @@ var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 var _state_manager: StateManager
 
 
-func project_init() -> void:
+func _project_init() -> void:
 	_state_manager = Global.program.StateManager
 	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
 	main_menu_manager.make_button("BUTTON_CREDITS", 400, true, true, self, "_open")

@@ -63,7 +63,7 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 
 # *****************************************************************************
 
-func project_init() -> void:
+func _project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	var timekeeper: Timekeeper = Global.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")

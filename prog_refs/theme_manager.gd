@@ -31,7 +31,7 @@ var splash_screen_font := "medium"
 var _themes: Dictionary = Global.themes
 var _fonts: Dictionary = Global.fonts
 
-func project_init() -> void:
+func _project_init() -> void:
 	_themes.main = Theme.new()
 	_themes.main_menu = Theme.new()
 	_themes.splash_screen = Theme.new()

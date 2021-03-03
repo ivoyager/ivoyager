@@ -61,9 +61,6 @@ func make_action(action: String, is_pressed := true) -> void:
 
 # *****************************************************************************
 
-func project_init():
-	pass
-
 func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
