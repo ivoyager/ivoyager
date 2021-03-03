@@ -36,8 +36,6 @@ func _project_init():
 	Global.connect("open_main_menu_requested", self, "_open")
 	Global.connect("close_main_menu_requested", self, "hide")
 	Global.connect("close_all_admin_popups_requested", self, "hide")
-	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
-	main_menu_manager.make_button("BUTTON_RESUME", 100, false, true, self, "hide")
 
 func _ready() -> void:
 	theme = Global.themes.main_menu

@@ -65,13 +65,13 @@ func _build() -> void:
 			continue
 		var button := Button.new()
 		var text: String = button_info[0]
-		var target_object: Object = button_info[4]
-		var target_method: String = button_info[5]
-		var target_args: Array = button_info[6]
+		var target: Object = button_info[4]
+		var method: String = button_info[5]
+		var args: Array = button_info[6]
 		var button_state: int = button_info[7]
 		button.focus_mode = Control.FOCUS_ALL
 		button.text = text
-		button.connect("pressed", target_object, target_method, target_args)
+		button.connect("pressed", target, method, args)
 		button.visible = button_state != _main_menu_manager.HIDDEN
 		# disabled will be updated at state_manager_inited signal
 		button.disabled = !_state.is_inited or button_state == _main_menu_manager.DISABLED

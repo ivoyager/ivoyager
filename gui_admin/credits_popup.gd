@@ -33,27 +33,28 @@ var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 var _state_manager: StateManager
 
 
-func _project_init() -> void:
-	_state_manager = Global.program.StateManager
-	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
-	main_menu_manager.make_button("BUTTON_CREDITS", 400, true, true, self, "_open")
-
-func _ready() -> void:
-	theme = Global.themes.main
-	set_process_unhandled_key_input(false)
-	Global.connect("credits_requested", self, "_open")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
-	connect("popup_hide", self, "_on_popup_hide")
-	find_node("Close").connect("pressed", self, "hide")
-	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
-
-func _open() -> void:
+func open() -> void:
 	set_process_unhandled_key_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	popup_centered_minsize()
 
-func _on_popup_hide() -> void:
+# *****************************************************************************
+
+func _project_init() -> void:
+	_state_manager = Global.program.StateManager
+
+func _ready() -> void:
+	theme = Global.themes.main
+	set_process_unhandled_key_input(false)
+	Global.connect("credits_requested", self, "open")
+	
+	Global.connect("close_all_admin_popups_requested", self, "hide")
+	connect("popup_hide", self, "_on_hide")
+	find_node("Close").connect("pressed", self, "hide")
+	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
+
+func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
@@ -65,7 +66,3 @@ func _on_unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
-
-	
-	
-

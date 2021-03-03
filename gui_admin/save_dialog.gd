@@ -35,12 +35,6 @@ onready var _timekeeper: Timekeeper = Global.program.Timekeeper
 func _project_init() -> void:
 	if !Global.enable_save_load:
 		return
-	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
-	main_menu_manager.make_button("BUTTON_SAVE_AS", 900, false, true,
-			Global, "emit_signal", ["save_requested", "", false])
-	if add_quick_save_button:
-		main_menu_manager.make_button("BUTTON_QUICK_SAVE", 800, false, true,
-				Global, "emit_signal", ["save_requested", "", true])
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("save_dialog_requested", self, "_open")
 	Global.connect("close_all_admin_popups_requested", self, "hide")

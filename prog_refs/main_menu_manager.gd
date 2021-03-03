@@ -17,14 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Admin GUI's should call make_button() in their _project_init().
-#
-# Note: as of Godot 3.2.3, passing a Reference (rather than a Node) to
-# make_button() causes "ObjectDB leaked at exit" errors on quit. This should
-# probably be opened as a Godot issue if we can narrow the probelm to a minimal
-# project.
 
-extends Reference
 class_name MainMenuManager
 
 signal buttons_changed()
@@ -32,16 +25,32 @@ signal button_state_changed()
 
 enum {ACTIVE, DISABLED, HIDDEN} # button_state
 
-var button_infos := [] # read-only
+# project var
+var button_inits := [
+	# External project can modify this array at _project_init() or use API
+	# below. "target" here must be a key in Global.program. Core buttons here
+	# may be excluded depending on Global project settings.
+	# [text, priority, is_splash, is_running, target_name, method, args]
+	["BUTTON_START", 1100, true, false, "SystemBuilder", "build_system_tree"],
+	["BUTTON_SAVE_AS", 1000, false, true, "SaveManager", "save_game"],
+	["BUTTON_QUICK_SAVE", 900, false, true, "SaveManager", "quick_save"],
+	["BUTTON_LOAD_FILE", 800, true, true, "SaveManager", "load_game"],
+	["BUTTON_QUICK_LOAD", 700, false, true, "SaveManager", "quick_load"],
+	["BUTTON_OPTIONS", 600, true, true, "OptionsPopup", "open"],
+	["BUTTON_HOTKEYS", 500, true, true, "HotkeysPopup", "open"],
+	["BUTTON_CREDITS", 400, true, true, "CreditsPopup", "open"],
+	["BUTTON_EXIT", 300, false, true, "StateManager", "exit"],
+	["BUTTON_QUIT", 200, true, true, "StateManager", "quit"],
+	["BUTTON_RESUME", 100, false, true, "MainMenuPopup", "hide"],
+] 
 
-func make_button(text: String, priority: int, is_splash_button: bool, is_running_button: bool,
-		target_object: Object, target_method: String, target_args := [],
-		button_state := ACTIVE) -> void:
-	# Highest priority will be top menu item; target_object cannot be a
-	# procedural object! See Note above - until this is resolved, it is best
-	# to pass Node rather than Reference.
-	button_infos.append([text, priority, is_splash_button, is_running_button,
-			target_object, target_method, target_args, button_state])
+# read-only!
+var button_infos := []
+
+func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
+		target: Object, method: String, args := [], button_state := ACTIVE) -> void:
+	# Highest priority will be top menu item.
+	button_infos.append([text, priority, is_splash, is_running, target, method, args, button_state])
 	button_infos.sort_custom(self, "_sort_button_infos")
 	emit_signal("buttons_changed")
 
@@ -63,14 +72,39 @@ func change_button_state(text: String, button_state: int) -> void:
 
 # *****************************************************************************
 
-func _project_init():
-	var state_manager: StateManager = Global.program.StateManager
-	var system_builder: SystemBuilder = Global.program.SystemBuilder
-	if !Global.skip_splash_screen:
-		make_button("BUTTON_START", 1000, true, false, system_builder, "build_system_tree")
-		make_button("BUTTON_EXIT", 300, false, true, state_manager, "exit", [false])
-	if !Global.disable_quit:
-		make_button("BUTTON_QUIT", 200, true, true, state_manager, "quit", [false])
+func _project_init() -> void:
+	Global.connect("project_inited", self, "_init_buttons")
+	Global.connect("about_to_quit", self, "_clear_for_quit")
+
+func _init_buttons() -> void:
+	for init_info in button_inits:
+		var text: String = init_info[0]
+		var target_name: String = init_info[4]
+		if !Global.program.has(target_name):
+			continue
+		var skip := false
+		match text:
+			"BUTTON_START":
+				skip = Global.skip_splash_screen
+			"BUTTON_SAVE_AS", "BUTTON_QUICK_SAVE", "BUTTON_LOAD_FILE", "BUTTON_QUICK_LOAD":
+				skip = !Global.enable_save_load
+			"BUTTON_EXIT":
+				skip = Global.disable_exit or Global.skip_splash_screen
+			"BUTTON_QUIT":
+				skip = Global.disable_quit
+		if skip:
+			continue
+		var priority: int = init_info[1]
+		var is_splash: bool = init_info[2]
+		var is_running: bool = init_info[3]
+		var target: Object = Global.program[target_name]
+		var method: String = init_info[5]
+		var has_args: bool = init_info.size() > 6
+		var args: Array = init_info[6] if has_args else []
+		make_button(text, priority, is_splash, is_running, target, method, args)
+
+func _clear_for_quit() -> void:
+	button_infos.clear()
 
 func _sort_button_infos(a: Array, b: Array) -> bool:
 	return a[1] > b[1] # priority

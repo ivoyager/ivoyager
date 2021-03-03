@@ -33,6 +33,11 @@ var _hotkey_dialog: ConfirmationDialog = \
 		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()
 
 
+func open() -> void:
+	._open()
+
+# *****************************************************************************
+
 func _on_init():
 	# Edit layout directly or use CachedItemsPopup functions at project init.
 	layout = [
@@ -131,9 +136,7 @@ func _on_init():
 
 func _project_init() -> void:
 	._project_init()
-	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
-	main_menu_manager.make_button("BUTTON_HOTKEYS", 550, true, true, self, "_open")
-	Global.connect("hotkeys_requested", self, "_open")
+	Global.connect("hotkeys_requested", self, "open")
 	if Global.disable_pause:
 		remove_item("toggle_pause")
 	if !Global.allow_time_reversal:
