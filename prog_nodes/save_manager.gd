@@ -77,7 +77,7 @@ func quick_save() -> bool:
 	save_game(path)
 	return true
 
-func save_game(path: String) -> void:
+func save_game(path := "") -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if !path:
@@ -105,7 +105,7 @@ func quick_load() -> void:
 	else:
 		Global.emit_signal("load_dialog_requested")
 
-func load_game(path: String, network_gamesave := []) -> void:
+func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and _state.network_state == IS_CLIENT:
 		return
 	if !network_gamesave and path == "":

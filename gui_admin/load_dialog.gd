@@ -34,11 +34,6 @@ func _project_init():
 	if !Global.enable_save_load:
 		return
 	_main_menu_manager = Global.program.MainMenuManager
-	_main_menu_manager.make_button("BUTTON_LOAD_FILE", 700, true, true,
-			Global, "emit_signal", ["load_requested", "", false])
-	if add_quick_load_button:
-		_main_menu_manager.make_button("BUTTON_QUICK_LOAD", 600, false, true,
-				Global, "emit_signal", ["load_requested", "", true])
 	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
 	Global.connect("load_dialog_requested", self, "_open")
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")

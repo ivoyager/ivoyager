@@ -40,6 +40,11 @@ var _settings: Dictionary = Global.settings
 onready var _settings_manager: SettingsManager = Global.program.SettingsManager
 
 
+func open() -> void:
+	._open()
+
+# *****************************************************************************
+
 func _on_init():
 	# Edit layout directly or use parent class functions at project init.
 	layout = [
@@ -88,9 +93,7 @@ func _on_init():
 
 func _project_init() -> void:
 	._project_init()
-	var main_menu_manager: MainMenuManager = Global.program.MainMenuManager
-	main_menu_manager.make_button("BUTTON_OPTIONS", 500, true, true, self, "_open")
-	Global.connect("options_requested", self, "_open")
+	Global.connect("options_requested", self, "open")
 	Global.connect("setting_changed", self, "_settings_listener")
 	if !Global.enable_save_load:
 		remove_subpanel("LABEL_SAVE_LOAD")
@@ -103,9 +106,6 @@ func _on_ready() -> void:
 	hotkeys_button.text = "BUTTON_HOTKEYS"
 	hotkeys_button.connect("pressed", self, "_open_hotkeys")
 	_header_right.add_child(hotkeys_button)
-
-func _open() -> void:
-	._open()
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	var setting_hbox := HBoxContainer.new()

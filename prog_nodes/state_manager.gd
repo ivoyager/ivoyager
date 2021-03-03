@@ -166,7 +166,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	Global.emit_signal("close_all_admin_popups_requested")
 	Global.emit_signal("simulator_exited")
 
-func quit(force_quit: bool) -> void:
+func quit(force_quit := false) -> void:
 	if Global.disable_quit:
 		return
 	if !force_quit:

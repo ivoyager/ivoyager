@@ -213,6 +213,7 @@ func init_extensions() -> void:
 	Global.emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:
+	program.Global = Global
 	program.Universe = universe
 	for dict in [program_importers, program_builders, program_references, program_nodes, gui_controls]:
 		for key in dict:
@@ -222,14 +223,12 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	for dict in [program_importers, program_builders,program_references, program_nodes, gui_controls,
+	for dict in [program_importers, program_builders, program_references, program_nodes, gui_controls,
 			procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
 	Global.emit_signal("project_objects_instantiated")
-#	yield(get_tree(), "idle_frame")
-#	emit_signal("init_step_finished")
 
 func init_project() -> void:
 	for key in program_importers:
