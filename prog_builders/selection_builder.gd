@@ -54,10 +54,6 @@ var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
 var _body_registry: BodyRegistry
 var _SelectionItem_: Script
 
-func _project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
-	_body_registry = Global.program.BodyRegistry
-	_SelectionItem_ = Global.script_classes._SelectionItem_
 
 func build_and_register(body: Body, parent_body: Body) -> void:
 	# parent_body = null for top Body
@@ -126,6 +122,13 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		Vector3(ecliptic_longitude_offset, latitude_offset_top, view_dist_top), # VIEW_TOP
 		Vector3(ecliptic_longitude_offset, ecliptic_latitude_offset, view_dist_zoom) # VIEW_OUTWARD
 	]
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
+	_body_registry = Global.program.BodyRegistry
+	_SelectionItem_ = Global.script_classes._SelectionItem_
 
 func _set_system_counts(is_new_game: bool) -> void:
 	if is_new_game:

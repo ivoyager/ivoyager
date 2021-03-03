@@ -344,11 +344,6 @@ func conv_enum(value: String, enum_name: String) -> int:
 # *****************************************************************************
 # init
 
-func _project_init() -> void:
-	_enums = Global.enums
-	_unit_multipliers = Global.unit_multipliers
-	_unit_functions = Global.unit_functions
-
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
 		table_units: Dictionary, table_row_dicts: Dictionary, values: Array) -> void:
 	_table_data = table_data
@@ -357,3 +352,8 @@ func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_ty
 	_table_units = table_units
 	_table_row_dicts = table_row_dicts
 	_values = values
+
+func _project_init() -> void:
+	_enums = Global.enums
+	_unit_multipliers = Global.unit_multipliers
+	_unit_functions = Global.unit_functions

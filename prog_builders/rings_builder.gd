@@ -17,7 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: We need a rings shader! What we have now is a QuadMesh & Texture.
+# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
+# What we have now is a QuadMesh & Texture.
+
 
 class_name RingsBuilder
 
@@ -34,6 +36,8 @@ func add_rings(body: Body) -> void:
 	var array := [body, rings_file, radius, north]
 	var io_manager: IOManager = Global.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
+
+# *****************************************************************************
 
 func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var rings_file: String = array[1]
@@ -66,7 +70,3 @@ func _io_finish(array: Array) -> void: # Main thread
 	body.add_child(rings)
 	# FIXME! Should cast shadows, but it doesn't...
 #	prints(rings.cast_shadow, rings_material.flags_do_not_receive_shadows)
-
-
-func _project_init() -> void:
-	pass

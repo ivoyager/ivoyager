@@ -23,9 +23,6 @@ class_name LPointBuilder
 
 var _LPoint_: Script
 
-func _project_init() -> void:
-	_LPoint_ = Global.script_classes._LPoint_
-
 func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
 	# Any Body can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
 	# will never be used, we create them only as needed. The L-point is orbiting
@@ -42,5 +39,8 @@ func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
 		body.get_parent().add_child(lagrange_point)
 		body.lagrange_points[l_point - 1] = lagrange_point
 	return lagrange_point
-	
-	
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	_LPoint_ = Global.script_classes._LPoint_

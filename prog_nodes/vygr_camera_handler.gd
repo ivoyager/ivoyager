@@ -85,9 +85,6 @@ var _rotate_pressed := VECTOR3_ZERO
 var _suppress_camera_move := false
 
 
-func _project_init() -> void:
-	pass
-
 func _ready():
 	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("run_state_changed", self, "_on_run_state_changed")

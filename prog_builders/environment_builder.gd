@@ -24,12 +24,15 @@ class_name EnvironmentBuilder
 
 var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
 
-func _project_init() -> void:
-	Global.connect("project_inited", self, "add_world_environment")
 
 func add_world_environment() -> void:
 	var io_manager: IOManager = Global.program.IOManager
 	io_manager.callback(self, "_io_callback", "_io_finish")
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	Global.connect("project_inited", self, "add_world_environment")
 
 func _io_callback(array: Array) -> void: # I/O thread!
 	var start_time := OS.get_system_time_msecs()

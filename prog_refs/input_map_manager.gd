@@ -159,6 +159,8 @@ static func strip_scancode_mods(scancode: int) -> int:
 	scancode &= ~KEY_MASK_META
 	return scancode
 
+# *****************************************************************************
+
 func _on_init() -> void:
 	# project vars - modify on signal project_objects_instantiated
 	cache_file_name = "input_map.vbinary"

@@ -49,6 +49,3 @@ func add_omni_light(body: Body) -> void:
 	body.omni_light = omni_light
 	body.add_child(omni_light)
 
-func _project_init() -> void:
-	pass
-

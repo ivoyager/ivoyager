@@ -35,9 +35,6 @@ const PERSIST_PROPERTIES := ["group_names", "ids_by_group"]
 const PERSIST_OBJ_PROPERTIES := ["group_refs_by_name", "lagrange_points"]
 
 
-func _project_init():
-	pass
-
 func _ready():
 	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 

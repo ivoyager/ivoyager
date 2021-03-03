@@ -69,9 +69,6 @@ func is_cached(item_name: String, cached_values: Dictionary) -> bool:
 
 func get_cached_values() -> Dictionary:
 	return _cached
-	
-#	var file := _get_file(File.READ)
-#	return file.get_var() if file else {}
 
 func restore_default(item_name: String, suppress_caching := false) -> void:
 	if !is_default(item_name):
@@ -97,6 +94,7 @@ func restore_from_cache() -> void:
 			var cached_value = get_cached_value(item_name, cached_values)
 			change_current(item_name, cached_value, true)
 
+# *****************************************************************************
 
 func _init() -> void:
 	_on_init()

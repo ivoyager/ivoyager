@@ -53,12 +53,8 @@ func set_show_symbols(is_show: bool) -> void:
 
 # *****************************************************************************
 
-func _project_init() -> void:
-	pass
-
 func _ready():
 	Global.connect("update_gui_needed", self, "_refresh_gui")
 
 func _refresh_gui() -> void:
 	emit_signal("show_huds_changed")
-

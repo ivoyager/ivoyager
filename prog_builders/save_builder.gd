@@ -179,7 +179,8 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	_reset()
 	return result
 
-# ***************************** DEBUG LOGGING *********************************
+# *****************************************************************************
+# Debug logging
 
 func debug_log(root: Node) -> String:
 	# Call before and after all external save/load stuff completed. Wrap in
@@ -239,7 +240,7 @@ func _log_nodes(node: Node) -> void:
 		if debug_log_all_nodes or "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_log_nodes(child)
 
-# ********************* VIRTUAL & PRIVATE FUNCTIONS ***************************
+# *****************************************************************************
 
 func _reset():
 	_gs_n_objects = 0
@@ -556,6 +557,3 @@ func _decode_object(test_string: String) -> Object:
 	var save_id := int(test_string.substr(_tag_size, test_string.length() - _tag_size))
 	var object: Object = _objects[save_id]
 	return object
-
-func _project_init():
-	pass # Ignore; required for I, Voyager compatibility

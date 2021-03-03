@@ -61,6 +61,8 @@ func change_button_state(text: String, button_state: int) -> void:
 			break
 	emit_signal("button_state_changed")
 
+# *****************************************************************************
+
 func _project_init():
 	var state_manager: StateManager = Global.program.StateManager
 	var system_builder: SystemBuilder = Global.program.SystemBuilder
