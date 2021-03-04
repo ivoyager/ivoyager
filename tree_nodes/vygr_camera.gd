@@ -361,9 +361,7 @@ func _on_ready():
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_camera_info[0] = self
 	_camera_info[2] = fov
-#	set_process_priority(100) # always last!
 	Global.emit_signal("camera_ready", self)
-	print("VygrCamera ready...")
 
 func _prepare_to_free() -> void:
 	set_process(false)

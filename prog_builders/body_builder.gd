@@ -107,7 +107,7 @@ var progress := 0 # external progress bar read-only
 var _is_building_system := false
 var _system_build_count: int
 var _system_finished_count: int
-var _system_build_start_msec: int
+var _system_build_start_msec := 0
 
 func init_system_build() -> void:
 	# Track when Bodies are completely finished (including I/O threaded
@@ -116,7 +116,7 @@ func init_system_build() -> void:
 	_is_building_system = true
 	_system_build_count = 0
 	_system_finished_count = 0
-	_system_build_start_msec = OS.get_system_time_msecs()
+	_io_manager.callback(self, "_start_system_build_msec") # after existing I/O jobs
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
 
@@ -344,6 +344,9 @@ func _io_finish(array: Array) -> void: # Main thread
 		progress = 100 * _system_finished_count / _system_build_count
 		if _system_finished_count == _system_build_count:
 			_finish_system_build()
+
+func _start_system_build_msec(_array: Array) -> void: # I/O thread
+	_system_build_start_msec = OS.get_system_time_msecs()
 
 func _finish_system_build() -> void: # Main thread
 		_is_building_system = false

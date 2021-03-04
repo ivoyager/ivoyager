@@ -32,7 +32,12 @@ func add_world_environment() -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
+	Global.connect("project_objects_instantiated", self, "_check_starmap_availability")
 	Global.connect("project_inited", self, "add_world_environment")
+
+func _check_starmap_availability() -> void:
+	# TODO: See what files are available and reflect that in settings.
+	pass
 
 func _io_callback(array: Array) -> void: # I/O thread!
 	var start_time := OS.get_system_time_msecs()
