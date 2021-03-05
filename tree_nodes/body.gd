@@ -67,7 +67,7 @@ var flags := 0 # see Enums.BodyFlags
 var system_radius := 0.0 # widest orbiting satellite
 var file_info := [""] # [file_prefix, icon [REMOVED], rings, rings_radius], 1st required
 
-var properties: Properties
+var body_properties: BodyProperties
 var model_controller: ModelController
 var orbit: Orbit
 var satellites := [] # Body instances
@@ -76,7 +76,7 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "model_controller", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["body_properties", "model_controller", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
@@ -178,7 +178,7 @@ func reset_orbit():
 
 func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
-		hud_too_close = properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
+		hud_too_close = body_properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
 			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER # just the label
 	else:
@@ -240,7 +240,7 @@ func _process(_delta: float) -> void:
 		var click_radius := MIN_CLICK_RADIUS
 		var divisor: float = _camera_info[2] * camera_dist
 		if divisor > 0.0:
-			var radius: float = 55.0 * properties.m_radius * _camera_info[3] / divisor
+			var radius: float = 55.0 * body_properties.m_radius * _camera_info[3] / divisor
 			if click_radius < radius:
 				click_radius = radius
 		if mouse_dist < click_radius:

@@ -1,4 +1,4 @@
-# properties.gd
+# body_properties.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -21,7 +21,7 @@
 # For int, -1 means not applicable. All physical bodies have mass & m_radius
 # (although possibly unknown). Other properties may apply by body type.
 
-class_name Properties
+class_name BodyProperties
 
 var mass := INF
 var m_radius := INF # some value required for game mechanics

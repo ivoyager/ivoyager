@@ -99,7 +99,7 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		use_ground_latitude_offset = ground_latitude_offset_moon
 		use_orbit_latitude_offset = orbit_latitude_offset_moon
 		
-	var m_radius := body.properties.m_radius
+	var m_radius := body.body_properties.m_radius
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
 	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * UnitDefs.KM
 	var view_dist_top := 500.0 * body.system_radius * system_radius_multiplier_top

@@ -29,7 +29,7 @@
 #   -9999
 #
 # To find properites, we search first in SelectionItem, then Body, then
-# Properties, then ModelController.
+# BodyProperties, then ModelController.
 #
 # For most applicatios, you'll want to put this widget in a ScrollContainer.
 #
@@ -145,12 +145,12 @@ func _on_selection_changed() -> void:
 	if !selection_item:
 		return
 	var body: Body
-	var properties: Properties
+	var body_properties: BodyProperties
 	var model_controller: ModelController
 	var orbit: Orbit
 	if _selection_manager.is_body():
 		body = _selection_manager.get_body()
-		properties = body.properties
+		body_properties = body.body_properties
 		model_controller = body.model_controller
 		orbit = body.orbit
 	var grid_index := 0
@@ -161,8 +161,8 @@ func _on_selection_changed() -> void:
 			value = selection_item.get(property)
 		elif body and property in body:
 			value = body.get(property)
-		elif properties and property in properties:
-			value = properties.get(property)
+		elif body_properties and property in body_properties:
+			value = body_properties.get(property)
 		elif model_controller and property in model_controller:
 			value = model_controller.get(property)
 		elif orbit and property in orbit:

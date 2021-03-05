@@ -63,9 +63,9 @@ var _recycled_placeholders := [] # unmodified, un-treed Spatials
 func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_controller := body.model_controller
-	var properties := body.properties
-	var m_radius := properties.m_radius
-	var e_radius := properties.e_radius
+	var body_properties := body.body_properties
+	var m_radius := body_properties.m_radius
+	var e_radius := body_properties.e_radius
 	body.model_too_far = m_radius * model_too_far_radius_multiplier
 	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
 	model_controller.set_model_reference_basis(model_basis)

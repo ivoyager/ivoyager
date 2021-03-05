@@ -171,7 +171,7 @@ var procedural_classes := {
 	# tree_refs
 	_Orbit_ = Orbit,
 	_ModelController_ = ModelController,
-	_Properties_ = Properties,
+	_BodyProperties_ = BodyProperties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,
 	_View_ = View,

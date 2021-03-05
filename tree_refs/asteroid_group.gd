@@ -172,7 +172,7 @@ func clear_for_import() -> void:
 func _fix_binary_keplerian_elements() -> void:
 	var au := unit_defs.AU
 	var year := unit_defs.YEAR
-	var mu := star.properties.gm
+	var mu := star.body_properties.gm
 	var index := 0
 	while index < _index:
 		var a: float = a_e_i[index][0] * au # from au

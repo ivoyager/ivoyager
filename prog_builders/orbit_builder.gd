@@ -119,7 +119,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	
 	_table_reader.build_object2(self, table_name, table_row, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
-	var mu := parent.properties.gm
+	var mu := parent.body_properties.gm
 	if is_nan(_w):
 		assert(!is_nan(_w_hat))
 		_w = _w_hat - _Om
