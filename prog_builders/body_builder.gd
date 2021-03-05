@@ -37,6 +37,8 @@ const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
 # project vars
+
+
 var body_fields := {
 	# property = table_field
 	name = "key",

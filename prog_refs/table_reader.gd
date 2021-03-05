@@ -193,13 +193,31 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	return conv_body(_values[row_data[column]])
 
+func build_dictionary(dict: Dictionary, table_name: String, row: int, required_fields := []) -> void:
+	# Sets dict keys that exactly match fields in table. Missing value in table
+	# (without Default) will not be set. Asserts if field in required_fields
+	# is missing.
+	var fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var units: Array = _table_units[table_name]
+	var row_data: Array = _table_data[table_name][row]
+	for key in dict:
+		var column: int = fields.get(key, -1)
+		if column == -1:
+			assert(!required_fields.has(key), "Missing column: " + table_name + " " + key)
+			continue
+		var index: int = row_data[column]
+		var value: String = _values[index]
+		if !value:
+			assert(!required_fields.has(key), "Missing value: " + table_name + "/" + \
+					_values[row_data[0]] + " " + key)
+			continue
+		var data_type: String = data_types[column]
+		var unit: String = units[column]
+		dict[key] = conv_value(value, data_type, unit)
+
 func build_object(object: Object, table_name: String, row: int, debug_required := []) -> void:
-	# Sets object properties that exactly match fields in table. Missing value
-	# in table (without Default) will not be set.
-	
-	# TODO: Modify to also set base class properties. Instead of iterating object
-	# properites, we should iterate table columns.
-	
+	# DEPRECIATE! Don't use this. Use build_dictionary().
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
@@ -223,31 +241,9 @@ func build_object(object: Object, table_name: String, row: int, debug_required :
 		var unit: String = units[column]
 		object[property] = conv_value(value, data_type, unit)
 
-func build_dictionary(dict: Dictionary, table_name: String, row: int, debug_required := []) -> void:
-	# Sets dict keys that exactly match fields in table. Missing value in table
-	# (without Default) will not be set.
-	var fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for key in dict:
-		var column: int = fields.get(key, -1)
-		if column == -1:
-			assert(!debug_required.has(key), "Missing column: " + table_name + " " + key)
-			continue
-		var index: int = row_data[column]
-		var value: String = _values[index]
-		if !value:
-			assert(!debug_required.has(key), "Missing value: " + table_name + "/" + \
-					_values[row_data[0]] + " " + key)
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		dict[key] = conv_value(value, data_type, unit)
-
 func build_object2(object: Object, table_name: String, row: int, property_fields: Dictionary,
 		required_fields := []) -> void:
-	# DEPRECIATE! Use build_object() instead.
+	# DEPRECIATE! Don't use this. Use build_dictionary().
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
