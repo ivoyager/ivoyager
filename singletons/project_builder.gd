@@ -170,7 +170,7 @@ var procedural_classes := {
 	_HUDPoints_ = HUDPoints,
 	# tree_refs
 	_Orbit_ = Orbit,
-	_ModelGeometry_ = ModelGeometry,
+	_ModelController_ = ModelController,
 	_Properties_ = Properties,
 	_SelectionItem_ = SelectionItem,
 	_SelectionManager_ = SelectionManager,

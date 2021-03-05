@@ -68,7 +68,7 @@ var system_radius := 0.0 # widest orbiting satellite
 var file_info := [""] # [file_prefix, icon [REMOVED], rings, rings_radius], 1st required
 
 var properties: Properties
-var model_geometry: ModelGeometry
+var model_controller: ModelController
 var orbit: Orbit
 var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
@@ -76,7 +76,7 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_info"]
-const PERSIST_OBJ_PROPERTIES := ["properties", "model_geometry", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["properties", "model_controller", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
@@ -124,16 +124,16 @@ func get_rings_radius() -> float:
 	return 0.0
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
-	if !model_geometry:
+	if !model_controller:
 		return VECTOR2_ZERO
-	return model_geometry.get_latitude_longitude(translation_, time)
+	return model_controller.get_latitude_longitude(translation_, time)
 
 func get_north(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates.
 	# TODO: North precession
-	if !model_geometry:
+	if !model_controller:
 		return ECLIPTIC_Z
-	return model_geometry.north_pole
+	return model_controller.north_pole
 
 func get_orbit_normal(time := NAN) -> Vector3:
 	if !orbit:
@@ -144,9 +144,9 @@ func get_orbit_normal(time := NAN) -> Vector3:
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
-	if !model_geometry:
+	if !model_controller:
 		return IDENTITY_BASIS
-	return model_geometry.get_ground_ref_basis(time)
+	return model_controller.get_ground_ref_basis(time)
 
 func get_orbit_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to parent body
@@ -263,13 +263,13 @@ func _process(_delta: float) -> void:
 	var time: float = _times[0]
 	if orbit:
 		translation = orbit.get_position(time)
-	if model_geometry:
+	if model_controller:
 		var model_visible := camera_dist < model_too_far
 		if model_visible:
-			model_geometry.process_visible(time, camera_dist)
+			model_controller.process_visible(time, camera_dist)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
-			model_geometry.change_visibility(model_visible)
+			model_controller.change_visibility(model_visible)
 	if aux_graphic:
 		var aux_graphic_visible := camera_dist < aux_graphic_too_far
 		if _aux_graphic_visible != aux_graphic_visible:
@@ -296,10 +296,10 @@ func _on_orbit_changed(is_scheduled: bool) -> void:
 #	prints("Orbit change: ", (1.0 / orbit.update_frequency) / UnitDefs.HOUR, "hr", tr(name))
 	if flags & IS_TIDALLY_LOCKED:
 		var new_north_pole := orbit.get_normal(_times[0])
-		if model_geometry.axial_tilt != 0.0:
+		if model_controller.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, model_geometry.axial_tilt)
-		model_geometry.north_pole = new_north_pole
+			new_north_pole = new_north_pole.rotated(correction_axis, model_controller.axial_tilt)
+		model_controller.north_pole = new_north_pole
 		# TODO: Adjust basis_at_epoch???
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,

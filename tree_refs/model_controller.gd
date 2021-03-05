@@ -1,4 +1,4 @@
-# model_geometry.gd
+# model_controller.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -27,7 +27,7 @@
 # is parent facing (mean). For others, it's an arbitrary landmark. We need a
 # longitude_offset_at_epoch and a model_longitude_offset. 
 
-class_name ModelGeometry
+class_name ModelController
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
