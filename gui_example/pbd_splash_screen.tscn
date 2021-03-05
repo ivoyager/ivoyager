@@ -15,9 +15,13 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect" type="TextureRect" parent="."]
+[node name="AspectContainer" type="MarginContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+
+[node name="TextureRect" type="TextureRect" parent="AspectContainer"]
+margin_right = 1800.0
+margin_bottom = 945.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 texture = ExtResource( 2 )
@@ -27,7 +31,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="LeftBox" type="MarginContainer" parent="."]
+[node name="LeftBox" type="MarginContainer" parent="AspectContainer/TextureRect"]
 anchor_left = 0.03
 anchor_top = 0.055
 anchor_right = 0.16
@@ -36,13 +40,13 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="VersionLabel" parent="LeftBox" instance=ExtResource( 4 )]
+[node name="VersionLabel" parent="AspectContainer/TextureRect/LeftBox" instance=ExtResource( 4 )]
 margin_right = 234.0
 margin_bottom = 841.0
 size_flags_vertical = 1
 valign = 2
 
-[node name="MainMenu" parent="LeftBox" instance=ExtResource( 3 )]
+[node name="MainMenu" parent="AspectContainer/TextureRect/LeftBox" instance=ExtResource( 3 )]
 margin_left = 0.0
 margin_top = 0.0
 margin_right = 0.0
@@ -50,7 +54,7 @@ margin_bottom = 0.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
-[node name="PBDCaption" type="Label" parent="."]
+[node name="PBDCaption" type="Label" parent="AspectContainer/TextureRect"]
 anchor_left = 0.73
 anchor_top = 0.055
 anchor_right = 0.967

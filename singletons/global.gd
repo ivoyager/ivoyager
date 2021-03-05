@@ -148,7 +148,6 @@ var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
 var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 var unit_multipliers := UnitDefs.MULTIPLIERS
 var unit_functions := UnitDefs.FUNCTIONS
-var is_electron_app := false
 var cache_dir := "user://cache"
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
@@ -232,7 +231,8 @@ var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_s
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
 func load_assets():
-	# called by ProjectBuilder before all other class instantiations
+	# Called by ProjectBuilder after extensions init but before all other 
+	# instantiations.
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()

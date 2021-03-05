@@ -185,11 +185,6 @@ func quit(force_quit := false) -> void:
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
-	# Below throws error as of early 2021. I think it's a browser change.
-	# It's best for now to set Global.disable_quit (removes Quit button) in
-	# HTML builds.
-#	if Global.is_html5:
-#		JavaScript.eval("window.close()")
 
 # *****************************************************************************
 
@@ -223,7 +218,6 @@ func _on_ready() -> void:
 func _finish_init() -> void:
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
-	print("StateManager inited...")
 	Global.emit_signal("state_manager_inited")
 
 func _on_about_to_build_system_tree() -> void:

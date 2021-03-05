@@ -48,7 +48,6 @@ var _running_count := 0
 func build() -> void:
 	if Global.skip_asteroids:
 		return
-	print("Adding minor bodies...")
 	var star: Body = _body_registry.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")

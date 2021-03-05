@@ -107,7 +107,7 @@ var progress := 0 # external progress bar read-only
 var _is_building_system := false
 var _system_build_count: int
 var _system_finished_count: int
-var _system_build_start_msec: int
+var _system_build_start_msec := 0
 
 func init_system_build() -> void:
 	# Track when Bodies are completely finished (including I/O threaded
@@ -116,7 +116,7 @@ func init_system_build() -> void:
 	_is_building_system = true
 	_system_build_count = 0
 	_system_finished_count = 0
-	_system_build_start_msec = OS.get_system_time_msecs()
+	_io_manager.callback(self, "_start_system_build_msec") # after existing I/O jobs
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
 
@@ -155,6 +155,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.set_orbit(orbit, true)
 	# properties
+	# missing may be either INF or NAN, see Properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
 	_table_reader.build_object2(properties, table_name, row, properties_fields, properties_fields_req)
@@ -163,11 +164,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		properties.p_radius = 3.0 * properties.m_radius - 2.0 * properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_nan(properties.mass):
-		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
-		if sig_digits > 1:
-			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-			properties.mass = math.set_decimal_precision(mass, sig_digits)
+	if is_inf(properties.mass):
+		if !is_nan(properties.mean_density):
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
+			if sig_digits > 1:
+				var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
+				properties.mass = math.set_decimal_precision(mass, sig_digits)
 	if is_nan(properties.gm): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:
@@ -344,6 +346,9 @@ func _io_finish(array: Array) -> void: # Main thread
 		progress = 100 * _system_finished_count / _system_build_count
 		if _system_finished_count == _system_build_count:
 			_finish_system_build()
+
+func _start_system_build_msec(_array: Array) -> void: # I/O thread
+	_system_build_start_msec = OS.get_system_time_msecs()
 
 func _finish_system_build() -> void: # Main thread
 		_is_building_system = false
