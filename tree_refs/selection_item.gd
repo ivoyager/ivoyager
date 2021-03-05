@@ -102,7 +102,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 
 func get_radius_for_camera() -> float:
 	if is_body:
-		return body.body_properties.m_radius
+		return body.get_mean_radius()
 	return UnitDefs.KM
 
 func _init() -> void:

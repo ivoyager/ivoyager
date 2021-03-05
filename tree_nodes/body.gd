@@ -56,17 +56,15 @@ const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 
 # persisted
-# name is table row key ("MOON_EUROPA", etc.), which is localization key
+# name is table row key ("MOON_EUROPA", etc.)
 var symbol := "\u25CC" # dashed circle default
 var body_id := -1
 var class_type := -1 # classes.csv
 var model_type := -1 # models.csv
-var light_type := -1 # lights.csv (probably -1 except stars)
+var light_type := -1 # lights.csv (-1 except stars)
 var flags := 0 # see Enums.BodyFlags
-
 var system_radius := 0.0 # widest orbiting satellite
-var file_info := [""] # [file_prefix, icon [REMOVED], rings, rings_radius], 1st required
-
+var file_info := [""] # [file_prefix, rings_name, rings_radius], 1st required
 var body_properties: BodyProperties
 var model_controller: ModelController
 var orbit: Orbit
@@ -86,9 +84,9 @@ var hud_orbit: HUDOrbit
 var hud_label: HUDLabel
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
-var model_too_far := 0.0
-var aux_graphic_too_far := 0.0
-var hud_too_close := 0.0
+var max_model_dist := 0.0
+var max_aux_graphic_dist := 0.0
+var min_hud_dist := 0.0
 var is_asleep := false
 
 # private
@@ -100,11 +98,11 @@ onready var _tree := get_tree()
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
-var _visible := false
 var _model_visible := false
 var _aux_graphic_visible := false
 var _hud_orbit_visible := false
 var _hud_label_visible := false
+var _is_visible := false
 
 
 func get_file_prefix() -> String:
@@ -115,13 +113,38 @@ func has_rings() -> bool:
 
 func get_rings_file() -> String:
 	if file_info.size() > 2:
-		return file_info[2]
+		return file_info[1]
 	return ""
 
 func get_rings_radius() -> float:
 	if file_info.size() > 2:
-		return file_info[3]
-	return 0.0
+		return file_info[2]
+	return NAN
+
+func get_std_gravitational_parameter() -> float:
+	if !body_properties:
+		return NAN
+	return body_properties.gm
+
+func get_mean_radius() -> float:
+	if !body_properties:
+		return NAN
+	return body_properties.m_radius
+
+func is_oblate() -> bool:
+	if !body_properties:
+		return false
+	return body_properties.is_oblate
+
+func get_equatorial_radius() -> float:
+	if !body_properties:
+		return NAN
+	return body_properties.e_radius
+
+func get_polar_radius() -> float:
+	if !body_properties:
+		return NAN
+	return body_properties.p_radius
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
@@ -130,7 +153,7 @@ func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 
 func get_north(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates.
-	# TODO: North precession
+	# TODO: North precession; will require time
 	if !model_controller:
 		return ECLIPTIC_Z
 	return model_controller.north_pole
@@ -178,11 +201,11 @@ func reset_orbit():
 
 func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
-		hud_too_close = body_properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
+		min_hud_dist = body_properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
-			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER # just the label
+			min_hud_dist *= HUD_TOO_CLOSE_STAR_MULTIPLIER # just the label
 	else:
-		hud_too_close = 0.0
+		min_hud_dist = 0.0
 
 func set_sleep(sleep: bool) -> void: # called by SleepManager
 	if flags & NEVER_SLEEP or sleep == is_asleep:
@@ -190,7 +213,7 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 	if sleep:
 		is_asleep = true
 		set_process(false)
-		_visible = false
+		_is_visible = false
 		visible = false
 		if _mouse_target[1] == self:
 			_mouse_target[1] = null
@@ -251,7 +274,7 @@ func _process(_delta: float) -> void:
 	if !is_mouse_near and _mouse_target[1] == self:
 		_mouse_target[1] = null
 		_mouse_target[2] = INF
-	var hud_dist_ok := camera_dist > hud_too_close
+	var hud_dist_ok := camera_dist > min_hud_dist
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
@@ -264,14 +287,14 @@ func _process(_delta: float) -> void:
 	if orbit:
 		translation = orbit.get_position(time)
 	if model_controller:
-		var model_visible := camera_dist < model_too_far
+		var model_visible := camera_dist < max_model_dist
 		if model_visible:
 			model_controller.process_visible(time, camera_dist)
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model_controller.change_visibility(model_visible)
 	if aux_graphic:
-		var aux_graphic_visible := camera_dist < aux_graphic_too_far
+		var aux_graphic_visible := camera_dist < max_aux_graphic_dist
 		if _aux_graphic_visible != aux_graphic_visible:
 			_aux_graphic_visible = aux_graphic_visible
 			aux_graphic.visible = aux_graphic_visible
@@ -284,8 +307,8 @@ func _process(_delta: float) -> void:
 		if _hud_label_visible != hud_label_visible:
 			_hud_label_visible = hud_label_visible
 			hud_label.visible = hud_label_visible
-	if !_visible:
-		_visible = true
+	if !_is_visible:
+		_is_visible = true
 		visible = true
 
 func _on_show_huds_changed() -> void:

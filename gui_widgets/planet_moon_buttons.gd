@@ -105,7 +105,7 @@ func _build(_is_new_game: bool) -> void:
 	for planet in star.satellites:
 		if not planet.flags & IS_PLANET:
 			continue
-		size = pow(planet.body_properties.m_radius, size_exponent)
+		size = pow(planet.get_mean_radius(), size_exponent)
 		planet_sizes.append(size)
 		column_widths.append(size)
 		total_width += size
@@ -147,7 +147,7 @@ func _build(_is_new_game: bool) -> void:
 		for moon in planet.satellites:
 			if not moon.flags & IS_NAVIGATOR_MOON:
 				continue
-			size = round(pow(moon.body_properties.m_radius, size_exponent) * scale)
+			size = round(pow(moon.get_mean_radius(), size_exponent) * scale)
 			if size < min_body_size:
 				size = min_body_size
 			_add_nav_button(planet_vbox, moon, size)

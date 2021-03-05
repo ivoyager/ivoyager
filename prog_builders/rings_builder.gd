@@ -65,7 +65,7 @@ func _io_finish(array: Array) -> void: # Main thread
 	var body: Body = array[0]
 	var radius: float = array[2]
 	var rings: MeshInstance = array[4]
-	body.aux_graphic_too_far = radius * rings_too_far_radius_multiplier
+	body.max_aux_graphic_dist = radius * rings_too_far_radius_multiplier
 	body.aux_graphic = rings
 	body.add_child(rings)
 	# FIXME! Should cast shadows, but it doesn't...

@@ -17,21 +17,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For float, NAN means not applicable (or don't display) and INF means unknown.
-# For int, -1 means not applicable. All physical bodies have mass & m_radius
-# (although possibly unknown). Other properties may apply by body type.
+# Only a subset of these are required for simulator function (marked "required"
+# in comment). Some are used but not required. Others are information display
+# only at this time.
+#
+# For float, NAN means not applicable (don't display) and INF means unknown
+# (display as "?"). For int, -1 means not applicable. All physical bodies have
+# mass & m_radius (although possibly unknown). Other properties may or may not
+# be applicable by body type.
 
 class_name BodyProperties
 
+var gm := NAN # required
 var mass := INF
-var m_radius := INF # some value required for game mechanics
-var gm := NAN
 var surface_gravity := NAN
 var esc_vel := NAN
-var e_radius := NAN
-var p_radius := NAN
-var hydrostatic_equilibrium := -1 # Enums.ConfidenceType
+var m_radius := INF # required
+var is_oblate := false # if true, next two properties are set
+var e_radius := NAN # used but not required
+var p_radius := NAN # used but not required
 var mean_density := NAN
+var hydrostatic_equilibrium := -1 # Enums.ConfidenceType
 var albedo := NAN
 var surf_pres := NAN
 var surf_t := NAN # NA for gas giants
@@ -42,8 +48,8 @@ var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["mass", "m_radius",
-	"gm", "surface_gravity", "esc_vel", "e_radius", "p_radius",
-	"hydrostatic_equilibrium", "mean_density", "albedo", "surf_pres",
+const PERSIST_PROPERTIES := ["gm", "mass", "surface_gravity", "esc_vel", "m_radius",
+	"is_oblate", "e_radius", "p_radius", "mean_density",
+	"hydrostatic_equilibrium", "albedo", "surf_pres",
 	"surf_t", "min_t", "max_t", "one_bar_t", "half_bar_t", "tenth_bar_t"]
 

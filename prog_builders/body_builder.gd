@@ -161,6 +161,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_table_reader.build_object2(body_properties, table_name, row, properties_fields, properties_fields_req)
 	body.system_radius = body_properties.m_radius * 10.0 # widens if satalletes are added
 	if !is_nan(body_properties.e_radius):
+		body_properties.is_oblate = true
 		body_properties.p_radius = 3.0 * body_properties.m_radius - 2.0 * body_properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
@@ -252,12 +253,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	# file import info
 	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
 	body.file_info[0] = file_prefix
-	var rings := _table_reader.get_string(table_name, "rings", row)
-	if rings:
-		if body.file_info.size() < 4:
-			body.file_info.resize(4)
-		body.file_info[2] = rings
-		body.file_info[3] = _table_reader.get_real(table_name, "rings_radius", row)
+	var rings_name := _table_reader.get_string(table_name, "rings", row)
+	if rings_name:
+		if body.file_info.size() < 3:
+			body.file_info.resize(3)
+		body.file_info[1] = rings_name
+		body.file_info[2] = _table_reader.get_real(table_name, "rings_radius", row)
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)

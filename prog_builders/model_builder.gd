@@ -63,10 +63,9 @@ var _recycled_placeholders := [] # unmodified, un-treed Spatials
 func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_controller := body.model_controller
-	var body_properties := body.body_properties
-	var m_radius := body_properties.m_radius
-	var e_radius := body_properties.e_radius
-	body.model_too_far = m_radius * model_too_far_radius_multiplier
+	var m_radius := body.get_mean_radius()
+	var e_radius := body.get_equatorial_radius()
+	body.max_model_dist = m_radius * model_too_far_radius_multiplier
 	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
 	model_controller.set_model_reference_basis(model_basis)
 	if lazy_init:
@@ -183,7 +182,7 @@ func _finish_model(array: Array) -> void: # Main thread
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
 	if body.light_type != -1: # is a star
-		body.model_too_far = INF
+		body.max_model_dist = INF
 		if array.size() > 6: # has dynamic star surface
 			var surface: SpatialMaterial = array[6]
 			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
