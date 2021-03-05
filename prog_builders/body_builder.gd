@@ -155,6 +155,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.set_orbit(orbit, true)
 	# properties
+	# missing may be either INF or NAN, see Properties
 	var properties: Properties = _Properties_.new()
 	body.properties = properties
 	_table_reader.build_object2(properties, table_name, row, properties_fields, properties_fields_req)
@@ -163,11 +164,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		properties.p_radius = 3.0 * properties.m_radius - 2.0 * properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_nan(properties.mass):
-		var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
-		if sig_digits > 1:
-			var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-			properties.mass = math.set_decimal_precision(mass, sig_digits)
+	if is_inf(properties.mass):
+		if !is_nan(properties.mean_density):
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
+			if sig_digits > 1:
+				var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
+				properties.mass = math.set_decimal_precision(mass, sig_digits)
 	if is_nan(properties.gm): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:

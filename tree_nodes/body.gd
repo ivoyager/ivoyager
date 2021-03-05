@@ -180,7 +180,7 @@ func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
 		hud_too_close = properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
-			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER
+			hud_too_close *= HUD_TOO_CLOSE_STAR_MULTIPLIER # just the label
 	else:
 		hud_too_close = 0.0
 
