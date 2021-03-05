@@ -52,23 +52,23 @@ var show_data := [
 	# [5] flags test (show) [6] flags test (is approximate value)
 	# [7] label as wiki link [8] value as wiki link
 	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
-	["m_radius", "LABEL_MEAN_RADIUS", QtyStrings.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
-	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyStrings.UNIT, "km"],
-	["p_radius", "LABEL_POLAR_RADIUS", QtyStrings.UNIT, "km"],
-	["mass", "LABEL_MASS", QtyStrings.MASS_G_KG],
+	["m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
+	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
 	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType", null,
 			BodyFlags.IS_MOON, null, true],
-	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyStrings.UNIT, "_g"],
-	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyStrings.VELOCITY_MPS_KMPS],
-	["mean_density", "LABEL_MEAN_DENSITY", QtyStrings.UNIT, "g/cm^3"],
-	["albedo", "LABEL_ALBEDO", QtyStrings.NUMBER],
-	["surf_pres", "LABEL_SURFACE_PRESSURE", QtyStrings.PREFIXED_UNIT, "bar"],
-	["surf_t", "LABEL_SURFACE_TEMP", QtyStrings.UNIT, "degC"],
-	["min_t", "LABEL_MIN_TEMP", QtyStrings.UNIT, "degC"],
-	["max_t", "LABEL_MAX_TEMP", QtyStrings.UNIT, "degC"],
-	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyStrings.UNIT, "degC"],
-	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyStrings.UNIT, "degC"],
-	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyStrings.UNIT, "degC"],
+	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
+	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
+	["mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
+	["albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
+	["surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
+	["surf_t", "LABEL_SURFACE_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["min_t", "LABEL_MIN_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["max_t", "LABEL_MAX_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],
 	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],
@@ -77,7 +77,7 @@ var show_data := [
 	["n_comets", "LABEL_COMETS"]
 ]
 
-onready var _qty_strings: QtyStrings = Global.program.QtyStrings
+onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
@@ -206,7 +206,7 @@ func _on_selection_changed() -> void:
 					var option_type: int = show_datum[2]
 					var unit: String = show_datum[3] if datum_size > 3 and show_datum[3] != null else ""
 					var sig_digits: int = show_datum[4] if datum_size > 4 and show_datum[4] != null else -1
-					value_str = _qty_strings.number_option(value, option_type, unit, sig_digits)
+					value_str = _qty_txt_converter.number_option(value, option_type, unit, sig_digits)
 				else:
 					value_str = str(value)
 			TYPE_STRING:

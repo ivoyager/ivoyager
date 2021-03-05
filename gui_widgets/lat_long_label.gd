@@ -20,7 +20,7 @@
 
 extends Label
 
-onready var _qty_strings: QtyStrings = Global.program.QtyStrings
+onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 var _camera: Camera
 
 func _ready():
@@ -41,7 +41,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool) -> void:
-	var new_text := _qty_strings.latitude_longitude(lat_long, 1)
+	var new_text := _qty_txt_converter.latitude_longitude(lat_long, 1)
 	if is_ecliptic:
 		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
 	text = new_text

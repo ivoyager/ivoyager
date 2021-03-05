@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# See prog_refs/qty_strings.gd for quantity strings!
+# See prog_refs/qty_txt_converter.gd for quantity strings!
 
 class_name StrUtils
 
