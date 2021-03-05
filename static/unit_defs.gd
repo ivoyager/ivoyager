@@ -17,30 +17,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Issue #37529 prevents localization of global class_name to const. Use:
+# Godot issue #37529 prevents localization of global class_name to const. Use:
 # const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 #
-# This class defines the internal representation of all unit quantities! You
-# should need it only for "in/out conversions": i.e., data table import,
+# This class defines units based on base units in universe.gd. You should need
+# it only when converting to and from simulator values: i.e., data import,
 # specifying unit quantities in class headers (e.g., a mass or radius cutoff),
 # and GUI (see program_refs/qty_strings.gd for generating quantity strings).
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
-# Note 1: Setting METER = 1.0 breaks the engine with AABB and other errors.
-# Need to test values at extreems of distance (zoomed to asteroid to far solar
-# system view). For Godot 3.2.2 and before, 1e-9 or smaller worked well. With
-# Godot 3.2.3, we needed to decrease to 1e-13 to prevent distant objects
-# disappearing.
+# See additional comments in universe.gd.
 
 class_name UnitDefs
 
 # SI base units - all sim units derived from these!
-const SECOND := 1.0 # some code comments assume 1.0; Timekeeper sets sim speed
-const METER := 1e-13 # translation units per meter; see Note 1 above
-const KG := 1.0
-const AMPERE := 1.0
-const KELVIN := 1.0
-const CANDELA := 1.0
+const SECOND := Universe.SECOND
+const METER := Universe.METER
+const KG := Universe.KG
+const AMPERE := Universe.AMPERE
+const KELVIN := Universe.KELVIN
+const CANDELA := Universe.CANDELA
 
 # derived units & constants
 const DEG := PI / 180.0 # radians
