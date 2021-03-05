@@ -97,8 +97,8 @@ var _scheduler: Scheduler
 var _table_reader: TableReader
 var _main_prog_bar: MainProgBar
 var _Body_: Script
-var _ModelGeometry_: Script
-var _Properties_: Script
+var _ModelController_: Script
+var _BodyProperties_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
 
@@ -154,71 +154,72 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.set_orbit(orbit, true)
-	# properties
-	# missing may be either INF or NAN, see Properties
-	var properties: Properties = _Properties_.new()
-	body.properties = properties
-	_table_reader.build_object2(properties, table_name, row, properties_fields, properties_fields_req)
-	body.system_radius = properties.m_radius * 10.0 # widens if satalletes are added
-	if !is_nan(properties.e_radius):
-		properties.p_radius = 3.0 * properties.m_radius - 2.0 * properties.e_radius
+	# body_properties
+	# missing may be either INF or NAN, see BodyProperties
+	var body_properties: BodyProperties = _BodyProperties_.new()
+	body.body_properties = body_properties
+	_table_reader.build_object2(body_properties, table_name, row, properties_fields, properties_fields_req)
+	body.system_radius = body_properties.m_radius * 10.0 # widens if satalletes are added
+	if !is_nan(body_properties.e_radius):
+		body_properties.is_oblate = true
+		body_properties.p_radius = 3.0 * body_properties.m_radius - 2.0 * body_properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_inf(properties.mass):
-		if !is_nan(properties.mean_density):
+	if is_inf(body_properties.mass):
+		if !is_nan(body_properties.mean_density):
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
 			if sig_digits > 1:
-				var mass := (PI * 4.0 / 3.0) * properties.mean_density * pow(properties.m_radius, 3.0)
-				properties.mass = math.set_decimal_precision(mass, sig_digits)
-	if is_nan(properties.gm): # planets table has mass, not GM
+				var mass := (PI * 4.0 / 3.0) * body_properties.mean_density * pow(body_properties.m_radius, 3.0)
+				body_properties.mass = math.set_decimal_precision(mass, sig_digits)
+	if is_nan(body_properties.gm): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
-			var gm := G * properties.mass
-			properties.gm = math.set_decimal_precision(gm, sig_digits)
-	if is_nan(properties.esc_vel) or is_nan(properties.surface_gravity):
+			var gm := G * body_properties.mass
+			body_properties.gm = math.set_decimal_precision(gm, sig_digits)
+	if is_nan(body_properties.esc_vel) or is_nan(body_properties.surface_gravity):
 		if _table_reader.has_value(table_name, "GM", row):
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
 			if sig_digits > 2:
-				if is_nan(properties.esc_vel):
-					var esc_vel := sqrt(2.0 * properties.gm / properties.m_radius)
-					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_nan(properties.surface_gravity):
-					var surface_gravity := properties.gm / pow(properties.m_radius, 2.0)
-					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+				if is_nan(body_properties.esc_vel):
+					var esc_vel := sqrt(2.0 * body_properties.gm / body_properties.m_radius)
+					body_properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_nan(body_properties.surface_gravity):
+					var surface_gravity := body_properties.gm / pow(body_properties.m_radius, 2.0)
+					body_properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
 			if sig_digits > 2:
-				if is_nan(properties.esc_vel):
+				if is_nan(body_properties.esc_vel):
 					if sig_digits > 6:
 						sig_digits = 6
-					var esc_vel := sqrt(2.0 * G * properties.mass / properties.m_radius)
-					properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_nan(properties.surface_gravity):
-					var surface_gravity := G * properties.mass / pow(properties.m_radius, 2.0)
-					properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+					var esc_vel := sqrt(2.0 * G * body_properties.mass / body_properties.m_radius)
+					body_properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if is_nan(body_properties.surface_gravity):
+					var surface_gravity := G * body_properties.mass / pow(body_properties.m_radius, 2.0)
+					body_properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
-	var model_geometry: ModelGeometry = _ModelGeometry_.new()
-	body.model_geometry = model_geometry
-	_table_reader.build_object2(model_geometry, table_name, row, rotations_fields)
+	var model_controller: ModelController = _ModelController_.new()
+	body.model_controller = model_controller
+	_table_reader.build_object2(model_controller, table_name, row, rotations_fields)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(!is_nan(model_geometry.right_ascension) and !is_nan(model_geometry.declination))
-		model_geometry.north_pole = _ecliptic_rotation * math.convert_spherical2(
-				model_geometry.right_ascension, model_geometry.declination)
+		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
+		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(
+				model_controller.right_ascension, model_controller.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ahhhh Pluto...).
 		if orbit:
-			model_geometry.axial_tilt = model_geometry.north_pole.angle_to(orbit.get_normal(time))
+			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal(time))
 		else: # sun
-			model_geometry.axial_tilt = model_geometry.north_pole.angle_to(ECLIPTIC_Z)
+			model_controller.axial_tilt = model_controller.north_pole.angle_to(ECLIPTIC_Z)
 	else:
-		model_geometry.rotation_period = TAU / orbit.get_mean_motion(time)
+		model_controller.rotation_period = TAU / orbit.get_mean_motion(time)
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -227,15 +228,15 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		model_geometry.north_pole = orbit.get_normal(time)
-		if model_geometry.axial_tilt != 0.0:
-			var correction_axis := model_geometry.north_pole.cross(orbit.reference_normal).normalized()
-			model_geometry.north_pole = model_geometry.north_pole.rotated(correction_axis, model_geometry.axial_tilt)
-	model_geometry.north_pole = model_geometry.north_pole.normalized()
+		model_controller.north_pole = orbit.get_normal(time)
+		if model_controller.axial_tilt != 0.0:
+			var correction_axis := model_controller.north_pole.cross(orbit.reference_normal).normalized()
+			model_controller.north_pole = model_controller.north_pole.rotated(correction_axis, model_controller.axial_tilt)
+	model_controller.north_pole = model_controller.north_pole.normalized()
 	if orbit and orbit.is_retrograde(time): # retrograde
-		model_geometry.rotation_period = -model_geometry.rotation_period
+		model_controller.rotation_period = -model_controller.rotation_period
 	# body reference basis
-	var basis_at_epoch := math.rotate_basis_z(Basis(), model_geometry.north_pole)
+	var basis_at_epoch := math.rotate_basis_z(Basis(), model_controller.north_pole)
 	var total_rotation: float
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		# By definition, longitude 0.0 is the mean parent facing side.
@@ -247,17 +248,17 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
 		if longitude_at_epoch and !is_nan(longitude_at_epoch):
 			total_rotation += longitude_at_epoch
-	basis_at_epoch = basis_at_epoch.rotated(model_geometry.north_pole, total_rotation)
-	model_geometry.set_basis_at_epoch(basis_at_epoch)
+	basis_at_epoch = basis_at_epoch.rotated(model_controller.north_pole, total_rotation)
+	model_controller.set_basis_at_epoch(basis_at_epoch)
 	# file import info
 	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
 	body.file_info[0] = file_prefix
-	var rings := _table_reader.get_string(table_name, "rings", row)
-	if rings:
-		if body.file_info.size() < 4:
-			body.file_info.resize(4)
-		body.file_info[2] = rings
-		body.file_info[3] = _table_reader.get_real(table_name, "rings_radius", row)
+	var rings_name := _table_reader.get_string(table_name, "rings", row)
+	if rings_name:
+		if body.file_info.size() < 3:
+			body.file_info.resize(3)
+		body.file_info[1] = rings_name
+		body.file_info[2] = _table_reader.get_real(table_name, "rings_radius", row)
 	# parent modifications
 	if parent and orbit:
 		var semimajor_axis := orbit.get_semimajor_axis(time)
@@ -287,8 +288,8 @@ func _project_init() -> void:
 	_table_reader = Global.program.TableReader
 	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_Body_ = Global.script_classes._Body_
-	_ModelGeometry_ = Global.script_classes._ModelGeometry_
-	_Properties_ = Global.script_classes._Properties_
+	_ModelController_ = Global.script_classes._ModelController_
+	_BodyProperties_ = Global.script_classes._BodyProperties_
 	_fallback_body_2d = Global.assets.fallback_body_2d
 
 func _on_node_added(node: Node) -> void:

@@ -62,18 +62,17 @@ var _recycled_placeholders := [] # unmodified, un-treed Spatials
 
 func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
-	var model_geometry := body.model_geometry
-	var properties := body.properties
-	var m_radius := properties.m_radius
-	var e_radius := properties.e_radius
-	body.model_too_far = m_radius * model_too_far_radius_multiplier
+	var model_controller := body.model_controller
+	var m_radius := body.get_mean_radius()
+	var e_radius := body.get_equatorial_radius()
+	body.max_model_dist = m_radius * model_too_far_radius_multiplier
 	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
-	model_geometry.set_model_reference_basis(model_basis)
+	model_controller.set_model_reference_basis(model_basis)
 	if lazy_init:
-		_add_placeholder(body, model_geometry)
+		_add_placeholder(body, model_controller)
 		return
 	var model_type := body.model_type
-	var array := [body, model_geometry, file_prefix, model_type, model_basis]
+	var array := [body, model_controller, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
 # *****************************************************************************
@@ -113,7 +112,7 @@ func _clear() -> void:
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
-func _add_placeholder(body: Body, model_geometry: ModelGeometry) -> void: # Main thread
+func _add_placeholder(body: Body, model_controller: ModelController) -> void: # Main thread
 	var placeholder: Spatial
 	if _recycled_placeholders:
 		placeholder = _recycled_placeholders.pop_back()
@@ -121,15 +120,15 @@ func _add_placeholder(body: Body, model_geometry: ModelGeometry) -> void: # Main
 		placeholder = Spatial.new()
 	placeholder.hide()
 	placeholder.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
-	model_geometry.set_model(placeholder, false)
+	model_controller.set_model(placeholder, false)
 	body.add_child(placeholder)
 
 func _lazy_init(body: Body) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.model_type
-	var model_geometry := body.model_geometry
-	var model_basis: Basis = model_geometry.model_reference_basis
-	var array := [body, model_geometry, file_prefix, model_type, model_basis]
+	var model_controller := body.model_controller
+	var model_basis: Basis = model_controller.model_reference_basis
+	var array := [body, model_controller, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
 
 func _get_model_on_io_thread(array: Array) -> void: # I/O thread
@@ -179,26 +178,26 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 
 func _finish_model(array: Array) -> void: # Main thread
 	var body: Body = array[0]
-	var model_geometry: ModelGeometry = array[1]
+	var model_controller: ModelController = array[1]
 	var model: Spatial = array[5]
-	model_geometry.set_model(model, false)
+	model_controller.set_model(model, false)
 	if body.light_type != -1: # is a star
-		body.model_too_far = INF
+		body.max_model_dist = INF
 		if array.size() > 6: # has dynamic star surface
 			var surface: SpatialMaterial = array[6]
-			model_geometry.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
+			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
 					star_energy_ref_dist, star_energy_near, star_energy_exponent)
 	body.add_child(model)
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
 	var body: Body = array[0]
-	var model_geometry: ModelGeometry = array[1]
+	var model_controller: ModelController = array[1]
 	var model: Spatial = array[5]
-	var placeholder := model_geometry.model
+	var placeholder := model_controller.model
 	body.remove_child(placeholder)
 	_recycled_placeholders.append(placeholder)
 	model.connect("visibility_changed", self, "_record_lazy_event", [model])
-	model_geometry.set_model(model, false)
+	model_controller.set_model(model, false)
 	body.add_child(model)
 	_n_lazy += 1
 	if _n_lazy > max_lazy:
@@ -224,8 +223,8 @@ func _lazy_uninit(model: Spatial) -> void: # Main thread
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
 	var body: Body = model.get_parent_spatial()
-	var model_geometry := body.model_geometry
-	_add_placeholder(body, model_geometry)
+	var model_controller := body.model_controller
+	_add_placeholder(body, model_controller)
 	model.queue_free() # it's now up to the Engine what to cache!
 
 func _record_lazy_event(model: Spatial) -> void: # Main thread

@@ -20,10 +20,11 @@
 # Godot issue #37529 prevents localization of global class_name to const. Use:
 # const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 #
-# This class defines units based on base units in universe.gd. You should need
-# it only when converting to and from simulator values: i.e., data import,
-# specifying unit quantities in class headers (e.g., a mass or radius cutoff),
-# and GUI (see program_refs/qty_strings.gd for generating quantity strings).
+# This class defines units from base SI units in universe.gd. You should need
+# it only when converting to and from simulator values: e.g., data import,
+# specifying quantities in class headers (e.g., a mass or radius cutoff),
+# and GUI display (see program_refs/qty_txt_converter.gd for generating
+# quantity strings).
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
 # See additional comments in universe.gd.

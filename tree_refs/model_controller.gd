@@ -1,4 +1,4 @@
-# model_geometry.gd
+# model_controller.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -23,11 +23,11 @@
 # TODO: North pole precession. We will need an ave_north_pole for rotation. 
 # TODO: Hyperion has chaotic rotation & precession. How do we simulate that???
 #
-# FIXME: Recode for standard 0,0 definitions. For tidally locked, 0 longitude
-# is parent facing (mean). For others, it's an arbitrary landmark. We need a
-# longitude_offset_at_epoch and a model_longitude_offset. 
+# FIXME: Recode for standard lat/long origin definitions. For tidally locked, 0
+# longitude is parent facing (mean). For others, it's an arbitrary landmark. We
+# need a longitude_offset_at_epoch and a model_longitude_offset. 
 
-class_name ModelGeometry
+class_name ModelController
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 

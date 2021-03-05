@@ -119,7 +119,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	
 	_table_reader.build_object2(self, table_name, table_row, property_fields)
 	# standardize orbital elements to: a, e, i, Om, w, M0, n
-	var mu := parent.properties.gm
+	var mu := parent.get_std_gravitational_parameter()
 	if is_nan(_w):
 		assert(!is_nan(_w_hat))
 		_w = _w_hat - _Om
@@ -196,7 +196,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 
 	# reference plane (moons!)
 	if _ref_plane == "Equatorial":
-		orbit.reference_normal = parent.model_geometry.north_pole
+		orbit.reference_normal = parent.model_controller.north_pole
 	elif _ref_plane == "Laplace":
 		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
 		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)

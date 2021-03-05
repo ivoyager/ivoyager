@@ -1,4 +1,4 @@
-# qty_strings.gd
+# qty_txt_converter.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,7 +19,7 @@
 # *****************************************************************************
 # All functions assume sim-standard units defined in UnitDefs.
 
-class_name QtyStrings
+class_name QtyTxtConverter
 
 const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
 const math := preload("res://ivoyager/static/math.gd")
