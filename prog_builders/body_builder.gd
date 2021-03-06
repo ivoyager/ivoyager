@@ -41,7 +41,7 @@ const BodyFlags := Enums.BodyFlags
 
 var body_fields := {
 	# property = table_field
-	name = "key",
+	name = "name",
 	symbol = "symbol",
 	class_type = "class_type",
 	model_type = "model_type",

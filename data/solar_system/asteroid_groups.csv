@@ -8,7 +8,7 @@
 "# hard-coded, we would need columns here telling us where the asteroid group should be placed relative to planets above (and then code it!).",,,,,,,,,
 "# Totals shown in comments are from wiki, and I think include only numbered. We have multiopposition non-numbered, so add ~20%. ",,,,,,,,,
 #,,,,,,,,,
-key,star,mag_cutoff,group,trojan_of,min_q,max_q,min_a,max_a,Comments
+name,star,mag_cutoff,group,trojan_of,min_q,max_q,min_a,max_a,Comments
 DataType,DATA,REAL,STRING,BODY,REAL,REAL,REAL,REAL,
 Default,,,,,,,,,
 Units,,,,,au,au,au,au,

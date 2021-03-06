@@ -68,7 +68,7 @@ var _data_types: Array
 var _units: Array
 var _defaults: Array
 var _line_array: Array
-var _row_key: String
+var _row_name: String
 var _field: String
 var _cell: String
 var _count := 0
@@ -94,23 +94,23 @@ func _import() -> void: # this and below on I/O thread!
 			_data_types = []
 			_rows = {}
 			_read_table() # writes wiki_titles; we don't keep data, fields, rows
-	for key in _table_import:
-		_path = _table_import[key]
+	for table_name in _table_import:
+		_path = _table_import[table_name]
 		_data = []
 		_fields = {} # column index by field name
 		_data_types = []
-		_rows = {} # row index by item key
+		_rows = {} # row index by name
 		_read_table()
 		# wiki_titles was populated on the fly (if Global.enable_wiki); but we
 		# save everything else to Global dicts below
-		_table_data[key] = _data
-		_table_fields[key] = _fields
-		_table_data_types[key] = _data_types
-		_table_units[key] = _units
-		_table_row_dicts[key] = _rows
-		for item_key in _rows:
-			assert(!_table_rows.has(item_key))
-			_table_rows[item_key] = _rows[item_key]
+		_table_data[table_name] = _data
+		_table_fields[table_name] = _fields
+		_table_data_types[table_name] = _data_types
+		_table_units[table_name] = _units
+		_table_row_dicts[table_name] = _rows
+		for row_name in _rows:
+			assert(!_table_rows.has(row_name))
+			_table_rows[row_name] = _rows[row_name]
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -133,7 +133,7 @@ func _read_table() -> void:
 		_line_array = Array(line.split(delimiter, true))
 		if !reading_data:
 			if !have_fields: # always 1st line!
-				assert(_line_array[0] == "key", "1st field must be 'key'")
+				assert(_line_array[0] == "name", "1st field must be 'name'")
 				for field in _line_array:
 					if field == "Comments":
 						break
@@ -142,7 +142,7 @@ func _read_table() -> void:
 				have_fields = true
 			elif _line_array[0] == "DataType":
 				_data_types = _line_array
-				_data_types[0] = "STRING" # always key field
+				_data_types[0] = "STRING" # always name field
 				_data_types.resize(n_columns) # there could be an extra comment column
 				assert(_data_type_test())
 			elif _line_array[0] == "Units":
@@ -182,9 +182,9 @@ func _read_data_line() -> void:
 	var row := _data.size()
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
-	_row_key = _line_array[0]
-	assert(!_rows.has(_row_key))
-	_rows[_row_key] = row
+	_row_name = _line_array[0]
+	assert(!_rows.has(_row_name))
+	_rows[_row_name] = row
 	for field in _fields:
 		_field = field
 		var column: int = _fields[_field]
@@ -204,8 +204,8 @@ func _read_data_line() -> void:
 			_value_indexes[_cell] = index
 			row_data[column] = index
 		if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
-			assert(!_wiki_titles.has(_row_key))
-			_wiki_titles[_row_key] = _cell
+			assert(!_wiki_titles.has(_row_name))
+			_wiki_titles[_row_name] = _cell
 		_count += 1
 	_data.append(row_data)
 
@@ -271,7 +271,7 @@ func _line_error(msg := "") -> bool:
 	if msg:
 		print(msg)
 	print("cell value: ", _cell)
-	print("row key   : ", _row_key)
+	print("row name   : ", _row_name)
 	print("field     : ", _field)
 	print(_path)
 	return false

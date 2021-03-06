@@ -194,27 +194,27 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return conv_body(_values[row_data[column]])
 
 func build_dictionary(dict: Dictionary, table_name: String, row: int, required_fields := []) -> void:
-	# Sets dict keys that exactly match fields in table. Missing value in table
-	# (without Default) will not be set. Asserts if field in required_fields
-	# is missing.
+	# Sets dict keys that exactly match column fields in table. Missing value
+	# in table (without Default) will not be set. Asserts if field in
+	# required_fields is missing.
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
 	var row_data: Array = _table_data[table_name][row]
-	for key in dict:
-		var column: int = fields.get(key, -1)
+	for column_field in dict:
+		var column: int = fields.get(column_field, -1)
 		if column == -1:
-			assert(!required_fields.has(key), "Missing column: " + table_name + " " + key)
+			assert(!required_fields.has(column_field), "Missing column: " + table_name + " " + column_field)
 			continue
 		var index: int = row_data[column]
 		var value: String = _values[index]
 		if !value:
-			assert(!required_fields.has(key), "Missing value: " + table_name + "/" + \
-					_values[row_data[0]] + " " + key)
+			assert(!required_fields.has(column_field), "Missing value: " + table_name + "/" + \
+					_values[row_data[0]] + " " + column_field)
 			continue
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
-		dict[key] = conv_value(value, data_type, unit)
+		dict[column_field] = conv_value(value, data_type, unit)
 
 func build_object(object: Object, table_name: String, row: int, debug_required := []) -> void:
 	# DEPRECIATE! Don't use this. Use build_dictionary().
@@ -323,7 +323,7 @@ func conv_real(value: String, unit := "") -> float:
 func conv_data(value: String) -> int:
 	if !value:
 		return -1
-	assert(_table_rows.has(value), "Unknown table row key " + value)
+	assert(_table_rows.has(value), "Unknown table row name " + value)
 	return _table_rows[value]
 
 func conv_body(value: String) -> Body:

@@ -4,7 +4,7 @@
 "# Model scale is assumed to be in meters (1 meter), unless included here.",,
 # Default values are hard-coded since we don't want to include all assets here.,,
 #,,
-key,longitude_offset,model_scale
+name,longitude_offset,model_scale
 DataType,REAL,REAL
 Units,deg,m
 Mars.albedo.noaa.CWreprocessed.4096.jpg,180,

@@ -104,6 +104,7 @@ enum BodyFlags {
 # const GeometryInstance := GeometryInstance
 # This should work but isn't tested yet...
 
+# DEPRECIATE
 static func get_reverse_enum(enum_name: String, value: int) -> String:
 	# This is not fast! It's intended mostly for GUI.
 	var dict: Dictionary = Global.enums[enum_name]

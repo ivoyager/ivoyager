@@ -1,6 +1,6 @@
 ﻿# Class types for info display and planetarium wiki links.,
 #,
-key,wiki_en
+name,wiki_en
 DataType,STRING
 Default,
 Units,
