@@ -124,7 +124,7 @@ func get_rings_radius() -> float:
 func get_std_gravitational_parameter() -> float:
 	if !body_properties:
 		return NAN
-	return body_properties.gm
+	return body_properties.GM
 
 func get_mean_radius() -> float:
 	if !body_properties:

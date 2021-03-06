@@ -103,7 +103,7 @@ func get_bool(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_bool(_values[row_data[column]])
+	return convert_bool(_values[row_data[column]])
 
 func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Requires either row or row_name.
@@ -117,7 +117,7 @@ func get_int(table_name: String, field_name: String, row := -1, row_name := "") 
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_int(_values[row_data[column]])
+	return convert_int(_values[row_data[column]])
 
 func get_real(table_name: String, field_name: String, row := -1, row_name := "") -> float:
 	# Requires either row or row_name.
@@ -133,7 +133,7 @@ func get_real(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	var units: Array = _table_units[table_name]
 	var unit: String = units[column]
-	return conv_real(_values[row_data[column]], unit)
+	return convert_real(_values[row_data[column]], unit)
 
 func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	var num_str := get_string(table_name, field_name, row, row_name)
@@ -163,7 +163,7 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = fields[field_name]
 	var data_types: Array = _table_data_types[table_name]
 	var enum_name: String = data_types[column]
-	return conv_enum(_values[row_data[column]], enum_name)
+	return convert_enum(_values[row_data[column]], enum_name)
 
 func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for DataType = "DATA" to get row number (= "type") of the cell item.
@@ -177,7 +177,7 @@ func get_table_type(table_name: String, field_name: String, row := -1, row_name 
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_data(_values[row_data[column]])
+	return convert_data(_values[row_data[column]])
 
 func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
 	# Use for DataType = "BODY" to get the Body instance.
@@ -191,12 +191,11 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = fields[field_name]
-	return conv_body(_values[row_data[column]])
+	return convert_body(_values[row_data[column]])
 
-func build_dictionary(dict: Dictionary, table_name: String, row: int, required_fields := []) -> void:
+func build_dictionary(dict: Dictionary, table_name: String, row: int) -> void:
 	# Sets dict keys that exactly match column fields in table. Missing value
-	# in table (without Default) will not be set. Asserts if field in
-	# required_fields is missing.
+	# in table without default will not be set.
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
@@ -204,113 +203,80 @@ func build_dictionary(dict: Dictionary, table_name: String, row: int, required_f
 	for column_field in dict:
 		var column: int = fields.get(column_field, -1)
 		if column == -1:
-			assert(!required_fields.has(column_field), "Missing column: " + table_name + " " + column_field)
 			continue
 		var index: int = row_data[column]
 		var value: String = _values[index]
 		if !value:
-			assert(!required_fields.has(column_field), "Missing value: " + table_name + "/" + \
-					_values[row_data[0]] + " " + column_field)
 			continue
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
-		dict[column_field] = conv_value(value, data_type, unit)
+		dict[column_field] = convert_value(value, data_type, unit)
 
-func build_object(object: Object, table_name: String, row: int, debug_required := []) -> void:
-	# DEPRECIATE! Don't use this. Use build_dictionary().
+func build_object(object: Object, object_fields: Array, table_name: String, row: int) -> void:
+	# Sets object_fields that exactly match column fields in table. Missing
+	# value in table without default will not be set.
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var units: Array = _table_units[table_name]
 	var row_data: Array = _table_data[table_name][row]
-	
-	var properties: Array = object.get_script().get_script_property_list()
-	
-	for property_dict in properties:
-		var property: String = property_dict.name
-		var column: int = fields.get(property, -1)
+	for column_field in object_fields:
+		var column: int = fields.get(column_field, -1)
 		if column == -1:
-			assert(!debug_required.has(property), "Missing column: " + table_name + " " + property)
 			continue
 		var index: int = row_data[column]
 		var value: String = _values[index]
 		if !value:
-			assert(!debug_required.has(property), "Missing value: " + table_name + "/" + \
-					_values[row_data[0]] + " " + property)
 			continue
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
-		object[property] = conv_value(value, data_type, unit)
+		object[column_field] = convert_value(value, data_type, unit)
 
-func build_object2(object: Object, table_name: String, row: int, property_fields: Dictionary,
-		required_fields := []) -> void:
-	# DEPRECIATE! Don't use this. Use build_dictionary().
-	var fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for property in property_fields:
-		var field: String = property_fields[property]
-		if !fields.has(field):
-			assert(!required_fields.has(field), "Missing table column: " + _values[row_data[0]] + " " + field)
-			continue
-		var column: int = fields[field]
-		var index: int = row_data[column]
-		var value: String = _values[index]
-		if !value:
-			assert(!required_fields.has(field), "Missing table value: " + _values[row_data[0]] + " " + field)
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		object[property] = conv_value(value, data_type, unit)
-
-func build_flags(flags: int, table_name: String, row: int, flag_fields: Dictionary,
-		required_fields := []) -> int:
-	# Assumes relevant flag already in off state; only sets for TRUE or x values in table.
+func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: int) -> int:
+	# Assumes relevant flag already in off state. Sets on if table value exists
+	# and would evaluate true in get_bool() (i.e., is true or x).
 	var fields: Dictionary = _table_fields[table_name]
 	var data_types: Array = _table_data_types[table_name]
 	var row_data: Array = _table_data[table_name][row]
 	for flag in flag_fields:
-		var field: String = flag_fields[flag]
-		if !fields.has(field):
-			assert(!required_fields.has(field), "Missing table column: " + _values[row_data[0]] + " " + field)
+		var column_field: String = flag_fields[flag]
+		if !fields.has(column_field):
 			continue
-		var column: int = fields[field]
+		var column: int = fields[column_field]
 		var index: int = row_data[column]
 		var value: String = _values[index]
 		var data_type: String = data_types[column]
 		assert(data_type == "BOOL" or data_type == "X", "Expected table DataType = 'BOOL' or 'X'")
-		if conv_bool(value):
+		if convert_bool(value):
 			flags |= flag
 	return flags
 
-func conv_value(value: String, data_type: String, unit := ""):
-	# untyped return
+func convert_value(value: String, data_type: String, unit := ""): # untyped return
 	match data_type:
 		"REAL":
-			return conv_real(value, unit)
+			return convert_real(value, unit)
 		"BOOL", "X":
-			return conv_bool(value)
+			return convert_bool(value)
 		"STRING":
 			return value
 		"INT":
-			return conv_int(value)
+			return convert_int(value)
 		"DATA":
-			return conv_data(value)
+			return convert_data(value)
 		"BODY":
-			return conv_body(value)
-		_: # valid enum name (tested on import)
-			return conv_enum(value, data_type)
+			return convert_body(value)
+		_: # must be valid enum name (tested on import)
+			return convert_enum(value, data_type)
 
-func conv_bool(value: String) -> bool:
+func convert_bool(value: String) -> bool:
 	# for "BOOL" or "X"
 	return value == "x" or value.matchn("true")
 
-func conv_int(value: String) -> int:
+func convert_int(value: String) -> int:
 	if !value:
 		return -1
 	return int(value)
 
-func conv_real(value: String, unit := "") -> float:
+func convert_real(value: String, unit := "") -> float:
 	if !value:
 		return NAN
 	var real := float(value)
@@ -320,18 +286,18 @@ func conv_real(value: String, unit := "") -> float:
 		real = math.set_decimal_precision(real, sig_digits)
 	return float(real)
 
-func conv_data(value: String) -> int:
+func convert_data(value: String) -> int:
 	if !value:
 		return -1
 	assert(_table_rows.has(value), "Unknown table row name " + value)
 	return _table_rows[value]
 
-func conv_body(value: String) -> Body:
+func convert_body(value: String) -> Body:
 	if !value:
 		return null
 	return _bodies_by_name.get(value)
 
-func conv_enum(value: String, enum_name: String) -> int:
+func convert_enum(value: String, enum_name: String) -> int:
 	if !value:
 		return -1
 	var dict: Dictionary = _enums[enum_name]
