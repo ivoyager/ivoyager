@@ -266,6 +266,7 @@ func _on_node_added(node: Node) -> void:
 		_build_unpersisted(body)
 
 func _build_unpersisted(body: Body) -> void: # Main thread
+	# After _enter_tree(), before _ready()
 	# Note: many builders called here ask for IOManager.callback. These are
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.

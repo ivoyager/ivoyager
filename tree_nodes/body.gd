@@ -88,7 +88,7 @@ var max_model_dist := 0.0
 var max_aux_graphic_dist := 0.0
 var min_hud_dist := 0.0
 var is_asleep := false
-var m_radius := 0.0 # here for convenience; BodyProperties maintains
+var m_radius := NAN # here for convenience; BodyProperties maintains
 
 # private
 var _times: Array = Global.times
@@ -257,6 +257,9 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 func _init() -> void:
 	_on_init()
 
+func _enter_tree() -> void:
+	_on_enter_tree()
+
 func _ready() -> void:
 	_on_ready()
 
@@ -266,20 +269,25 @@ func _process(delta: float) -> void:
 func _on_init() -> void:
 	hide()
 
-func _on_ready() -> void:
+func _on_enter_tree() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
-	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
 		orbit.reset_elements_and_interval_update()
 		if !orbit.is_connected("changed", self, "_on_orbit_changed"):
 			orbit.connect("changed", self, "_on_orbit_changed")
+			_on_orbit_changed(false)
 	if body_properties:
 		if !body_properties.is_connected("changed", self, "_on_body_properties_changed"):
 			body_properties.connect("changed", self, "_on_body_properties_changed")
+			_on_body_properties_changed()
 	if model_controller:
 		if !model_controller.is_connected("changed", self, "_on_model_controller_changed"):
 			model_controller.connect("changed", self, "_on_model_controller_changed")
+			_on_model_controller_changed()
+
+func _on_ready() -> void:
+	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _prepare_to_free() -> void:
 	set_process(false)
@@ -353,6 +361,7 @@ func _on_show_huds_changed() -> void:
 
 func _on_body_properties_changed() -> void:
 	m_radius = body_properties.m_radius
+	assert(!is_nan(m_radius))
 	# TODO: Network sync
 
 func _on_model_controller_changed() -> void:
