@@ -314,11 +314,11 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 # *****************************************************************************
 # ivoyager mechanics & private
 
-func clear_for_disposal() -> void:
+func disconnect_interval_update() -> void:
 	if _update_interval:
 		_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
 
-func reset() -> void:
+func reset_elements_and_interval_update() -> void:
 	# Sets current_elements, calculates update interval for element_rates, and
 	# connects or disconnects/connects to Schedular for updating.
 	var time: float = _times[0]
@@ -364,7 +364,7 @@ func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
 		_init_elements(_times[0] + _update_interval / 2.0, current_elements)
 	else:
 		element_rates = element_rates_
-		reset()
+		reset_elements_and_interval_update()
 
 func _init() -> void:
 	_scheduler = Global.program.Scheduler

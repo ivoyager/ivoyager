@@ -37,9 +37,9 @@ class_name Body
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
 const DPRINT := false
-const HUD_TOO_FAR_ORBIT_R_MULTIPLIER := 100.0
-const HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER := 500.0
-const HUD_TOO_CLOSE_STAR_MULTIPLIER := 20.0 # combines w/ above
+const MAX_HUD_DIST_ORBIT_RADIUS_MULTIPLIER := 100.0
+const MIN_HUD_DIST_RADIUS_MULTIPLIER := 500.0
+const MIN_HUD_DIST_STAR_MULTIPLIER := 20.0 # combines w/ above
 const MIN_CLICK_RADIUS := 20.0
 
 const IDENTITY_BASIS := Basis.IDENTITY
@@ -88,6 +88,7 @@ var max_model_dist := 0.0
 var max_aux_graphic_dist := 0.0
 var min_hud_dist := 0.0
 var is_asleep := false
+var m_radius := 0.0 # here for convenience; BodyProperties maintains
 
 # private
 var _times: Array = Global.times
@@ -111,15 +112,15 @@ func get_file_prefix() -> String:
 func has_rings() -> bool:
 	return file_info.size() > 2
 
-func get_rings_file() -> String:
-	if file_info.size() > 2:
-		return file_info[1]
-	return ""
+func get_rings_file_prefix() -> String:
+	if file_info.size() < 3:
+		return ""
+	return file_info[1]
 
 func get_rings_radius() -> float:
-	if file_info.size() > 2:
-		return file_info[2]
-	return NAN
+	if file_info.size() < 3:
+		return NAN
+	return file_info[2]
 
 func get_std_gravitational_parameter() -> float:
 	if !body_properties:
@@ -127,9 +128,7 @@ func get_std_gravitational_parameter() -> float:
 	return body_properties.GM
 
 func get_mean_radius() -> float:
-	if !body_properties:
-		return NAN
-	return body_properties.m_radius
+	return m_radius
 
 func is_oblate() -> bool:
 	if !body_properties:
@@ -137,14 +136,20 @@ func is_oblate() -> bool:
 	return body_properties.is_oblate
 
 func get_equatorial_radius() -> float:
+	# Returns m_radius if !is_oblate
 	if !body_properties:
 		return NAN
-	return body_properties.e_radius
+	if body_properties.is_oblate:
+		return body_properties.e_radius
+	return m_radius
 
 func get_polar_radius() -> float:
+	# Returns m_radius if !is_oblate
 	if !body_properties:
 		return NAN
-	return body_properties.p_radius
+	if body_properties.is_oblate:
+		return body_properties.p_radius
+	return m_radius
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
@@ -183,27 +188,47 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
 
-func set_orbit(orbit_: Orbit, skip_reset := false) -> void:
+func set_orbit(orbit_: Orbit) -> void:
 	if orbit == orbit_:
 		return
 	if orbit:
-		orbit.clear_for_disposal()
-	if !skip_reset:
-		orbit_.reset()
+		orbit.disconnect_interval_update()
+		orbit.disconnect("changed", self, "_on_orbit_changed")
 	orbit = orbit_
+	if orbit_:
+		if is_inside_tree(): # otherwise happens on _ready()
+			orbit_.reset_elements_and_interval_update()
+		orbit_.connect("changed", self, "_on_orbit_changed")
+		_on_orbit_changed(false)
+
+func set_body_properties(body_properties_: BodyProperties) -> void:
+	if body_properties == body_properties_:
+		return
+	if body_properties:
+		body_properties.disconnect("changed", self, "_on_body_properties_changed")
+	body_properties = body_properties_
+	if body_properties_:
+		body_properties_.connect("changed", self, "_on_body_properties_changed")
+		_on_body_properties_changed()
+
+func set_model_controller(model_controller_: ModelController) -> void:
+	if model_controller == model_controller_:
+		return
+	if model_controller:
+		model_controller.disconnect("changed", self, "_on_model_controller_changed")
+	model_controller = model_controller_
+	if model_controller_:
+		model_controller_.connect("changed", self, "_on_model_controller_changed")
+		_on_model_controller_changed()
 
 # *****************************************************************************
 # ivoyager mechanics & private
 
-func reset_orbit():
-	if orbit:
-		orbit.reset()
-
 func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
-		min_hud_dist = body_properties.m_radius * HUD_TOO_CLOSE_M_RADIUS_MULTIPLIER
+		min_hud_dist = m_radius * MIN_HUD_DIST_RADIUS_MULTIPLIER
 		if flags & IS_STAR:
-			min_hud_dist *= HUD_TOO_CLOSE_STAR_MULTIPLIER # just the label
+			min_hud_dist *= MIN_HUD_DIST_STAR_MULTIPLIER # just the label
 	else:
 		min_hud_dist = 0.0
 
@@ -228,29 +253,40 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		is_asleep = false
 		set_process(true) # will show on next _process()
 
-func _init():
-	_on_init() # can override
+# virtual functions call private functions so subclass can override
+func _init() -> void:
+	_on_init()
+
+func _ready() -> void:
+	_on_ready()
+
+func _process(delta: float) -> void:
+	_on_process(delta)
 
 func _on_init() -> void:
 	hide()
 
-func _ready():
-	_on_ready() # can override
-
 func _on_ready() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
-			CONNECT_ONESHOT)
+	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	if orbit:
-		orbit.connect("changed", self, "_on_orbit_changed")
+		orbit.reset_elements_and_interval_update()
+		if !orbit.is_connected("changed", self, "_on_orbit_changed"):
+			orbit.connect("changed", self, "_on_orbit_changed")
+	if body_properties:
+		if !body_properties.is_connected("changed", self, "_on_body_properties_changed"):
+			body_properties.connect("changed", self, "_on_body_properties_changed")
+	if model_controller:
+		if !model_controller.is_connected("changed", self, "_on_model_controller_changed"):
+			model_controller.connect("changed", self, "_on_model_controller_changed")
 
 func _prepare_to_free() -> void:
 	set_process(false)
 	Global.disconnect("setting_changed", self, "_settings_listener")
 	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
-func _process(_delta: float) -> void:
+func _on_process(_delta: float) -> void:
 	var global_translation := global_transform.origin
 	var camera_global_translation: Vector3 = _camera_info[1]
 	var camera_dist := global_translation.distance_to(camera_global_translation)
@@ -259,13 +295,13 @@ func _process(_delta: float) -> void:
 	var camera: Camera = _camera_info[0]
 	if !camera.is_position_behind(global_translation):
 		position_2d = camera.unproject_position(global_translation)
-		var mouse_dist := position_2d.distance_to(_mouse_target[0])
+		var mouse_dist := position_2d.distance_to(_mouse_target[0]) # mouse position
 		var click_radius := MIN_CLICK_RADIUS
-		var divisor: float = _camera_info[2] * camera_dist
+		var divisor: float = _camera_info[2] * camera_dist # fov * dist
 		if divisor > 0.0:
-			var radius: float = 55.0 * body_properties.m_radius * _camera_info[3] / divisor
-			if click_radius < radius:
-				click_radius = radius
+			var screen_radius: float = 55.0 * m_radius * _camera_info[3] / divisor
+			if click_radius < screen_radius:
+				click_radius = screen_radius
 		if mouse_dist < click_radius:
 			is_mouse_near = true
 			if camera_dist < _mouse_target[2]:
@@ -277,7 +313,7 @@ func _process(_delta: float) -> void:
 	var hud_dist_ok := camera_dist > min_hud_dist
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
-		hud_dist_ok = camera_dist < orbit_radius * HUD_TOO_FAR_ORBIT_R_MULTIPLIER
+		hud_dist_ok = camera_dist < orbit_radius * MAX_HUD_DIST_ORBIT_RADIUS_MULTIPLIER
 	var hud_label_visible := _show_label and hud_dist_ok and hud_label \
 			and position_2d != VECTOR2_NULL
 	if hud_label_visible:
@@ -315,16 +351,26 @@ func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
+func _on_body_properties_changed() -> void:
+	m_radius = body_properties.m_radius
+	# TODO: Network sync
+
+func _on_model_controller_changed() -> void:
+	pass
+	# TODO: Network sync
+
 func _on_orbit_changed(is_scheduled: bool) -> void:
-#	prints("Orbit change: ", (1.0 / orbit.update_frequency) / UnitDefs.HOUR, "hr", tr(name))
-	if flags & IS_TIDALLY_LOCKED:
+#	prints("Orbit change: ", orbit._update_interval / UnitDefs.HOUR, "hr", tr(name))
+	if flags & IS_TIDALLY_LOCKED and model_controller:
 		var new_north_pole := orbit.get_normal(_times[0])
 		if model_controller.axial_tilt != 0.0:
 			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
 			new_north_pole = new_north_pole.rotated(correction_axis, model_controller.axial_tilt)
 		model_controller.north_pole = new_north_pole
+		model_controller.emit_signal("changed")
 		# TODO: Adjust basis_at_epoch???
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
+		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
 				orbit.m_modifiers)
 

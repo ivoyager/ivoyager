@@ -28,6 +28,8 @@
 
 class_name BodyProperties
 
+signal changed() # whoever changes must emit
+
 var GM := NAN # required
 var mass := INF
 var surface_gravity := NAN

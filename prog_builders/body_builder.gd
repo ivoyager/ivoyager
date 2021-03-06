@@ -121,11 +121,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	var orbit: Orbit
 	if not body.flags & BodyFlags.IS_TOP:
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
-		body.set_orbit(orbit, true)
+		body.set_orbit(orbit)
 	# body_properties
 	# missing may be either INF or NAN, see BodyProperties
 	var body_properties: BodyProperties = _BodyProperties_.new()
-	body.body_properties = body_properties
 	_table_reader.build_object(body_properties, body_properties_fields, table_name, row)
 	body.system_radius = body_properties.m_radius * 10.0 # widens if satalletes are added
 	if !is_nan(body_properties.e_radius):
@@ -167,13 +166,13 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 				if is_nan(body_properties.surface_gravity):
 					var surface_gravity := G * body_properties.mass / pow(body_properties.m_radius, 2.0)
 					body_properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+	body.set_body_properties(body_properties)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
 	var model_controller: ModelController = _ModelController_.new()
-	body.model_controller = model_controller
 	_table_reader.build_object(model_controller, model_controller_fields, table_name, row)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
@@ -218,6 +217,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 			total_rotation += longitude_at_epoch
 	basis_at_epoch = basis_at_epoch.rotated(model_controller.north_pole, total_rotation)
 	model_controller.set_basis_at_epoch(basis_at_epoch)
+	body.set_model_controller(model_controller)
 	# file import info
 	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
 	body.file_info[0] = file_prefix
@@ -279,7 +279,6 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)
-		body.reset_orbit()
 	_huds_builder.add_label(body)
 	body.set_hide_hud_when_close(_settings.hide_hud_when_close)
 	var file_prefix := body.get_file_prefix()
