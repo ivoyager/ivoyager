@@ -79,6 +79,7 @@ var show_data := [
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
+var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
 var _labels := []
@@ -190,7 +191,9 @@ func _on_selection_changed() -> void:
 							value_str = tr(key)
 						ENUM:
 							var enum_name: String = show_datum[3]
-							key = Enums.get_reverse_enum(enum_name, value)
+							var enum_dict: Dictionary = _enums.get(enum_name)
+							var enum_keys: Array = enum_dict.keys()
+							key = enum_keys[value]
 							value_str = tr(key)
 					if enable_wiki_links and key and datum_size > 8 and show_datum[8]:
 						value_wiki = key

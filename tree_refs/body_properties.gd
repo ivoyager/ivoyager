@@ -28,7 +28,7 @@
 
 class_name BodyProperties
 
-var gm := NAN # required
+var GM := NAN # required
 var mass := INF
 var surface_gravity := NAN
 var esc_vel := NAN
@@ -48,7 +48,7 @@ var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["gm", "mass", "surface_gravity", "esc_vel", "m_radius",
+const PERSIST_PROPERTIES := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius",
 	"is_oblate", "e_radius", "p_radius", "mean_density",
 	"hydrostatic_equilibrium", "albedo", "surf_pres",
 	"surf_t", "min_t", "max_t", "one_bar_t", "half_bar_t", "tenth_bar_t"]

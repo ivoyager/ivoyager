@@ -98,16 +98,3 @@ enum BodyFlags {
 	#     0b1 * 0x10000000000 to 0b10000000 * 0x100000000000000
 	# But more safe to extend Body and add your own flags_ext property!
 }
-
-# We can reference Godot classes here so TableReader has access to their enums
-# e.g.,
-# const GeometryInstance := GeometryInstance
-# This should work but isn't tested yet...
-
-static func get_reverse_enum(enum_name: String, value: int) -> String:
-	# This is not fast! It's intended mostly for GUI.
-	var dict: Dictionary = Global.enums[enum_name]
-	for key in dict:
-		if dict[key] == value:
-			return key
-	return ""

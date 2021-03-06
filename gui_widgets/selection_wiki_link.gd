@@ -43,11 +43,11 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 		bbcode_text = "[url]" + tr(fallback_text) + "[/url]"
 
 func _on_selection_changed() -> void:
-	var object_key: String = _selection_manager.get_name()
-	bbcode_text = "[url]" + tr(object_key) + "[/url]"
+	var object_name: String = _selection_manager.get_name()
+	bbcode_text = "[url]" + tr(object_name) + "[/url]"
 
 func _on_wiki_clicked(_meta: String) -> void:
-	var object_key: String = _selection_manager.get_name()
-	if _wiki_titles.has(object_key):
-		var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_key])
+	var object_name: String = _selection_manager.get_name()
+	if _wiki_titles.has(object_name):
+		var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_name])
 		OS.shell_open(url)

@@ -36,48 +36,16 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
-# project vars
-var body_fields := {
-	# property = table_field
-	name = "key",
-	symbol = "symbol",
-	class_type = "class_type",
-	model_type = "model_type",
-	light_type = "light_type",
-}
-var body_fields_req := ["class_type", "model_type", "m_radius"]
-
+# project vars - modify if body or body components are subclassed
+var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
+var body_properties_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
+	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
+	"one_bar_t", "half_bar_t", "tenth_bar_t"]
+var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
-}
-
-var properties_fields := {
-	m_radius = "m_radius",
-	e_radius = "e_radius", # set to m_radius if missing
-	mass = "mass", # calculate from m_radius & density if missing
-	gm = "GM", # calculate from mass if missing
-	esc_vel = "esc_vel",
-	surface_gravity = "surface_gravity",
-	hydrostatic_equilibrium = "hydrostatic_equilibrium",
-	mean_density = "density",
-	albedo = "albedo",
-	surf_pres = "surf_pres",
-	surf_t = "surf_t",
-	min_t = "min_t",
-	max_t = "max_t",
-	one_bar_t = "one_bar_t",
-	half_bar_t = "half_bar_t",
-	tenth_bar_t = "tenth_bar_t",
-}
-var properties_fields_req := ["m_radius"]
-
-var rotations_fields := {
-	rotation_period = "rotation",
-	right_ascension = "RA",
-	declination = "dec",
-	axial_tilt = "axial_tilt",
 }
 
 # private
@@ -122,9 +90,9 @@ func init_system_build() -> void:
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Main thread!
 	var body: Body = _Body_.new()
-	_table_reader.build_object2(body, table_name, row, body_fields, body_fields_req)
+	_table_reader.build_object(body, body_fields, table_name, row)
 	# flags
-	var flags := _table_reader.build_flags(0, table_name, row, flag_fields)
+	var flags := _table_reader.build_flags(0, flag_fields, table_name, row)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
@@ -158,7 +126,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	# missing may be either INF or NAN, see BodyProperties
 	var body_properties: BodyProperties = _BodyProperties_.new()
 	body.body_properties = body_properties
-	_table_reader.build_object2(body_properties, table_name, row, properties_fields, properties_fields_req)
+	_table_reader.build_object(body_properties, body_properties_fields, table_name, row)
 	body.system_radius = body_properties.m_radius * 10.0 # widens if satalletes are added
 	if !is_nan(body_properties.e_radius):
 		body_properties.is_oblate = true
@@ -171,22 +139,22 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 			if sig_digits > 1:
 				var mass := (PI * 4.0 / 3.0) * body_properties.mean_density * pow(body_properties.m_radius, 3.0)
 				body_properties.mass = math.set_decimal_precision(mass, sig_digits)
-	if is_nan(body_properties.gm): # planets table has mass, not GM
+	if is_nan(body_properties.GM): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
-			var gm := G * body_properties.mass
-			body_properties.gm = math.set_decimal_precision(gm, sig_digits)
+			var GM := G * body_properties.mass
+			body_properties.GM = math.set_decimal_precision(GM, sig_digits)
 	if is_nan(body_properties.esc_vel) or is_nan(body_properties.surface_gravity):
 		if _table_reader.has_value(table_name, "GM", row):
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
 			if sig_digits > 2:
 				if is_nan(body_properties.esc_vel):
-					var esc_vel := sqrt(2.0 * body_properties.gm / body_properties.m_radius)
+					var esc_vel := sqrt(2.0 * body_properties.GM / body_properties.m_radius)
 					body_properties.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
 				if is_nan(body_properties.surface_gravity):
-					var surface_gravity := body_properties.gm / pow(body_properties.m_radius, 2.0)
+					var surface_gravity := body_properties.GM / pow(body_properties.m_radius, 2.0)
 					body_properties.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
 			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
@@ -206,7 +174,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	# intentionally flipped.
 	var model_controller: ModelController = _ModelController_.new()
 	body.model_controller = model_controller
-	_table_reader.build_object2(model_controller, table_name, row, rotations_fields)
+	_table_reader.build_object(model_controller, model_controller_fields, table_name, row)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
 		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(

@@ -37,14 +37,7 @@ var star_grow_exponent := 0.6
 var star_energy_ref_dist := 3.8e6 * UnitDefs.KM # ~4x radius works
 var star_energy_near := 10.0 # energy at _star_energy_ref_dist
 var star_energy_exponent := 1.9
-
-var material_fields := { # DEPRECIATE w/ improved TableReader.build_object()
-	metallic = "metallic",
-	roughness = "roughness",
-	rim_enabled = "rim_enabled",
-	rim = "rim",
-	rim_tint = "rim_tint",
-}
+var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
 # private
 var _times: Array = Global.times
@@ -163,7 +156,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	model.mesh = _globe_mesh
 	var surface := SpatialMaterial.new()
 	model.set_surface_material(0, surface)
-	_table_reader.build_object2(surface, "models", model_type, material_fields)
+	_table_reader.build_object(surface, material_fields, "models", model_type)
 	if albedo_map:
 		surface.albedo_texture = albedo_map
 	if emission_map:

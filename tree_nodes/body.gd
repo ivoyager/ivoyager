@@ -56,7 +56,7 @@ const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 
 # persisted
-# name is table row key ("MOON_EUROPA", etc.)
+# node name is table row name ("MOON_EUROPA", etc.)
 var symbol := "\u25CC" # dashed circle default
 var body_id := -1
 var class_type := -1 # classes.csv
@@ -124,7 +124,7 @@ func get_rings_radius() -> float:
 func get_std_gravitational_parameter() -> float:
 	if !body_properties:
 		return NAN
-	return body_properties.gm
+	return body_properties.GM
 
 func get_mean_radius() -> float:
 	if !body_properties:
