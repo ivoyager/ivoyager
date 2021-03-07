@@ -47,6 +47,7 @@ enum {
 # project vars
 var enable_wiki_links := false # Global.enable_wiki must also be set
 var max_data_items := 15
+var search_body_components := ["body_properties", "model_controller", "orbit"]
 var show_data := [
 	# [0] property [1] display label [2-4] type-specific (see code)
 	# [5] flags test (show) [6] flags test (is approximate value)
@@ -105,7 +106,6 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	while grid_index < max_data_items:
 		if enable_wiki_links:
 			var label_label := RichTextLabel.new()
-#			label_label.rect_min_size.x = labels_width
 			label_label.scroll_active = false
 			label_label.bbcode_enabled = true
 			label_label.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -114,7 +114,6 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 			_labels.append(label_label)
 			add_child(label_label)
 			var value_label := RichTextLabel.new()
-#			value_label.rect_min_size.x = values_width
 			value_label.scroll_active = false
 			value_label.bbcode_enabled = true
 			value_label.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -124,14 +123,12 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 			add_child(value_label)
 		else:
 			var label_label := Label.new()
-#			label_label.rect_min_size.x = labels_width
 			label_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			label_label.clip_text = true
 			label_label.hide()
 			_labels.append(label_label)
 			add_child(label_label)
 			var value_label := Label.new()
-#			value_label.rect_min_size.x = values_width
 			value_label.size_flags_horizontal = SIZE_EXPAND_FILL
 			value_label.clip_text = true
 			value_label.hide()
@@ -146,28 +143,21 @@ func _on_selection_changed() -> void:
 	if !selection_item:
 		return
 	var body: Body
-	var body_properties: BodyProperties
-	var model_controller: ModelController
-	var orbit: Orbit
 	if _selection_manager.is_body():
 		body = _selection_manager.get_body()
-		body_properties = body.body_properties
-		model_controller = body.model_controller
-		orbit = body.orbit
 	var grid_index := 0
 	for show_datum in show_data:
 		var property: String = show_datum[0]
-		var value # untyped!
-		if property in selection_item:
-			value = selection_item.get(property)
-		elif body and property in body:
-			value = body.get(property)
-		elif body_properties and property in body_properties:
-			value = body_properties.get(property)
-		elif model_controller and property in model_controller:
-			value = model_controller.get(property)
-		elif orbit and property in orbit:
-			value = orbit.get(property)
+		var value = selection_item.get(property) # untyped
+		if value == null and body:
+			for component_name in search_body_components:
+				var component: Object = body.get(component_name)
+				if component:
+					value = component.get(property)
+					if value != null:
+						break
+			if value == null:
+				value = body.get(property)
 		if value == null:
 			continue
 		var datum_size: int = show_datum.size()
