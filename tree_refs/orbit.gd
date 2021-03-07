@@ -62,6 +62,14 @@ const PERSIST_OBJ_PROPERTIES := []
 
 # read-only
 var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# display vars
+var periapsis := NAN
+var apoapsis := NAN
+var semi_major_axis := NAN
+var eccentricity := NAN
+var mean_motion := NAN
+var orbital_perioid := NAN
+var average_orbital_speed := NAN
 
 # private
 var _times: Array = Global.times
@@ -324,6 +332,7 @@ func reset_elements_and_interval_update() -> void:
 	var time: float = _times[0]
 	if !element_rates:
 		_init_elements(time, current_elements)
+		_update_display_vars()
 		_begin_current = -INF
 		_end_current = INF
 		return
@@ -342,6 +351,7 @@ func reset_elements_and_interval_update() -> void:
 	_begin_current = time
 	_end_current = time + interval * 1.1
 	_init_elements(time + interval / 2.0, current_elements)
+	_update_display_vars()
 	if _update_interval != interval:
 		if _update_interval: # already has a Schedular connection
 			_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
@@ -353,6 +363,7 @@ func _scheduler_update() -> void:
 	_begin_current = time
 	_end_current = time + _update_interval * 1.1
 	_init_elements(time + _update_interval / 2.0, current_elements)
+	_update_display_vars()
 	emit_signal("changed", true)
 
 func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
@@ -411,3 +422,31 @@ func _init_elements(time: float, elements: Array) -> void:
 	elements[4] = w
 	elements[5] = M0
 	elements[6] = n
+
+func _update_display_vars() -> void:
+	var update_a := false
+	var update_e := false
+	var update_n := false
+	if semi_major_axis != current_elements[0]:
+		semi_major_axis = current_elements[0]
+		update_a = true
+	if eccentricity != current_elements[1]:
+		eccentricity = current_elements[1]
+		update_e = true
+	if mean_motion != current_elements[6]:
+		mean_motion = current_elements[6]
+		update_n = true
+	if update_a or update_e:
+		periapsis = (1.0 - eccentricity) * semi_major_axis # (1 - e) * a
+		apoapsis = (1.0 + eccentricity) * semi_major_axis # (1 + e) * a
+	if update_n:
+		orbital_perioid = TAU / mean_motion # TAU / n
+	if update_a or update_e or update_n:
+		average_orbital_speed = semi_major_axis * mean_motion
+		if eccentricity > 0.05:
+			var e2 := eccentricity * eccentricity
+			var e4 := e2 * e2
+			var e6 := e4 * e2
+			var e8 := e4 * e4
+			average_orbital_speed *= 1.0 - 0.25 * e2 - 0.046875 * e4 - 0.01953125 * e6 \
+					- 0.01068115 * e8

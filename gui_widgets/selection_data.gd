@@ -53,6 +53,10 @@ var show_data := [
 	# [5] flags test (show) [6] flags test (is approximate value)
 	# [7] label as wiki link [8] value as wiki link
 	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
+	["apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
+	["average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED", QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
 	["m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
 	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
 	["p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
@@ -209,6 +213,21 @@ func _on_selection_changed() -> void:
 		if !value_str:
 			continue
 		var label: String = show_datum[1]
+		if body:
+			if label == "LABEL_PERIAPSIS":
+				var parent := body.get_parent() as Body
+				if parent:
+					if parent.name == "STAR_SUN":
+						label = "LABEL_PERIHELION"
+					elif parent.name == "PLANET_EARTH":
+						label = "LABEL_PERIGEE"
+			elif label == "LABEL_APOAPSIS":
+				var parent := body.get_parent() as Body
+				if parent:
+					if parent.name == "STAR_SUN":
+						label = "LABEL_APHELION"
+					elif parent.name == "PLANET_EARTH":
+						label = "LABEL_APOGEE"
 		if enable_wiki_links and datum_size > 7 and show_datum[7] and _wiki_titles.has(label):
 			var tr_label := tr(label)
 			_meta_lookup[tr_label] = label
