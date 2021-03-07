@@ -166,8 +166,6 @@ func get_north(_time := NAN) -> Vector3:
 func get_orbit_normal(time := NAN) -> Vector3:
 	if !orbit:
 		return ECLIPTIC_Z
-	if is_nan(time):
-		time = _times[0]
 	return orbit.get_normal(time)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
@@ -180,8 +178,6 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to parent body
 	if !orbit:
 		return IDENTITY_BASIS
-	if is_nan(time):
-		time = _times[0]
 	var x_axis := -orbit.get_position(time).normalized()
 	var up := orbit.get_normal(time)
 	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision

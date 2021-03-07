@@ -49,14 +49,14 @@ var enable_wiki_links := false # Global.enable_wiki must also be set
 var max_data_items := 15
 var search_body_components := ["body_properties", "model_controller", "orbit"]
 var show_data := [
-	# [0] property [1] display label [2-4] type-specific (see code)
+	# [0] property or method [1] display label [2-4] type-specific (see code)
 	# [5] flags test (show) [6] flags test (is approximate value)
 	# [7] label as wiki link [8] value as wiki link
 	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
-	["apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
-	["average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED", QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
+	["get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["get_apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["get_orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
+	["get_average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED", QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
 	["m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
 	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
 	["p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
@@ -151,17 +151,17 @@ func _on_selection_changed() -> void:
 		body = _selection_manager.get_body()
 	var grid_index := 0
 	for show_datum in show_data:
-		var property: String = show_datum[0]
-		var value = selection_item.get(property) # untyped
+		var property_or_method: String = show_datum[0]
+		var value = _get_property_or_method_result(selection_item, property_or_method) # untyped
 		if value == null and body:
 			for component_name in search_body_components:
 				var component: Object = body.get(component_name)
 				if component:
-					value = component.get(property)
+					value = _get_property_or_method_result(component, property_or_method)
 					if value != null:
 						break
 			if value == null:
-				value = body.get(property)
+				value = _get_property_or_method_result(body, property_or_method)
 		if value == null:
 			continue
 		var datum_size: int = show_datum.size()
@@ -248,6 +248,11 @@ func _on_selection_changed() -> void:
 		_labels[grid_index].hide()
 		_values[grid_index].hide()
 		grid_index += 1
+
+func _get_property_or_method_result(target: Object, key: String): # untyped
+	if target.has_method(key):
+		return target.call(key)
+	return target.get(key) # property value or null
 
 func _on_meta_clicked(meta: String) -> void:
 	var value_wiki: String = _meta_lookup[meta]
