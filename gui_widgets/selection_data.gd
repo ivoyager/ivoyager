@@ -1,4 +1,4 @@
-# selection_buttons.gd
+# selection_data.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -28,9 +28,6 @@
 #   INF or -INF
 #   -9999
 #
-# To find properites, we search first in SelectionItem, then Body, then
-# BodyProperties, then ModelController.
-#
 # For most applicatios, you'll want to put this widget in a ScrollContainer.
 #
 # TODO: tooltips.
@@ -46,6 +43,8 @@ enum {
 
 # project vars
 var enable_wiki_links := false # Global.enable_wiki must also be set
+
+
 var max_data_items := 15
 var search_body_components := ["body_properties", "model_controller", "orbit"]
 var show_data := [
