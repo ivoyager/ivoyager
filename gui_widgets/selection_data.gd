@@ -52,8 +52,8 @@ var section_searches := [ # one section array element per header
 	# "SelectionItem", "Body", or Body property name
 	["Body"],
 	["orbit", "SelectionItem"],
-	["body_properties"],
-	["body_properties"],
+	["body_characteristics"],
+	["body_characteristics"],
 ]
 var section_data := [ # one section array element per header
 	# In each section array, we have an array for each data line containing:

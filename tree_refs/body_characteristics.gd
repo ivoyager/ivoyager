@@ -1,4 +1,4 @@
-# body_properties.gd
+# body_characteristics.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,16 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Only a subset of these are required for simulator function (marked "required"
-# in comment). Some are used but not required. Others are information display
-# only at this time.
+# Only a subset of properties here are required for simulator function (marked
+# "required" in comment). Some are "used but not required". Others are
+# information display only at this time.
 #
 # For float, NAN means not applicable (don't display) and INF means unknown
-# (display as "?"). For int, -1 means not applicable. All physical bodies have
-# mass & m_radius (although possibly unknown). Other properties may or may not
-# be applicable by body type.
+# (display as "?"). For int, -1 means not applicable. Mass is unknown for many
+# small moons but relavent, so we display "?".
 
-class_name BodyProperties
+class_name BodyCharacteristics
 
 signal changed() # whoever changes must emit
 

@@ -65,7 +65,7 @@ var light_type := -1 # lights.csv (-1 except stars)
 var flags := 0 # see Enums.BodyFlags
 var system_radius := 0.0 # widest orbiting satellite
 var file_info := [""] # [file_prefix, rings_name, rings_radius], 1st required
-var body_properties: BodyProperties
+var body_characteristics: BodyCharacteristics
 var model_controller: ModelController
 var orbit: Orbit
 var satellites := [] # Body instances
@@ -74,7 +74,7 @@ var lagrange_points := [] # LPoint instances (lazy init as needed)
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
 	"light_type", "flags", "system_radius", "file_info"]
-const PERSIST_OBJ_PROPERTIES := ["body_properties", "model_controller", "orbit", "satellites",
+const PERSIST_OBJ_PROPERTIES := ["body_characteristics", "model_controller", "orbit", "satellites",
 	"lagrange_points"]
 
 # public unpersisted - read-only except builder classes
@@ -88,7 +88,7 @@ var max_model_dist := 0.0
 var max_aux_graphic_dist := 0.0
 var min_hud_dist := 0.0
 var is_asleep := false
-var m_radius := NAN # here for convenience; BodyProperties maintains
+var m_radius := NAN # here for convenience; BodyCharacteristics maintains
 
 # private
 var _times: Array = Global.times
@@ -123,32 +123,32 @@ func get_rings_radius() -> float:
 	return file_info[2]
 
 func get_std_gravitational_parameter() -> float:
-	if !body_properties:
+	if !body_characteristics:
 		return NAN
-	return body_properties.GM
+	return body_characteristics.GM
 
 func get_mean_radius() -> float:
 	return m_radius
 
 func is_oblate() -> bool:
-	if !body_properties:
+	if !body_characteristics:
 		return false
-	return body_properties.is_oblate
+	return body_characteristics.is_oblate
 
 func get_equatorial_radius() -> float:
 	# Returns m_radius if !is_oblate
-	if !body_properties:
+	if !body_characteristics:
 		return NAN
-	if body_properties.is_oblate:
-		return body_properties.e_radius
+	if body_characteristics.is_oblate:
+		return body_characteristics.e_radius
 	return m_radius
 
 func get_polar_radius() -> float:
 	# Returns m_radius if !is_oblate
-	if !body_properties:
+	if !body_characteristics:
 		return NAN
-	if body_properties.is_oblate:
-		return body_properties.p_radius
+	if body_characteristics.is_oblate:
+		return body_characteristics.p_radius
 	return m_radius
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
@@ -197,15 +197,15 @@ func set_orbit(orbit_: Orbit) -> void:
 		orbit_.connect("changed", self, "_on_orbit_changed")
 		_on_orbit_changed(false)
 
-func set_body_properties(body_properties_: BodyProperties) -> void:
-	if body_properties == body_properties_:
+func set_body_characteristics(body_characteristics_: BodyCharacteristics) -> void:
+	if body_characteristics == body_characteristics_:
 		return
-	if body_properties:
-		body_properties.disconnect("changed", self, "_on_body_properties_changed")
-	body_properties = body_properties_
-	if body_properties_:
-		body_properties_.connect("changed", self, "_on_body_properties_changed")
-		_on_body_properties_changed()
+	if body_characteristics:
+		body_characteristics.disconnect("changed", self, "_on_body_characteristics_changed")
+	body_characteristics = body_characteristics_
+	if body_characteristics_:
+		body_characteristics_.connect("changed", self, "_on_body_characteristics_changed")
+		_on_body_characteristics_changed()
 
 func set_model_controller(model_controller_: ModelController) -> void:
 	if model_controller == model_controller_:
@@ -273,10 +273,10 @@ func _on_enter_tree() -> void:
 		if !orbit.is_connected("changed", self, "_on_orbit_changed"):
 			orbit.connect("changed", self, "_on_orbit_changed")
 			_on_orbit_changed(false)
-	if body_properties:
-		if !body_properties.is_connected("changed", self, "_on_body_properties_changed"):
-			body_properties.connect("changed", self, "_on_body_properties_changed")
-			_on_body_properties_changed()
+	if body_characteristics:
+		if !body_characteristics.is_connected("changed", self, "_on_body_characteristics_changed"):
+			body_characteristics.connect("changed", self, "_on_body_characteristics_changed")
+			_on_body_characteristics_changed()
 	if model_controller:
 		if !model_controller.is_connected("changed", self, "_on_model_controller_changed"):
 			model_controller.connect("changed", self, "_on_model_controller_changed")
@@ -355,8 +355,8 @@ func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
-func _on_body_properties_changed() -> void:
-	m_radius = body_properties.m_radius
+func _on_body_characteristics_changed() -> void:
+	m_radius = body_characteristics.m_radius
 	assert(!is_nan(m_radius))
 	# TODO: Network sync
 
