@@ -140,6 +140,8 @@ func _read_table() -> void:
 					_fields[field] = n_columns
 					n_columns += 1
 				have_fields = true
+				assert(n_columns == _fields.size(), "Columns: %s, unique fields: %s; duplicate? %s" \
+						% [n_columns, _fields.size(), _path])
 			elif _line_array[0] == "DataType":
 				_data_types = _line_array
 				_data_types[0] = "STRING" # always name field

@@ -29,6 +29,7 @@ class_name BodyCharacteristics
 
 signal changed() # whoever changes must emit
 
+# physical characteristics
 var GM := NAN # required
 var mass := INF
 var surface_gravity := NAN
@@ -40,10 +41,11 @@ var p_radius := NAN # used but not required
 var mean_density := NAN
 var hydrostatic_equilibrium := -1 # Enums.ConfidenceType
 var albedo := NAN
-var surf_pres := NAN
 var surf_t := NAN # NA for gas giants
 var min_t := NAN
 var max_t := NAN
+# atmosphere
+var surf_pres := NAN
 var one_bar_t := NAN # venus, gas giants
 var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
@@ -51,6 +53,6 @@ var tenth_bar_t := NAN # gas giants
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius",
 	"is_oblate", "e_radius", "p_radius", "mean_density",
-	"hydrostatic_equilibrium", "albedo", "surf_pres",
-	"surf_t", "min_t", "max_t", "one_bar_t", "half_bar_t", "tenth_bar_t"]
+	"hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
+	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t"]
 
