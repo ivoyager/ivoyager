@@ -43,6 +43,7 @@ const math := preload("res://ivoyager/static/math.gd")
 const DPRINT := false
 const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
 
+var _split_regex := RegEx.new()
 # source files
 var _table_import: Dictionary = Global.table_import
 var _wiki_only: Array = Global.table_import_wiki_only
@@ -74,6 +75,9 @@ var _cell: String
 var _count := 0
 
 func _init():
+	# Monster reg ex found somewhere on internet. Splits comma dilineated,
+	# but not quoted commas. Removes quotes. 2nd capture group has cell value.
+	_split_regex.compile("(?:^|,)(?=[^\\\"]|(\\\")?)\\\"?((?(1)[^\\\"]*|[^,\\\"]*))\\\"?(?=,|$)")
 	var start_time := OS.get_system_time_msecs()
 	_import()
 	var time := OS.get_system_time_msecs() - start_time
@@ -85,7 +89,7 @@ func _project_init() -> void:
 			_table_row_dicts, _values)
 	Global.program.erase("TableImporter") # this Reference will free itself
 
-func _import() -> void: # this and below on I/O thread!
+func _import() -> void:
 	if _enable_wiki:
 		for path in _wiki_only:
 			_path = path
@@ -118,7 +122,6 @@ func _read_table() -> void:
 	if file.open(_path, file.READ) != OK:
 		print("ERROR: Could not open file: ", _path)
 		assert(false)
-	var delimiter := "," if _path.ends_with(".csv") else "\t" # legacy project support; use *.csv
 	_units = []
 	_defaults = []
 	var have_fields := false
@@ -130,7 +133,15 @@ func _read_table() -> void:
 		if commenter != -1 and commenter < 4: # skip comment line
 			line = file.get_line()
 			continue
-		_line_array = Array(line.split(delimiter, true))
+		
+		var reg_matches := _split_regex.search_all(line)
+		var n_matches := reg_matches.size()
+		_line_array.resize(n_matches)
+		var i := 0
+		while i < n_matches:
+			var reg_match: RegExMatch = reg_matches[i]
+			_line_array[i] = reg_match.strings[2]
+			i += 1
 		if !reading_data:
 			if !have_fields: # always 1st line!
 				assert(_line_array[0] == "name", "1st field must be 'name'")
@@ -143,20 +154,20 @@ func _read_table() -> void:
 				assert(n_columns == _fields.size(), "Columns: %s, unique fields: %s; duplicate? %s" \
 						% [n_columns, _fields.size(), _path])
 			elif _line_array[0] == "DataType":
-				_data_types = _line_array
+				_data_types = _line_array.duplicate()
 				_data_types[0] = "STRING" # always name field
 				_data_types.resize(n_columns) # there could be an extra comment column
 				assert(_data_type_test())
 			elif _line_array[0] == "Units":
-				_units = _line_array
+				_units = _line_array.duplicate()
 				_units[0] = ""
 				_units.resize(n_columns)
 				assert(_unit_test())
 			elif _line_array[0] == "Default":
-				_defaults = _line_array
+				_defaults = _line_array.duplicate()
 				_defaults[0] = ""
 				_defaults.resize(n_columns)
-				var i := 0
+				i = 0
 				while i < n_columns:
 					if _defaults[i]:
 						_defaults[i] = _get_processed_value(_defaults[i])
@@ -212,8 +223,6 @@ func _read_data_line() -> void:
 	_data.append(row_data)
 
 func _get_processed_value(value: String) -> String:
-	if value.begins_with("\"") and value.ends_with("\""): # whole cell quoted
-		value = value.substr(1, value.length() - 2)
 	value = value.lstrip("_")
 	value = value.c_unescape() # does not work for "\u"; Godot issue #38716
 	value = StrUtils.c_unescape_patch(value)

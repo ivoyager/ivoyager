@@ -39,8 +39,8 @@ const BodyFlags := Enums.BodyFlags
 # project vars - modify if body or body components are subclassed
 var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
 var body_characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
-	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
-	"one_bar_t", "half_bar_t", "tenth_bar_t"]
+	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
+	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t", "atmos_composition"]
 var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",

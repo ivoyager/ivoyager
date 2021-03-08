@@ -45,6 +45,7 @@ enum {
 
 # project vars
 var enable_wiki: bool = Global.enable_wiki # override if needed
+var autowrap_values := true # needed for Composition; set false if problematic
 
 var section_headers := ["", "LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE"] # "" for no-header/no-indent section
@@ -100,6 +101,7 @@ var section_data := [ # one section array element per header
 	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["atmos_composition", "LABEL_COMPOSITION"],
 	],
 ]
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -279,7 +281,9 @@ func _get_label_value(section: int, data_index: int) -> Array:
 		TYPE_STRING:
 			value_txt = tr(value)
 			if enable_wiki and data_size > 8 and line_data[8]:
-				wiki_key = value # may be used as wiki link
+				wiki_key = value # may be used as wiki link (if valid key)
+#			if value == value_txt:
+#				print(value)
 	if !value_txt:
 		return NULL_ARRAY # n/a
 	# get label text
@@ -352,6 +356,7 @@ func _set_grid_row(grid: GridContainer, print_line: int, label_value: Array,
 			value_cell = Label.new()
 			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
 			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
+			value_cell.autowrap = autowrap_values
 			grid.add_child(label_cell)
 			grid.add_child(value_cell)
 		else:
