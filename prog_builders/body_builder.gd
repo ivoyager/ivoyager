@@ -132,9 +132,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		body_properties.p_radius = 3.0 * body_properties.m_radius - 2.0 * body_properties.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_inf(body_properties.mass):
+	if is_inf(body_properties.mass): # missing in moon table
+		# Could calculate from GM, but mean_density x m_radius is better
 		if !is_nan(body_properties.mean_density):
-			var sig_digits := _table_reader.get_least_real_precision(table_name, ["density", "m_radius"], row)
+			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mean_density", "m_radius"], row)
 			if sig_digits > 1:
 				var mass := (PI * 4.0 / 3.0) * body_properties.mean_density * pow(body_properties.m_radius, 3.0)
 				body_properties.mass = math.set_decimal_precision(mass, sig_digits)
