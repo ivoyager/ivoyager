@@ -53,6 +53,8 @@ enum { # option_type for number_option()
 	MASS_G_KG, # g if < 1.0 kg
 	MASS_G_KG_T, # g if < 1.0 kg; t if x >= 1000.0 kg 
 	MASS_G_KG_PREFIXED_T, # g, kg, t, kt, Mt, Gt, Tt, Pt etc.
+	# time
+	TIME_D_Y, # d if < 1000 d, else y
 	# velocity
 	VELOCITY_MPS_KMPS, # km/s if >= 1.0 km/s
 	VELOCITY_MPS_KMPS_C, # km/s if >= 1.0 km/s; c if >= 0.1 c
@@ -262,6 +264,11 @@ func number_option(x: float, option_type: int, unit := "", sig_digits := -1, num
 			elif x < unit_defs.TONNE:
 				return number_unit(x, "kg", sig_digits, num_type, long_form, case_type)
 			return number_prefixed_unit(x, "t", sig_digits, num_type, long_form, case_type)
+		TIME_D_Y:
+			if x <= 1000.0 * unit_defs.DAY:
+				return number_unit(x, "d", sig_digits, num_type, long_form, case_type)
+			else:
+				return number_unit(x, "y", sig_digits, num_type, long_form, case_type)
 		VELOCITY_MPS_KMPS: # km/s if >= 1.0 km/s
 			if x < unit_defs.KM / unit_defs.SECOND:
 				return number_unit(x, "m/s", sig_digits, num_type, long_form, case_type)

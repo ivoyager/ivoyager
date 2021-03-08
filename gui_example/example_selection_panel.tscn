@@ -120,6 +120,7 @@ scroll_horizontal_enabled = false
 
 [node name="SelectionData" parent="VBox/MainHBox/RightVBox/ScrollContainer" instance=ExtResource( 12 )]
 margin_right = 435.0
+margin_bottom = 0.0
 
 [node name="VSpacer" type="Control" parent="VBox"]
 margin_top = 308.0

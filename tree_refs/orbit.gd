@@ -33,7 +33,12 @@
 #
 # See static/unit_defs.gd for base units.
 #
-# This is our first candidate for porting to GDNative!
+# TODO: This is by far the largest CPU hog. Here is a data-oriented fix: 
+#   - SystemOrbits will house all orbit data in packed arrays, and have all
+#     existing methods here with leading orbit_id arg.
+#   - Body will have orbit_id only, and call SystemOrbits directly.
+#   - Depreciate this class.
+#   - GDNative version of SystemOrbits
 
 class_name Orbit
 
@@ -58,7 +63,6 @@ var m_modifiers := [] # [b, c, s, f]; planets Jupiter to Pluto only
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["reference_normal",
 	"elements_at_epoch", "element_rates", "m_modifiers"]
-const PERSIST_OBJ_PROPERTIES := []
 
 # read-only
 var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -80,39 +84,106 @@ func perturb(_delta_v: Vector3, _at_time := NAN) -> void:
 	# m_modifiers.
 	pass
 
-func get_semimajor_axis(time: float) -> float:
+# information about orbit
+
+func get_semimajor_axis(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	return elements[0]
 
-func get_inclination(time: float) -> float:
+func get_eccentricity(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return elements[1]
+
+func get_inclination(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	return elements[2]
 
-func get_mean_motion(time: float) -> float:
+func get_longitude_of_ascending_node(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return elements[3]
+
+func get_argument_of_periapsis(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return elements[4]
+
+func get_mean_anomaly_at_epoch(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return elements[5]
+
+func get_mean_motion(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	return elements[6]
 
-func is_retrograde(time: float) -> bool:
+func get_apoapsis(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return (1.0 + elements[1]) * elements[0] # (1 + e) * a
+
+func get_periapsis(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return (1.0 - elements[1]) * elements[0] # (1 - e) * a
+
+func is_retrograde(time := NAN) -> bool:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	return elements[2] > PI / 2.0 # inclination > 90 degrees
 
-func get_normal(time: float) -> Vector3:
+func get_orbital_perioid(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return TAU / elements[6]
+
+func get_average_orbital_speed(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	# https://en.wikipedia.org/wiki/Orbital_speed; error << 1%
+	var ave_orbit_speed: float = elements[0] * elements[6] # a * n
+	var e: float = elements[1]
+	if e > 0.05:
+		var e2 := e * e
+		var e4 := e2 * e2
+		var e6 := e4 * e2
+		var e8 := e4 * e4
+		ave_orbit_speed *= 1.0 - 0.25 * e2 - 0.046875 * e4 - 0.01953125 * e6 - 0.01068115 * e8
+	return ave_orbit_speed
+
+func get_normal(time := NAN) -> Vector3:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	# Orbit normal is defined by Om & i. This vector precesses around the
 	# reference_normal.
 	var relative_normal := math.convert_spherical2(
@@ -124,18 +195,24 @@ func get_normal(time: float) -> Vector3:
 		orbit_normal = math.rotate_vector_z(reference_normal, relative_normal)
 	return orbit_normal
 
-func get_mean_anomaly(time: float) -> float:
+# information about current position or velocity
+
+func get_mean_anomaly(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	return wrapf(elements[6] * time + elements[5], -PI, PI) # M = n * time + M0
 
-func get_true_anomaly(time: float) -> float:
+func get_true_anomaly(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	var e: float = elements[1]  # eccentricity
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
@@ -148,19 +225,23 @@ func get_true_anomaly(time: float) -> float:
 		E -= dE
 	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 
-func get_mean_longitude(time: float) -> float:
+func get_mean_longitude(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	var M: float = elements[6] * time + elements[5]
 	return wrapf(M + elements[3] + elements[4], -PI, PI) # M + Om + w
 
-func get_true_longitude(time: float) -> float:
+func get_true_longitude(time := NAN) -> float:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	var e: float = elements[1]  # eccentricity
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
@@ -174,40 +255,44 @@ func get_true_longitude(time: float) -> float:
 	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
 
-func get_position(time: float) -> Vector3:
+func get_position(time := NAN) -> Vector3:
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	var R := get_position_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
 		R = math.rotate_vector_z(R, reference_normal)
 	return R
 
-func get_position_velocity(time: float) -> Array:
+func get_position_velocity(time := NAN) -> Array:
 	# returns [Vector3(x, y, z), Vector3(vx, vy, vz)]
 	# NOT TESTED!
 	var elements := current_elements
-	if time > _end_current or time < _begin_current:
-		elements = ArrayUtils.init(7)
-		_init_elements(time, elements)
+	if is_nan(time):
+		time = _times[0]
+	elif time > _end_current or time < _begin_current:
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
 	var RV := get_vectors_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
 		RV[0] = math.rotate_vector_z(RV[0], reference_normal)
 		RV[1] = math.rotate_vector_z(RV[1], reference_normal)
 	return RV
 
-func get_elements(time: float) -> Array:
-	if time > _end_current or time < _begin_current:
+func get_elements(time := NAN) -> Array:
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		var elements := ArrayUtils.init(7)
-		_init_elements(time, elements)
+		_set_elements(time, elements)
 		return elements
 	return current_elements.duplicate() # safe
 
 static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	# Derived from https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf. However,
 	# we use M modifiers (b, c, s, f) to modify M0 in our dynamic orbital
-	# elements (see _init_elements function) rather than modifying M here.
+	# elements (see _set_elements function) rather than modifying M here.
 	# Thus, position is strictly a function of time and orbital elements.
 	var a: float = elements[0]  # semi-major axis
 	var e: float = elements[1]  # eccentricity
@@ -314,16 +399,16 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 # *****************************************************************************
 # ivoyager mechanics & private
 
-func clear_for_disposal() -> void:
+func disconnect_interval_update() -> void:
 	if _update_interval:
 		_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
 
-func reset() -> void:
+func reset_elements_and_interval_update() -> void:
 	# Sets current_elements, calculates update interval for element_rates, and
 	# connects or disconnects/connects to Schedular for updating.
 	var time: float = _times[0]
 	if !element_rates:
-		_init_elements(time, current_elements)
+		_set_elements(time, current_elements)
 		_begin_current = -INF
 		_end_current = INF
 		return
@@ -341,7 +426,7 @@ func reset() -> void:
 		interval = interval / 10.0 + UPDATE_LIMITER * 0.9
 	_begin_current = time
 	_end_current = time + interval * 1.1
-	_init_elements(time + interval / 2.0, current_elements)
+	_set_elements(time + interval / 2.0, current_elements)
 	if _update_interval != interval:
 		if _update_interval: # already has a Schedular connection
 			_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
@@ -352,7 +437,7 @@ func _scheduler_update() -> void:
 	var time: float = _times[0]
 	_begin_current = time
 	_end_current = time + _update_interval * 1.1
-	_init_elements(time + _update_interval / 2.0, current_elements)
+	_set_elements(time + _update_interval / 2.0, current_elements)
 	emit_signal("changed", true)
 
 func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
@@ -361,28 +446,27 @@ func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
 	elements_at_epoch = elements_at_epoch_
 	m_modifiers = m_modifiers_
 	if element_rates == element_rates_: # content test as of Godot 3.2.3!
-		_init_elements(_times[0] + _update_interval / 2.0, current_elements)
+		_set_elements(_times[0] + _update_interval / 2.0, current_elements)
 	else:
 		element_rates = element_rates_
-		reset()
+		reset_elements_and_interval_update()
 
 func _init() -> void:
 	_scheduler = Global.program.Scheduler
 
-func _init_elements(time: float, elements: Array) -> void:
+func _set_elements(time: float, elements: Array) -> void:
 	# elements must be size 7.
 	# Based on https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf (time range
 	# 3000 BCE - 3000 CE) except we apply Jupiter to Pluto M modifiers to
 	# adjust M0 here rather than adjusting M in position calculation.
 	if !element_rates: # no rates for this body or dynamic_orbits == false
-		var i := 0
-		while i < 7:
-			elements[i] = elements_at_epoch[i]
-			i += 1
+		var index := 0
+		while index < 7:
+			elements[index] = elements_at_epoch[index]
+			index += 1
 		return
 	# Create new elements from endogenous perturbations. We clamp time to stay
-	# in the valid 3000 BCE - 3000 CE range for adjustments that are not
-	# precessions.
+	# in the valid 3000 BCE - 3000 CE range for adjustments that are not cyclic.
 	var t_clamped := clamp(time, T_3000BCE, T_3000CE)
 	var a: float = elements_at_epoch[0] + element_rates[0] * t_clamped
 	var e: float = elements_at_epoch[1] + element_rates[1] * t_clamped
@@ -400,6 +484,7 @@ func _init_elements(time: float, elements: Array) -> void:
 		M0 += b * t_clamped * t_clamped # clamp this due to square
 		if c != 0.0: # if so, we also have non-zero s & f
 			M0 += c * cos(f * time) + s * sin(f * time) # safe unclamped
+	# standardize wrap range
 	i = wrapf(i, -PI, PI)
 	Om = wrapf(Om, 0.0, TAU)
 	w = wrapf(w, 0.0, TAU)

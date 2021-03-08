@@ -1,4 +1,4 @@
-# body_properties.gd
+# body_characteristics.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,32 +17,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Only a subset of these are required for simulator function (marked "required"
-# in comment). Some are used but not required. Others are information display
-# only at this time.
+# Only a subset of properties here are required for simulator function (marked
+# "required" in comment). Some are "used but not required". Others are
+# information display only at this time.
 #
 # For float, NAN means not applicable (don't display) and INF means unknown
-# (display as "?"). For int, -1 means not applicable. All physical bodies have
-# mass & m_radius (although possibly unknown). Other properties may or may not
-# be applicable by body type.
+# (display as "?"). For int, -1 means not applicable. Mass is unknown for many
+# small moons but relavent, so we display "?".
 
-class_name BodyProperties
+class_name BodyCharacteristics
 
+signal changed() # whoever changes must emit
+
+# physical characteristics
 var GM := NAN # required
 var mass := INF
 var surface_gravity := NAN
 var esc_vel := NAN
-var m_radius := INF # required
+var m_radius := NAN # required
 var is_oblate := false # if true, next two properties are set
 var e_radius := NAN # used but not required
 var p_radius := NAN # used but not required
 var mean_density := NAN
 var hydrostatic_equilibrium := -1 # Enums.ConfidenceType
 var albedo := NAN
-var surf_pres := NAN
 var surf_t := NAN # NA for gas giants
 var min_t := NAN
 var max_t := NAN
+# atmosphere
+var surf_pres := NAN
 var one_bar_t := NAN # venus, gas giants
 var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
@@ -50,6 +53,6 @@ var tenth_bar_t := NAN # gas giants
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius",
 	"is_oblate", "e_radius", "p_radius", "mean_density",
-	"hydrostatic_equilibrium", "albedo", "surf_pres",
-	"surf_t", "min_t", "max_t", "one_bar_t", "half_bar_t", "tenth_bar_t"]
+	"hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
+	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t"]
 

@@ -30,21 +30,21 @@ var rings_too_far_radius_multiplier := 2e3
 
 
 func add_rings(body: Body) -> void:
-	var rings_file: String = body.get_rings_file()
+	var file_prefix: String = body.get_rings_file_prefix()
 	var radius: float = body.get_rings_radius()
 	var north: Vector3 = body.get_north()
-	var array := [body, rings_file, radius, north]
+	var array := [body, file_prefix, radius, north]
 	var io_manager: IOManager = Global.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
 
 # *****************************************************************************
 
 func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
-	var rings_file: String = array[1]
+	var file_prefix: String = array[1]
 	var radius: float = array[2]
 	var north: Vector3 = array[3]
 	var rings_search: Array = Global.rings_search
-	var texture: Texture = file_utils.find_and_load_resource(rings_search, rings_file)
+	var texture: Texture = file_utils.find_and_load_resource(rings_search, file_prefix)
 	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()

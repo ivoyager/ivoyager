@@ -31,6 +31,8 @@ class_name ModelController
 
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
+signal changed() # public properties; whoever changes must emit
+
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
 
 var axial_tilt := 0.0
