@@ -105,6 +105,7 @@ var program_builders := {
 	_MinorBodiesBuilder_ = MinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
 	_SelectionBuilder_ = SelectionBuilder,
+	_CompositionBuilder_ = CompositionBuilder,
 }
 
 var program_references := {
@@ -176,6 +177,7 @@ var procedural_classes := {
 	_SelectionManager_ = SelectionManager,
 	_View_ = View,
 	_AsteroidGroup_ = AsteroidGroup,
+	_Composition_ = Composition,
 	_BodyList_ = BodyList, # WIP
 }
 

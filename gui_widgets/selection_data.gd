@@ -44,19 +44,19 @@ enum {
 }
 
 # project vars
-var enable_wiki: bool = Global.enable_wiki # override if needed
-var autowrap_values := true # needed for Composition; set false if problematic
+var enable_wiki: bool = false # Global.enable_wiki # override if needed
 
 var section_headers := ["", "LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE"] # "" for no-header/no-indent section
-var section_searches := [ # one section array element per header
-	# "SelectionItem", "Body", or Body property name
-	["Body"],
-	["orbit", "SelectionItem"],
-	["body_characteristics"],
-	["body_characteristics"],
+var section_searches := [ # one array element per header
+	# object paths relative to SelectionItem 
+	["body"],
+	["body/orbit", ""],
+	["body/body_characteristics"],
+	["body/body_characteristics"],
 ]
-var section_data := [ # one section array element per header
+
+var section_data := [ # one array element per header
 	# In each section array, we have an array for each data line containing:
 	# [0] property or method [1] display label [2-4] type-specific (see code)
 	# [5] flags test (show) [6] flags test (is approximate value)
@@ -101,9 +101,11 @@ var section_data := [ # one section array element per header
 	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["atmos_composition", "LABEL_COMPOSITION"],
+	["atmos_composition", "LABEL_COMPOSITION_BY_VOLUME"],
 	],
 ]
+var section_open := [true, true, true, true] # FIXME: allow false init value
+
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
 var _enums: Script = Global.enums
@@ -111,8 +113,8 @@ var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
 var _header_buttons := []
 var _grids := []
-var _is_open := []
 var _meta_lookup := {}
+var _recycled_labels := []
 
 var _selection_item: SelectionItem
 var _body: Body
@@ -124,7 +126,6 @@ func _ready():
 func _clear() -> void:
 	_header_buttons.clear()
 	_grids.clear()
-	_is_open.clear()
 	_meta_lookup.clear()
 	for child in get_children():
 		child.queue_free()
@@ -132,6 +133,7 @@ func _clear() -> void:
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == section_searches.size())
 	assert(section_headers.size() == section_data.size())
+	assert(section_headers.size() == section_open.size())
 	_selection_manager = GUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	var n_sections := section_headers.size()
@@ -153,7 +155,6 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		grid.columns = 2
 		grid.size_flags_horizontal = SIZE_EXPAND_FILL
 		_grids.append(grid)
-		_is_open.append(true)
 		add_child(grid)
 		section += 1
 	_on_selection_changed()
@@ -173,14 +174,14 @@ func _on_selection_changed() -> void:
 		section += 1
 
 func _process_section(section: int, toggle: bool) -> void:
-	var is_open: bool = _is_open[section]
+	var is_open: bool = section_open[section]
 	var header_button: Button = _header_buttons[section]
 	var has_header := header_button != null
 	if toggle:
 		is_open = !is_open
-		_is_open[section] = is_open
+		section_open[section] = is_open
 		var header: String = section_headers[section]
-		if _is_open[section]:
+		if section_open[section]:
 			header_button.text = "v " + tr(header) # down pointer
 		else:
 			header_button.text = "> " + tr(header) # right pointer
@@ -189,14 +190,14 @@ func _process_section(section: int, toggle: bool) -> void:
 	var n_data: int = section_data[section].size()
 	var data_index := 0
 	while data_index < n_data:
-		var label_value := _get_label_value(section, data_index)
-		if label_value:
+		var row_info := _get_row_info(section, data_index)
+		if row_info:
 			if !is_open: # closed but has content
 				if header_button:
 					header_button.show()
 				grid.hide()
 				return
-			_set_grid_row(grid, print_line, label_value, has_header)
+			_add_grid_row(grid, print_line, row_info, has_header)
 			print_line += 1
 		data_index += 1
 	if print_line == 0: # no content
@@ -213,26 +214,20 @@ func _process_section(section: int, toggle: bool) -> void:
 		header_button.show()
 	grid.show()
 
-func _get_label_value(section: int, data_index: int) -> Array:
-	# Returns [label_txt, value_txt], or empty array if n/a (skip)
+func _get_row_info(section: int, data_index: int) -> Array:
+	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
 	var line_data: Array = section_data[section][data_index]
 	# flags exclusion
 	var data_size: int = line_data.size()
 	if data_size > 5 and line_data[5]:
 		if !_body or not _body.flags & line_data[5]:
 			return NULL_ARRAY
-	# get untyped value from SelectionItem, Body, or component of Body
+	# get untyped value from SelectionItem or nested object
 	var value
 	var property_or_method: String = line_data[0]
 	var search: Array = section_searches[section]
-	for search_item in search:
-		var target: Object
-		if search_item == "SelectionItem":
-			target = _selection_item
-		elif search_item == "Body":
-			target = _body
-		elif _body:
-			target = _body.get(search_item)
+	for search_str in search:
+		var target: Object = GDUtils.get_deep(_selection_item, search_str)
 		if target:
 			value = _get_property_or_method_result(target, property_or_method)
 			if value != null:
@@ -282,8 +277,17 @@ func _get_label_value(section: int, data_index: int) -> Array:
 			value_txt = tr(value)
 			if enable_wiki and data_size > 8 and line_data[8]:
 				wiki_key = value # may be used as wiki link (if valid key)
-#			if value == value_txt:
-#				print(value)
+		TYPE_OBJECT:
+			if value is Composition:
+				var composition := value as Composition
+				var label_key: String = line_data[1]
+				var label_txt := tr(label_key)
+				var comp_array := composition.get_display("        ")
+				var chem_labels: String = comp_array[0]
+				var amounts: String = comp_array[1]
+				label_txt += "\n" + chem_labels
+				value_txt = "\n" + amounts
+				return [label_txt, value_txt, false, false]
 	if !value_txt:
 		return NULL_ARRAY # n/a
 	# get label text
@@ -305,26 +309,37 @@ func _get_label_value(section: int, data_index: int) -> Array:
 					label_key = "LABEL_APOGEE"
 	var label_txt := tr(label_key)
 	if !enable_wiki:
-		return [label_txt, value_txt]
+		return [label_txt, value_txt, false, false]
 	# wiki links
+	var label_link := false
+	var value_link := false
 	if data_size > 7 and line_data[7] and _wiki_titles.has(label_key): # label is wiki link
 		_meta_lookup[label_txt] = label_key
 		label_txt = "[url]" + label_txt + "[/url]"
 	if wiki_key and _wiki_titles.has(wiki_key): # value is wiki link
 		_meta_lookup[value_txt] = wiki_key
 		value_txt = "[url]" + value_txt + "[/url]"
-	return [label_txt, value_txt]
+	return [label_txt, value_txt, label_link, value_link]
 
 func _get_property_or_method_result(target: Object, key: String): # untyped
 	if target.has_method(key):
 		return target.call(key)
 	return target.get(key) # property value or null
 
-func _set_grid_row(grid: GridContainer, print_line: int, label_value: Array,
+func _get_label() -> Label:
+	if _recycled_labels:
+		return _recycled_labels.pop_back()
+	var label := Label.new()
+	label.size_flags_horizontal = SIZE_EXPAND_FILL
+	return label
+
+func _add_grid_row(grid: GridContainer, print_line: int, row_info: Array,
 		has_header: bool) -> void:
 	var prespace := "    " if has_header else ""
-	var label_txt: String = prespace + label_value[0]
-	var value_txt: String = label_value[1]
+	var label_txt: String = prespace + row_info[0]
+	var value_txt: String = row_info[1]
+	var label_link: bool = row_info[2]
+	var value_link: bool = row_info[3]
 	if enable_wiki:
 		var label_cell: RichTextLabel
 		var value_cell: RichTextLabel
@@ -335,6 +350,8 @@ func _set_grid_row(grid: GridContainer, print_line: int, label_value: Array,
 			value_cell.bbcode_enabled = true
 			label_cell.fit_content_height = true
 			value_cell.fit_content_height = true
+			label_cell.scroll_active = false
+			value_cell.scroll_active = false
 			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
 			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
 			label_cell.connect("meta_clicked", self, "_on_meta_clicked")
@@ -352,11 +369,10 @@ func _set_grid_row(grid: GridContainer, print_line: int, label_value: Array,
 		var label_cell: Label
 		var value_cell: Label
 		if print_line * 2 == grid.get_child_count():
-			label_cell = Label.new()
-			value_cell = Label.new()
-			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-			value_cell.autowrap = autowrap_values
+			label_cell = _get_label()
+			value_cell = _get_label()
+#			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
+#			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
 			grid.add_child(label_cell)
 			grid.add_child(value_cell)
 		else:

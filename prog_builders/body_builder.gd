@@ -40,7 +40,7 @@ const BodyFlags := Enums.BodyFlags
 var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
 var body_characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
-	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t", "atmos_composition"]
+	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t"]
 var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
@@ -60,6 +60,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _composition_builder: CompositionBuilder
 var _io_manager: IOManager
 var _scheduler: Scheduler
 var _table_reader: TableReader
@@ -123,7 +124,6 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
 		body.set_orbit(orbit)
 	# body_characteristics
-	# missing may be either INF or NAN, see BodyCharacteristics
 	var body_characteristics: BodyCharacteristics = _BodyCharacteristics_.new()
 	_table_reader.build_object(body_characteristics, body_characteristics_fields, table_name, row)
 	body.system_radius = body_characteristics.m_radius * 10.0 # widens if satalletes are added
@@ -167,6 +167,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 				if is_nan(body_characteristics.surface_gravity):
 					var surface_gravity := G * body_characteristics.mass / pow(body_characteristics.m_radius, 2.0)
 					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+	var atmos_composition_str := _table_reader.get_string(table_name, "atmos_composition", row)
+	if atmos_composition_str:
+		var atmos_composition := _composition_builder.make_from_string(atmos_composition_str)
+		body_characteristics.atmos_composition = atmos_composition
 	body.set_body_characteristics(body_characteristics)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
@@ -252,6 +256,7 @@ func _project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_composition_builder = Global.program.CompositionBuilder
 	_io_manager = Global.program.IOManager
 	_scheduler = Global.program.Scheduler
 	_table_reader = Global.program.TableReader
