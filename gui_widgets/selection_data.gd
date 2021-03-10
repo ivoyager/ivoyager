@@ -44,7 +44,7 @@ enum {
 }
 
 # project vars
-var enable_wiki: bool = false # Global.enable_wiki # override if needed
+var enable_wiki: bool = Global.enable_wiki # can override false if needed
 
 var section_headers := ["", "LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE"] # "" for no-header/no-indent section
@@ -115,6 +115,7 @@ var _header_buttons := []
 var _grids := []
 var _meta_lookup := {}
 var _recycled_labels := []
+var _recycled_rtlabels := []
 
 var _selection_item: SelectionItem
 var _body: Body
@@ -122,11 +123,16 @@ var _body: Body
 func _ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	Global.connect("about_to_quit", self, "_clear")
 
 func _clear() -> void:
 	_header_buttons.clear()
 	_grids.clear()
 	_meta_lookup.clear()
+	while _recycled_labels:
+		_recycled_labels.pop_back().queue_free()
+	while _recycled_rtlabels:
+		_recycled_rtlabels.pop_back().queue_free()
 	for child in get_children():
 		child.queue_free()
 
@@ -186,30 +192,26 @@ func _process_section(section: int, toggle: bool) -> void:
 		else:
 			header_button.text = "> " + tr(header) # right pointer
 	var grid: GridContainer = _grids[section]
-	var print_line := 0
+	_clear_grid(grid)
+	var has_content := false
 	var n_data: int = section_data[section].size()
 	var data_index := 0
 	while data_index < n_data:
 		var row_info := _get_row_info(section, data_index)
 		if row_info:
-			if !is_open: # closed but has content
+			if !is_open: # closed but has content - keep header visible
 				if header_button:
 					header_button.show()
 				grid.hide()
 				return
-			_add_grid_row(grid, print_line, row_info, has_header)
-			print_line += 1
+			_add_row(grid, row_info, has_header)
+			has_content = true
 		data_index += 1
-	if print_line == 0: # no content
+	if !has_content: # no content - hide header and grid
 		if header_button:
 			header_button.hide()
 		grid.hide()
 		return
-	var n_cells := grid.get_child_count()
-	while print_line * 2 < n_cells: # hide unused cells
-		grid.get_child(print_line * 2).hide()
-		grid.get_child(print_line * 2 + 1).hide()
-		print_line += 1
 	if header_button:
 		header_button.show()
 	grid.show()
@@ -316,15 +318,50 @@ func _get_row_info(section: int, data_index: int) -> Array:
 	if data_size > 7 and line_data[7] and _wiki_titles.has(label_key): # label is wiki link
 		_meta_lookup[label_txt] = label_key
 		label_txt = "[url]" + label_txt + "[/url]"
+		label_link = true
 	if wiki_key and _wiki_titles.has(wiki_key): # value is wiki link
 		_meta_lookup[value_txt] = wiki_key
 		value_txt = "[url]" + value_txt + "[/url]"
+		value_link = true
 	return [label_txt, value_txt, label_link, value_link]
+
+func _add_row(grid: GridContainer, row_info: Array, has_header: bool) -> void:
+	var prespace := "    " if has_header else ""
+	var label_txt: String = prespace + row_info[0]
+	var value_txt: String = row_info[1]
+	var label_link: bool = row_info[2]
+	var value_link: bool = row_info[3]
+	if label_link:
+		var label_cell := _get_rtlabel()
+		label_cell.bbcode_text = label_txt
+		grid.add_child(label_cell)
+	else:
+		var label_cell := _get_label()
+		label_cell.text = label_txt
+		grid.add_child(label_cell)
+	if value_link:
+		var value_cell := _get_rtlabel()
+		value_cell.bbcode_text = value_txt
+		grid.add_child(value_cell)
+	else:
+		var value_cell := _get_label()
+		value_cell.text = value_txt
+		grid.add_child(value_cell)
 
 func _get_property_or_method_result(target: Object, key: String): # untyped
 	if target.has_method(key):
 		return target.call(key)
 	return target.get(key) # property value or null
+
+func _clear_grid(grid: GridContainer) -> void:
+	var children := grid.get_children()
+	children.invert()
+	for child in children:
+		grid.remove_child(child)
+		if child is Label:
+			_recycled_labels.append(child)
+		else:
+			_recycled_rtlabels.append(child)
 
 func _get_label() -> Label:
 	if _recycled_labels:
@@ -333,55 +370,16 @@ func _get_label() -> Label:
 	label.size_flags_horizontal = SIZE_EXPAND_FILL
 	return label
 
-func _add_grid_row(grid: GridContainer, print_line: int, row_info: Array,
-		has_header: bool) -> void:
-	var prespace := "    " if has_header else ""
-	var label_txt: String = prespace + row_info[0]
-	var value_txt: String = row_info[1]
-	var label_link: bool = row_info[2]
-	var value_link: bool = row_info[3]
-	if enable_wiki:
-		var label_cell: RichTextLabel
-		var value_cell: RichTextLabel
-		if print_line * 2 == grid.get_child_count():
-			label_cell = RichTextLabel.new()
-			value_cell = RichTextLabel.new()
-			label_cell.bbcode_enabled = true
-			value_cell.bbcode_enabled = true
-			label_cell.fit_content_height = true
-			value_cell.fit_content_height = true
-			label_cell.scroll_active = false
-			value_cell.scroll_active = false
-			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-			label_cell.connect("meta_clicked", self, "_on_meta_clicked")
-			value_cell.connect("meta_clicked", self, "_on_meta_clicked")
-			grid.add_child(label_cell)
-			grid.add_child(value_cell)
-		else:
-			label_cell = grid.get_child(print_line * 2)
-			value_cell = grid.get_child(print_line * 2 + 1)
-			label_cell.show()
-			value_cell.show()
-		label_cell.bbcode_text = label_txt
-		value_cell.bbcode_text = value_txt
-	else:
-		var label_cell: Label
-		var value_cell: Label
-		if print_line * 2 == grid.get_child_count():
-			label_cell = _get_label()
-			value_cell = _get_label()
-#			label_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-#			value_cell.size_flags_horizontal = SIZE_EXPAND_FILL
-			grid.add_child(label_cell)
-			grid.add_child(value_cell)
-		else:
-			label_cell = grid.get_child(print_line * 2)
-			value_cell = grid.get_child(print_line * 2 + 1)
-			label_cell.show()
-			value_cell.show()
-		label_cell.text = label_txt
-		value_cell.text = value_txt
+func _get_rtlabel() -> RichTextLabel:
+	if _recycled_rtlabels:
+		return _recycled_rtlabels.pop_back()
+	var rtlabel := RichTextLabel.new()
+	rtlabel.bbcode_enabled = true
+	rtlabel.fit_content_height = true
+	rtlabel.scroll_active = false
+	rtlabel.size_flags_horizontal = SIZE_EXPAND_FILL
+	rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+	return rtlabel
 
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
