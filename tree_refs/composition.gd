@@ -25,16 +25,15 @@ class_name Composition
 enum CompositionType {BY_WEIGHT, BY_VOLUME}
 
 var type: int
-var main := {} # chemicals w/ amount string or null
-var trace := {} # TODO
+var components := {} # chemicals w/ amount string or null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["type", "main", "trace"]
+const PERSIST_PROPERTIES := ["type", "components"]
 
 
 func get_display(labels_prefix := "") -> Array:
 	var result := ["", ""] # label, value
-	_get_display(main, result, labels_prefix)
+	_get_display(components, result, labels_prefix)
 	return result
 
 func _get_display(dict: Dictionary, result: Array, labels_prefix: String) -> void:

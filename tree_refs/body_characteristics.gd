@@ -49,12 +49,12 @@ var surf_pres := NAN
 var one_bar_t := NAN # venus, gas giants
 var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
-var atmos_composition: Composition
+var compositions := {}
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius",
 	"is_oblate", "e_radius", "p_radius", "mean_density",
 	"hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t"]
-const PERSIST_OBJ_PROPERTIES := ["atmos_composition"]
+const PERSIST_OBJ_PROPERTIES := ["compositions"]
 

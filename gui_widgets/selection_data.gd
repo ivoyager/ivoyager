@@ -47,13 +47,16 @@ enum {
 var enable_wiki: bool = Global.enable_wiki # can override false if needed
 
 var section_headers := ["", "LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
-	"LABEL_ATMOSPHERE"] # "" for no-header/no-indent section
+	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_PHOTOSPHERE_BY_WEIGHT"]
+var subsection_of := [-1, -1, -1, -1, 3, -1]
 var section_searches := [ # one array element per header
 	# object paths relative to SelectionItem 
 	["body"],
 	["body/orbit", ""],
 	["body/body_characteristics"],
 	["body/body_characteristics"],
+	["body/body_characteristics/compositions"],
+	["body/body_characteristics/compositions"],
 ]
 
 var section_data := [ # one array element per header
@@ -101,10 +104,17 @@ var section_data := [ # one array element per header
 	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
 	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["atmos_composition", "LABEL_COMPOSITION_BY_VOLUME"],
+	],
+	# Atmosphere composition
+	[
+	["atmosphere"],
+	],
+	# Photosphere composition
+	[
+	["photosphere"],
 	],
 ]
-var section_open := [true, true, true, true] # FIXME: allow false init value
+var section_open := [true, true, true, true, true, true]
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
@@ -138,6 +148,7 @@ func _clear() -> void:
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == section_searches.size())
+	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
 	_selection_manager = GUIUtils.get_selection_manager(self)
@@ -148,9 +159,13 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		var header: String = section_headers[section]
 		if header:
 			var header_button := Button.new()
+			var prespace := "" if subsection_of[section] == -1 else "   "
+			if section_open[section]:
+				header_button.text = prespace + "v " + tr(header) # down pointer
+			else:
+				header_button.text = prespace + "> " + tr(header) # right pointer
 			header_button.flat = true
 			header_button.size_flags_horizontal = 0
-			header_button.text = "v " + tr(header) # down pointer
 			header_button.mouse_default_cursor_shape = CURSOR_POINTING_HAND
 			header_button.connect("pressed", self, "_process_section", [section, true])
 			_header_buttons.append(header_button)
@@ -182,29 +197,42 @@ func _on_selection_changed() -> void:
 func _process_section(section: int, toggle: bool) -> void:
 	var is_open: bool = section_open[section]
 	var header_button: Button = _header_buttons[section]
-	var has_header := header_button != null
+	var grid: GridContainer = _grids[section]
+	var supersection: int = subsection_of[section]
+	if supersection != -1:
+		if !section_open[supersection]:
+			if header_button:
+				header_button.hide()
+			grid.hide()
+			return
+	var prespace := "" if subsection_of[section] == -1 else "   "
 	if toggle:
 		is_open = !is_open
 		section_open[section] = is_open
 		var header: String = section_headers[section]
 		if section_open[section]:
-			header_button.text = "v " + tr(header) # down pointer
+			header_button.text = prespace + "v " + tr(header) # down pointer
 		else:
-			header_button.text = "> " + tr(header) # right pointer
-	var grid: GridContainer = _grids[section]
+			header_button.text = prespace + "> " + tr(header) # right pointer
+		var n_sections := section_headers.size()
+		var subsection := 0
+		while subsection < n_sections:
+			if section == subsection_of[subsection]:
+				_process_section(subsection, false)
+			subsection += 1
 	_clear_grid(grid)
 	var has_content := false
 	var n_data: int = section_data[section].size()
 	var data_index := 0
 	while data_index < n_data:
-		var row_info := _get_row_info(section, data_index)
+		var row_info := _get_row_info(section, data_index, prespace)
 		if row_info:
 			if !is_open: # closed but has content - keep header visible
 				if header_button:
 					header_button.show()
 				grid.hide()
 				return
-			_add_row(grid, row_info, has_header)
+			_add_row(grid, row_info)
 			has_content = true
 		data_index += 1
 	if !has_content: # no content - hide header and grid
@@ -216,7 +244,7 @@ func _process_section(section: int, toggle: bool) -> void:
 		header_button.show()
 	grid.show()
 
-func _get_row_info(section: int, data_index: int) -> Array:
+func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
 	var line_data: Array = section_data[section][data_index]
 	# flags exclusion
@@ -224,12 +252,12 @@ func _get_row_info(section: int, data_index: int) -> Array:
 	if data_size > 5 and line_data[5]:
 		if !_body or not _body.flags & line_data[5]:
 			return NULL_ARRAY
-	# get untyped value from SelectionItem or nested object
-	var value
+	# get value from SelectionItem or nested object
+	var value # untyped
 	var property_or_method: String = line_data[0]
 	var search: Array = section_searches[section]
 	for search_str in search:
-		var target: Object = GDUtils.get_deep(_selection_item, search_str)
+		var target = GDUtils.get_deep(_selection_item, search_str) # Object or dict
 		if target:
 			value = _get_property_or_method_result(target, property_or_method)
 			if value != null:
@@ -281,15 +309,10 @@ func _get_row_info(section: int, data_index: int) -> Array:
 				wiki_key = value # may be used as wiki link (if valid key)
 		TYPE_OBJECT:
 			if value is Composition:
-				var composition := value as Composition
-				var label_key: String = line_data[1]
-				var label_txt := tr(label_key)
-				var comp_array := composition.get_display("        ")
-				var chem_labels: String = comp_array[0]
-				var amounts: String = comp_array[1]
-				label_txt += "\n" + chem_labels
-				value_txt = "\n" + amounts
-				return [label_txt, value_txt, false, false]
+				var display: Array = value.get_display(prespace)
+				var components: String = display[0]
+				var amounts: String = display[1]
+				return [components, amounts, false, false]
 	if !value_txt:
 		return NULL_ARRAY # n/a
 	# get label text
@@ -311,7 +334,7 @@ func _get_row_info(section: int, data_index: int) -> Array:
 					label_key = "LABEL_APOGEE"
 	var label_txt := tr(label_key)
 	if !enable_wiki:
-		return [label_txt, value_txt, false, false]
+		return [prespace + label_txt, value_txt, false, false]
 	# wiki links
 	var label_link := false
 	var value_link := false
@@ -323,11 +346,10 @@ func _get_row_info(section: int, data_index: int) -> Array:
 		_meta_lookup[value_txt] = wiki_key
 		value_txt = "[url]" + value_txt + "[/url]"
 		value_link = true
-	return [label_txt, value_txt, label_link, value_link]
+	return [prespace + label_txt, value_txt, label_link, value_link]
 
-func _add_row(grid: GridContainer, row_info: Array, has_header: bool) -> void:
-	var prespace := "    " if has_header else ""
-	var label_txt: String = prespace + row_info[0]
+func _add_row(grid: GridContainer, row_info: Array) -> void:
+	var label_txt: String = row_info[0]
 	var value_txt: String = row_info[1]
 	var label_link: bool = row_info[2]
 	var value_link: bool = row_info[3]
@@ -348,8 +370,8 @@ func _add_row(grid: GridContainer, row_info: Array, has_header: bool) -> void:
 		value_cell.text = value_txt
 		grid.add_child(value_cell)
 
-func _get_property_or_method_result(target: Object, key: String): # untyped
-	if target.has_method(key):
+func _get_property_or_method_result(target, key: String): # untyped
+	if target is Object and target.has_method(key):
 		return target.call(key)
 	return target.get(key) # property value or null
 

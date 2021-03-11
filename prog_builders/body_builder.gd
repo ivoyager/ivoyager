@@ -167,10 +167,16 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 				if is_nan(body_characteristics.surface_gravity):
 					var surface_gravity := G * body_characteristics.mass / pow(body_characteristics.m_radius, 2.0)
 					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
-	var atmos_composition_str := _table_reader.get_string(table_name, "atmos_composition", row)
-	if atmos_composition_str:
-		var atmos_composition := _composition_builder.make_from_string(atmos_composition_str)
-		body_characteristics.atmos_composition = atmos_composition
+	var compositions := body_characteristics.compositions
+	var atmosphere_composition_str := _table_reader.get_string(table_name, "atmosphere_composition", row)
+	if atmosphere_composition_str:
+		var atmosphere_composition := _composition_builder.make_from_string(atmosphere_composition_str)
+		compositions.atmosphere = atmosphere_composition
+	var photosphere_composition_str := _table_reader.get_string(table_name, "photosphere_composition", row)
+	if photosphere_composition_str:
+		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
+		compositions.photosphere = photosphere_composition
+		
 	body.set_body_characteristics(body_characteristics)
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
