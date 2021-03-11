@@ -33,7 +33,8 @@ func make_from_string(string: String) -> Composition:
 
 func _project_init() -> void:
 	_Composition_ = Global.script_classes._Composition_
-	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
+	item_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
+#	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
 
 func _parse_simple_list_string(string: String) -> Dictionary:
 	# "item 0.0%, item2 0.0%"

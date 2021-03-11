@@ -279,6 +279,8 @@ func convert_int(value: String) -> int:
 func convert_real(value: String, unit := "") -> float:
 	if !value:
 		return NAN
+	if value == "?":
+		return INF
 	var real := float(value)
 	if unit:
 		var sig_digits := math.get_str_decimal_precision(value)

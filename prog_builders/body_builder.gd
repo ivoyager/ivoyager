@@ -40,7 +40,8 @@ const BodyFlags := Enums.BodyFlags
 var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
 var body_characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
-	"surf_pres", "one_bar_t", "half_bar_t", "tenth_bar_t"]
+	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
+	"tenth_bar_t"]
 var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
@@ -172,6 +173,10 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	if atmosphere_composition_str:
 		var atmosphere_composition := _composition_builder.make_from_string(atmosphere_composition_str)
 		compositions.atmosphere = atmosphere_composition
+	var trace_atmosphere_composition_str := _table_reader.get_string(table_name, "trace_atmosphere_composition", row)
+	if trace_atmosphere_composition_str:
+		var trace_atmosphere_composition := _composition_builder.make_from_string(trace_atmosphere_composition_str)
+		compositions.trace_atmosphere = trace_atmosphere_composition
 	var photosphere_composition_str := _table_reader.get_string(table_name, "photosphere_composition", row)
 	if photosphere_composition_str:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)

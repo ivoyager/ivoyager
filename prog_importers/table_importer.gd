@@ -170,7 +170,7 @@ func _read_table() -> void:
 				i = 0
 				while i < n_columns:
 					if _defaults[i]:
-						_defaults[i] = _get_processed_value(_defaults[i])
+						_defaults[i] = _get_processed_value(_defaults[i], i)
 					i += 1
 			else:
 				assert(_data_types) # required
@@ -201,7 +201,8 @@ func _read_data_line() -> void:
 	for field in _fields:
 		_field = field
 		var column: int = _fields[_field]
-		_cell = _get_processed_value(_line_array[column])
+		_cell = _line_array[column]
+		_cell = _get_processed_value(_cell, column)
 		if !_cell: # set to default
 			_cell = _defaults[column]
 		if !_cell:
@@ -222,10 +223,13 @@ func _read_data_line() -> void:
 		_count += 1
 	_data.append(row_data)
 
-func _get_processed_value(value: String) -> String:
+func _get_processed_value(value: String, column: int) -> String:
 	value = value.lstrip("_")
 	value = value.c_unescape() # does not work for "\u"; Godot issue #38716
 	value = StrUtils.c_unescape_patch(value)
+	var data_type: String = _data_types[column]
+	if data_type == "REAL":
+		value = value.replace("E", "e")
 	return value
 
 func _data_type_test() -> bool:
@@ -270,7 +274,7 @@ func _cell_test(column: int) -> bool:
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":
-			assert(_cell.replace("E", "e").is_valid_float() or _line_error("Expected REAL"))
+			assert(_cell == "?" or _cell.is_valid_float() or _line_error("Expected REAL"))
 		"STRING", "DATA", "BODY":
 			pass
 		_: # must be valid enum name

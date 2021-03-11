@@ -45,16 +45,20 @@ enum {
 
 # project vars
 var enable_wiki: bool = Global.enable_wiki # can override false if needed
+var labels_stretch_ratio := 0.6
+var values_stretch_ratio := 0.4
 
-var section_headers := ["", "LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
-	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_PHOTOSPHERE_BY_WEIGHT"]
-var subsection_of := [-1, -1, -1, -1, 3, -1]
+
+var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
+	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
+	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
+var subsection_of := [-1, -1, -1, 2, 2, -1]
 var section_searches := [ # one array element per header
 	# object paths relative to SelectionItem 
-	["body"],
 	["body/orbit", ""],
+	["body/body_characteristics", "body"],
 	["body/body_characteristics"],
-	["body/body_characteristics"],
+	["body/body_characteristics/compositions"],
 	["body/body_characteristics/compositions"],
 	["body/body_characteristics/compositions"],
 ]
@@ -65,10 +69,6 @@ var section_data := [ # one array element per header
 	# [5] flags test (show) [6] flags test (is approximate value)
 	# [7] label as wiki link [8] value as wiki link
 	#
-	# top (no header)
-	[
-	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
-	],
 	# Orbital Characteristics
 	[
 	["get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
@@ -84,6 +84,7 @@ var section_data := [ # one array element per header
 	],
 	# Physical Characteristics
 	[
+	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
 	["m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
 	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
 	["p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
@@ -101,13 +102,20 @@ var section_data := [ # one array element per header
 	# Atmosphere
 	[
 	["surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
-	["one_bar_t", "LABEL_ONE_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["half_bar_t", "LABEL_HALF_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["tenth_bar_t", "LABEL_TENTH_BAR_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
+	["half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
+	["tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
 	],
 	# Atmosphere composition
 	[
 	["atmosphere"],
+	],
+	# Trace atmosphere composition
+	[
+	["trace_atmosphere"],
 	],
 	# Photosphere composition
 	[
@@ -195,9 +203,10 @@ func _on_selection_changed() -> void:
 		section += 1
 
 func _process_section(section: int, toggle: bool) -> void:
+	var grid: GridContainer = _grids[section]
+	_clear_grid(grid)
 	var is_open: bool = section_open[section]
 	var header_button: Button = _header_buttons[section]
-	var grid: GridContainer = _grids[section]
 	var supersection: int = subsection_of[section]
 	if supersection != -1:
 		if !section_open[supersection]:
@@ -220,14 +229,13 @@ func _process_section(section: int, toggle: bool) -> void:
 			if section == subsection_of[subsection]:
 				_process_section(subsection, false)
 			subsection += 1
-	_clear_grid(grid)
 	var has_content := false
 	var n_data: int = section_data[section].size()
 	var data_index := 0
 	while data_index < n_data:
 		var row_info := _get_row_info(section, data_index, prespace)
 		if row_info:
-			if !is_open: # closed but has content - keep header visible
+			if !is_open: # keep header visible but don't add content
 				if header_button:
 					header_button.show()
 				grid.hide()
@@ -235,7 +243,7 @@ func _process_section(section: int, toggle: bool) -> void:
 			_add_row(grid, row_info)
 			has_content = true
 		data_index += 1
-	if !has_content: # no content - hide header and grid
+	if !has_content: # no content - hide header
 		if header_button:
 			header_button.hide()
 		grid.hide()
@@ -354,19 +362,19 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 	var label_link: bool = row_info[2]
 	var value_link: bool = row_info[3]
 	if label_link:
-		var label_cell := _get_rtlabel()
+		var label_cell := _get_rtlabel(false)
 		label_cell.bbcode_text = label_txt
 		grid.add_child(label_cell)
 	else:
-		var label_cell := _get_label()
+		var label_cell := _get_label(false)
 		label_cell.text = label_txt
 		grid.add_child(label_cell)
 	if value_link:
-		var value_cell := _get_rtlabel()
+		var value_cell := _get_rtlabel(true)
 		value_cell.bbcode_text = value_txt
 		grid.add_child(value_cell)
 	else:
-		var value_cell := _get_label()
+		var value_cell := _get_label(true)
 		value_cell.text = value_txt
 		grid.add_child(value_cell)
 
@@ -376,6 +384,8 @@ func _get_property_or_method_result(target, key: String): # untyped
 	return target.get(key) # property value or null
 
 func _clear_grid(grid: GridContainer) -> void:
+	if grid.get_child_count() == 0:
+		return
 	var children := grid.get_children()
 	children.invert()
 	for child in children:
@@ -385,22 +395,28 @@ func _clear_grid(grid: GridContainer) -> void:
 		else:
 			_recycled_rtlabels.append(child)
 
-func _get_label() -> Label:
+func _get_label(is_value: bool) -> Label:
+	var label: Label
 	if _recycled_labels:
-		return _recycled_labels.pop_back()
-	var label := Label.new()
-	label.size_flags_horizontal = SIZE_EXPAND_FILL
+		label = _recycled_labels.pop_back()
+	else:
+		label = Label.new()
+		label.size_flags_horizontal = SIZE_EXPAND_FILL
+	label.size_flags_stretch_ratio = values_stretch_ratio if is_value else labels_stretch_ratio
 	return label
 
-func _get_rtlabel() -> RichTextLabel:
+func _get_rtlabel(is_value: bool) -> RichTextLabel:
+	var rtlabel: RichTextLabel
 	if _recycled_rtlabels:
-		return _recycled_rtlabels.pop_back()
-	var rtlabel := RichTextLabel.new()
-	rtlabel.bbcode_enabled = true
-	rtlabel.fit_content_height = true
-	rtlabel.scroll_active = false
-	rtlabel.size_flags_horizontal = SIZE_EXPAND_FILL
-	rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+		rtlabel = _recycled_rtlabels.pop_back()
+	else:
+		rtlabel = RichTextLabel.new()
+		rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+		rtlabel.bbcode_enabled = true
+		rtlabel.fit_content_height = true
+		rtlabel.scroll_active = false
+		rtlabel.size_flags_horizontal = SIZE_EXPAND_FILL
+	rtlabel.size_flags_stretch_ratio = values_stretch_ratio if is_value else labels_stretch_ratio
 	return rtlabel
 
 func _on_meta_clicked(meta: String) -> void:
