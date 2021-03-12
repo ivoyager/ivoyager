@@ -52,6 +52,7 @@ var trace_pres_high := NAN
 var one_bar_t := NAN # venus, gas giants
 var half_bar_t := NAN # earth, venus, gas giants
 var tenth_bar_t := NAN # gas giants
+# container for Composition instances
 var compositions := {}
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true

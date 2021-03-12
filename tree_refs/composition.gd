@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 # This object is designed for simple display. It could be extended to do more.
-# We keep amounts as strings to preserve significant digits.
+# For I, Voyager, we keep amounts as strings to preserve significant digits.
 
 class_name Composition
 

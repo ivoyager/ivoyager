@@ -228,15 +228,15 @@ func _read_data_line() -> void:
 	_count_rows += 1
 
 func _process_cell_value() -> void:
-	_cell = _cell.lstrip("_")
-	_cell = _cell.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
-	_cell = StrUtils.c_unescape_patch(_cell) # handles "\uXXXX"
 	if _data_type == "BOOL":
-		_cell = _cell.to_upper()
-		if _cell == "FALSE":
+		if _cell.matchn("FALSE"):
 			_cell = ""
 	elif _data_type == "REAL":
+		_cell = _cell.lstrip("_") # use "_" to prevent Excel from ruining precision
 		_cell = _cell.replace("E", "e")
+	elif _data_type == "STRING":
+		_cell = _cell.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
+		_cell = StrUtils.c_unescape_patch(_cell) # handles "\uXXXX"
 
 func _data_types_test() -> bool:
 	for data_type in _data_types:
@@ -271,12 +271,12 @@ func _table_test(n_columns: int) -> bool:
 	return true
 
 func _cell_test() -> bool:
-	# This is after _process_cell_value()
+	# This is after _process_cell_value(); "" is ok and not checked here.
 	match _data_type:
 		"X":
 			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
 		"BOOL":
-			assert(_cell == "TRUE" or _line_error("Expected BOOL"))
+			assert(_cell.matchn("TRUE") or _line_error("Expected BOOL"))
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":
