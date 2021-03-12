@@ -39,8 +39,9 @@ const BodyFlags := Enums.BodyFlags
 # project vars - modify if body or body components are subclassed
 var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
 var body_characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
-	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_pres", "surf_t", "min_t", "max_t",
-	"one_bar_t", "half_bar_t", "tenth_bar_t"]
+	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
+	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
+	"tenth_bar_t"]
 var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
@@ -60,6 +61,7 @@ var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
 var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
+var _composition_builder: CompositionBuilder
 var _io_manager: IOManager
 var _scheduler: Scheduler
 var _table_reader: TableReader
@@ -77,6 +79,9 @@ var _system_build_count: int
 var _system_finished_count: int
 var _system_build_start_msec := 0
 
+var _table_name: String
+var _row: int
+
 func init_system_build() -> void:
 	# Track when Bodies are completely finished (including I/O threaded
 	# resource loading) to signal "system_ready" and run the progress bar.
@@ -89,17 +94,31 @@ func init_system_build() -> void:
 		_main_prog_bar.start(self)
 
 func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Main thread!
+	_table_name = table_name
+	_row = row
 	var body: Body = _Body_.new()
 	_table_reader.build_object(body, body_fields, table_name, row)
+	_set_flags_from_table(body, parent)
+	_set_orbit_from_table(body, parent)
+	_set_body_characteristics_from_table(body)
+	_set_model_controller_from_table(body)
+	_set_file_info_from_table(body)
+	_modify_parent(body, parent)
+	_register(body, parent)
+	_selection_builder.build_and_register(body, parent)
+	body.hide()
+	return body
+
+func _set_flags_from_table(body: Body, parent: Body) -> void:
 	# flags
-	var flags := _table_reader.build_flags(0, flag_fields, table_name, row)
+	var flags := _table_reader.build_flags(0, flag_fields, _table_name, _row)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	var hydrostatic_equilibrium: int = _table_reader.get_enum(table_name, "hydrostatic_equilibrium", row)
+	var hydrostatic_equilibrium: int = _table_reader.get_enum(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= Enums.ConfidenceType.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
-	match table_name:
+	match _table_name:
 		"stars":
 			flags |= BodyFlags.IS_STAR
 			if flags & BodyFlags.IS_TOP:
@@ -113,19 +132,19 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		"moons":
 			flags |= BodyFlags.IS_MOON
 			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
-					or _table_reader.get_bool(table_name, "force_navigator", row):
+					or _table_reader.get_bool(_table_name, "force_navigator", _row):
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
-	body.flags = flags # there may be more flags set below
-	# orbit
-	var time: float = _times[0]
-	var orbit: Orbit
-	if not body.flags & BodyFlags.IS_TOP:
-		orbit = _orbit_builder.make_orbit_from_data(table_name, row, parent)
-		body.set_orbit(orbit)
-	# body_characteristics
-	# missing may be either INF or NAN, see BodyCharacteristics
+	body.flags = flags
+
+func _set_orbit_from_table(body: Body, parent: Body) -> void:
+	if body.flags & BodyFlags.IS_TOP:
+		return
+	var orbit := _orbit_builder.make_orbit_from_data(_table_name, _row, parent)
+	body.set_orbit(orbit)
+
+func _set_body_characteristics_from_table(body: Body) -> void:
 	var body_characteristics: BodyCharacteristics = _BodyCharacteristics_.new()
-	_table_reader.build_object(body_characteristics, body_characteristics_fields, table_name, row)
+	_table_reader.build_object(body_characteristics, body_characteristics_fields, _table_name, _row)
 	body.system_radius = body_characteristics.m_radius * 10.0 # widens if satalletes are added
 	if !is_nan(body_characteristics.e_radius):
 		body_characteristics.is_oblate = true
@@ -135,20 +154,20 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	if is_inf(body_characteristics.mass): # missing in moon table
 		# Could calculate from GM, but mean_density x m_radius is better
 		if !is_nan(body_characteristics.mean_density):
-			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mean_density", "m_radius"], row)
+			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mean_density", "m_radius"], _row)
 			if sig_digits > 1:
 				var mass := (PI * 4.0 / 3.0) * body_characteristics.mean_density * pow(body_characteristics.m_radius, 3.0)
 				body_characteristics.mass = math.set_decimal_precision(mass, sig_digits)
 	if is_nan(body_characteristics.GM): # planets table has mass, not GM
-		var sig_digits := _table_reader.get_real_precision(table_name, "mass", row)
+		var sig_digits := _table_reader.get_real_precision(_table_name, "mass", _row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
 			var GM := G * body_characteristics.mass
 			body_characteristics.GM = math.set_decimal_precision(GM, sig_digits)
 	if is_nan(body_characteristics.esc_vel) or is_nan(body_characteristics.surface_gravity):
-		if _table_reader.has_value(table_name, "GM", row):
-			var sig_digits := _table_reader.get_least_real_precision(table_name, ["GM", "m_radius"], row)
+		if _table_reader.has_value(_table_name, "GM", _row):
+			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["GM", "m_radius"], _row)
 			if sig_digits > 2:
 				if is_nan(body_characteristics.esc_vel):
 					var esc_vel := sqrt(2.0 * body_characteristics.GM / body_characteristics.m_radius)
@@ -157,7 +176,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 					var surface_gravity := body_characteristics.GM / pow(body_characteristics.m_radius, 2.0)
 					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
-			var sig_digits := _table_reader.get_least_real_precision(table_name, ["mass", "m_radius"], row)
+			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mass", "m_radius"], _row)
 			if sig_digits > 2:
 				if is_nan(body_characteristics.esc_vel):
 					if sig_digits > 6:
@@ -167,14 +186,34 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 				if is_nan(body_characteristics.surface_gravity):
 					var surface_gravity := G * body_characteristics.mass / pow(body_characteristics.m_radius, 2.0)
 					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+	_set_compositions_from_table(body_characteristics)
 	body.set_body_characteristics(body_characteristics)
+
+func _set_compositions_from_table(body_characteristics: BodyCharacteristics) -> void:
+	var compositions := body_characteristics.compositions
+	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
+	if atmosphere_composition_str:
+		var atmosphere_composition := _composition_builder.make_from_string(atmosphere_composition_str)
+		compositions.atmosphere = atmosphere_composition
+	var trace_atmosphere_composition_str := _table_reader.get_string(_table_name, "trace_atmosphere_composition", _row)
+	if trace_atmosphere_composition_str:
+		var trace_atmosphere_composition := _composition_builder.make_from_string(trace_atmosphere_composition_str)
+		compositions.trace_atmosphere = trace_atmosphere_composition
+	var photosphere_composition_str := _table_reader.get_string(_table_name, "photosphere_composition", _row)
+	if photosphere_composition_str:
+		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
+		compositions.photosphere = photosphere_composition
+
+func _set_model_controller_from_table(body: Body) -> void:
 	# orbit and rotations
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
 	# intentionally flipped.
+	var flags := body.flags
+	var orbit := body.orbit
 	var model_controller: ModelController = _ModelController_.new()
-	_table_reader.build_object(model_controller, model_controller_fields, table_name, row)
+	_table_reader.build_object(model_controller, model_controller_fields, _table_name, _row)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
 		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(
@@ -183,11 +222,11 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ahhhh Pluto...).
 		if orbit:
-			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal(time))
+			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal())
 		else: # sun
 			model_controller.axial_tilt = model_controller.north_pole.angle_to(ECLIPTIC_Z)
 	else:
-		model_controller.rotation_period = TAU / orbit.get_mean_motion(time)
+		model_controller.rotation_period = TAU / orbit.get_mean_motion()
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -196,12 +235,12 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		model_controller.north_pole = orbit.get_normal(time)
+		model_controller.north_pole = orbit.get_normal()
 		if model_controller.axial_tilt != 0.0:
 			var correction_axis := model_controller.north_pole.cross(orbit.reference_normal).normalized()
 			model_controller.north_pole = model_controller.north_pole.rotated(correction_axis, model_controller.axial_tilt)
 	model_controller.north_pole = model_controller.north_pole.normalized()
-	if orbit and orbit.is_retrograde(time): # retrograde
+	if orbit and orbit.is_retrograde(): # retrograde
 		model_controller.rotation_period = -model_controller.rotation_period
 	# body reference basis
 	var basis_at_epoch := math.rotate_basis_z(Basis(), model_controller.north_pole)
@@ -213,32 +252,34 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		# Table value "longitude_at_epoch" is planetocentric longitude facing
 		# solar system barycenter at epoch.
 		total_rotation = orbit.get_true_longitude(0.0) - PI
-		var longitude_at_epoch := _table_reader.get_real(table_name, "longitude_at_epoch", row)
+		var longitude_at_epoch := _table_reader.get_real(_table_name, "longitude_at_epoch", _row)
 		if longitude_at_epoch and !is_nan(longitude_at_epoch):
 			total_rotation += longitude_at_epoch
 	basis_at_epoch = basis_at_epoch.rotated(model_controller.north_pole, total_rotation)
 	model_controller.set_basis_at_epoch(basis_at_epoch)
 	body.set_model_controller(model_controller)
-	# file import info
-	var file_prefix := _table_reader.get_string(table_name, "file_prefix", row)
+
+func _set_file_info_from_table(body: Body) -> void:
+	var file_prefix := _table_reader.get_string(_table_name, "file_prefix", _row)
 	body.file_info[0] = file_prefix
-	var rings_name := _table_reader.get_string(table_name, "rings", row)
+	var rings_name := _table_reader.get_string(_table_name, "rings", _row)
 	if rings_name:
 		if body.file_info.size() < 3:
 			body.file_info.resize(3)
 		body.file_info[1] = rings_name
-		body.file_info[2] = _table_reader.get_real(table_name, "rings_radius", row)
-	# parent modifications
+		body.file_info[2] = _table_reader.get_real(_table_name, "rings_radius", _row)
+
+func _modify_parent(body: Body, parent: Body) -> void:
+	var orbit := body.orbit
 	if parent and orbit:
-		var semimajor_axis := orbit.get_semimajor_axis(time)
+		var semimajor_axis := orbit.get_semimajor_axis()
 		if parent.system_radius < semimajor_axis:
 			parent.system_radius = semimajor_axis
+
+func _register(body: Body, parent: Body) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
 	_body_registry.register_body(body)
-	_selection_builder.build_and_register(body, parent)
-	body.hide()
-	return body
 
 # *****************************************************************************
 
@@ -252,6 +293,7 @@ func _project_init() -> void:
 	_huds_builder = Global.program.HUDsBuilder
 	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
+	_composition_builder = Global.program.CompositionBuilder
 	_io_manager = Global.program.IOManager
 	_scheduler = Global.program.Scheduler
 	_table_reader = Global.program.TableReader
@@ -260,6 +302,8 @@ func _project_init() -> void:
 	_ModelController_ = Global.script_classes._ModelController_
 	_BodyCharacteristics_ = Global.script_classes._BodyCharacteristics_
 	_fallback_body_2d = Global.assets.fallback_body_2d
+
+# *****************************************************************************
 
 func _on_node_added(node: Node) -> void:
 	var body := node as Body

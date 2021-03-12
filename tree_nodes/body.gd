@@ -192,8 +192,7 @@ func set_orbit(orbit_: Orbit) -> void:
 		orbit.disconnect("changed", self, "_on_orbit_changed")
 	orbit = orbit_
 	if orbit_:
-		if is_inside_tree(): # otherwise happens on _ready()
-			orbit_.reset_elements_and_interval_update()
+		orbit_.reset_elements_and_interval_update()
 		orbit_.connect("changed", self, "_on_orbit_changed")
 		_on_orbit_changed(false)
 
@@ -266,23 +265,23 @@ func _on_init() -> void:
 	hide()
 
 func _on_enter_tree() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	Global.connect("setting_changed", self, "_settings_listener")
+	if !_state.is_loaded_game or _state.is_system_built:
+		return
+	# loading game inits
 	if orbit:
 		orbit.reset_elements_and_interval_update()
-		if !orbit.is_connected("changed", self, "_on_orbit_changed"):
-			orbit.connect("changed", self, "_on_orbit_changed")
-			_on_orbit_changed(false)
+		orbit.connect("changed", self, "_on_orbit_changed")
+		_on_orbit_changed(false)
 	if body_characteristics:
-		if !body_characteristics.is_connected("changed", self, "_on_body_characteristics_changed"):
-			body_characteristics.connect("changed", self, "_on_body_characteristics_changed")
-			_on_body_characteristics_changed()
+		body_characteristics.connect("changed", self, "_on_body_characteristics_changed")
+		_on_body_characteristics_changed()
 	if model_controller:
-		if !model_controller.is_connected("changed", self, "_on_model_controller_changed"):
-			model_controller.connect("changed", self, "_on_model_controller_changed")
-			_on_model_controller_changed()
+		model_controller.connect("changed", self, "_on_model_controller_changed")
+		_on_model_controller_changed()
 
 func _on_ready() -> void:
+	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _prepare_to_free() -> void:
