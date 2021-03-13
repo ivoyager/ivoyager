@@ -284,7 +284,7 @@ func get_position_velocity(time := NAN) -> Array:
 
 func get_elements(time := NAN) -> Array:
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
-		var elements := ArrayUtils.init(7)
+		var elements := GDUtils.init_array(7)
 		_set_elements(time, elements)
 		return elements
 	return current_elements.duplicate() # safe

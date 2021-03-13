@@ -31,3 +31,21 @@ static func get_deep(target, path: String): # untyped return
 		if target == null:
 			return null
 	return target
+
+static func init_array(size: int, init_value = null) -> Array:
+	var array := []
+	array.resize(size)
+	if init_value == null:
+		return array
+	var i := 0
+	while i < size:
+		array[i] = init_value
+		i += 1
+	return array
+
+static func fill_array(array: Array, fill_value) -> void:
+	var size := array.size()
+	var i := 0
+	while i < size:
+		array[i] = fill_value
+		i += 1
