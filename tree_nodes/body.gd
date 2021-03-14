@@ -163,10 +163,17 @@ func get_north(_time := NAN) -> Vector3:
 		return ECLIPTIC_Z
 	return model_controller.north_pole
 
-func get_orbit_normal(time := NAN) -> Vector3:
+func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	if !orbit:
 		return ECLIPTIC_Z
-	return orbit.get_normal(time)
+	return orbit.get_normal(time, flip_retrograde)
+
+func get_orbit_inclination_to_equator(time := NAN) -> float:
+	if !orbit or flags & BodyFlags.IS_TOP:
+		return NAN
+	var parent_north: Vector3 = get_parent().get_north(time)
+	var orbit_normal := orbit.get_normal(time)
+	return parent_north.angle_to(orbit_normal)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground

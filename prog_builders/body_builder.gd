@@ -222,7 +222,7 @@ func _set_model_controller_from_table(body: Body) -> void:
 		# (overwriting table value, if exists). Results basically make sense for
 		# the planets EXCEPT Uranus (flipped???) and Pluto (ahhhh Pluto...).
 		if orbit:
-			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal())
+			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal(NAN, true))
 		else: # sun
 			model_controller.axial_tilt = model_controller.north_pole.angle_to(ECLIPTIC_Z)
 	else:
@@ -235,7 +235,7 @@ func _set_model_controller_from_table(body: Body) -> void:
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		model_controller.north_pole = orbit.get_normal()
+		model_controller.north_pole = orbit.get_normal(NAN, true)
 		if model_controller.axial_tilt != 0.0:
 			var correction_axis := model_controller.north_pole.cross(orbit.reference_normal).normalized()
 			model_controller.north_pole = model_controller.north_pole.rotated(correction_axis, model_controller.axial_tilt)

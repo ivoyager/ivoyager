@@ -135,6 +135,18 @@ func get_mean_motion(time := NAN) -> float:
 		_set_elements(time, elements)
 	return elements[6]
 
+func get_inclination_to_ecliptic(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	
+	var relative_normal := math.convert_spherical2(
+			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
+	var orbit_normal: Vector3
+	orbit_normal = math.rotate_vector_z(reference_normal, relative_normal)
+	return ECLIPTIC_UP.angle_to(orbit_normal)
+
 func get_apoapsis(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
@@ -179,7 +191,7 @@ func get_average_orbital_speed(time := NAN) -> float:
 		ave_orbit_speed *= 1.0 - 0.25 * e2 - 0.046875 * e4 - 0.01953125 * e6 - 0.01068115 * e8
 	return ave_orbit_speed
 
-func get_normal(time := NAN) -> Vector3:
+func get_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -189,7 +201,7 @@ func get_normal(time := NAN) -> Vector3:
 	var relative_normal := math.convert_spherical2(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
 	var orbit_normal: Vector3
-	if elements[2] > PI / 2.0: # retrograde
+	if flip_retrograde and elements[2] > PI / 2.0: # retrograde
 		orbit_normal = -math.rotate_vector_z(relative_normal, reference_normal)
 	else:
 		orbit_normal = math.rotate_vector_z(reference_normal, relative_normal)

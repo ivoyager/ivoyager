@@ -55,7 +55,7 @@ var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACT
 var subsection_of := [-1, -1, -1, 2, 2, -1]
 var section_searches := [ # one array element per header
 	# object paths relative to SelectionItem 
-	["body/orbit", ""],
+	["body/orbit", "body", ""],
 	["body/body_characteristics", "body"],
 	["body/body_characteristics"],
 	["body/body_characteristics/compositions"],
@@ -73,8 +73,13 @@ var section_data := [ # one array element per header
 	[
 	["get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
 	["get_apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["get_semimajor_axis", "LABEL_SEMI_MAJOR_AXIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["get_eccentricity", "LABEL_ECCENTRICITY"],
 	["get_orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
 	["get_average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED", QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
+	["get_inclination_to_ecliptic", "LABEL_INCLINATION_TO_ECLIPTIC", QtyTxtConverter.UNIT, "deg", 4],
+	["get_orbit_inclination_to_equator", "LABEL_INCLINATION_TO_EQUATOR", QtyTxtConverter.UNIT, "deg", 4],
+	
 	["n_stars", "LABEL_STARS"],
 	["n_planets", "LABEL_PLANETS"],
 	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],

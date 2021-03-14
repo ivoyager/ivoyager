@@ -80,10 +80,10 @@ func get_flags() -> int:
 		return body.flags
 	return 0
 
-func get_orbit_normal(time := NAN) -> Vector3:
+func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	if !is_body:
 		return ECLIPTIC_Z
-	return body.get_orbit_normal(time)
+	return body.get_orbit_normal(time, flip_retrograde)
 
 func get_north(time := NAN) -> Vector3:
 	if !is_body:
