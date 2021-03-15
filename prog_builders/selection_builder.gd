@@ -29,6 +29,7 @@ const IS_MOON := BodyFlags.IS_MOON
 const IS_STAR_ORBITING := BodyFlags.IS_STAR_ORBITING
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
+
 # project vars
 var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
 var ecliptic_longitude_offset := 0.0
@@ -43,21 +44,34 @@ var orbit_longitude_offset_moon := deg2rad(195.0)
 var orbit_latitude_offset_moon := deg2rad(15.0)
 var latitude_offset_top := deg2rad(85.0)
 var latitude_offset_45 := deg2rad(45.0)
-
+var min_system_m_radius_multiplier := 15.0
 var min_view_dist_radius_multiplier := 1.65
 var zoom_divisor := 1.5e-4 * UnitDefs.KM # bigger makes zoom closer
 var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
-var system_radius_multiplier_top := 1.5
+var system_radius_multiplier_top := 2.5
 
 # private
 var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
 var _body_registry: BodyRegistry
 var _SelectionItem_: Script
 
+func build_selection_items() -> void:
+	for top_body in _body_registry.top_bodies:
+		build_selection_items_recursive(top_body, null)
 
-func build_and_register(body: Body, parent_body: Body) -> void:
-	# parent_body = null for top Body
+func build_selection_items_recursive(body: Body, parent_body: Body) -> void:
+	# build bottom up to calculate system_radius
+	var system_radius := body.m_radius * min_system_m_radius_multiplier
+	for satellite in body.satellites:
+		var a: float = satellite.get_orbit_semi_major_axis()
+		if system_radius < a:
+			system_radius = a
+		build_selection_items_recursive(satellite, body)
+	build_and_register(body, parent_body, system_radius)
+
+func build_and_register(body: Body, parent_body: Body, system_radius: float) -> void:
 	var selection_item: SelectionItem = _SelectionItem_.new()
+	selection_item.system_radius = system_radius
 	selection_item.is_body = true
 	selection_item.spatial = body
 	selection_item.body = body
@@ -68,7 +82,6 @@ func build_and_register(body: Body, parent_body: Body) -> void:
 		# TODO: Some special handling for barycenters
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
-#	selection_item.selection_type = body.selection_type
 	if body.flags & IS_PLANET:
 		selection_item.n_moons = 0
 	elif body.flags & IS_STAR:
@@ -98,12 +111,19 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		use_orbit_longitude_offset = orbit_longitude_offset_moon
 		use_ground_latitude_offset = ground_latitude_offset_moon
 		use_orbit_latitude_offset = orbit_latitude_offset_moon
-		
 	var m_radius := body.get_mean_radius()
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
 	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * UnitDefs.KM
-	var view_dist_top := 500.0 * body.system_radius * system_radius_multiplier_top
+	var view_dist_top := selection_item.system_radius * system_radius_multiplier_top * 50.0 # /fov
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
+	match body.name:
+		"STAR_SUN":
+			view_dist_45 *= 4.0
+		"PLANET_URANUS":
+			view_dist_45 /= 2.5
+		"PLANET_NEPTUNE":
+			view_dist_45 /= 4.0
+	
 	selection_item.track_ground_positions = [ # camera will divide dist by fov
 		Vector3(use_ground_longitude_offset, use_ground_latitude_offset, view_dist_zoom), # VIEW_ZOOM
 		Vector3(use_ground_longitude_offset, latitude_offset_45, view_dist_45), # VIEW_45

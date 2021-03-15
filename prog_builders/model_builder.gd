@@ -64,7 +64,7 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 	if lazy_init:
 		_add_placeholder(body, model_controller)
 		return
-	var model_type := body.model_type
+	var model_type := body.get_model_type()
 	var array := [body, model_controller, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
@@ -118,7 +118,7 @@ func _add_placeholder(body: Body, model_controller: ModelController) -> void: # 
 
 func _lazy_init(body: Body) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
-	var model_type := body.model_type
+	var model_type := body.get_model_type()
 	var model_controller := body.model_controller
 	var model_basis: Basis = model_controller.model_reference_basis
 	var array := [body, model_controller, file_prefix, model_type, model_basis]
@@ -174,7 +174,7 @@ func _finish_model(array: Array) -> void: # Main thread
 	var model_controller: ModelController = array[1]
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
-	if body.light_type != -1: # is a star
+	if body.get_light_type() != -1: # is a star
 		body.max_model_dist = INF
 		if array.size() > 6: # has dynamic star surface
 			var surface: SpatialMaterial = array[6]

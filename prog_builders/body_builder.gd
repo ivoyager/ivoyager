@@ -36,9 +36,16 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
-# project vars - modify if body or body components are subclassed
-var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
-var characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
+# project vars
+var min_click_radius := 20.0
+var max_hud_dist_orbit_radius_multiplier := 100.0
+var min_hud_dist_radius_multiplier := 500.0
+var min_hud_dist_star_multiplier := 20.0 # combines w/ above
+
+var body_fields := ["name", "m_radius"]
+var characteristics_fields := ["symbol", "class_type", "model_type", "light_type",
+	"file_prefix", "rings_file_prefix", "rings_radius", "GM", "mass", "surface_gravity",
+	"esc_vel", "m_radius", "e_radius",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t"]
@@ -60,7 +67,6 @@ var _model_builder: ModelBuilder
 var _rings_builder: RingsBuilder
 var _light_builder: LightBuilder
 var _huds_builder: HUDsBuilder
-var _selection_builder: SelectionBuilder
 var _orbit_builder: OrbitBuilder
 var _composition_builder: CompositionBuilder
 var _io_manager: IOManager
@@ -103,10 +109,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_set_characteristics_from_table(body)
 	_set_compositions_from_table(body)
 	_set_model_controller_from_table(body)
-	_set_file_info_from_table(body)
-	_modify_parent(body, parent)
 	_register(body, parent)
-	_selection_builder.build_and_register(body, parent)
 	body.hide()
 	return body
 
@@ -147,8 +150,6 @@ func _set_characteristics_from_table(body: Body) -> void:
 	var characteristics := body.characteristics
 	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
-	body.m_radius = characteristics.m_radius
-	body.system_radius = characteristics.m_radius * 10.0 # widens if satalletes are added
 	if characteristics.has("e_radius"):
 		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
 	else:
@@ -191,8 +192,9 @@ func _set_characteristics_from_table(body: Body) -> void:
 				if !characteristics.has("surface_gravity"):
 					var surface_gravity: float = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
 					characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
-	for key in characteristics:
-		assert(!is_nan(characteristics[key]))
+	# debug
+#	if body.name == "PLANET_EARTH":
+#		print(characteristics)
 
 func _set_compositions_from_table(body: Body) -> void:
 	var components := body.components
@@ -264,23 +266,6 @@ func _set_model_controller_from_table(body: Body) -> void:
 	model_controller.set_basis_at_epoch(basis_at_epoch)
 	body.set_model_controller(model_controller)
 
-func _set_file_info_from_table(body: Body) -> void:
-	var file_prefix := _table_reader.get_string(_table_name, "file_prefix", _row)
-	body.file_info[0] = file_prefix
-	var rings_name := _table_reader.get_string(_table_name, "rings", _row)
-	if rings_name:
-		if body.file_info.size() < 3:
-			body.file_info.resize(3)
-		body.file_info[1] = rings_name
-		body.file_info[2] = _table_reader.get_real(_table_name, "rings_radius", _row)
-
-func _modify_parent(body: Body, parent: Body) -> void:
-	var orbit := body.orbit
-	if parent and orbit:
-		var semimajor_axis := orbit.get_semimajor_axis()
-		if parent.system_radius < semimajor_axis:
-			parent.system_radius = semimajor_axis
-
 func _register(body: Body, parent: Body) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
@@ -296,7 +281,6 @@ func _project_init() -> void:
 	_rings_builder = Global.program.RingsBuilder
 	_light_builder = Global.program.LightBuilder
 	_huds_builder = Global.program.HUDsBuilder
-	_selection_builder = Global.program.SelectionBuilder
 	_orbit_builder = Global.program.OrbitBuilder
 	_composition_builder = Global.program.CompositionBuilder
 	_io_manager = Global.program.IOManager
@@ -319,13 +303,17 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 	# Note: many builders called here ask for IOManager.callback. These are
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
-	if body.model_type != -1:
+	body.min_click_radius = min_click_radius
+	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
+	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
+	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
+	if body.get_model_type() != -1:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
 	if body.has_rings():
 		_rings_builder.add_rings(body)
-	if body.light_type != -1:
+	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
 		_huds_builder.add_orbit(body)

@@ -83,7 +83,7 @@ var section_data := [ # one array element per header
 	],
 	# Physical Characteristics
 	[
-	["body/class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes"],
+	["body/characteristics/class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes"],
 	["body/m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km"],
 	["body/characteristics/e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
 	["body/characteristics/p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],

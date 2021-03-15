@@ -42,7 +42,7 @@ var _orbit_mesh_arrays := []
 func add_label(body: Body) -> void:
 	var hud_label: HUDLabel = _HUDLabel_.new()
 	hud_label.set_body_name(body.name)
-	hud_label.set_body_symbol(body.symbol)
+	hud_label.set_body_symbol(body.get_symbol())
 	hud_label.hide()
 	body.hud_label = hud_label
 	_projection_surface.add_child(hud_label)
