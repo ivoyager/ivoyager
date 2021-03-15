@@ -38,7 +38,7 @@ const BodyFlags := Enums.BodyFlags
 
 # project vars - modify if body or body components are subclassed
 var body_fields := ["name", "symbol", "class_type", "model_type", "light_type"]
-var body_characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
+var characteristics_fields := ["GM", "mass", "surface_gravity", "esc_vel", "m_radius", "e_radius",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t"]
@@ -48,6 +48,7 @@ var flag_fields := {
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
+
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
@@ -68,7 +69,6 @@ var _table_reader: TableReader
 var _main_prog_bar: MainProgBar
 var _Body_: Script
 var _ModelController_: Script
-var _BodyCharacteristics_: Script
 var _StarRegulator_: Script
 var _fallback_body_2d: Texture
 
@@ -100,7 +100,8 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_table_reader.build_object(body, body_fields, table_name, row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
-	_set_body_characteristics_from_table(body)
+	_set_characteristics_from_table(body)
+	_set_compositions_from_table(body)
 	_set_model_controller_from_table(body)
 	_set_file_info_from_table(body)
 	_modify_parent(body, parent)
@@ -142,74 +143,78 @@ func _set_orbit_from_table(body: Body, parent: Body) -> void:
 	var orbit := _orbit_builder.make_orbit_from_data(_table_name, _row, parent)
 	body.set_orbit(orbit)
 
-func _set_body_characteristics_from_table(body: Body) -> void:
-	var body_characteristics: BodyCharacteristics = _BodyCharacteristics_.new()
-	_table_reader.build_object(body_characteristics, body_characteristics_fields, _table_name, _row)
-	body.system_radius = body_characteristics.m_radius * 10.0 # widens if satalletes are added
-	if !is_nan(body_characteristics.e_radius):
-		body_characteristics.is_oblate = true
-		body_characteristics.p_radius = 3.0 * body_characteristics.m_radius - 2.0 * body_characteristics.e_radius
+func _set_characteristics_from_table(body: Body) -> void:
+	var characteristics := body.characteristics
+	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
+	assert(characteristics.has("m_radius"))
+	body.m_radius = characteristics.m_radius
+	body.system_radius = characteristics.m_radius * 10.0 # widens if satalletes are added
+	if characteristics.has("e_radius"):
+		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if is_inf(body_characteristics.mass): # missing in moon table
+	if !characteristics.has("mass"): # missing in moon table
+		assert(characteristics.has("GM"))
 		# Could calculate from GM, but mean_density x m_radius is better
-		if !is_nan(body_characteristics.mean_density):
+		if characteristics.has("mean_density"):
 			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mean_density", "m_radius"], _row)
 			if sig_digits > 1:
-				var mass := (PI * 4.0 / 3.0) * body_characteristics.mean_density * pow(body_characteristics.m_radius, 3.0)
-				body_characteristics.mass = math.set_decimal_precision(mass, sig_digits)
-	if is_nan(body_characteristics.GM): # planets table has mass, not GM
+				var mass: float = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
+				characteristics.mass = math.set_decimal_precision(mass, sig_digits)
+		else:
+			characteristics.mass = INF
+	if !characteristics.has("GM"): # planets table has mass, not GM
 		var sig_digits := _table_reader.get_real_precision(_table_name, "mass", _row)
 		if sig_digits > 1:
 			if sig_digits > 6:
 				sig_digits = 6 # limited by G precision
-			var GM := G * body_characteristics.mass
-			body_characteristics.GM = math.set_decimal_precision(GM, sig_digits)
-	if is_nan(body_characteristics.esc_vel) or is_nan(body_characteristics.surface_gravity):
+			var GM: float = G * characteristics.mass
+			characteristics.GM = math.set_decimal_precision(GM, sig_digits)
+	if !characteristics.has("esc_vel") or !characteristics.has("surface_gravity"):
 		if _table_reader.has_value(_table_name, "GM", _row):
 			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["GM", "m_radius"], _row)
 			if sig_digits > 2:
-				if is_nan(body_characteristics.esc_vel):
-					var esc_vel := sqrt(2.0 * body_characteristics.GM / body_characteristics.m_radius)
-					body_characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_nan(body_characteristics.surface_gravity):
-					var surface_gravity := body_characteristics.GM / pow(body_characteristics.m_radius, 2.0)
-					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+				if !characteristics.has("esc_vel"):
+					var esc_vel := sqrt(2.0 * characteristics.GM / characteristics.m_radius)
+					characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if !characteristics.has("surface_gravity"):
+					var surface_gravity: float = characteristics.GM / pow(characteristics.m_radius, 2.0)
+					characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
 		else: # planet w/ mass
 			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mass", "m_radius"], _row)
 			if sig_digits > 2:
-				if is_nan(body_characteristics.esc_vel):
+				if !characteristics.has("esc_vel"):
 					if sig_digits > 6:
 						sig_digits = 6
-					var esc_vel := sqrt(2.0 * G * body_characteristics.mass / body_characteristics.m_radius)
-					body_characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
-				if is_nan(body_characteristics.surface_gravity):
-					var surface_gravity := G * body_characteristics.mass / pow(body_characteristics.m_radius, 2.0)
-					body_characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
-	_set_compositions_from_table(body_characteristics)
-	body.set_body_characteristics(body_characteristics)
+					var esc_vel := sqrt(2.0 * G * characteristics.mass / characteristics.m_radius)
+					characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+				if !characteristics.has("surface_gravity"):
+					var surface_gravity: float = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
+					characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+	for key in characteristics:
+		assert(!is_nan(characteristics[key]))
 
-func _set_compositions_from_table(body_characteristics: BodyCharacteristics) -> void:
-	var compositions := body_characteristics.compositions
+func _set_compositions_from_table(body: Body) -> void:
+	var components := body.components
 	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
 	if atmosphere_composition_str:
 		var atmosphere_composition := _composition_builder.make_from_string(atmosphere_composition_str)
-		compositions.atmosphere = atmosphere_composition
+		components.atmosphere = atmosphere_composition
 	var trace_atmosphere_composition_str := _table_reader.get_string(_table_name, "trace_atmosphere_composition", _row)
 	if trace_atmosphere_composition_str:
 		var trace_atmosphere_composition := _composition_builder.make_from_string(trace_atmosphere_composition_str)
-		compositions.trace_atmosphere = trace_atmosphere_composition
+		components.trace_atmosphere = trace_atmosphere_composition
 	var photosphere_composition_str := _table_reader.get_string(_table_name, "photosphere_composition", _row)
 	if photosphere_composition_str:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
-		compositions.photosphere = photosphere_composition
+		components.photosphere = photosphere_composition
 
 func _set_model_controller_from_table(body: Body) -> void:
-	# orbit and rotations
+	# orientation and rotation
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
 	# follow IAU definition (!= positive pole) except Pluto, which is
-	# intentionally flipped.
+	# flipped by convention.
 	var flags := body.flags
 	var orbit := body.orbit
 	var model_controller: ModelController = _ModelController_.new()
@@ -300,7 +305,6 @@ func _project_init() -> void:
 	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
 	_Body_ = Global.script_classes._Body_
 	_ModelController_ = Global.script_classes._ModelController_
-	_BodyCharacteristics_ = Global.script_classes._BodyCharacteristics_
 	_fallback_body_2d = Global.assets.fallback_body_2d
 
 # *****************************************************************************

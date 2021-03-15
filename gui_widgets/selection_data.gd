@@ -85,47 +85,47 @@ var section_data := [ # one array element per header
 	[
 	["body/class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes"],
 	["body/m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/body_characteristics/e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/body_characteristics/p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/body_characteristics/mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
-	["body/body_characteristics/hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType"],
-	["body/body_characteristics/surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
-	["body/body_characteristics/esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
-	["body/body_characteristics/mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
-	["body/body_characteristics/albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
-	["body/body_characteristics/min_t", "LABEL_SURFACE_TEMP_MIN", QtyTxtConverter.UNIT, "degC"],
-	["body/body_characteristics/surf_t", "LABEL_SURFACE_TEMP_MEAN", QtyTxtConverter.UNIT, "degC"],
-	["body/body_characteristics/max_t", "LABEL_SURFACE_TEMP_MAX", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["body/characteristics/p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["body/characteristics/mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
+	["body/characteristics/hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType"],
+	["body/characteristics/surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
+	["body/characteristics/esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
+	["body/characteristics/mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
+	["body/characteristics/albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
+	["body/characteristics/min_t", "LABEL_SURFACE_TEMP_MIN", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/surf_t", "LABEL_SURFACE_TEMP_MEAN", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/max_t", "LABEL_SURFACE_TEMP_MAX", QtyTxtConverter.UNIT, "degC"],
 	],
 	# Atmosphere
 	[
-	["body/body_characteristics/surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
-	["body/body_characteristics/trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/body_characteristics/trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/body_characteristics/trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/body_characteristics/one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
-	["body/body_characteristics/half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
-	["body/body_characteristics/tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
+	["body/characteristics/trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
 	],
 	# Atmosphere composition
 	[
-	["body/body_characteristics/compositions/atmosphere", "", OBJECT_SPECIAL],
+	["body/components/atmosphere", "", OBJECT_SPECIAL],
 	],
 	# Trace atmosphere composition
 	[
-	["body/body_characteristics/compositions/trace_atmosphere", "", OBJECT_SPECIAL],
+	["body/components/trace_atmosphere", "", OBJECT_SPECIAL],
 	],
 	# Photosphere composition
 	[
-	["body/body_characteristics/compositions/photosphere", "", OBJECT_SPECIAL],
+	["body/components/photosphere", "", OBJECT_SPECIAL],
 	],
 ]
 
-var label_is_wiki_link := ["body/body_characteristics/hydrostatic_equilibrium"]
+var label_is_wiki_link := ["body/characteristics/hydrostatic_equilibrium"]
 var value_is_wiki_link := ["body/class_type"]
 var body_flags_test := {
 	"body/m_radius" : BodyFlags.DISPLAY_M_RADIUS,
-	"body/body_characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
+	"body/characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
