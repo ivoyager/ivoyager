@@ -85,7 +85,8 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	# Alternatively, we could build orbit from an Ephemerides object.
 	
 	var mu := parent.get_std_gravitational_parameter()
-	_table_reader.build_dictionary(t, table_name, table_row)
+	assert(mu)
+	_table_reader.build_dictionary_from_keys(t, table_name, table_row)
 
 	# convert to standardized orbital elements [a, e, i, Om, w, M0, n]
 	if is_nan(t.w):

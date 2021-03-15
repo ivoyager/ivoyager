@@ -63,7 +63,7 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 var selection_item: SelectionItem
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_OBJ_PROPERTIES := ["selection_item"]
+const PERSIST_PROPERTIES := ["selection_item"]
 
 # private
 var _root: Viewport = Global.get_tree().get_root()

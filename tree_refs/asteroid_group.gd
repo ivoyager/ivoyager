@@ -62,10 +62,9 @@ var _index := 0
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["is_trojans", "group_name", "max_apoapsis", "names",
-	"iau_number", "magnitudes", 
-	"dummy_translations", "a_e_i", "Om_w_M0_n", "s_g", "d_e_i", "Om_w_D_f", "th0", "_index"]
-const PERSIST_OBJ_PROPERTIES := ["star", "lagrange_point"]
+const PERSIST_PROPERTIES := ["is_trojans", "star", "lagrange_point", "group_name",
+	"max_apoapsis", "names", "iau_number", "magnitudes", "dummy_translations",
+	"a_e_i", "Om_w_M0_n", "s_g", "d_e_i", "Om_w_D_f", "th0", "_index"]
 
 # ************************** UNPERSISTED VARS *********************************
 
@@ -173,6 +172,7 @@ func _fix_binary_keplerian_elements() -> void:
 	var au := unit_defs.AU
 	var year := unit_defs.YEAR
 	var mu := star.get_std_gravitational_parameter()
+	assert(mu)
 	var index := 0
 	while index < _index:
 		var a: float = a_e_i[index][0] * au # from au

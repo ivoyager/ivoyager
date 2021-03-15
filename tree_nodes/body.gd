@@ -23,7 +23,9 @@
 # (other Body instances) and other spatial children that are visuals: Model,
 # Rings, HUDOrbit.
 #
-# TODO: Make LPoint into Body instances
+# Node name is table row name: "PLANET_EARTH", "MOON_EUROPA", etc.
+#
+# TODO?: Make LPoint into Body instances?
 # TODO: barycenters
 #
 # TODO: Make this node "drag-and_drop" as much as possible.
@@ -37,10 +39,6 @@ class_name Body
 const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
 
 const DPRINT := false
-const MAX_HUD_DIST_ORBIT_RADIUS_MULTIPLIER := 100.0
-const MIN_HUD_DIST_RADIUS_MULTIPLIER := 500.0
-const MIN_HUD_DIST_STAR_MULTIPLIER := 20.0 # combines w/ above
-const MIN_CLICK_RADIUS := 20.0
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_Z := IDENTITY_BASIS.z
@@ -56,39 +54,35 @@ const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 
 # persisted
-# node name is table row name ("MOON_EUROPA", etc.)
-var symbol := "\u25CC" # dashed circle default
 var body_id := -1
-var class_type := -1 # classes.csv
-var model_type := -1 # models.csv
-var light_type := -1 # lights.csv (-1 except stars)
 var flags := 0 # see Enums.BodyFlags
-var system_radius := 0.0 # widest orbiting satellite
-var file_info := [""] # [file_prefix, rings_name, rings_radius], 1st required
-var body_characteristics: BodyCharacteristics
-var model_controller: ModelController
-var orbit: Orbit
+var characteristics := {} # non-object values
+var components := {} # objects (persisted only)
 var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "symbol", "body_id", "class_type", "model_type",
-	"light_type", "flags", "system_radius", "file_info"]
-const PERSIST_OBJ_PROPERTIES := ["body_characteristics", "model_controller", "orbit", "satellites",
-	"lagrange_points"]
+const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
+	"satellites", "lagrange_points"]
 
-# public unpersisted - read-only except builder classes
+# public - read-only except builder classes; not persisted unless noted
+var m_radius := NAN # persisted in characteristics
+var model_controller: ModelController # persisted in components
+var orbit: Orbit # persisted in components
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
 var hud_orbit: HUDOrbit
 var hud_label: HUDLabel
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
+var min_click_radius: float
+var max_hud_dist_orbit_radius_multiplier: float
+var min_hud_dist_radius_multiplier: float
+var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
 var max_aux_graphic_dist := 0.0
-var min_hud_dist := 0.0
+var min_hud_dist: float
 var is_asleep := false
-var m_radius := NAN # here for convenience; BodyCharacteristics maintains
 
 # private
 var _times: Array = Global.times
@@ -106,49 +100,46 @@ var _hud_label_visible := false
 var _is_visible := false
 
 
+func get_symbol() -> String:
+	return characteristics.get("symbol", "\u25CC") # default is dashed circle
+
+func get_class_type() -> int: # "classes" table row
+	return characteristics.get("class_type", -1)
+
+func get_model_type() -> int: # "models" table row
+	return characteristics.get("model_type", -1)
+
+func get_light_type() -> int: # "lights" table row
+	return characteristics.get("light_type", -1)
+
 func get_file_prefix() -> String:
-	return file_info[0]
+	return characteristics.get("file_prefix", "")
 
 func has_rings() -> bool:
-	return file_info.size() > 2
+	return characteristics.has("rings_radius")
 
 func get_rings_file_prefix() -> String:
-	if file_info.size() < 3:
-		return ""
-	return file_info[1]
+	return characteristics.get("rings_file_prefix", "")
 
 func get_rings_radius() -> float:
-	if file_info.size() < 3:
-		return NAN
-	return file_info[2]
+	return characteristics.get("rings_radius", 0.0)
 
 func get_std_gravitational_parameter() -> float:
-	if !body_characteristics:
-		return NAN
-	return body_characteristics.GM
+	return characteristics.get("GM", 0.0)
 
 func get_mean_radius() -> float:
 	return m_radius
 
-func is_oblate() -> bool:
-	if !body_characteristics:
-		return false
-	return body_characteristics.is_oblate
-
 func get_equatorial_radius() -> float:
-	# Returns m_radius if !is_oblate
-	if !body_characteristics:
-		return NAN
-	if body_characteristics.is_oblate:
-		return body_characteristics.e_radius
+	var e_radius: float = characteristics.get("e_radius", 0.0)
+	if e_radius:
+		return e_radius
 	return m_radius
 
 func get_polar_radius() -> float:
-	# Returns m_radius if !is_oblate
-	if !body_characteristics:
-		return NAN
-	if body_characteristics.is_oblate:
-		return body_characteristics.p_radius
+	var p_radius: float = characteristics.get("p_radius", 0.0)
+	if p_radius:
+		return p_radius
 	return m_radius
 
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
@@ -163,10 +154,22 @@ func get_north(_time := NAN) -> Vector3:
 		return ECLIPTIC_Z
 	return model_controller.north_pole
 
-func get_orbit_normal(time := NAN) -> Vector3:
+func get_orbit_semi_major_axis(time := NAN) -> float:
+	if !orbit:
+		return 0.0
+	return orbit.get_semimajor_axis(time)
+
+func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	if !orbit:
 		return ECLIPTIC_Z
-	return orbit.get_normal(time)
+	return orbit.get_normal(time, flip_retrograde)
+
+func get_orbit_inclination_to_equator(time := NAN) -> float:
+	if !orbit or flags & BodyFlags.IS_TOP:
+		return NAN
+	var parent_north: Vector3 = get_parent().get_north(time)
+	var orbit_normal := orbit.get_normal(time)
+	return parent_north.angle_to(orbit_normal)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
@@ -192,19 +195,12 @@ func set_orbit(orbit_: Orbit) -> void:
 		orbit.disconnect("changed", self, "_on_orbit_changed")
 	orbit = orbit_
 	if orbit_:
+		components.orbit = orbit_
 		orbit_.reset_elements_and_interval_update()
 		orbit_.connect("changed", self, "_on_orbit_changed")
 		_on_orbit_changed(false)
-
-func set_body_characteristics(body_characteristics_: BodyCharacteristics) -> void:
-	if body_characteristics == body_characteristics_:
-		return
-	if body_characteristics:
-		body_characteristics.disconnect("changed", self, "_on_body_characteristics_changed")
-	body_characteristics = body_characteristics_
-	if body_characteristics_:
-		body_characteristics_.connect("changed", self, "_on_body_characteristics_changed")
-		_on_body_characteristics_changed()
+	else:
+		components.erase("orbit")
 
 func set_model_controller(model_controller_: ModelController) -> void:
 	if model_controller == model_controller_:
@@ -213,17 +209,20 @@ func set_model_controller(model_controller_: ModelController) -> void:
 		model_controller.disconnect("changed", self, "_on_model_controller_changed")
 	model_controller = model_controller_
 	if model_controller_:
+		components.model_controller = model_controller_
 		model_controller_.connect("changed", self, "_on_model_controller_changed")
 		_on_model_controller_changed()
+	else:
+		components.erase("model_controller")
 
 # *****************************************************************************
 # ivoyager mechanics & private
 
 func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
-		min_hud_dist = m_radius * MIN_HUD_DIST_RADIUS_MULTIPLIER
+		min_hud_dist = m_radius * min_hud_dist_radius_multiplier
 		if flags & IS_STAR:
-			min_hud_dist *= MIN_HUD_DIST_STAR_MULTIPLIER # just the label
+			min_hud_dist *= min_hud_dist_star_multiplier # just the label
 	else:
 		min_hud_dist = 0.0
 
@@ -268,21 +267,25 @@ func _on_enter_tree() -> void:
 	if !_state.is_loaded_game or _state.is_system_built:
 		return
 	# loading game inits
+	m_radius = characteristics.m_radius
+	orbit = components.get("orbit")
+	model_controller = components.get("model_controller")
 	if orbit:
 		orbit.reset_elements_and_interval_update()
 		orbit.connect("changed", self, "_on_orbit_changed")
 		_on_orbit_changed(false)
-	if body_characteristics:
-		body_characteristics.connect("changed", self, "_on_body_characteristics_changed")
-		_on_body_characteristics_changed()
 	if model_controller:
 		model_controller.connect("changed", self, "_on_model_controller_changed")
 		_on_model_controller_changed()
 
 func _on_ready() -> void:
+#	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
+
+#func _on_system_tree_ready(_is_new_game: bool) -> void:
+#	pass
 
 func _prepare_to_free() -> void:
 	set_process(false)
@@ -299,7 +302,7 @@ func _on_process(_delta: float) -> void:
 	if !camera.is_position_behind(global_translation):
 		position_2d = camera.unproject_position(global_translation)
 		var mouse_dist := position_2d.distance_to(_mouse_target[0]) # mouse position
-		var click_radius := MIN_CLICK_RADIUS
+		var click_radius := min_click_radius
 		var divisor: float = _camera_info[2] * camera_dist # fov * dist
 		if divisor > 0.0:
 			var screen_radius: float = 55.0 * m_radius * _camera_info[3] / divisor
@@ -316,7 +319,7 @@ func _on_process(_delta: float) -> void:
 	var hud_dist_ok := camera_dist > min_hud_dist
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
-		hud_dist_ok = camera_dist < orbit_radius * MAX_HUD_DIST_ORBIT_RADIUS_MULTIPLIER
+		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
 	var hud_label_visible := _show_label and hud_dist_ok and hud_label \
 			and position_2d != VECTOR2_NULL
 	if hud_label_visible:
@@ -353,11 +356,6 @@ func _on_process(_delta: float) -> void:
 func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
-
-func _on_body_characteristics_changed() -> void:
-	m_radius = body_characteristics.m_radius
-	assert(!is_nan(m_radius))
-	# TODO: Network sync
 
 func _on_model_controller_changed() -> void:
 	pass

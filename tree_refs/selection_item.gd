@@ -41,9 +41,9 @@ var n_moons := -1
 var n_asteroids := -1
 var n_comets := -1
 # camera
+var system_radius := 0.0
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
-
 var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
@@ -54,10 +54,10 @@ var body: Body # = spatial if is_body else null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
-	"n_stars", "n_planets", "n_dwarf_planets",
-	"n_moons", "n_asteroids", "n_comets", "view_rotate_when_close", "view_min_distance",
-	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions"]
-const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
+	"n_stars", "n_planets", "n_dwarf_planets", "n_moons", "n_asteroids", "n_comets",
+	"system_radius", "view_rotate_when_close", "view_min_distance",
+	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
+	"spatial", "body"]
 
 # read-only
 var texture_2d: Texture
@@ -80,10 +80,10 @@ func get_flags() -> int:
 		return body.flags
 	return 0
 
-func get_orbit_normal(time := NAN) -> Vector3:
+func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	if !is_body:
 		return ECLIPTIC_Z
-	return body.get_orbit_normal(time)
+	return body.get_orbit_normal(time, flip_retrograde)
 
 func get_north(time := NAN) -> Vector3:
 	if !is_body:

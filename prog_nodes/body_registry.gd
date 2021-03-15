@@ -32,7 +32,7 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 var top_bodies := []
 var selection_items := {} # indexed by name
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_OBJ_PROPERTIES := ["top_bodies", "selection_items"]
+const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
 
 # unpersisted - public are read-only!
 var bodies: Array = Global.bodies # indexed by body_id

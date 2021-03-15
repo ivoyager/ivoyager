@@ -39,8 +39,10 @@ const BodyFlags := Enums.BodyFlags
 const NULL_ARRAY := []
 
 enum {
+	AS_IS = 10000,
 	TABLE_ROW,
-	ENUM
+	ENUM,
+	OBJECT_SPECIAL,
 }
 
 # project vars
@@ -53,76 +55,78 @@ var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACT
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
 	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
 var subsection_of := [-1, -1, -1, 2, 2, -1]
-var section_searches := [ # one array element per header
-	# object paths relative to SelectionItem 
-	["body/orbit", ""],
-	["body/body_characteristics", "body"],
-	["body/body_characteristics"],
-	["body/body_characteristics/compositions"],
-	["body/body_characteristics/compositions"],
-	["body/body_characteristics/compositions"],
-]
+var section_open := [true, true, true, true, true, true]
 
 var section_data := [ # one array element per header
 	# In each section array, we have an array for each data line containing:
-	# [0] property or method [1] display label [2-4] type-specific (see code)
-	# [5] flags test (show) [6] flags test (is approximate value)
-	# [7] label as wiki link [8] value as wiki link
-	#
+	# [0] path to property or method [1] display label [2-4] type-specific (see code)
+
 	# Orbital Characteristics
 	[
-	["get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["get_apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["get_orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
-	["get_average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED", QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
-	["n_stars", "LABEL_STARS"],
-	["n_planets", "LABEL_PLANETS"],
-	["n_dwarf_planets", "LABEL_DWARF_PLANETS"],
-	["n_moons", "LABEL_MOONS"],
-	["n_asteroids", "LABEL_ASTEROIDS"],
-	["n_comets", "LABEL_COMETS"],
+	["body/orbit/get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["body/orbit/get_apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["body/orbit/get_semimajor_axis", "LABEL_SEMI_MAJOR_AXIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
+	["body/orbit/get_eccentricity", "LABEL_ECCENTRICITY", AS_IS],
+	["body/orbit/get_orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
+	["body/orbit/get_average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED",
+			QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
+	["body/orbit/get_inclination_to_ecliptic", "LABEL_INCLINATION_TO_ECLIPTIC",
+			QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL],
+	["body/get_orbit_inclination_to_equator", "LABEL_INCLINATION_TO_EQUATOR",
+			QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL],
+	["n_stars", "LABEL_STARS", AS_IS],
+	["n_planets", "LABEL_PLANETS", AS_IS],
+	["n_dwarf_planets", "LABEL_DWARF_PLANETS", AS_IS],
+	["n_moons", "LABEL_MOONS", AS_IS],
+	["n_asteroids", "LABEL_ASTEROIDS", AS_IS],
+	["n_comets", "LABEL_COMETS", AS_IS],
 	],
 	# Physical Characteristics
 	[
-	["class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes", null, null, null, false, true],
-	["m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km", -1, BodyFlags.DISPLAY_M_RADIUS],
-	["e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
-	["hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType", null,
-			BodyFlags.IS_MOON, null, true],
-	["surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
-	["esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
-	["mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
-	["albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
-	["surf_t", "LABEL_SURFACE_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["min_t", "LABEL_MIN_TEMP", QtyTxtConverter.UNIT, "degC"],
-	["max_t", "LABEL_MAX_TEMP", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes"],
+	["body/m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["body/characteristics/e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["body/characteristics/p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
+	["body/characteristics/mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
+	["body/characteristics/hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType"],
+	["body/characteristics/surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
+	["body/characteristics/esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
+	["body/characteristics/mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
+	["body/characteristics/albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
+	["body/characteristics/min_t", "LABEL_SURFACE_TEMP_MIN", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/surf_t", "LABEL_SURFACE_TEMP_MEAN", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/max_t", "LABEL_SURFACE_TEMP_MAX", QtyTxtConverter.UNIT, "degC"],
 	],
 	# Atmosphere
 	[
-	["surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
-	["trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
-	["half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
-	["tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
+	["body/characteristics/trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
+	["body/characteristics/one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
+	["body/characteristics/tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
 	],
 	# Atmosphere composition
 	[
-	["atmosphere"],
+	["body/components/atmosphere", "", OBJECT_SPECIAL],
 	],
 	# Trace atmosphere composition
 	[
-	["trace_atmosphere"],
+	["body/components/trace_atmosphere", "", OBJECT_SPECIAL],
 	],
 	# Photosphere composition
 	[
-	["photosphere"],
+	["body/components/photosphere", "", OBJECT_SPECIAL],
 	],
 ]
-var section_open := [true, true, true, true, true, true]
+
+var label_is_wiki_link := ["body/characteristics/hydrostatic_equilibrium"]
+var value_is_wiki_link := ["body/class_type"]
+var body_flags_test := {
+	"body/m_radius" : BodyFlags.DISPLAY_M_RADIUS,
+	"body/characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
+}
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
@@ -155,7 +159,6 @@ func _clear() -> void:
 		child.queue_free()
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
-	assert(section_headers.size() == section_searches.size())
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
@@ -255,65 +258,61 @@ func _process_section(section: int, toggle: bool) -> void:
 func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
 	var line_data: Array = section_data[section][data_index]
+	var path: String = line_data[0]
+	
 	# flags exclusion
-	var data_size: int = line_data.size()
-	if data_size > 5 and line_data[5]:
-		if !_body or not _body.flags & line_data[5]:
+	var body_flags: int = body_flags_test.get(path, 0)
+	if body_flags:
+		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
 	# get value from SelectionItem or nested object
-	var value # untyped
-	var property_or_method: String = line_data[0]
-	var search: Array = section_searches[section]
-	for search_str in search:
-		var target = GDUtils.get_deep(_selection_item, search_str) # Object or dict
-		if target:
-			value = _get_property_or_method_result(target, property_or_method)
-			if value != null:
-				break
+	var value = GDUtils.get_path_result(_selection_item, path)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text (& possibly wiki key)
+	
+	var enum_value: int = line_data[2]
+	
 	var value_txt: String
 	var wiki_key: String
 	match typeof(value):
 		TYPE_INT:
+			var key: String
 			if value == -9999:
 				value_txt = "?"
 			elif value == -1:
-				pass
-			elif data_size > 2 and line_data[2] != null:
-				var key: String
-				match line_data[2]:
-					TABLE_ROW:
-						var table_name: String = line_data[3]
-						key = _table_reader.get_row_name(table_name, value)
-						value_txt = tr(key)
-					ENUM:
-						var enum_name: String = line_data[3]
-						var enum_dict: Dictionary = _enums.get(enum_name)
-						var enum_keys: Array = enum_dict.keys()
-						key = enum_keys[value]
-						value_txt = tr(key)
-				if enable_wiki and key and data_size > 8 and line_data[8]:
-					wiki_key = key
+				pass # don't display
+			elif enum_value == TABLE_ROW:
+				var table_name: String = line_data[3]
+				key = _table_reader.get_row_name(table_name, value)
+				value_txt = tr(key)
+			elif enum_value == ENUM:
+				var enum_name: String = line_data[3]
+				var enum_dict: Dictionary = _enums.get(enum_name)
+				var enum_keys: Array = enum_dict.keys()
+				key = enum_keys[value]
+				value_txt = tr(key)
 			else:
 				value_txt = str(value)
+			if enable_wiki and key and value_is_wiki_link.has(path):
+				wiki_key = key
 		TYPE_REAL:
 			if is_inf(value):
 				value_txt = "?"
 			elif is_nan(value):
-				pass
-			elif data_size > 2 and line_data[2] != null:
-				# expects elements 2, 3, 4
-				var option_type: int = line_data[2]
-				var unit: String = line_data[3] if data_size > 3 and line_data[3] != null else ""
-				var sig_digits: int = line_data[4] if data_size > 4 and line_data[4] != null else -1
-				value_txt = _qty_txt_converter.number_option(value, option_type, unit, sig_digits)
-			else:
+				pass # don't display
+			elif enum_value == AS_IS:
 				value_txt = str(value)
+			else: # call with args to QtyTxtConverter.number_option()
+				# expects elements 2, 3, 4
+				var data_size: int = line_data.size()
+				var unit: String = line_data[3] if data_size > 3 else ""
+				var sig_digits: int = line_data[4] if data_size > 4 else -1
+				var num_type: int = line_data[5] if data_size > 5 else QtyTxtConverter.NUM_DYNAMIC
+				value_txt = _qty_txt_converter.number_option(value, enum_value, unit, sig_digits, num_type)
 		TYPE_STRING:
 			value_txt = tr(value)
-			if enable_wiki and data_size > 8 and line_data[8]:
+			if enable_wiki and value_is_wiki_link.has(path):
 				wiki_key = value # may be used as wiki link (if valid key)
 		TYPE_OBJECT:
 			if value is Composition:
@@ -346,7 +345,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# wiki links
 	var label_link := false
 	var value_link := false
-	if data_size > 7 and line_data[7] and _wiki_titles.has(label_key): # label is wiki link
+	if label_is_wiki_link.has(path) and _wiki_titles.has(label_key): # label is wiki link
 		_meta_lookup[label_txt] = label_key
 		label_txt = "[url]" + label_txt + "[/url]"
 		label_link = true
@@ -377,11 +376,6 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 		var value_cell := _get_label(true)
 		value_cell.text = value_txt
 		grid.add_child(value_cell)
-
-func _get_property_or_method_result(target, key: String): # untyped
-	if target is Object and target.has_method(key):
-		return target.call(key)
-	return target.get(key) # property value or null
 
 func _clear_grid(grid: GridContainer) -> void:
 	if grid.get_child_count() == 0:

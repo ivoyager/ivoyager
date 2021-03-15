@@ -40,7 +40,7 @@ onready var _SelectionManager_: Script = Global.script_classes._SelectionManager
 # save ("= false" because THIS node is added by ProjectBuilder, not
 # procedurally). The second constant tells SaveBuilder what to persist.
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_OBJ_PROPERTIES := ["selection_manager"]
+const PERSIST_PROPERTIES := ["selection_manager"]
 
 # All objects added by ProjectBuilder need a "_project_init" function.
 func _project_init() -> void:

@@ -25,10 +25,10 @@ var omni_fields := ["omni_range"]
 
 func add_omni_light(body: Body) -> void:
 	var table_reader: TableReader = Global.program.TableReader
-	if body.light_type == -1:
+	if body.get_light_type() == -1:
 		return
 	var omni_light := OmniLight.new()
-	var light_type: int = body.light_type
+	var light_type := body.get_light_type()
 	table_reader.build_object(omni_light, omni_fields, "lights", light_type)
 	omni_light.shadow_enabled = true # FIXME: No shadows. Why not?
 #	omni_light.shadow_bias = 0.01 # FIXME: This is supposed to cause shadow artifacts!

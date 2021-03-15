@@ -1,4 +1,4 @@
-# array_utils.gd
+# gd_utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -31,3 +31,37 @@ static func get_deep(target, path: String): # untyped return
 		if target == null:
 			return null
 	return target
+
+static func get_path_result(target, path: String): # untyped return
+	# as above but path could include methods
+	if !path:
+		return target
+	var path_stack := Array(path.split("/", false))
+	path_stack.invert()
+	while path_stack:
+		var property_or_method: String = path_stack.pop_back()
+		if target is Object and target.has_method(property_or_method):
+			target = target.call(property_or_method)
+		else:
+			target = target.get(property_or_method)
+		if target == null:
+			return null
+	return target
+
+static func init_array(size: int, init_value = null) -> Array:
+	var array := []
+	array.resize(size)
+	if init_value == null:
+		return array
+	var i := 0
+	while i < size:
+		array[i] = init_value
+		i += 1
+	return array
+
+static func fill_array(array: Array, fill_value) -> void:
+	var size := array.size()
+	var i := 0
+	while i < size:
+		array[i] = fill_value
+		i += 1

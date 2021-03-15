@@ -41,6 +41,8 @@ func build_system_tree() -> void:
 	_add_bodies("moons")
 	var minor_bodies_builder: MinorBodiesBuilder = Global.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
+	var selection_builder: SelectionBuilder = Global.program.SelectionBuilder
+	selection_builder.build_selection_items()
 	if add_camera:
 		var camera_script: Script = Global.script_classes._Camera_
 		var camera: Camera = camera_script.new()
@@ -50,8 +52,8 @@ func build_system_tree() -> void:
 # *****************************************************************************
 
 func _project_init():
-	_body_builder = Global.program.BodyBuilder
 	_table_reader = Global.program.TableReader
+	_body_builder = Global.program.BodyBuilder
 	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 
 func _on_state_manager_inited() -> void:

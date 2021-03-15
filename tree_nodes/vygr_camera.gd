@@ -101,10 +101,9 @@ var _view_type_memory := view_type
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "track_type",
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection_item", "view_type", "track_type",
 	"view_position", "view_rotations", "focal_length", "focal_length_index",
 	"_transform", "_view_type_memory"]
-const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
 
@@ -636,7 +635,7 @@ func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> V
 		return ECLIPTIC_Z
 	var local_up: Vector3
 	if track_type_ == TRACK_ORBIT:
-		local_up = selection_item_.get_orbit_normal()
+		local_up = selection_item_.get_orbit_normal(NAN, true)
 	else:
 		local_up = selection_item_.get_north()
 	if dist <= _use_local_up_dist:
@@ -658,8 +657,8 @@ func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type
 	return IDENTITY_BASIS
 
 func _get_transfer_ref_basis(s1: SelectionItem, s2: SelectionItem) -> Basis:
-	var normal1 := s1.get_orbit_normal()
-	var normal2 := s2.get_orbit_normal()
+	var normal1 := s1.get_orbit_normal(NAN, true)
+	var normal2 := s2.get_orbit_normal(NAN, true)
 	var z_axis := (normal1 + normal2).normalized()
 	var y_axis := z_axis.cross(ECLIPTIC_X).normalized() # norm needed - imprecision?
 	var x_axis := y_axis.cross(z_axis)
