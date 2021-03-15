@@ -79,26 +79,23 @@ var obj_properties_arrays := [
 	]
 var object_tag := "@!~`#" # persisted strings must not start with this!
 
-# read-only for external progress bar
-var progress := 0
-
 # gamesave contents
 var _gs_n_objects := 0
 var _gs_serialized_nodes := []
 var _gs_serialized_references := []
 var _gs_script_paths := []
+var _gs_dict_keys := []
 
 # save/load processing
 var _root: Node # save & load
 var _ids := {} # save; keyed by objects & script paths
+var _key_ids := {} # save
 var _objects := [] # load
 var _tag_size: int # load
 var _dont_attach: bool # load
 var _build_result := [] # load
 
-# progress & logging
-var _prog_serialized := 0
-var _prog_deserialized := 0
+# logging
 var _log_count := 0
 var _log_count_by_class := {}
 var _log := ""
@@ -131,8 +128,6 @@ func generate_gamesave(root: Node) -> Array:
 	# "root" may or may not be the main scene tree root. Data in the result
 	# array includes the root (if it is a persist node) and the continuous tree
 	# of persist nodes below that.
-	progress = 0
-	_prog_serialized = 0
 	_root = root
 	assert(DPRINT and print("* Registering tree for gamesave *") or true)
 	_register_tree_for_save(root)
@@ -161,8 +156,6 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	# If building for a loaded game, be sure to free the old procedural tree
 	# using free_procedural_nodes(). It is recommended to delay a few frames
 	# after that so old freeing objects are no longer recieving signals.
-	progress = 0
-	_prog_deserialized = 0
 	_tag_size = object_tag.length()
 	_root = root
 	_dont_attach = dont_attach
@@ -249,6 +242,7 @@ func _reset():
 	_gs_script_paths = []
 	_root = null
 	_ids.clear()
+	_key_ids.clear()
 	_objects.clear()
 	_build_result = []
 
@@ -313,14 +307,8 @@ func _deserialize_load_objects() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
 	for serialized_node in _gs_serialized_nodes:
 		_deserialize_object_data(serialized_node, 3)
-		_prog_deserialized += 1
-		# warning-ignore:integer_division
-		progress = progress_multiplier * _prog_deserialized / _gs_n_objects
 	for serialized_reference in _gs_serialized_references:
 		_deserialize_object_data(serialized_reference, 2)
-		_prog_deserialized += 1
-		# warning-ignore:integer_division
-		progress = progress_multiplier * _prog_deserialized / _gs_n_objects
 
 func _build_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
@@ -359,9 +347,6 @@ func _serialize_node(node: Node):
 		serialized_node.append(node_path) # index 2
 	_serialize_object_data(node, serialized_node)
 	_gs_serialized_nodes.append(serialized_node)
-	_prog_serialized += 1
-	# warning-ignore:integer_division
-	progress = progress_multiplier * _prog_serialized / _gs_n_objects
 
 func _register_and_serialize_reference(reference: Reference) -> int:
 	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
@@ -375,9 +360,6 @@ func _register_and_serialize_reference(reference: Reference) -> int:
 	serialized_reference.append(script_id) # index 1
 	_serialize_object_data(reference, serialized_reference)
 	_gs_serialized_references.append(serialized_reference)
-	_prog_serialized += 1
-	# warning-ignore:integer_division
-	progress = progress_multiplier * _prog_serialized / _gs_n_objects
 	return save_id
 
 func _get_or_create_script_id(object: Object) -> int:
