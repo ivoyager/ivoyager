@@ -81,7 +81,8 @@ var _gs_dict_keys := []
 
 # save/load processing
 var _root: Node # save & load
-var _ids := {} # save; keyed by objects & script paths
+var _path_ids := {} # save
+var _object_ids := {} # save
 var _key_ids := {} # save
 var _objects := [] # load
 var _tag_size: int # load
@@ -131,6 +132,7 @@ func generate_gamesave(root: Node) -> Array:
 		_gs_serialized_nodes,
 		_gs_serialized_references,
 		_gs_script_paths,
+		_gs_dict_keys,
 		]
 	print("Persist objects saved: ", _gs_n_objects, "; nodes in tree: ",
 			root.get_tree().get_node_count())
@@ -156,6 +158,7 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	_gs_serialized_nodes = gamesave[1]
 	_gs_serialized_references = gamesave[2]
 	_gs_script_paths = gamesave[3]
+	_gs_dict_keys = gamesave[4]
 	_objects.resize(_gs_n_objects)
 	_register_and_instance_load_objects()
 	_deserialize_load_objects()
@@ -233,8 +236,10 @@ func _reset():
 	_gs_serialized_nodes = []
 	_gs_serialized_references = []
 	_gs_script_paths = []
+	_gs_dict_keys = []
 	_root = null
-	_ids.clear()
+	_path_ids.clear()
+	_object_ids.clear()
 	_key_ids.clear()
 	_objects.clear()
 	_build_result = []
@@ -242,9 +247,10 @@ func _reset():
 # Procedural save
 
 func _register_tree_for_save(node: Node) -> void:
-	# Make a save_id for all persist nodes by indexing in _ids. Initial call
-	# is the tree root which may or may not be a persist node itself.
-	_ids[node] = _gs_n_objects
+	# Make an object_id for all persist nodes by indexing in _object_ids
+	# Initial call is the tree root which may or may not be a persist node
+	# itself.
+	_object_ids[node] = _gs_n_objects
 	_gs_n_objects += 1
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
@@ -274,27 +280,27 @@ func _register_and_instance_load_objects() -> void:
 	for script_path in _gs_script_paths:
 		scripts.append(load(script_path))
 	for serialized_node in _gs_serialized_nodes:
-		var save_id: int = serialized_node[0]
+		var object_id: int = serialized_node[0]
 		var script_id: int = serialized_node[1]
 		var node: Node
 		if script_id == -1: # non-procedural node; find it
 			var node_path: NodePath = serialized_node[2] # relative
 			node = _root.get_node(node_path)
-			assert(DPRINT and prints(save_id, node, node.name) or true)
+			assert(DPRINT and prints(object_id, node, node.name) or true)
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
 			node = make_object_or_scene(script)
-			assert(DPRINT and prints(save_id, node, script_id, _gs_script_paths[script_id]) or true)
+			assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
 		assert(node)
-		_objects[save_id] = node
+		_objects[object_id] = node
 	for serialized_reference in _gs_serialized_references:
-		var save_id: int = serialized_reference[0]
+		var object_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
 		var script: Script = scripts[script_id]
 		var reference: Reference = script.new()
 		assert(reference)
-		_objects[save_id] = reference
-		assert(DPRINT and prints(save_id, reference, script_id, _gs_script_paths[script_id]) or true)
+		_objects[object_id] = reference
+		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
 
 func _deserialize_load_objects() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
@@ -305,8 +311,8 @@ func _deserialize_load_objects() -> void:
 
 func _build_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
-		var save_id: int = serialized_node[0]
-		var node: Node = _objects[save_id]
+		var object_id: int = serialized_node[0]
+		var node: Node = _objects[object_id]
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in node:
 			if node.PERSIST_AS_PROCEDURAL_OBJECT:
 				var parent_save_id: int = serialized_node[2]
@@ -321,19 +327,19 @@ func _build_tree() -> void:
 
 func _serialize_node(node: Node):
 	var serialized_node := []
-	var save_id: int = _ids[node]
-	serialized_node.append(save_id) # index 0
+	var object_id: int = _object_ids[node]
+	serialized_node.append(object_id) # index 0
 	var script_id := -1
 	if node.PERSIST_AS_PROCEDURAL_OBJECT:
 		script_id = _get_or_create_script_id(node)
-		assert(DPRINT and prints(save_id, node, script_id, _gs_script_paths[script_id]) or true)
+		assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
 	else:
-		assert(DPRINT and prints(save_id, node, node.name) or true)
+		assert(DPRINT and prints(object_id, node, node.name) or true)
 	serialized_node.append(script_id) # index 1
 	# index 2 will be parent_save_id *or* non-procedural node path
 	if node.PERSIST_AS_PROCEDURAL_OBJECT:
 		var parent := node.get_parent()
-		var parent_save_id: int = _ids[parent]
+		var parent_save_id: int = _object_ids[parent]
 		serialized_node.append(parent_save_id) # index 2
 	else:
 		var node_path := _root.get_path_to(node)
@@ -343,28 +349,26 @@ func _serialize_node(node: Node):
 
 func _register_and_serialize_reference(reference: Reference) -> int:
 	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
-	var save_id := _gs_n_objects
+	var object_id := _gs_n_objects
 	_gs_n_objects += 1
-	_ids[reference] = save_id
+	_object_ids[reference] = object_id
 	var serialized_reference := []
-	serialized_reference.append(save_id) # index 0
+	serialized_reference.append(object_id) # index 0
 	var script_id := _get_or_create_script_id(reference)
-	assert(DPRINT and prints(save_id, reference, script_id, _gs_script_paths[script_id]) or true)
+	assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
 	serialized_reference.append(script_id) # index 1
 	_serialize_object_data(reference, serialized_reference)
 	_gs_serialized_references.append(serialized_reference)
-	return save_id
+	return object_id
 
 func _get_or_create_script_id(object: Object) -> int:
 	var script_path: String = object.get_script().resource_path
 	assert(script_path)
-	var script_id: int
-	if _ids.has(script_path):
-		script_id = _ids[script_path]
-	else:
+	var script_id: int = _path_ids.get(script_path, -1)
+	if script_id == -1:
 		script_id = _gs_script_paths.size()
 		_gs_script_paths.append(script_path)
-		_ids[script_path] = script_id
+		_path_ids[script_path] = script_id
 	return script_id
 
 func _serialize_object_data(object: Object, serialized_object: Array) -> void:
@@ -381,11 +385,11 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 			n_properties = 0
 		serialized_object.append(n_properties)
 		if n_properties > 0:
-			var objects_array := []
+			var array := []
 			for property in properties:
-				objects_array.append(object.get(property))
-			var serialized_objects_array := _get_serialized_array(objects_array)
-			serialized_object.append(serialized_objects_array)
+				array.append(object.get(property))
+			var serialized_array := _get_serialized_array(array)
+			serialized_object.append(serialized_array)
 
 func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
 	# The order of persist properties must be exactly the same from game save
@@ -395,87 +399,102 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 	# There is some opportunity here for backward compatibility if the newer
 	# version knows to init-on-load its added persist properties when loading
 	# an older version save file.
-	var save_id: int = serialized_object[0]
-	var object: Object = _objects[save_id]
+	var object_id: int = serialized_object[0]
+	var object: Object = _objects[object_id]
 	for properties_array in properties_arrays:
 		var n_properties: int = serialized_object[data_index]
 		data_index += 1
 		if n_properties > 0:
-			var objects_array: Array = serialized_object[data_index]
+			var array: Array = serialized_object[data_index]
 			data_index += 1
-			_deserialize_array(objects_array)
+			_deserialize_array(array)
 			var properties: Array = object.get(properties_array)
 			var property_index := 0
 			while property_index < n_properties:
 				var property: String = properties[property_index]
-				object.set(property, objects_array[property_index])
+				object.set(property, array[property_index])
 				property_index += 1
 
-func _get_serialized_array(objects_array: Array) -> Array:
-	var serialized_objects_array := []
-	for item in objects_array:
-		match typeof(item):
-			TYPE_OBJECT:
-				serialized_objects_array.append(_encode_object(item))
-			TYPE_ARRAY:
-				serialized_objects_array.append(_get_serialized_array(item))
-			TYPE_DICTIONARY:
-				serialized_objects_array.append(_get_serialized_dict(item))
-			_: # built-in type
-				serialized_objects_array.append(item)
-	return serialized_objects_array
-
-func _get_serialized_dict(objects_dict: Dictionary) -> Dictionary:
-	var serialized_objects_dict := {}
-	for key in objects_dict:
-		var item = objects_dict[key] # dynamic type!
-		match typeof(item):
-			TYPE_OBJECT:
-				serialized_objects_dict[key] = _encode_object(item)
-			TYPE_ARRAY:
-				serialized_objects_dict[key] = _get_serialized_array(item)
-			TYPE_DICTIONARY:
-				serialized_objects_dict[key] = _get_serialized_dict(item)
-			_: # built-in type
-				serialized_objects_dict[key] = item
-	return serialized_objects_dict
-
-func _deserialize_array(objects_array: Array) -> void:
-	var n_items := objects_array.size()
+func _get_serialized_array(array: Array) -> Array:
+	var n_items := array.size()
+	var serialized_array := []
+	serialized_array.resize(n_items)
 	var index := 0
 	while index < n_items:
-		var item = objects_array[index] # dynamic type!
+		var item = array[index] # untyped
+		match typeof(item):
+			TYPE_OBJECT:
+				serialized_array[index] = _encode_object(item)
+			TYPE_ARRAY:
+				serialized_array[index] = _get_serialized_array(item)
+			TYPE_DICTIONARY:
+				serialized_array[index] = _get_serialized_dict(item)
+			_: # built-in type
+				serialized_array[index] = item
+		index += 1
+	return serialized_array
+
+func _get_serialized_dict(dict: Dictionary) -> Dictionary:
+	var serialized_dict := {}
+	for key in dict:
+		var item = dict[key] # dynamic type!
+		var key_id: int = _key_ids.get(key, -1)
+		if key_id == -1:
+			key_id = _key_ids.size()
+			_key_ids[key] = key_id
+			_gs_dict_keys.append(key)
+		match typeof(item):
+			TYPE_OBJECT:
+				serialized_dict[key_id] = _encode_object(item)
+			TYPE_ARRAY:
+				serialized_dict[key_id] = _get_serialized_array(item)
+			TYPE_DICTIONARY:
+				serialized_dict[key_id] = _get_serialized_dict(item)
+			_: # built-in type
+				serialized_dict[key_id] = item
+	return serialized_dict
+
+func _deserialize_array(serialized_array: Array) -> void:
+	# deserialize in place
+	var n_items := serialized_array.size()
+	var index := 0
+	while index < n_items:
+		var item = serialized_array[index] # dynamic type!
 		match typeof(item):
 			TYPE_STRING:
 				var object := _decode_object(item)
 				if object:
-					objects_array[index] = object
+					serialized_array[index] = object
 				else: # it's a string!
-					objects_array[index] = item
+					serialized_array[index] = item
 			TYPE_ARRAY:
 				_deserialize_array(item)
 			TYPE_DICTIONARY:
-				_deserialize_dict(item)
+				serialized_array[index] = _get_deserialized_dict(item)
 			_: # other built-in type
-				objects_array[index] = item
+				serialized_array[index] = item
 		index += 1
 
-func _deserialize_dict(objects_dict: Dictionary) -> void:
-	for key in objects_dict:
-		var item = objects_dict[key] # dynamic type!
+func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
+	var dict := {}
+	for key_id in serialized_dict:
+		var item = serialized_dict[key_id] # dynamic type!
+		var key = _gs_dict_keys[key_id]
 		match typeof(item):
 			TYPE_STRING:
 				var object := _decode_object(item)
 				if object:
-					objects_dict[key] = object
+					dict[key] = object
 				else: # it's a string!
-					objects_dict[key] = item
+					dict[key] = item
 			TYPE_ARRAY:
 				_deserialize_array(item)
+				dict[key] = item
 			TYPE_DICTIONARY:
-				_deserialize_dict(item)
+				dict[key] = _get_deserialized_dict(item)
 			_: # other built-in type
-				objects_dict[key] = item
+				dict[key] = item
+	return dict
 
 func _encode_object(object: Object) -> String:
 	var is_weak_ref := false
@@ -485,25 +504,23 @@ func _encode_object(object: Object) -> String:
 			return object_tag + "w-1" # weak ref to dead object
 		is_weak_ref = true
 	assert("PERSIST_AS_PROCEDURAL_OBJECT" in object) # can't persist a non-persist obj
-	var save_id: int
-	if _ids.has(object): # always true for Node
-		save_id = _ids[object]
-	else:
+	var object_id: int = _object_ids.get(object, -1)
+	if object_id == -1:
 		assert(object is Reference)
-		save_id = _register_and_serialize_reference(object)
+		object_id = _register_and_serialize_reference(object)
 	if is_weak_ref:
-		return object_tag + "w" + str(save_id)
-	return object_tag + str(save_id)
+		return object_tag + "w" + str(object_id)
+	return object_tag + str(object_id)
 
 func _decode_object(test_string: String) -> Object:
 	if test_string.substr(0, _tag_size) != object_tag:
 		return null # it's just a string!
 	if test_string.substr(_tag_size, 1) == "w": # weak ref
-		var save_id := int(test_string.substr(_tag_size + 1, test_string.length() - _tag_size - 1))
-		if save_id == -1: # weak ref to dead object
+		var object_id := int(test_string.substr(_tag_size + 1, test_string.length() - _tag_size - 1))
+		if object_id == -1: # weak ref to dead object
 			return WeakRef.new() # get_ref() = null
-		var object: Object = _objects[save_id]
+		var object: Object = _objects[object_id]
 		return weakref(object)
-	var save_id := int(test_string.substr(_tag_size, test_string.length() - _tag_size))
-	var object: Object = _objects[save_id]
+	var object_id := int(test_string.substr(_tag_size, test_string.length() - _tag_size))
+	var object: Object = _objects[object_id]
 	return object
