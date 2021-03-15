@@ -70,10 +70,9 @@ var properties_arrays := [
 	"PERSIST_PROPERTIES",
 	"PERSIST_PROPERTIES_2",
 	]
-var object_tag := "@!~`#" # persisted strings must not start with this!
 
 # gamesave contents
-var _gs_n_objects := 0
+var _gs_n_objects := 1
 var _gs_serialized_nodes := []
 var _gs_serialized_references := []
 var _gs_script_paths := []
@@ -84,10 +83,9 @@ var _root: Node # save & load
 var _path_ids := {} # save
 var _object_ids := {} # save
 var _key_ids := {} # save
-var _objects := [] # load
-var _tag_size: int # load
-var _dont_attach: bool # load
+var _objects := [null] # load
 var _build_result := [] # load
+var _dont_attach: bool # load
 
 # logging
 var _log_count := 0
@@ -151,7 +149,6 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	# If building for a loaded game, be sure to free the old procedural tree
 	# using free_procedural_nodes(). It is recommended to delay a few frames
 	# after that so old freeing objects are no longer recieving signals.
-	_tag_size = object_tag.length()
 	_root = root
 	_dont_attach = dont_attach
 	_gs_n_objects = gamesave[0]
@@ -232,7 +229,7 @@ func _log_nodes(node: Node) -> void:
 # *****************************************************************************
 
 func _reset():
-	_gs_n_objects = 0
+	_gs_n_objects = 1
 	_gs_serialized_nodes = []
 	_gs_serialized_references = []
 	_gs_script_paths = []
@@ -241,7 +238,7 @@ func _reset():
 	_path_ids.clear()
 	_object_ids.clear()
 	_key_ids.clear()
-	_objects.clear()
+	_objects.resize(1) # 1st element is null
 	_build_result = []
 
 # Procedural save
@@ -275,7 +272,7 @@ func _register_and_instance_load_objects() -> void:
 	# Instantiates procecural objects (nodes & references) without data.
 	# Indexes root and all persist objects (procedural and non-procedural).
 	assert(DPRINT and print("* Registering(/Instancing) Objects for Load *") or true)
-	_objects[0] = _root
+	_objects[1] = _root
 	var scripts := []
 	for script_path in _gs_script_paths:
 		scripts.append(load(script_path))
@@ -422,36 +419,36 @@ func _get_serialized_array(array: Array) -> Array:
 	var index := 0
 	while index < n_items:
 		var item = array[index] # untyped
-		match typeof(item):
-			TYPE_OBJECT:
-				serialized_array[index] = _encode_object(item)
-			TYPE_ARRAY:
-				serialized_array[index] = _get_serialized_array(item)
-			TYPE_DICTIONARY:
-				serialized_array[index] = _get_serialized_dict(item)
-			_: # built-in type
-				serialized_array[index] = item
+		var type := typeof(item)
+		if type == TYPE_OBJECT:
+			serialized_array[index] = _encode_object(item)
+		elif type == TYPE_ARRAY:
+			serialized_array[index] = _get_serialized_array(item)
+		elif type == TYPE_DICTIONARY:
+			serialized_array[index] = _get_serialized_dict(item)
+		else: # built-in type
+			serialized_array[index] = item
 		index += 1
 	return serialized_array
 
 func _get_serialized_dict(dict: Dictionary) -> Dictionary:
 	var serialized_dict := {}
 	for key in dict:
-		var item = dict[key] # dynamic type!
 		var key_id: int = _key_ids.get(key, -1)
 		if key_id == -1:
 			key_id = _key_ids.size()
 			_key_ids[key] = key_id
 			_gs_dict_keys.append(key)
-		match typeof(item):
-			TYPE_OBJECT:
-				serialized_dict[key_id] = _encode_object(item)
-			TYPE_ARRAY:
-				serialized_dict[key_id] = _get_serialized_array(item)
-			TYPE_DICTIONARY:
-				serialized_dict[key_id] = _get_serialized_dict(item)
-			_: # built-in type
-				serialized_dict[key_id] = item
+		var item = dict[key] # untyped
+		var type := typeof(item)
+		if type == TYPE_OBJECT:
+			serialized_dict[key_id] = _encode_object(item)
+		elif type == TYPE_ARRAY:
+			serialized_dict[key_id] = _get_serialized_array(item)
+		elif type == TYPE_DICTIONARY:
+			serialized_dict[key_id] = _get_serialized_dict(item)
+		else: # built-in type
+			serialized_dict[key_id] = item
 	return serialized_dict
 
 func _deserialize_array(serialized_array: Array) -> void:
@@ -459,68 +456,64 @@ func _deserialize_array(serialized_array: Array) -> void:
 	var n_items := serialized_array.size()
 	var index := 0
 	while index < n_items:
-		var item = serialized_array[index] # dynamic type!
-		match typeof(item):
-			TYPE_STRING:
-				var object := _decode_object(item)
-				if object:
-					serialized_array[index] = object
-				else: # it's a string!
-					serialized_array[index] = item
-			TYPE_ARRAY:
-				_deserialize_array(item)
-			TYPE_DICTIONARY:
+		var item = serialized_array[index] # untyped
+		var type := typeof(item)
+		if type == TYPE_ARRAY:
+			_deserialize_array(item)
+		elif type == TYPE_DICTIONARY:
+			var object := _decode_object(item)
+			if object:
+				serialized_array[index] = object
+			else: # it's a dictionary!
 				serialized_array[index] = _get_deserialized_dict(item)
-			_: # other built-in type
-				serialized_array[index] = item
+		else: # other built-in type
+			serialized_array[index] = item
 		index += 1
 
 func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
 	var dict := {}
 	for key_id in serialized_dict:
-		var item = serialized_dict[key_id] # dynamic type!
 		var key = _gs_dict_keys[key_id]
-		match typeof(item):
-			TYPE_STRING:
-				var object := _decode_object(item)
-				if object:
-					dict[key] = object
-				else: # it's a string!
-					dict[key] = item
-			TYPE_ARRAY:
-				_deserialize_array(item)
-				dict[key] = item
-			TYPE_DICTIONARY:
+		var item = serialized_dict[key_id] # dynamic type!
+		var type := typeof(item)
+		if type == TYPE_ARRAY:
+			_deserialize_array(item)
+			dict[key] = item
+		elif type == TYPE_DICTIONARY:
+			var object := _decode_object(item)
+			if object:
+				dict[key] = object
+			else: # it's a dictionary!
 				dict[key] = _get_deserialized_dict(item)
-			_: # other built-in type
-				dict[key] = item
+		else: # other built-in type
+			dict[key] = item
 	return dict
 
-func _encode_object(object: Object) -> String:
+func _encode_object(object: Object) -> Dictionary:
+	# Encoded object is a dictionary with key "_" and a sign-coded object_id.
 	var is_weak_ref := false
 	if object is WeakRef:
 		object = object.get_ref()
 		if object == null:
-			return object_tag + "w-1" # weak ref to dead object
+			return {_ = 0} # 0 is always weak ref to dead object
 		is_weak_ref = true
-	assert("PERSIST_AS_PROCEDURAL_OBJECT" in object) # can't persist a non-persist obj
+	assert("PERSIST_AS_PROCEDURAL_OBJECT" in object, "Can't persist a non-persist obj")
 	var object_id: int = _object_ids.get(object, -1)
 	if object_id == -1:
-		assert(object is Reference)
+		assert(object is Reference, "Nodes are already registered")
 		object_id = _register_and_serialize_reference(object)
 	if is_weak_ref:
-		return object_tag + "w" + str(object_id)
-	return object_tag + str(object_id)
+		return {_ = -object_id} # negative object_id for WeakRef
+	return {_ = object_id}
 
-func _decode_object(test_string: String) -> Object:
-	if test_string.substr(0, _tag_size) != object_tag:
-		return null # it's just a string!
-	if test_string.substr(_tag_size, 1) == "w": # weak ref
-		var object_id := int(test_string.substr(_tag_size + 1, test_string.length() - _tag_size - 1))
-		if object_id == -1: # weak ref to dead object
-			return WeakRef.new() # get_ref() = null
-		var object: Object = _objects[object_id]
+func _decode_object(test_dict: Dictionary) -> Object:
+	if !test_dict.has("_"):
+		return null # it's just a dictionary!
+	var object_id: int = test_dict._
+	if object_id == 0:
+		return WeakRef.new() # weak ref to dead object
+	if object_id < 0: # weak ref
+		var object: Object = _objects[-object_id]
 		return weakref(object)
-	var object_id := int(test_string.substr(_tag_size, test_string.length() - _tag_size))
 	var object: Object = _objects[object_id]
 	return object
