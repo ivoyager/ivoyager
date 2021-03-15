@@ -56,8 +56,8 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"n_stars", "n_planets", "n_dwarf_planets", "n_moons", "n_asteroids", "n_comets",
 	"system_radius", "view_rotate_when_close", "view_min_distance",
-	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions"]
-const PERSIST_OBJ_PROPERTIES := ["spatial", "body"]
+	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
+	"spatial", "body"]
 
 # read-only
 var texture_2d: Texture

@@ -62,8 +62,8 @@ var satellites := [] # Body instances
 var lagrange_points := [] # LPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics"]
-const PERSIST_OBJ_PROPERTIES := ["components", "satellites", "lagrange_points"]
+const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
+	"satellites", "lagrange_points"]
 
 # public - read-only except builder classes; not persisted unless noted
 var m_radius := NAN # persisted in characteristics

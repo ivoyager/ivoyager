@@ -27,10 +27,8 @@
 # A "persist" node or reference is identified by presence of the constant:
 #    const PERSIST_AS_PROCEDURAL_OBJECT: bool
 # Lists of properties to persists must be named in constant arrays:
-#    const PERSIST_PROPERTIES := [] # properties to persist (no objects!)
-#    const PERSIST_OBJ_PROPERTIES := [] # as above; nested objects allowed
+#    const PERSIST_PROPERTIES := [] # properties to persist
 #    const PERSIST_PROPERTIES_2 := []
-#    const PERSIST_OBJ_PROPERTIES_2 := []
 #    etc...
 #    (These list names can be modified in project settings below. The extra
 #    numbered lists are needed for subclasses where a list name is taken by a
@@ -67,15 +65,10 @@ var debug_print_tree := false
 
 # project settings
 var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
+
 var properties_arrays := [
 	"PERSIST_PROPERTIES",
 	"PERSIST_PROPERTIES_2",
-	"PERSIST_PROPERTIES_3",
-	]
-var obj_properties_arrays := [
-	"PERSIST_OBJ_PROPERTIES",
-	"PERSIST_OBJ_PROPERTIES_2",
-	"PERSIST_OBJ_PROPERTIES_3",
 	]
 var object_tag := "@!~`#" # persisted strings must not start with this!
 
@@ -378,21 +371,11 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 	assert(object is Node or object is Reference)
 	# serialized_object already has some header info. We now append the size of
 	# each persist array followed by data.
-	var n_properties: int
-	var properties: Array
 	for properties_array in properties_arrays:
+		var properties: Array
+		var n_properties: int
 		if properties_array in object:
 			properties = object.get(properties_array)
-			n_properties = properties.size()
-		else:
-			n_properties = 0
-		serialized_object.append(n_properties)
-		if n_properties > 0:
-			for property in properties:
-				serialized_object.append(object.get(property))
-	for obj_properties_array in obj_properties_arrays:
-		if obj_properties_array in object:
-			properties = object.get(obj_properties_array)
 			n_properties = properties.size()
 		else:
 			n_properties = 0
@@ -401,7 +384,7 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 			var objects_array := []
 			for property in properties:
 				objects_array.append(object.get(property))
-			var serialized_objects_array := _get_serialized_objects_array(objects_array)
+			var serialized_objects_array := _get_serialized_array(objects_array)
 			serialized_object.append(serialized_objects_array)
 
 func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
@@ -414,50 +397,35 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 	# an older version save file.
 	var save_id: int = serialized_object[0]
 	var object: Object = _objects[save_id]
-	var property_index: int
-	var n_properties: int
-	var properties: Array
-	var property: String
 	for properties_array in properties_arrays:
-		n_properties = serialized_object[data_index]
-		data_index += 1
-		if n_properties > 0:
-			properties = object.get(properties_array)
-			property_index = 0
-			while property_index < n_properties:
-				property = properties[property_index]
-				object.set(property, serialized_object[data_index])
-				data_index += 1
-				property_index += 1
-	for obj_properties_array in obj_properties_arrays:
-		n_properties = serialized_object[data_index]
+		var n_properties: int = serialized_object[data_index]
 		data_index += 1
 		if n_properties > 0:
 			var objects_array: Array = serialized_object[data_index]
 			data_index += 1
-			_deserialize_objects_array(objects_array)
-			properties = object.get(obj_properties_array)
-			property_index = 0
+			_deserialize_array(objects_array)
+			var properties: Array = object.get(properties_array)
+			var property_index := 0
 			while property_index < n_properties:
-				property = properties[property_index]
+				var property: String = properties[property_index]
 				object.set(property, objects_array[property_index])
 				property_index += 1
 
-func _get_serialized_objects_array(objects_array: Array) -> Array:
+func _get_serialized_array(objects_array: Array) -> Array:
 	var serialized_objects_array := []
 	for item in objects_array:
 		match typeof(item):
 			TYPE_OBJECT:
 				serialized_objects_array.append(_encode_object(item))
 			TYPE_ARRAY:
-				serialized_objects_array.append(_get_serialized_objects_array(item))
+				serialized_objects_array.append(_get_serialized_array(item))
 			TYPE_DICTIONARY:
-				serialized_objects_array.append(_get_serialized_objects_dict(item))
+				serialized_objects_array.append(_get_serialized_dict(item))
 			_: # built-in type
 				serialized_objects_array.append(item)
 	return serialized_objects_array
 
-func _get_serialized_objects_dict(objects_dict: Dictionary) -> Dictionary:
+func _get_serialized_dict(objects_dict: Dictionary) -> Dictionary:
 	var serialized_objects_dict := {}
 	for key in objects_dict:
 		var item = objects_dict[key] # dynamic type!
@@ -465,14 +433,14 @@ func _get_serialized_objects_dict(objects_dict: Dictionary) -> Dictionary:
 			TYPE_OBJECT:
 				serialized_objects_dict[key] = _encode_object(item)
 			TYPE_ARRAY:
-				serialized_objects_dict[key] = _get_serialized_objects_array(item)
+				serialized_objects_dict[key] = _get_serialized_array(item)
 			TYPE_DICTIONARY:
-				serialized_objects_dict[key] = _get_serialized_objects_dict(item)
+				serialized_objects_dict[key] = _get_serialized_dict(item)
 			_: # built-in type
 				serialized_objects_dict[key] = item
 	return serialized_objects_dict
 
-func _deserialize_objects_array(objects_array: Array) -> void:
+func _deserialize_array(objects_array: Array) -> void:
 	var n_items := objects_array.size()
 	var index := 0
 	while index < n_items:
@@ -485,14 +453,14 @@ func _deserialize_objects_array(objects_array: Array) -> void:
 				else: # it's a string!
 					objects_array[index] = item
 			TYPE_ARRAY:
-				_deserialize_objects_array(item)
+				_deserialize_array(item)
 			TYPE_DICTIONARY:
-				_deserialize_objects_dict(item)
+				_deserialize_dict(item)
 			_: # other built-in type
 				objects_array[index] = item
 		index += 1
 
-func _deserialize_objects_dict(objects_dict: Dictionary) -> void:
+func _deserialize_dict(objects_dict: Dictionary) -> void:
 	for key in objects_dict:
 		var item = objects_dict[key] # dynamic type!
 		match typeof(item):
@@ -503,9 +471,9 @@ func _deserialize_objects_dict(objects_dict: Dictionary) -> void:
 				else: # it's a string!
 					objects_dict[key] = item
 			TYPE_ARRAY:
-				_deserialize_objects_array(item)
+				_deserialize_array(item)
 			TYPE_DICTIONARY:
-				_deserialize_objects_dict(item)
+				_deserialize_dict(item)
 			_: # other built-in type
 				objects_dict[key] = item
 

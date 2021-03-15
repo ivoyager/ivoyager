@@ -101,10 +101,9 @@ var _view_type_memory := view_type
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "view_type", "track_type",
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection_item", "view_type", "track_type",
 	"view_position", "view_rotations", "focal_length", "focal_length_index",
 	"_transform", "_view_type_memory"]
-const PERSIST_OBJ_PROPERTIES := ["selection_item"]
 
 # ****************************** UNPERSISTED **********************************
 

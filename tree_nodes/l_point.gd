@@ -37,8 +37,8 @@ var dynamic_elements: Array
 var elements_at_epoch: Array
 var focal_orbit: Orbit
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["l_point", "dynamic_elements", "elements_at_epoch"]
-const PERSIST_OBJ_PROPERTIES := ["focal_orbit"]
+const PERSIST_PROPERTIES := ["l_point", "dynamic_elements", "elements_at_epoch", "focal_orbit"]
+
 
 func init(focal_orbit_: Orbit, l_point_: int) -> void:
 	focal_orbit = focal_orbit_

@@ -41,8 +41,7 @@ var _sort_type: int
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["list_name", "body_names", "_sort_type"]
-const PERSIST_OBJ_PROPERTIES := ["bodies_by_name", "_instance_builder"]
+const PERSIST_PROPERTIES := ["list_name", "body_names", "_sort_type", "bodies_by_name", "_instance_builder"]
 
 func init_virtual_bodies(list_name_: String, sort_type := SORT_DEFAULT, body_names_ := [], instance_builder: Object = null) -> void:
 	# body_names_ is kept & modified
