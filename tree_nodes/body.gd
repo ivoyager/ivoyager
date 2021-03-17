@@ -171,6 +171,22 @@ func get_orbit_inclination_to_equator(time := NAN) -> float:
 	var orbit_normal := orbit.get_normal(time)
 	return parent_north.angle_to(orbit_normal)
 
+func get_sidereal_rotation_period() -> float:
+	if !model_controller:
+		return NAN
+	return model_controller.rotation_period
+
+func get_sidereal_rotation_period_qualifier() -> String:
+	if flags & BodyFlags.IS_TIDALLY_LOCKED:
+		return "TXT_TIDALLY_LOCKED"
+	if flags & BodyFlags.CHAOTIC_ROTATION:
+		return "TXT_CHAOTIC"
+	if name == "PLANET_MERCURY":
+		return "3:2 " + tr("TXT_RESONANCE")
+	if model_controller and model_controller.rotation_period < 0.0:
+		return "TXT_RETROGRADE"
+	return ""
+
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
 	if !model_controller:
@@ -182,7 +198,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	if !orbit:
 		return IDENTITY_BASIS
 	var x_axis := -orbit.get_position(time).normalized()
-	var up := orbit.get_normal(time)
+	var up := orbit.get_normal(time, true)
 	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)

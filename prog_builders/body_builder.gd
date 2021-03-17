@@ -53,6 +53,7 @@ var model_controller_fields := ["rotation_period", "right_ascension", "declinati
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
+	BodyFlags.CHAOTIC_ROTATION : "chaotic_rotation",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
 
@@ -222,7 +223,15 @@ func _set_model_controller_from_table(body: Body) -> void:
 	var model_controller: ModelController = _ModelController_.new()
 	_table_reader.build_object(model_controller, model_controller_fields, _table_name, _row)
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
+		
+		# TEMP FIX FOR HYPERION
+#		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
+		if is_nan(model_controller.right_ascension):
+			model_controller.right_ascension = 0.0
+			model_controller.declination = 0.0
+		
+		
+		
 		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(
 				model_controller.right_ascension, model_controller.declination)
 		# We have dec & RA for planets and we calculate axial_tilt from these

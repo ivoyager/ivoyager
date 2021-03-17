@@ -55,6 +55,7 @@ var _dynamic_star: Array
 var _working_basis: Basis
 var _is_visible := false
 
+
 func get_latitude_longitude(translation: Vector3, time := NAN) -> Vector2:
 	# Order is flipped from standard spherical (RA, Dec), and we wrap longitude
 	# from -PI (West) to PI (East).

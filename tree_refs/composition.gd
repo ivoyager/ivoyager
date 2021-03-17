@@ -31,14 +31,10 @@ const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["type", "components"]
 
 
-func get_display(labels_prefix := "") -> Array:
+func get_labels_values_display(labels_prefix := "") -> Array:
 	var result := ["", ""] # label, value
-	_get_display(components, result, labels_prefix)
-	return result
-
-func _get_display(dict: Dictionary, result: Array, labels_prefix: String) -> void:
-	for key in dict:
-		var value = dict[key]
+	for key in components:
+		var value = components[key]
 		var optn_newline := "\n" if result[0] else ""
 		match typeof(value):
 			TYPE_NIL:
@@ -47,3 +43,4 @@ func _get_display(dict: Dictionary, result: Array, labels_prefix: String) -> voi
 			TYPE_STRING:
 				result[0] += optn_newline + labels_prefix + key
 				result[1] += optn_newline + value
+	return result

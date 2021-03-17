@@ -181,7 +181,7 @@ func _read_table() -> void:
 					if _defaults[i]:
 						_cell = _defaults[i]
 						_data_type = _data_types[i]
-						_process_cell_value()
+#						_process_cell_value()
 						_defaults[i] = _cell
 					i += 1
 			else:
@@ -211,9 +211,9 @@ func _read_data_line() -> void:
 		var column: int = _fields[_field]
 		_cell = _line_array[column]
 		_data_type = _data_types[column]
-		_process_cell_value()
 		if !_cell: # set to default
 			_cell = _defaults[column]
+		_process_cell_value()
 		if !_cell:
 			row_data[column] = ""
 			continue

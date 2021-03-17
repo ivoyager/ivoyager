@@ -20,6 +20,7 @@
 
 class_name GDUtils
 
+const NO_ARGS := []
 
 static func get_deep(target, path: String): # untyped return
 	if !path:
@@ -32,7 +33,7 @@ static func get_deep(target, path: String): # untyped return
 			return null
 	return target
 
-static func get_path_result(target, path: String): # untyped return
+static func get_path_result(target, path: String, args := NO_ARGS): # untyped return
 	# as above but path could include methods
 	if !path:
 		return target
@@ -41,7 +42,7 @@ static func get_path_result(target, path: String): # untyped return
 	while path_stack:
 		var property_or_method: String = path_stack.pop_back()
 		if target is Object and target.has_method(property_or_method):
-			target = target.call(property_or_method)
+			target = target.callv(property_or_method, args)
 		else:
 			target = target.get(property_or_method)
 		if target == null:
