@@ -245,13 +245,8 @@ func _set_model_controller_from_table(body: Body, _parent: Body) -> void:
 		# positive pole in the case of other objects (incl dwarf planets) and
 		# their satellites. It's IAU's fault.
 		model_controller.rotation_rate = orbit.get_mean_motion()
-		model_controller.rotation_vector = orbit.get_normal(NAN, true)
-		if orbit.is_retrograde():
-			model_controller.rotation_rate *= -1.0
-			
-#			prints(body.name, orbit.get_normal(), orbit.get_normal(NAN, true))
-			
-			
+		model_controller.rotation_vector = orbit.get_normal()
+
 		
 #		var up := parent.get_up_pole()
 #		if up.dot(model_controller.rotation_vector) < 0.0:

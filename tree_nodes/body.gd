@@ -211,10 +211,10 @@ func get_sidereal_rotation_period_qualifier() -> String:
 	return ""
 
 func get_axial_tilt_to_orbit(time := NAN) -> float:
-	if !model_controller:
+	if !model_controller or !orbit:
 		return NAN
 	var positive_pole := get_positive_pole(time)
-	var orbit_normal := get_orbit_normal(time)
+	var orbit_normal := orbit.get_normal(time)
 	return positive_pole.angle_to(orbit_normal)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
