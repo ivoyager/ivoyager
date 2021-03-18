@@ -32,7 +32,7 @@ var rings_too_far_radius_multiplier := 2e3
 func add_rings(body: Body) -> void:
 	var file_prefix: String = body.get_rings_file_prefix()
 	var radius: float = body.get_rings_radius()
-	var north: Vector3 = body.get_north()
+	var north: Vector3 = body.get_north_pole()
 	var array := [body, file_prefix, radius, north]
 	var io_manager: IOManager = Global.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)

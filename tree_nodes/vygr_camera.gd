@@ -637,7 +637,7 @@ func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> V
 	if track_type_ == TRACK_ORBIT:
 		local_up = selection_item_.get_orbit_normal(NAN, true)
 	else:
-		local_up = selection_item_.get_north()
+		local_up = selection_item_.get_up()
 	if dist <= _use_local_up_dist:
 		return local_up
 	# interpolate along a log scale

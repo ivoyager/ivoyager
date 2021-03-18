@@ -154,7 +154,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 	if t.ref_plane == "Equatorial":
 		
 		orbit.reference_normal = parent.get_positive_pole()
-#		orbit.reference_normal = parent.model_controller.north_pole
+#		orbit.reference_normal = parent.model_controller.rotation_vector
 		
 
 		

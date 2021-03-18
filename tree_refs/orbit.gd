@@ -201,6 +201,9 @@ func get_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	var relative_normal := math.convert_spherical2(
 			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
 	var orbit_normal: Vector3
+	
+	
+	
 	if flip_retrograde and elements[2] > PI / 2.0: # retrograde
 		orbit_normal = -math.rotate_vector_z(relative_normal, reference_normal)
 	else:

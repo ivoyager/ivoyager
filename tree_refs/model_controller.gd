@@ -25,7 +25,16 @@
 #
 # FIXME: Recode for standard lat/long origin definitions. For tidally locked, 0
 # longitude is parent facing (mean). For others, it's an arbitrary landmark. We
-# need a longitude_offset_at_epoch and a model_longitude_offset. 
+# need a longitude_offset_at_epoch and a model_longitude_offset.
+#
+# For astronomical bodies, we set rotation_vector to match either the north or
+# positive pole as defined by IAU:
+#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies).
+# Thus, Sun, planets and their satellites have rotation_vector = north (and
+# rotation_rate negative if retrograde). Dwarf planets and other bodies have
+# rotation_vector = positive pole (with rotation_rate > 0.0).
+# Body functions figure out "north" or "positive" polarity on the fly, but use
+# rotation_vector to derterime "up".
 
 class_name ModelController
 
@@ -33,24 +42,20 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 
 signal changed() # public properties; whoever changes must emit
 
-const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
+var right_ascension := NAN # TODO: Derived only!
+var declination := NAN # TODO: Derived only!
 
-var axial_tilt := 0.0
-var right_ascension := NAN
-var declination := NAN
-var rotation_period := 0.0
-
-# TODO: Change "north_pole" to "up": "north" is specific to Body class
-var north_pole := Vector3(0.0, 0.0, 1.0)
-var basis_at_epoch := Basis.IDENTITY # north_pole and longitude_at_epoch rotations
+var rotation_rate := 0.0
+var rotation_vector := Vector3(0.0, 0.0, 1.0)
+var basis_at_epoch := Basis.IDENTITY
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["axial_tilt", "right_ascension", "declination",
-	"rotation_period", "north_pole", "basis_at_epoch"]
+const PERSIST_PROPERTIES := ["right_ascension", "declination",
+	"rotation_rate", "rotation_vector", "basis_at_epoch"]
 
 # unpersisted (rebuilt on load)
 var model: Spatial # program-built MeshInstance or imported Spatial scene
-var model_reference_basis := Basis.IDENTITY
+var model_reference_basis := Basis.IDENTITY # z up
 
 var _times: Array = Global.times
 var _dynamic_star: Array
@@ -70,8 +75,8 @@ func get_latitude_longitude(translation: Vector3, time := NAN) -> Vector2:
 func get_ground_ref_basis(time := NAN) -> Basis:
 	if is_nan(time):
 		time = _times[0]
-	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
-	return basis_at_epoch.rotated(north_pole, rotation_angle)
+	var rotation_angle := wrapf(time * rotation_rate, 0.0, TAU)
+	return basis_at_epoch.rotated(rotation_vector, rotation_angle)
 
 func set_model(model_: Spatial, use_basis_as_reference := true) -> void:
 	model = model_
@@ -102,9 +107,9 @@ func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent:
 func process_visible(time: float, camera_dist: float) -> void:
 	if !model:
 		return
-	var rotation_angle := wrapf(time * TAU / rotation_period, 0.0, TAU)
+	var rotation_angle := wrapf(time * rotation_rate, 0.0, TAU)
 	if !_dynamic_star:
-		model.transform.basis = _working_basis.rotated(north_pole, rotation_angle)
+		model.transform.basis = _working_basis.rotated(rotation_vector, rotation_angle)
 	else:
 		var surface: SpatialMaterial = _dynamic_star[0]
 		var grow_dist: float = _dynamic_star[1]
@@ -116,9 +121,9 @@ func process_visible(time: float, camera_dist: float) -> void:
 			var grow_exponent: float = _dynamic_star[2]
 			var scale := pow(camera_dist / grow_dist, grow_exponent)
 			var scaled_basis := _working_basis.scaled(Vector3(scale, scale, scale))
-			model.transform.basis = scaled_basis.rotated(north_pole, rotation_angle)
+			model.transform.basis = scaled_basis.rotated(rotation_vector, rotation_angle)
 		else:
-			model.transform.basis = _working_basis.rotated(north_pole, rotation_angle)
+			model.transform.basis = _working_basis.rotated(rotation_vector, rotation_angle)
 		# dynamic emission energy
 		var dist_ratio := camera_dist / emission_ref_dist
 		if dist_ratio < 1.0:

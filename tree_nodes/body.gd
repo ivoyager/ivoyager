@@ -147,21 +147,34 @@ func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 		return VECTOR2_ZERO
 	return model_controller.get_latitude_longitude(translation_, time)
 
-func get_north(_time := NAN) -> Vector3:
+func get_north_pole(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates.
-	# TODO: North precession; will require time
+	# Technically, we should use Invariable Plane rather than Ecliptic to
+	# determine polarity. But result is almost always the same.
+	# Also, technically, "north" only applies to Sun, planets and their
+	# satellites. We should use positive pole for dwarf planets and other
+	# bodies.
+	# TODO: North precession; will require time.
 	if !model_controller:
 		return ECLIPTIC_Z
-	return model_controller.north_pole
+	var rotation_vector := model_controller.rotation_vector
+	if rotation_vector.dot(ECLIPTIC_Z) < 0.0:
+		return -model_controller.rotation_vector
+	return model_controller.rotation_vector
 
-func get_positive_pole() -> Vector3:
-	# Right-hand-rule; see:
-	# https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
+func get_positive_pole(_time := NAN) -> Vector3:
+	# Right-hand-rule.
 	if !model_controller:
 		return ECLIPTIC_Z
-	if model_controller.rotation_period >= 0.0:
-		return model_controller.north_pole
-	return -model_controller.north_pole
+	if model_controller.rotation_rate >= 0.0:
+		return model_controller.rotation_vector
+	return -model_controller.rotation_vector
+
+func get_up_pole(_time := NAN) -> Vector3:
+	# See comments in ModelController.
+	if !model_controller:
+		return ECLIPTIC_Z
+	return model_controller.rotation_vector
 
 func get_orbit_semi_major_axis(time := NAN) -> float:
 	if !orbit:
@@ -176,15 +189,16 @@ func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 func get_orbit_inclination_to_equator(time := NAN) -> float:
 	if !orbit or flags & BodyFlags.IS_TOP:
 		return NAN
-	var parent_north: Vector3 = get_parent().get_north(time)
 	var orbit_normal := orbit.get_normal(time)
-	return parent_north.angle_to(orbit_normal)
+	var positive_pole: Vector3 = get_parent().get_positive_pole(time)
+	return orbit_normal.angle_to(positive_pole)
 
 func get_sidereal_rotation_period() -> float:
 	if !model_controller:
 		return NAN
-	return model_controller.rotation_period
+	return TAU / model_controller.rotation_rate
 
+# DEPRECIATE: Move logic to SelectionData
 func get_sidereal_rotation_period_qualifier() -> String:
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		return "TXT_TIDALLY_LOCKED"
@@ -192,14 +206,16 @@ func get_sidereal_rotation_period_qualifier() -> String:
 		return "TXT_CHAOTIC"
 	if name == "PLANET_MERCURY":
 		return "3:2 " + tr("TXT_RESONANCE")
-	if model_controller and model_controller.rotation_period < 0.0:
+	if model_controller and model_controller.rotation_rate < 0.0:
 		return "TXT_RETROGRADE"
 	return ""
 
-func get_axial_tilt() -> float:
+func get_axial_tilt_to_orbit(time := NAN) -> float:
 	if !model_controller:
 		return NAN
-	return model_controller.axial_tilt
+	var positive_pole := get_positive_pole(time)
+	var orbit_normal := get_orbit_normal(time)
+	return positive_pole.angle_to(orbit_normal)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
@@ -393,14 +409,24 @@ func _on_model_controller_changed() -> void:
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
 #	prints("Orbit change: ", orbit._update_interval / UnitDefs.HOUR, "hr", tr(name))
-	if flags & IS_TIDALLY_LOCKED and model_controller:
-		var new_north_pole := orbit.get_normal(_times[0])
-		if model_controller.axial_tilt != 0.0:
-			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, model_controller.axial_tilt)
-		model_controller.north_pole = new_north_pole
-		model_controller.emit_signal("changed")
+
+#	if flags & IS_TIDALLY_LOCKED and model_controller:
+#		model_controller.rotation_vector = orbit.get_normal()
+#		var up: Vector3 = get_parent().get_up_pole()
+#		if up.dot(model_controller.rotation_vector) < 0.0:
+#			model_controller.rotation_rate *= -1.0
+#			model_controller.rotation_vector *= -1.0
+		
+		
+		# FIXME: Moon axial tilt
+		# Old wrong solution...
+#		if model_controller.axial_tilt != 0.0:
+#			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
+#			new_north_pole = new_north_pole.rotated(correction_axis, model_controller.axial_tilt)
+
 		# TODO: Adjust basis_at_epoch???
+#		model_controller.emit_signal("changed")
+		
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,

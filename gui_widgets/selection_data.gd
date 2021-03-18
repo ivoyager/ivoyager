@@ -113,7 +113,7 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_ROTATION_PERIOD", "body/get_sidereal_rotation_period", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
-		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt", NO_ARGS,
+		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
 	],
 	[ # Atmosphere
@@ -152,7 +152,7 @@ var body_flags_test := {
 
 var special_processing := {
 	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
-	"body/get_axial_tilt" : "_mod_axial_tilt",
+	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter

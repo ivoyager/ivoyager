@@ -49,7 +49,7 @@ var characteristics_fields := ["symbol", "class_type", "model_type", "light_type
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t"]
-var model_controller_fields := ["rotation_period", "right_ascension", "declination", "axial_tilt"]
+var model_controller_fields := ["right_ascension", "declination"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
@@ -110,7 +110,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
 	_set_compositions_from_table(body)
-	_set_model_controller_from_table(body)
+	_set_model_controller_from_table(body, parent)
 	_register(body, parent)
 	body.hide()
 	return body
@@ -213,7 +213,7 @@ func _set_compositions_from_table(body: Body) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
-func _set_model_controller_from_table(body: Body) -> void:
+func _set_model_controller_from_table(body: Body, _parent: Body) -> void:
 	# orientation and rotation
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
@@ -223,6 +223,7 @@ func _set_model_controller_from_table(body: Body) -> void:
 	var orbit := body.orbit
 	var model_controller: ModelController = _ModelController_.new()
 	_table_reader.build_object(model_controller, model_controller_fields, _table_name, _row)
+	
 	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
 		
 		# TEMP FIX FOR HYPERION
@@ -231,18 +232,33 @@ func _set_model_controller_from_table(body: Body) -> void:
 			model_controller.right_ascension = 0.0
 			model_controller.declination = 0.0
 		
-
-		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(
+		var rotation_period := _table_reader.get_real(_table_name, "rotation_period", _row)
+		assert(rotation_period and !is_nan(rotation_period))
+		model_controller.rotation_rate = TAU / rotation_period
+		var rotation_vector := _ecliptic_rotation * math.convert_spherical2(
 				model_controller.right_ascension, model_controller.declination)
-		# We have dec & RA for planets and we calculate axial_tilt from these,
-		# overwriting table value.
-		var positive_pole := model_controller.north_pole
-		if model_controller.rotation_period < 0.0:
-			positive_pole *= -1.0
-		var orbit_normal := body.get_orbit_normal(NAN, true)
-		model_controller.axial_tilt = positive_pole.angle_to(orbit_normal)
-	else:
-		model_controller.rotation_period = TAU / orbit.get_mean_motion()
+		rotation_vector = rotation_vector.normalized()
+		model_controller.rotation_vector = rotation_vector
+	else: # tidally locked
+		# See comments in ModelController. We set rotation_vector to be our
+		# subjective "up". This is north in the case of planet satellites and
+		# positive pole in the case of other objects (incl dwarf planets) and
+		# their satellites. It's IAU's fault.
+		model_controller.rotation_rate = orbit.get_mean_motion()
+		model_controller.rotation_vector = orbit.get_normal(NAN, true)
+		if orbit.is_retrograde():
+			model_controller.rotation_rate *= -1.0
+			
+#			prints(body.name, orbit.get_normal(), orbit.get_normal(NAN, true))
+			
+			
+		
+#		var up := parent.get_up_pole()
+#		if up.dot(model_controller.rotation_vector) < 0.0:
+#			model_controller.rotation_rate *= -1.0
+#			model_controller.rotation_vector *= -1.0
+
+		# FIXME: Moon axial tilt
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
 		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
 		# tilt to ecliptic is 1.5 degrees.
@@ -251,15 +267,13 @@ func _set_model_controller_from_table(body: Body) -> void:
 		# after each orbit update. I don't think this is correct for other
 		# moons, but all other moons have zero or very small axial tilt, so
 		# inacuracy is small.
-		model_controller.north_pole = orbit.get_normal(NAN, true)
-		if model_controller.axial_tilt != 0.0:
-			var correction_axis := model_controller.north_pole.cross(orbit.reference_normal).normalized()
-			model_controller.north_pole = model_controller.north_pole.rotated(correction_axis, model_controller.axial_tilt)
-	model_controller.north_pole = model_controller.north_pole.normalized()
-	if orbit and orbit.is_retrograde(): # retrograde
-		model_controller.rotation_period = -model_controller.rotation_period
+		# Old wrong solution...
+#		if model_controller.axial_tilt != 0.0:
+#			var correction_axis := model_controller.rotation_vector.cross(orbit.reference_normal).normalized()
+#			model_controller.rotation_vector = model_controller.rotation_vector.rotated(correction_axis, model_controller.axial_tilt)
+#	model_controller.rotation_vector = model_controller.rotation_vector.normalized()
 	# body reference basis
-	var basis_at_epoch := math.rotate_basis_z(Basis(), model_controller.north_pole)
+	var basis_at_epoch := math.rotate_basis_z(Basis(), model_controller.rotation_vector)
 	var total_rotation: float
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		# By definition, longitude 0.0 is the mean parent facing side.
@@ -271,7 +285,7 @@ func _set_model_controller_from_table(body: Body) -> void:
 		var longitude_at_epoch := _table_reader.get_real(_table_name, "longitude_at_epoch", _row)
 		if longitude_at_epoch and !is_nan(longitude_at_epoch):
 			total_rotation += longitude_at_epoch
-	basis_at_epoch = basis_at_epoch.rotated(model_controller.north_pole, total_rotation)
+	basis_at_epoch = basis_at_epoch.rotated(model_controller.rotation_vector, total_rotation)
 	model_controller.set_basis_at_epoch(basis_at_epoch)
 	body.set_model_controller(model_controller)
 
