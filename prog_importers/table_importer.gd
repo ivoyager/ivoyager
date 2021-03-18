@@ -130,8 +130,7 @@ func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
 	var file := File.new()
 	if file.open(_path, file.READ) != OK:
-		print("ERROR: Could not open file: ", _path)
-		assert(false)
+		assert(false, "Could not open file: " +  _path)
 	_units = []
 	_defaults = []
 	var have_fields := false

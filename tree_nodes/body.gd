@@ -154,6 +154,15 @@ func get_north(_time := NAN) -> Vector3:
 		return ECLIPTIC_Z
 	return model_controller.north_pole
 
+func get_positive_pole() -> Vector3:
+	# Right-hand-rule; see:
+	# https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
+	if !model_controller:
+		return ECLIPTIC_Z
+	if model_controller.rotation_period >= 0.0:
+		return model_controller.north_pole
+	return -model_controller.north_pole
+
 func get_orbit_semi_major_axis(time := NAN) -> float:
 	if !orbit:
 		return 0.0
@@ -186,6 +195,11 @@ func get_sidereal_rotation_period_qualifier() -> String:
 	if model_controller and model_controller.rotation_period < 0.0:
 		return "TXT_RETROGRADE"
 	return ""
+
+func get_axial_tilt() -> float:
+	if !model_controller:
+		return NAN
+	return model_controller.axial_tilt
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground

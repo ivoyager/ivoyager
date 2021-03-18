@@ -39,6 +39,8 @@ var axial_tilt := 0.0
 var right_ascension := NAN
 var declination := NAN
 var rotation_period := 0.0
+
+# TODO: Change "north_pole" to "up": "north" is specific to Body class
 var north_pole := Vector3(0.0, 0.0, 1.0)
 var basis_at_epoch := Basis.IDENTITY # north_pole and longitude_at_epoch rotations
 

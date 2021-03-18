@@ -63,20 +63,20 @@ var section_data := [ # one array element per header
 	# [3] data_type [4] process arg or args
 	[ # Orbital Characteristics
 		["LABEL_PERIAPSIS", "body/orbit/get_periapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 4]],
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
 		["LABEL_APOAPSIS", "body/orbit/get_apoapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 4]],
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
 		["LABEL_SEMI_MAJOR_AXIS", "body/orbit/get_semimajor_axis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 4]],
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
 		["LABEL_ECCENTRICITY", "body/orbit/get_eccentricity", NO_ARGS, AS_IS],
 		["LABEL_ORBITAL_PERIOD", "body/orbit/get_orbital_perioid", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.TIME_D_Y, "", 4]],
+				QTY_TXT, [QtyTxtConverter.TIME_D_Y, "", 5]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/orbit/get_average_orbital_speed", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4]],
+				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS, "", 5]],
 		["LABEL_INCLINATION_TO_ECLIPTIC", "body/orbit/get_inclination_to_ecliptic", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
 		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
 		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
 		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
 		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],
@@ -93,10 +93,10 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
-		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.MASS_G_KG]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
 				ENUM, "ConfidenceType"],
+		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "_g"]],
 		["LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NO_ARGS,
@@ -113,6 +113,8 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_ROTATION_PERIOD", "body/get_sidereal_rotation_period", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
+		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
 	],
 	[ # Atmosphere
 		["LABEL_SURFACE_PRESSURE", "body/characteristics/surf_pres", NO_ARGS,
@@ -149,7 +151,8 @@ var body_flags_test := {
 }
 
 var special_processing := {
-	"body/get_sidereal_rotation_period" : "_mod_rotation_period"
+	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
+	"body/get_axial_tilt" : "_mod_axial_tilt",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -455,4 +458,12 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 			value_txt = "~%s d (%s)" %[round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
 		elif qualifier:
 			value_txt += " (%s)" % tr(qualifier).to_lower()
+	return value_txt
+
+func _mod_axial_tilt(value_txt: String, value: float) -> String:
+	if _body:
+		if _body.flags & BodyFlags.VARIABLE_AXIAL_TILT:
+			value_txt = tr("TXT_VARIABLE")
+		elif value == 0.0:
+			value_txt = "~0\u00B0"
 	return value_txt

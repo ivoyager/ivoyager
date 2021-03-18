@@ -54,6 +54,7 @@ var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
 	BodyFlags.CHAOTIC_ROTATION : "chaotic_rotation",
+	BodyFlags.VARIABLE_AXIAL_TILT : "variable_axial_tilt",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
 
@@ -230,17 +231,16 @@ func _set_model_controller_from_table(body: Body) -> void:
 			model_controller.right_ascension = 0.0
 			model_controller.declination = 0.0
 		
-		
-		
+
 		model_controller.north_pole = _ecliptic_rotation * math.convert_spherical2(
 				model_controller.right_ascension, model_controller.declination)
-		# We have dec & RA for planets and we calculate axial_tilt from these
-		# (overwriting table value, if exists). Results basically make sense for
-		# the planets EXCEPT Uranus (flipped???) and Pluto (ahhhh Pluto...).
-		if orbit:
-			model_controller.axial_tilt = model_controller.north_pole.angle_to(orbit.get_normal(NAN, true))
-		else: # sun
-			model_controller.axial_tilt = model_controller.north_pole.angle_to(ECLIPTIC_Z)
+		# We have dec & RA for planets and we calculate axial_tilt from these,
+		# overwriting table value.
+		var positive_pole := model_controller.north_pole
+		if model_controller.rotation_period < 0.0:
+			positive_pole *= -1.0
+		var orbit_normal := body.get_orbit_normal(NAN, true)
+		model_controller.axial_tilt = positive_pole.angle_to(orbit_normal)
 	else:
 		model_controller.rotation_period = TAU / orbit.get_mean_motion()
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
