@@ -115,6 +115,8 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
 		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+		["LABEL_AXIAL_TILT_TO_ECLIPTIC", "body/get_axial_tilt_to_ecliptic", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
 	],
 	[ # Atmosphere
 		["LABEL_SURFACE_PRESSURE", "body/characteristics/surf_pres", NO_ARGS,
@@ -152,7 +154,8 @@ var body_flags_test := {
 
 var special_processing := {
 	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
-	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt",
+	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt_to_orbit",
+	"body/get_axial_tilt_to_ecliptic" : "_mod_axial_tilt_to_ecliptic",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -453,17 +456,26 @@ func _on_meta_clicked(meta: String) -> void:
 
 func _mod_rotation_period(value_txt: String, value: float) -> String:
 	if _body:
-		var qualifier := _body.get_sidereal_rotation_period_qualifier()
-		if qualifier == "TXT_CHAOTIC":
+		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
+			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
+		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
 			value_txt = "~%s d (%s)" %[round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
-		elif qualifier:
-			value_txt += " (%s)" % tr(qualifier).to_lower()
+		elif _body.name == "PLANET_MERCURY":
+			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
+		elif _body.is_rotation_retrograde():
+			value_txt += " (%s)" % tr("TXT_RETROGRADE").to_lower()
 	return value_txt
 
-func _mod_axial_tilt(value_txt: String, value: float) -> String:
+func _mod_axial_tilt_to_orbit(value_txt: String, value: float) -> String:
 	if _body:
-		if _body.flags & BodyFlags.VARIABLE_AXIAL_TILT:
-			value_txt = tr("TXT_VARIABLE")
-		elif value == 0.0:
+		if is_zero_approx(value) and _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt = "~0\u00B0"
+		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
+			value_txt = tr("TXT_VARIABLE")
+	return value_txt
+
+func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
+	if _body:
+		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
+			value_txt = tr("TXT_VARIABLE")
 	return value_txt

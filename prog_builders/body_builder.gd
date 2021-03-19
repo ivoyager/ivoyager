@@ -49,12 +49,12 @@ var characteristics_fields := ["symbol", "class_type", "model_type", "light_type
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t"]
-var model_controller_fields := ["right_ascension", "declination"]
+var model_controller_fields := ["right_ascension", "declination", "longitude_at_epoch"]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
-	BodyFlags.CHAOTIC_ROTATION : "chaotic_rotation",
-	BodyFlags.VARIABLE_AXIAL_TILT : "variable_axial_tilt",
+	BodyFlags.IS_AXIS_LOCKED : "axis_locked",
+	BodyFlags.TUMBLES_CHAOTICALLY : "tumbles_chaotically",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
 
@@ -223,63 +223,58 @@ func _set_model_controller_from_table(body: Body, parent: Body) -> void:
 	var orbit := body.orbit
 	var model_controller: ModelController = _ModelController_.new()
 	_table_reader.build_object(model_controller, model_controller_fields, _table_name, _row)
-	
-	if not flags & BodyFlags.IS_TIDALLY_LOCKED:
-		
-		# TEMP FIX FOR HYPERION
-#		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
-		if is_nan(model_controller.right_ascension):
-			model_controller.right_ascension = 0.0
-			model_controller.declination = 0.0
-		
+	# rotation_rate
+	if flags & BodyFlags.IS_TIDALLY_LOCKED:
+		model_controller.rotation_rate = orbit.get_mean_motion()
+	else:
 		var rotation_period := _table_reader.get_real(_table_name, "rotation_period", _row)
 		assert(rotation_period and !is_nan(rotation_period))
 		model_controller.rotation_rate = TAU / rotation_period
-		var rotation_vector := _ecliptic_rotation * math.convert_spherical2(
-				model_controller.right_ascension, model_controller.declination)
-		rotation_vector = rotation_vector.normalized()
-		model_controller.rotation_vector = rotation_vector
-	else: # tidally locked
-		# See comments in ModelController. We set rotation_vector to be our
-		# subjective "up". This is north in the case of planet satellites and
-		# positive pole in the case of other objects (incl dwarf planets) and
-		# their satellites. Blame IAU not me!
-		model_controller.rotation_rate = orbit.get_mean_motion()
+	# rotation_vector
+	if flags & BodyFlags.IS_AXIS_LOCKED:
+		# True for most tidally locked moons, but not Moon. Ignore RA and dec.
 		model_controller.rotation_vector = orbit.get_normal()
-		if parent.flags & BodyFlags.IS_TRUE_PLANET:
-			if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
-				model_controller.rotation_rate *= -1.0
-				model_controller.rotation_vector *= -1.0
-
-		# FIXME: Moon axial tilt
-		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
-		# orbital plane) and orbit inclination ~5 degrees. The resulting axial
-		# tilt to ecliptic is 1.5 degrees.
-		# For The Moon, axial precession and orbit nodal precession are both
-		# 18.6 yr. So we apply below adjustment to north pole here AND in Body
-		# after each orbit update. I don't think this is correct for other
-		# moons, but all other moons have zero or very small axial tilt, so
-		# inacuracy is small.
-		# Old wrong solution...
-#		if model_controller.axial_tilt != 0.0:
-#			var correction_axis := model_controller.rotation_vector.cross(orbit.reference_normal).normalized()
-#			model_controller.rotation_vector = model_controller.rotation_vector.rotated(correction_axis, model_controller.axial_tilt)
-#	model_controller.rotation_vector = model_controller.rotation_vector.normalized()
-	# body reference basis
-	var basis_at_epoch := math.rotate_basis_z(Basis(), model_controller.rotation_vector)
-	var total_rotation: float
+	elif flags & BodyFlags.TUMBLES_CHAOTICALLY:
+		# TODO: something sensible for Hyperion
+		model_controller.right_ascension = 0.0
+		model_controller.declination = 0.0
+		model_controller.rotation_vector = _ecliptic_rotation * math.convert_spherical2(
+				model_controller.right_ascension, model_controller.declination)
+	else:
+		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
+		model_controller.rotation_vector = _ecliptic_rotation * math.convert_spherical2(
+				model_controller.right_ascension, model_controller.declination)
+	# Polarity fix. See comments in Body.get_north_pole(). We set rotation_vector
+	# polarity to be a sensible "north" which will be subjective "up". IAU
+	# defines north for true planets and their satellites as pole pointing
+	# above invarient plane. Pluto "north" is informally defined as positive
+	# pole (which is reverse of above). We follow Pluto and use positive pole
+	# for all non-true planets and positive pole of parent for their satellites.
+	# We assume that "star" and "planet" tables correctly set RA & dec (thus
+	# rotation_vector) and we need only fix moons here.
+	if parent and parent.flags & BodyFlags.IS_TRUE_PLANET:
+		# Moons of true planets
+		# FIXME: To be technically correct, we should use invarient plane
+		# rather than ecliptic. These differ by ~1 degree so very few (if any)
+		# moons will be flipped.
+		if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
+			model_controller.rotation_rate *= -1.0
+			model_controller.rotation_vector *= -1.0
+	elif parent and not parent.flags & BodyFlags.IS_STAR:
+		# All other satellites
+		var positive_pole := parent.get_positive_pole()
+		if positive_pole.dot(model_controller.rotation_vector) < 0.0:
+			model_controller.rotation_rate *= -1.0
+			model_controller.rotation_vector *= -1.0
+	# rotation and reference at epoch
+	var rotation_at_epoch := 0.0
 	if flags & BodyFlags.IS_TIDALLY_LOCKED:
 		# By definition, longitude 0.0 is the mean parent facing side.
-		total_rotation = orbit.get_mean_longitude(0.0) - PI
+		rotation_at_epoch = orbit.get_mean_longitude(0.0) - PI
 	elif orbit:
-		# Table value "longitude_at_epoch" is planetocentric longitude facing
-		# solar system barycenter at epoch.
-		total_rotation = orbit.get_true_longitude(0.0) - PI
-		var longitude_at_epoch := _table_reader.get_real(_table_name, "longitude_at_epoch", _row)
-		if longitude_at_epoch and !is_nan(longitude_at_epoch):
-			total_rotation += longitude_at_epoch
-	basis_at_epoch = basis_at_epoch.rotated(model_controller.rotation_vector, total_rotation)
-	model_controller.set_basis_at_epoch(basis_at_epoch)
+		rotation_at_epoch = orbit.get_true_longitude(0.0) - PI
+	model_controller.set_rotation_and_basis_at_epoch(rotation_at_epoch)
+
 	body.set_model_controller(model_controller)
 
 func _register(body: Body, parent: Body) -> void:
@@ -308,6 +303,7 @@ func _project_init() -> void:
 	_fallback_body_2d = Global.assets.fallback_body_2d
 
 # *****************************************************************************
+# Build non-persisted after added to tree
 
 func _on_node_added(node: Node) -> void:
 	var body := node as Body

@@ -27,14 +27,8 @@
 # longitude is parent facing (mean). For others, it's an arbitrary landmark. We
 # need a longitude_offset_at_epoch and a model_longitude_offset.
 #
-# For astronomical bodies, we set rotation_vector to match either the north or
-# positive pole as defined by IAU:
-#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies).
-# Thus, Sun, planets and their satellites have rotation_vector = north (and
-# rotation_rate negative if retrograde). Dwarf planets and other bodies have
-# rotation_vector = positive pole (with rotation_rate > 0.0).
-# Body functions figure out "north" or "positive" polarity on the fly, but use
-# rotation_vector to derterime "up".
+# For astronomical bodies, we set rotation_vector to match "north". See
+# comments under Body.get_north().
 
 class_name ModelController
 
@@ -42,16 +36,18 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 
 signal changed() # public properties; whoever changes must emit
 
-var right_ascension := NAN # TODO: Derived only!
-var declination := NAN # TODO: Derived only!
+var right_ascension := NAN # don't set if tidally locked with ~0 axial tilt
+var declination := NAN # don't set if tidally locked with ~0 axial tilt
 
 var rotation_rate := 0.0
 var rotation_vector := Vector3(0.0, 0.0, 1.0)
+var longitude_at_epoch := 0.0 # table
+var rotation_at_epoch := 0.0
 var basis_at_epoch := Basis.IDENTITY
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["right_ascension", "declination",
-	"rotation_rate", "rotation_vector", "basis_at_epoch"]
+const PERSIST_PROPERTIES := ["right_ascension", "declination", "rotation_rate",
+	"rotation_vector", "longitude_at_epoch", "rotation_at_epoch", "basis_at_epoch"]
 
 # unpersisted (rebuilt on load)
 var model: Spatial # program-built MeshInstance or imported Spatial scene
@@ -88,8 +84,11 @@ func set_model_reference_basis(model_basis_: Basis) -> void:
 	model_reference_basis = model_basis_
 	_working_basis = basis_at_epoch * model_reference_basis
 
-func set_basis_at_epoch(basis_at_epoch_: Basis) -> void:
-	basis_at_epoch = basis_at_epoch_
+func set_rotation_and_basis_at_epoch(rotation_at_epoch_: float) -> void:
+	rotation_at_epoch = rotation_at_epoch_
+	var basis := math.rotate_basis_z(Basis(), rotation_vector)
+	var total_rotation := rotation_at_epoch + longitude_at_epoch
+	basis_at_epoch = basis.rotated(rotation_vector, total_rotation)
 	_working_basis = basis_at_epoch * model_reference_basis
 
 func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent: float,
