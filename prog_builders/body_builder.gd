@@ -213,7 +213,7 @@ func _set_compositions_from_table(body: Body) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
-func _set_model_controller_from_table(body: Body, _parent: Body) -> void:
+func _set_model_controller_from_table(body: Body, parent: Body) -> void:
 	# orientation and rotation
 	# We use definition of "axial tilt" as angle to a body's orbital plane
 	# (excpept for primary star where we use ecliptic). North pole should
@@ -243,15 +243,13 @@ func _set_model_controller_from_table(body: Body, _parent: Body) -> void:
 		# See comments in ModelController. We set rotation_vector to be our
 		# subjective "up". This is north in the case of planet satellites and
 		# positive pole in the case of other objects (incl dwarf planets) and
-		# their satellites. It's IAU's fault.
+		# their satellites. Blame IAU not me!
 		model_controller.rotation_rate = orbit.get_mean_motion()
 		model_controller.rotation_vector = orbit.get_normal()
-
-		
-#		var up := parent.get_up_pole()
-#		if up.dot(model_controller.rotation_vector) < 0.0:
-#			model_controller.rotation_rate *= -1.0
-#			model_controller.rotation_vector *= -1.0
+		if parent.flags & BodyFlags.IS_TRUE_PLANET:
+			if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
+				model_controller.rotation_rate *= -1.0
+				model_controller.rotation_vector *= -1.0
 
 		# FIXME: Moon axial tilt
 		# This is complicated! The Moon has axial tilt 6.5 degrees (to its 
