@@ -164,14 +164,6 @@ func _read_table() -> void:
 				_defaults = _line_array.duplicate()
 				_defaults[0] = ""
 				_defaults.resize(n_columns)
-				var i := 0
-				while i < n_columns:
-					if _defaults[i]:
-						_cell = _defaults[i]
-						_data_type = _data_types[i]
-#						_process_cell_value()
-						_defaults[i] = _cell
-					i += 1
 			else:
 				assert(_data_types) # required
 				if !_units:

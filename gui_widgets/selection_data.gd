@@ -51,6 +51,7 @@ enum { # data_type
 var enable_wiki: bool = Global.enable_wiki # can override false if needed
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
+var update_interval := 1.0 # seconds; set 0.0 for no updates
 
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
@@ -160,24 +161,30 @@ var special_processing := {
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
+var _state: Dictionary = Global.state
 var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
+var _selection_item: SelectionItem
+var _body: Body
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {}
 var _recycled_labels := []
 var _recycled_rtlabels := []
 
-var _selection_item: SelectionItem
-var _body: Body
-
-func _ready():
+func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("about_to_quit", self, "_clear")
+	_update_coroutine()
 
 func _clear() -> void:
+	if _selection_manager:
+		_selection_manager.disconnect("selection_changed", self, "_update_selection")
+	_selection_manager = null
+	_selection_item = null
+	_body = null
 	_header_buttons.clear()
 	_grids.clear()
 	_meta_lookup.clear()
@@ -193,7 +200,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
 	_selection_manager = GUIUtils.get_selection_manager(self)
-	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0
 	while section < n_sections:
@@ -219,9 +226,17 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		_grids.append(grid)
 		add_child(grid)
 		section += 1
-	_on_selection_changed()
+	_update_selection()
 
-func _on_selection_changed() -> void:
+func _update_coroutine() -> void:
+	if !update_interval:
+		return
+	while true:
+		yield(get_tree().create_timer(update_interval), "timeout")
+		if _state.is_running:
+			_update_selection()
+
+func _update_selection() -> void:
 	_selection_item = _selection_manager.selection_item
 	if !_selection_item:
 		return
