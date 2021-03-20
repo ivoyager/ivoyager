@@ -1,6 +1,0 @@
-﻿# This file provides keys for Wiki URL titles not included in other data tables.,
-# Spaces and underscores will be appropriately converted.,
-name,wiki_en
-DataType,STRING
-LABEL_HYDROSTATIC_EQUILIBRIUM,Hydrostatic_equilibrium
-SYSTEM_SOLAR_SYSTEM,Solar System

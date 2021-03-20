@@ -1,0 +1,24 @@
+# Graphics attributes need attention! Columns can be added here, then implemented in program_refs/model_builder.gd.							
+# Our target aesthetic for base I, Voyager is *harsh realism*. E.g., see videos of Musk's roadster in space. NOT cartoony!							
+#							
+#							
+#							
+#			# Graphics ---->				
+name	ellipsoid	starlight	metallic	roughness	rim_enabled	rim	rim_tint
+DataType	BOOL	BOOL	REAL	REAL	BOOL	REAL	REAL
+Default	TRUE	FALSE	0	0.6	TRUE	0.003	0.5
+Units							
+MODEL_G_STAR		TRUE					
+MODEL_ROCKY_WORLD							
+MODEL_DESERT_WORLD							
+MODEL_CONTINENTAL_WORLD							
+MODEL_THICK_ATM_WORLD							
+MODEL_ICE_WORLD							
+MODEL_VOLCANO_WORLD							
+MODEL_GAS_GIANT							
+MODEL_ICE_GIANT							
+MODEL_SMALL_C_TYPE	FALSE						
+MODEL_SMALL_S_TYPE	FALSE						
+MODEL_SMALL_M_TYPE	FALSE						
+MODEL_COMET	FALSE						
+MODEL_SPACECRAFT	FALSE						

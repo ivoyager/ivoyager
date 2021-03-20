@@ -168,16 +168,16 @@ var shared_resources := {
 
 # Data table import
 var table_import := {
-	stars = "res://ivoyager/data/solar_system/stars.csv",
-	planets = "res://ivoyager/data/solar_system/planets.csv",
-	moons = "res://ivoyager/data/solar_system/moons.csv",
-	lights = "res://ivoyager/data/solar_system/lights.csv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.csv",
-	classes = "res://ivoyager/data/solar_system/classes.csv",
-	models = "res://ivoyager/data/solar_system/models.csv",
-	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.csv",
+	stars = "res://ivoyager/data/solar_system/stars.tsv",
+	planets = "res://ivoyager/data/solar_system/planets.tsv",
+	moons = "res://ivoyager/data/solar_system/moons.tsv",
+	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
+	classes = "res://ivoyager/data/solar_system/classes.tsv",
+	models = "res://ivoyager/data/solar_system/models.tsv",
+	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
 }
-var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.csv"]
+var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing

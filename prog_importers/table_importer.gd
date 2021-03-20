@@ -46,7 +46,6 @@ const math := preload("res://ivoyager/static/math.gd")
 const DPRINT := false
 const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
 
-var _split_regex := RegEx.new()
 # source files
 var _table_import: Dictionary = Global.table_import
 var _wiki_only: Array = Global.table_import_wiki_only
@@ -82,9 +81,6 @@ var _count_non_null := 0
 
 
 func _init():
-	# Monster reg ex found somewhere on internet. Splits comma dilineated,
-	# but not quoted commas. Removes quotes. 2nd capture group has cell value.
-	_split_regex.compile("(?:^|,)(?=[^\\\"]|(\\\")?)\\\"?((?(1)[^\\\"]*|[^,\\\"]*))\\\"?(?=,|$)")
 	var start_time := OS.get_system_time_msecs()
 	_import()
 	var time := OS.get_system_time_msecs() - start_time
@@ -142,14 +138,7 @@ func _read_table() -> void:
 		if commenter != -1 and commenter < 4: # skip comment line
 			line = file.get_line()
 			continue
-		var reg_matches := _split_regex.search_all(line)
-		var n_matches := reg_matches.size()
-		_line_array.resize(n_matches)
-		var i := 0
-		while i < n_matches:
-			var reg_match: RegExMatch = reg_matches[i]
-			_line_array[i] = reg_match.strings[2]
-			i += 1
+		_line_array = line.split("\t")
 		if !reading_data:
 			if !have_fields: # always 1st line!
 				assert(_line_array[0] == "name", "1st field must be 'name'")
@@ -175,7 +164,7 @@ func _read_table() -> void:
 				_defaults = _line_array.duplicate()
 				_defaults[0] = ""
 				_defaults.resize(n_columns)
-				i = 0
+				var i := 0
 				while i < n_columns:
 					if _defaults[i]:
 						_cell = _defaults[i]

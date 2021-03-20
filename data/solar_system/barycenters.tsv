@@ -1,0 +1,9 @@
+# NOT IMPLEMENTED YET!!!													
+# A counterbalanced_object doesn't have its own orbit (kep = null). Instead, it's placed relative to counterbalanced_by based on body masses.													
+# Counterbalanced_by can be a single object or multiple in array format [Body1,Body2] with no spaces.													
+#		# is_top, system_center, star, planet				# The 6 orbital elements; we'll convert L->T0 and w_hat->w.							
+#													
+name	parent	parent_level	counterbalanced_body	counterbalanced_by	show_counterbalanced_orbit	a	e	i	L	w_hat	Om	esc_vel	GM
+DataType	STRING	STRING	STRING	STRING	BOOL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL
+Default					FALSE								
+Units						au		deg	deg	deg	deg	km/s	
