@@ -1,0 +1,8 @@
+# See detailed comments in planet_data.csv.																										
+# Orbital elements can be null for top body.																										
+#											# The 6 orbital elements; we'll convert L->T0 and w_hat->w.							# RA/dec at J2018		# from Wiki						
+name	file_prefix	wiki_en	symbol	class_type	model_type	light_type	hydrostatic_equilibrium	cel_RA	cel_dec	cel_dist	a	e	i	L	w_hat	Om	rotation_period	right_ascension	declination	e_radius	m_radius	mass	mean_density	esc_vel	GM	photosphere_composition
+DataType	STRING	STRING	STRING	DATA	DATA	DATA	ConfidenceType	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING
+Default							YES																			
+Units								deg	deg	ly	au		deg	deg	deg	deg	d	deg	deg	km	km	kg	g/cm^3	km/s	m^3/s^2	
+STAR_SUN	Sun	Sun	\u2609	CLASS_G_STAR	MODEL_G_STAR	LIGHT_SUN		0	0	0							25.05	286.13	63.87	696342	696339	1.99E+30	1.408	617.7	1.33E+20	73.46% Hydrogen, 24.85% Helium, 0.77% Oxygen, 0.29% Carbon, 0.16% Iron, 0.12% Neon, 0.09% Nitrogen, 0.07% Silicon, 0.05% Magnesium, 0.04% Sulphur

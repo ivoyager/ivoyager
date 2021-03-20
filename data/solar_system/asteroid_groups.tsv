@@ -1,0 +1,20 @@
+# See Asteroid Importer addon for creation of asteroid binaries.									
+# Edit mag_cutoff to change how many asteroids are loaded. Number asteroids at mag_cutoff: 15.0 ~94k; 14.0 ~31k, 13.0 ~9k, 12.0 ~3k.									
+# All other columns (and provided rows) are used to make binaries and should not be changed unless rebuilding binaries. 									
+# Groups are based on https://en.wikipedia.org/wiki/List_of_minor_planets#Orbital_groups, with criteria modified so there are no excluded orbits.									
+# Asteroids are added to the first matching group. q, perihelion (closest); a, semimajor axis (peri- & apohelion average); q = (1 - e) * a.									
+# For each group, binaries were created representing half-integer ranges of magnitude. mag_cutoff determines which of these binaries are loaded.									
+# Rows here are currently hard-coded into navigation_panel.gd. This is something we try very hard not to do! To make this procedural rather than									
+# hard-coded, we would need columns here telling us where the asteroid group should be placed relative to planets above (and then code it!).									
+# Totals shown in comments are from wiki, and I think include only numbered. We have multiopposition non-numbered, so add ~20%. 									
+#									
+name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	Comments
+DataType	DATA	REAL	STRING	BODY	REAL	REAL	REAL	REAL	
+Default									
+Units					au	au	au	au	
+ASTEROID_GROUP_NEAR_EARTH	STAR_SUN	17	NE			1.3			# 2694 total
+ASTEROID_GROUP_MARS_CROSSERS	STAR_SUN	16	MC		1.3	1.666			# 5157 total
+ASTEROID_GROUP_MAIN_BELT	STAR_SUN	15	MB		1.666			4.6	# 510336  total (!)
+ASTEROID_GROUP_JUPITER_TROJANS	STAR_SUN	15	JT	PLANET_JUPITER			4.6	5.5	# 4869 total; if no L-point, will fall into next group
+ASTEROID_GROUP_CENTAURS	STAR_SUN	15	CE				4.6	30.1	# 95 total
+ASTEROID_GROUP_TRANS_NEPTUNE	STAR_SUN	15	TN				30.1		# 409 total

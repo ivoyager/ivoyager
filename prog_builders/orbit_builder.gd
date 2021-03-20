@@ -149,10 +149,10 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 			orbit.element_rates = element_rates
 			if m_modifiers:
 				orbit.m_modifiers = m_modifiers
-
+				
 	# reference plane (moons!)
 	if t.ref_plane == "Equatorial":
-		orbit.reference_normal = parent.model_controller.north_pole
+		orbit.reference_normal = parent.get_positive_pole()
 	elif t.ref_plane == "Laplace":
 		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
 		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)

@@ -37,12 +37,14 @@ extends VBoxContainer
 
 const BodyFlags := Enums.BodyFlags
 const NULL_ARRAY := []
+const NO_ARGS := []
 
-enum {
-	AS_IS = 10000,
+enum { # data_type
+	AS_IS,
+	QTY_TXT,
 	TABLE_ROW,
 	ENUM,
-	OBJECT_SPECIAL,
+	OBJECT_LABELS_VALUES,
 }
 
 # project vars
@@ -50,82 +52,110 @@ var enable_wiki: bool = Global.enable_wiki # can override false if needed
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 
-
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
 	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
 var subsection_of := [-1, -1, -1, 2, 2, -1]
 var section_open := [true, true, true, true, true, true]
-
 var section_data := [ # one array element per header
 	# In each section array, we have an array for each data line containing:
-	# [0] path to property or method [1] display label [2-4] type-specific (see code)
-
-	# Orbital Characteristics
-	[
-	["body/orbit/get_periapsis", "LABEL_PERIAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["body/orbit/get_apoapsis", "LABEL_APOAPSIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["body/orbit/get_semimajor_axis", "LABEL_SEMI_MAJOR_AXIS", QtyTxtConverter.LENGTH_KM_AU, "", 4],
-	["body/orbit/get_eccentricity", "LABEL_ECCENTRICITY", AS_IS],
-	["body/orbit/get_orbital_perioid", "LABEL_ORBITAL_PERIOD", QtyTxtConverter.TIME_D_Y, "", 4],
-	["body/orbit/get_average_orbital_speed", "LABEL_AVERAGE_ORBITAL_SPEED",
-			QtyTxtConverter.VELOCITY_MPS_KMPS, "", 4],
-	["body/orbit/get_inclination_to_ecliptic", "LABEL_INCLINATION_TO_ECLIPTIC",
-			QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL],
-	["body/get_orbit_inclination_to_equator", "LABEL_INCLINATION_TO_EQUATOR",
-			QtyTxtConverter.UNIT, "deg", 2, QtyTxtConverter.NUM_DECIMAL_PL],
-	["n_stars", "LABEL_STARS", AS_IS],
-	["n_planets", "LABEL_PLANETS", AS_IS],
-	["n_dwarf_planets", "LABEL_DWARF_PLANETS", AS_IS],
-	["n_moons", "LABEL_MOONS", AS_IS],
-	["n_asteroids", "LABEL_ASTEROIDS", AS_IS],
-	["n_comets", "LABEL_COMETS", AS_IS],
+	# [0] display label [1] path to property or method [2] method_args
+	# [3] data_type [4] process arg or args
+	[ # Orbital Characteristics
+		["LABEL_PERIAPSIS", "body/orbit/get_periapsis", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+		["LABEL_APOAPSIS", "body/orbit/get_apoapsis", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+		["LABEL_SEMI_MAJOR_AXIS", "body/orbit/get_semimajor_axis", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+		["LABEL_ECCENTRICITY", "body/orbit/get_eccentricity", NO_ARGS, AS_IS],
+		["LABEL_ORBITAL_PERIOD", "body/orbit/get_orbital_perioid", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.TIME_D_Y, "", 5]],
+		["LABEL_AVERAGE_ORBITAL_SPEED", "body/orbit/get_average_orbital_speed", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS, "", 5]],
+		["LABEL_INCLINATION_TO_ECLIPTIC", "body/orbit/get_inclination_to_ecliptic", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
+		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
+		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],
+		["LABEL_MOONS", "n_moons", NO_ARGS, AS_IS],
+		["LABEL_ASTEROIDS", "n_asteroids", NO_ARGS, AS_IS],
+		["LABEL_COMETS", "n_comets", NO_ARGS, AS_IS],
 	],
-	# Physical Characteristics
-	[
-	["body/characteristics/class_type", "LABEL_CLASSIFICATION", TABLE_ROW, "classes"],
-	["body/m_radius", "LABEL_MEAN_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/characteristics/e_radius", "LABEL_EQUATORIAL_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/characteristics/p_radius", "LABEL_POLAR_RADIUS", QtyTxtConverter.UNIT, "km"],
-	["body/characteristics/mass", "LABEL_MASS", QtyTxtConverter.MASS_G_KG],
-	["body/characteristics/hydrostatic_equilibrium", "LABEL_HYDROSTATIC_EQUILIBRIUM", ENUM, "ConfidenceType"],
-	["body/characteristics/surface_gravity", "LABEL_SURFACE_GRAVITY", QtyTxtConverter.UNIT, "_g"],
-	["body/characteristics/esc_vel", "LABEL_ESCAPE_VELOCITY", QtyTxtConverter.VELOCITY_MPS_KMPS],
-	["body/characteristics/mean_density", "LABEL_MEAN_DENSITY", QtyTxtConverter.UNIT, "g/cm^3"],
-	["body/characteristics/albedo", "LABEL_ALBEDO", QtyTxtConverter.NUMBER],
-	["body/characteristics/min_t", "LABEL_SURFACE_TEMP_MIN", QtyTxtConverter.UNIT, "degC"],
-	["body/characteristics/surf_t", "LABEL_SURFACE_TEMP_MEAN", QtyTxtConverter.UNIT, "degC"],
-	["body/characteristics/max_t", "LABEL_SURFACE_TEMP_MAX", QtyTxtConverter.UNIT, "degC"],
+	[ # Physical Characteristics
+		["LABEL_CLASSIFICATION", "body/characteristics/class_type", NO_ARGS,
+				TABLE_ROW, "classes"],
+		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+		["LABEL_EQUATORIAL_RADIUS", "body/characteristics/e_radius", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
+				ENUM, "ConfidenceType"],
+		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.MASS_G_KG]],
+		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "_g"]],
+		["LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS]],
+		["LABEL_MEAN_DENSITY", "body/characteristics/mean_density", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "g/cm^3"]],
+		["LABEL_ALBEDO", "body/characteristics/albedo", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.NUMBER]],
+		["LABEL_SURFACE_TEMP_MIN", "body/characteristics/min_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_SURFACE_TEMP_MEAN", "body/characteristics/surf_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_ROTATION_PERIOD", "body/get_sidereal_rotation_period", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
+		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+		["LABEL_AXIAL_TILT_TO_ECLIPTIC", "body/get_axial_tilt_to_ecliptic", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
 	],
-	# Atmosphere
-	[
-	["body/characteristics/surf_pres", "LABEL_SURFACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "bar"],
-	["body/characteristics/trace_pres", "LABEL_TRACE_PRESSURE", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/characteristics/trace_pres_high", "LABEL_TRACE_PRESSURE_HIGH", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/characteristics/trace_pres_low", "LABEL_TRACE_PRESSURE_LOW", QtyTxtConverter.PREFIXED_UNIT, "Pa"],
-	["body/characteristics/one_bar_t", "LABEL_TEMP_AT_1_BAR", QtyTxtConverter.UNIT, "degC"],
-	["body/characteristics/half_bar_t", "LABEL_TEMP_AT_HALF_BAR", QtyTxtConverter.UNIT, "degC"],
-	["body/characteristics/tenth_bar_t", "LABEL_TEMP_AT_10TH_BAR", QtyTxtConverter.UNIT, "degC"],
+	[ # Atmosphere
+		["LABEL_SURFACE_PRESSURE", "body/characteristics/surf_pres", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "bar"]],
+		["LABEL_TRACE_PRESSURE", "body/characteristics/trace_pres", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+		["LABEL_TRACE_PRESSURE_HIGH", "body/characteristics/trace_pres_high", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+		["LABEL_TRACE_PRESSURE_LOW", "body/characteristics/trace_pres_low", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+		["LABEL_TEMP_AT_1_BAR", "body/characteristics/one_bar_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_TEMP_AT_HALF_BAR", "body/characteristics/half_bar_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_TEMP_AT_10TH_BAR", "body/characteristics/tenth_bar_t", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
 	],
-	# Atmosphere composition
-	[
-	["body/components/atmosphere", "", OBJECT_SPECIAL],
+	[ # Atmosphere composition
+		["", "body/components/atmosphere", NO_ARGS, OBJECT_LABELS_VALUES],
 	],
-	# Trace atmosphere composition
-	[
-	["body/components/trace_atmosphere", "", OBJECT_SPECIAL],
+	[ # Trace atmosphere composition
+		["", "body/components/trace_atmosphere", NO_ARGS, OBJECT_LABELS_VALUES],
 	],
-	# Photosphere composition
-	[
-	["body/components/photosphere", "", OBJECT_SPECIAL],
+	[ # Photosphere composition
+		["", "body/components/photosphere", NO_ARGS, OBJECT_LABELS_VALUES],
 	],
 ]
 
 var label_is_wiki_link := ["body/characteristics/hydrostatic_equilibrium"]
-var value_is_wiki_link := ["body/class_type"]
+var value_is_wiki_link := ["body/characteristics/class_type"]
 var body_flags_test := {
 	"body/m_radius" : BodyFlags.DISPLAY_M_RADIUS,
 	"body/characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
+}
+
+var special_processing := {
+	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
+	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt_to_orbit",
+	"body/get_axial_tilt_to_ecliptic" : "_mod_axial_tilt_to_ecliptic",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -258,21 +288,19 @@ func _process_section(section: int, toggle: bool) -> void:
 func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
 	var line_data: Array = section_data[section][data_index]
-	var path: String = line_data[0]
-	
+	var path: String = line_data[1]
 	# flags exclusion
 	var body_flags: int = body_flags_test.get(path, 0)
 	if body_flags:
 		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
 	# get value from SelectionItem or nested object
-	var value = GDUtils.get_path_result(_selection_item, path)
+	var method_args: Array = line_data[2]
+	var value = GDUtils.get_path_result(_selection_item, path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text (& possibly wiki key)
-	
-	var enum_value: int = line_data[2]
-	
+	var data_type: int = line_data[3]
 	var value_txt: String
 	var wiki_key: String
 	match typeof(value):
@@ -282,12 +310,12 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				value_txt = "?"
 			elif value == -1:
 				pass # don't display
-			elif enum_value == TABLE_ROW:
-				var table_name: String = line_data[3]
+			elif data_type == TABLE_ROW:
+				var table_name: String = line_data[4]
 				key = _table_reader.get_row_name(table_name, value)
 				value_txt = tr(key)
-			elif enum_value == ENUM:
-				var enum_name: String = line_data[3]
+			elif data_type == ENUM:
+				var enum_name: String = line_data[4]
 				var enum_dict: Dictionary = _enums.get(enum_name)
 				var enum_keys: Array = enum_dict.keys()
 				key = enum_keys[value]
@@ -301,29 +329,34 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				value_txt = "?"
 			elif is_nan(value):
 				pass # don't display
-			elif enum_value == AS_IS:
+			elif data_type == AS_IS:
 				value_txt = str(value)
-			else: # call with args to QtyTxtConverter.number_option()
-				# expects elements 2, 3, 4
-				var data_size: int = line_data.size()
-				var unit: String = line_data[3] if data_size > 3 else ""
-				var sig_digits: int = line_data[4] if data_size > 4 else -1
-				var num_type: int = line_data[5] if data_size > 5 else QtyTxtConverter.NUM_DYNAMIC
-				value_txt = _qty_txt_converter.number_option(value, enum_value, unit, sig_digits, num_type)
+			elif data_type == QTY_TXT:
+				var args: Array = line_data[4]
+				var n_args: int = args.size()
+				var option_type: int = args[0]
+				var unit: String = args[1] if n_args > 1 else ""
+				var sig_digits: int = args[2] if n_args > 2 else -1
+				var num_type: int = args[3] if n_args > 3 else QtyTxtConverter.NUM_DYNAMIC
+				var long_form: bool = args[4] if n_args > 4 else false
+				var case_type: int = args[5] if n_args > 5 else QtyTxtConverter.CASE_MIXED
+				value_txt = _qty_txt_converter.number_option(value, option_type, unit, sig_digits,
+						num_type, long_form, case_type)
 		TYPE_STRING:
 			value_txt = tr(value)
 			if enable_wiki and value_is_wiki_link.has(path):
 				wiki_key = value # may be used as wiki link (if valid key)
 		TYPE_OBJECT:
-			if value is Composition:
-				var display: Array = value.get_display(prespace)
-				var components: String = display[0]
-				var amounts: String = display[1]
-				return [components, amounts, false, false]
+			if data_type == OBJECT_LABELS_VALUES:
+				var labels_values = value.get_labels_values_display(prespace)
+				return [labels_values[0], labels_values[1], false, false]
 	if !value_txt:
 		return NULL_ARRAY # n/a
+	var special_process: String = special_processing.get(path, "")
+	if special_process:
+		value_txt = call(special_process, value_txt, value)
 	# get label text
-	var label_key: String = line_data[1]
+	var label_key: String = line_data[0]
 	if _body:
 		if label_key == "LABEL_PERIAPSIS":
 			var parent := _body.get_parent() as Body
@@ -418,3 +451,31 @@ func _on_meta_clicked(meta: String) -> void:
 	var wiki_title: String = _wiki_titles[wiki_key]
 	var url: String = "https://en.wikipedia.org/wiki/" + wiki_title
 	OS.shell_open(url)
+
+# special processing functions
+
+func _mod_rotation_period(value_txt: String, value: float) -> String:
+	if _body:
+		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
+			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
+		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
+			value_txt = "~%s d (%s)" %[round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
+		elif _body.name == "PLANET_MERCURY":
+			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
+		elif _body.is_rotation_retrograde():
+			value_txt += " (%s)" % tr("TXT_RETROGRADE").to_lower()
+	return value_txt
+
+func _mod_axial_tilt_to_orbit(value_txt: String, value: float) -> String:
+	if _body:
+		if is_zero_approx(value) and _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
+			value_txt = "~0\u00B0"
+		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
+			value_txt = tr("TXT_VARIABLE")
+	return value_txt
+
+func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
+	if _body:
+		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
+			value_txt = tr("TXT_VARIABLE")
+	return value_txt

@@ -89,6 +89,7 @@ var _times: Array = Global.times
 var _state: Dictionary = Global.state
 var _camera_info: Array = Global.camera_info
 var _mouse_target: Array = Global.mouse_target
+var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 onready var _tree := get_tree()
 onready var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
@@ -147,12 +148,45 @@ func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 		return VECTOR2_ZERO
 	return model_controller.get_latitude_longitude(translation_, time)
 
-func get_north(_time := NAN) -> Vector3:
-	# Returns this body's north in ecliptic coordinates.
-	# TODO: North precession; will require time
+func get_north_pole(_time := NAN) -> Vector3:
+	# Returns this body's north in ecliptic coordinates. This is messy because
+	# IAU defines "north" only for true planets and their satellites equal to
+	# the pole pointing above invariable plane. Other bodies should use
+	# positive pole:
+	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
+	# However, it is common usage to assign "north" to Pluto and Charon's
+	# positive poles, even though this is south by above definition. We attempt
+	# to sort this out in BodyBuilder assigning model_controller.rotation_vector
+	# to a sensible "north" as follows:
+	#  * Planets and their satellites - per IAU, except we use ecliptic rather
+	#    than invarient plane (the difference is ~ 1 degree and will affect
+	#    very few if any objects).
+	#  * Other star-orbiting bodies - using positive pole, following Pluto.
+	#  * All others - use positive pole of parent body; so, hypothetically, a
+	#    retrograde moon of Pluto would have same north as Pluto.
+	# TODO: North precession; will require time.
 	if !model_controller:
 		return ECLIPTIC_Z
-	return model_controller.north_pole
+	return model_controller.rotation_vector
+
+func get_positive_pole(_time := NAN) -> Vector3:
+	# Right-hand-rule.
+	if !model_controller:
+		return ECLIPTIC_Z
+	if model_controller.rotation_rate < 0.0:
+		return -model_controller.rotation_vector
+	return model_controller.rotation_vector
+
+func get_up_pole(_time := NAN) -> Vector3:
+	# See comments in ModelController.
+	if !model_controller:
+		return ECLIPTIC_Z
+	return model_controller.rotation_vector
+
+func is_orbit_retrograde(time := NAN) -> bool:
+	if !orbit:
+		return false
+	return orbit.is_retrograde(time)
 
 func get_orbit_semi_major_axis(time := NAN) -> float:
 	if !orbit:
@@ -167,9 +201,32 @@ func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 func get_orbit_inclination_to_equator(time := NAN) -> float:
 	if !orbit or flags & BodyFlags.IS_TOP:
 		return NAN
-	var parent_north: Vector3 = get_parent().get_north(time)
 	var orbit_normal := orbit.get_normal(time)
-	return parent_north.angle_to(orbit_normal)
+	var positive_pole: Vector3 = get_parent().get_positive_pole(time)
+	return orbit_normal.angle_to(positive_pole)
+
+func get_sidereal_rotation_period() -> float:
+	if !model_controller:
+		return NAN
+	return TAU / model_controller.rotation_rate
+
+func is_rotation_retrograde() -> bool:
+	if !model_controller:
+		return false
+	return model_controller.rotation_rate < 0.0
+
+func get_axial_tilt_to_orbit(time := NAN) -> float:
+	if !model_controller or !orbit:
+		return NAN
+	var positive_pole := get_positive_pole(time)
+	var orbit_normal := orbit.get_normal(time)
+	return positive_pole.angle_to(orbit_normal)
+
+func get_axial_tilt_to_ecliptic(time := NAN) -> float:
+	if !model_controller:
+		return NAN
+	var positive_pole := get_positive_pole(time)
+	return positive_pole.angle_to(ECLIPTIC_Z)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
@@ -182,7 +239,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	if !orbit:
 		return IDENTITY_BASIS
 	var x_axis := -orbit.get_position(time).normalized()
-	var up := orbit.get_normal(time)
+	var up := orbit.get_normal(time, true)
 	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
@@ -362,15 +419,37 @@ func _on_model_controller_changed() -> void:
 	# TODO: Network sync
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
-#	prints("Orbit change: ", orbit._update_interval / UnitDefs.HOUR, "hr", tr(name))
-	if flags & IS_TIDALLY_LOCKED and model_controller:
-		var new_north_pole := orbit.get_normal(_times[0])
-		if model_controller.axial_tilt != 0.0:
-			var correction_axis := new_north_pole.cross(orbit.reference_normal).normalized()
-			new_north_pole = new_north_pole.rotated(correction_axis, model_controller.axial_tilt)
-		model_controller.north_pole = new_north_pole
+	if !is_inside_tree():
+		return
+	# logic here follows BodyBuilder
+	var model_controller_changed := false
+	if flags & BodyFlags.IS_TIDALLY_LOCKED:
+		model_controller.rotation_rate = orbit.get_mean_motion()
+		model_controller_changed = true
+	if flags & BodyFlags.IS_AXIS_LOCKED:
+		model_controller.rotation_vector = orbit.get_normal()
+		model_controller_changed = true
+	if model_controller_changed:
+		# fix polarity
+		var parent_flags: int = get_parent().flags
+		if parent_flags & BodyFlags.IS_TRUE_PLANET:
+			if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
+				model_controller.rotation_rate *= -1.0
+				model_controller.rotation_vector *= -1.0
+		elif parent_flags & BodyFlags.IS_STAR:
+			var positive_pole: Vector3 = get_parent().get_positive_pole()
+			if positive_pole.dot(model_controller.rotation_vector) < 0.0:
+				model_controller.rotation_rate *= -1.0
+				model_controller.rotation_vector *= -1.0
+		# set rotation and basis at epoch
+		var rotation_at_epoch := 0.0
+		if flags & BodyFlags.IS_TIDALLY_LOCKED:
+			rotation_at_epoch = orbit.get_mean_longitude(0.0) - PI
+		elif orbit:
+			rotation_at_epoch = orbit.get_true_longitude(0.0) - PI
+		model_controller.set_rotation_and_basis_at_epoch(rotation_at_epoch)
 		model_controller.emit_signal("changed")
-		# TODO: Adjust basis_at_epoch???
+	
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,

@@ -85,10 +85,10 @@ func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 		return ECLIPTIC_Z
 	return body.get_orbit_normal(time, flip_retrograde)
 
-func get_north(time := NAN) -> Vector3:
+func get_up(time := NAN) -> Vector3:
 	if !is_body:
 		return ECLIPTIC_Z
-	return body.get_north(time)
+	return body.get_north_pole(time)
 
 func get_ground_ref_basis(time := NAN) -> Basis:
 	if !is_body:
