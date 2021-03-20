@@ -36,20 +36,13 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 
 signal changed() # public properties; whoever changes must emit
 
-var right_ascension := NAN # don't set if tidally locked with ~0 axial tilt
-var declination := NAN # don't set if tidally locked with ~0 axial tilt
 
-var rotation_rate := 0.0
+# Body
 var rotation_vector := Vector3(0.0, 0.0, 1.0)
-var longitude_at_epoch := 0.0 # table
+var rotation_rate := 0.0
 var rotation_at_epoch := 0.0
 var basis_at_epoch := Basis.IDENTITY
-
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["right_ascension", "declination", "rotation_rate",
-	"rotation_vector", "longitude_at_epoch", "rotation_at_epoch", "basis_at_epoch"]
-
-# unpersisted (rebuilt on load)
+# Model
 var model: Spatial # program-built MeshInstance or imported Spatial scene
 var model_reference_basis := Basis.IDENTITY # z up
 
@@ -59,37 +52,30 @@ var _working_basis: Basis
 var _is_visible := false
 
 
-func get_latitude_longitude(translation: Vector3, time := NAN) -> Vector2:
-	# Order is flipped from standard spherical (RA, Dec), and we wrap longitude
-	# from -PI (West) to PI (East).
-	var ground_basis := get_ground_ref_basis(time)
-	var spherical := math.get_rotated_spherical3(translation, ground_basis)
-	var latitude: float = spherical[1]
-	var longitude: float = wrapf(spherical[0], -PI, PI)
-	return Vector2(latitude, longitude)
-
 func get_ground_ref_basis(time := NAN) -> Basis:
 	if is_nan(time):
 		time = _times[0]
 	var rotation_angle := wrapf(time * rotation_rate, 0.0, TAU)
 	return basis_at_epoch.rotated(rotation_vector, rotation_angle)
 
-func set_model(model_: Spatial, use_basis_as_reference := true) -> void:
-	model = model_
-	model.visible = _is_visible
-	if use_basis_as_reference:
-		set_model_reference_basis(model.transform.basis)
+func set_body_parameters(rotation_vector_: Vector3, rotation_rate_: float,
+		rotation_at_epoch_: float) -> void:
+	rotation_vector = rotation_vector_
+	rotation_rate = rotation_rate_
+	rotation_at_epoch = rotation_at_epoch_
+	var basis := math.rotate_basis_z(Basis(), rotation_vector)
+	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch_)
+	_working_basis = basis_at_epoch * model_reference_basis
 
 func set_model_reference_basis(model_basis_: Basis) -> void:
 	model_reference_basis = model_basis_
 	_working_basis = basis_at_epoch * model_reference_basis
 
-func set_rotation_and_basis_at_epoch(rotation_at_epoch_: float) -> void:
-	rotation_at_epoch = rotation_at_epoch_
-	var basis := math.rotate_basis_z(Basis(), rotation_vector)
-	var total_rotation := rotation_at_epoch + longitude_at_epoch
-	basis_at_epoch = basis.rotated(rotation_vector, total_rotation)
-	_working_basis = basis_at_epoch * model_reference_basis
+func set_model(model_: Spatial, use_basis_as_reference := true) -> void:
+	model = model_
+	model.visible = _is_visible
+	if use_basis_as_reference:
+		set_model_reference_basis(model.transform.basis)
 
 func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent: float,
 		energy_ref_dist: float, energy_near: float, energy_exponent: float) -> void:
