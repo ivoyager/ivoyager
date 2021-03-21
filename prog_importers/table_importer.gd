@@ -208,6 +208,8 @@ func _read_data_line() -> void:
 	_count_rows += 1
 
 func _process_cell_value() -> void:
+	if _cell.begins_with("\"") and _cell.ends_with("\""):
+		_cell = _cell.lstrip("\"").rstrip("\"")
 	if _data_type == "BOOL":
 		if _cell.matchn("FALSE"):
 			_cell = ""

@@ -1,8 +1,8 @@
-# See detailed comments in planet_data.csv.																				
-#																				
-#								TODO	TODO	TODO		# RA/dec at J2018		# from Wiki						
-name	file_prefix	wiki_en	symbol	class_type	model_type	light_type	hydrostatic_equilibrium	cel_RA	cel_dec	cel_dist	rotation_period	right_ascension	declination	e_radius	m_radius	mass	mean_density	esc_vel	GM	photosphere_composition
-DataType	STRING	STRING	STRING	DATA	DATA	DATA	ConfidenceType	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING
-Default							YES													
-Units								deg	deg	ly	d	deg	deg	km	km	kg	g/cm^3	km/s	m^3/s^2	
-STAR_SUN	Sun	Sun	\u2609	CLASS_G_STAR	MODEL_G_STAR	LIGHT_SUN		0	0	0	25.05	286.13	63.87	696342	696339	1.99E+30	1.408	617.7	1.33E+20	"73.46% Hydrogen, 24.85% Helium, 0.77% Oxygen, 0.29% Carbon, 0.16% Iron, 0.12% Neon, 0.09% Nitrogen, 0.07% Silicon, 0.05% Magnesium, 0.04% Sulphur"
+# See detailed comments in planet_data.csv.																												
+#																												
+#								TODO	TODO	TODO				# RA/dec at J2018		# from Wiki												
+name	file_prefix	wiki_en	symbol	class_type	model_type	light_type	hydrostatic_equilibrium	cel_RA	cel_dec	cel_dist	dist_galactic_core	galactic_period	rotation_period	right_ascension	declination	e_radius	m_radius	mass	mean_density	esc_vel	GM	stellar_classification	absolute_magnitude	luminosity	color_b_v	metallicity	age	photosphere_composition
+DataType	STRING	STRING	STRING	DATA	DATA	DATA	ConfidenceType	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	REAL	REAL	REAL	REAL	REAL	STRING
+Default							YES																					
+Units								deg	deg	ly	km	yr	d	deg	deg	km	km	kg	g/cm^3	km/s	m^3/s^2			W			yr	
+STAR_SUN	Sun	Sun	\u2609	CLASS_G_STAR	MODEL_G_STAR	LIGHT_SUN		0	0	0	_2.7e17	_2.3e8	25.05	286.13	63.87	696342	696339	1.99E+30	1.408	617.7	1.33E+20	G2V	4.83	3.83E+26	0.63	0.0122	_4.6e9	"73.46% Hydrogen, 24.85% Helium, 0.77% Oxygen, 0.29% Carbon, 0.16% Iron, 0.12% Neon, 0.09% Nitrogen, 0.07% Silicon, 0.05% Magnesium, 0.04% Sulphur"

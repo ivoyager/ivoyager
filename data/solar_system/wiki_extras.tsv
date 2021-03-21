@@ -1,6 +1,30 @@
 # This file provides keys for Wiki URL titles not included in other data tables.	
-# Spaces and underscores will be appropriately converted.	
+# Case-insensitive; spaces will be converted to underscores.	
 name	wiki_en
 DataType	STRING
+LABEL_ABSOLUTE_MAGNITUDE	Absolute_magnitude
+LABEL_ALBEDO	Albedo
+LABEL_APOAPSIS	Apsis
+LABEL_APHELION	Apsis
+LABEL_APOGEE	Apsis
+LABEL_AVERAGE_ORBITAL_SPEED	Orbital_speed
+LABEL_AXIAL_TILT_TO_ORBIT	Axial_tilt
+LABEL_AXIAL_TILT_TO_ECLIPTIC	Axial_tilt
+LABEL_COLOR_B_V	Color_index
+LABEL_ECCENTRICITY	Orbital_eccentricity
+LABEL_ESCAPE_VELOCITY	Escape_velocity
+LABEL_GALACTIC_PERIOD	Galactic_year
 LABEL_HYDROSTATIC_EQUILIBRIUM	Hydrostatic_equilibrium
-SYSTEM_SOLAR_SYSTEM	Solar System
+LABEL_INCLINATION_TO_ECLIPTIC	Orbital_inclination
+LABEL_INCLINATION_TO_EQUATOR	Orbital_inclination
+LABEL_LUMINOSITY	Luminosity
+LABEL_METALLICITY	Metallicity
+LABEL_ORBITAL_PERIOD	Orbital_period
+LABEL_PERIAPSIS	Apsis
+LABEL_PERIGEE	Apsis
+LABEL_PERIHELION	Apsis
+LABEL_ROTATION_PERIOD	Rotation_period
+LABEL_SEMI_MAJOR_AXIS	Semi-major_and_semi-minor_axes
+LABEL_STELLAR_CLASSIFICATION	Stellar_classification
+LABEL_SURFACE_GRAVITY	Surface_gravity
+SYSTEM_SOLAR_SYSTEM	Solar_System

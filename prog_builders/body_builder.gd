@@ -43,13 +43,17 @@ var min_hud_dist_radius_multiplier := 500.0
 var min_hud_dist_star_multiplier := 20.0 # combines w/ above
 
 var body_fields := ["name", "m_radius"]
-var characteristics_fields := ["symbol", "class_type", "model_type", "light_type",
+var characteristics_fields := [
+	"symbol", "class_type", "model_type", "light_type",
 	"file_prefix", "rings_file_prefix", "rings_radius", "GM", "mass", "surface_gravity",
 	"esc_vel", "m_radius", "e_radius", "right_ascension", "declination", "longitude_at_epoch",
 	"rotation_period",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
-	"tenth_bar_t"]
+	"tenth_bar_t",
+	"dist_galactic_core", "galactic_period", "stellar_classification", "absolute_magnitude",
+	"luminosity", "color_b_v", "metallicity", "age"
+]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
