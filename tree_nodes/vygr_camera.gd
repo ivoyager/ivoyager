@@ -152,9 +152,9 @@ var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
-
 var _is_ecliptic := false
 var _last_dist := 0.0
+var _is_camera_bump := false
 
 var _universe: Spatial = Global.program.Universe
 var _View_: Script = Global.script_classes._View_
@@ -384,7 +384,7 @@ func _process(delta: float) -> void:
 	# We process our working _transform, then update transform
 	if is_moving:
 		_process_move_in_progress(delta)
-	if !is_moving:
+	else:
 		_process_at_target(delta)
 	if UNIVERSE_SHIFTING:
 		# Camera parent will be at global translation (0,0,0) after this step.
@@ -401,6 +401,9 @@ func _process_move_in_progress(delta: float) -> void:
 		is_moving = false
 		if parent != _to_spatial:
 			_do_camera_handoff()
+		_is_camera_bump = true
+		_process_at_target(delta)
+		_is_camera_bump = true # need on next frame too
 		return
 	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
 	# Hand-off at halfway point avoids precision shakes at either end
@@ -482,7 +485,7 @@ func _interpolate_spherical_path(progress: float) -> void:
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
 
 func _process_at_target(delta: float) -> void:
-	var is_camera_bump := false
+	var is_camera_bump := _is_camera_bump
 	# maintain present "position" based on track_type
 	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
 	# process accumulated user inputs
@@ -516,6 +519,7 @@ func _process_at_target(delta: float) -> void:
 		else:
 			lat_long = selection_item.get_latitude_longitude(translation)
 		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
+		_is_camera_bump = false
 
 func _process_move_action(delta: float) -> void:
 	var action_proportion := action_immediacy * delta

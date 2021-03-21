@@ -2,7 +2,6 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/selection_data.gd" type="Script" id=1]
 
-
 [node name="SelectionData" type="VBoxContainer"]
 margin_right = 40.0
 margin_bottom = 40.0

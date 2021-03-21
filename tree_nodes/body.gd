@@ -45,11 +45,14 @@ const ECLIPTIC_Z := IDENTITY_BASIS.z
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR2_NULL := Vector2(-INF, -INF)
 const BodyFlags := Enums.BodyFlags
+const IS_TOP := BodyFlags.IS_TOP
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
 const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
+const IS_AXIS_LOCKED := BodyFlags.IS_AXIS_LOCKED
+const TUMBLES_CHAOTICALLY := BodyFlags.TUMBLES_CHAOTICALLY
 const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = Enums.NetworkState.IS_SERVER
 
@@ -67,8 +70,8 @@ const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "com
 
 # public - read-only except builder classes; not persisted unless noted
 var m_radius := NAN # persisted in characteristics
-var model_controller: ModelController # persisted in components
 var orbit: Orbit # persisted in components
+var model_controller: ModelController
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
 var hud_orbit: HUDOrbit
@@ -146,7 +149,11 @@ func get_polar_radius() -> float:
 func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
 		return VECTOR2_ZERO
-	return model_controller.get_latitude_longitude(translation_, time)
+	var ground_basis := model_controller.get_ground_ref_basis(time)
+	var spherical := math.get_rotated_spherical3(translation_, ground_basis)
+	var latitude: float = spherical[1]
+	var longitude: float = wrapf(spherical[0], -PI, PI)
+	return Vector2(latitude, longitude)
 
 func get_north_pole(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates. This is messy because
@@ -156,14 +163,17 @@ func get_north_pole(_time := NAN) -> Vector3:
 	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
 	# However, it is common usage to assign "north" to Pluto and Charon's
 	# positive poles, even though this is south by above definition. We attempt
-	# to sort this out in BodyBuilder assigning model_controller.rotation_vector
-	# to a sensible "north" as follows:
-	#  * Planets and their satellites - per IAU, except we use ecliptic rather
-	#    than invarient plane (the difference is ~ 1 degree and will affect
-	#    very few if any objects).
-	#  * Other star-orbiting bodies - using positive pole, following Pluto.
-	#  * All others - use positive pole of parent body; so, hypothetically, a
-	#    retrograde moon of Pluto would have same north as Pluto.
+	# to sort this out in our data tables and BodyBuilder assigning
+	# model_controller.rotation_vector to a sensible "north" as follows:
+	#  * Star - same as true planet below.
+	#  * True planets and their satellites - use pole pointing in positive z-
+	#    axis direction in ecliptic (our sim reference coordinates). This is
+	#    per IAU except the use of ecliptic rather than invarient plane (the
+	#    difference is ~ 1 degree and will affect very few if any objects).
+	#  * Other star-orbiting bodies - use positive pole, following Pluto.
+	#  * All others - use pole in same hemisphere as parent positive pole; so,
+	#    hypothetically, a retrograde moon of Pluto would have north aligned
+	#    with Pluto's.
 	# TODO: North precession; will require time.
 	if !model_controller:
 		return ECLIPTIC_Z
@@ -199,7 +209,7 @@ func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	return orbit.get_normal(time, flip_retrograde)
 
 func get_orbit_inclination_to_equator(time := NAN) -> float:
-	if !orbit or flags & BodyFlags.IS_TOP:
+	if !orbit or flags & IS_TOP:
 		return NAN
 	var orbit_normal := orbit.get_normal(time)
 	var positive_pole: Vector3 = get_parent().get_positive_pole(time)
@@ -244,6 +254,9 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
 
+# *****************************************************************************
+# ivoyager mechanics & private
+
 func set_orbit(orbit_: Orbit) -> void:
 	if orbit == orbit_:
 		return
@@ -255,25 +268,8 @@ func set_orbit(orbit_: Orbit) -> void:
 		components.orbit = orbit_
 		orbit_.reset_elements_and_interval_update()
 		orbit_.connect("changed", self, "_on_orbit_changed")
-		_on_orbit_changed(false)
 	else:
 		components.erase("orbit")
-
-func set_model_controller(model_controller_: ModelController) -> void:
-	if model_controller == model_controller_:
-		return
-	if model_controller:
-		model_controller.disconnect("changed", self, "_on_model_controller_changed")
-	model_controller = model_controller_
-	if model_controller_:
-		components.model_controller = model_controller_
-		model_controller_.connect("changed", self, "_on_model_controller_changed")
-		_on_model_controller_changed()
-	else:
-		components.erase("model_controller")
-
-# *****************************************************************************
-# ivoyager mechanics & private
 
 func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	if hide_hud_when_close:
@@ -304,6 +300,72 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		is_asleep = false
 		set_process(true) # will show on next _process()
 
+func reset_orientation_and_rotation() -> void:
+	# If we have tidal and/or axis lock, then Orbit determines rotation and/or
+	# orientation. If so, we use Orbit to set values in characteristics and
+	# ModelController. Otherwise, characteristics already holds table-loaded
+	# values which we use to set ModelController values.
+	# Note: Earth's Moon is the unusual case that is tidally locked but not
+	# axis locked (its axis is tilted to its orbit). Axis of other moons are
+	# not exactly orbit normal but stay within ~1 degree. E.g., see:
+	# https://zenodo.org/record/1259023.
+	# TODO: We still need rotation precession for Bodies with axial tilt.
+	# TODO: Some special mechanic for tumblers like Hyperion.
+	if !model_controller:
+		return
+	# rotation_rate
+	var rotation_rate: float
+	if flags & IS_TIDALLY_LOCKED:
+		rotation_rate = orbit.get_mean_motion()
+		characteristics.rotation_period = TAU / rotation_rate
+	else:
+		var rotation_period: float = characteristics.rotation_period
+		rotation_rate = TAU / rotation_period
+	# rotation_vector
+	var rotation_vector: Vector3
+	if flags & IS_AXIS_LOCKED:
+		rotation_vector = orbit.get_normal()
+		var ra_dec := math.get_spherical2(rotation_vector)
+		characteristics.right_ascension = ra_dec[0]
+		characteristics.declination = ra_dec[1]
+	elif flags & TUMBLES_CHAOTICALLY:
+		# TODO: something sensible for Hyperion
+		characteristics.right_ascension = 0.0
+		characteristics.declination = 0.0
+		rotation_vector = _ecliptic_rotation * math.convert_spherical2(0.0, 0.0)
+	else:
+		var ra: float = characteristics.right_ascension
+		var dec: float = characteristics.declination
+		rotation_vector = _ecliptic_rotation * math.convert_spherical2(ra, dec)
+	var rotation_at_epoch: float = characteristics.get("longitude_at_epoch", 0.0)
+	if flags & IS_TIDALLY_LOCKED:
+		rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
+	elif orbit:
+		rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
+	# possible polarity reversal; see comments under get_north_pole()
+	var reverse_polarity := false
+	var parent_flags := 0
+	var parent := get_parent_spatial()
+	if parent.name != "Universe":
+		parent_flags = parent.flags
+	if flags & IS_STAR or flags & IS_TRUE_PLANET or parent_flags & IS_TRUE_PLANET:
+		if ECLIPTIC_Z.dot(rotation_vector) < 0.0:
+			reverse_polarity = true
+	elif parent_flags & IS_STAR: # dwarf planets and other star-orbiters
+		var positive_pole := get_positive_pole()
+		if positive_pole.dot(rotation_vector) < 0.0:
+			reverse_polarity = true
+	else:
+		var parent_positive_pole: Vector3 = parent.get_positive_pole()
+		if parent_positive_pole.dot(rotation_vector) < 0.0:
+			reverse_polarity = true
+	if reverse_polarity:
+		rotation_rate *= -1.0
+		rotation_vector *= -1.0
+		rotation_at_epoch *= -1.0
+	model_controller.set_body_parameters(rotation_vector, rotation_rate, rotation_at_epoch)
+	model_controller.emit_signal("changed")
+
 # virtual functions call private functions so subclass can override
 func _init() -> void:
 	_on_init()
@@ -326,14 +388,9 @@ func _on_enter_tree() -> void:
 	# loading game inits
 	m_radius = characteristics.m_radius
 	orbit = components.get("orbit")
-	model_controller = components.get("model_controller")
 	if orbit:
 		orbit.reset_elements_and_interval_update()
 		orbit.connect("changed", self, "_on_orbit_changed")
-		_on_orbit_changed(false)
-	if model_controller:
-		model_controller.connect("changed", self, "_on_model_controller_changed")
-		_on_model_controller_changed()
 
 func _on_ready() -> void:
 #	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
@@ -414,42 +471,9 @@ func _on_show_huds_changed() -> void:
 	_show_orbit = _huds_manager.show_orbits
 	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
 
-func _on_model_controller_changed() -> void:
-	pass
-	# TODO: Network sync
-
 func _on_orbit_changed(is_scheduled: bool) -> void:
-	if !is_inside_tree():
-		return
-	# logic here follows BodyBuilder
-	var model_controller_changed := false
-	if flags & BodyFlags.IS_TIDALLY_LOCKED:
-		model_controller.rotation_rate = orbit.get_mean_motion()
-		model_controller_changed = true
-	if flags & BodyFlags.IS_AXIS_LOCKED:
-		model_controller.rotation_vector = orbit.get_normal()
-		model_controller_changed = true
-	if model_controller_changed:
-		# fix polarity
-		var parent_flags: int = get_parent().flags
-		if parent_flags & BodyFlags.IS_TRUE_PLANET:
-			if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
-				model_controller.rotation_rate *= -1.0
-				model_controller.rotation_vector *= -1.0
-		elif parent_flags & BodyFlags.IS_STAR:
-			var positive_pole: Vector3 = get_parent().get_positive_pole()
-			if positive_pole.dot(model_controller.rotation_vector) < 0.0:
-				model_controller.rotation_rate *= -1.0
-				model_controller.rotation_vector *= -1.0
-		# set rotation and basis at epoch
-		var rotation_at_epoch := 0.0
-		if flags & BodyFlags.IS_TIDALLY_LOCKED:
-			rotation_at_epoch = orbit.get_mean_longitude(0.0) - PI
-		elif orbit:
-			rotation_at_epoch = orbit.get_true_longitude(0.0) - PI
-		model_controller.set_rotation_and_basis_at_epoch(rotation_at_epoch)
-		model_controller.emit_signal("changed")
-	
+	if flags & IS_TIDALLY_LOCKED or flags & IS_AXIS_LOCKED:
+		reset_orientation_and_rotation()
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,

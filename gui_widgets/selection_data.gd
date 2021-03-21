@@ -48,9 +48,12 @@ enum { # data_type
 }
 
 # project vars
-var enable_wiki: bool = Global.enable_wiki # can override false if needed
+var test_wiki_labels: bool = Global.enable_wiki # can override to false if needed
+var test_wiki_values: bool = Global.enable_wiki # can override to false if needed
+
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
+var update_interval := 1.0 # seconds; set 0.0 for no updates
 
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
@@ -77,6 +80,10 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
 		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+		["LABEL_DIST_GALACTIC_CORE", "body/characteristics/dist_galactic_core", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU]],
+		["LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
 		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
 		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
 		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],
@@ -111,6 +118,18 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+		
+		
+		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
+		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
+		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "W"]],
+		["LABEL_COLOR_B_V", "body/characteristics/color_b_v", NO_ARGS, AS_IS],
+		["LABEL_METALLICITY", "body/characteristics/metallicity", NO_ARGS, AS_IS],
+		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
+		
+		
+		
 		["LABEL_ROTATION_PERIOD", "body/get_sidereal_rotation_period", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
 		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
@@ -145,9 +164,7 @@ var section_data := [ # one array element per header
 	],
 ]
 
-var label_is_wiki_link := ["body/characteristics/hydrostatic_equilibrium"]
-var value_is_wiki_link := ["body/characteristics/class_type"]
-var body_flags_test := {
+var body_flags_test := { # show criteria
 	"body/m_radius" : BodyFlags.DISPLAY_M_RADIUS,
 	"body/characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
 }
@@ -160,24 +177,30 @@ var special_processing := {
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
 onready var _table_reader: TableReader = Global.program.TableReader
+var _state: Dictionary = Global.state
 var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
+var _selection_item: SelectionItem
+var _body: Body
 var _header_buttons := []
 var _grids := []
-var _meta_lookup := {}
+var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
 
-var _selection_item: SelectionItem
-var _body: Body
-
-func _ready():
+func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	Global.connect("about_to_quit", self, "_clear")
+	_update_coroutine()
 
 func _clear() -> void:
+	if _selection_manager:
+		_selection_manager.disconnect("selection_changed", self, "_update_selection")
+	_selection_manager = null
+	_selection_item = null
+	_body = null
 	_header_buttons.clear()
 	_grids.clear()
 	_meta_lookup.clear()
@@ -193,7 +216,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
 	_selection_manager = GUIUtils.get_selection_manager(self)
-	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0
 	while section < n_sections:
@@ -219,9 +242,17 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		_grids.append(grid)
 		add_child(grid)
 		section += 1
-	_on_selection_changed()
+	_update_selection()
 
-func _on_selection_changed() -> void:
+func _update_coroutine() -> void:
+	if !update_interval:
+		return
+	while true:
+		yield(get_tree().create_timer(update_interval), "timeout")
+		if _state.is_running:
+			_update_selection()
+
+func _update_selection() -> void:
 	_selection_item = _selection_manager.selection_item
 	if !_selection_item:
 		return
@@ -299,10 +330,10 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	var value = GDUtils.get_path_result(_selection_item, path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
-	# get value text (& possibly wiki key)
+	# get value text and possibly wiki key
 	var data_type: int = line_data[3]
 	var value_txt: String
-	var wiki_key: String
+	var value_wiki_key: String
 	match typeof(value):
 		TYPE_INT:
 			var key: String
@@ -314,16 +345,18 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var table_name: String = line_data[4]
 				key = _table_reader.get_row_name(table_name, value)
 				value_txt = tr(key)
+				if test_wiki_values and _wiki_titles.has(key):
+					value_wiki_key = key
 			elif data_type == ENUM:
 				var enum_name: String = line_data[4]
 				var enum_dict: Dictionary = _enums.get(enum_name)
 				var enum_keys: Array = enum_dict.keys()
 				key = enum_keys[value]
 				value_txt = tr(key)
+				if test_wiki_values and _wiki_titles.has(key):
+					value_wiki_key = key
 			else:
 				value_txt = str(value)
-			if enable_wiki and key and value_is_wiki_link.has(path):
-				wiki_key = key
 		TYPE_REAL:
 			if is_inf(value):
 				value_txt = "?"
@@ -344,8 +377,8 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 						num_type, long_form, case_type)
 		TYPE_STRING:
 			value_txt = tr(value)
-			if enable_wiki and value_is_wiki_link.has(path):
-				wiki_key = value # may be used as wiki link (if valid key)
+			if test_wiki_values and _wiki_titles.has(value):
+				value_wiki_key = value
 		TYPE_OBJECT:
 			if data_type == OBJECT_LABELS_VALUES:
 				var labels_values = value.get_labels_values_display(prespace)
@@ -373,27 +406,25 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				elif parent.name == "PLANET_EARTH":
 					label_key = "LABEL_APOGEE"
 	var label_txt := tr(label_key)
-	if !enable_wiki:
-		return [prespace + label_txt, value_txt, false, false]
 	# wiki links
-	var label_link := false
-	var value_link := false
-	if label_is_wiki_link.has(path) and _wiki_titles.has(label_key): # label is wiki link
+	var is_label_link := false
+	var is_value_link := false
+	if test_wiki_labels and _wiki_titles.has(label_key): # label is wiki link
 		_meta_lookup[label_txt] = label_key
 		label_txt = "[url]" + label_txt + "[/url]"
-		label_link = true
-	if wiki_key and _wiki_titles.has(wiki_key): # value is wiki link
-		_meta_lookup[value_txt] = wiki_key
+		is_label_link = true
+	if value_wiki_key: # value is wiki link
+		_meta_lookup[value_txt] = value_wiki_key
 		value_txt = "[url]" + value_txt + "[/url]"
-		value_link = true
-	return [prespace + label_txt, value_txt, label_link, value_link]
+		is_value_link = true
+	return [prespace + label_txt, value_txt, is_label_link, is_value_link]
 
 func _add_row(grid: GridContainer, row_info: Array) -> void:
 	var label_txt: String = row_info[0]
 	var value_txt: String = row_info[1]
-	var label_link: bool = row_info[2]
-	var value_link: bool = row_info[3]
-	if label_link:
+	var is_label_link: bool = row_info[2]
+	var is_value_link: bool = row_info[3]
+	if is_label_link:
 		var label_cell := _get_rtlabel(false)
 		label_cell.bbcode_text = label_txt
 		grid.add_child(label_cell)
@@ -401,7 +432,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 		var label_cell := _get_label(false)
 		label_cell.text = label_txt
 		grid.add_child(label_cell)
-	if value_link:
+	if is_value_link:
 		var value_cell := _get_rtlabel(true)
 		value_cell.bbcode_text = value_txt
 		grid.add_child(value_cell)

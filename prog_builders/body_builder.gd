@@ -43,13 +43,17 @@ var min_hud_dist_radius_multiplier := 500.0
 var min_hud_dist_star_multiplier := 20.0 # combines w/ above
 
 var body_fields := ["name", "m_radius"]
-var characteristics_fields := ["symbol", "class_type", "model_type", "light_type",
+var characteristics_fields := [
+	"symbol", "class_type", "model_type", "light_type",
 	"file_prefix", "rings_file_prefix", "rings_radius", "GM", "mass", "surface_gravity",
-	"esc_vel", "m_radius", "e_radius",
+	"esc_vel", "m_radius", "e_radius", "right_ascension", "declination", "longitude_at_epoch",
+	"rotation_period",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
-	"tenth_bar_t"]
-var model_controller_fields := ["right_ascension", "declination", "longitude_at_epoch"]
+	"tenth_bar_t",
+	"dist_galactic_core", "galactic_period", "stellar_classification", "absolute_magnitude",
+	"luminosity", "color_b_v", "metallicity", "age"
+]
 var flag_fields := {
 	BodyFlags.IS_DWARF_PLANET : "dwarf",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
@@ -77,7 +81,6 @@ var _table_reader: TableReader
 var _main_prog_bar: MainProgBar
 var _Body_: Script
 var _ModelController_: Script
-var _StarRegulator_: Script
 var _fallback_body_2d: Texture
 
 var progress := 0 # external progress bar read-only
@@ -110,7 +113,6 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
 	_set_compositions_from_table(body)
-	_set_model_controller_from_table(body, parent)
 	_register(body, parent)
 	body.hide()
 	return body
@@ -213,70 +215,6 @@ func _set_compositions_from_table(body: Body) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
-func _set_model_controller_from_table(body: Body, parent: Body) -> void:
-	# orientation and rotation
-	# We use definition of "axial tilt" as angle to a body's orbital plane
-	# (excpept for primary star where we use ecliptic). North pole should
-	# follow IAU definition (!= positive pole) except Pluto, which is
-	# flipped by convention.
-	var flags := body.flags
-	var orbit := body.orbit
-	var model_controller: ModelController = _ModelController_.new()
-	_table_reader.build_object(model_controller, model_controller_fields, _table_name, _row)
-	# rotation_rate
-	if flags & BodyFlags.IS_TIDALLY_LOCKED:
-		model_controller.rotation_rate = orbit.get_mean_motion()
-	else:
-		var rotation_period := _table_reader.get_real(_table_name, "rotation_period", _row)
-		assert(rotation_period and !is_nan(rotation_period))
-		model_controller.rotation_rate = TAU / rotation_period
-	# rotation_vector
-	if flags & BodyFlags.IS_AXIS_LOCKED:
-		# True for most tidally locked moons, but not Moon. Ignore RA and dec.
-		model_controller.rotation_vector = orbit.get_normal()
-	elif flags & BodyFlags.TUMBLES_CHAOTICALLY:
-		# TODO: something sensible for Hyperion
-		model_controller.right_ascension = 0.0
-		model_controller.declination = 0.0
-		model_controller.rotation_vector = _ecliptic_rotation * math.convert_spherical2(
-				model_controller.right_ascension, model_controller.declination)
-	else:
-		assert(!is_nan(model_controller.right_ascension) and !is_nan(model_controller.declination))
-		model_controller.rotation_vector = _ecliptic_rotation * math.convert_spherical2(
-				model_controller.right_ascension, model_controller.declination)
-	# Polarity fix. See comments in Body.get_north_pole(). We set rotation_vector
-	# polarity to be a sensible "north" which will be subjective "up". IAU
-	# defines north for true planets and their satellites as pole pointing
-	# above invarient plane. Pluto "north" is informally defined as positive
-	# pole (which is reverse of above). We follow Pluto and use positive pole
-	# for all non-true planets and positive pole of parent for their satellites.
-	# We assume that "star" and "planet" tables correctly set RA & dec (thus
-	# rotation_vector) and we need only fix moons here.
-	if parent and parent.flags & BodyFlags.IS_TRUE_PLANET:
-		# Moons of true planets
-		# FIXME: To be technically correct, we should use invarient plane
-		# rather than ecliptic. These differ by ~1 degree so very few (if any)
-		# moons will be flipped.
-		if ECLIPTIC_Z.dot(model_controller.rotation_vector) < 0.0:
-			model_controller.rotation_rate *= -1.0
-			model_controller.rotation_vector *= -1.0
-	elif parent and not parent.flags & BodyFlags.IS_STAR:
-		# All other satellites
-		var positive_pole := parent.get_positive_pole()
-		if positive_pole.dot(model_controller.rotation_vector) < 0.0:
-			model_controller.rotation_rate *= -1.0
-			model_controller.rotation_vector *= -1.0
-	# rotation and reference at epoch
-	var rotation_at_epoch := 0.0
-	if flags & BodyFlags.IS_TIDALLY_LOCKED:
-		# By definition, longitude 0.0 is the mean parent facing side.
-		rotation_at_epoch = orbit.get_mean_longitude(0.0) - PI
-	elif orbit:
-		rotation_at_epoch = orbit.get_true_longitude(0.0) - PI
-	model_controller.set_rotation_and_basis_at_epoch(rotation_at_epoch)
-
-	body.set_model_controller(model_controller)
-
 func _register(body: Body, parent: Body) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
@@ -311,7 +249,7 @@ func _on_node_added(node: Node) -> void:
 		_build_unpersisted(body)
 
 func _build_unpersisted(body: Body) -> void: # Main thread
-	# After _enter_tree(), before _ready()
+	# This is after Body._enter_tree(), but before Body._ready()
 	# Note: many builders called here ask for IOManager.callback. These are
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
@@ -319,7 +257,10 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
 	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
+	
 	if body.get_model_type() != -1:
+		body.model_controller = _ModelController_.new()
+		body.reset_orientation_and_rotation()
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
