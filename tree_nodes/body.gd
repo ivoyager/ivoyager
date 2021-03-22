@@ -146,11 +146,11 @@ func get_polar_radius() -> float:
 		return p_radius
 	return m_radius
 
-func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
+func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
 		return VECTOR2_ZERO
 	var ground_basis := model_controller.get_ground_ref_basis(time)
-	var spherical := math.get_rotated_spherical3(translation_, ground_basis)
+	var spherical := math.get_rotated_spherical3(at_translation, ground_basis)
 	var latitude: float = spherical[1]
 	var longitude: float = wrapf(spherical[0], -PI, PI)
 	return Vector2(latitude, longitude)
@@ -304,7 +304,7 @@ func reset_orientation_and_rotation() -> void:
 	# If we have tidal and/or axis lock, then Orbit determines rotation and/or
 	# orientation. If so, we use Orbit to set values in characteristics and
 	# ModelController. Otherwise, characteristics already holds table-loaded
-	# values which we use to set ModelController values.
+	# values (RA, dec, period) which we use to set ModelController values.
 	# Note: Earth's Moon is the unusual case that is tidally locked but not
 	# axis locked (its axis is tilted to its orbit). Axis of other moons are
 	# not exactly orbit normal but stay within ~1 degree. E.g., see:
@@ -341,6 +341,9 @@ func reset_orientation_and_rotation() -> void:
 	if flags & IS_TIDALLY_LOCKED:
 		rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
 	elif orbit:
+#		if orbit.is_retrograde(0.0):
+#			rotation_at_epoch -= orbit.get_true_longitude(0.0) - PI
+#		else:
 		rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
