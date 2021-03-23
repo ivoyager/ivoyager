@@ -137,7 +137,7 @@ func _read_cache() -> void:
 	# it does block until completed.
 	var file := File.new()
 	if file.open(_file_path, File.READ) != OK:
-		prints("No cache file", _file_path, "(ok if no changes)")
+		prints("Missing", _file_path, "(ok if no changes yet)")
 		return
 	_cached = file.get_var()
 	for item_name in _cached:
