@@ -31,8 +31,7 @@
 # To modify and extend I, Voyager:
 # 1. Create an extension init file with path "res://<name>/<name>.gd" where
 #    <name> is the name of your project or addon. This file should have an
-#    _extension_init() function and extend Reference. Instructions 2-5 refer
-#    to this file.
+#    _extension_init() function. Instructions 2-3 refer to this file.
 # 2. Use _extension_init() to:
 #     a. modify "project init" values in Global singleton.
 #     b. modify this node's dictionaries to extend (i.e., subclass) or replace
@@ -82,16 +81,16 @@ onready var universe: Spatial = get_node_or_null("/root/Universe")
 # edge underscores are removed to form keys in the Global.program dictionary
 # and the "name" property of nodes.
 
-var program_importers := {
+var initializers := {
 	# Reference classes. ProjectBuilder instances these first. They may erase
-	# themselves from Global.program when done (thus, freeing themselves).
+	# themselves from Global.program when done (thereby freeing themselves).
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
 }
 
-var program_builders := {
+var prog_builders := {
 	# Reference classes. ProjectBuilder instances one of each. No save/load
-	# persistence. These are treated exactly like program_references below, but
+	# persistence. These are treated exactly like prog_refs below, but
 	# separated for project organization.
 	_SaveBuilder_ = SaveBuilder, # ok to remove if you don't need game save
 	_EnvironmentBuilder_ = EnvironmentBuilder,
@@ -108,7 +107,7 @@ var program_builders := {
 	_CompositionBuilder_ = CompositionBuilder,
 }
 
-var program_references := {
+var prog_refs := {
 	# Reference classes. ProjectBuilder instances one of each. No save/load
 	# persistence.
 	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
@@ -123,7 +122,7 @@ var program_references := {
 	_Scheduler_ = Scheduler,
 }
 
-var program_nodes := {
+var prog_nodes := {
 	# ProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
 	_StateManager_ = StateManager,
@@ -139,7 +138,7 @@ var program_nodes := {
 
 var keep_gui_under_existing_controls := true # add before other children
 
-var gui_controls := {
+var gui_nodes := {
 	# ProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
@@ -216,7 +215,7 @@ func init_extensions() -> void:
 func instantiate_and_index() -> void:
 	program.Global = Global
 	program.Universe = universe
-	for dict in [program_importers, program_builders, program_references, program_nodes, gui_controls]:
+	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
@@ -224,7 +223,7 @@ func instantiate_and_index() -> void:
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	for dict in [program_importers, program_builders, program_references, program_nodes, gui_controls,
+	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes,
 			procedural_classes]:
 		for key in dict:
 			assert(!script_classes.has(key))
@@ -232,13 +231,13 @@ func instantiate_and_index() -> void:
 	Global.emit_signal("project_objects_instantiated")
 
 func init_project() -> void:
-	for key in program_importers:
+	for key in initializers:
 		var object_key: String = key.rstrip("_").lstrip("_")
 		if program.has(object_key): # might have removed themselves already
 			var object: Object = program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
-	for dict in [program_builders, program_references, program_nodes, gui_controls]:
+	for dict in [prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = program[object_key]
@@ -250,13 +249,13 @@ func init_project() -> void:
 
 func add_project_nodes() -> void:
 	var index := 0
-	for key in gui_controls:
+	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(program[object_key])
 		if keep_gui_under_existing_controls:
 			universe.move_child(program[object_key], index)
 		index += 1
-	for key in program_nodes:
+	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(program[object_key])
 	Global.emit_signal("project_nodes_added")

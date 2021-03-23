@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# [Not added in core ivoyager!] Add to ProjectBuilder.program_nodes in your
+# [Not added in core ivoyager!] Add to ProjectBuilder.prog_nodes in your
 # extension file if you want camera view to be cached and restored on start.
 # Used by Planetarium.
 #

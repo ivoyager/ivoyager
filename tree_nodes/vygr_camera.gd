@@ -21,7 +21,7 @@
 # that Body's orbit around its parent. You can replace this with another Camera
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
-#    VygrCameraHandler (program_nodes/vygr_camera_handler.gd); replace this!
+#    VygrCameraHandler (prog_nodes/vygr_camera_handler.gd); replace this!
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground
