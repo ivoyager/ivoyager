@@ -115,7 +115,7 @@ var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 # project vars - set on _extension_init(); see singletons/project_builder.gd
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
-var ivoyager_version := "0.0.9-dev"
+var ivoyager_version := "0.0.9-dev-3-24"
 var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
