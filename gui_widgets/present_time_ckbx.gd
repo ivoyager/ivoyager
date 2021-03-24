@@ -35,7 +35,7 @@ func _on_speed_changed(_speed_index: int, _is_reversed: bool, _is_paused: bool,
 		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
 	pressed = _timekeeper.is_real_world_time
 
-func _on_time_altered() -> void:
+func _on_time_altered(_previous_time: float) -> void:
 	pressed = _timekeeper.is_real_world_time
 	
 func _set_real_world() -> void:

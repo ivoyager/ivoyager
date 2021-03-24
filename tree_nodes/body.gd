@@ -338,13 +338,11 @@ func reset_orientation_and_rotation() -> void:
 		var dec: float = characteristics.declination
 		rotation_vector = _ecliptic_rotation * math.convert_spherical2(ra, dec)
 	var rotation_at_epoch: float = characteristics.get("longitude_at_epoch", 0.0)
-	if flags & IS_TIDALLY_LOCKED:
-		rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
-	elif orbit:
-#		if orbit.is_retrograde(0.0):
-#			rotation_at_epoch -= orbit.get_true_longitude(0.0) - PI
-#		else:
-		rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
+	if orbit:
+		if flags & IS_TIDALLY_LOCKED:
+			rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
+		else:
+			rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
 	var parent_flags := 0
@@ -400,6 +398,13 @@ func _on_ready() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
+	var timekeeper: Timekeeper = Global.program.Timekeeper
+	timekeeper.connect("time_altered", self, "_on_time_altered")
+
+func _on_time_altered(_previous_time: float) -> void:
+	if orbit:
+		orbit.reset_elements_and_interval_update()
+	reset_orientation_and_rotation()
 
 #func _on_system_tree_ready(_is_new_game: bool) -> void:
 #	pass

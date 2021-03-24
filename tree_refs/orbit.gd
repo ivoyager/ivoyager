@@ -47,6 +47,7 @@ const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529
 signal changed(is_scheduled) # is_scheduled == false triggers network sync
 
 const DPRINT := false
+const PIdiv2 := PI / 2.0
 const ECLIPTIC_UP := Vector3(0.0, 0.0, 1.0)
 const T_3000BCE := -50.0 * UnitDefs.CENTURY # 3000 BCE
 const T_3000CE := 10.0 * UnitDefs.CENTURY # 3000 CE
@@ -160,7 +161,7 @@ func is_retrograde(time := NAN) -> bool:
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
-	return elements[2] > PI / 2.0 # inclination > 90 degrees
+	return elements[2] > PIdiv2 # inclination > 90 degrees
 
 func get_orbital_perioid(time := NAN) -> float:
 	var elements := current_elements
@@ -193,9 +194,9 @@ func get_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	# Orbit normal is defined by Om & i. This vector precesses around the
 	# reference_normal.
 	var relative_normal := math.convert_spherical2(
-			elements[3] + PI / 2.0, elements[2] + PI / 2.0) # Om, i
+			elements[3] + PIdiv2, elements[2] + PIdiv2) # Om, i
 	var orbit_normal: Vector3
-	if elements[2] > PI / 2.0: # retrograde
+	if elements[2] > PIdiv2: # retrograde
 		orbit_normal = math.rotate_vector_z(relative_normal, reference_normal)
 		if flip_retrograde:
 			orbit_normal *= -1.0
@@ -415,7 +416,7 @@ func reset_elements_and_interval_update() -> void:
 	# Sets current_elements, calculates update interval for element_rates, and
 	# connects or disconnects/connects to Schedular for updating.
 	var time: float = _times[0]
-	if !element_rates:
+	if !element_rates: # no update scheduling
 		_set_elements(time, current_elements)
 		_begin_current = -INF
 		_end_current = INF
@@ -481,8 +482,12 @@ func _set_elements(time: float, elements: Array) -> void:
 	var i: float = elements_at_epoch[2] + element_rates[2] * t_clamped
 	var Om: float = elements_at_epoch[3] + element_rates[3] * time
 	var w: float = elements_at_epoch[4] + element_rates[4] * time
-	# M is relative to Om & w, so we need to deduct Om & w changes from M0
-	var M0: float = elements_at_epoch[5] - (element_rates[3] + element_rates[4]) * time
+	# adjust M0 for Om & w to give correct M at time
+	var M0: float
+	if elements_at_epoch[2] > PIdiv2:
+		M0 = elements_at_epoch[5] + (element_rates[3] + element_rates[4]) * time
+	else:
+		M0 = elements_at_epoch[5] - (element_rates[3] + element_rates[4]) * time
 	var n: float = elements_at_epoch[6] # does not change
 	if m_modifiers: # Jupiter, Saturn, Uranus, Neptune & Pluto only
 		var b: float = m_modifiers[0]

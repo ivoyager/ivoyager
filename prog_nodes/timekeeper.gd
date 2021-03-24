@@ -47,7 +47,7 @@ class_name Timekeeper
 signal processed(sim_time, engine_delta) # this drives the simulator
 signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
 signal date_changed() # normal day rollover
-signal time_altered() # someone manipulated time!
+signal time_altered(previous_time) # someone manipulated time!
 
 const SECOND := UnitDefs.SECOND # sim_time conversion
 const MINUTE := UnitDefs.MINUTE
@@ -270,17 +270,19 @@ func set_real_world() -> void:
 		set_time_reversed(false)
 		change_speed(0, real_time_speed)
 		is_real_world_time = true
+	var previous_time := time
 	time = get_real_world_time()
 	_reset_time()
-	emit_signal("time_altered")
+	emit_signal("time_altered", previous_time)
 
 func set_time(new_time: float) -> void:
 	if _network_state == IS_CLIENT:
 		return
+	var previous_time := time
 	time = new_time
 	is_real_world_time = false
 	_reset_time()
-	emit_signal("time_altered")
+	emit_signal("time_altered", previous_time)
 
 func set_time_reversed(new_is_reversed: bool) -> void:
 	if _network_state == IS_CLIENT:
