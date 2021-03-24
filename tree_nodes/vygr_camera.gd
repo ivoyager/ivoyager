@@ -154,7 +154,7 @@ var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
 var _is_ecliptic := false
 var _last_dist := 0.0
-var _lat_long := Vector2.ZERO
+var _lat_long := Vector2(-INF, -INF)
 
 var _universe: Spatial = Global.program.Universe
 var _View_: Script = Global.script_classes._View_
@@ -411,7 +411,7 @@ func _process_move_in_progress(delta: float) -> void:
 		_interpolate_cartesian_path(progress)
 	else: # PATH_SPHERICAL
 		_interpolate_spherical_path(progress)
-	var gui_translation := translation
+	var gui_translation := _transform.origin
 	var dist := gui_translation.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
@@ -513,7 +513,7 @@ func _process_at_target(delta: float) -> void:
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
-		lat_long = selection_item.get_latitude_longitude(translation)
+		lat_long = selection_item.get_latitude_longitude(_transform.origin)
 	if _lat_long != lat_long:
 		_lat_long = lat_long
 		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
