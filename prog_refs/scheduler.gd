@@ -67,6 +67,7 @@ func _project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
 	var timekeeper: Timekeeper = Global.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
+	timekeeper.connect("time_altered", self, "_on_time_altered")
 	if Global.allow_time_reversal:
 		timekeeper.connect("speed_changed", self, "_on_speed_changed")
 
@@ -128,13 +129,22 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 	if _is_reversed == is_reversed:
 		return
 	_is_reversed = is_reversed
-	var size := _ordered_signal_infos.size()
+	var n_signals := _ordered_signal_infos.size()
 	var i := 0
-	while i < size:
+	while i < n_signals:
 		var signal_info: Array = _ordered_signal_infos[i]
 		signal_info[0] += (-signal_info[1] if is_reversed else signal_info[1])
 		i += 1
 	_ordered_signal_infos.sort_custom(self, "_sort_reverse" if is_reversed else "_sort_forward")
+
+func _on_time_altered(previous_time: float) -> void:
+	var time_diff: float = _times[0] - previous_time
+	var n_signals := _ordered_signal_infos.size()
+	var i := 0
+	while i < n_signals:
+		var signal_info: Array = _ordered_signal_infos[i]
+		signal_info[0] += time_diff
+		i += 1
 
 func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 	if !_ordered_signal_infos:

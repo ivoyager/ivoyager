@@ -146,11 +146,11 @@ func get_polar_radius() -> float:
 		return p_radius
 	return m_radius
 
-func get_latitude_longitude(translation_: Vector3, time := NAN) -> Vector2:
+func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
 		return VECTOR2_ZERO
 	var ground_basis := model_controller.get_ground_ref_basis(time)
-	var spherical := math.get_rotated_spherical3(translation_, ground_basis)
+	var spherical := math.get_rotated_spherical3(at_translation, ground_basis)
 	var latitude: float = spherical[1]
 	var longitude: float = wrapf(spherical[0], -PI, PI)
 	return Vector2(latitude, longitude)
@@ -304,7 +304,7 @@ func reset_orientation_and_rotation() -> void:
 	# If we have tidal and/or axis lock, then Orbit determines rotation and/or
 	# orientation. If so, we use Orbit to set values in characteristics and
 	# ModelController. Otherwise, characteristics already holds table-loaded
-	# values which we use to set ModelController values.
+	# values (RA, dec, period) which we use to set ModelController values.
 	# Note: Earth's Moon is the unusual case that is tidally locked but not
 	# axis locked (its axis is tilted to its orbit). Axis of other moons are
 	# not exactly orbit normal but stay within ~1 degree. E.g., see:
@@ -338,10 +338,11 @@ func reset_orientation_and_rotation() -> void:
 		var dec: float = characteristics.declination
 		rotation_vector = _ecliptic_rotation * math.convert_spherical2(ra, dec)
 	var rotation_at_epoch: float = characteristics.get("longitude_at_epoch", 0.0)
-	if flags & IS_TIDALLY_LOCKED:
-		rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
-	elif orbit:
-		rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
+	if orbit:
+		if flags & IS_TIDALLY_LOCKED:
+			rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
+		else:
+			rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
 	var parent_flags := 0
@@ -397,6 +398,13 @@ func _on_ready() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	Global.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
+	var timekeeper: Timekeeper = Global.program.Timekeeper
+	timekeeper.connect("time_altered", self, "_on_time_altered")
+
+func _on_time_altered(_previous_time: float) -> void:
+	if orbit:
+		orbit.reset_elements_and_interval_update()
+	reset_orientation_and_rotation()
 
 #func _on_system_tree_ready(_is_new_game: bool) -> void:
 #	pass

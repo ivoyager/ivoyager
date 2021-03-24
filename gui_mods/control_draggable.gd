@@ -151,8 +151,14 @@ func _fix_offscreen() -> void:
 func _set_anchors_to_position() -> void:
 	var position := _parent.rect_position
 	var size := _parent.rect_size
-	var horizontal_anchor := clamp(position.x / (_viewport.size.x - size.x), 0.0, 1.0)
-	var vertical_anchor := clamp(position.y / (_viewport.size.y - size.y), 0.0, 1.0)
+	var extra_x := _viewport.size.x - size.x
+	var horizontal_anchor := 1.0
+	if extra_x > 0.0:
+		horizontal_anchor = clamp(position.x / extra_x, 0.0, 1.0)
+	var extra_y := _viewport.size.y - size.y
+	var vertical_anchor := 1.0
+	if extra_y > 0.0:
+		vertical_anchor = clamp(position.y / extra_y, 0.0, 1.0)
 	_parent.anchor_left = horizontal_anchor
 	_parent.anchor_right = horizontal_anchor
 	_parent.anchor_top = vertical_anchor

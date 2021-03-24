@@ -21,7 +21,7 @@
 # that Body's orbit around its parent. You can replace this with another Camera
 # class, but see:
 #    Global signals related to camera (singletons/global.gd)
-#    VygrCameraHandler (program_nodes/vygr_camera_handler.gd); replace this!
+#    VygrCameraHandler (prog_nodes/vygr_camera_handler.gd); replace this!
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground
@@ -154,7 +154,7 @@ var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
 var _is_ecliptic := false
 var _last_dist := 0.0
-var _is_camera_bump := false
+var _lat_long := Vector2(-INF, -INF)
 
 var _universe: Spatial = Global.program.Universe
 var _View_: Script = Global.script_classes._View_
@@ -401,9 +401,7 @@ func _process_move_in_progress(delta: float) -> void:
 		is_moving = false
 		if parent != _to_spatial:
 			_do_camera_handoff()
-		_is_camera_bump = true
 		_process_at_target(delta)
-		_is_camera_bump = true # need on next frame too
 		return
 	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
 	# Hand-off at halfway point avoids precision shakes at either end
@@ -413,7 +411,7 @@ func _process_move_in_progress(delta: float) -> void:
 		_interpolate_cartesian_path(progress)
 	else: # PATH_SPHERICAL
 		_interpolate_spherical_path(progress)
-	var gui_translation := translation
+	var gui_translation := _transform.origin
 	var dist := gui_translation.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
@@ -425,12 +423,11 @@ func _process_move_in_progress(delta: float) -> void:
 	if _is_ecliptic != is_ecliptic:
 		_is_ecliptic = is_ecliptic
 		emit_signal("tracking_changed", track_type, is_ecliptic)
-	var lat_long: Vector2
 	if is_ecliptic:
-		lat_long = math.get_latitude_longitude(global_transform.origin)
+		_lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
-		lat_long = selection_item.get_latitude_longitude(gui_translation)
-	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
+		_lat_long = selection_item.get_latitude_longitude(gui_translation)
+	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic)
 
 func _do_camera_handoff() -> void:
 	parent.remove_child(self)
@@ -485,7 +482,7 @@ func _interpolate_spherical_path(progress: float) -> void:
 	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
 
 func _process_at_target(delta: float) -> void:
-	var is_camera_bump := _is_camera_bump
+	var is_camera_bump := false
 	# maintain present "position" based on track_type
 	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
 	# process accumulated user inputs
@@ -512,14 +509,14 @@ func _process_at_target(delta: float) -> void:
 	if _is_ecliptic != is_ecliptic:
 		_is_ecliptic = is_ecliptic
 		emit_signal("tracking_changed", track_type, is_ecliptic)
-	if is_camera_bump or (!is_ecliptic and track_type != TRACK_GROUND):
-		var lat_long: Vector2
-		if is_ecliptic:
-			lat_long = math.get_latitude_longitude(global_transform.origin)
-		else:
-			lat_long = selection_item.get_latitude_longitude(translation)
+	var lat_long: Vector2
+	if is_ecliptic:
+		lat_long = math.get_latitude_longitude(global_transform.origin)
+	else:
+		lat_long = selection_item.get_latitude_longitude(_transform.origin)
+	if _lat_long != lat_long:
+		_lat_long = lat_long
 		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
-		_is_camera_bump = false
 
 func _process_move_action(delta: float) -> void:
 	var action_proportion := action_immediacy * delta
