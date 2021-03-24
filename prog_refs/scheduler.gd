@@ -139,7 +139,6 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 
 func _on_time_altered(previous_time: float) -> void:
 	var time_diff: float = _times[0] - previous_time
-	prints("_on_time_altered", time_diff)
 	var n_signals := _ordered_signal_infos.size()
 	var i := 0
 	while i < n_signals:
