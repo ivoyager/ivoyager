@@ -86,17 +86,18 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
-		["LABEL_VELOCITY_CMB", "body/characteristics/velocity_cmb", NO_ARGS,
+		["LABEL_VELOCITY_VS_CMB", "body/characteristics/velocity_vs_cmb", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
-		["LABEL_VELOCITY_NEARBY_STARS", "body/characteristics/velocity_nearby_stars", NO_ARGS,
+		["LABEL_VELOCITY_VS_NEAR_STARS", "body/characteristics/velocity_vs_near_stars", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
 		
-		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
-		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
-		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],
-		["LABEL_MOONS", "n_moons", NO_ARGS, AS_IS],
-		["LABEL_ASTEROIDS", "n_asteroids", NO_ARGS, AS_IS],
-		["LABEL_COMETS", "n_comets", NO_ARGS, AS_IS],
+		["LABEL_KN_PLANETS", "body/characteristics/n_kn_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_DWF_PLANETS", "body/characteristics/n_kn_dwf_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_MINOR_PLANETS", "body/characteristics/n_kn_minor_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_COMETS", "body/characteristics/n_kn_comets", NO_ARGS, AS_IS],
+		["LABEL_NAT_SATELLITES", "body/characteristics/n_nat_satellites", NO_ARGS, AS_IS],
+		["LABEL_KN_NAT_SATELLITES", "body/characteristics/n_kn_nat_satellites", NO_ARGS, AS_IS],
+		["LABEL_KN_QUASI_SATELLITES", "body/characteristics/n_kn_quasi_satellites", NO_ARGS, AS_IS],
 	],
 	[ # Physical Characteristics
 		["LABEL_CLASSIFICATION", "body/characteristics/class_type", NO_ARGS,
@@ -180,6 +181,7 @@ var special_processing := {
 	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
 	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt_to_orbit",
 	"body/get_axial_tilt_to_ecliptic" : "_mod_axial_tilt_to_ecliptic",
+	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -497,7 +499,7 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = "~%s d (%s)" %[round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
+			value_txt = "~%s d (%s)" % [round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
 		elif _body.name == "PLANET_MERCURY":
 			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
 		elif _body.is_rotation_retrograde():
@@ -517,3 +519,6 @@ func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
 		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
 			value_txt = tr("TXT_VARIABLE")
 	return value_txt
+
+func _mod_n_kn_dwf_planets(value_txt: String, _value: float) -> String:
+	return "%s (%s)" % [value_txt, tr("TXT_POSSIBLE").to_lower()]

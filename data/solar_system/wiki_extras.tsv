@@ -17,8 +17,15 @@ LABEL_GALACTIC_PERIOD	Galactic_year
 LABEL_HYDROSTATIC_EQUILIBRIUM	Hydrostatic_equilibrium
 LABEL_INCLINATION_TO_ECLIPTIC	Orbital_inclination
 LABEL_INCLINATION_TO_EQUATOR	Orbital_inclination
+LABEL_KN_PLANETS	Planet
+LABEL_KN_DWF_PLANETS	Dwarf_planet
+LABEL_KN_MINOR_PLANETS	Minor_planet
+LABEL_KN_COMETS	Comet
+LABEL_KN_NAT_SATELLITES	Natural_satellite
+LABEL_KN_QUASI_SATELLITES	Quasi-satellite
 LABEL_LUMINOSITY	Luminosity
 LABEL_METALLICITY	Metallicity
+LABEL_NAT_SATELLITES	Natural_satellite
 LABEL_ORBITAL_PERIOD	Orbital_period
 LABEL_PERIAPSIS	Apsis
 LABEL_PERIGEE	Apsis
@@ -27,5 +34,5 @@ LABEL_ROTATION_PERIOD	Rotation_period
 LABEL_SEMI_MAJOR_AXIS	Semi-major_and_semi-minor_axes
 LABEL_STELLAR_CLASSIFICATION	Stellar_classification
 LABEL_SURFACE_GRAVITY	Surface_gravity
-LABEL_VELOCITY_CMB	Cosmic_microwave_background
+LABEL_VELOCITY_VS_CMB	Cosmic_microwave_background
 SYSTEM_SOLAR_SYSTEM	Solar_System

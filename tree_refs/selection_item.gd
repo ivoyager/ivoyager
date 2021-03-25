@@ -33,13 +33,6 @@ const VECTOR2_ZERO := Vector2.ZERO
 var name: String # BodyRegistry guaranties these are unique
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
-# GUI data
-var n_stars := -1
-var n_planets := -1
-var n_dwarf_planets := -1
-var n_moons := -1
-var n_asteroids := -1
-var n_comets := -1
 # camera
 var system_radius := 0.0
 var view_rotate_when_close := false
@@ -54,7 +47,6 @@ var body: Body # = spatial if is_body else null
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
-	"n_stars", "n_planets", "n_dwarf_planets", "n_moons", "n_asteroids", "n_comets",
 	"system_radius", "view_rotate_when_close", "view_min_distance",
 	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
 	"spatial", "body"]

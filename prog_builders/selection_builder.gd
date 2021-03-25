@@ -82,14 +82,6 @@ func build_and_register(body: Body, parent_body: Body, system_radius: float) -> 
 		# TODO: Some special handling for barycenters
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
-	if body.flags & IS_PLANET:
-		selection_item.n_moons = 0
-	elif body.flags & IS_STAR:
-		selection_item.n_planets = 0
-		selection_item.n_dwarf_planets = 0
-		selection_item.n_moons = 0
-#		selection_item.n_asteroids = 0
-#		selection_item.n_comets = 0
 	_body_registry.register_selection_item(selection_item)
 
 func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
@@ -146,30 +138,5 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_set_system_counts")
 	_body_registry = Global.program.BodyRegistry
 	_SelectionItem_ = Global.script_classes._SelectionItem_
-
-func _set_system_counts(is_new_game: bool) -> void:
-	if is_new_game:
-		for body in _body_registry.top_bodies:
-			_set_counts_recursive(body)
-
-func _set_counts_recursive(body: Body) -> void:
-	if body.flags & IS_STAR:
-		for child in body.satellites:
-			_set_counts_recursive(child)
-	var selection_item := _body_registry.get_selection_for_body(body)
-	if body.flags & IS_PLANET:
-		for child in body.satellites:
-			if child.flags & IS_MOON:
-				selection_item.n_moons += 1
-	elif body.flags & IS_STAR:
-		for child in body.satellites:
-			if child.flags & IS_DWARF_PLANET:
-				selection_item.n_dwarf_planets += 1
-			elif child.flags & IS_TRUE_PLANET:
-				selection_item.n_planets += 1
-			if child.satellites:
-				var child_selection_item := _body_registry.get_selection_for_body(child)
-				selection_item.n_moons += child_selection_item.n_moons
