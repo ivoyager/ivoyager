@@ -27,4 +27,5 @@ LABEL_ROTATION_PERIOD	Rotation_period
 LABEL_SEMI_MAJOR_AXIS	Semi-major_and_semi-minor_axes
 LABEL_STELLAR_CLASSIFICATION	Stellar_classification
 LABEL_SURFACE_GRAVITY	Surface_gravity
+LABEL_VELOCITY_CMB	Cosmic_microwave_background
 SYSTEM_SOLAR_SYSTEM	Solar_System

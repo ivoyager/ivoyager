@@ -84,6 +84,13 @@ var section_data := [ # one array element per header
 				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU]],
 		["LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
+		["LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
+		["LABEL_VELOCITY_CMB", "body/characteristics/velocity_cmb", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
+		["LABEL_VELOCITY_NEARBY_STARS", "body/characteristics/velocity_nearby_stars", NO_ARGS,
+				QTY_TXT, [QtyTxtConverter.UNIT, "km/s"]],
+		
 		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
 		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
 		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],

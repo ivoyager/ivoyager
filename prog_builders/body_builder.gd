@@ -51,6 +51,7 @@ var characteristics_fields := [
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t",
+	"galactic_orbital_speed", "velocity_cmb", "velocity_nearby_stars",
 	"dist_galactic_core", "galactic_period", "stellar_classification", "absolute_magnitude",
 	"luminosity", "color_b_v", "metallicity", "age"
 ]
