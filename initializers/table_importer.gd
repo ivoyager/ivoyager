@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Reads external data tables (.csv files) and adds results to:
+# Reads external data tables (.tsv files) and adds results to:
 #    - Global.table_rows
 #    - Global.wiki_titles (if Global.wiki_enabled)
 #    - table containers in TableReader via init_tables()
@@ -26,7 +26,7 @@
 # itself from Global.program after table import. No other object should
 # reference it.
 #
-# ivoyager/data/solar_system/*.csv table construction:
+# ivoyager/data/solar_system/*.tsv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
 #    See tables for examples; see TableReader for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
