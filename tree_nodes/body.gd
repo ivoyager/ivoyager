@@ -146,6 +146,9 @@ func get_polar_radius() -> float:
 		return p_radius
 	return m_radius
 
+func get_rotation_period() -> float:
+	return characteristics.get("rotation_period", 0.0)
+
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 	if !model_controller:
 		return VECTOR2_ZERO
@@ -214,11 +217,6 @@ func get_orbit_inclination_to_equator(time := NAN) -> float:
 	var orbit_normal := orbit.get_normal(time)
 	var positive_pole: Vector3 = get_parent().get_positive_pole(time)
 	return orbit_normal.angle_to(positive_pole)
-
-func get_sidereal_rotation_period() -> float:
-	if !model_controller:
-		return NAN
-	return TAU / model_controller.rotation_rate
 
 func is_rotation_retrograde() -> bool:
 	if !model_controller:

@@ -21,6 +21,7 @@
 
 class_name StrUtils
 
+
 static func c_unescape_patch(text: String) -> String:
 	# Use as patch until c_unescape() is fixed (Godot issue #38716).
 	# Implement escapes as needed here. It appears that large unicodes are not

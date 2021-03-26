@@ -131,20 +131,22 @@ func get_real(table_name: String, field_name: String, row := -1, row_name := "")
 
 func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var num_str := get_string(table_name, field_name, row, row_name)
-	if !num_str:
-		return 0 # missing value
-	return math.get_str_decimal_precision(num_str)
+	var real_str := get_string(table_name, field_name, row, row_name)
+	if !real_str:
+		return -1 # missing value
+	return get_real_str_precision(real_str)
 	
 func get_least_real_precision(table_name: String, field_names: Array, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var num_strs := []
+	var min_precision := 9999
 	for field_name in field_names:
-		var num_str := get_string(table_name, field_name, row, row_name)
-		if !num_str:
-			return 0 # missing value
-		num_strs.append(num_str)
-	return math.get_least_str_decimal_precision(num_strs)
+		var real_str := get_string(table_name, field_name, row, row_name)
+		if !real_str:
+			return -1 # missing value
+		var precission := get_real_str_precision(real_str)
+		if min_precision > precission:
+			min_precision = precission
+	return min_precision
 
 func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# returns -1 if missing
@@ -261,6 +263,66 @@ func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: i
 			flags |= flag
 	return flags
 
+func get_real_precisions(fields: Array, table_name: String, row: int) -> Array:
+	# Return array is same size as fields. Missing and non-REALs are -1.
+	var result := []
+	var column_fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var row_data: Array = _table_data[table_name][row]
+	for column_field in fields:
+		var column: int = column_fields.get(column_field, -1)
+		if column == -1:
+			result.append(-1)
+			continue
+		var value: String = row_data[column]
+		if !value:
+			result.append(-1)
+			continue
+		var data_type: String = data_types[column]
+		if data_type != "REAL":
+			result.append(-1)
+			continue
+		var precision := get_real_str_precision(value)
+		result.append(precision)
+	return result
+
+func get_real_str_precision(real_str: String) -> int:
+	# See table REAL format rules in solar_system/planets.tsv.
+	# TableImporter has stripped leading "_" and converted "E" to "e".
+	# We ignore leading zeroes before the decimal place.
+	# We count trailing zeroes IF there is a decimal place.
+	if real_str == "?":
+		return -1
+	if real_str.begins_with("~"):
+		return 0
+	var length := real_str.length()
+	var n_digits := 0
+	var started := false
+	var n_unsig_zeros := 0
+	var deduct_zeroes := true
+	var i := 0
+	while i < length:
+		var chr: String = real_str[i]
+		if chr == ".":
+			started = true
+			deduct_zeroes = false
+		elif chr == "e":
+			break
+		elif chr == "0":
+			if started:
+				n_digits += 1
+				if deduct_zeroes:
+					n_unsig_zeros += 1
+		elif chr != "-":
+			assert(chr.is_valid_integer(), "Unknown REAL character: " + chr)
+			started = true
+			n_digits += 1
+			n_unsig_zeros = 0
+		i += 1
+	if deduct_zeroes:
+		n_digits -= n_unsig_zeros
+	return n_digits
+
 func convert_value(value: String, data_type: String, unit := ""): # untyped return
 	match data_type:
 		"REAL":
@@ -286,11 +348,10 @@ func convert_real(value: String, unit := "") -> float:
 		return NAN
 	if value == "?":
 		return INF
+	value = value.lstrip("~")
 	var real := float(value)
 	if unit:
-		var sig_digits := math.get_str_decimal_precision(value)
 		real = unit_defs.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
-		real = math.set_decimal_precision(real, sig_digits)
 	return float(real)
 
 func convert_data(value: String) -> int:

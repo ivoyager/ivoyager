@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Reads external data tables (.csv files) and adds results to:
+# Reads external data tables (.tsv files) and adds results to:
 #    - Global.table_rows
 #    - Global.wiki_titles (if Global.wiki_enabled)
 #    - table containers in TableReader via init_tables()
@@ -26,7 +26,7 @@
 # itself from Global.program after table import. No other object should
 # reference it.
 #
-# ivoyager/data/solar_system/*.csv table construction:
+# ivoyager/data/solar_system/*.tsv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
 #    See tables for examples; see TableReader for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
@@ -253,7 +253,8 @@ func _table_test(n_columns: int) -> bool:
 	return true
 
 func _cell_test() -> bool:
-	# This is after _process_cell_value(); "" is ok and not checked here.
+	# "" is always ok and not checked here; _process_cell_value() has already
+	# processed table values to our internal format (e.g., REAL "E" -> "e").
 	match _data_type:
 		"X":
 			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
@@ -262,7 +263,8 @@ func _cell_test() -> bool:
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":
-			assert(_cell == "?" or _cell.is_valid_float() or _line_error("Expected REAL"))
+			var real := _cell.lstrip("~")
+			assert(real == "?" or real.is_valid_float() or _line_error("Expected REAL"))
 		"STRING", "DATA", "BODY":
 			pass
 		_: # must be valid enum name

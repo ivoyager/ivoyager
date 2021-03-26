@@ -42,6 +42,7 @@ const NO_ARGS := []
 enum { # data_type
 	AS_IS,
 	QTY_TXT,
+	QTY_TXT_W_PRECISION,
 	TABLE_ROW,
 	ENUM,
 	OBJECT_LABELS_VALUES,
@@ -50,7 +51,7 @@ enum { # data_type
 # project vars
 var test_wiki_labels: bool = Global.enable_wiki # can override to false if needed
 var test_wiki_values: bool = Global.enable_wiki # can override to false if needed
-
+var use_kept_precisions := true # set same as BodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var update_interval := 1.0 # seconds; set 0.0 for no updates
@@ -81,46 +82,58 @@ var section_data := [ # one array element per header
 		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
 		["LABEL_DIST_GALACTIC_CORE", "body/characteristics/dist_galactic_core", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.LENGTH_KM_AU]],
 		["LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
-		["LABEL_STARS", "n_stars", NO_ARGS, AS_IS],
-		["LABEL_PLANETS", "n_planets", NO_ARGS, AS_IS],
-		["LABEL_DWARF_PLANETS", "n_dwarf_planets", NO_ARGS, AS_IS],
-		["LABEL_MOONS", "n_moons", NO_ARGS, AS_IS],
-		["LABEL_ASTEROIDS", "n_asteroids", NO_ARGS, AS_IS],
-		["LABEL_COMETS", "n_comets", NO_ARGS, AS_IS],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "yr"]],
+		["LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+		["LABEL_VELOCITY_VS_CMB", "body/characteristics/velocity_vs_cmb", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+		["LABEL_VELOCITY_VS_NEAR_STARS", "body/characteristics/velocity_vs_near_stars", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+		
+		["LABEL_KN_PLANETS", "body/characteristics/n_kn_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_DWF_PLANETS", "body/characteristics/n_kn_dwf_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_MINOR_PLANETS", "body/characteristics/n_kn_minor_planets", NO_ARGS, AS_IS],
+		["LABEL_KN_COMETS", "body/characteristics/n_kn_comets", NO_ARGS, AS_IS],
+		["LABEL_NAT_SATELLITES", "body/characteristics/n_nat_satellites", NO_ARGS, AS_IS],
+		["LABEL_KN_NAT_SATELLITES", "body/characteristics/n_kn_nat_satellites", NO_ARGS, AS_IS],
+		["LABEL_KN_QUASI_SATELLITES", "body/characteristics/n_kn_quasi_satellites", NO_ARGS, AS_IS],
 	],
 	[ # Physical Characteristics
 		["LABEL_CLASSIFICATION", "body/characteristics/class_type", NO_ARGS,
 				TABLE_ROW, "classes"],
+		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
 		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
 		["LABEL_EQUATORIAL_RADIUS", "body/characteristics/e_radius", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
 				ENUM, "ConfidenceType"],
 		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.MASS_G_KG]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "_g"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "_g"]],
 		["LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.VELOCITY_MPS_KMPS]],
 		["LABEL_MEAN_DENSITY", "body/characteristics/mean_density", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "g/cm^3"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "g/cm^3"]],
 		["LABEL_ALBEDO", "body/characteristics/albedo", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.NUMBER]],
 		["LABEL_SURFACE_TEMP_MIN", "body/characteristics/min_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MEAN", "body/characteristics/surf_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
-		
-		
-		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+		["LABEL_TEMP_CENTER", "body/characteristics/temp_center", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+		["LABEL_TEMP_PHOTOSPHERE", "body/characteristics/temp_photosphere", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+		["LABEL_TEMP_CORONA", "body/characteristics/temp_corona", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
 		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
 		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "W"]],
@@ -130,8 +143,8 @@ var section_data := [ # one array element per header
 		
 		
 		
-		["LABEL_ROTATION_PERIOD", "body/get_sidereal_rotation_period", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "d", 5]],
+		["LABEL_ROTATION_PERIOD", "body/characteristics/rotation_period", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "d", 5]],
 		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
 		["LABEL_AXIAL_TILT_TO_ECLIPTIC", "body/get_axial_tilt_to_ecliptic", NO_ARGS,
@@ -170,9 +183,10 @@ var body_flags_test := { # show criteria
 }
 
 var special_processing := {
-	"body/get_sidereal_rotation_period" : "_mod_rotation_period",
+	"body/characteristics/rotation_period" : "_mod_rotation_period",
 	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt_to_orbit",
 	"body/get_axial_tilt_to_ecliptic" : "_mod_axial_tilt_to_ecliptic",
+	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
 onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
@@ -181,13 +195,15 @@ var _state: Dictionary = Global.state
 var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
 var _selection_manager: SelectionManager
-var _selection_item: SelectionItem
-var _body: Body
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
+# currently processing
+var _selection_item: SelectionItem
+var _body: Body
+var _path: String
 
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
@@ -319,15 +335,15 @@ func _process_section(section: int, toggle: bool) -> void:
 func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
 	var line_data: Array = section_data[section][data_index]
-	var path: String = line_data[1]
+	_path = line_data[1]
 	# flags exclusion
-	var body_flags: int = body_flags_test.get(path, 0)
+	var body_flags: int = body_flags_test.get(_path, 0)
 	if body_flags:
 		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
 	# get value from SelectionItem or nested object
 	var method_args: Array = line_data[2]
-	var value = GDUtils.get_path_result(_selection_item, path, method_args)
+	var value = GDUtils.get_path_result(_selection_item, _path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text and possibly wiki key
@@ -364,17 +380,28 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				pass # don't display
 			elif data_type == AS_IS:
 				value_txt = str(value)
-			elif data_type == QTY_TXT:
+			elif data_type == QTY_TXT or data_type == QTY_TXT_W_PRECISION:
 				var args: Array = line_data[4]
 				var n_args: int = args.size()
 				var option_type: int = args[0]
 				var unit: String = args[1] if n_args > 1 else ""
-				var sig_digits: int = args[2] if n_args > 2 else -1
+				var precision: int = args[2] if n_args > 2 else -1
+				if use_kept_precisions and data_type == QTY_TXT_W_PRECISION:
+					var kept_precision: int = _selection_item.real_precisions.get(_path, -1)
+					if kept_precision != -1:
+						precision = kept_precision
 				var num_type: int = args[3] if n_args > 3 else QtyTxtConverter.NUM_DYNAMIC
 				var long_form: bool = args[4] if n_args > 4 else false
 				var case_type: int = args[5] if n_args > 5 else QtyTxtConverter.CASE_MIXED
-				value_txt = _qty_txt_converter.number_option(value, option_type, unit, sig_digits,
+				
+#				if _path == "body/characteristics/dist_galactic_core":
+#					print("precision = ", precision)
+#
+				
+				value_txt = _qty_txt_converter.number_option(value, option_type, unit, precision,
 						num_type, long_form, case_type)
+				if precision == 0:
+					value_txt = "~" + value_txt
 		TYPE_STRING:
 			value_txt = tr(value)
 			if test_wiki_values and _wiki_titles.has(value):
@@ -385,7 +412,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				return [labels_values[0], labels_values[1], false, false]
 	if !value_txt:
 		return NULL_ARRAY # n/a
-	var special_process: String = special_processing.get(path, "")
+	var special_process: String = special_processing.get(_path, "")
 	if special_process:
 		value_txt = call(special_process, value_txt, value)
 	# get label text
@@ -490,7 +517,7 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = "~%s d (%s)" %[round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
+			value_txt = "~%s d (%s)" % [round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
 		elif _body.name == "PLANET_MERCURY":
 			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
 		elif _body.is_rotation_retrograde():
@@ -510,3 +537,6 @@ func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
 		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
 			value_txt = tr("TXT_VARIABLE")
 	return value_txt
+
+func _mod_n_kn_dwf_planets(value_txt: String, _value: float) -> String:
+	return "%s (%s)" % [value_txt, tr("TXT_POSSIBLE").to_lower()]

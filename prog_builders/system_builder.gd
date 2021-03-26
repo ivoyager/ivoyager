@@ -42,7 +42,7 @@ func build_system_tree() -> void:
 	var minor_bodies_builder: MinorBodiesBuilder = Global.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
 	var selection_builder: SelectionBuilder = Global.program.SelectionBuilder
-	selection_builder.build_selection_items()
+	selection_builder.build_body_selection_items()
 	if add_camera:
 		var camera_script: Script = Global.script_classes._Camera_
 		var camera: Camera = camera_script.new()
@@ -66,6 +66,7 @@ func _add_bodies(table_name: String) -> void:
 	while row < n_rows:
 		var parent := _table_reader.get_body(table_name, "parent", row) # null for top
 		var body := _body_builder.build_from_table(table_name, row, parent)
+		body.hide() # Bodies set their own visibility as needed
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)

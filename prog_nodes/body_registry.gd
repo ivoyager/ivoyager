@@ -30,7 +30,7 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted - read only
 var top_bodies := []
-var selection_items := {} # indexed by name
+var selection_items := {} # indexed by Body.name (e.g., "MOON_EUROPA")
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
 
