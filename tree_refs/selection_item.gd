@@ -33,23 +33,22 @@ const VECTOR2_ZERO := Vector2.ZERO
 var name: String # BodyRegistry guaranties these are unique
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
-# camera
 var system_radius := 0.0
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
 var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-
 var spatial: Spatial # for camera reference
 var body: Body # = spatial if is_body else null
+var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
 
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"system_radius", "view_rotate_when_close", "view_min_distance",
 	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
-	"spatial", "body"]
+	"spatial", "body", "real_precisions"]
 
 # read-only
 var texture_2d: Texture

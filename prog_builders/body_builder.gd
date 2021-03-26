@@ -37,12 +37,12 @@ const G := UnitDefs.GRAVITATIONAL_CONSTANT
 const BodyFlags := Enums.BodyFlags
 
 # project vars
+var keep_real_precisions := true
 var min_click_radius := 20.0
 var max_hud_dist_orbit_radius_multiplier := 100.0
 var min_hud_dist_radius_multiplier := 500.0
 var min_hud_dist_star_multiplier := 20.0 # combines w/ above
 
-var body_fields := ["name", "m_radius"]
 var characteristics_fields := [
 	"symbol", "class_type", "model_type", "light_type", "file_prefix",
 	"rings_file_prefix", "rings_radius",
@@ -66,6 +66,8 @@ var flag_fields := {
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
 
+# read-only
+var progress := 0 # for external progress bar
 
 # private
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
@@ -86,16 +88,15 @@ var _main_prog_bar: MainProgBar
 var _Body_: Script
 var _ModelController_: Script
 var _fallback_body_2d: Texture
-
-var progress := 0 # external progress bar read-only
-
+# system build in progress
 var _is_building_system := false
 var _system_build_count: int
 var _system_finished_count: int
 var _system_build_start_msec := 0
-
+# body build in progress
 var _table_name: String
 var _row: int
+var _real_precisions := {}
 
 func init_system_build() -> void:
 	# Track when Bodies are completely finished (including I/O threaded
@@ -112,13 +113,17 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_table_name = table_name
 	_row = row
 	var body: Body = _Body_.new()
-	_table_reader.build_object(body, body_fields, table_name, row)
+	body.name = _table_reader.get_string(table_name, "name", row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
+	body.m_radius = body.characteristics.m_radius
 	_set_compositions_from_table(body)
 	_register(body, parent)
-	body.hide()
+	if keep_real_precisions:
+		# SelectionBuilder will grab temp dict, then erase from characteristics
+		body.characteristics.temp_real_precisions = _real_precisions
+		_real_precisions = {}
 	return body
 
 func _set_flags_from_table(body: Body, parent: Body) -> void:
@@ -158,51 +163,74 @@ func _set_characteristics_from_table(body: Body) -> void:
 	var characteristics := body.characteristics
 	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
+	if keep_real_precisions:
+		var precisions := _table_reader.get_real_precisions(characteristics_fields, _table_name, _row)
+		var n_fields := characteristics_fields.size()
+		var i := 0
+		while i < n_fields:
+			var precision: int = precisions[i]
+			if precision != -1:
+				var field: String = characteristics_fields[i]
+				var index := "body/characteristics/" + field
+				_real_precisions[index] = precision
+			i += 1
+	# Assign missing characteristics where we can
 	if characteristics.has("e_radius"):
 		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
+		if keep_real_precisions:
+			var precision := _table_reader.get_least_real_precision(_table_name, ["m_radius", "e_radius"], _row)
+			_real_precisions["body/characteristics/p_radius"] = precision
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if !characteristics.has("mass"): # missing in moon table
-		assert(characteristics.has("GM"))
-		# Could calculate from GM, but mean_density x m_radius is better
+	if !characteristics.has("mass"): # moons.tsv has GM but not mass
+		assert(_table_reader.has_value(_table_name, "GM", _row)) # table test
+		# We could in principle calculate mass from GM, but small moon GM is poor
+		# estimator. Instead use mean_density if we have it; otherwise, assign INF
+		# for unknown mass.
 		if characteristics.has("mean_density"):
-			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mean_density", "m_radius"], _row)
-			if sig_digits > 1:
-				var mass: float = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
-				characteristics.mass = math.set_decimal_precision(mass, sig_digits)
+			characteristics.mass = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
+			if keep_real_precisions:
+				var precision := _table_reader.get_least_real_precision(_table_name, ["m_radius", "mean_density"], _row)
+				_real_precisions["body/characteristics/mass"] = precision
 		else:
-			characteristics.mass = INF
-	if !characteristics.has("GM"): # planets table has mass, not GM
-		var sig_digits := _table_reader.get_real_precision(_table_name, "mass", _row)
-		if sig_digits > 1:
-			if sig_digits > 6:
-				sig_digits = 6 # limited by G precision
-			var GM: float = G * characteristics.mass
-			characteristics.GM = math.set_decimal_precision(GM, sig_digits)
+			characteristics.mass = INF # displays "?"
+	if !characteristics.has("GM"): # planets.tsv has mass, not GM
+		assert(_table_reader.has_value(_table_name, "mass", _row))
+		characteristics.GM = G * characteristics.mass
+		if keep_real_precisions:
+			var precision := _table_reader.get_real_precision(_table_name, "mass", _row)
+			if precision > 6:
+				precision = 6 # limited by G
+			_real_precisions["body/characteristics/GM"] = precision
 	if !characteristics.has("esc_vel") or !characteristics.has("surface_gravity"):
 		if _table_reader.has_value(_table_name, "GM", _row):
-			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["GM", "m_radius"], _row)
-			if sig_digits > 2:
+			# Use GM to calculate missing esc_vel & surface_gravity, but only
+			# if precision > 1.
+			var precision := _table_reader.get_least_real_precision(_table_name, ["GM", "m_radius"], _row)
+			if precision > 1:
 				if !characteristics.has("esc_vel"):
-					var esc_vel := sqrt(2.0 * characteristics.GM / characteristics.m_radius)
-					characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+					characteristics.esc_vel = sqrt(2.0 * characteristics.GM / characteristics.m_radius)
+					if keep_real_precisions:
+						_real_precisions["body/characteristics/esc_vel"] = precision
 				if !characteristics.has("surface_gravity"):
-					var surface_gravity: float = characteristics.GM / pow(characteristics.m_radius, 2.0)
-					characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
+					characteristics.surface_gravity = characteristics.GM / pow(characteristics.m_radius, 2.0)
+					if keep_real_precisions:
+						_real_precisions["body/characteristics/surface_gravity"] = precision
 		else: # planet w/ mass
-			var sig_digits := _table_reader.get_least_real_precision(_table_name, ["mass", "m_radius"], _row)
-			if sig_digits > 2:
+			# Use mass to calculate missing esc_vel & surface_gravity, but only
+			# if precision > 1.
+			var precision := _table_reader.get_least_real_precision(_table_name, ["mass", "m_radius"], _row)
+			if precision > 1:
+				if precision > 6:
+					precision = 6 # limited by G
 				if !characteristics.has("esc_vel"):
-					if sig_digits > 6:
-						sig_digits = 6
-					var esc_vel := sqrt(2.0 * G * characteristics.mass / characteristics.m_radius)
-					characteristics.esc_vel = math.set_decimal_precision(esc_vel, sig_digits - 1)
+					characteristics.esc_vel = sqrt(2.0 * G * characteristics.mass / characteristics.m_radius)
+					if keep_real_precisions:
+						_real_precisions["body/characteristics/esc_vel"] = precision
 				if !characteristics.has("surface_gravity"):
-					var surface_gravity: float = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
-					characteristics.surface_gravity = math.set_decimal_precision(surface_gravity, sig_digits - 1)
-	# debug
-#	if body.name == "PLANET_EARTH":
-#		print(characteristics)
+					characteristics.surface_gravity = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
+					if keep_real_precisions:
+						_real_precisions["body/characteristics/surface_gravity"] = precision
 
 func _set_compositions_from_table(body: Body) -> void:
 	var components := body.components
@@ -254,14 +282,14 @@ func _on_node_added(node: Node) -> void:
 
 func _build_unpersisted(body: Body) -> void: # Main thread
 	# This is after Body._enter_tree(), but before Body._ready()
-	# Note: many builders called here ask for IOManager.callback. These are
-	# processed in order, so the last callback at the end of this function will
-	# have the last "finish" callback.
 	body.min_click_radius = min_click_radius
 	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
 	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
 	
+	# Note: many builders called here ask for IOManager.callback. These are
+	# processed in order, so the last callback at the end of this function will
+	# have the last "finish" callback.
 	if body.get_model_type() != -1:
 		body.model_controller = _ModelController_.new()
 		body.reset_orientation_and_rotation()

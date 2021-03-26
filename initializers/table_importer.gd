@@ -253,7 +253,8 @@ func _table_test(n_columns: int) -> bool:
 	return true
 
 func _cell_test() -> bool:
-	# This is after _process_cell_value(); "" is ok and not checked here.
+	# "" is always ok and not checked here; _process_cell_value() has already
+	# processed table values to our internal format (e.g., REAL "E" -> "e").
 	match _data_type:
 		"X":
 			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
@@ -262,7 +263,8 @@ func _cell_test() -> bool:
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":
-			assert(_cell == "?" or _cell.is_valid_float() or _line_error("Expected REAL"))
+			var real := _cell.lstrip("~")
+			assert(real == "?" or real.is_valid_float() or _line_error("Expected REAL"))
 		"STRING", "DATA", "BODY":
 			pass
 		_: # must be valid enum name
