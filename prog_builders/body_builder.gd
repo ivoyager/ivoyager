@@ -52,6 +52,7 @@ var characteristics_fields := [
 	"esc_vel", "m_radius", "e_radius", "right_ascension", "declination", "longitude_at_epoch",
 	"rotation_period",
 	"mean_density", "hydrostatic_equilibrium", "albedo", "surf_t", "min_t", "max_t",
+	"temp_center", "temp_photosphere", "temp_corona",
 	"surf_pres", "trace_pres", "trace_pres_low", "trace_pres_high", "one_bar_t", "half_bar_t",
 	"tenth_bar_t",
 	"galactic_orbital_speed", "velocity_vs_cmb", "velocity_vs_near_stars",

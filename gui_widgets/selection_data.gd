@@ -103,6 +103,7 @@ var section_data := [ # one array element per header
 	[ # Physical Characteristics
 		["LABEL_CLASSIFICATION", "body/characteristics/class_type", NO_ARGS,
 				TABLE_ROW, "classes"],
+		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
 		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
 				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
 		["LABEL_EQUATORIAL_RADIUS", "body/characteristics/e_radius", NO_ARGS,
@@ -127,9 +128,12 @@ var section_data := [ # one array element per header
 				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
 				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
-		
-		
-		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
+		["LABEL_TEMP_CENTER", "body/characteristics/temp_center", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+		["LABEL_TEMP_PHOTOSPHERE", "body/characteristics/temp_photosphere", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+		["LABEL_TEMP_CORONA", "body/characteristics/temp_corona", NO_ARGS,
+				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
 		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
 		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.UNIT, "W"]],
