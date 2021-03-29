@@ -1,6 +1,5 @@
-# OmniLight properties for individual stars like our sun.	
-#	
 name	omni_range
+# OmniLight properties for individual stars like our sun.	
 DataType	REAL
 Default	
 Units	au

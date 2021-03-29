@@ -1,6 +1,5 @@
-# Class types for info display and planetarium wiki links.	
-#	
 name	wiki_en
+# Class types for info display and planetarium wiki links.	
 DataType	STRING
 Default	
 Units	

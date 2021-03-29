@@ -1,6 +1,5 @@
-# WIP - not implemented yet	
-#	
 name	dummy
+# WIP - not implemented yet	
 DataType	BOOL
 Default	TRUE
 ENVIRONMENT_IVOYAGER	

@@ -67,35 +67,33 @@ const LOG_OF_10 := log(10.0)
 
 # project vars
 var exp_str := "e" # e.g., set to "E", "x10^", " x 10^"
-var prefix_names := [
+var prefix_names := [ # e-24, ..., e24
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
-] # e3, e6, ... e24
-var prefix_symbols := [
+]
+var prefix_symbols := [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
-] # same indexing as above
+]
 
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
-	 "TXT_NONILLION", "TXT_DECILLION"] # e6, e9, e12, ... e33; localized in _project_init()
+	 "TXT_NONILLION", "TXT_DECILLION"] # e6, ..., e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
-# or functions dictionaries (by default, these are obtained from UnitDefs). The
-# converse is not true.
+# or functions dictionaries. (The converse is not true.)
 
 var short_forms := {
 	# If missing here, we fallback to the unit string itself, which is usually
 	# the desired short form. Asterisk before TXT_KEY means no space before
 	# unit.
-	"century" : "TXT_CENTURIES",
 	"deg" : "*TXT_DEG",
 	"degC" : "TXT_DEG_C",
 	"degF" : "TXT_DEG_F",
 	"deg/d" : "*TXT_DEG_PER_DAY",
 	"deg/a" : "*TXT_DEG_PER_YEAR",
-	"deg/century" : "*TXT_DEG_PER_CENTURY",
-	"_g" : "g",
+	"deg/Cy" : "*TXT_DEG_PER_CENTURY",
+	"_g" : "g", # reused symbol ("_g" in function call; "g" in GUI)
 }
 
 var long_forms := {
@@ -111,7 +109,7 @@ var long_forms := {
 	"a" : "TXT_YEARS",
 	"y" : "TXT_YEARS",
 	"yr" : "TXT_YEARS",
-	"century" : "TXT_CENTURIES",
+	"Cy" : "TXT_CENTURIES",
 	# length
 	"mm" : "TXT_MILIMETERS",
 	"cm" : "TXT_CENTIMETERS",
@@ -158,7 +156,7 @@ var long_forms := {
 	# angular velocity
 	"deg/d" : "TXT_DEGREES_PER_DAY",
 	"deg/a" : "TXT_DEGREES_PER_YEAR",
-	"deg/century" : "DEGREES_PER_CENTURY",
+	"deg/Cy" : "DEGREES_PER_CENTURY",
 	# particle density
 	"m^-3" : "TXT_PER_CUBIC_METER",
 	# mass density
