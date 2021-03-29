@@ -210,11 +210,12 @@ func _read_data_line() -> void:
 func _process_cell_value() -> void:
 	if _cell.begins_with("\"") and _cell.ends_with("\""):
 		_cell = _cell.lstrip("\"").rstrip("\"")
+	_cell = _cell.lstrip("'")
+	_cell = _cell.lstrip("_")
 	if _data_type == "BOOL":
 		if _cell.matchn("FALSE"):
 			_cell = ""
 	elif _data_type == "REAL":
-		_cell = _cell.lstrip("_") # use "_" to prevent Excel from ruining precision
 		_cell = _cell.replace("E", "e")
 	elif _data_type == "STRING":
 		_cell = _cell.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
@@ -229,7 +230,7 @@ func _units_test() -> bool:
 	for unit in _units:
 		if unit:
 			assert(unit_defs.is_valid_unit(unit, true, Global.unit_multipliers, Global.unit_functions),
-					"Unkown unit: " + unit)
+					"Unkown unit '" + unit + "' in " + _path)
 	return true
 
 func _table_test(n_columns: int) -> bool:
@@ -237,19 +238,19 @@ func _table_test(n_columns: int) -> bool:
 		var data_type: String = _data_types[column]
 		match data_type:
 			"X":
-				assert(!_defaults[column], "Expected no Default for X type")
-				assert(!_units[column], "Expected no Units for X type")
+				assert(!_defaults[column], "Expected no Default for X type in" + _path)
+				assert(!_units[column], "Expected no Units for X type in" + _path)
 			"BOOL":
-				assert(!_units[column], "Expected no Units for BOOL")
+				assert(!_units[column], "Expected no Units for BOOL in" + _path)
 			"INT":
-				assert(!_units[column], "Expected no Units for INT")
+				assert(!_units[column], "Expected no Units for INT in" + _path)
 			"REAL":
 				pass
 			"STRING", "DATA", "BODY":
-				assert(!_units[column], "Expected no Units for " + data_type)
+				assert(!_units[column], "Expected no Units for " + data_type + " in " + _path)
 			_: # must be valid enum name
-				assert(!_units or !_units[column], "Expected no Units for " + data_type)
-				assert(data_type in _enums, "Non-existent enum dict " + data_type)
+				assert(!_units or !_units[column], "Expected no Units for " + data_type + " in " + _path)
+				assert(data_type in _enums, "Non-existent enum dict '" + data_type + "' in " + _path)
 	return true
 
 func _cell_test() -> bool:

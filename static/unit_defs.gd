@@ -85,7 +85,7 @@ const MULTIPLIERS := {
 	"a" : YEAR, # official Julian year symbol
 	"y" : YEAR,
 	"yr" : YEAR,
-	"century" : CENTURY,
+	"Cy" : CENTURY,
 	# length
 	"mm" : MM,
 	"cm" : CM,
@@ -125,8 +125,8 @@ const MULTIPLIERS := {
 	"km/s" : KM / SECOND,
 	"km/h" : KM / HOUR,
 	"au/a" : AU / YEAR,
-	"au/century" : AU / CENTURY,
-	"AU/century" : AU / CENTURY,
+	"au/Cy" : AU / CENTURY,
+	"AU/Cy" : AU / CENTURY,
 	"c" : SPEED_OF_LIGHT,
 	# acceleration/gravity
 	"m/s^2" : METER / (SECOND * SECOND),
@@ -135,7 +135,7 @@ const MULTIPLIERS := {
 	"rad/s" : 1.0 / SECOND, 
 	"deg/d" : DEG / DAY,
 	"deg/a" : DEG / YEAR,
-	"deg/century" : DEG / CENTURY,
+	"deg/Cy" : DEG / CENTURY,
 	# particle density
 	"m^-3" : 1.0 / (METER * METER * METER),
 	# density
@@ -164,7 +164,8 @@ const MULTIPLIERS := {
 	"MW" : 1e6 * WATT,
 	# luminous intensity / luminous flux
 	"cd" : CANDELA,
-	"lm" : CANDELA, # lumen (really cd * sr, but sr is dimentionless)
+	"cd sr" : CANDELA, # sr is dimentionless
+	"lm" : CANDELA, # lumen
 	# luminance
 	"cd/m^2" : CANDELA / (METER * METER),
 	# electric potential
@@ -182,7 +183,7 @@ const MULTIPLIERS := {
 	"m^3/(kg s^2)" : METER * METER * METER / (KG * SECOND * SECOND),
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),
 	# misc
-	"deg/century^2" : DEG / (CENTURY * CENTURY),
+	"deg/Cy^2" : DEG / (CENTURY * CENTURY),
 }
 
 const FUNCTIONS := {
@@ -196,7 +197,7 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> float:
 	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
 	# dictionaries); preprocess = true handles prefixes "10^x " or "1/".
-	# Valid examples: "1/century", "10^24 kg", "1/(10^3 yr)".
+	# Valid examples: "1/Cy", "10^24 kg", "1/(10^3 yr)".
 	if preprocess: # mainly for table import
 		if unit.begins_with("1/"):
 			unit = unit.lstrip("1/")
@@ -224,7 +225,7 @@ static func is_valid_unit(unit: String, preprocess := false,
 		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> bool:
 	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
 	# dictionaries); preprocess = true handles prefixes "10^x " or "1/".
-	# Valid examples: "1/century", "10^24 kg", "1/(10^3 yr)".
+	# Valid examples: "1/Cy", "10^24 kg", "1/(10^3 yr)".
 	if preprocess: # mainly for table import
 		if unit.begins_with("1/"):
 			unit = unit.lstrip("1/")

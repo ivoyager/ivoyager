@@ -148,8 +148,36 @@ func get_least_real_precision(table_name: String, field_names: Array, row := -1,
 			min_precision = precission
 	return min_precision
 
+func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
+	# Use for DataType = "BODY" to get the Body instance.
+	# Returns null if missing (from table) or no such Body exists in the tree.
+	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	var column_fields: Dictionary = _table_fields[table_name]
+	if !column_fields.has(field_name):
+		return null
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = column_fields[field_name]
+	return convert_body(row_data[column])
+
+func get_data(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# Use for DataType = "DATA" to get row number of the cell item.
+	# Returns -1 if missing.
+	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	var column_fields: Dictionary = _table_fields[table_name]
+	if !column_fields.has(field_name):
+		return -1
+	if row_name:
+		row = _table_rows[row_name]
+	var data: Array = _table_data[table_name]
+	var row_data: Array = data[row]
+	var column = column_fields[field_name]
+	return convert_data(row_data[column])
+
 func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# returns -1 if missing
+	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
 	if !column_fields.has(field_name):
@@ -162,34 +190,6 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var data_types: Array = _table_data_types[table_name]
 	var enum_name: String = data_types[column]
 	return convert_enum(row_data[column], enum_name)
-
-func get_table_type(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# Use for DataType = "DATA" to get row number (= "type") of the cell item.
-	# Returns -1 if missing!
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
-		return -1
-	if row_name:
-		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_data(row_data[column])
-
-func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
-	# Use for DataType = "BODY" to get the Body instance.
-	# Returns null if missing!
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
-		return null
-	if row_name:
-		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_body(row_data[column])
 
 func build_dictionary_from_keys(dict: Dictionary, table_name: String, row: int) -> void:
 	# Sets dict value for each dict key that exactly matches a column field
