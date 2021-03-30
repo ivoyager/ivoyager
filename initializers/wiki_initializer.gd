@@ -1,4 +1,4 @@
-# wiki_manager.gd
+# wiki_initializer.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,31 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For internal wiki, set Global.enable_wiki and Global.use_internal_wiki. You
-# can then either 1) extend this class and override _open_internal_wiki(), or
-# 2) hook up directly to Global signal "open_wiki_requested". If the latter,
-# you can safely erase this class from ProjectBuilder.prog_refs.
 
-class_name WikiManager
+class_name WikiInitializer
 
 
-var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki: String = Global.wiki # "wiki" (internal), "en.wikipedia", etc.
-var _wiki_url: String 
-
-
-func _project_init() -> void:
+func _init() -> void:
+	_on_init()
+	
+func _on_init() -> void:
 	if !Global.enable_wiki:
 		return
-	Global.connect("open_wiki_requested", self, "_open_wiki")
-	if !Global.use_internal_wiki:
-		_wiki_url = "https://" + _wiki + ".org/wiki/"
-
-func _open_wiki(wiki_title: String) -> void:
-	if _wiki_url:
-		OS.shell_open(_wiki_url + wiki_title)
+	if Global.use_internal_wiki:
+		Global.wiki = "wiki"
 	else:
-		_open_internal_wiki(wiki_title)
+		var locale := TranslationServer.get_locale()
+		if Global.wikipedia_locales.has(locale):
+			Global.wiki = locale + ".wikipedia"
+		else:
+			Global.wiki = "en.wikipedia"
 
-func _open_internal_wiki(_wiki_title: String) -> void:
-	pass
+func _project_init() -> void:
+	Global.program.erase("WikiInitializer") # frees self

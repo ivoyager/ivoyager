@@ -48,7 +48,7 @@ const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & e
 
 # source files
 var _table_import: Dictionary = Global.table_import
-var _wiki_only: Array = Global.table_import_wiki_only
+var _wiki_titles_import: Array = Global.wiki_titles_import
 # imported data
 var _table_data := {}
 var _table_fields := {}
@@ -62,7 +62,7 @@ var _unique_register := {}
 # localization
 var _enable_wiki: bool = Global.enable_wiki
 var _enums: Script = Global.enums
-var _wiki_locale: String = Global.wiki_locale # en.wikipedia, etc., or wiki (internal)
+var _wiki: String = Global.wiki # wiki column header
 
 # current processing
 var _path: String
@@ -83,6 +83,9 @@ var _count_non_null := 0
 
 
 func _init():
+	_on_init()
+	
+func _on_init() -> void:
 	var start_time := OS.get_system_time_msecs()
 	_import()
 	var time := OS.get_system_time_msecs() - start_time
@@ -92,17 +95,9 @@ func _init():
 func _project_init() -> void:
 	var table_reader: TableReader = Global.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _table_row_dicts)
-	Global.program.erase("TableImporter") # this Reference will free itself
+	Global.program.erase("TableImporter") # frees self
 
 func _import() -> void:
-	if _enable_wiki:
-		for path in _wiki_only:
-			_path = path
-			_data = []
-			_fields = {}
-			_data_types = []
-			_rows = {}
-			_read_table() # writes wiki_titles; we don't keep anything else
 	for table_name in _table_import:
 		_path = _table_import[table_name]
 		_data = []
@@ -123,6 +118,19 @@ func _import() -> void:
 		for row_name in _rows:
 			assert(!_table_rows.has(row_name))
 			_table_rows[row_name] = _rows[row_name]
+	if !_enable_wiki:
+		return
+	_data = []
+	_fields = {}
+	_data_types = []
+	_rows = {}
+	for path in _wiki_titles_import:
+		_path = path
+		_read_table() # writes wiki_titles; we don't keep anything else
+		_data.clear()
+		_fields.clear()
+		_data_types.clear()
+		_rows.clear()
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -202,8 +210,7 @@ func _read_data_line() -> void:
 		assert(_cell_test())
 		row_data[column] = _cell
 		_unique_register[_cell] = null
-		if _enable_wiki and _field == _wiki_locale:
-			assert(!_wiki_titles.has(_row_name))
+		if _enable_wiki and _field == _wiki:
 			_wiki_titles[_row_name] = _cell
 		_count_non_null += 1
 	_data.append(row_data)
@@ -283,4 +290,3 @@ func _line_error(msg := "") -> bool:
 	print("field     : ", _field)
 	print(_path)
 	return false
-

@@ -97,7 +97,7 @@ var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
 var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 
 var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
-var assets := {} # Global; loaded here from dynamic paths
+var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # SettingsManager
 var table_rows := {} # TableImporter; row number for all row names
 var wiki_titles := {} # TableImporter; en.wikipedia; TODO: non-en & internal
@@ -116,7 +116,6 @@ var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
 # project vars - set on _extension_init(); see singletons/project_builder.gd
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
-var ivoyager_version := "0.0.9-dev"
 var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
@@ -179,8 +178,8 @@ var table_import := {
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
 }
-var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
-var wikipedia_locales := ["en"] # present in data tables, eg, "de.wikipedia", etc.
+var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
+var wikipedia_locales := ["en"] # add locales present in data tables
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing
@@ -219,55 +218,16 @@ var translations := [
 	"res://ivoyager/data/text/long_text.en.translation",
 ]
 
-var debug_log := File.new() # set null to disable debug log
-var debug_log_path := "user://logs/debug.log"
-
+var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 
 # *****************************************************************************
 
 # read-only!
+var ivoyager_version := "0.0.9-dev"
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
-var wiki_locale = "en.wikipedia" # changed below for internal or non-en Wikipedia
-
-# private
-var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
-var _asset_path_dicts := [asset_paths, asset_paths_for_load]
+var wiki: String # WikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
+var debug_log: File # LogInitializer sets if debug build and debug_log_path
 
 func _ready():
 	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
-	connect("extentions_inited", self, "_on_extentions_inited", [], CONNECT_ONESHOT)
-
-func _on_extentions_inited():
-	if use_internal_wiki:
-		wiki_locale = "wiki"
-	else:
-		var locale := TranslationServer.get_locale()
-		if wikipedia_locales.has(locale):
-			wiki_locale = locale + ".wikipedia"
-	if debug_log:
-		debug_log.open(debug_log_path, File.WRITE)
-	_modify_asset_paths()
-	_load_assets()
-
-func _modify_asset_paths() -> void:
-	if !asset_replacement_dir:
-		return
-	for array in _asset_path_arrays:
-		var index := 0
-		var array_size: int = array.size()
-		while index < array_size:
-			var old_path: String = array[index]
-			var new_path := old_path.replace("ivoyager_assets", asset_replacement_dir)
-			array[index] = new_path
-			index += 1
-	for dict in _asset_path_dicts:
-		for asset_name in dict:
-			var old_path: String = dict[asset_name]
-			var new_path := old_path.replace("ivoyager_assets", asset_replacement_dir)
-			dict[asset_name] = new_path
-
-func _load_assets() -> void:
-	for asset_name in asset_paths_for_load:
-		var path: String = asset_paths_for_load[asset_name]
-		assets[asset_name] = load(path)

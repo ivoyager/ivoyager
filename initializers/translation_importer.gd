@@ -30,9 +30,12 @@
 class_name TranslationImporter
 
 func _init():
+	_on_init()
+	
+func _on_init() -> void:
 	_load_translations()
 	Global.emit_signal("translations_imported")
-	Global.program.erase("TranslationImporter") # this Reference will free itself
+	Global.program.erase("TranslationImporter") # frees self
 
 func _load_translations() -> void:
 	var load_dict := {}

@@ -194,7 +194,7 @@ onready var _table_reader: TableReader = Global.program.TableReader
 var _state: Dictionary = Global.state
 var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki_locale: String = Global.wiki_locale
+var _wiki_locale: String = Global.wiki
 var _selection_manager: SelectionManager
 var _header_buttons := []
 var _grids := []

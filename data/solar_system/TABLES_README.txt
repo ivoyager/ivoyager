@@ -5,9 +5,9 @@ modify cell values. For example, the Sun's GM = "1.32712440018e20" will be
 be changed to "1.33E+20" in the display bar AND THE SAVED FILE VALUE! You can
 prevent this by prefixing with either single-quote (') or underscore (_).
 However, it is then necessary to assess each REAL for "Excel-safety", or prefix
-all REALs. The only alternative using Excel is to use the import wizard
-(setting all columns to text) EVERY TIME you edit a *.tsv file. These options
-are all a major hassle.
+all REALs. Alternatively, you can use the import wizard and set all columns to
+text EVERY TIME you edit a *.tsv file, but that seems like a major hassle to
+me.
 
 Remarkably, the only .csv/.tsv file editor that I could find that doesn't do
 this (and is currently being maintained for Windows 10) is Ron's Editor:
@@ -17,13 +17,13 @@ well for me so far and I recommend it.
 
 Overview:
 
-TableImporter reads *.tsv files specified in Global.table_import and stores
-data as modified string values. TableReader API (prog_refs/table_reader.gd) is
-used to "read" internal data tables, converting cells to typed values and (for
-REAL) converting for specified Units. String representation allows us to retain
-significant digits of REAL values for correct precision display. Use
-TableReader "get_" and "build_" functions to init object properties with table
-values. Don't use TableReader for runtime logic that needs to be fast.
+TableImporter reads *.tsv files specified in Global.table_import (and
+Global.wiki_titles_import) and stores data as modified string values. Use
+TableReader API (prog_refs/table_reader.gd) to read internal data tables; it
+will convert strings to typed values and convert REAL values to specified
+Units. Use TableReader "get_" and "build_" functions to init object properties
+with table values. Don't use TableReader for runtime logic that needs to be
+fast.
 
 File rules:
 
@@ -31,7 +31,9 @@ File rules:
 *	The first non-comment row must have headers.
 *	The last column is ignored if header is "Comment".
 *	The first column header must be "name".
-*	Row name must be globally unique among all data tables.
+*	Row name must be globally unique among all data tables listed and imported
+	from Global.table_import. Tables listed in Global.wiki_titles_import can have
+	duplicate row names (duplicates will overwrite existing values).
 *	After header row there must be a "Type" row. See details below.
 *	Two more rows are optional: "Default" and "Units". See details below.
 
@@ -44,18 +46,14 @@ Cell rules:
 	TableReader "build_" functions. However, get_int(), get_real(), etc., will
 	return type-specific null-equivilent values (e.g., -1, NAN, etc.).
 
-Hyperlinks to Wikipedia or internal wiki:
+Item hyperlinks to Wikipedia or internal wiki:
 
-Extension project can set Global.enable_wiki = true to have GUI hyperlinks.
-These links can be either to Wikipedia.org (in any available language) or an
-internal game wiki (a la "Civilopedia"). For external Wikipedia links, item
-URL titles must be specified in table field "en.wikipedia", "es.wikipedia",
-etc. If non-English wiki titles are added, these locales also must be added
-to Global.wikipedia_locales. If game project has an internal wiki, add titles
-under table field "wiki" and set Global.use_internal_wiki = true. This will
-enable Global signal open_internal_wiki_requested(wiki_title) whenever a GUI
-hyperlink is pressed.
-
+Extension project can set Global.enable_wiki = true for GUI hyperlinks. Column
+fields "en.wikipedia", etc., contain page titles for language-specific
+Wikipedia pages. Additional languages can be added as new columns and must be
+added to Global.wikipedia_locales. For an internal wiki (a la "Civiliopedia")
+add new column "wiki" and set Global.use_internal_wiki = true. For more, see
+comments in prog_refs/wiki_manager.gd.
 
 Type (required row):
 

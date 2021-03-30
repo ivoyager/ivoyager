@@ -84,6 +84,9 @@ onready var universe: Spatial = get_node_or_null("/root/Universe")
 var initializers := {
 	# Reference classes. ProjectBuilder instances these first. They may erase
 	# themselves from Global.program when done (thereby freeing themselves).
+	_LogInitializer_ = LogInitializer,
+	_AssetInitializer_ = AssetInitializer,
+	_WikiInitializer_ = WikiInitializer,
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
 }

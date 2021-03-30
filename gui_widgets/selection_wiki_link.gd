@@ -28,7 +28,7 @@ var fallback_text := "LABEL_WIKIPEDIA"
 
 var _selection_manager: SelectionManager
 var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki_locale: String = Global.wiki_locale
+var _wiki_locale: String = Global.wiki
 
 func _ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
