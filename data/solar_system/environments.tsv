@@ -1,5 +1,5 @@
 name	dummy
 # WIP - not implemented yet	
-DataType	BOOL
+Type	BOOL
 Default	TRUE
 ENVIRONMENT_IVOYAGER	

@@ -209,7 +209,6 @@ func init_extensions() -> void:
 			extension._extension_init()
 		Global.extensions.append([extension.EXTENSION_NAME,
 				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
-	Global.load_assets() # here so extensions can alter paths
 	Global.emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:

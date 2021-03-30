@@ -89,7 +89,7 @@ func get_string(table_name: String, field_name: String, row := -1, row_name := "
 	return row_data[column]
 
 func get_bool(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
-	# Use for table DataType "BOOL" or "X"; returns false if missing
+	# Use for table Type "BOOL" or "X"; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
 	if !column_fields.has(field_name):
@@ -149,7 +149,7 @@ func get_least_real_precision(table_name: String, field_names: Array, row := -1,
 	return min_precision
 
 func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
-	# Use for DataType = "BODY" to get the Body instance.
+	# Use for Type = "BODY" to get the Body instance.
 	# Returns null if missing (from table) or no such Body exists in the tree.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
@@ -163,7 +163,7 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return convert_body(row_data[column])
 
 func get_data(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# Use for DataType = "DATA" to get row number of the cell item.
+	# Use for Type = "DATA" to get row number of the cell item.
 	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
@@ -258,7 +258,7 @@ func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: i
 		var column: int = column_fields[column_field]
 		var value: String = row_data[column]
 		var data_type: String = data_types[column]
-		assert(data_type == "BOOL" or data_type == "X", "Expected table DataType = 'BOOL' or 'X'")
+		assert(data_type == "BOOL" or data_type == "X", "Expected table Type = 'BOOL' or 'X'")
 		if bool(value):
 			flags |= flag
 	return flags

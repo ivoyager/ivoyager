@@ -62,6 +62,8 @@ var _unique_register := {}
 # localization
 var _enable_wiki: bool = Global.enable_wiki
 var _enums: Script = Global.enums
+var _wiki_locale: String = Global.wiki_locale # en.wikipedia, etc., or wiki (internal)
+
 # current processing
 var _path: String
 var _data: Array
@@ -84,7 +86,7 @@ func _init():
 	var start_time := OS.get_system_time_msecs()
 	_import()
 	var time := OS.get_system_time_msecs() - start_time
-	print("Imported tables in %s msec; %s rows; %s cells, %s non-null; %s unique" \
+	print("Imported tables in %s msec; %s rows; %s cells (%s non-null; %s unique)" \
 			% [time, _count_rows, _count_cells, _count_non_null, _unique_register.size()])
 
 func _project_init() -> void:
@@ -150,7 +152,7 @@ func _read_table() -> void:
 				have_fields = true
 				assert(n_columns == _fields.size(), "Duplicate field (%s columns, %s unique fields) in %s" \
 						% [n_columns, _fields.size(), _path])
-			elif _line_array[0] == "DataType":
+			elif _line_array[0] == "Type":
 				_data_types = _line_array.duplicate()
 				_data_types[0] = "STRING" # always name field
 				_data_types.resize(n_columns) # there could be an extra comment column
@@ -200,7 +202,7 @@ func _read_data_line() -> void:
 		assert(_cell_test())
 		row_data[column] = _cell
 		_unique_register[_cell] = null
-		if _enable_wiki and _field == "wiki_en": # TODO: non-English Wikipedias
+		if _enable_wiki and _field == _wiki_locale:
 			assert(!_wiki_titles.has(_row_name))
 			_wiki_titles[_row_name] = _cell
 		_count_non_null += 1
@@ -223,7 +225,7 @@ func _process_cell_value() -> void:
 
 func _data_types_test() -> bool:
 	for data_type in _data_types:
-		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown DataType: " + data_type)
+		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown Type: " + data_type)
 	return true
 
 func _units_test() -> bool:

@@ -88,6 +88,7 @@ signal save_dialog_requested()
 signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, bbcode_text)
+signal open_internal_wiki_requested(wiki_title) # for game wiki, a la "Civilopedia"
 
 # containers - write authority indicated; safe to keep container reference
 var state := {} # see comments in StateManager; is_inited, is_running, etc.
@@ -99,7 +100,7 @@ var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
 var assets := {} # Global; loaded here from dynamic paths
 var settings := {} # SettingsManager
 var table_rows := {} # TableImporter; row number for all row names
-var wiki_titles := {} # TableImporter; Wiki url identifiers by item name
+var wiki_titles := {} # TableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # BodyRegistry; indexed by body_id
@@ -129,6 +130,7 @@ var skip_splash_screen := false
 var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
+var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
@@ -178,6 +180,7 @@ var table_import := {
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
 }
 var table_import_wiki_only := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
+var wikipedia_locales := ["en"] # present in data tables, eg, "de.wikipedia", etc.
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, ModelBuilder first looks for an existing
@@ -225,21 +228,27 @@ var debug_log_path := "user://logs/debug.log"
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
+var wiki_locale = "en.wikipedia" # changed below for internal or non-en Wikipedia
 
 # private
 var _asset_path_arrays := [models_search, maps_search, bodies_2d_search, rings_search]
 var _asset_path_dicts := [asset_paths, asset_paths_for_load]
 
-func load_assets():
-	# Called by ProjectBuilder after extensions init but before all other 
-	# instantiations.
+func _ready():
+	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
+	connect("extentions_inited", self, "_on_extentions_inited", [], CONNECT_ONESHOT)
+
+func _on_extentions_inited():
+	if use_internal_wiki:
+		wiki_locale = "wiki"
+	else:
+		var locale := TranslationServer.get_locale()
+		if wikipedia_locales.has(locale):
+			wiki_locale = locale + ".wikipedia"
 	if debug_log:
 		debug_log.open(debug_log_path, File.WRITE)
 	_modify_asset_paths()
 	_load_assets()
-
-func _ready():
-	prints("I, Voyager", ivoyager_version, "- https://ivoyager.dev")
 
 func _modify_asset_paths() -> void:
 	if !asset_replacement_dir:

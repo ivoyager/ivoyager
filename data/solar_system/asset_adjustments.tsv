@@ -3,7 +3,7 @@ name	longitude_offset	model_scale
 # as is typical for Earth maps; if different use longitude_offset.		
 # Model scale is assumed to be in meters (1 meter), unless included here.		
 # Defaults are hard-coded since we don't want to include all assets here.		
-DataType	REAL	REAL
+Type	REAL	REAL
 Units	deg	m
 Mars.albedo.noaa.CWreprocessed.4096.jpg	180	
 Deimos.4000_1_1000.glb		1000

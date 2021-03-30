@@ -4,10 +4,10 @@ WARNING! Do not use Excel for .tsv file editing! Excel will "interpret" and
 modify cell values. For example, the Sun's GM = "1.32712440018e20" will be
 be changed to "1.33E+20" in the display bar AND THE SAVED FILE VALUE! You can
 prevent this by prefixing with either single-quote (') or underscore (_).
-However, it is then necessary to assess each REAL and large INT value
-individually for "Excel-safety", or prefix all numbers. Alternatively, you can
-use the import wizard and set all columns to text EVERY TIME you edit a *.tsv
-file. Any of these options is a major hassle.
+However, it is then necessary to assess each REAL for "Excel-safety", or prefix
+all REALs. The only alternative using Excel is to use the import wizard
+(setting all columns to text) EVERY TIME you edit a *.tsv file. These options
+are all a major hassle.
 
 Remarkably, the only .csv/.tsv file editor that I could find that doesn't do
 this (and is currently being maintained for Windows 10) is Ron's Editor:
@@ -32,26 +32,32 @@ File rules:
 *	The last column is ignored if header is "Comment".
 *	The first column header must be "name".
 *	Row name must be globally unique among all data tables.
-*	After header row there must be a "DataType" row. See details below.
+*	After header row there must be a "Type" row. See details below.
 *	Two more rows are optional: "Default" and "Units". See details below.
 
 Cell rules:
 
 *	Double-quotes (") will be removed if they enclose the cell on both ends.
 *	A prefix single-quote (') or underscore (_) will be removed.
-*	Blank cells are allowed for any DataType and (if no Default specified) are
+*	Blank cells are allowed for any Type and (if no Default specified) are
 	interpreted as missing or n/a values. These values will not be set in
 	TableReader "build_" functions. However, get_int(), get_real(), etc., will
 	return type-specific null-equivilent values (e.g., -1, NAN, etc.).
 
-Wikipedia:
+Hyperlinks to Wikipedia or internal wiki:
 
-All data tables can have column wiki_en, which specifies item text needed to
-complete URL for English language Wikipedia page. TODO: other localizations.
-Also, we plan to implement similar (but different) headers to facilitate
-hyperlinks to internal game content wikis (a la Civilopedia). 
+Extension project can set Global.enable_wiki = true to have GUI hyperlinks.
+These links can be either to Wikipedia.org (in any available language) or an
+internal game wiki (a la "Civilopedia"). For external Wikipedia links, item
+URL titles must be specified in table field "en.wikipedia", "es.wikipedia",
+etc. If non-English wiki titles are added, these locales also must be added
+to Global.wikipedia_locales. If game project has an internal wiki, add titles
+under table field "wiki" and set Global.use_internal_wiki = true. This will
+enable Global signal open_internal_wiki_requested(wiki_title) whenever a GUI
+hyperlink is pressed.
 
-DataType:
+
+Type (required row):
 
 	STRING
 		Normal Godot escaping applies for \n, \t, etc. We have also patched
@@ -62,11 +68,9 @@ DataType:
 		Case-insensitive "True" or "False". Blank Default is the same as False.
 	X
 		Must be "x" or blank. This is essentially the same as BOOL except
-		Default is not allowed. Use TableReader.get_bool() to read this
-		data type.
+		Default is not allowed. Use TableReader.get_bool() to read this type.
 	INT
-		Any valid integer. See WARNING about Excel above; it will change vary
-		large int values unless they are prefixed by ' or _.
+		Any valid integer.
 	REAL
 		See WARNING about Excel above. If you must use it, then prefix all REAL
 		values with ' or _ to prevent number modification.
@@ -95,21 +99,20 @@ DataType:
 		TableReader.get_body() is the Body instance (if it exists in tree) or
 		null.
 	< enum name >
-		An enum name can be specified for DataType. The enum must exist in a
+		An enum name can be specified for Type. The enum must exist in a
 		static Reference class specified in Global.enums. If you need to add
 		enums for table data, extend the existing static/enums.gd class file
 		and set Global.enums to your new class.
 
-Default:
+Default (optional row):
 
-	Default row is optional. Value must be blank or follow DataType rules
-	above.
+	Default values must be blank or follow Type rules above.
 
-Units:
+Units (optional row):
 
-	Units row is optional. It is valid only for DataType = REAL. The Unit
-	string must be a key in one of the dictionaires in static/unit_defs.gd
-	(MULTIPLIERS or FUNCTIONS), or in replacement dictionaries specified in
-	Global.unit_multipliers or Global.unit_functions.
-	Unit can be prefixed by "10^### " where ### is any valid integer.
+	Units are valid only for Type = REAL. The Units string must be a key in one
+	of the dictionaires in static/unit_defs.gd (MULTIPLIERS or FUNCTIONS), or
+	in replacement dictionaries specified in Global.unit_multipliers or
+	Global.unit_functions. Units can be prefixed by "10^### " where ### is a
+	valid integer.
 	
