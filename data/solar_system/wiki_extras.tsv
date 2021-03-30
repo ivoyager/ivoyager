@@ -1,15 +1,13 @@
-name	wiki_en
-# This file associates text keys (not included in	
-# other data tables) with Wiki titles.	
-DataType	STRING
+name	en.wikipedia
+Type	STRING
 LABEL_ABSOLUTE_MAGNITUDE	Absolute_magnitude
 LABEL_ALBEDO	Albedo
-LABEL_APOAPSIS	Apsis
 LABEL_APHELION	Apsis
+LABEL_APOAPSIS	Apsis
 LABEL_APOGEE	Apsis
 LABEL_AVERAGE_ORBITAL_SPEED	Orbital_speed
-LABEL_AXIAL_TILT_TO_ORBIT	Axial_tilt
 LABEL_AXIAL_TILT_TO_ECLIPTIC	Axial_tilt
+LABEL_AXIAL_TILT_TO_ORBIT	Axial_tilt
 LABEL_COLOR_B_V	Color_index
 LABEL_ECCENTRICITY	Orbital_eccentricity
 LABEL_ESCAPE_VELOCITY	Escape_velocity
@@ -17,11 +15,11 @@ LABEL_GALACTIC_PERIOD	Galactic_year
 LABEL_HYDROSTATIC_EQUILIBRIUM	Hydrostatic_equilibrium
 LABEL_INCLINATION_TO_ECLIPTIC	Orbital_inclination
 LABEL_INCLINATION_TO_EQUATOR	Orbital_inclination
-LABEL_KN_PLANETS	Planet
+LABEL_KN_COMETS	Comet
 LABEL_KN_DWF_PLANETS	Dwarf_planet
 LABEL_KN_MINOR_PLANETS	Minor_planet
-LABEL_KN_COMETS	Comet
 LABEL_KN_NAT_SATELLITES	Natural_satellite
+LABEL_KN_PLANETS	Planet
 LABEL_KN_QUASI_SATELLITES	Quasi-satellite
 LABEL_LUMINOSITY	Luminosity
 LABEL_METALLICITY	Metallicity

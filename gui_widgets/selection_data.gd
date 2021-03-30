@@ -194,6 +194,7 @@ onready var _table_reader: TableReader = Global.program.TableReader
 var _state: Dictionary = Global.state
 var _enums: Script = Global.enums
 var _wiki_titles: Dictionary = Global.wiki_titles
+var _wiki_locale: String = Global.wiki
 var _selection_manager: SelectionManager
 var _header_buttons := []
 var _grids := []
@@ -507,8 +508,7 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
-	var url: String = "https://en.wikipedia.org/wiki/" + wiki_title
-	OS.shell_open(url)
+	Global.emit_signal("open_wiki_requested", wiki_title)
 
 # special processing functions
 

@@ -84,6 +84,9 @@ onready var universe: Spatial = get_node_or_null("/root/Universe")
 var initializers := {
 	# Reference classes. ProjectBuilder instances these first. They may erase
 	# themselves from Global.program when done (thereby freeing themselves).
+	_LogInitializer_ = LogInitializer,
+	_AssetInitializer_ = AssetInitializer,
+	_WikiInitializer_ = WikiInitializer,
 	_TranslationImporter_ = TranslationImporter,
 	_TableImporter_ = TableImporter,
 }
@@ -120,6 +123,7 @@ var prog_refs := {
 	_MainMenuManager_ = MainMenuManager,
 	_SleepManager_ = SleepManager,
 	_Scheduler_ = Scheduler,
+	_WikiManager_ = WikiManager,
 }
 
 var prog_nodes := {
@@ -209,7 +213,6 @@ func init_extensions() -> void:
 			extension._extension_init()
 		Global.extensions.append([extension.EXTENSION_NAME,
 				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
-	Global.load_assets() # here so extensions can alter paths
 	Global.emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:

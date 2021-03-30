@@ -28,6 +28,7 @@ var fallback_text := "LABEL_WIKIPEDIA"
 
 var _selection_manager: SelectionManager
 var _wiki_titles: Dictionary = Global.wiki_titles
+var _wiki_locale: String = Global.wiki
 
 func _ready():
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
@@ -48,6 +49,7 @@ func _on_selection_changed() -> void:
 
 func _on_wiki_clicked(_meta: String) -> void:
 	var object_name: String = _selection_manager.get_name()
-	if _wiki_titles.has(object_name):
-		var url := "https://en.wikipedia.org/wiki/" + tr(_wiki_titles[object_name])
-		OS.shell_open(url)
+	if !_wiki_titles.has(object_name):
+		return
+	var wiki_title: String = _wiki_titles[object_name]
+	Global.emit_signal("open_wiki_requested", wiki_title)
