@@ -120,6 +120,7 @@ var prog_refs := {
 	_MainMenuManager_ = MainMenuManager,
 	_SleepManager_ = SleepManager,
 	_Scheduler_ = Scheduler,
+	_WikiManager_ = WikiManager,
 }
 
 var prog_nodes := {

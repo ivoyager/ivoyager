@@ -508,11 +508,7 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
-	if _wiki_locale == "wiki":
-		Global.emit_signal("open_internal_wiki_requested", wiki_title)
-	else:
-		var url := "https://" + _wiki_locale + ".org/wiki/" + wiki_title
-		OS.shell_open(url)
+	Global.emit_signal("open_wiki_requested", wiki_title)
 
 # special processing functions
 

@@ -88,7 +88,7 @@ signal save_dialog_requested()
 signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, bbcode_text)
-signal open_internal_wiki_requested(wiki_title) # for game wiki, a la "Civilopedia"
+signal open_wiki_requested(wiki_title)
 
 # containers - write authority indicated; safe to keep container reference
 var state := {} # see comments in StateManager; is_inited, is_running, etc.

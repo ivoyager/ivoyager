@@ -52,8 +52,4 @@ func _on_wiki_clicked(_meta: String) -> void:
 	if !_wiki_titles.has(object_name):
 		return
 	var wiki_title: String = _wiki_titles[object_name]
-	if _wiki_locale == "wiki":
-		Global.emit_signal("open_internal_wiki_requested", wiki_title)
-	else:
-		var url := "https://" + _wiki_locale + ".org/wiki/" + wiki_title
-		OS.shell_open(url)
+	Global.emit_signal("open_wiki_requested", wiki_title)
