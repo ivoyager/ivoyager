@@ -156,6 +156,7 @@ func _load_callback(gamesave: Array, err: int) -> void:
 		print("ERROR on Load; error code = ", err)
 		return # TODO: Exit and give user feedback
 	_save_builder.build_tree(_universe, gamesave)
+	_test_version()
 	Global.emit_signal("game_load_finished")
 	_state.is_system_built = true
 	Global.emit_signal("system_tree_built_or_loaded", false)
@@ -192,7 +193,7 @@ func _test_version() -> void:
 			or ivoyager_version != Global.IVOYAGER_VERSION \
 			or ivoyager_version_ymd != Global.IVOYAGER_VERSION_YMD:
 		print("WARNING! Loaded game was created with different program version...")
-		prints("I, Voayger running: ", Global.IVOYAGER_VERSION, Global.IVOYAGER_VERSION_YMD)
-		prints("I, Voyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
-		prints("Project running: ", Global.project_version, Global.project_version_ymd)
-		prints("Project loaded:  ", project_version, project_version_ymd)
+		prints(" ivoayger running: ", Global.IVOYAGER_VERSION, Global.IVOYAGER_VERSION_YMD)
+		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
+		prints(" project running:  ", Global.project_version, Global.project_version_ymd)
+		prints(" project loaded:   ", project_version, project_version_ymd)
