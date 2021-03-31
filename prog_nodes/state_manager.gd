@@ -257,12 +257,3 @@ func _run_simulator() -> void:
 	assert(DPRINT and prints("signal threads_allowed") or true)
 	allow_threads = true
 	emit_signal("threads_allowed")
-
-func _test_load_version_warning() -> void:
-	if Global.current_project_version != Global.project_version \
-			or Global.current_ivoyager_version != Global.ivoyager_version:
-		print("WARNING! Loaded game was created with a different version...")
-		prints("Present running version: ", Global.current_ivoyager_version,
-				Global.current_project_version)
-		prints("Loaded game started as:  ", Global.ivoyager_version, Global.project_version)
-

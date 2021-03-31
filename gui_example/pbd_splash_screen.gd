@@ -41,27 +41,13 @@ func _ready():
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
 	_pbd_caption.connect("gui_input", self, "_pbd_caption_input")
-	_pbd_caption.set("custom_colors/font_color", Color.lightskyblue)
+	_pbd_caption.set("custom_colors/font_color", Color.lightblue)
 	if _settings.pbd_splash_caption_open:
 		_pbd_caption.text = "TXT_PBD_LONG"
 	else:
 		_pbd_caption.text = "TXT_PBD_SHORT"
 	if Global.skip_splash_screen:
 		hide()
-	get_viewport().connect("size_changed", self, "_resize")
-	_resize()
-
-func _resize() -> void:
-	# TODO: This won't be needed with new AspectRatioContainer in 3.2.4
-	var viewport_size := get_viewport().size
-	var viewport_height := viewport_size.y
-	var height := 0.5625 * viewport_size.x
-	if height > viewport_height:
-		height = viewport_height
-	var pos_y = (viewport_height - height) / 2.0
-	var aspect_container: Container = $AspectContainer
-	aspect_container.rect_size.y = height
-	aspect_container.rect_position.y = pos_y
 
 func _pbd_mouse_entered() -> void:
 	_pbd_caption.set("custom_colors/font_color", Color.white)

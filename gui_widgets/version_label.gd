@@ -30,7 +30,7 @@ func set_version_label(extension_name := "", include_name := true,
 	var version := ""
 	if !extension_name: # display I, Voyager version
 		program_name = "I, Voyager"
-		version = Global.ivoyager_version
+		version = Global.IVOYAGER_VERSION
 	else:
 		for loop_info in Global.extensions:
 			var loop_name: String = loop_info[0]

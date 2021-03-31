@@ -37,11 +37,14 @@ const NetworkStopSync = Enums.NetworkStopSync
 
 # persistence - values will be replaced by file values on game load!
 var project_version: String = Global.project_version
-var ivoyager_version: String = Global.ivoyager_version
+var project_version_ymd: int = Global.project_version_ymd
+var ivoyager_version: String = Global.IVOYAGER_VERSION
+var ivoyager_version_ymd: int = Global.IVOYAGER_VERSION_YMD
 var is_modded: bool = Global.is_modded
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["project_version", "ivoyager_version", "is_modded"]
+const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
+	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 
 # private
 onready var _io_manager: IOManager = Global.program.IOManager
@@ -153,6 +156,7 @@ func _load_callback(gamesave: Array, err: int) -> void:
 		print("ERROR on Load; error code = ", err)
 		return # TODO: Exit and give user feedback
 	_save_builder.build_tree(_universe, gamesave)
+	_test_version()
 	Global.emit_signal("game_load_finished")
 	_state.is_system_built = true
 	Global.emit_signal("system_tree_built_or_loaded", false)
@@ -184,7 +188,12 @@ func _on_load_requested(path: String, is_quick_load := false) -> void:
 		quick_load()
 
 func _test_version() -> void:
-	if project_version != Global.project_version or ivoyager_version != Global.ivoyager_version:
-		print("WARNING! Loaded game was created with a different version...")
-		prints("Present running version: ", Global.ivoyager_version, Global.project_version)
-		prints("Loaded game started as:  ", ivoyager_version, project_version)
+	if project_version != Global.project_version \
+			or project_version_ymd != Global.project_version_ymd \
+			or ivoyager_version != Global.IVOYAGER_VERSION \
+			or ivoyager_version_ymd != Global.IVOYAGER_VERSION_YMD:
+		print("WARNING! Loaded game was created with different program version...")
+		prints(" ivoayger running: ", Global.IVOYAGER_VERSION, Global.IVOYAGER_VERSION_YMD)
+		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
+		prints(" project running:  ", Global.project_version, Global.project_version_ymd)
+		prints(" project loaded:   ", project_version, project_version_ymd)
