@@ -99,7 +99,7 @@ func get_bool(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
-	return bool(row_data[column])
+	return convert_bool(row_data[column])
 
 func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Returns -1 if missing.
@@ -258,8 +258,8 @@ func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: i
 		var column: int = column_fields[column_field]
 		var value: String = row_data[column]
 		var data_type: String = data_types[column]
-		assert(data_type == "BOOL" or data_type == "X", "Expected table Type = 'BOOL' or 'X'")
-		if bool(value):
+		assert(data_type == "BOOL", "Expected table Type = 'BOOL' or 'X'")
+		if convert_bool(value):
 			flags |= flag
 	return flags
 
@@ -328,7 +328,7 @@ func convert_value(value: String, data_type: String, unit := ""): # untyped retu
 		"REAL":
 			return convert_real(value, unit)
 		"BOOL":
-			return bool(value) # False is internally ""
+			return convert_bool(value)
 		"STRING":
 			return value
 		"INT":
@@ -339,6 +339,9 @@ func convert_value(value: String, data_type: String, unit := ""): # untyped retu
 			return convert_body(value)
 		_: # must be valid enum name (this was verified on import)
 			return convert_enum(value, data_type)
+
+func convert_bool(value: String) -> bool:
+	return value == "true"
 
 func convert_int(value: String) -> int:
 	return int(value) if value else -1
