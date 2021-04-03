@@ -353,14 +353,14 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	# returns integer string up to "999999", then "1.00 Million", etc.;
 	if abs(x) < 1e6:
 		return "%.f" % x
-	var exp_div_3 := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
-	var lg_num_index := exp_div_3 - 2
+	var exp_3s_index := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
+	var lg_num_index := exp_3s_index - 2
 	if lg_num_index < 0: # shouldn't happen but just in case
 		return "%.f" % x
 	if lg_num_index >= _n_lg_numbers:
 		lg_num_index = _n_lg_numbers - 1
-		exp_div_3 = lg_num_index + 2
-	x /= pow(10.0, exp_div_3 * 3)
+		exp_3s_index = lg_num_index + 2
+	x /= pow(10.0, exp_3s_index * 3)
 	var lg_number_str: String = large_numbers[lg_num_index]
 	if case_type == CASE_LOWER:
 		lg_number_str = lg_number_str.to_lower()
@@ -397,15 +397,17 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
 	if unit:
 		x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
-	var exp_div_3 := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
-	var si_index := exp_div_3 + _prefix_offset
+	var exp_3s_index := 0
+	if x != 0.0:
+		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
+	var si_index := exp_3s_index + _prefix_offset
 	if si_index < 0:
 		si_index = 0
-		exp_div_3 = -_prefix_offset
+		exp_3s_index = -_prefix_offset
 	elif si_index >= _n_prefixes:
 		si_index = _n_prefixes - 1
-		exp_div_3 = si_index - _prefix_offset
-	x /= pow(10.0, exp_div_3 * 3)
+		exp_3s_index = si_index - _prefix_offset
+	x /= pow(10.0, exp_3s_index * 3)
 	var number_str := number(x, precision, num_type)
 	var prepend_space := true
 	if long_form and long_forms.has(unit):
