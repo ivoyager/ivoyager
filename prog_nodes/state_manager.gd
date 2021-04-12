@@ -49,7 +49,6 @@ class_name StateManager
 
 signal run_threads_allowed() # ok to start threads that affect gamestate
 signal run_threads_must_stop() # finish threads that affect gamestate
-signal about_to_stop_before_quit() # finish any other threads (eg, I/O thread)
 signal threads_finished() # all blocking threads removed
 signal client_is_dropping_out(is_exit)
 signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
@@ -180,7 +179,7 @@ func quit(force_quit := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	emit_signal("about_to_stop_before_quit")
+	Global.emit_signal("about_to_stop_before_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
 	Global.emit_signal("about_to_quit")

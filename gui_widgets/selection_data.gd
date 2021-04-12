@@ -54,7 +54,7 @@ var test_wiki_values: bool = Global.enable_wiki # can override to false if neede
 var use_kept_precisions := true # set same as BodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
-var update_interval := 1.0 # seconds; set 0.0 for no updates
+var interval := 1.0 # seconds; set 0.0 for no periodic updates
 
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
@@ -64,7 +64,7 @@ var section_open := [true, true, true, true, true, true]
 var section_data := [ # one array element per header
 	# In each section array, we have an array for each data line containing:
 	# [0] display label [1] path to property or method [2] method_args
-	# [3] data_type [4] process arg or args
+	# [3] data_type [4] arg or args specific for data_type
 	[ # Orbital Characteristics
 		["LABEL_PERIAPSIS", "body/orbit/get_periapsis", NO_ARGS,
 				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
@@ -209,24 +209,27 @@ var _path: String
 func _ready() -> void:
 	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_quit", self, "_clear")
-	_update_coroutine()
+	Global.connect("about_to_stop_before_quit", self, "_clear_recycled")
+	_start_interval_updates()
 
 func _clear() -> void:
 	if _selection_manager:
 		_selection_manager.disconnect("selection_changed", self, "_update_selection")
-	_selection_manager = null
+		_selection_manager = null
 	_selection_item = null
 	_body = null
 	_header_buttons.clear()
 	_grids.clear()
 	_meta_lookup.clear()
+	for child in get_children():
+		child.queue_free()
+	_clear_recycled()
+
+func _clear_recycled() -> void:
 	while _recycled_labels:
 		_recycled_labels.pop_back().queue_free()
 	while _recycled_rtlabels:
 		_recycled_rtlabels.pop_back().queue_free()
-	for child in get_children():
-		child.queue_free()
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == subsection_of.size())
@@ -261,11 +264,11 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		section += 1
 	_update_selection()
 
-func _update_coroutine() -> void:
-	if !update_interval:
+func _start_interval_updates() -> void:
+	if !interval:
 		return
 	while true:
-		yield(get_tree().create_timer(update_interval), "timeout")
+		yield(get_tree().create_timer(interval), "timeout")
 		if _state.is_running:
 			_update_selection()
 

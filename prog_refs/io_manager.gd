@@ -140,7 +140,7 @@ func _project_init() -> void:
 	_state_manager = Global.program.StateManager
 	if !_use_threads:
 		return
-	_state_manager.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
+	Global.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()

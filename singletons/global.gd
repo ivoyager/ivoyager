@@ -43,6 +43,7 @@ signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_needed() # send signals with GUI info now!
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
+signal about_to_stop_before_quit()
 signal about_to_quit()
 signal about_to_exit()
 signal simulator_exited()
