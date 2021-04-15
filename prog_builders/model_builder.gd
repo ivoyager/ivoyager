@@ -72,7 +72,7 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 
 func _project_init() -> void:
 	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_quit", self, "_clear")
+	Global.connect("about_to_stop_before_quit", self, "_clear")
 	_table_reader = Global.program.TableReader
 	_io_manager = Global.program.IOManager
 	_globe_mesh = Global.shared_resources.globe_mesh
@@ -100,8 +100,7 @@ func _preregister_files() -> void:
 
 func _clear() -> void:
 	while _recycled_placeholders:
-		var placeholder: Spatial = _recycled_placeholders.pop_back()
-		placeholder.queue_free()
+		_recycled_placeholders.pop_back().queue_free()
 	_lazy_tracker.clear()
 	_n_lazy = 0
 

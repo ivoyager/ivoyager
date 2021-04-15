@@ -21,7 +21,7 @@ TableImporter reads *.tsv files specified in Global.table_import (and
 Global.wiki_titles_import) and stores data as modified string values. Use
 TableReader API (prog_refs/table_reader.gd) to read internal data tables; it
 will convert strings to typed values and convert REAL values to specified
-Units. Use TableReader "get_" and "build_" functions to init object properties
+Units. Use TableReader get_ and build_ functions to init object properties
 with table values. Don't use TableReader for runtime logic that needs to be
 fast.
 
@@ -43,8 +43,8 @@ Cell rules:
 *	A prefix single-quote (') or underscore (_) will be removed.
 *	Blank cells are allowed for any Type and (if no Default specified) are
 	interpreted as missing or n/a values. These values will not be set in
-	TableReader "build_" functions. However, get_int(), get_real(), etc., will
-	return type-specific null-equivilent values (e.g., -1, NAN, etc.).
+	TableReader build_ functions. However, get_int(), get_real(), etc., will
+	return type-specific "null" values (e.g., -1, NAN, etc.).
 
 Item hyperlinks to Wikipedia or internal wiki:
 
@@ -52,8 +52,8 @@ Extension project can set Global.enable_wiki = true for GUI hyperlinks. Column
 fields "en.wikipedia", etc., contain page titles for language-specific
 Wikipedia pages. Additional languages can be added as new columns and must be
 added to Global.wikipedia_locales. For an internal wiki (a la "Civiliopedia")
-add new column "wiki" and set Global.use_internal_wiki = true. For more, see
-comments in prog_refs/wiki_manager.gd.
+add new column "wiki" and set Global.use_internal_wiki = true. For more info,
+see comments and API in prog_refs/wiki_manager.gd.
 
 Type (required row):
 
@@ -63,7 +63,10 @@ Type (required row):
 		Godot; see issue https://github.com/godotengine/godot/issues/38716).
 		However, \UXXXXXXXX for advanced unicode does not currently work. 
 	BOOL
-		Case-insensitive "True" or "False". Blank Default is the same as False.
+		Case-insensitive "True" or "False". Note that blank cell (without
+		Default) is different than "False". A "False" value will be set to
+		false in TableReader build_ functions; a blank will not be set. Both
+		"False" and blank/missing value will return false in get_bool().
 	X
 		Must be "x" or blank. This is essentially the same as BOOL except
 		Default is not allowed. Use TableReader.get_bool() to read this type.
@@ -104,7 +107,8 @@ Type (required row):
 
 Default (optional row):
 
-	Default values must be blank or follow Type rules above.
+	Default values must be blank or follow Type rules above. If non-blank, this
+	value is used for any blank cells in the column.
 
 Units (optional row):
 

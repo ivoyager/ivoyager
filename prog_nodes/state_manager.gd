@@ -47,9 +47,9 @@
 extends Node
 class_name StateManager
 
-signal threads_allowed() # ok to start threads that affect gamestate
-signal finish_threads_required() # finish threads that affect gamestate
-signal threads_finished()
+signal run_threads_allowed() # ok to start threads that affect gamestate
+signal run_threads_must_stop() # finish threads that affect gamestate
+signal threads_finished() # all blocking threads removed
 signal client_is_dropping_out(is_exit)
 signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
 signal server_about_to_run() # server only
@@ -106,7 +106,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	# bypass_checks intended for this node & NetworkLobby; could break sync.
 	# Returns false if the caller doesn't have authority to stop the sim.
 	# "Stopped" means SceneTree is paused, the player is locked out from most
-	# input, and we have signaled "finish_threads_required" (any Threads added
+	# input, and we have signaled "run_threads_must_stop" (any Threads added
 	# via add_blocking_thread() should then be removed as they finish).
 	# In many cases, you should yield to "threads_finished" after calling this.
 	if !bypass_checks:
@@ -179,9 +179,10 @@ func quit(force_quit := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	Global.emit_signal("about_to_quit")
+	Global.emit_signal("about_to_stop_before_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
+	Global.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
@@ -242,9 +243,9 @@ func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
 	# particular, persist vars during save/load).
 	print("Stop simulator")
-	assert(DPRINT and prints("signal finish_threads_required") or true)
+	assert(DPRINT and prints("signal run_threads_must_stop") or true)
 	allow_threads = false
-	emit_signal("finish_threads_required")
+	emit_signal("run_threads_must_stop")
 	_state.is_running = false
 	_tree.paused = true
 	Global.emit_signal("run_state_changed", false)
@@ -254,6 +255,6 @@ func _run_simulator() -> void:
 	_state.is_running = true
 	_tree.paused = false
 	Global.emit_signal("run_state_changed", true)
-	assert(DPRINT and prints("signal threads_allowed") or true)
+	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true
-	emit_signal("threads_allowed")
+	emit_signal("run_threads_allowed")

@@ -25,7 +25,7 @@ extends Popup
 class_name MainMenuPopup
 const SCENE := "res://ivoyager/gui_admin/main_menu_popup.tscn"
 
-var center := false # set for centered; otherwise, set $MainMenu margins
+var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
 var _state: Dictionary = Global.state
@@ -40,9 +40,9 @@ func _project_init():
 func _ready() -> void:
 	theme = Global.themes.main_menu
 	if center:
-		$MainMenu.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-		$MainMenu.grow_horizontal = GROW_DIRECTION_BOTH
-		$MainMenu.grow_vertical = GROW_DIRECTION_BOTH
+		$PanelContainer.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
+		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 func _open() -> void:
 	if stop_sim:

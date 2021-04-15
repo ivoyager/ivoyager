@@ -184,6 +184,9 @@ const MULTIPLIERS := {
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),
 	# misc
 	"deg/Cy^2" : DEG / (CENTURY * CENTURY),
+	"flops" : 1.0 / SECOND,
+	"FLOPS" : 1.0 / SECOND,
+	"bits" : 1.0,
 }
 
 const FUNCTIONS := {

@@ -163,17 +163,17 @@ func _read_table() -> void:
 			elif _line_array[0] == "Type":
 				_data_types = _line_array.duplicate()
 				_data_types[0] = "STRING" # always name field
-				_data_types.resize(n_columns) # there could be an extra comment column
+				_data_types.resize(n_columns) # truncate Comment column
 				assert(_data_types_test())
 			elif _line_array[0] == "Units":
 				_units = _line_array.duplicate()
 				_units[0] = ""
-				_units.resize(n_columns)
+				_units.resize(n_columns) # truncate Comment column
 				assert(_units_test())
 			elif _line_array[0] == "Default":
 				_defaults = _line_array.duplicate()
 				_defaults[0] = ""
-				_defaults.resize(n_columns)
+				_defaults.resize(n_columns) # truncate Comment column
 			else:
 				assert(_data_types) # required
 				if !_units:
@@ -222,8 +222,10 @@ func _process_cell_value() -> void:
 	_cell = _cell.lstrip("'")
 	_cell = _cell.lstrip("_")
 	if _data_type == "BOOL":
-		if _cell.matchn("FALSE"):
-			_cell = ""
+		_cell = _cell.to_lower()
+	elif _data_type == "X":
+		if _cell == "x":
+			_cell = "true"
 	elif _data_type == "REAL":
 		_cell = _cell.replace("E", "e")
 	elif _data_type == "STRING":
@@ -246,11 +248,11 @@ func _table_test(n_columns: int) -> bool:
 	for column in range(n_columns):
 		var data_type: String = _data_types[column]
 		match data_type:
+			"BOOL":
+				assert(!_units[column], "Expected no Units for BOOL in" + _path)
 			"X":
 				assert(!_defaults[column], "Expected no Default for X type in" + _path)
 				assert(!_units[column], "Expected no Units for X type in" + _path)
-			"BOOL":
-				assert(!_units[column], "Expected no Units for BOOL in" + _path)
 			"INT":
 				assert(!_units[column], "Expected no Units for INT in" + _path)
 			"REAL":
@@ -266,10 +268,10 @@ func _cell_test() -> bool:
 	# "" is always ok and not checked here; _process_cell_value() has already
 	# processed table values to our internal format (e.g., REAL "E" -> "e").
 	match _data_type:
-		"X":
-			assert(_cell == "x" or _line_error("X type must be x or blank cell"))
 		"BOOL":
-			assert(_cell.matchn("TRUE") or _line_error("Expected BOOL"))
+			assert(_cell == "true" or _cell == "false" or _line_error("Expected BOOL"))
+		"X":
+			assert(_cell == "true" or _line_error("X type must be x or blank cell"))
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":

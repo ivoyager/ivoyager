@@ -140,13 +140,13 @@ func _project_init() -> void:
 	_state_manager = Global.program.StateManager
 	if !_use_threads:
 		return
-	Global.connect("about_to_quit", self, "_on_about_to_quit")
+	Global.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
 	_thread.start(self, "_run_thread", 0)
 
-func _on_about_to_quit() -> void:
+func _block_quit_until_finished() -> void:
 	# Block the quit until we finish the thread; otherwise, we'll have leaks.
 	_stop_thread = true
 	if _thread.is_active():
