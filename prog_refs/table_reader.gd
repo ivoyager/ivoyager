@@ -54,9 +54,43 @@ func get_row(table_name: String, row_name: String) -> int:
 		return table_rows[row_name]
 	return -1
 
-func get_rows_dict(table_name: String) -> Dictionary:
+func get_names_dict(table_name: String) -> Dictionary:
 	# Returns an enum-like dict of row number keyed by row names. Don't modify!
 	return _table_row_dicts[table_name]
+
+func get_column_array(table_name: String, field_name: String) -> Array:
+	# field_name must exist in specified table
+	var column_fields: Dictionary = _table_fields[table_name]
+	var column = column_fields[field_name]
+	var data_types: Array = _table_data_types[table_name]
+	var data_type: String = data_types[column]
+	var units: Array = _table_units[table_name]
+	var unit: String = units[column]
+	var data: Array = _table_data[table_name]
+	var n_rows := data.size()
+	var result := []
+	result.resize(n_rows)
+	var row := 0
+	while row < n_rows:
+		var row_data: Array = data[row]
+		var value_str: String = row_data[column]
+		result[row] = convert_value(value_str, data_type, unit)
+		row += 1
+	return result
+
+func get_1st_true_row(table_name: String, field_name: String) -> int:
+	# field_name must exist in specified table
+	var column_fields: Dictionary = _table_fields[table_name]
+	var column = column_fields[field_name]
+	var data: Array = _table_data[table_name]
+	var n_rows := data.size()
+	var row := 0
+	while row < n_rows:
+		var row_data: Array = data[row]
+		if convert_bool(row_data[column]):
+			return row
+		row += 1
+	return -1
 
 func has_row_name(table_name: String, row_name: String) -> bool:
 	var table_rows: Dictionary = _table_row_dicts[table_name]
@@ -72,7 +106,7 @@ func has_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
-	return bool(row_data[column])
+	return bool(row_data[column]) # "" is missing value
 
 func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
 	# Use for STRING or to obtain a "raw", unconverted table value.

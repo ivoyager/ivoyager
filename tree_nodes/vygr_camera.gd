@@ -125,8 +125,8 @@ var is_moving := false # body to body move in progress
 
 # private
 var _times: Array = Global.times
-var _camera_info: Array = Global.camera_info # [self, global_translation, fov, viewport.size.y]
 var _settings: Dictionary = Global.settings
+var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
 var _body_registry: BodyRegistry = Global.program.BodyRegistry
 var _max_dist: float = Global.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
@@ -309,7 +309,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
-	_camera_info[2] = fov
+	_visuals_helper.camera_fov = fov
 	if !suppress_move:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
@@ -336,9 +336,6 @@ func _on_ready():
 	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	Global.connect("move_camera_to_body_requested", self, "move_to_body")
 	Global.connect("setting_changed", self, "_settings_listener")
-	var viewport := get_viewport()
-	viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_camera_info[3] = viewport.size.y
 	transform = _transform
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
@@ -358,8 +355,8 @@ func _on_ready():
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
-	_camera_info[0] = self
-	_camera_info[2] = fov
+	_visuals_helper.camera = self
+	_visuals_helper.camera_fov = fov
 	Global.emit_signal("camera_ready", self)
 
 func _prepare_to_free() -> void:
@@ -393,7 +390,6 @@ func _process(delta: float) -> void:
 		# the same time we add our new shift.
 		_universe.translation -= parent.global_transform.origin
 	transform = _transform
-	_camera_info[1] = global_transform.origin
 
 func _process_move_in_progress(delta: float) -> void:
 	_move_progress += delta
@@ -692,9 +688,6 @@ func _send_gui_refresh() -> void:
 	else:
 		lat_long = selection_item.get_latitude_longitude(translation)
 	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
-
-func _on_viewport_size_changed() -> void:
-	_camera_info[3] = get_viewport().size.y
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

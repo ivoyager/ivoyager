@@ -122,6 +122,7 @@ var prog_refs := {
 	_TableReader_ = TableReader,
 	_MainMenuManager_ = MainMenuManager,
 	_SleepManager_ = SleepManager,
+	_VisualsHelper_ = VisualsHelper,
 	_Scheduler_ = Scheduler,
 	_WikiManager_ = WikiManager,
 }

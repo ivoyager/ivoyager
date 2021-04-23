@@ -30,7 +30,7 @@ signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
 
-var _mouse_target: Array = Global.mouse_target # [mouse_pos, target, dist]
+var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 
@@ -44,15 +44,13 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 
 func _clear() -> void:
-	_mouse_target[1] = null # object
-	_mouse_target[2] = INF # distance
 	for child in get_children():
 		child.queue_free()
 
 func _process(_delta: float) -> void:
 	if _drag_start:
 		set_default_cursor_shape(CURSOR_MOVE)
-	elif _mouse_target[1]: # there is a target object under the mouse!
+	elif _visuals_helper.mouse_target: # there is a target object under the mouse!
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 	else:
 		set_default_cursor_shape(CURSOR_ARROW)
@@ -78,7 +76,7 @@ func _gui_input(input_event: InputEvent) -> void:
 				_drag_segment_start = _drag_start
 			else: # end of drag or button-up after click selection
 				if _drag_start == event.position: # was a mouse click!
-					var target: Object = _mouse_target[1]
+					var target := _visuals_helper.mouse_target
 					if target:
 						emit_signal("mouse_target_clicked", target, event.button_mask,
 								_get_key_modifier_mask(event))
@@ -87,7 +85,7 @@ func _gui_input(input_event: InputEvent) -> void:
 	
 	elif event is InputEventMouseMotion:
 		var mouse_pos: Vector2 = event.position
-		_mouse_target[0] = mouse_pos
+		_visuals_helper.mouse_position = mouse_pos
 		if _drag_segment_start: # accumulated mouse drag motion
 			var drag_vector := mouse_pos - _drag_segment_start
 			_drag_segment_start = mouse_pos
