@@ -95,7 +95,7 @@ signal open_wiki_requested(wiki_title)
 var state := {} # see comments in StateManager; is_inited, is_running, etc.
 var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # Timekeeper; UT1 [hour, minute, second] (ints)
+var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
 var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 
 var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
@@ -109,10 +109,6 @@ var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
-# Camera, ProjectionSurface & Body write below; optimized for Body._process()
-var camera_info := [null, Vector3.ZERO, 50.0, 600.0] # [Camera, glb_trns, fov, vwpt_ht]
-var mouse_target := [Vector2.ZERO, null, INF] # [mouse_pos, Body, dist]
-
 
 # project vars - set on _extension_init(); see singletons/project_builder.gd
 var project_name := ""

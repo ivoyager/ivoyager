@@ -90,11 +90,10 @@ var is_asleep := false
 # private
 var _times: Array = Global.times
 var _state: Dictionary = Global.state
-var _camera_info: Array = Global.camera_info
-var _mouse_target: Array = Global.mouse_target
 var _ecliptic_rotation: Basis = Global.ecliptic_rotation
 onready var _tree := get_tree()
-onready var _huds_manager: HUDsManager = Global.program.HUDsManager
+var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
+var _huds_manager: HUDsManager = Global.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
 var _model_visible := false
@@ -285,9 +284,7 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		set_process(false)
 		_is_visible = false
 		visible = false
-		if _mouse_target[1] == self:
-			_mouse_target[1] = null
-			_mouse_target[2] = INF
+		_visuals_helper.remove_mouse_target(self)
 		if hud_orbit: # not a child of this node!
 			_hud_orbit_visible = false
 			hud_orbit.visible = false
@@ -413,35 +410,29 @@ func _prepare_to_free() -> void:
 	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _on_process(_delta: float) -> void:
+	var is_mouse_target := false
 	var global_translation := global_transform.origin
-	var camera_global_translation: Vector3 = _camera_info[1]
-	var camera_dist := global_translation.distance_to(camera_global_translation)
-	var is_mouse_near := false
-	var position_2d := VECTOR2_NULL
-	var camera: Camera = _camera_info[0]
-	if !camera.is_position_behind(global_translation):
-		position_2d = camera.unproject_position(global_translation)
-		var mouse_dist := position_2d.distance_to(_mouse_target[0]) # mouse position
+	var camera_dist := _visuals_helper.get_distance_to_camera(global_translation)
+	var position_2d := _visuals_helper.unproject_position_in_front(global_translation)
+	if position_2d != VECTOR2_NULL: # not behind
+		var mouse_dist := position_2d.distance_to(_visuals_helper.mouse_position)
 		var click_radius := min_click_radius
-		var divisor: float = _camera_info[2] * camera_dist # fov * dist
+		var divisor: float = _visuals_helper.camera_fov * camera_dist # fov * dist
 		if divisor > 0.0:
-			var screen_radius: float = 55.0 * m_radius * _camera_info[3] / divisor
+			var screen_radius: float = 55.0 * m_radius * _visuals_helper.veiwport_height / divisor
 			if click_radius < screen_radius:
 				click_radius = screen_radius
 		if mouse_dist < click_radius:
-			is_mouse_near = true
-			if camera_dist < _mouse_target[2]:
-				_mouse_target[1] = self
-				_mouse_target[2] = camera_dist
-	if !is_mouse_near and _mouse_target[1] == self:
-		_mouse_target[1] = null
-		_mouse_target[2] = INF
+			is_mouse_target = true
+	if is_mouse_target:
+		_visuals_helper.set_mouse_target(self, camera_dist)
+	else:
+		_visuals_helper.remove_mouse_target(self)
 	var hud_dist_ok := camera_dist > min_hud_dist
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
-	var hud_label_visible := _show_label and hud_dist_ok and hud_label \
-			and position_2d != VECTOR2_NULL
+	var hud_label_visible := _show_label and hud_dist_ok and hud_label and position_2d != VECTOR2_NULL
 	if hud_label_visible:
 		# position 2D Label before 3D translation!
 		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
