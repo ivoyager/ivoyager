@@ -96,7 +96,7 @@ var state := {} # see comments in StateManager; is_inited, is_running, etc.
 var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
-var program := {} # ProjectBuilder; all prog_builders, prog_nodes & prog_refs 
+var program := {} # holds everything instantiated by ProjectBuilder 
 var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # SettingsManager
@@ -131,9 +131,9 @@ var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
-var allow_real_world_time := false # UT1 from user system seconds
+var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
-var home_view_from_user_time_zone := false # grab user latitude (in Planetarium)
+var home_view_from_user_time_zone := false # get user latitude
 var disable_pause := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
 var limit_stops_in_multiplayer := true # overrides most stops
@@ -198,7 +198,7 @@ var asset_paths := {
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
-var asset_paths_for_load := { # loaded into "assets" dict at project init
+var asset_paths_for_load := { # loaded into "assets" dict by AssetInitializer
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
@@ -220,8 +220,8 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 
 # *****************************************************************************
 
-const IVOYAGER_VERSION := "0.0.9-dev-3-31"
-const IVOYAGER_VERSION_YMD := 20210331
+const IVOYAGER_VERSION := "0.0.9-alpha"
+const IVOYAGER_VERSION_YMD := 20210429
 
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
