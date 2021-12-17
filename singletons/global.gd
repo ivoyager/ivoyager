@@ -96,7 +96,7 @@ var state := {} # see comments in StateManager; is_inited, is_running, etc.
 var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
-var program := {} # holds everything instantiated by ProjectBuilder 
+var program := {} # all objects instantiated by ProjectBuilder 
 var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # SettingsManager
@@ -110,7 +110,7 @@ var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
 
-# project vars - set on _extension_init(); see singletons/project_builder.gd
+# project vars - extensions modify via _extension_init(); see ProjectBuilder
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
 var project_version_ymd := 0
@@ -130,7 +130,7 @@ var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 20.0 * UnitDefs.YEAR # from J2000 epoch
+var start_time: float = 22.0 * UnitDefs.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
 var home_view_from_user_time_zone := false # get user latitude
@@ -208,8 +208,7 @@ var translations := [
 	# Added here so extensions can modify. Note that TranslationImporter will
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
-	# be kept. So prepend this array if you want to override an ivoyager text
-	# key.
+	# be kept. So prepend this array if you want to override ivoyager text keys.
 	"res://ivoyager/data/text/entities_text.en.translation",
 	"res://ivoyager/data/text/gui_text.en.translation",
 	"res://ivoyager/data/text/hints_text.en.translation",
@@ -220,8 +219,8 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 
 # *****************************************************************************
 
-const IVOYAGER_VERSION := "0.0.9-alpha"
-const IVOYAGER_VERSION_YMD := 20210429
+const IVOYAGER_VERSION := "0.0.10-dev1"
+const IVOYAGER_VERSION_YMD := 20211217
 
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
