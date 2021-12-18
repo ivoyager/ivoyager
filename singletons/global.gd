@@ -219,8 +219,8 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 
 # *****************************************************************************
 
-const IVOYAGER_VERSION := "0.0.10-dev1"
-const IVOYAGER_VERSION_YMD := 20211217
+const IVOYAGER_VERSION := "0.0.10-dev2"
+const IVOYAGER_VERSION_YMD := 20211218
 
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
