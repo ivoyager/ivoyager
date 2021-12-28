@@ -21,7 +21,7 @@
 
 extends RichTextLabel
 
-var _link_url := "https://ivoyager.dev"
+var _link_url := "https://www.ivoyager.dev"
 
 func set_hyperlink(link_text: String, link_url: String) -> void:
 	bbcode_text = "[url]" + link_text + "[/url]"
