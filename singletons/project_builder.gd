@@ -26,7 +26,8 @@
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
-# See https://ivoyager.dev/forum for extension instructions and best practices.
+# See https://www.ivoyager.dev/forum for extension instructions and best
+# practices.
 #
 # To modify and extend I, Voyager:
 # 1. Create an extension init file with path "res://<name>/<name>.gd" where

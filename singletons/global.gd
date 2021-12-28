@@ -17,15 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "Global"
-#
-# Global init values should be modified by extension in their _extension_init()
-# function and treated as immutable thereafter.
-#
+# Singleton "Global". Global init values should be modified by extension in
+# their _extension_init() function and treated as immutable thereafter.
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
 
 extends Node
+
+const IVOYAGER_VERSION := "0.0.10-dev"
+const IVOYAGER_VERSION_YMD := 20211228
 
 # simulator state broadcasts
 signal extentions_inited() # ProjectBuilder; nothing else added yet
@@ -219,9 +219,6 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 
 # *****************************************************************************
 
-const IVOYAGER_VERSION := "0.0.10-dev2"
-const IVOYAGER_VERSION_YMD := 20211218
-
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
@@ -229,4 +226,4 @@ var wiki: String # WikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: File # LogInitializer sets if debug build and debug_log_path
 
 func _ready():
-	prints("I, Voyager", IVOYAGER_VERSION, "- https://ivoyager.dev")
+	prints("I, Voyager", IVOYAGER_VERSION, IVOYAGER_VERSION_YMD, "- https://www.ivoyager.dev")
