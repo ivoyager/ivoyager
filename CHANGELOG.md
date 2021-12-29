@@ -346,6 +346,16 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 * Removed hotkeys for non-existent developer functions
 
 
-## [v0.0.1] - 2019-11-8
+## v0.0.1 - 2019-11-8
 
 Initial alpha release!
+
+[Unreleased v0.0.10-dev]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...HEAD
+[v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
+[v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha
+[v0.0.7]: https://github.com/ivoyager/ivoyager/compare/v0.0.6-alpha...v0.0.7-alpha
+[v0.0.6]: https://github.com/ivoyager/ivoyager/compare/v0.0.5-alpha...v0.0.6-alpha
+[v0.0.5]: https://github.com/ivoyager/ivoyager/compare/v0.0.4-alpha...v0.0.5-alpha
+[v0.0.4]: https://github.com/ivoyager/ivoyager/compare/v0.0.3-alpha...v0.0.4-alpha
+[v0.0.3]: https://github.com/ivoyager/ivoyager/compare/v0.0.2-alpha...v0.0.3-alpha
+[v0.0.2]: https://github.com/ivoyager/ivoyager/compare/v0.0.1-alpha...v0.0.2-alpha
