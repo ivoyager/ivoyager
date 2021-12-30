@@ -2,8 +2,8 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright (c) 2017-2021 Charlie Whitfield
-# I, Voyager is a registered trademark of Charlie Whitfield
+# Copyright 2017-2022 Charlie Whitfield
+# I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ func _project_init():
 func _ready():
 	theme = Global.themes.splash_screen
 	find_node("VersionLabel").set_version_label("", true, true, "\n", "",
-			"\n\n(c) 2017-2021\nCharlie Whitfield")
+			"\n\n(c) 2017-2022\nCharlie Whitfield")
 	find_node("MainMenu").is_splash_config = true
 	_pbd_caption.connect("mouse_entered", self, "_pbd_mouse_entered")
 	_pbd_caption.connect("mouse_exited", self, "_pbd_mouse_exited")
