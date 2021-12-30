@@ -1,26 +1,20 @@
 # Changelog
 
-This file documents changes to the project's core submodule (ivoyager) and core assets (ivoyager_assets directory). Core assets are not Git-tracked and must be downloaded from development or official releases [here](https://github.com/ivoyager/ivoyager/releases).
+This file documents changes to the core submodule (ivoyager) and core assets (ivoyager_assets directory). Core assets are not Git-tracked and must be downloaded from official releases [here](https://github.com/ivoyager/ivoyager/releases) or non-release development assets [here](https://github.com/ivoyager/non_release_assets/releases).
 
 File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/download/).
 
-## [Unreleased v0.0.10-dev] - TBD
+## [Unreleased v0.0.10] - TBD
 
-Currently developing using Godot 3.4.2.stable.
+Under development using Godot 3.4.2.stable.
 
-Use non-Git-tracked **ivoyager_assets-2021-12-28** or **...-2021-12-28-web** [here](https://github.com/ivoyager/changelogs/releases/tag/dev-assets).
-
-The main goal for v0.0.10 is to deploy the Planetarium as a [Progressive Web App](https://godotengine.org/article/godot-web-progress-report-8). 
-
-### Changes
-* Planetarium project now has top level 'planetarium_assets' directory.
+Requires non-Git-tracked [development assets from 2021-12-28](https://github.com/ivoyager/non_release_assets/releases/tag/2021-12-28).
 
 ### Bug Fixes
-* Images are now imported with `repeat` on (which I learned is required for mipmaps to work). [2021-12-20 dev assets](https://github.com/ivoyager/changelogs/releases/tag/dev-assets)
-* Set vertex compression off to fix models on HTML export. [2021-12-28 dev assets](https://github.com/ivoyager/changelogs/releases/tag/dev-assets)
-
+* Images are now imported with `repeat` on (required for mipmaps to work).
+* Set vertex compression off to fix broken models on HTML export in Godot 3.4.1 & 3.4.2.
 
 ## [v0.0.9] - 2021-04-29
 
@@ -350,7 +344,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[Unreleased v0.0.10-dev]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...HEAD
+[Unreleased v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...HEAD
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
 [v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha
 [v0.0.7]: https://github.com/ivoyager/ivoyager/compare/v0.0.6-alpha...v0.0.7-alpha
