@@ -25,7 +25,7 @@
 extends Node
 
 const IVOYAGER_VERSION := "0.0.10-dev"
-const IVOYAGER_VERSION_YMD := 20211230
+const IVOYAGER_VERSION_YMD := 20211231
 
 # simulator state broadcasts
 signal extentions_inited() # ProjectBuilder; nothing else added yet
