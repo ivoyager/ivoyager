@@ -24,8 +24,9 @@
 
 extends Node
 
-const IVOYAGER_VERSION := "0.0.10-dev"
-const IVOYAGER_VERSION_YMD := 20220104
+const IVOYAGER_VERSION := "0.0.10-rc1"
+const IVOYAGER_VERSION_YMD := 20220108
+const DEBUG_BUILD := ""
 
 # simulator state broadcasts
 signal extentions_inited() # ProjectBuilder; nothing else added yet
@@ -226,4 +227,5 @@ var wiki: String # WikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: File # LogInitializer sets if debug build and debug_log_path
 
 func _ready():
-	prints("I, Voyager", IVOYAGER_VERSION, IVOYAGER_VERSION_YMD, "- https://www.ivoyager.dev")
+	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,
+			"- https://www.ivoyager.dev")
