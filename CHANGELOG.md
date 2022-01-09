@@ -4,13 +4,13 @@ This file documents changes to the core submodule (ivoyager) and core assets (iv
 
 File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-See cloning and downloading instructions [here](https://www.ivoyager.dev/download/).
+See cloning and downloading instructions [here](https://www.ivoyager.dev/devs/).
 
-## [Unreleased v0.0.10] - TBD
+## [v0.0.10] - 2022-01-09
 
-Under development using Godot 3.4.2.stable.
+Developed using Godot 3.4.2.stable.
 
-Requires non-Git-tracked [development assets from 2021-12-28](https://github.com/ivoyager/non_release_assets/releases/tag/2021-12-28).
+Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
 ### Bug Fixes
 * Images are now imported with `repeat` on (required for mipmaps to work).
@@ -344,7 +344,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[Unreleased v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...HEAD
+[v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10-alpha
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
 [v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha
 [v0.0.7]: https://github.com/ivoyager/ivoyager/compare/v0.0.6-alpha...v0.0.7-alpha
