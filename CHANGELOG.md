@@ -344,7 +344,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10-alpha
+[v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
 [v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha
 [v0.0.7]: https://github.com/ivoyager/ivoyager/compare/v0.0.6-alpha...v0.0.7-alpha
