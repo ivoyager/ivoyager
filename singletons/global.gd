@@ -24,8 +24,8 @@
 
 extends Node
 
-const IVOYAGER_VERSION := "0.0.10"
-const IVOYAGER_VERSION_YMD := 20220109
+const IVOYAGER_VERSION := "0.0.11-dev"
+const IVOYAGER_VERSION_YMD := 20220110
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
