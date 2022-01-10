@@ -17,6 +17,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 
 ### Changes
 * universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this). It's a spatial that does nothing. The .gd file is only there for comments.
+* Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
 
 ## [v0.0.10] - 2022-01-09
 
