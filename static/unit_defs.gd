@@ -32,12 +32,12 @@
 class_name UnitDefs
 
 # SI base units - all sim units derived from these!
-const SECOND := Universe.SECOND
-const METER := Universe.METER
-const KG := Universe.KG
-const AMPERE := Universe.AMPERE
-const KELVIN := Universe.KELVIN
-const CANDELA := Universe.CANDELA
+const SECOND := SIBaseUnits.SECOND
+const METER := SIBaseUnits.METER
+const KG := SIBaseUnits.KG
+const AMPERE := SIBaseUnits.AMPERE
+const KELVIN := SIBaseUnits.KELVIN
+const CANDELA := SIBaseUnits.CANDELA
 
 # derived units & constants
 const DEG := PI / 180.0 # radians
