@@ -38,7 +38,7 @@
 # False is represented internally as "", so bool(internal_value) will give
 # meaningful result for both BOOL and X type.
 
-class_name TableImporter
+class_name IVTableImporter
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name AssetInitializer
+class_name IVAssetInitializer
 
 
 var _asset_replacement_dir: String = IVGlobal.asset_replacement_dir

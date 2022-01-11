@@ -322,7 +322,7 @@ func get_real_precisions(fields: Array, table_name: String, row: int) -> Array:
 
 func get_real_str_precision(real_str: String) -> int:
 	# See table REAL format rules in solar_system/planets.tsv.
-	# TableImporter has stripped leading "_" and converted "E" to "e".
+	# IVTableImporter has stripped leading "_" and converted "E" to "e".
 	# We ignore leading zeroes before the decimal place.
 	# We count trailing zeroes IF there is a decimal place.
 	if real_str == "?":

@@ -85,11 +85,11 @@ onready var universe: Spatial = get_node_or_null("/root/Universe")
 var initializers := {
 	# Reference classes. IVProjectBuilder instances these first. They may erase
 	# themselves from IVGlobal.program when done (thereby freeing themselves).
-	_LogInitializer_ = LogInitializer,
-	_AssetInitializer_ = AssetInitializer,
-	_WikiInitializer_ = WikiInitializer,
-	_TranslationImporter_ = TranslationImporter,
-	_TableImporter_ = TableImporter,
+	_LogInitializer_ = IVLogInitializer,
+	_AssetInitializer_ = IVAssetInitializer,
+	_WikiInitializer_ = IVWikiInitializer,
+	_TranslationImporter_ = IVTranslationImporter,
+	_TableImporter_ = IVTableImporter,
 }
 
 var prog_builders := {

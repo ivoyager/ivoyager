@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name LogInitializer
+class_name IVLogInitializer
 
 
 func _init() -> void:

@@ -30,7 +30,7 @@ const DEBUG_BUILD := ""
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
-signal translations_imported() # TranslationImporter; useful for boot screen
+signal translations_imported() # IVTranslationImporter; useful for boot screen
 signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
 signal project_inited() # IVProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added
@@ -101,8 +101,8 @@ var program := {} # all objects instantiated by IVProjectBuilder
 var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # SettingsManager
-var table_rows := {} # TableImporter; row number for all row names
-var wiki_titles := {} # TableImporter; en.wikipedia; TODO: non-en & internal
+var table_rows := {} # IVTableImporter; row number for all row names
+var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # ThemeManager
 var fonts := {} # FontManager
 var bodies := [] # BodyRegistry; indexed by body_id
@@ -199,14 +199,14 @@ var asset_paths := {
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
-var asset_paths_for_load := { # loaded into "assets" dict by AssetInitializer
+var asset_paths_for_load := { # loaded into "assets" dict by IVAssetInitializer
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 }
 var translations := [
-	# Added here so extensions can modify. Note that TranslationImporter will
+	# Added here so extensions can modify. Note that IVTranslationImporter will
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
 	# be kept. So prepend this array if you want to override ivoyager text keys.
@@ -223,8 +223,8 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
-var wiki: String # WikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
-var debug_log: File # LogInitializer sets if debug build and debug_log_path
+var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
+var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
 
 func _ready():
 	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,

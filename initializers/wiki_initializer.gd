@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name WikiInitializer
+class_name IVWikiInitializer
 
 
 func _init() -> void:
