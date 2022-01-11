@@ -40,7 +40,7 @@
 #   - Depreciate this class.
 #   - GDNative version of SystemOrbits
 
-class_name Orbit
+class_name IVOrbit
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 

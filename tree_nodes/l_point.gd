@@ -35,12 +35,12 @@ class_name IVLPoint
 var l_point: int # 1, 2, 3, 4, 5
 var dynamic_elements: Array
 var elements_at_epoch: Array
-var focal_orbit: Orbit
+var focal_orbit: IVOrbit
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["l_point", "dynamic_elements", "elements_at_epoch", "focal_orbit"]
 
 
-func init(focal_orbit_: Orbit, l_point_: int) -> void:
+func init(focal_orbit_: IVOrbit, l_point_: int) -> void:
 	focal_orbit = focal_orbit_
 	l_point = l_point_
 	focal_orbit.connect("changed", self, "_update_elements")

@@ -90,7 +90,7 @@ const FAR_MULTIPLIER := 1e6 # see Note below
 var is_camera_lock := true
 
 # public - read only! (these are "to" during body-to-body transfer)
-var selection_item: SelectionItem
+var selection_item: IVSelectionItem
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
 var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
@@ -137,7 +137,7 @@ var _track_dist: float
 var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
 var _max_compensated_dist: float
-var _init_view: View
+var _init_view: IVView
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -150,7 +150,7 @@ var _to_spatial: Spatial
 var _from_spatial: Spatial
 var _transfer_ref_spatial: Spatial
 var _transfer_ref_basis: Basis
-var _from_selection_item: SelectionItem
+var _from_selection_item: IVSelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
@@ -167,8 +167,8 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
-func set_start_view(view: View) -> void:
-	# Set before about_to_start_simulator to start camera at this View.
+func set_start_view(view: IVView) -> void:
+	# Set before about_to_start_simulator to start camera at this IVView.
 	_init_view = view
 
 func add_to_tree() -> void:
@@ -183,17 +183,17 @@ func add_move_action(move_action: Vector3) -> void:
 func add_rotate_action(rotate_action: Vector3) -> void:
 	_rotate_action += rotate_action
 
-func move_to_view(view: View, is_instant_move := false) -> void:
-	var to_selection_item: SelectionItem
+func move_to_view(view: IVView, is_instant_move := false) -> void:
+	var to_selection_item: IVSelectionItem
 	if view.selection_name:
 		to_selection_item = _body_registry.selection_items.get(view.selection_name)
 		assert(to_selection_item)
 	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
 
-func create_view(use_current_selection := true) -> View:
-	# View object is useful for cache or save persistence
-	var view: View = _View_.new()
+func create_view(use_current_selection := true) -> IVView:
+	# IVView object is useful for cache or save persistence
+	var view: IVView = _View_.new()
 	if use_current_selection:
 		view.selection_name = selection_item.name
 	view.track_type = track_type
@@ -214,7 +214,7 @@ func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTO
 	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
-func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override all or some components of view_position &
@@ -618,7 +618,7 @@ func _reset_view_position_and_rotations() -> void:
 	var rotations_basis := basis_looking_at.inverse() * basis_rotated
 	view_rotations = rotations_basis.get_euler()
 
-func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3,
+func _get_view_transform(selection_item_: IVSelectionItem, view_position_: Vector3,
 		view_rotations_: Vector3, track_type_: int) -> Transform:
 	var dist := view_position_[2]
 	var up := _get_up(selection_item_, dist, track_type_)
@@ -630,7 +630,7 @@ func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3
 	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis
 	return view_transform
 
-func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> Vector3:
+func _get_up(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Vector3:
 	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_NONE:
 		return ECLIPTIC_Z
 	var local_up: Vector3
@@ -647,7 +647,7 @@ func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> V
 	var diff_vector := local_up - ECLIPTIC_Z
 	return (local_up - diff_vector * proportion).normalized()
 
-func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type_: int) -> Basis:
+func _get_tracking_basis(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Basis:
 	if dist > _track_dist:
 		return IDENTITY_BASIS
 	if track_type_ == TRACK_ORBIT:
@@ -656,7 +656,7 @@ func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type
 		return selection_item_.get_ground_ref_basis()
 	return IDENTITY_BASIS
 
-func _get_transfer_ref_basis(s1: SelectionItem, s2: SelectionItem) -> Basis:
+func _get_transfer_ref_basis(s1: IVSelectionItem, s2: IVSelectionItem) -> Basis:
 	var normal1 := s1.get_orbit_normal(NAN, true)
 	var normal2 := s2.get_orbit_normal(NAN, true)
 	var z_axis := (normal1 + normal2).normalized()

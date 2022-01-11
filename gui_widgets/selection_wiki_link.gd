@@ -26,7 +26,7 @@ extends RichTextLabel
 var use_selection_as_text := true # otherwise, "Wikipedia"
 var fallback_text := "LABEL_WIKIPEDIA"
 
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _wiki_locale: String = IVGlobal.wiki
 

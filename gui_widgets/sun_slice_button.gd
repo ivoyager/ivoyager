@@ -31,8 +31,8 @@ extends Button
 # private
 onready var _texture_rect: TextureRect = $TextureRect
 onready var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
-var _selection_manager: SelectionManager # get from ancestor selection_manager
-var _selection_item: SelectionItem
+var _selection_manager: IVSelectionManager # get from ancestor selection_manager
+var _selection_item: IVSelectionItem
 var _has_mouse := false
 
 func _ready():

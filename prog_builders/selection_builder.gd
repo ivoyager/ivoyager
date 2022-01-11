@@ -70,8 +70,8 @@ func build_body_selection_items_recursive(body: IVBody, parent_body: IVBody) -> 
 	var selection_item := build_body_selection_item(body, parent_body, system_radius)
 	_body_registry.register_selection_item(selection_item)
 
-func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius: float) -> SelectionItem:
-	var selection_item: SelectionItem = _SelectionItem_.new()
+func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius: float) -> IVSelectionItem:
+	var selection_item: IVSelectionItem = _SelectionItem_.new()
 	selection_item.system_radius = system_radius
 	selection_item.is_body = true
 	selection_item.spatial = body
@@ -88,7 +88,7 @@ func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius:
 		selection_item.up_selection_name = above_bodies_selection_name
 	return selection_item
 
-func set_view_parameters_from_body(selection_item: SelectionItem, body: IVBody) -> void:
+func set_view_parameters_from_body(selection_item: IVSelectionItem, body: IVBody) -> void:
 	var use_ground_longitude_offset: float
 	var use_orbit_longitude_offset: float
 	var use_ground_latitude_offset: float

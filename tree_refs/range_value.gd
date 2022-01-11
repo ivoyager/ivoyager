@@ -21,7 +21,7 @@
 # Holds and creates display string for value that may have min, mean, max.
 # Use NAN for not applicable (i.e., don't show). Use INF for ?.
 
-class_name RangeValue
+class_name IVRangeValue
 
 var mean := NAN
 var minimum := NAN

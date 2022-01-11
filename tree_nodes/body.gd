@@ -30,7 +30,7 @@
 #
 # TODO: Make this node "drag-and_drop" as much as possible.
 #
-# TODO: Implement network sync! This will mainly involve synching Orbit
+# TODO: Implement network sync! This will mainly involve synching IVOrbit
 # anytime it changes (e.g., impulse from a rocket engine).
 
 extends Spatial
@@ -70,8 +70,8 @@ const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "com
 
 # public - read-only except builder classes; not persisted unless noted
 var m_radius := NAN # persisted in characteristics
-var orbit: Orbit # persisted in components
-var model_controller: ModelController
+var orbit: IVOrbit # persisted in components
+var model_controller: IVModelController
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
 var hud_orbit: IVHUDOrbit
@@ -190,7 +190,7 @@ func get_positive_pole(_time := NAN) -> Vector3:
 	return model_controller.rotation_vector
 
 func get_up_pole(_time := NAN) -> Vector3:
-	# See comments in ModelController.
+	# See comments in IVModelController.
 	if !model_controller:
 		return ECLIPTIC_Z
 	return model_controller.rotation_vector
@@ -254,7 +254,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 # *****************************************************************************
 # ivoyager mechanics & private
 
-func set_orbit(orbit_: Orbit) -> void:
+func set_orbit(orbit_: IVOrbit) -> void:
 	if orbit == orbit_:
 		return
 	if orbit:
@@ -296,10 +296,10 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		set_process(true) # will show on next _process()
 
 func reset_orientation_and_rotation() -> void:
-	# If we have tidal and/or axis lock, then Orbit determines rotation and/or
-	# orientation. If so, we use Orbit to set values in characteristics and
-	# ModelController. Otherwise, characteristics already holds table-loaded
-	# values (RA, dec, period) which we use to set ModelController values.
+	# If we have tidal and/or axis lock, then IVOrbit determines rotation and/or
+	# orientation. If so, we use IVOrbit to set values in characteristics and
+	# IVModelController. Otherwise, characteristics already holds table-loaded
+	# values (RA, dec, period) which we use to set IVModelController values.
 	# Note: Earth's Moon is the unusual case that is tidally locked but not
 	# axis locked (its axis is tilted to its orbit). Axis of other moons are
 	# not exactly orbit normal but stay within ~1 degree. E.g., see:

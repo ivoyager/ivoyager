@@ -22,8 +22,7 @@
 # names that are instanced only if/when individually selected (eg, our 300000+
 # Main Belt asteroids).
 
-extends Reference
-class_name BodyList
+class_name IVBodyList
 
 enum {
 	SORT_NO_SORT, # leave as is, eg, from a data table
@@ -86,7 +85,7 @@ func remove_virtual_body(_body_name: String) -> void:
 
 
 # warning-ignore:unused_argument
-func select(body_name: String, selection_manager: SelectionManager) -> void:
+func select(body_name: String, selection_manager: IVSelectionManager) -> void:
 # warning-ignore:unused_variable
 	var body: IVBody
 	if bodies_by_name.has(body_name):

@@ -21,7 +21,7 @@
 
 extends HBoxContainer
 
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 onready var _back: Button = $Back
 onready var _forward: Button = $Forward
 onready var _up: Button = $Up

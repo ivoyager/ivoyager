@@ -18,8 +18,8 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Reference
-class_name SelectionItem
+
+class_name IVSelectionItem
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 

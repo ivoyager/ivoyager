@@ -195,14 +195,14 @@ var _state: Dictionary = IVGlobal.state
 var _enums: Script = IVGlobal.enums
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _wiki_locale: String = IVGlobal.wiki
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
 # currently processing
-var _selection_item: SelectionItem
+var _selection_item: IVSelectionItem
 var _body: IVBody
 var _path: String
 
@@ -345,7 +345,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	if body_flags:
 		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
-	# get value from SelectionItem or nested object
+	# get value from IVSelectionItem or nested object
 	var method_args: Array = line_data[2]
 	var value = IVUtils.get_path_result(_selection_item, _path, method_args)
 	if value == null:

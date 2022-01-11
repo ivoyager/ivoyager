@@ -21,7 +21,7 @@
 
 extends TextureRect
 
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 var _hint_extension := "\n\n" + tr("HINT_SELECTION_IMAGE")
 
 func _ready() -> void:

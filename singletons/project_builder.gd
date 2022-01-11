@@ -175,14 +175,14 @@ var procedural_classes := {
 	_HUDOrbit_ = IVHUDOrbit,
 	_HUDPoints_ = IVHUDPoints,
 	# tree_refs
-	_Orbit_ = Orbit,
-	_ModelController_ = ModelController,
-	_SelectionItem_ = SelectionItem,
-	_SelectionManager_ = SelectionManager,
-	_View_ = View,
-	_AsteroidGroup_ = AsteroidGroup,
-	_Composition_ = Composition,
-	_BodyList_ = BodyList, # WIP
+	_Orbit_ = IVOrbit,
+	_ModelController_ = IVModelController,
+	_SelectionItem_ = IVSelectionItem,
+	_SelectionManager_ = IVSelectionManager,
+	_View_ = IVView,
+	_AsteroidGroup_ = IVAsteroidGroup,
+	_Composition_ = IVComposition,
+	# _BodyList_ = IVBodyList, # WIP
 }
 
 var extensions := []

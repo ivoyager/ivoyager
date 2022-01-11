@@ -22,7 +22,7 @@
 extends MeshInstance
 class_name IVHUDOrbit
 
-var orbit: Orbit
+var orbit: IVOrbit
 var orbit_mesh := ArrayMesh.new()
 var shader_material := ShaderMaterial.new()
 

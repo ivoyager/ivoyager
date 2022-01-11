@@ -26,7 +26,7 @@
 # For astronomical bodies, we set rotation_vector to match "north". See
 # comments under IVBody.get_north().
 
-class_name ModelController
+class_name IVModelController
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 

@@ -36,7 +36,7 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 onready var _tree: SceneTree = get_tree()
 onready var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
 onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 var _state: Dictionary = IVGlobal.state
 var _script_classes: Dictionary = IVGlobal.script_classes
 var _disable_pause: bool = IVGlobal.disable_pause

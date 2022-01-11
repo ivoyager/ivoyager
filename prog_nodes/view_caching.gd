@@ -62,7 +62,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	if !file:
 		return
 	var view_dict: Dictionary = file.get_var()
-	var view: View = dict2inst(view_dict)
+	var view: IVView = dict2inst(view_dict)
 	_camera.set_start_view(view)
 
 func _cache_now() -> void:

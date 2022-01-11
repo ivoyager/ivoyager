@@ -28,13 +28,13 @@ const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT
 const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR
 
-var group: AsteroidGroup
+var group: IVAsteroidGroup
 var color: Color # read only
 
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
-func init(group_: AsteroidGroup, color_: Color) -> void:
+func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	group = group_
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF

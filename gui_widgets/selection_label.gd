@@ -21,7 +21,7 @@
 
 extends Label
 
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 
 func _ready() -> void:
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")

@@ -27,8 +27,7 @@
 # merge this with IVHUDPoints. Builder stuff currently in both classes should go
 # to a builder class.
 
-extends Reference
-class_name AsteroidGroup
+class_name IVAsteroidGroup
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const units := preload("res://ivoyager/static/units.gd")

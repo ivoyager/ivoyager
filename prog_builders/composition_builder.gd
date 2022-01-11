@@ -25,8 +25,8 @@ var _Composition_: Script
 var item_regex := RegEx.new()
 
 
-func make_from_string(string: String) -> Composition:
-	var composition: Composition = _Composition_.new()
+func make_from_string(string: String) -> IVComposition:
+	var composition: IVComposition = _Composition_.new()
 	composition.components = _parse_simple_list_string(string)
 	return composition
 

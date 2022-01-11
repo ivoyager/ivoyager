@@ -18,12 +18,12 @@
 # limitations under the License.
 # *****************************************************************************
 # Has currently selected item and keeps selection history. You can have >1 of
-# these. GUI widgets search up their ancestor tree and grab a SelectionManager
+# these. GUI widgets search up their ancestor tree and grab an IVSelectionManager
 # from the first control with a "selection_manager" member. InputHandler and
 # VygrCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
 
-extends Reference
-class_name SelectionManager
+
+class_name IVSelectionManager
 
 signal selection_changed()
 
@@ -60,7 +60,7 @@ const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
-var selection_item: SelectionItem
+var selection_item: IVSelectionItem
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["selection_item"]
@@ -73,7 +73,7 @@ var _history_index := -1
 var _supress_history := false
 
 
-func select(selection_item_: SelectionItem) -> void:
+func select(selection_item_: IVSelectionItem) -> void:
 	if selection_item == selection_item_:
 		return
 	selection_item = selection_item_
@@ -82,7 +82,7 @@ func select(selection_item_: SelectionItem) -> void:
 
 func select_body(body_: IVBody) -> void:
 	var name := body_.name
-	var selection_item_: SelectionItem = _body_registry.selection_items[name]
+	var selection_item_: IVSelectionItem = _body_registry.selection_items[name]
 	select(selection_item_)
 
 func get_name() -> String:
@@ -108,7 +108,7 @@ func back() -> void:
 		return
 	_history_index -= 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: SelectionItem = wr.get_ref()
+	var new_selection: IVSelectionItem = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -120,7 +120,7 @@ func forward() -> void:
 		return
 	_history_index += 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: SelectionItem = wr.get_ref()
+	var new_selection: IVSelectionItem = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -129,7 +129,7 @@ func forward() -> void:
 	
 func up() -> void:
 	if selection_item.up_selection_name:
-		var new_selection: SelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
+		var new_selection: IVSelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
 		select(new_selection)
 
 func can_go_back() -> bool:
@@ -222,7 +222,7 @@ func _add_history() -> void:
 		return
 	if _history_index >= 0:
 		var last_wr: WeakRef = _history[_history_index]
-		var last_selection_item: SelectionItem = last_wr.get_ref()
+		var last_selection_item: IVSelectionItem = last_wr.get_ref()
 		if last_selection_item == selection_item:
 			return
 	_history_index += 1

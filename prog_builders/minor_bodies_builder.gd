@@ -69,11 +69,11 @@ func _project_init() -> void:
 func _init_unpersisted(_is_new_game: bool) -> void:
 	var group_refs_by_name := _minor_bodies_manager.group_refs_by_name
 	for group_name in group_refs_by_name:
-		var asteroid_group := group_refs_by_name[group_name] as AsteroidGroup
+		var asteroid_group := group_refs_by_name[group_name] as IVAsteroidGroup
 		if asteroid_group:
 			_init_hud_points(asteroid_group, group_name)
 
-func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void:
+func _init_hud_points(asteroid_group: IVAsteroidGroup, group_name: String) -> void:
 	var hud_points: IVHUDPoints = _HUDPoints_.new()
 	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
@@ -102,8 +102,8 @@ func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point :
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
 	var lagrange_point: IVLPoint
-	# make the AsteroidGroup
-	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
+	# make the IVAsteroidGroup
+	var asteroid_group: IVAsteroidGroup = _AsteroidGroup_.new()
 	if !is_trojans:
 		asteroid_group.init(star, group)
 	else:
@@ -129,7 +129,7 @@ func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point :
 	_minor_bodies_manager.group_names.append(group)
 	_minor_bodies_manager.ids_by_group[group] = []
 
-func _load_binary(asteroid_group: AsteroidGroup, group: String, mag_str: String) -> void:
+func _load_binary(asteroid_group: IVAsteroidGroup, group: String, mag_str: String) -> void:
 	var binary_name := group + "." + mag_str + ".vbinary"
 	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
 	var binary := File.new()

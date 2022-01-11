@@ -42,7 +42,7 @@ var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 # private
 onready var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
 onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
-var _selection_manager: SelectionManager # get from ancestor selection_manager
+var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
 var _resize_control_multipliers := {}
 
@@ -187,10 +187,10 @@ class NavButton extends Button:
 	signal selected()
 	
 	var _has_mouse := false
-	var _selection_item: SelectionItem
-	var _selection_manager: SelectionManager
+	var _selection_item: IVSelectionItem
+	var _selection_manager: IVSelectionManager
 	
-	func _init(selection_item: SelectionItem, selection_manager: SelectionManager,
+	func _init(selection_item: IVSelectionItem, selection_manager: IVSelectionManager,
 			image_size: float) -> void:
 		_selection_item = selection_item
 		_selection_manager = selection_manager

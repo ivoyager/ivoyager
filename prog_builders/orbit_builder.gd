@@ -56,7 +56,7 @@ var _table_reader: TableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
-func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) -> Orbit:
+func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) -> IVOrbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
@@ -105,7 +105,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 		else:
 			assert(false, "Elements must include M0, L0 or T0")
 	var elements := [t.a, t.e, t.i, t.Om, t.w, t.M0, t.n]
-	var orbit: Orbit = _Orbit_.new()
+	var orbit: IVOrbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements
 	
 	if _dynamic_orbits:

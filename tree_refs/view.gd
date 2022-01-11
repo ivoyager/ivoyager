@@ -24,7 +24,8 @@
 # (so a player could save one or more views in an active game) or via a
 # CacheManager (e.g., I, Voyager Planetarium; see planetarium/view_cacher.gd).
 
-class_name View
+
+class_name IVView
 
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 

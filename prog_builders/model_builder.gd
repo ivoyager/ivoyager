@@ -104,7 +104,7 @@ func _clear() -> void:
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
-func _add_placeholder(body: IVBody, model_controller: ModelController) -> void: # Main thread
+func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void: # Main thread
 	var placeholder: Spatial
 	if _recycled_placeholders:
 		placeholder = _recycled_placeholders.pop_back()
@@ -170,7 +170,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 
 func _finish_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var model_controller: ModelController = array[1]
+	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
 	if body.get_light_type() != -1: # is a star
@@ -183,7 +183,7 @@ func _finish_model(array: Array) -> void: # Main thread
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var model_controller: ModelController = array[1]
+	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
 	var placeholder := model_controller.model
 	body.remove_child(placeholder)

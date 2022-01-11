@@ -66,7 +66,7 @@ onready var _projection_surface: IVProjectionSurface = IVGlobal.program.Projecti
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 var _camera: IVCamera
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
 onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
