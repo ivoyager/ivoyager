@@ -19,14 +19,14 @@
 # *****************************************************************************
 # Builds the star system(s) from data tables & binaries.
 
-class_name SystemBuilder
+class_name IVSystemBuilder
 
 # project vars
 var add_camera := true
 
 # private
 var _table_reader: TableReader
-var _body_builder: BodyBuilder
+var _body_builder: IVBodyBuilder
 
 
 func build_system_tree() -> void:
@@ -39,9 +39,9 @@ func build_system_tree() -> void:
 	_add_bodies("stars")
 	_add_bodies("planets")
 	_add_bodies("moons")
-	var minor_bodies_builder: MinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
+	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
-	var selection_builder: SelectionBuilder = IVGlobal.program.SelectionBuilder
+	var selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 	selection_builder.build_body_selection_items()
 	if add_camera:
 		var camera_script: Script = IVGlobal.script_classes._Camera_

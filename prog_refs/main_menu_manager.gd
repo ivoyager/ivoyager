@@ -31,7 +31,7 @@ var button_inits := [
 	# below. "target" here must be a key in IVGlobal.program. Core buttons here
 	# may be excluded depending on IVGlobal project settings.
 	# [text, priority, is_splash, is_running, target_name, method, args]
-	["BUTTON_START", 1100, true, false, "SystemBuilder", "build_system_tree"],
+	["BUTTON_START", 1100, true, false, "IVSystemBuilder", "build_system_tree"],
 	["BUTTON_SAVE_AS", 1000, false, true, "SaveManager", "save_game"],
 	["BUTTON_QUICK_SAVE", 900, false, true, "SaveManager", "quick_save"],
 	["BUTTON_LOAD_FILE", 800, true, true, "SaveManager", "load_game"],

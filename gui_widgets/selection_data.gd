@@ -51,7 +51,7 @@ enum { # data_type
 # project vars
 var test_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
 var test_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
-var use_kept_precisions := true # set same as BodyBuilder.keep_real_precisions
+var use_kept_precisions := true # set same as IVBodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var interval := 1.0 # seconds; set 0.0 for no periodic updates

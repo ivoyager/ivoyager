@@ -23,7 +23,7 @@
 # be set to something larger than the max number of lazy models likely to be
 # visible at a give time (however, a small value helps on low end systems).
 
-class_name ModelBuilder
+class_name IVModelBuilder
 
 const files := preload("res://ivoyager/static/files.gd")
 const METER := IVUnits.METER

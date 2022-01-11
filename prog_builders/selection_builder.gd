@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends Reference
-class_name SelectionBuilder
+class_name IVSelectionBuilder
 
 const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR

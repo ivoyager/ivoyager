@@ -20,8 +20,7 @@
 # TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 # What we have now is a QuadMesh & Texture.
 
-
-class_name RingsBuilder
+class_name IVRingsBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const files := preload("res://ivoyager/static/files.gd")

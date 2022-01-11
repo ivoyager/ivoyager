@@ -165,7 +165,7 @@ func get_north_pole(_time := NAN) -> Vector3:
 	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
 	# However, it is common usage to assign "north" to Pluto and Charon's
 	# positive poles, even though this is south by above definition. We attempt
-	# to sort this out in our data tables and BodyBuilder assigning
+	# to sort this out in our data tables and IVBodyBuilder assigning
 	# model_controller.rotation_vector to a sensible "north" as follows:
 	#  * Star - same as true planet below.
 	#  * True planets and their satellites - use pole pointing in positive z-

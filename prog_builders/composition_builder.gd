@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name CompositionBuilder
+class_name IVCompositionBuilder
 
 var _Composition_: Script
 

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name HUDsBuilder
+class_name IVHUDsBuilder
 
 
 const BodyFlags := IVEnums.BodyFlags

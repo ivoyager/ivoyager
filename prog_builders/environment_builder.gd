@@ -20,7 +20,7 @@
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.
 
-class_name EnvironmentBuilder
+class_name IVEnvironmentBuilder
 
 var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
 

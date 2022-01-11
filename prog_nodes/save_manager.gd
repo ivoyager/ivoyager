@@ -21,7 +21,7 @@
 # can then (optionally) delete these from IVProjectBuilder:
 #
 #   - SaveManager
-#   - SaveBuilder
+#   - IVSaveBuilder
 #   - SaveDialog
 #   - LoadDialog
 
@@ -50,7 +50,7 @@ const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 onready var _io_manager: IOManager = IVGlobal.program.IOManager
 onready var _state_manager: StateManager = IVGlobal.program.StateManager
 onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
-onready var _save_builder: SaveBuilder = IVGlobal.program.SaveBuilder
+onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
 onready var _universe: Spatial = IVGlobal.program.Universe
 onready var _tree := get_tree()
 var _state: Dictionary = IVGlobal.state

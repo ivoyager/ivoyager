@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# SaveBuilder can persist specified data (which may include nested objects) and
+# IVSaveBuilder can persist specified data (which may include nested objects) and
 # rebuild procedurally generated node trees and references on load. It can
 # persist built-in types and four kinds of objects:
 #    1. Non-procedural Nodes
@@ -52,7 +52,7 @@
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
 
-class_name SaveBuilder
+class_name IVSaveBuilder
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info

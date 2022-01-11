@@ -96,19 +96,19 @@ var prog_builders := {
 	# Reference classes. IVProjectBuilder instances one of each. No save/load
 	# persistence. These are treated exactly like prog_refs below, but
 	# separated for project organization.
-	_SaveBuilder_ = SaveBuilder, # ok to remove if you don't need game save
-	_EnvironmentBuilder_ = EnvironmentBuilder,
-	_SystemBuilder_ = SystemBuilder,
-	_BodyBuilder_ = BodyBuilder,
-	_OrbitBuilder_ = OrbitBuilder,
-	_ModelBuilder_ = ModelBuilder,
-	_RingsBuilder_ = RingsBuilder,
-	_LightBuilder_ = LightBuilder,
-	_HUDsBuilder_ = HUDsBuilder,
-	_MinorBodiesBuilder_ = MinorBodiesBuilder,
+	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
+	_EnvironmentBuilder_ = IVEnvironmentBuilder,
+	_SystemBuilder_ = IVSystemBuilder,
+	_BodyBuilder_ = IVBodyBuilder,
+	_OrbitBuilder_ = IVOrbitBuilder,
+	_ModelBuilder_ = IVModelBuilder,
+	_RingsBuilder_ = IVRingsBuilder,
+	_LightBuilder_ = IVLightBuilder,
+	_HUDsBuilder_ = IVHUDsBuilder,
+	_MinorBodiesBuilder_ = IVMinorBodiesBuilder,
 	_LPointBuilder_ = LPointBuilder,
-	_SelectionBuilder_ = SelectionBuilder,
-	_CompositionBuilder_ = CompositionBuilder,
+	_SelectionBuilder_ = IVSelectionBuilder,
+	_CompositionBuilder_ = IVCompositionBuilder,
 }
 
 var prog_refs := {
@@ -224,7 +224,7 @@ func instantiate_and_index() -> void:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!program.has(object_key))
-			var object: Object = SaveBuilder.make_object_or_scene(dict[key])
+			var object: Object = IVSaveBuilder.make_object_or_scene(dict[key])
 			program[object_key] = object
 			if object is Node:
 				object.name = object_key

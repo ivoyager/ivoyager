@@ -25,8 +25,7 @@
 # system. Hence, we use these to determine and signal "system_ready" and to
 # run the progress bar.
 
-extends Reference
-class_name BodyBuilder
+class_name IVBodyBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const files := preload("res://ivoyager/static/files.gd")
@@ -76,12 +75,12 @@ var _settings: Dictionary = IVGlobal.settings
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _times: Array = IVGlobal.times
 var _body_registry: BodyRegistry
-var _model_builder: ModelBuilder
-var _rings_builder: RingsBuilder
-var _light_builder: LightBuilder
-var _huds_builder: HUDsBuilder
-var _orbit_builder: OrbitBuilder
-var _composition_builder: CompositionBuilder
+var _model_builder: IVModelBuilder
+var _rings_builder: IVRingsBuilder
+var _light_builder: IVLightBuilder
+var _huds_builder: IVHUDsBuilder
+var _orbit_builder: IVOrbitBuilder
+var _composition_builder: IVCompositionBuilder
 var _io_manager: IOManager
 var _scheduler: Scheduler
 var _table_reader: TableReader
@@ -122,7 +121,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_set_compositions_from_table(body)
 	_register(body, parent)
 	if keep_real_precisions:
-		# SelectionBuilder will grab temp dict, then erase from characteristics
+		# IVSelectionBuilder will grab temp dict, then erase from characteristics
 		body.characteristics.temp_real_precisions = _real_precisions
 		_real_precisions = {}
 	return body

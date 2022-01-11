@@ -19,9 +19,7 @@
 # *****************************************************************************
 # TODO: simplify code with the new TableReader class.
 
-
-extends Reference
-class_name MinorBodiesBuilder
+class_name IVMinorBodiesBuilder
 
 signal minor_bodies_added()
 

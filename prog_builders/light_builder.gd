@@ -19,7 +19,7 @@
 # *****************************************************************************
 # Only a star's OmniLight for now.
 
-class_name LightBuilder
+class_name IVLightBuilder
 
 var omni_fields := ["omni_range"]
 
