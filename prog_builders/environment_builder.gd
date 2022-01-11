@@ -20,20 +20,20 @@
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.
 
-class_name EnvironmentBuilder
+class_name IVEnvironmentBuilder
 
-var fallback_starmap := "starmap_8k" # Global.asset_paths index; must exist
+var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
 
 
 func add_world_environment() -> void:
-	var io_manager: IOManager = Global.program.IOManager
+	var io_manager: IVIOManager = IVGlobal.program.IOManager
 	io_manager.callback(self, "_io_callback", "_io_finish")
 
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("project_objects_instantiated", self, "_check_starmap_availability")
-	Global.connect("project_inited", self, "add_world_environment")
+	IVGlobal.connect("project_objects_instantiated", self, "_check_starmap_availability")
+	IVGlobal.connect("project_inited", self, "add_world_environment")
 
 func _check_starmap_availability() -> void:
 	# TODO: See what files are available and reflect that in settings.
@@ -50,23 +50,23 @@ func _io_callback(array: Array) -> void: # I/O thread!
 func _io_finish(array: Array) -> void: # Main thread
 	var world_environment: WorldEnvironment = array[0]
 	var start_time: int = array[1]
-	Global.program.Universe.add_child(world_environment) # this hangs a while!
+	IVGlobal.program.Universe.add_child(world_environment) # this hangs a while!
 	var time := OS.get_system_time_msecs() - start_time
 	print("Added WorldEnvironment in ", time, " msec")
-	Global.emit_signal("world_environment_added")
+	IVGlobal.emit_signal("world_environment_added")
 
 func _get_environment() -> Environment: # I/O thread!
 	# TODO: Read env settings from data table!
-	var settings: Dictionary = Global.settings
-	var asset_paths: Dictionary = Global.asset_paths
+	var settings: Dictionary = IVGlobal.settings
+	var asset_paths: Dictionary = IVGlobal.asset_paths
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
 	match settings.starmap:
-		Enums.StarmapSize.STARMAP_8K:
+		IVEnums.StarmapSize.STARMAP_8K:
 			starmap_file = asset_paths.starmap_8k
-		Enums.StarmapSize.STARMAP_16K:
+		IVEnums.StarmapSize.STARMAP_16K:
 			starmap_file = asset_paths.starmap_16k
-	if !FileUtils.exists(starmap_file):
+	if !IVFiles.exists(starmap_file):
 		starmap_file = asset_paths[fallback_starmap]
 	var starmap: Texture = load(starmap_file)
 	panorama_sky.panorama = starmap
@@ -88,12 +88,12 @@ func _get_environment() -> Environment: # I/O thread!
 	env.set_glow_level(4, false)
 	env.set_glow_level(5, true)
 	env.set_glow_level(6, true)
-	if Global.is_gles2: # GLES2 lighting is different than GLES3!
+	if IVGlobal.is_gles2: # GLES2 lighting is different than GLES3!
 		env.ambient_light_energy = 0.15
 		env.glow_hdr_threshold = 0.9
 		env.glow_intensity = 0.8
 		env.glow_bloom = 0.5
-	elif Global.auto_exposure_enabled:
+	elif IVGlobal.auto_exposure_enabled:
 		env.auto_exposure_enabled = true
 		env.auto_exposure_speed = 5.0
 		env.auto_exposure_scale = 0.4

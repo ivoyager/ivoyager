@@ -27,7 +27,7 @@ onready var _fl_decr: Button = $Minus
 onready var _fl_incr: Button = $Plus
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_fl_decr.connect("pressed", self, "_increment_focal_length", [-1])
 	_fl_incr.connect("pressed", self, "_increment_focal_length", [1])
 	_connect_camera(get_viewport().get_camera())

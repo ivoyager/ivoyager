@@ -17,24 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: We need API to assist building Body not from table data.
+# TODO: We need API to assist building IVBody not from table data.
 #
 # Note: below the huge build_from_table() function, we have functions that
-# build unpersisted parts of Body as they are added to the SceneTree, including
+# build unpersisted parts of IVBody as they are added to the SceneTree, including
 # I/O threaded resource loading. These are rate-limiting for building the solar
 # system. Hence, we use these to determine and signal "system_ready" and to
 # run the progress bar.
 
-extends Reference
-class_name BodyBuilder
+class_name IVBodyBuilder
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const files := preload("res://ivoyager/static/files.gd")
 
 const DPRINT := false
 const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
-const G := UnitDefs.GRAVITATIONAL_CONSTANT
-const BodyFlags := Enums.BodyFlags
+const G := IVUnits.GRAVITATIONAL_CONSTANT
+const BodyFlags := IVEnums.BodyFlags
 
 # project vars
 var keep_real_precisions := true
@@ -71,21 +70,21 @@ var flag_fields := {
 var progress := 0 # for external progress bar
 
 # private
-var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _settings: Dictionary = Global.settings
-var _bodies_2d_search: Array = Global.bodies_2d_search
-var _times: Array = Global.times
-var _body_registry: BodyRegistry
-var _model_builder: ModelBuilder
-var _rings_builder: RingsBuilder
-var _light_builder: LightBuilder
-var _huds_builder: HUDsBuilder
-var _orbit_builder: OrbitBuilder
-var _composition_builder: CompositionBuilder
-var _io_manager: IOManager
-var _scheduler: Scheduler
-var _table_reader: TableReader
-var _main_prog_bar: MainProgBar
+var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
+var _settings: Dictionary = IVGlobal.settings
+var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
+var _times: Array = IVGlobal.times
+var _body_registry: IVBodyRegistry
+var _model_builder: IVModelBuilder
+var _rings_builder: IVRingsBuilder
+var _light_builder: IVLightBuilder
+var _huds_builder: IVHUDsBuilder
+var _orbit_builder: IVOrbitBuilder
+var _composition_builder: IVCompositionBuilder
+var _io_manager: IVIOManager
+var _scheduler: IVScheduler
+var _table_reader: IVTableReader
+var _main_prog_bar: IVMainProgBar
 var _Body_: Script
 var _ModelController_: Script
 var _fallback_body_2d: Texture
@@ -110,10 +109,10 @@ func init_system_build() -> void:
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
 
-func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Main thread!
+func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
 	_table_name = table_name
 	_row = row
-	var body: Body = _Body_.new()
+	var body: IVBody = _Body_.new()
 	body.name = _table_reader.get_string(table_name, "name", row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
@@ -122,19 +121,19 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 	_set_compositions_from_table(body)
 	_register(body, parent)
 	if keep_real_precisions:
-		# SelectionBuilder will grab temp dict, then erase from characteristics
+		# IVSelectionBuilder will grab temp dict, then erase from characteristics
 		body.characteristics.temp_real_precisions = _real_precisions
 		_real_precisions = {}
 	return body
 
-func _set_flags_from_table(body: Body, parent: Body) -> void:
+func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
 	var flags := _table_reader.build_flags(0, flag_fields, _table_name, _row)
 	if !parent:
-		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
+		flags |= BodyFlags.IS_TOP # must be in IVBodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_enum(_table_name, "hydrostatic_equilibrium", _row)
-	if hydrostatic_equilibrium >= Enums.ConfidenceType.PROBABLY:
+	if hydrostatic_equilibrium >= IVEnums.ConfidenceType.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match _table_name:
 		"stars":
@@ -154,13 +153,13 @@ func _set_flags_from_table(body: Body, parent: Body) -> void:
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 
-func _set_orbit_from_table(body: Body, parent: Body) -> void:
+func _set_orbit_from_table(body: IVBody, parent: IVBody) -> void:
 	if body.flags & BodyFlags.IS_TOP:
 		return
 	var orbit := _orbit_builder.make_orbit_from_data(_table_name, _row, parent)
 	body.set_orbit(orbit)
 
-func _set_characteristics_from_table(body: Body) -> void:
+func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
 	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
@@ -233,7 +232,7 @@ func _set_characteristics_from_table(body: Body) -> void:
 					if keep_real_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 
-func _set_compositions_from_table(body: Body) -> void:
+func _set_compositions_from_table(body: IVBody) -> void:
 	var components := body.components
 	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
 	if atmosphere_composition_str:
@@ -248,7 +247,7 @@ func _set_compositions_from_table(body: Body) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
-func _register(body: Body, parent: Body) -> void:
+func _register(body: IVBody, parent: IVBody) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
 	_body_registry.register_body(body)
@@ -256,39 +255,39 @@ func _register(body: Body, parent: Body) -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("game_load_started", self, "init_system_build")
-	Global.get_tree().connect("node_added", self, "_on_node_added")
-	_body_registry = Global.program.BodyRegistry
-	_model_builder = Global.program.ModelBuilder
-	_rings_builder = Global.program.RingsBuilder
-	_light_builder = Global.program.LightBuilder
-	_huds_builder = Global.program.HUDsBuilder
-	_orbit_builder = Global.program.OrbitBuilder
-	_composition_builder = Global.program.CompositionBuilder
-	_io_manager = Global.program.IOManager
-	_scheduler = Global.program.Scheduler
-	_table_reader = Global.program.TableReader
-	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
-	_Body_ = Global.script_classes._Body_
-	_ModelController_ = Global.script_classes._ModelController_
-	_fallback_body_2d = Global.assets.fallback_body_2d
+	IVGlobal.connect("game_load_started", self, "init_system_build")
+	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	_body_registry = IVGlobal.program.BodyRegistry
+	_model_builder = IVGlobal.program.ModelBuilder
+	_rings_builder = IVGlobal.program.RingsBuilder
+	_light_builder = IVGlobal.program.LightBuilder
+	_huds_builder = IVGlobal.program.HUDsBuilder
+	_orbit_builder = IVGlobal.program.OrbitBuilder
+	_composition_builder = IVGlobal.program.CompositionBuilder
+	_io_manager = IVGlobal.program.IOManager
+	_scheduler = IVGlobal.program.Scheduler
+	_table_reader = IVGlobal.program.TableReader
+	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
+	_Body_ = IVGlobal.script_classes._Body_
+	_ModelController_ = IVGlobal.script_classes._ModelController_
+	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
 
 # *****************************************************************************
 # Build non-persisted after added to tree
 
 func _on_node_added(node: Node) -> void:
-	var body := node as Body
+	var body := node as IVBody
 	if body:
 		_build_unpersisted(body)
 
-func _build_unpersisted(body: Body) -> void: # Main thread
-	# This is after Body._enter_tree(), but before Body._ready()
+func _build_unpersisted(body: IVBody) -> void: # Main thread
+	# This is after IVBody._enter_tree(), but before IVBody._ready()
 	body.min_click_radius = min_click_radius
 	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
 	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
 	
-	# Note: many builders called here ask for IOManager.callback. These are
+	# Note: many builders called here ask for IVIOManager.callback. These are
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
 	if body.get_model_type() != -1:
@@ -315,17 +314,17 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
-	var texture_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
+	var texture_2d: Texture = files.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !texture_2d:
 		texture_2d = _fallback_body_2d
 	array.append(texture_2d)
 	if is_star:
 		var slice_name = file_prefix + "_slice"
-		var texture_slice_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
+		var texture_slice_2d: Texture = files.find_and_load_resource(_bodies_2d_search, slice_name)
 		array.append(texture_slice_2d)
 
 func _io_finish(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var is_star: bool = array[2]
 	var texture_2d: Texture = array[3]
 	body.texture_2d = texture_2d
@@ -346,7 +345,7 @@ func _finish_system_build() -> void: # Main thread
 		_is_building_system = false
 		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
-		var is_new_game: bool = !Global.state.is_loaded_game
-		Global.emit_signal("system_tree_ready", is_new_game)
+		var is_new_game: bool = !IVGlobal.state.is_loaded_game
+		IVGlobal.emit_signal("system_tree_ready", is_new_game)
 		if _main_prog_bar:
 			_main_prog_bar.stop()

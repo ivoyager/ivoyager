@@ -18,16 +18,16 @@
 # limitations under the License.
 # *****************************************************************************
 # Abstract base class for user interface with cached items. I, Voyager
-# subclasses: OptionsPopup, HotkeysPopup.
+# subclasses: IVOptionsPopup, IVHotkeysPopup.
 
 extends PopupPanel
-class_name CachedItemsPopup
+class_name IVCachedItemsPopup
 const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 
 var stop_sim := true
 var layout: Array # subclass sets in _init()
 
-onready var _state_manager: StateManager = Global.program.StateManager
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer
@@ -38,7 +38,7 @@ var _restore_defaults: Button
 
 
 func add_subpanel(subpanel_dict: Dictionary, to_column: int, to_row := 999) -> void:
-	# See example subpanel_dict formats in OptionsPopup or HotkeysPopup.
+	# See example subpanel_dict formats in IVOptionsPopup or IVHotkeysPopup.
 	# Set to_column and/or to_row arbitrarily large to move to end.
 	if to_column >= layout.size():
 		to_column = layout.size()
@@ -118,8 +118,8 @@ func _ready():
 
 func _on_ready() -> void:
 	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
-	theme = Global.themes.main
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
@@ -185,7 +185,7 @@ func _on_cancel() -> void:
 	if _confirm_changes.disabled:
 		hide()
 	else:
-		OneUseConfirm.new("LABEL_DISCARD_CHANGES", self, "_on_cancel_changes")
+		IVOneUseConfirm.new("LABEL_DISCARD_CHANGES", self, "_on_cancel_changes")
 
 func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)

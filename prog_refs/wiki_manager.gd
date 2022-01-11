@@ -17,24 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For internal wiki, set Global.enable_wiki and Global.use_internal_wiki. You
+# For internal wiki, set IVGlobal.enable_wiki and IVGlobal.use_internal_wiki. You
 # can then either 1) extend this class and override _open_internal_wiki(), or
-# 2) hook up directly to Global signal "open_wiki_requested". If the latter,
-# you can safely erase this class from ProjectBuilder.prog_refs.
+# 2) hook up directly to IVGlobal signal "open_wiki_requested". If the latter,
+# you can safely erase this class from IVProjectBuilder.prog_refs.
 
-class_name WikiManager
+class_name IVWikiManager
 
 
-var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki: String = Global.wiki # "wiki" (internal), "en.wikipedia", etc.
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki: String = IVGlobal.wiki # "wiki" (internal), "en.wikipedia", etc.
 var _wiki_url: String 
 
 
 func _project_init() -> void:
-	if !Global.enable_wiki:
+	if !IVGlobal.enable_wiki:
 		return
-	Global.connect("open_wiki_requested", self, "_open_wiki")
-	if !Global.use_internal_wiki:
+	IVGlobal.connect("open_wiki_requested", self, "_open_wiki")
+	if !IVGlobal.use_internal_wiki:
 		_wiki_url = "https://" + _wiki + ".org/wiki/"
 
 func _open_wiki(wiki_title: String) -> void:

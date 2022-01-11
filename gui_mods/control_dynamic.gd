@@ -47,7 +47,7 @@ var default_sizes := [
 var max_default_screen_proportions := Vector2(0.45, 0.45)
 
 # private
-var _settings: Dictionary = Global.settings
+var _settings: Dictionary = IVGlobal.settings
 onready var _viewport := get_viewport()
 onready var _parent: Control = get_parent()
 var _margin_drag_x := 0.0
@@ -61,8 +61,8 @@ func set_min_size() -> void:
 		default_sizes[i] = Vector2.ZERO
 
 func _ready():
-	Global.connect("update_gui_needed", self, "_on_update_gui_needed")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("update_gui_needed", self, "_on_update_gui_needed")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	$TL.connect("gui_input", self, "_on_margin_input", [TL])

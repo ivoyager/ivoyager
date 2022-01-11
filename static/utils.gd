@@ -1,4 +1,4 @@
-# str_utils.gd
+# utils.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,11 +17,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# See prog_refs/qty_txt_converter.gd for quantity strings!
 
-class_name StrUtils
+class_name IVUtils
 
 
+# Untyped tree search
+static func get_deep(target, path: String): # untyped return
+	if !path:
+		return target
+	var path_stack := Array(path.split("/", false))
+	path_stack.invert()
+	while path_stack:
+		target = target.get(path_stack.pop_back())
+		if target == null:
+			return null
+	return target
+
+const NO_ARGS := []
+
+static func get_path_result(target, path: String, args := NO_ARGS): # untyped return
+	# as above but path could include methods
+	if !path:
+		return target
+	var path_stack := Array(path.split("/", false))
+	path_stack.invert()
+	while path_stack:
+		var property_or_method: String = path_stack.pop_back()
+		if target is Object and target.has_method(property_or_method):
+			target = target.callv(property_or_method, args)
+		else:
+			target = target.get(property_or_method)
+		if target == null:
+			return null
+	return target
+
+# Arrays
+static func init_array(size: int, init_value = null) -> Array:
+	var array := []
+	array.resize(size)
+	if init_value == null:
+		return array
+	var i := 0
+	while i < size:
+		array[i] = init_value
+		i += 1
+	return array
+
+static func fill_array(array: Array, fill_value) -> void:
+	var size := array.size()
+	var i := 0
+	while i < size:
+		array[i] = fill_value
+		i += 1
+
+# patch
 static func c_unescape_patch(text: String) -> String:
 	# Use as patch until c_unescape() is fixed (Godot issue #38716).
 	# Implement escapes as needed here. It appears that large unicodes are not
@@ -35,4 +84,3 @@ static func c_unescape_patch(text: String) -> String:
 		text = text.replace(esc_str, unicode_chr)
 		u_esc = text.find("\\u")
 	return text
-

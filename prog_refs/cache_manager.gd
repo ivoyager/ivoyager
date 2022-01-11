@@ -18,9 +18,9 @@
 # limitations under the License.
 # *****************************************************************************
 # Abstract base class for managing user cached items. Subclasses include
-# SettingsManager & InputMapManager.
+# IVSettingsManager & IVInputMapManager.
 
-class_name CacheManager
+class_name IVCacheManager
 
 # project vars - set in subclass _init(); project can modify at init
 var cache_file_name := "generic_item.vbinary" # change in subclass
@@ -31,7 +31,7 @@ var current: Dictionary # subclass makes or references an existing dict
 var _is_references := false # set if cache items are arrays or dicts
 
 # private
-var _io_manager: IOManager
+var _io_manager: IVIOManager
 var _file_path: String
 var _cached := {} # exact replica of disk cache notwithstanding I/O delay
 
@@ -103,8 +103,8 @@ func _on_init() -> void:
 	pass
 
 func _project_init() -> void:
-	_io_manager = Global.program.IOManager
-	var cache_dir: String = Global.cache_dir
+	_io_manager = IVGlobal.program.IOManager
+	var cache_dir: String = IVGlobal.cache_dir
 	_file_path = cache_dir.plus_file(cache_file_name)
 	var dir = Directory.new()
 	if dir.open(cache_dir) != OK:

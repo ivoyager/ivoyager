@@ -19,19 +19,18 @@
 # *****************************************************************************
 # Keeps compact data for an asteroid group, which could include >100,000
 # asteroids (Main Belt). Pool*Arrays are used to constitute ArrayMesh's in
-# HUDPoints, and act as source data for Asteroid instances. We can't easily
+# IVHUDPoints, and act as source data for Asteroid instances. We can't easily
 # separate contruction here because we would have to pass-by-value very large
 # pool arrays.
 #
 # TODO: This should be a Node (parented by Sun in our solar system). We should
-# merge this with HUDPoints. Builder stuff currently in both classes should go
+# merge this with IVHUDPoints. Builder stuff currently in both classes should go
 # to a builder class.
 
-extends Reference
-class_name AsteroidGroup
+class_name IVAsteroidGroup
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const units := preload("res://ivoyager/static/units.gd")
 
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
@@ -39,8 +38,8 @@ const DPRINT = false
 # ************************** PERSISTED VARS ***********************************
 
 var is_trojans := false
-var star: Body
-var lagrange_point: LPoint # null unless is_trojans
+var star: IVBody
+var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
 
 var max_apoapsis := 0.0
@@ -74,12 +73,12 @@ var _load_count := 0
 
 # ************************** PUBLIC FUNCTIONS *********************************
 
-func init(star_: Body, group_name_: String) -> void:
+func init(star_: IVBody, group_name_: String) -> void:
 	star = star_
 	group_name = group_name_
 	assert(VPRINT and _verbose_reset_mins_maxes() or true)
 
-func init_trojans(star_: Body, group_name_: String, lagrange_point_: LPoint) -> void:
+func init_trojans(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void:
 	star = star_
 	group_name = group_name_
 	is_trojans = true
@@ -169,8 +168,8 @@ func clear_for_import() -> void:
 # ************************** PRIVATE FUNCTIONS ********************************
 
 func _fix_binary_keplerian_elements() -> void:
-	var au := unit_defs.AU
-	var year := unit_defs.YEAR
+	var au := units.AU
+	var year := units.YEAR
 	var mu := star.get_std_gravitational_parameter()
 	assert(mu)
 	var index := 0
@@ -192,7 +191,7 @@ func _fix_binary_keplerian_elements() -> void:
 		# JD = MJD + 2400000.5 = 2458200.5
 		# J2000 day = JD - 2451545 = 6655.5
 		var M0: float = Om_w_M0_n[index][2] # already in rad
-		var M0_J2000: float = M0 - n * 6655.5 * UnitDefs.DAY
+		var M0_J2000: float = M0 - n * 6655.5 * IVUnits.DAY
 		M0_J2000 = fposmod(M0_J2000, TAU)
 		Om_w_M0_n[index][2] = M0_J2000
 		# apoapsis
@@ -204,8 +203,8 @@ func _fix_binary_keplerian_elements() -> void:
 		index += 1
 
 func _fix_binary_trojan_elements() -> void:
-	var au := unit_defs.AU
-	var year := unit_defs.YEAR
+	var au := units.AU
+	var year := units.YEAR
 	var lagrange_a: float = lagrange_point.dynamic_elements[0]
 	var index := 0
 	while index < _index:
@@ -255,9 +254,9 @@ func _verbose_min_max_tally(a_e_i_: Vector3, Om_w_M0_n_: Color, s_g_ := Vector2(
 	_load_count += 1
 	
 func _verbose_print() -> void:
-	var au := unit_defs.AU
-	var deg := unit_defs.DEG
-	var year := unit_defs.YEAR
+	var au := units.AU
+	var deg := units.DEG
+	var year := units.YEAR
 	print("%s group %s asteroids loaded from binaries (min/max)" % [_load_count, group_name])
 	if !is_trojans:
 		print(" a  : %s / %s (AU)" % [_mins[0] / au, _maxes[0] / au])

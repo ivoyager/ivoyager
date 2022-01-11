@@ -18,12 +18,12 @@
 # limitations under the License.
 # *****************************************************************************
 # Has currently selected item and keeps selection history. You can have >1 of
-# these. GUI widgets search up their ancestor tree and grab a SelectionManager
-# from the first control with a "selection_manager" member. InputHandler and
-# VygrCameraHandler grab selection_manager from Global.program.ProjectGUI.
+# these. GUI widgets search up their ancestor tree and grab an IVSelectionManager
+# from the first control with a "selection_manager" member. IVInputHandler and
+# IVCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
 
-extends Reference
-class_name SelectionManager
+
+class_name IVSelectionManager
 
 signal selection_changed()
 
@@ -50,7 +50,7 @@ enum {
 	SELECTION_LAGRANGE_POINT,
 }
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
@@ -60,29 +60,29 @@ const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
-var selection_item: SelectionItem
+var selection_item: IVSelectionItem
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["selection_item"]
 
 # private
-var _root: Viewport = Global.get_tree().get_root()
-var _body_registry: BodyRegistry = Global.program.BodyRegistry
+var _root: Viewport = IVGlobal.get_tree().get_root()
+var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
 
 
-func select(selection_item_: SelectionItem) -> void:
+func select(selection_item_: IVSelectionItem) -> void:
 	if selection_item == selection_item_:
 		return
 	selection_item = selection_item_
 	_add_history()
 	emit_signal("selection_changed")
 
-func select_body(body_: Body) -> void:
+func select_body(body_: IVBody) -> void:
 	var name := body_.name
-	var selection_item_: SelectionItem = _body_registry.selection_items[name]
+	var selection_item_: IVSelectionItem = _body_registry.selection_items[name]
 	select(selection_item_)
 
 func get_name() -> String:
@@ -95,7 +95,7 @@ func get_texture_2d() -> Texture:
 		return selection_item.texture_2d
 	return null
 
-func get_body() -> Body:
+func get_body() -> IVBody:
 	if selection_item:
 		return selection_item.body
 	return null
@@ -108,7 +108,7 @@ func back() -> void:
 		return
 	_history_index -= 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: SelectionItem = wr.get_ref()
+	var new_selection: IVSelectionItem = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -120,7 +120,7 @@ func forward() -> void:
 		return
 	_history_index += 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: SelectionItem = wr.get_ref()
+	var new_selection: IVSelectionItem = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -129,7 +129,7 @@ func forward() -> void:
 	
 func up() -> void:
 	if selection_item.up_selection_name:
-		var new_selection: SelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
+		var new_selection: IVSelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
 		select(new_selection)
 
 func can_go_back() -> bool:
@@ -142,7 +142,7 @@ func can_go_up() -> bool:
 	return selection_item and selection_item.up_selection_name
 
 func down() -> void:
-	var body: Body = selection_item.body
+	var body: IVBody = selection_item.body
 	if body and body.satellites:
 		select_body(body.satellites[0])
 
@@ -157,7 +157,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
 			 # TODO: code for multistar systems
-			var sun: Body = _body_registry.top_bodies[0]
+			var sun: IVBody = _body_registry.top_bodies[0]
 			select_body(sun)
 			return
 		SELECTION_PLANET:
@@ -196,7 +196,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			index = array_size - 1
 		elif index >= array_size:
 			index = 0
-		var body: Body = iteration_array[index]
+		var body: IVBody = iteration_array[index]
 		var select := false
 		match selection_type:
 			-1:
@@ -222,7 +222,7 @@ func _add_history() -> void:
 		return
 	if _history_index >= 0:
 		var last_wr: WeakRef = _history[_history_index]
-		var last_selection_item: SelectionItem = last_wr.get_ref()
+		var last_selection_item: IVSelectionItem = last_wr.get_ref()
 		if last_selection_item == selection_item:
 			return
 	_history_index += 1

@@ -1,4 +1,4 @@
-# file_utils.gd
+# files.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,9 +19,9 @@
 # *****************************************************************************
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
-# const file_utils := preload("res://ivoyager/static/file_utils.gd")
+# const files := preload("res://ivoyager/static/files.gd")
 
-class_name FileUtils
+class_name IVFiles
 
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
@@ -45,7 +45,7 @@ static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> Str
 
 static func get_base_file_name(file_name : String) -> String:
 	# Strips file type and date extensions
-	file_name = file_name.replace("." + Global.save_file_extension, "")
+	file_name = file_name.replace("." + IVGlobal.save_file_extension, "")
 	var regex := RegEx.new()
 	regex.compile("\\.\\d+-\\d\\d-\\d\\d") # "(\.\d+-\d\d-\d\d)"
 	var search_result := regex.search(file_name)
@@ -59,7 +59,7 @@ static func get_save_path(save_dir: String, base_name: String, date_string := ""
 	if date_string:
 		path += "." + date_string
 	if append_file_extension:
-		path += "." + Global.save_file_extension
+		path += "." + IVGlobal.save_file_extension
 	return path
 
 static func exists(file_path: String) -> bool:

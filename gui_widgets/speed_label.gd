@@ -21,10 +21,10 @@
 
 extends Label
 
-var forward_color: Color = Global.colors.normal
-var reverse_color: Color = Global.colors.danger
+var forward_color: Color = IVGlobal.colors.normal
+var reverse_color: Color = IVGlobal.colors.danger
 
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")

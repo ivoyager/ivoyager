@@ -1,4 +1,4 @@
-# vygr_camera.gd
+# camera.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,11 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# This camera is always locked to a Body and constantly orients itself based on
-# that Body's orbit around its parent. You can replace this with another Camera
-# class, but see:
-#    Global signals related to camera (singletons/global.gd)
-#    VygrCameraHandler (prog_nodes/vygr_camera_handler.gd); replace this!
+# This camera is always locked to a IVBody and constantly orients itself based on
+# that IVBody's ground or orbit around its parent, depending on 'tracking'
+# selection.
+#
+# You can replace this with another Camera class, but see:
+#    IVGlobal signals related to camera (singletons/global.gd)
+#    IVCameraHandler (prog_nodes/camera_handler.gd); replace this!
+#    Possibly other dependencies. You'll need to search.
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground
@@ -29,9 +32,9 @@
 # target body w/ north up.
 
 extends Camera
-class_name VygrCamera
+class_name IVCamera
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 # ********************************* SIGNALS ***********************************
 
@@ -46,15 +49,15 @@ signal tracking_changed(track_type, is_ecliptic)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-const VIEW_ZOOM = Enums.ViewType.VIEW_ZOOM
-const VIEW_45 = Enums.ViewType.VIEW_45
-const VIEW_TOP = Enums.ViewType.VIEW_TOP
-const VIEW_OUTWARD = Enums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = Enums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = Enums.ViewType.VIEW_BUMPED_ROTATED
-const TRACK_NONE = Enums.CameraTrackType.TRACK_NONE
-const TRACK_ORBIT = Enums.CameraTrackType.TRACK_ORBIT
-const TRACK_GROUND = Enums.CameraTrackType.TRACK_GROUND
+const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
+const VIEW_45 = IVEnums.ViewType.VIEW_45
+const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
+const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
+const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
+const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
+const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
 # TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
 # circumstances, PATH_CARTESION looks better.
@@ -87,7 +90,7 @@ const FAR_MULTIPLIER := 1e6 # see Note below
 var is_camera_lock := true
 
 # public - read only! (these are "to" during body-to-body transfer)
-var selection_item: SelectionItem
+var selection_item: IVSelectionItem
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
 var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
@@ -111,10 +114,10 @@ const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection_item", "view_t
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var track_dist: float = 4e7 * UnitDefs.KM # km after dividing by fov
-var use_local_up: float = 5e7 * UnitDefs.KM # must be > track_dist
-var use_ecliptic_up: float = 5e10 * UnitDefs.KM # must be > use_local_up
-var max_compensated_dist: float = 5e7 * UnitDefs.KM
+var track_dist: float = 4e7 * IVUnits.KM # km after dividing by fov
+var use_local_up: float = 5e7 * IVUnits.KM # must be > track_dist
+var use_ecliptic_up: float = 5e10 * IVUnits.KM # must be > use_local_up
+var max_compensated_dist: float = 5e7 * IVUnits.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation
@@ -124,17 +127,17 @@ var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
 # private
-var _times: Array = Global.times
-var _settings: Dictionary = Global.settings
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-var _body_registry: BodyRegistry = Global.program.BodyRegistry
-var _max_dist: float = Global.max_camera_distance
+var _times: Array = IVGlobal.times
+var _settings: Dictionary = IVGlobal.settings
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
+var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
 var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
 var _max_compensated_dist: float
-var _init_view: View
+var _init_view: IVView
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -147,7 +150,7 @@ var _to_spatial: Spatial
 var _from_spatial: Spatial
 var _transfer_ref_spatial: Spatial
 var _transfer_ref_basis: Basis
-var _from_selection_item: SelectionItem
+var _from_selection_item: IVSelectionItem
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
@@ -156,22 +159,22 @@ var _is_ecliptic := false
 var _last_dist := 0.0
 var _lat_long := Vector2(-INF, -INF)
 
-var _universe: Spatial = Global.program.Universe
-var _View_: Script = Global.script_classes._View_
+var _universe: Spatial = IVGlobal.program.Universe
+var _View_: Script = IVGlobal.script_classes._View_
 
 # settings
 onready var _transfer_time: float = _settings.camera_transfer_time
 
 # **************************** PUBLIC FUNCTIONS *******************************
 
-func set_start_view(view: View) -> void:
-	# Set before about_to_start_simulator to start camera at this View.
+func set_start_view(view: IVView) -> void:
+	# Set before about_to_start_simulator to start camera at this IVView.
 	_init_view = view
 
 func add_to_tree() -> void:
 	var start_body_name: String
-	start_body_name = Global.start_body_name
-	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
+	start_body_name = IVGlobal.start_body_name
+	var start_body: IVBody = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
 func add_move_action(move_action: Vector3) -> void:
@@ -180,17 +183,17 @@ func add_move_action(move_action: Vector3) -> void:
 func add_rotate_action(rotate_action: Vector3) -> void:
 	_rotate_action += rotate_action
 
-func move_to_view(view: View, is_instant_move := false) -> void:
-	var to_selection_item: SelectionItem
+func move_to_view(view: IVView, is_instant_move := false) -> void:
+	var to_selection_item: IVSelectionItem
 	if view.selection_name:
 		to_selection_item = _body_registry.selection_items.get(view.selection_name)
 		assert(to_selection_item)
 	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
 
-func create_view(use_current_selection := true) -> View:
-	# View object is useful for cache or save persistence
-	var view: View = _View_.new()
+func create_view(use_current_selection := true) -> IVView:
+	# IVView object is useful for cache or save persistence
+	var view: IVView = _View_.new()
 	if use_current_selection:
 		view.selection_name = selection_item.name
 	view.track_type = track_type
@@ -203,7 +206,7 @@ func create_view(use_current_selection := true) -> View:
 			view.view_rotations = view_rotations
 	return view
 
-func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
@@ -211,7 +214,7 @@ func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3
 	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
-func move_to_selection(to_selection_item: SelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override all or some components of view_position &
@@ -329,13 +332,13 @@ func _ready() -> void:
 
 func _on_ready():
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
-	name = "VygrCamera"
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
-	Global.connect("update_gui_needed", self, "_send_gui_refresh")
-	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
-	Global.connect("move_camera_to_body_requested", self, "move_to_body")
-	Global.connect("setting_changed", self, "_settings_listener")
+	name = "IVCamera"
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
+	IVGlobal.connect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.connect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
@@ -357,14 +360,14 @@ func _on_ready():
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_visuals_helper.camera = self
 	_visuals_helper.camera_fov = fov
-	Global.emit_signal("camera_ready", self)
+	IVGlobal.emit_signal("camera_ready", self)
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	Global.disconnect("update_gui_needed", self, "_send_gui_refresh")
-	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
-	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
-	Global.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.disconnect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
+	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
 	selection_item = null
 	parent = null
 	_to_spatial = null
@@ -615,7 +618,7 @@ func _reset_view_position_and_rotations() -> void:
 	var rotations_basis := basis_looking_at.inverse() * basis_rotated
 	view_rotations = rotations_basis.get_euler()
 
-func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3,
+func _get_view_transform(selection_item_: IVSelectionItem, view_position_: Vector3,
 		view_rotations_: Vector3, track_type_: int) -> Transform:
 	var dist := view_position_[2]
 	var up := _get_up(selection_item_, dist, track_type_)
@@ -627,7 +630,7 @@ func _get_view_transform(selection_item_: SelectionItem, view_position_: Vector3
 	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis
 	return view_transform
 
-func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> Vector3:
+func _get_up(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Vector3:
 	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_NONE:
 		return ECLIPTIC_Z
 	var local_up: Vector3
@@ -644,7 +647,7 @@ func _get_up(selection_item_: SelectionItem, dist: float, track_type_: int) -> V
 	var diff_vector := local_up - ECLIPTIC_Z
 	return (local_up - diff_vector * proportion).normalized()
 
-func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type_: int) -> Basis:
+func _get_tracking_basis(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Basis:
 	if dist > _track_dist:
 		return IDENTITY_BASIS
 	if track_type_ == TRACK_ORBIT:
@@ -653,7 +656,7 @@ func _get_tracking_basis(selection_item_: SelectionItem, dist: float, track_type
 		return selection_item_.get_ground_ref_basis()
 	return IDENTITY_BASIS
 
-func _get_transfer_ref_basis(s1: SelectionItem, s2: SelectionItem) -> Basis:
+func _get_transfer_ref_basis(s1: IVSelectionItem, s2: IVSelectionItem) -> Basis:
 	var normal1 := s1.get_orbit_normal(NAN, true)
 	var normal2 := s2.get_orbit_normal(NAN, true)
 	var z_axis := (normal1 + normal2).normalized()

@@ -20,21 +20,20 @@
 # TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 # What we have now is a QuadMesh & Texture.
 
+class_name IVRingsBuilder
 
-class_name RingsBuilder
-
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const files := preload("res://ivoyager/static/files.gd")
 
 var rings_too_far_radius_multiplier := 2e3
 
 
-func add_rings(body: Body) -> void:
+func add_rings(body: IVBody) -> void:
 	var file_prefix: String = body.get_rings_file_prefix()
 	var radius: float = body.get_rings_radius()
 	var north: Vector3 = body.get_north_pole()
 	var array := [body, file_prefix, radius, north]
-	var io_manager: IOManager = Global.program.IOManager
+	var io_manager: IVIOManager = IVGlobal.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
 
 # *****************************************************************************
@@ -43,8 +42,8 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var radius: float = array[2]
 	var north: Vector3 = array[3]
-	var rings_search: Array = Global.rings_search
-	var texture: Texture = file_utils.find_and_load_resource(rings_search, file_prefix)
+	var rings_search: Array = IVGlobal.rings_search
+	var texture: Texture = files.find_and_load_resource(rings_search, file_prefix)
 	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()
@@ -62,7 +61,7 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	array.append(rings)
 
 func _io_finish(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var radius: float = array[2]
 	var rings: MeshInstance = array[4]
 	body.max_aux_graphic_dist = radius * rings_too_far_radius_multiplier

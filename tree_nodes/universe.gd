@@ -25,10 +25,10 @@
 # *****************************************************************************
 # Universe does nothing but is the simulator root node by default. You can
 # change the simulator root node by using a different main scene named
-# 'Universe' or by modifying var 'universe' in ProjectBuilder during
+# 'Universe' or by modifying var 'universe' in IVProjectBuilder during
 # extension init. The simulator does not care about root node name. However,
-# it is critical that the correct simulator root is set in ProjectBuilder so
-# it will be correctly set in Global.program.Universe before simulator start.
+# it is critical that the correct simulator root is set in IVProjectBuilder so
+# it will be correctly set in IVGlobal.program.Universe before simulator start.
 # Note that we use origin shifting to prevent float "imprecision shakes" when
 # way out at Pluto (for example). This is the camera shifting the root node's
 # translation.

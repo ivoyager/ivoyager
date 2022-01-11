@@ -18,27 +18,27 @@
 # limitations under the License.
 # *****************************************************************************
 # Unlike all other popups, this one is always listening for "ui_cancel". Other
-# popups listen only when open and process before MainMenuPopup (due to order
-# in ProjectBuilder).
+# popups listen only when open and process before IVMainMenuPopup (due to order
+# in IVProjectBuilder).
 
 extends Popup
-class_name MainMenuPopup
+class_name IVMainMenuPopup
 const SCENE := "res://ivoyager/gui_admin/main_menu_popup.tscn"
 
 var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
-var _state: Dictionary = Global.state
-onready var _state_manager: StateManager = Global.program.StateManager
+var _state: Dictionary = IVGlobal.state
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 func _project_init():
 	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("open_main_menu_requested", self, "_open")
-	Global.connect("close_main_menu_requested", self, "hide")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
+	IVGlobal.connect("open_main_menu_requested", self, "_open")
+	IVGlobal.connect("close_main_menu_requested", self, "hide")
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 
 func _ready() -> void:
-	theme = Global.themes.main_menu
+	theme = IVGlobal.themes.main_menu
 	if center:
 		$PanelContainer.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH

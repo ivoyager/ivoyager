@@ -24,8 +24,8 @@
 # https://en.wikipedia.org/wiki/Julian_day.
 #
 # "time" here always refers to sim time, which runs in seconds (assuming
-# UnitDefs.SECOND = 1.0) from J2000 epoch, which was at 2000-01-01 12:00.
-# "j2000days" is just time / UnitDefs.DAY. We avoid using Julian Day for
+# IVUnits.SECOND = 1.0) from J2000 epoch, which was at 2000-01-01 12:00.
+# "j2000days" is just time / IVUnits.DAY. We avoid using Julian Day for
 # float calculations due to precision loss.
 #
 # In priciple, "UT", "UT1", etc., are all approximations (in some way) of solar
@@ -38,36 +38,36 @@
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 #
 # This node processes during SceneTree pause, but stops and starts processing
-# following StateManager "is_running" state. StateManager has authority over
+# following IVStateManager "is_running" state. IVStateManager has authority over
 # pause, but we signal pause changes here as a "speed_changed" event.
 
 extends Node
-class_name Timekeeper
+class_name IVTimekeeper
 
 signal processed(sim_time, engine_delta) # this drives the simulator
 signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
 
-const SECOND := UnitDefs.SECOND # sim_time conversion
-const MINUTE := UnitDefs.MINUTE
-const HOUR := UnitDefs.HOUR
-const DAY := UnitDefs.DAY
+const SECOND := IVUnits.SECOND # sim_time conversion
+const MINUTE := IVUnits.MINUTE
+const HOUR := IVUnits.HOUR
+const DAY := IVUnits.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const NO_NETWORK = Enums.NetworkState.NO_NETWORK
-const IS_SERVER = Enums.NetworkState.IS_SERVER
-const IS_CLIENT = Enums.NetworkState.IS_CLIENT
+const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
+const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
 
 # project vars
 var sync_tolerance := 0.2 # engine time (seconds)
 var start_real_world_time := false # true overrides other start settings
 var speeds := [ # sim_units / delta
-		UnitDefs.SECOND, # real-time if UnitDefs.SECOND = 1.0
-		UnitDefs.MINUTE,
-		UnitDefs.HOUR,
-		UnitDefs.DAY,
-		7.0 * UnitDefs.DAY,
-		30.4375 * UnitDefs.DAY,
+		IVUnits.SECOND, # real-time if IVUnits.SECOND = 1.0
+		IVUnits.MINUTE,
+		IVUnits.HOUR,
+		IVUnits.DAY,
+		7.0 * IVUnits.DAY,
+		30.4375 * IVUnits.DAY,
 ]
 var speed_names := [
 	"GAME_SPEED_REAL_TIME",
@@ -95,7 +95,7 @@ var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
 var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
-var is_paused := false # always same as Global.state.is_paused
+var is_paused := false # always same as IVGlobal.state.is_paused
 var is_reversed := false
 
 # persistence
@@ -110,15 +110,15 @@ var show_clock := false
 var show_seconds := false
 var speed_name: String
 var speed_symbol: String
-var times: Array = Global.times # [0] time (s, J2000) [1] engine_time [2] UT1
-var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
-var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
+var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1
+var date: Array = IVGlobal.date # Gregorian [0] year [1] month [2] day (ints)
+var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _state: Dictionary = Global.state
+var _state: Dictionary = IVGlobal.state
 onready var _tree := get_tree()
-onready var _allow_real_world_time: bool = Global.allow_real_world_time
-onready var _allow_time_reversal: bool = Global.allow_time_reversal
+onready var _allow_real_world_time: bool = IVGlobal.allow_real_world_time
+onready var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
@@ -247,8 +247,8 @@ func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 func set_paused(pause: bool, is_toggle := false) -> void:
-	# 1st arg ignored if is_toggle. Timekeeper has authority over pause, so
-	# all changes should use this function or Global signal "pause_requested".
+	# 1st arg ignored if is_toggle. IVTimekeeper has authority over pause, so
+	# all changes should use this function or IVGlobal signal "pause_requested".
 	var new_paused: bool
 	if is_toggle:
 		new_paused = !is_paused
@@ -257,7 +257,7 @@ func set_paused(pause: bool, is_toggle := false) -> void:
 	if is_paused != new_paused:
 		is_paused = new_paused
 		_state.is_paused = new_paused
-		Global.emit_signal("sim_pause_changed", new_paused)
+		IVGlobal.emit_signal("sim_pause_changed", new_paused)
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
 				show_seconds, is_real_world_time)
 
@@ -331,14 +331,14 @@ func _ready() -> void:
 	_on_ready() # subclass can override
 
 func _on_ready() -> void:
-	Global.connect("pause_requested", self, "set_paused")
-	Global.connect("network_state_changed", self, "_on_network_state_changed")
-	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	Global.connect("game_load_finished", self, "_set_ready_state")
-	Global.connect("simulator_exited", self, "_set_ready_state")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("pause_requested", self, "set_paused")
+	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
+	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 	connect("speed_changed", self, "_on_speed_changed")
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
@@ -351,7 +351,7 @@ func _set_init_state() -> void:
 	if start_real_world_time:
 		time = get_real_world_time()
 	else:
-		time = Global.start_time
+		time = IVGlobal.start_time
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
@@ -389,7 +389,7 @@ func _on_about_to_start_simulator(is_new_game: bool) -> void:
 		if start_real_world_time:
 			set_real_world()
 	else:
-		is_paused = is_paused or Global.settings.loaded_game_is_paused
+		is_paused = is_paused or IVGlobal.settings.loaded_game_is_paused
 		_state.is_paused = is_paused
 
 func _on_run_state_changed(is_running: bool) -> void:
@@ -430,7 +430,7 @@ remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused
 	show_seconds = show_seconds_
 	is_real_world_time = is_real_world_time_
 	if is_paused != is_paused_:
-		Global.emit_signal("pause_requested", is_paused_) # will trigger update
+		IVGlobal.emit_signal("pause_requested", is_paused_) # will trigger update
 	else:
 		emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
 				show_seconds_, is_real_world_time_)

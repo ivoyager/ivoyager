@@ -21,29 +21,29 @@
 # maintain their own orbit.
 
 extends MeshInstance
-class_name HUDPoints
+class_name IVHUDPoints
 
 const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR
 const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR
 
-var group: AsteroidGroup
+var group: IVAsteroidGroup
 var color: Color # read only
 
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
-func init(group_: AsteroidGroup, color_: Color) -> void:
+func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	group = group_
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_orbit_points.shader = Global.shared_resources.orbit_points_shader
+		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_shader
 	else:
-		_orbit_points.shader = Global.shared_resources.orbit_points_lagrangian_shader
+		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_lagrangian_shader
 	material_override = _orbit_points
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 
 func draw_points() -> void:
@@ -71,7 +71,7 @@ func _init():
 	hide()
 
 func _ready() -> void:
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
 func _timekeeper_process(time: float, _e_delta: float) -> void:
 	if !visible or time == _last_update_time:

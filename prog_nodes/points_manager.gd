@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends Node
-class_name PointsManager
+class_name IVPointsManager
 
 const DPRINT := false
 
@@ -55,7 +55,7 @@ func show_points(group_or_category: String, is_show: bool) -> void:
 			_points_groups[group_or_category].hide()
 	emit_signal("show_points_changed", group_or_category, is_show)
 
-func register_points_group(hud_points: HUDPoints, group: String) -> void:
+func register_points_group(hud_points: IVHUDPoints, group: String) -> void:
 	if !_show_points.has(group):
 		_show_points[group] = false
 	elif _show_points[group]: # was shown in loaded save
@@ -80,8 +80,8 @@ func forget_points_category(category: String) -> void: # not needed for load
 # *****************************************************************************
 
 func _ready():
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	Global.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 
 func _restore_init_state() -> void:
 	_show_points.clear()

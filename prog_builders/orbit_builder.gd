@@ -18,9 +18,9 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name OrbitBuilder
+class_name IVOrbitBuilder
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const DPRINT := false
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
@@ -52,11 +52,11 @@ var t := {
 	ref_plane = "",
 }
 
-var _table_reader: TableReader
+var _table_reader: IVTableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
-func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> Orbit:
+func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) -> IVOrbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:
@@ -105,7 +105,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 		else:
 			assert(false, "Elements must include M0, L0 or T0")
 	var elements := [t.a, t.e, t.i, t.Om, t.w, t.M0, t.n]
-	var orbit: Orbit = _Orbit_.new()
+	var orbit: IVOrbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements
 	
 	if _dynamic_orbits:
@@ -157,7 +157,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
 		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)
 		orbit.reference_normal = math.convert_spherical2(orbit_ra, orbit_dec)
-		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
+		orbit.reference_normal = IVGlobal.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
 	elif t.ref_plane:
 		assert(t.ref_plane == "Ecliptic")
@@ -168,9 +168,9 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 # *****************************************************************************
 
 func _project_init() -> void:
-	_table_reader = Global.program.TableReader
-	_Orbit_ = Global.script_classes._Orbit_
-	_dynamic_orbits = Global.dynamic_orbits
+	_table_reader = IVGlobal.program.TableReader
+	_Orbit_ = IVGlobal.script_classes._Orbit_
+	_dynamic_orbits = IVGlobal.dynamic_orbits
 
 func _reset_table_dict() -> void:
 	for field in t:

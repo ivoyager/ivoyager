@@ -19,9 +19,9 @@
 # *****************************************************************************
 
 extends Reference
-class_name SelectionBuilder
+class_name IVSelectionBuilder
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
@@ -46,20 +46,20 @@ var latitude_offset_top := deg2rad(85.0)
 var latitude_offset_45 := deg2rad(45.0)
 var min_system_m_radius_multiplier := 15.0
 var min_view_dist_radius_multiplier := 1.65
-var zoom_divisor := 1.5e-4 * UnitDefs.KM # bigger makes zoom closer
+var zoom_divisor := 1.5e-4 * IVUnits.KM # bigger makes zoom closer
 var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
 var system_radius_multiplier_top := 2.5
 
 # private
-var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
-var _body_registry: BodyRegistry
+var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zone
+var _body_registry: IVBodyRegistry
 var _SelectionItem_: Script
 
 func build_body_selection_items() -> void:
 	for top_body in _body_registry.top_bodies:
 		build_body_selection_items_recursive(top_body, null)
 
-func build_body_selection_items_recursive(body: Body, parent_body: Body) -> void:
+func build_body_selection_items_recursive(body: IVBody, parent_body: IVBody) -> void:
 	# build bottom up to calculate system_radius
 	var system_radius := body.m_radius * min_system_m_radius_multiplier
 	for satellite in body.satellites:
@@ -70,8 +70,8 @@ func build_body_selection_items_recursive(body: Body, parent_body: Body) -> void
 	var selection_item := build_body_selection_item(body, parent_body, system_radius)
 	_body_registry.register_selection_item(selection_item)
 
-func build_body_selection_item(body: Body, parent_body: Body, system_radius: float) -> SelectionItem:
-	var selection_item: SelectionItem = _SelectionItem_.new()
+func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius: float) -> IVSelectionItem:
+	var selection_item: IVSelectionItem = _SelectionItem_.new()
 	selection_item.system_radius = system_radius
 	selection_item.is_body = true
 	selection_item.spatial = body
@@ -88,7 +88,7 @@ func build_body_selection_item(body: Body, parent_body: Body, system_radius: flo
 		selection_item.up_selection_name = above_bodies_selection_name
 	return selection_item
 
-func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
+func set_view_parameters_from_body(selection_item: IVSelectionItem, body: IVBody) -> void:
 	var use_ground_longitude_offset: float
 	var use_orbit_longitude_offset: float
 	var use_ground_latitude_offset: float
@@ -109,7 +109,7 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		use_orbit_latitude_offset = orbit_latitude_offset_moon
 	var m_radius := body.get_mean_radius()
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
-	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * UnitDefs.KM
+	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * IVUnits.KM
 	var view_dist_top := selection_item.system_radius * system_radius_multiplier_top * 50.0 # /fov
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
 	match body.name:
@@ -142,5 +142,5 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 # *****************************************************************************
 
 func _project_init() -> void:
-	_body_registry = Global.program.BodyRegistry
-	_SelectionItem_ = Global.script_classes._SelectionItem_
+	_body_registry = IVGlobal.program.BodyRegistry
+	_SelectionItem_ = IVGlobal.script_classes._SelectionItem_

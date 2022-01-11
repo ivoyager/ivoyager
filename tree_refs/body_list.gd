@@ -22,8 +22,7 @@
 # names that are instanced only if/when individually selected (eg, our 300000+
 # Main Belt asteroids).
 
-extends Reference
-class_name BodyList
+class_name IVBodyList
 
 enum {
 	SORT_NO_SORT, # leave as is, eg, from a data table
@@ -72,13 +71,13 @@ func init_bodies(list_name_: String, sort_type := SORT_DEFAULT, bodies := [], in
 		SORT_ASTEROIDS:
 			body_names.sort_custom(self, "_sort_asteroids")
 
-func add_body(_body: Body) -> void:
+func add_body(_body: IVBody) -> void:
 	pass
 
 func add_virtual_body(_body_name: String) -> void:
 	pass
 
-func remove_body(_body: Body) -> void:
+func remove_body(_body: IVBody) -> void:
 	pass
 
 func remove_virtual_body(_body_name: String) -> void:
@@ -86,9 +85,9 @@ func remove_virtual_body(_body_name: String) -> void:
 
 
 # warning-ignore:unused_argument
-func select(body_name: String, selection_manager: SelectionManager) -> void:
+func select(body_name: String, selection_manager: IVSelectionManager) -> void:
 # warning-ignore:unused_variable
-	var body: Body
+	var body: IVBody
 	if bodies_by_name.has(body_name):
 		body = bodies_by_name[body_name]
 	else:

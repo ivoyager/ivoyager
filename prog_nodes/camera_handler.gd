@@ -1,4 +1,4 @@
-# vygr_camera_handler.gd
+# camera_handler.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Handles input for VygrCamera movements and click selection. Remove or replace
+# Handles input for IVCamera movements and click selection. Remove or replace
 # this class if you have a different camera.
 
 extends Node
-class_name VygrCameraHandler
+class_name IVCameraHandler
 
 enum {
 	DRAG_MOVE,
@@ -30,12 +30,12 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
-const VIEW_ZOOM = Enums.ViewType.VIEW_ZOOM
-const VIEW_45 = Enums.ViewType.VIEW_45
-const VIEW_TOP = Enums.ViewType.VIEW_TOP
-const VIEW_OUTWARD = Enums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = Enums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = Enums.ViewType.VIEW_BUMPED_ROTATED
+const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
+const VIEW_45 = IVEnums.ViewType.VIEW_45
+const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
+const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
+const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
@@ -60,13 +60,13 @@ var hybrid_drag_center_zone := 0.2 # for DRAG_PITCH_YAW_ROLL_HYBRID
 var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _settings: Dictionary = Global.settings
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-onready var _projection_surface: ProjectionSurface = Global.program.ProjectionSurface
+var _settings: Dictionary = IVGlobal.settings
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
-var _camera: VygrCamera
-var _selection_manager: SelectionManager
+var _camera: IVCamera
+var _selection_manager: IVSelectionManager
 
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
 onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
@@ -86,11 +86,11 @@ var _suppress_camera_move := false
 
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("run_state_changed", self, "_on_run_state_changed")
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	Global.connect("camera_ready", self, "_connect_camera")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
 	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
 	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
@@ -103,7 +103,7 @@ func _restore_init_state() -> void:
 		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
 		_selection_manager = null
 
-func _connect_camera(camera: VygrCamera) -> void:
+func _connect_camera(camera: IVCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
 	_camera.connect("move_started", self, "_on_camera_move_started")
@@ -117,7 +117,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
-	_selection_manager = Global.program.ProjectGUI.selection_manager
+	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 
 func _on_run_state_changed(is_running: bool) -> void:
@@ -129,7 +129,7 @@ func _on_selection_changed() -> void:
 		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
 				NULL_ROTATION, -1)
 
-func _on_camera_move_started(to_body: Body, is_camera_lock: bool) -> void:
+func _on_camera_move_started(to_body: IVBody, is_camera_lock: bool) -> void:
 	if is_camera_lock:
 		_suppress_camera_move = true
 		_selection_manager.select_body(to_body)
@@ -177,8 +177,8 @@ func _process(delta: float) -> void:
 
 
 func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
-	# We only handle Body as target object for now (this could change).
-	var body := target as Body
+	# We only handle IVBody as target object for now (this could change).
+	var body := target as IVBody
 	if body and _camera:
 		_camera.move_to_body(body)
 

@@ -20,27 +20,27 @@
 # We report key duplicates and process text under the following conditions:
 #
 #   1. Translation is not added by editor (i.e., not in project.godot).
-#   2. Translation path is added to Global.translations.
+#   2. Translation path is added to IVGlobal.translations.
 #   3. Translation are reimported with compress OFF (compress=false in *.import file).
 #
 # Processing modifications:
 #
 #   1. Interpret unicode escape "\uHHHH" (patches Godot issue #38716)
 
-class_name TranslationImporter
+class_name IVTranslationImporter
 
 func _init():
 	_on_init()
 	
 func _on_init() -> void:
 	_load_translations()
-	Global.emit_signal("translations_imported")
-	Global.program.erase("TranslationImporter") # frees self
+	IVGlobal.emit_signal("translations_imported")
+	IVGlobal.program.erase("TranslationImporter") # frees self
 
 func _load_translations() -> void:
 	var load_dict := {}
 	var duplications := []
-	for tr_path in Global.translations:
+	for tr_path in IVGlobal.translations:
 		var translation: Translation = load(tr_path)
 		if translation is PHashTranslation:
 			# Note: PHashTranslation doesn't work in add_translation in export
@@ -73,6 +73,6 @@ func _process_translation(translation: Translation,	load_dict: Dictionary,
 		load_dict[txt_key] = translation
 		var text: String = translation.get_message(txt_key)
 		# Patch for Godot issue #38716 not understanding "\uXXXX".
-		var new_text := StrUtils.c_unescape_patch(text)
+		var new_text := IVUtils.c_unescape_patch(text)
 		if new_text != text:
 			translation.add_message(txt_key, new_text)

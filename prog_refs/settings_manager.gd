@@ -22,8 +22,8 @@
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
 
-extends CacheManager
-class_name SettingsManager
+extends IVCacheManager
+class_name IVSettingsManager
 
 
 func _on_init():
@@ -50,7 +50,7 @@ func _on_init():
 		camera_key_roll_rate = 1.0,
 
 		# UI & HUD display
-		gui_size = Enums.GUISize.GUI_MEDIUM,
+		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
 		viewport_symbols_size = 25,
 		hide_hud_when_close = true, # restart or load required
@@ -64,12 +64,12 @@ func _on_init():
 		asteroid_point_color = Color("008800"),
 		
 		# graphics/performance
-		starmap = Enums.StarmapSize.STARMAP_16K,
+		starmap = IVEnums.StarmapSize.STARMAP_16K,
 	
 		# misc
 		mouse_action_releases_gui_focus = true,
 
-		# cached but not in base OptionsPopup
+		# cached but not in base IVOptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
@@ -80,7 +80,7 @@ func _on_init():
 		}
 	
 	# read-only
-	current = Global.settings
+	current = IVGlobal.settings
 
 func _on_change_current(setting: String) -> void:
-	Global.emit_signal("setting_changed", setting, current[setting])
+	IVGlobal.emit_signal("setting_changed", setting, current[setting])

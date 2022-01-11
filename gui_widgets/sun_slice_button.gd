@@ -30,15 +30,15 @@ extends Button
 
 # private
 onready var _texture_rect: TextureRect = $TextureRect
-onready var _body_registry: BodyRegistry = Global.program.BodyRegistry
-var _selection_manager: SelectionManager # get from ancestor selection_manager
-var _selection_item: SelectionItem
+onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
+var _selection_manager: IVSelectionManager # get from ancestor selection_manager
+var _selection_item: IVSelectionItem
 var _has_mouse := false
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_build")
-	Global.connect("update_gui_needed", self, "_update_selection")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_start_simulator", self, "_build")
+	IVGlobal.connect("update_gui_needed", self, "_update_selection")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
@@ -50,9 +50,9 @@ func _clear() -> void:
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
-	var sun: Body = _body_registry.top_bodies[0]
+	var sun: IVBody = _body_registry.top_bodies[0]
 	_selection_item = _body_registry.get_selection_for_body(sun)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	flat = true

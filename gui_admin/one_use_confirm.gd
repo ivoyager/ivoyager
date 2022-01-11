@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends ConfirmationDialog
-class_name OneUseConfirm
+class_name IVOneUseConfirm
 
 var _stop_sim: bool
 
@@ -32,14 +32,14 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	pause_mode = PAUSE_MODE_PROCESS
 	_stop_sim = stop_sim
 	if _stop_sim:
-		Global.emit_signal("sim_stop_required", self)
-	Global.program.Universe.add_child(self)
-	theme = Global.themes.main
+		IVGlobal.emit_signal("sim_stop_required", self)
+	IVGlobal.program.Universe.add_child(self)
+	theme = IVGlobal.themes.main
 	popup_centered()
 
 func _on_hide() -> void:
 	if _stop_sim:
-		Global.emit_signal("sim_run_allowed", self)
+		IVGlobal.emit_signal("sim_run_allowed", self)
 	queue_free()
 
 func _unhandled_key_input(event: InputEventKey) -> void:

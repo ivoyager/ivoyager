@@ -1,4 +1,4 @@
-# qty_txt_converter.gd
+# quantity_formatter.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# All functions assume sim-standard units defined in UnitDefs.
+# All functions assume sim-standard units defined in IVUnits.
 
-class_name QtyTxtConverter
+class_name IVQuantityFormatter
 
-const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 enum { # case_type
@@ -217,64 +217,64 @@ func number_option(x: float, option_type: int, unit := "", precision := -1, num_
 		PREFIXED_UNIT:
 			return number_prefixed_unit(x, unit, precision, num_type, long_form, case_type)
 		LENGTH_M_KM: # m if x < 1.0 km
-			if x < unit_defs.KM:
+			if x < units.KM:
 				return number_unit(x, "m", precision, num_type, long_form, case_type)
 			return number_unit(x, "km", precision, num_type, long_form, case_type)
 		LENGTH_KM_AU: # au if x > 0.1 au
-			if x < 0.1 * unit_defs.AU:
+			if x < 0.1 * units.AU:
 				return number_unit(x, "km", precision, num_type, long_form, case_type)
 			return number_unit(x, "au", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU:
-			if x < unit_defs.KM:
+			if x < units.KM:
 				return number_unit(x, "m", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.AU:
+			elif x < 0.1 * units.AU:
 				return number_unit(x, "km", precision, num_type, long_form, case_type)
 			return number_unit(x, "au", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU_LY:
-			if x < unit_defs.KM:
+			if x < units.KM:
 				return number_unit(x, "m", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.AU:
+			elif x < 0.1 * units.AU:
 				return number_unit(x, "km", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.LIGHT_YEAR:
+			elif x < 0.1 * units.LIGHT_YEAR:
 				return number_unit(x, "au", precision, num_type, long_form, case_type)
 			return number_unit(x, "ly", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU_PREFIXED_PARSEC:
-			if x < unit_defs.KM:
+			if x < units.KM:
 				return number_unit(x, "m", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.AU:
+			elif x < 0.1 * units.AU:
 				return number_unit(x, "km", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.PARSEC:
+			elif x < 0.1 * units.PARSEC:
 				return number_unit(x, "au", precision, num_type, long_form, case_type)
 			return number_prefixed_unit(x, "pc", precision, num_type, long_form, case_type)
 		MASS_G_KG: # g if < 1.0 kg
-			if x < unit_defs.KG:
+			if x < units.KG:
 				return number_unit(x, "g", precision, num_type, long_form, case_type)
 			return number_unit(x, "kg", precision, num_type, long_form, case_type)
 		MASS_G_KG_T: # g if < 1.0 kg; t if x >= 1000.0 kg 
-			if x < unit_defs.KG:
+			if x < units.KG:
 				return number_unit(x, "g", precision, num_type, long_form, case_type)
-			elif x < unit_defs.TONNE:
+			elif x < units.TONNE:
 				return number_unit(x, "kg", precision, num_type, long_form, case_type)
 			return number_unit(x, "t", precision, num_type, long_form, case_type)
 		MASS_G_KG_PREFIXED_T: # g, kg, t, kt, Mt, Gt, Tt, etc.
-			if x < unit_defs.KG:
+			if x < units.KG:
 				return number_unit(x, "g", precision, num_type, long_form, case_type)
-			elif x < unit_defs.TONNE:
+			elif x < units.TONNE:
 				return number_unit(x, "kg", precision, num_type, long_form, case_type)
 			return number_prefixed_unit(x, "t", precision, num_type, long_form, case_type)
 		TIME_D_Y:
-			if x <= 1000.0 * unit_defs.DAY:
+			if x <= 1000.0 * units.DAY:
 				return number_unit(x, "d", precision, num_type, long_form, case_type)
 			else:
 				return number_unit(x, "y", precision, num_type, long_form, case_type)
 		VELOCITY_MPS_KMPS: # km/s if >= 1.0 km/s
-			if x < unit_defs.KM / unit_defs.SECOND:
+			if x < units.KM / units.SECOND:
 				return number_unit(x, "m/s", precision, num_type, long_form, case_type)
 			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
 		VELOCITY_MPS_KMPS_C: # c if >= 0.1 c
-			if x < unit_defs.KM / unit_defs.SECOND:
+			if x < units.KM / units.SECOND:
 				return number_unit(x, "m/s", precision, num_type, long_form, case_type)
-			elif x < 0.1 * unit_defs.SPEED_OF_LIGHT:
+			elif x < 0.1 * units.SPEED_OF_LIGHT:
 				return number_unit(x, "c", precision, num_type, long_form, case_type)
 			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
 		LATITUDE:
@@ -371,8 +371,8 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 func number_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
-	# MULTIPLIERS and FUNCTIONS in ivoyager/static/unit_defs.gd)
-	x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
+	# MULTIPLIERS and FUNCTIONS in ivoyager/static/units.gd)
+	x = units.conv(x, unit, true, false, _multipliers, _functions)
 	var number_str := number(x, precision, num_type)
 	if long_form and long_forms.has(unit):
 		unit = long_forms[unit]
@@ -396,7 +396,7 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
 	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
 	if unit:
-		x = unit_defs.conv(x, unit, true, false, _multipliers, _functions)
+		x = units.conv(x, unit, true, false, _multipliers, _functions)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
@@ -433,8 +433,8 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 # *****************************************************************************
 
 func _project_init():
-	_multipliers = Global.unit_multipliers
-	_functions = Global.unit_functions
+	_multipliers = IVGlobal.unit_multipliers
+	_functions = IVGlobal.unit_functions
 	_n_prefixes = prefix_symbols.size()
 	assert(_n_prefixes == prefix_names.size())
 	_prefix_offset = prefix_symbols.find("")

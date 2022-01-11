@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Wrap all calls in assert(). E.g., assert(Debug.dlog("something")).
+# Wrap all calls in assert(). E.g., assert(IVDebug.dlog("something")).
 
-class_name Debug
+class_name IVDebug
 
 static func dlog(value) -> bool:
-	var file: File = Global.debug_log
+	var file: File = IVGlobal.debug_log
 	if !file:
 		return true
 	var line := str(value)

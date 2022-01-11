@@ -20,7 +20,7 @@
 # This object is designed for simple display. It could be extended to do more.
 # For I, Voyager, we keep amounts as strings to preserve significant digits.
 
-class_name Composition
+class_name IVComposition
 
 enum CompositionType {BY_WEIGHT, BY_VOLUME}
 

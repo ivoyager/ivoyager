@@ -18,23 +18,23 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name WikiInitializer
+class_name IVWikiInitializer
 
 
 func _init() -> void:
 	_on_init()
 	
 func _on_init() -> void:
-	if !Global.enable_wiki:
+	if !IVGlobal.enable_wiki:
 		return
-	if Global.use_internal_wiki:
-		Global.wiki = "wiki"
+	if IVGlobal.use_internal_wiki:
+		IVGlobal.wiki = "wiki"
 	else:
 		var locale := TranslationServer.get_locale()
-		if Global.wikipedia_locales.has(locale):
-			Global.wiki = locale + ".wikipedia"
+		if IVGlobal.wikipedia_locales.has(locale):
+			IVGlobal.wiki = locale + ".wikipedia"
 		else:
-			Global.wiki = "en.wikipedia"
+			IVGlobal.wiki = "en.wikipedia"
 
 func _project_init() -> void:
-	Global.program.erase("WikiInitializer") # frees self
+	IVGlobal.program.erase("WikiInitializer") # frees self

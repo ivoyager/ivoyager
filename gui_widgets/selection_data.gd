@@ -35,7 +35,7 @@
 
 extends VBoxContainer
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const NULL_ARRAY := []
 const NO_ARGS := []
 
@@ -49,9 +49,9 @@ enum { # data_type
 }
 
 # project vars
-var test_wiki_labels: bool = Global.enable_wiki # can override to false if needed
-var test_wiki_values: bool = Global.enable_wiki # can override to false if needed
-var use_kept_precisions := true # set same as BodyBuilder.keep_real_precisions
+var test_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
+var test_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
+var use_kept_precisions := true # set same as IVBodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var interval := 1.0 # seconds; set 0.0 for no periodic updates
@@ -67,30 +67,30 @@ var section_data := [ # one array element per header
 	# [3] data_type [4] arg or args specific for data_type
 	[ # Orbital Characteristics
 		["LABEL_PERIAPSIS", "body/orbit/get_periapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_APOAPSIS", "body/orbit/get_apoapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_SEMI_MAJOR_AXIS", "body/orbit/get_semimajor_axis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_ECCENTRICITY", "body/orbit/get_eccentricity", NO_ARGS, AS_IS],
 		["LABEL_ORBITAL_PERIOD", "body/orbit/get_orbital_perioid", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.TIME_D_Y, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.TIME_D_Y, "", 5]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/orbit/get_average_orbital_speed", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.VELOCITY_MPS_KMPS, "", 5]],
 		["LABEL_INCLINATION_TO_ECLIPTIC", "body/orbit/get_inclination_to_ecliptic", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 3, IVQuantityFormatter.NUM_DECIMAL_PL]],
 		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 3, IVQuantityFormatter.NUM_DECIMAL_PL]],
 		["LABEL_DIST_GALACTIC_CORE", "body/characteristics/dist_galactic_core", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.LENGTH_KM_AU]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.LENGTH_KM_AU]],
 		["LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "yr"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "yr"]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		["LABEL_VELOCITY_VS_CMB", "body/characteristics/velocity_vs_cmb", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		["LABEL_VELOCITY_VS_NEAR_STARS", "body/characteristics/velocity_vs_near_stars", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		
 		["LABEL_KN_PLANETS", "body/characteristics/n_kn_planets", NO_ARGS, AS_IS],
 		["LABEL_KN_DWF_PLANETS", "body/characteristics/n_kn_dwf_planets", NO_ARGS, AS_IS],
@@ -105,66 +105,66 @@ var section_data := [ # one array element per header
 				TABLE_ROW, "classes"],
 		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
 		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_EQUATORIAL_RADIUS", "body/characteristics/e_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
 				ENUM, "ConfidenceType"],
 		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.MASS_G_KG]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "_g"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "_g"]],
 		["LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.VELOCITY_MPS_KMPS]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.VELOCITY_MPS_KMPS]],
 		["LABEL_MEAN_DENSITY", "body/characteristics/mean_density", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "g/cm^3"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "g/cm^3"]],
 		["LABEL_ALBEDO", "body/characteristics/albedo", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.NUMBER]],
+				QTY_TXT, [IVQuantityFormatter.NUMBER]],
 		["LABEL_SURFACE_TEMP_MIN", "body/characteristics/min_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MEAN", "body/characteristics/surf_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_CENTER", "body/characteristics/temp_center", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_TEMP_PHOTOSPHERE", "body/characteristics/temp_photosphere", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_TEMP_CORONA", "body/characteristics/temp_corona", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
 		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "W"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "W"]],
 		["LABEL_COLOR_B_V", "body/characteristics/color_b_v", NO_ARGS, AS_IS],
 		["LABEL_METALLICITY", "body/characteristics/metallicity", NO_ARGS, AS_IS],
-		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
+		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [IVQuantityFormatter.UNIT, "yr"]],
 		
 		
 		
 		["LABEL_ROTATION_PERIOD", "body/characteristics/rotation_period", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "d", 5]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "d", 5]],
 		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 4]],
 		["LABEL_AXIAL_TILT_TO_ECLIPTIC", "body/get_axial_tilt_to_ecliptic", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 4]],
 	],
 	[ # Atmosphere
 		["LABEL_SURFACE_PRESSURE", "body/characteristics/surf_pres", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "bar"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "bar"]],
 		["LABEL_TRACE_PRESSURE", "body/characteristics/trace_pres", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TRACE_PRESSURE_HIGH", "body/characteristics/trace_pres_high", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TRACE_PRESSURE_LOW", "body/characteristics/trace_pres_low", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TEMP_AT_1_BAR", "body/characteristics/one_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_AT_HALF_BAR", "body/characteristics/half_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_AT_10TH_BAR", "body/characteristics/tenth_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 	],
 	[ # Atmosphere composition
 		["", "body/components/atmosphere", NO_ARGS, OBJECT_LABELS_VALUES],
@@ -189,27 +189,27 @@ var special_processing := {
 	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
-onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
-onready var _table_reader: TableReader = Global.program.TableReader
-var _state: Dictionary = Global.state
-var _enums: Script = Global.enums
-var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki_locale: String = Global.wiki
-var _selection_manager: SelectionManager
+onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
+var _state: Dictionary = IVGlobal.state
+var _enums: Script = IVGlobal.enums
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki_locale: String = IVGlobal.wiki
+var _selection_manager: IVSelectionManager
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
 # currently processing
-var _selection_item: SelectionItem
-var _body: Body
+var _selection_item: IVSelectionItem
+var _body: IVBody
 var _path: String
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_stop_before_quit", self, "_clear_recycled")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
 	_start_interval_updates()
 
 func _clear() -> void:
@@ -235,7 +235,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0
@@ -345,9 +345,9 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	if body_flags:
 		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
-	# get value from SelectionItem or nested object
+	# get value from IVSelectionItem or nested object
 	var method_args: Array = line_data[2]
-	var value = GDUtils.get_path_result(_selection_item, _path, method_args)
+	var value = IVUtils.get_path_result(_selection_item, _path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text and possibly wiki key
@@ -394,15 +394,15 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 					var kept_precision: int = _selection_item.real_precisions.get(_path, -1)
 					if kept_precision != -1:
 						precision = kept_precision
-				var num_type: int = args[3] if n_args > 3 else QtyTxtConverter.NUM_DYNAMIC
+				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC
 				var long_form: bool = args[4] if n_args > 4 else false
-				var case_type: int = args[5] if n_args > 5 else QtyTxtConverter.CASE_MIXED
+				var case_type: int = args[5] if n_args > 5 else IVQuantityFormatter.CASE_MIXED
 				
 #				if _path == "body/characteristics/dist_galactic_core":
 #					print("precision = ", precision)
 #
 				
-				value_txt = _qty_txt_converter.number_option(value, option_type, unit, precision,
+				value_txt = _quantity_formatter.number_option(value, option_type, unit, precision,
 						num_type, long_form, case_type)
 				if precision == 0:
 					value_txt = "~" + value_txt
@@ -423,14 +423,14 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	var label_key: String = line_data[0]
 	if _body:
 		if label_key == "LABEL_PERIAPSIS":
-			var parent := _body.get_parent() as Body
+			var parent := _body.get_parent() as IVBody
 			if parent:
 				if parent.name == "STAR_SUN":
 					label_key = "LABEL_PERIHELION"
 				elif parent.name == "PLANET_EARTH":
 					label_key = "LABEL_PERIGEE"
 		elif label_key == "LABEL_APOAPSIS":
-			var parent := _body.get_parent() as Body
+			var parent := _body.get_parent() as IVBody
 			if parent:
 				if parent.name == "STAR_SUN":
 					label_key = "LABEL_APHELION"
@@ -511,7 +511,7 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
-	Global.emit_signal("open_wiki_requested", wiki_title)
+	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
 
 # special processing functions
 
@@ -520,7 +520,7 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = "~%s d (%s)" % [round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
+			value_txt = "~%s d (%s)" % [round(value / IVUnits.DAY), tr("TXT_CHAOTIC").to_lower()]
 		elif _body.name == "PLANET_MERCURY":
 			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
 		elif _body.is_rotation_retrograde():

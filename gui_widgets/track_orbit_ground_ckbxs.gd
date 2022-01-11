@@ -21,9 +21,9 @@
 
 extends HBoxContainer
 
-const TRACK_NONE = Enums.CameraTrackType.TRACK_NONE
-const TRACK_ORBIT = Enums.CameraTrackType.TRACK_ORBIT
-const TRACK_GROUND = Enums.CameraTrackType.TRACK_GROUND
+const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
+const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
 onready var _orbit_checkbox: CheckBox = $Orbit
 onready var _ground_checkbox: CheckBox = $Ground
@@ -33,7 +33,7 @@ func remove_track_label() -> void:
 	$TrackLabel.queue_free()
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
 	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")

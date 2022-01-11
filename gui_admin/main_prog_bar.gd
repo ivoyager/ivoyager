@@ -23,7 +23,7 @@
 # to allow target object to reset it's progress when called on another thread.
 
 extends ProgressBar
-class_name MainProgBar
+class_name IVMainProgBar
 const SCENE := "res://ivoyager/gui_admin/main_prog_bar.tscn"
 
 var delay_start_frames := 0

@@ -22,11 +22,11 @@
 
 extends Label
 
-onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
+onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 var _camera: Camera
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	
 func _connect_camera(camera: Camera) -> void:
@@ -43,7 +43,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_range_changed(new_range: float) -> void:
-	text = _qty_txt_converter.number_option(new_range, _qty_txt_converter.LENGTH_M_KM_AU, "", 3)
+	text = _quantity_formatter.number_option(new_range, _quantity_formatter.LENGTH_M_KM_AU, "", 3)
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	visible = is_locked

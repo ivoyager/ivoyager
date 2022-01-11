@@ -18,21 +18,21 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name CompositionBuilder
+class_name IVCompositionBuilder
 
 var _Composition_: Script
 
 var item_regex := RegEx.new()
 
 
-func make_from_string(string: String) -> Composition:
-	var composition: Composition = _Composition_.new()
+func make_from_string(string: String) -> IVComposition:
+	var composition: IVComposition = _Composition_.new()
 	composition.components = _parse_simple_list_string(string)
 	return composition
 
 
 func _project_init() -> void:
-	_Composition_ = Global.script_classes._Composition_
+	_Composition_ = IVGlobal.script_classes._Composition_
 	item_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
 #	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
 

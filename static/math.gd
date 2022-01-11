@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Call directly using Math, or better, localize in your class header area.
+# Call directly using IVMath, or better, localize in your class header area.
 # Issue #37529 prevents localization of global class_name to const. Use:
 # const math := preload("res://ivoyager/static/math.gd")
 #
@@ -27,7 +27,7 @@
 #   right_ascension, declination (= longitude, latitude)
 # Elsewhere in code these might be ecliptic2, equatorial2, geographic2, etc.
 
-class_name Math
+class_name IVMath
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const Z_VECTOR := Vector3(0.0, 0.0, 1.0)
@@ -229,7 +229,7 @@ static func get_fov_scaling_factor(fov: float) -> float:
 	# corrections after fov change.
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
 
-# Conversions (use UnitDefs for most conversions!)
+# Conversions (use IVUnits for most conversions!)
 static func srgb2linear(color: Color) -> Color:
 	if color.r <= 0.04045:
 		color.r /= 12.92
