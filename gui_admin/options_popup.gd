@@ -20,8 +20,8 @@
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
 
-extends CachedItemsPopup
-class_name OptionsPopup
+extends IVCachedItemsPopup
+class_name IVOptionsPopup
 
 const DPRINT := true
 

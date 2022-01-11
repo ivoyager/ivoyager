@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends FileDialog
-class_name LoadDialog
+class_name IVLoadDialog
 const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 
 const files := preload("res://ivoyager/static/files.gd")

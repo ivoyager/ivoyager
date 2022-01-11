@@ -22,7 +22,7 @@
 # markup. Someone can generalize if they want.
 
 extends PopupPanel
-class_name CreditsPopup
+class_name IVCreditsPopup
 const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
 
 

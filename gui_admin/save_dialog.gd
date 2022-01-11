@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends FileDialog
-class_name SaveDialog
+class_name IVSaveDialog
 const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 
 const files := preload("res://ivoyager/static/files.gd")

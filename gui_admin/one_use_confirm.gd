@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends ConfirmationDialog
-class_name OneUseConfirm
+class_name IVOneUseConfirm
 
 var _stop_sim: bool
 

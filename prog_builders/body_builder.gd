@@ -84,7 +84,7 @@ var _composition_builder: IVCompositionBuilder
 var _io_manager: IVIOManager
 var _scheduler: IVScheduler
 var _table_reader: IVTableReader
-var _main_prog_bar: MainProgBar
+var _main_prog_bar: IVMainProgBar
 var _Body_: Script
 var _ModelController_: Script
 var _fallback_body_2d: Texture

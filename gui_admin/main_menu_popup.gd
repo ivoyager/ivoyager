@@ -18,11 +18,11 @@
 # limitations under the License.
 # *****************************************************************************
 # Unlike all other popups, this one is always listening for "ui_cancel". Other
-# popups listen only when open and process before MainMenuPopup (due to order
+# popups listen only when open and process before IVMainMenuPopup (due to order
 # in IVProjectBuilder).
 
 extends Popup
-class_name MainMenuPopup
+class_name IVMainMenuPopup
 const SCENE := "res://ivoyager/gui_admin/main_menu_popup.tscn"
 
 var center := true # if false, set $PanelContainer margins

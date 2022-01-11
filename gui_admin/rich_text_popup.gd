@@ -21,7 +21,7 @@
 # BBCode is really limited, but I think improvements are coming in Godot 3.2.
 
 extends PopupPanel
-class_name RichTextPopup
+class_name IVRichTextPopup
 const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
 var stop_sim := true

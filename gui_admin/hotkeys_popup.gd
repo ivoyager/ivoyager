@@ -20,8 +20,8 @@
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
 
-extends CachedItemsPopup
-class_name HotkeysPopup
+extends IVCachedItemsPopup
+class_name IVHotkeysPopup
 
 const DPRINT := true
 
@@ -39,7 +39,7 @@ func open() -> void:
 # *****************************************************************************
 
 func _on_init():
-	# Edit layout directly or use CachedItemsPopup functions at project init.
+	# Edit layout directly or use IVCachedItemsPopup functions at project init.
 	layout = [
 		[ # column 1; each dict is a subpanel
 			{

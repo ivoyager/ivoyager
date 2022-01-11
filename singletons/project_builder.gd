@@ -153,14 +153,14 @@ var gui_nodes := {
 	_ProjectionSurface_ = IVProjectionSurface, # Control ok
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
 	_SplashScreen_ = null, # Project MUST set unless IVGlobal.skip_splash_screen
-	_MainMenuPopup_ = MainMenuPopup, # safe to replace or remove
-	_LoadDialog_ = LoadDialog, # safe to replace or remove
-	_SaveDialog_ = SaveDialog, # safe to replace or remove
-	_OptionsPopup_ = OptionsPopup, # safe to replace or remove
-	_CreditsPopup_ = CreditsPopup, # safe to replace or remove
-	_HotkeysPopup_ = HotkeysPopup, # safe to replace or remove
-	_RichTextPopup_ = RichTextPopup, # safe to replace or remove
-	_MainProgBar_ = MainProgBar, # safe to replace or remove
+	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
+	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
+	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
+	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
+	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
+	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
+	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
+	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
 var procedural_classes := {

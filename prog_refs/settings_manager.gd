@@ -69,7 +69,7 @@ func _on_init():
 		# misc
 		mouse_action_releases_gui_focus = true,
 
-		# cached but not in base OptionsPopup
+		# cached but not in base IVOptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
