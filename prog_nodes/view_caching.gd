@@ -31,7 +31,7 @@ var cache_interval := 0.0 # s; enable (set >0.0) if IVGlobal.disable_quit
 var cache_file_name := "view.vbinary"
 
 var _cache_dir: String = IVGlobal.cache_dir
-var _camera: VygrCamera
+var _camera: IVCamera
 
 func _project_init() -> void:
 	var dir = Directory.new()
@@ -54,7 +54,7 @@ func _clear() -> void:
 	_camera = null
 	stop()
 
-func _set_camera(camera: VygrCamera) -> void:
+func _set_camera(camera: IVCamera) -> void:
 	_camera = camera
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:

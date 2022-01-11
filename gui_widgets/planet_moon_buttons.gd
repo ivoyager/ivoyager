@@ -94,7 +94,7 @@ func _build(_is_new_game: bool) -> void:
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
 	# calculate star "slice" relative size
-	var star: Body = _body_registry.top_bodies[0]
+	var star: IVBody = _body_registry.top_bodies[0]
 	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
 	var size := 0.0
@@ -153,7 +153,7 @@ func _build(_is_new_game: bool) -> void:
 			_add_nav_button(planet_vbox, moon, size)
 		column += 1
 
-func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float) -> void:
+func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
 	button.connect("selected", self, "_change_selection", [button])

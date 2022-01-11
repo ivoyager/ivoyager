@@ -40,7 +40,7 @@ var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var spatial: Spatial # for camera reference
-var body: Body # = spatial if is_body else null
+var body: IVBody # = spatial if is_body else null
 var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
 
 

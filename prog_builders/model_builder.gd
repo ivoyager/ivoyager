@@ -53,7 +53,7 @@ var _n_lazy := 0
 var _recycled_placeholders := [] # unmodified, un-treed Spatials
 
 
-func add_model(body: Body, lazy_init: bool) -> void: # Main thread
+func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_controller := body.model_controller
 	var m_radius := body.get_mean_radius()
@@ -104,7 +104,7 @@ func _clear() -> void:
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
-func _add_placeholder(body: Body, model_controller: ModelController) -> void: # Main thread
+func _add_placeholder(body: IVBody, model_controller: ModelController) -> void: # Main thread
 	var placeholder: Spatial
 	if _recycled_placeholders:
 		placeholder = _recycled_placeholders.pop_back()
@@ -115,7 +115,7 @@ func _add_placeholder(body: Body, model_controller: ModelController) -> void: # 
 	model_controller.set_model(placeholder, false)
 	body.add_child(placeholder)
 
-func _lazy_init(body: Body) -> void: # Main thread
+func _lazy_init(body: IVBody) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
 	var model_controller := body.model_controller
@@ -169,7 +169,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		# FIXME! Should cast shadows, but it doesn't...!
 
 func _finish_model(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var model_controller: ModelController = array[1]
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
@@ -182,7 +182,7 @@ func _finish_model(array: Array) -> void: # Main thread
 	body.add_child(model)
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var model_controller: ModelController = array[1]
 	var model: Spatial = array[5]
 	var placeholder := model_controller.model
@@ -214,7 +214,7 @@ func _lazy_uninit(model: Spatial) -> void: # Main thread
 	model.disconnect("visibility_changed", self, "_record_lazy_event")
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
-	var body: Body = model.get_parent_spatial()
+	var body: IVBody = model.get_parent_spatial()
 	var model_controller := body.model_controller
 	_add_placeholder(body, model_controller)
 	model.queue_free() # it's now up to the Engine what to cache!

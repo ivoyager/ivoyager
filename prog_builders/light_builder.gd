@@ -23,7 +23,7 @@ class_name LightBuilder
 
 var omni_fields := ["omni_range"]
 
-func add_omni_light(body: Body) -> void:
+func add_omni_light(body: IVBody) -> void:
 	var table_reader: TableReader = IVGlobal.program.TableReader
 	if body.get_light_type() == -1:
 		return

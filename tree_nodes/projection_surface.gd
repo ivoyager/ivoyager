@@ -23,7 +23,7 @@
 # All children are freed on exit or game load.
 
 extends Control
-class_name ProjectionSurface
+class_name IVProjectionSurface
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)

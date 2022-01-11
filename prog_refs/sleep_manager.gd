@@ -18,10 +18,10 @@
 # limitations under the License.
 # *****************************************************************************
 # This manager is optional. If present, it will reduce process load by putting
-# to sleep Body instances that we don't need to process. For now, we're mainly
+# to sleep IVBody instances that we don't need to process. For now, we're mainly
 # concerned with planet satellites (e.g., the 150+ moons of Jupiter and Saturn).
 # TODO: Probably as an option, we'll also want to manage sleep for asteroids,
-# which could represent many 1000s of Body instances depending on extension
+# which could represent many 1000s of IVBody instances depending on extension
 # project.
 
 class_name SleepManager
@@ -29,7 +29,7 @@ class_name SleepManager
 const IS_STAR_ORBITING := IVEnums.BodyFlags.IS_STAR_ORBITING
 
 var _camera: Camera
-var _current_star_orbiter: Body
+var _current_star_orbiter: IVBody
 
 
 func _project_init() -> void:
@@ -57,7 +57,7 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	for body in body_registry.top_bodies:
 		_change_sleep_recursive(body, true)
 
-func _on_camera_parent_changed(body: Body) -> void:
+func _on_camera_parent_changed(body: IVBody) -> void:
 	var to_star_orbiter := _get_star_orbiter(body)
 	if _current_star_orbiter == to_star_orbiter:
 		return
@@ -67,14 +67,14 @@ func _on_camera_parent_changed(body: Body) -> void:
 		_change_sleep_recursive(to_star_orbiter, false)
 	_current_star_orbiter = to_star_orbiter
 
-func _get_star_orbiter(body: Body) -> Body:
+func _get_star_orbiter(body: IVBody) -> IVBody:
 	while not body.flags & IS_STAR_ORBITING:
-		body = body.get_parent_spatial() as Body
+		body = body.get_parent_spatial() as IVBody
 		if !body: # reached the top
 			return null
 	return body
 
-func _change_sleep_recursive(body: Body, sleep: bool) -> void:
+func _change_sleep_recursive(body: IVBody, sleep: bool) -> void:
 	for satellite in body.satellites:
 		satellite.set_sleep(sleep)
 		_change_sleep_recursive(satellite, sleep)

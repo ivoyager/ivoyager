@@ -22,10 +22,10 @@ class_name VisualsHelper
 
 const VECTOR2_NULL := Vector2(-INF, -INF)
 
-var camera: Camera # VygrCamera sets
-var camera_fov: float # VygrCamera sets
+var camera: Camera # IVCamera sets
+var camera_fov: float # IVCamera sets
 var veiwport_height: float
-var mouse_position: Vector2 # ProjectionSurface sets
+var mouse_position: Vector2 # IVProjectionSurface sets
 var mouse_target: Object
 var target_dist := INF
 

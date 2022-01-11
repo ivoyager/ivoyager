@@ -48,7 +48,7 @@ var _running_count := 0
 func build() -> void:
 	if IVGlobal.skip_asteroids:
 		return
-	var star: Body = _body_registry.top_bodies[0] # TODO: multistar
+	var star: IVBody = _body_registry.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")
@@ -74,7 +74,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 			_init_hud_points(asteroid_group, group_name)
 
 func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void:
-	var hud_points: HUDPoints = _HUDPoints_.new()
+	var hud_points: IVHUDPoints = _HUDPoints_.new()
 	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
 	_points_manager.register_points_group(hud_points, group_name)
@@ -82,7 +82,7 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	var star := asteroid_group.star
 	star.add_child(hud_points)
 
-func _load_binaries(star: Body) -> void:
+func _load_binaries(star: IVBody) -> void:
 	_running_count = 0
 	var n_asteroid_groups := _table_reader.get_n_rows("asteroid_groups")
 	var row := 0
@@ -97,11 +97,11 @@ func _load_binaries(star: Body) -> void:
 				_load_group_binaries(star, l_group, row, l_point, trojan_of)
 		row += 1
 	
-func _load_group_binaries(star: Body, group: String, table_row: int, l_point := -1,
-		trojan_of: Body = null) -> void:
+func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point := -1,
+		trojan_of: IVBody = null) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
-	var lagrange_point: LPoint
+	var lagrange_point: IVLPoint
 	# make the AsteroidGroup
 	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
 	if !is_trojans:

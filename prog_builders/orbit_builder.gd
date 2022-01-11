@@ -56,7 +56,7 @@ var _table_reader: TableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 
-func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> Orbit:
+func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) -> Orbit:
 	# This is messy because every kind of astronomical body and source uses a
 	# different parameterization of the 6 Keplarian orbital elements. We
 	# translate table data to a common set of 6(+1) elements for sim use:

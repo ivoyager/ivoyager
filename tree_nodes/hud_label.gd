@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Body sets its own HUDLabel visibility during _process().
+# IVBody sets its own IVHUDLabel visibility during _process().
 
 extends Label
-class_name HUDLabel
+class_name IVHUDLabel
 
 var _body_name: String
 var _body_symbol: String

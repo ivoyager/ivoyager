@@ -19,12 +19,12 @@
 # *****************************************************************************
 # Keeps compact data for an asteroid group, which could include >100,000
 # asteroids (Main Belt). Pool*Arrays are used to constitute ArrayMesh's in
-# HUDPoints, and act as source data for Asteroid instances. We can't easily
+# IVHUDPoints, and act as source data for Asteroid instances. We can't easily
 # separate contruction here because we would have to pass-by-value very large
 # pool arrays.
 #
 # TODO: This should be a Node (parented by Sun in our solar system). We should
-# merge this with HUDPoints. Builder stuff currently in both classes should go
+# merge this with IVHUDPoints. Builder stuff currently in both classes should go
 # to a builder class.
 
 extends Reference
@@ -39,8 +39,8 @@ const DPRINT = false
 # ************************** PERSISTED VARS ***********************************
 
 var is_trojans := false
-var star: Body
-var lagrange_point: LPoint # null unless is_trojans
+var star: IVBody
+var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
 
 var max_apoapsis := 0.0
@@ -74,12 +74,12 @@ var _load_count := 0
 
 # ************************** PUBLIC FUNCTIONS *********************************
 
-func init(star_: Body, group_name_: String) -> void:
+func init(star_: IVBody, group_name_: String) -> void:
 	star = star_
 	group_name = group_name_
 	assert(VPRINT and _verbose_reset_mins_maxes() or true)
 
-func init_trojans(star_: Body, group_name_: String, lagrange_point_: LPoint) -> void:
+func init_trojans(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void:
 	star = star_
 	group_name = group_name_
 	is_trojans = true

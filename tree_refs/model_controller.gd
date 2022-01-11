@@ -24,7 +24,7 @@
 # TODO: Hyperion has chaotic rotation & precession. How do we simulate that???
 #
 # For astronomical bodies, we set rotation_vector to match "north". See
-# comments under Body.get_north().
+# comments under IVBody.get_north().
 
 class_name ModelController
 
@@ -33,7 +33,7 @@ const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #375
 signal changed() # public properties; whoever changes must emit
 
 
-# Body
+# IVBody
 var rotation_vector := Vector3(0.0, 0.0, 1.0)
 var rotation_rate := 0.0
 var rotation_at_epoch := 0.0

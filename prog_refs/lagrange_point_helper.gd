@@ -23,12 +23,12 @@ class_name LPointBuilder
 
 var _LPoint_: Script
 
-func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
-	# Any Body can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
+func get_or_make_lagrange_point(body: IVBody, l_point: int) -> IVLPoint:
+	# Any IVBody can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
 	# will never be used, we create them only as needed. The L-point is orbiting
-	# this object's parent Body, but will define its orbital elements
+	# this object's parent IVBody, but will define its orbital elements
 	# in reference to this object.
-	var lagrange_point: LPoint
+	var lagrange_point: IVLPoint
 	if body.lagrange_points:
 		lagrange_point = body.lagrange_points[l_point - 1]
 	else:

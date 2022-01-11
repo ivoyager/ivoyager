@@ -80,7 +80,7 @@ func select(selection_item_: SelectionItem) -> void:
 	_add_history()
 	emit_signal("selection_changed")
 
-func select_body(body_: Body) -> void:
+func select_body(body_: IVBody) -> void:
 	var name := body_.name
 	var selection_item_: SelectionItem = _body_registry.selection_items[name]
 	select(selection_item_)
@@ -95,7 +95,7 @@ func get_texture_2d() -> Texture:
 		return selection_item.texture_2d
 	return null
 
-func get_body() -> Body:
+func get_body() -> IVBody:
 	if selection_item:
 		return selection_item.body
 	return null
@@ -142,7 +142,7 @@ func can_go_up() -> bool:
 	return selection_item and selection_item.up_selection_name
 
 func down() -> void:
-	var body: Body = selection_item.body
+	var body: IVBody = selection_item.body
 	if body and body.satellites:
 		select_body(body.satellites[0])
 
@@ -157,7 +157,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
 			 # TODO: code for multistar systems
-			var sun: Body = _body_registry.top_bodies[0]
+			var sun: IVBody = _body_registry.top_bodies[0]
 			select_body(sun)
 			return
 		SELECTION_PLANET:
@@ -196,7 +196,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			index = array_size - 1
 		elif index >= array_size:
 			index = 0
-		var body: Body = iteration_array[index]
+		var body: IVBody = iteration_array[index]
 		var select := false
 		match selection_type:
 			-1:

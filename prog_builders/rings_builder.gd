@@ -29,7 +29,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var rings_too_far_radius_multiplier := 2e3
 
 
-func add_rings(body: Body) -> void:
+func add_rings(body: IVBody) -> void:
 	var file_prefix: String = body.get_rings_file_prefix()
 	var radius: float = body.get_rings_radius()
 	var north: Vector3 = body.get_north_pole()
@@ -62,7 +62,7 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	array.append(rings)
 
 func _io_finish(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var radius: float = array[2]
 	var rings: MeshInstance = array[4]
 	body.max_aux_graphic_dist = radius * rings_too_far_radius_multiplier

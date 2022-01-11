@@ -21,15 +21,15 @@
 # implementation for a graphic symbol (there is no translation update now). Its
 # real purpose is to provide dynamic_elements for use by objects at Lagrange
 # Points, e.g., trojans. Note that L-point objects are in orbit around their
-# parent Body (e.g., Jupiter Trojans orbit the Sun). A LPoint is itself
-# not a Body but provides a common set of orbital elements that each L-point
+# parent IVBody (e.g., Jupiter Trojans orbit the Sun). A IVLPoint is itself
+# not a IVBody but provides a common set of orbital elements that each L-point
 # object needs to update its own orbital elements.
 #
-# TODO: Decide whether or not this should be a Body! Code & comments elsewhere
+# TODO: Decide whether or not this should be a IVBody! Code & comments elsewhere
 # indicate that this is our intention.
 
 extends Spatial
-class_name LPoint
+class_name IVLPoint
 
 # persisted
 var l_point: int # 1, 2, 3, 4, 5

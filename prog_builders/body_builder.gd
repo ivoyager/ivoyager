@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: We need API to assist building Body not from table data.
+# TODO: We need API to assist building IVBody not from table data.
 #
 # Note: below the huge build_from_table() function, we have functions that
-# build unpersisted parts of Body as they are added to the SceneTree, including
+# build unpersisted parts of IVBody as they are added to the SceneTree, including
 # I/O threaded resource loading. These are rate-limiting for building the solar
 # system. Hence, we use these to determine and signal "system_ready" and to
 # run the progress bar.
@@ -110,10 +110,10 @@ func init_system_build() -> void:
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
 
-func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Main thread!
+func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
 	_table_name = table_name
 	_row = row
-	var body: Body = _Body_.new()
+	var body: IVBody = _Body_.new()
 	body.name = _table_reader.get_string(table_name, "name", row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
@@ -127,7 +127,7 @@ func build_from_table(table_name: String, row: int, parent: Body) -> Body: # Mai
 		_real_precisions = {}
 	return body
 
-func _set_flags_from_table(body: Body, parent: Body) -> void:
+func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
 	var flags := _table_reader.build_flags(0, flag_fields, _table_name, _row)
 	if !parent:
@@ -154,13 +154,13 @@ func _set_flags_from_table(body: Body, parent: Body) -> void:
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 
-func _set_orbit_from_table(body: Body, parent: Body) -> void:
+func _set_orbit_from_table(body: IVBody, parent: IVBody) -> void:
 	if body.flags & BodyFlags.IS_TOP:
 		return
 	var orbit := _orbit_builder.make_orbit_from_data(_table_name, _row, parent)
 	body.set_orbit(orbit)
 
-func _set_characteristics_from_table(body: Body) -> void:
+func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
 	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
@@ -233,7 +233,7 @@ func _set_characteristics_from_table(body: Body) -> void:
 					if keep_real_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 
-func _set_compositions_from_table(body: Body) -> void:
+func _set_compositions_from_table(body: IVBody) -> void:
 	var components := body.components
 	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
 	if atmosphere_composition_str:
@@ -248,7 +248,7 @@ func _set_compositions_from_table(body: Body) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
-func _register(body: Body, parent: Body) -> void:
+func _register(body: IVBody, parent: IVBody) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
 	_body_registry.register_body(body)
@@ -277,12 +277,12 @@ func _project_init() -> void:
 # Build non-persisted after added to tree
 
 func _on_node_added(node: Node) -> void:
-	var body := node as Body
+	var body := node as IVBody
 	if body:
 		_build_unpersisted(body)
 
-func _build_unpersisted(body: Body) -> void: # Main thread
-	# This is after Body._enter_tree(), but before Body._ready()
+func _build_unpersisted(body: IVBody) -> void: # Main thread
+	# This is after IVBody._enter_tree(), but before IVBody._ready()
 	body.min_click_radius = min_click_radius
 	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
@@ -325,7 +325,7 @@ func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 		array.append(texture_slice_2d)
 
 func _io_finish(array: Array) -> void: # Main thread
-	var body: Body = array[0]
+	var body: IVBody = array[0]
 	var is_star: bool = array[2]
 	var texture_2d: Texture = array[3]
 	body.texture_2d = texture_2d

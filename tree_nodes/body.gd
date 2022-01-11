@@ -19,13 +19,13 @@
 # *****************************************************************************
 # Base class for spatial nodes that have an orbit or can be orbited, including
 # non-physical barycenters & lagrange points. The system tree is composed of
-# Body instances from top to bottom, each Body having its orbiting children
-# (other Body instances) and other spatial children that are visuals: Model,
-# Rings, HUDOrbit.
+# IVBody instances from top to bottom, each IVBody having its orbiting children
+# (other IVBody instances) and other spatial children that are visuals: Model,
+# Rings, IVHUDOrbit.
 #
 # Node name is table row name: "PLANET_EARTH", "MOON_EUROPA", etc.
 #
-# TODO?: Make LPoint into Body instances?
+# TODO?: Make IVLPoint into IVBody instances?
 # TODO: barycenters
 #
 # TODO: Make this node "drag-and_drop" as much as possible.
@@ -34,7 +34,7 @@
 # anytime it changes (e.g., impulse from a rocket engine).
 
 extends Spatial
-class_name Body
+class_name IVBody
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -61,8 +61,8 @@ var body_id := -1
 var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
-var satellites := [] # Body instances
-var lagrange_points := [] # LPoint instances (lazy init as needed)
+var satellites := [] # IVBody instances
+var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
@@ -74,8 +74,8 @@ var orbit: Orbit # persisted in components
 var model_controller: ModelController
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
-var hud_orbit: HUDOrbit
-var hud_label: HUDLabel
+var hud_orbit: IVHUDOrbit
+var hud_label: IVHUDLabel
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var min_click_radius: float

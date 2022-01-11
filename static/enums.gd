@@ -98,5 +98,5 @@ enum BodyFlags {
 	# First 5 bytes reserved: 0b1 to 0b10000000 * 0x100000000
 	# It's *probably* safe for extension to use bytes 6 to 8:
 	#     0b1 * 0x10000000000 to 0b10000000 * 0x100000000000000
-	# But more safe to extend Body and add your own flags_ext property!
+	# But more safe to extend IVBody and add your own flags_ext property!
 }

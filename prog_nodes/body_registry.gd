@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Indexes Body and SelectionItem instances. Also holds SelectionItems so they
+# Indexes IVBody and SelectionItem instances. Also holds SelectionItems so they
 # aren't freed (they are References that need at least one reference).
 
 extends Node
@@ -30,7 +30,7 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted - read only
 var top_bodies := []
-var selection_items := {} # indexed by Body.name (e.g., "MOON_EUROPA")
+var selection_items := {} # indexed by IVBody.name (e.g., "MOON_EUROPA")
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
 
@@ -39,14 +39,14 @@ var bodies: Array = IVGlobal.bodies # indexed by body_id
 var bodies_by_name: Dictionary = IVGlobal.bodies_by_name # indexed by name
 var _removed_body_ids := []
 
-func get_body_above_selection(selection_item: SelectionItem) -> Body:
+func get_body_above_selection(selection_item: SelectionItem) -> IVBody:
 	while selection_item.up_selection_name:
 		selection_item = selection_items[selection_item.up_selection_name]
 		if selection_item.body:
 			return selection_item.body
 	return top_bodies[0]
 
-func get_selection_star(selection_item: SelectionItem) -> Body:
+func get_selection_star(selection_item: SelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_STAR:
 		return selection_item.body
 	while selection_item.up_selection_name:
@@ -55,7 +55,7 @@ func get_selection_star(selection_item: SelectionItem) -> Body:
 			return selection_item.body
 	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
-func get_selection_planet(selection_item: SelectionItem) -> Body:
+func get_selection_planet(selection_item: SelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_PLANET:
 		return selection_item.body
 	while selection_item.up_selection_name:
@@ -64,7 +64,7 @@ func get_selection_planet(selection_item: SelectionItem) -> Body:
 			return selection_item.body
 	return null
 
-func get_selection_moon(selection_item: SelectionItem) -> Body:
+func get_selection_moon(selection_item: SelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_MOON:
 		return selection_item.body
 	while selection_item.up_selection_name:
@@ -73,14 +73,14 @@ func get_selection_moon(selection_item: SelectionItem) -> Body:
 			return selection_item.body
 	return null
 
-func get_selection_for_body(body: Body) -> SelectionItem:
+func get_selection_for_body(body: IVBody) -> SelectionItem:
 	var name_ := body.name
 	return selection_items[name_]
 
-func register_top_body(body: Body) -> void:
+func register_top_body(body: IVBody) -> void:
 	top_bodies.append(body)
 
-func register_body(body: Body) -> void:
+func register_body(body: IVBody) -> void:
 	var name_ := body.name
 	assert(!bodies_by_name.has(name_))
 	assert(body.body_id == -1)
@@ -95,7 +95,7 @@ func register_body(body: Body) -> void:
 		bodies.append(body)
 	bodies_by_name[name_] = body
 
-func remove_body(body: Body) -> void:
+func remove_body(body: IVBody) -> void:
 	var name_ := body.name
 	assert(bodies_by_name.has(name_))
 	bodies_by_name.erase(name_)
@@ -132,17 +132,17 @@ func _index_bodies() -> void:
 	var n_bodies := bodies.size()
 	var index := 0
 	while index < n_bodies:
-		var body: Body = bodies[index]
+		var body: IVBody = bodies[index]
 		if !body:
 			_removed_body_ids.append(index)
 		index += 1
 
-func _index_body_recursive(body: Body) -> void:
+func _index_body_recursive(body: IVBody) -> void:
 	var body_id := body.body_id
 	if bodies.size() <= body_id + 1:
 		bodies.resize(body_id + 1)
 	bodies[body_id] = body
 	bodies_by_name[body.name] = body
 	for child in body.get_children():
-		if child is Body:
+		if child is IVBody:
 			_index_body_recursive(child)

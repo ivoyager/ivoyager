@@ -59,7 +59,7 @@ func build_body_selection_items() -> void:
 	for top_body in _body_registry.top_bodies:
 		build_body_selection_items_recursive(top_body, null)
 
-func build_body_selection_items_recursive(body: Body, parent_body: Body) -> void:
+func build_body_selection_items_recursive(body: IVBody, parent_body: IVBody) -> void:
 	# build bottom up to calculate system_radius
 	var system_radius := body.m_radius * min_system_m_radius_multiplier
 	for satellite in body.satellites:
@@ -70,7 +70,7 @@ func build_body_selection_items_recursive(body: Body, parent_body: Body) -> void
 	var selection_item := build_body_selection_item(body, parent_body, system_radius)
 	_body_registry.register_selection_item(selection_item)
 
-func build_body_selection_item(body: Body, parent_body: Body, system_radius: float) -> SelectionItem:
+func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius: float) -> SelectionItem:
 	var selection_item: SelectionItem = _SelectionItem_.new()
 	selection_item.system_radius = system_radius
 	selection_item.is_body = true
@@ -88,7 +88,7 @@ func build_body_selection_item(body: Body, parent_body: Body, system_radius: flo
 		selection_item.up_selection_name = above_bodies_selection_name
 	return selection_item
 
-func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) -> void:
+func set_view_parameters_from_body(selection_item: SelectionItem, body: IVBody) -> void:
 	var use_ground_longitude_offset: float
 	var use_orbit_longitude_offset: float
 	var use_ground_latitude_offset: float

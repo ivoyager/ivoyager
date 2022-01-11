@@ -203,7 +203,7 @@ var _recycled_labels := []
 var _recycled_rtlabels := []
 # currently processing
 var _selection_item: SelectionItem
-var _body: Body
+var _body: IVBody
 var _path: String
 
 func _ready() -> void:
@@ -423,14 +423,14 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	var label_key: String = line_data[0]
 	if _body:
 		if label_key == "LABEL_PERIAPSIS":
-			var parent := _body.get_parent() as Body
+			var parent := _body.get_parent() as IVBody
 			if parent:
 				if parent.name == "STAR_SUN":
 					label_key = "LABEL_PERIHELION"
 				elif parent.name == "PLANET_EARTH":
 					label_key = "LABEL_PERIGEE"
 		elif label_key == "LABEL_APOAPSIS":
-			var parent := _body.get_parent() as Body
+			var parent := _body.get_parent() as IVBody
 			if parent:
 				if parent.name == "STAR_SUN":
 					label_key = "LABEL_APHELION"

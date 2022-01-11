@@ -136,7 +136,7 @@ var prog_nodes := {
 	_Timekeeper_ = Timekeeper,
 	_BodyRegistry_ = BodyRegistry,
 	_InputHandler_ = InputHandler,
-	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using VygrCamera
+	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using IVCamera
 	_HUDsManager_ = HUDsManager,
 	_PointsManager_ = PointsManager,
 	_MinorBodiesManager_ = MinorBodiesManager,
@@ -150,7 +150,7 @@ var gui_nodes := {
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
 	# project init, or 2) reorder children of Universe after project build.
-	_ProjectionSurface_ = ProjectionSurface, # Control ok
+	_ProjectionSurface_ = IVProjectionSurface, # Control ok
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
 	_SplashScreen_ = null, # Project MUST set unless IVGlobal.skip_splash_screen
 	_MainMenuPopup_ = MainMenuPopup, # safe to replace or remove
@@ -168,12 +168,12 @@ var procedural_classes := {
 	# plus all above can be accessed from IVGlobal.script_classes (keys still
 	# have underscores). 
 	# tree_nodes
-	_Body_ = Body,
-	_LPoint_ = LPoint,
-	_Camera_ = VygrCamera, # possible to replace, but look for dependencies
-	_HUDLabel_ = HUDLabel,
-	_HUDOrbit_ = HUDOrbit,
-	_HUDPoints_ = HUDPoints,
+	_Body_ = IVBody,
+	_Camera_ = IVCamera, # possible to replace, but look for dependencies
+	_LPoint_ = IVLPoint,
+	_HUDLabel_ = IVHUDLabel,
+	_HUDOrbit_ = IVHUDOrbit,
+	_HUDPoints_ = IVHUDPoints,
 	# tree_refs
 	_Orbit_ = Orbit,
 	_ModelController_ = ModelController,

@@ -182,9 +182,9 @@ func get_least_real_precision(table_name: String, field_names: Array, row := -1,
 			min_precision = precission
 	return min_precision
 
-func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> Body:
-	# Use for Type = "BODY" to get the Body instance.
-	# Returns null if missing (from table) or no such Body exists in the tree.
+func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> IVBody:
+	# Use for Type = "BODY" to get the IVBody instance.
+	# Returns null if missing (from table) or no such IVBody exists in the tree.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
 	if !column_fields.has(field_name):
@@ -397,7 +397,7 @@ func convert_data(value: String) -> int:
 	assert(_table_rows.has(value), "Unknown table row name " + value)
 	return _table_rows[value]
 
-func convert_body(value: String) -> Body:
+func convert_body(value: String) -> IVBody:
 	if !value:
 		return null
 	return _bodies_by_name.get(value)

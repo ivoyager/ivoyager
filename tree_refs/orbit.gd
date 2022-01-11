@@ -36,7 +36,7 @@
 # TODO: This is by far the largest CPU hog. Here is a data-oriented fix: 
 #   - SystemOrbits will house all orbit data in packed arrays, and have all
 #     existing methods here with leading orbit_id arg.
-#   - Body will have orbit_id only, and call SystemOrbits directly.
+#   - IVBody will have orbit_id only, and call SystemOrbits directly.
 #   - Depreciate this class.
 #   - GDNative version of SystemOrbits
 

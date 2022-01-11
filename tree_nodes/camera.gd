@@ -1,4 +1,4 @@
-# vygr_camera.gd
+# camera.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,11 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# This camera is always locked to a Body and constantly orients itself based on
-# that Body's orbit around its parent. You can replace this with another Camera
-# class, but see:
+# This camera is always locked to a IVBody and constantly orients itself based on
+# that IVBody's ground or orbit around its parent, depending on 'tracking'
+# selection.
+#
+# You can replace this with another Camera class, but see:
 #    IVGlobal signals related to camera (singletons/global.gd)
-#    VygrCameraHandler (prog_nodes/vygr_camera_handler.gd); replace this!
+#    IVCameraHandler (prog_nodes/camera_handler.gd); replace this!
+#    Possibly other dependencies. You'll need to search.
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
 # The first is position relative to either target body's parent or ground
@@ -29,7 +32,7 @@
 # target body w/ north up.
 
 extends Camera
-class_name VygrCamera
+class_name IVCamera
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -171,7 +174,7 @@ func set_start_view(view: View) -> void:
 func add_to_tree() -> void:
 	var start_body_name: String
 	start_body_name = IVGlobal.start_body_name
-	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
+	var start_body: IVBody = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
 func add_move_action(move_action: Vector3) -> void:
@@ -203,7 +206,7 @@ func create_view(use_current_selection := true) -> View:
 			view.view_rotations = view_rotations
 	return view
 
-func move_to_body(to_body: Body, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
@@ -329,7 +332,7 @@ func _ready() -> void:
 
 func _on_ready():
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
-	name = "VygrCamera"
+	name = "IVCamera"
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	IVGlobal.connect("update_gui_needed", self, "_send_gui_refresh")

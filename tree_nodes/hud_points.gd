@@ -21,7 +21,7 @@
 # maintain their own orbit.
 
 extends MeshInstance
-class_name HUDPoints
+class_name IVHUDPoints
 
 const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR

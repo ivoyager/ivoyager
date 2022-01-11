@@ -38,18 +38,18 @@ var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
 
-func add_label(body: Body) -> void:
-	var hud_label: HUDLabel = _HUDLabel_.new()
+func add_label(body: IVBody) -> void:
+	var hud_label: IVHUDLabel = _HUDLabel_.new()
 	hud_label.set_body_name(body.name)
 	hud_label.set_body_symbol(body.get_symbol())
 	hud_label.hide()
 	body.hud_label = hud_label
 	_projection_surface.add_child(hud_label)
 
-func add_orbit(body: Body) -> void:
+func add_orbit(body: IVBody) -> void:
 	if !body.orbit:
 		return
-	var hud_orbit: HUDOrbit = _HUDOrbit_.new()
+	var hud_orbit: IVHUDOrbit = _HUDOrbit_.new()
 	var color: Color
 	var flags := body.flags
 	if flags & IS_MOON and flags & LIKELY_HYDROSTATIC_EQUILIBRIUM:
