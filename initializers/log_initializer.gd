@@ -18,18 +18,18 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name LogInitializer
+class_name IVLogInitializer
 
 
 func _init() -> void:
 	_on_init()
 	
 func _on_init() -> void:
-	if !OS.is_debug_build() or !Global.debug_log_path:
+	if !OS.is_debug_build() or !IVGlobal.debug_log_path:
 		return
 	var debug_log := File.new()
-	if debug_log.open(Global.debug_log_path, File.WRITE) == OK:
-		Global.debug_log = debug_log
+	if debug_log.open(IVGlobal.debug_log_path, File.WRITE) == OK:
+		IVGlobal.debug_log = debug_log
 
 func _project_init() -> void:
-	Global.program.erase("LogInitializer") # frees self
+	IVGlobal.program.erase("LogInitializer") # frees self

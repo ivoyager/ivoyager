@@ -20,7 +20,7 @@
 # Manages visibility of HUD elements.
 
 extends Node
-class_name HUDsManager
+class_name IVHUDsManager
 
 signal show_huds_changed()
 
@@ -54,7 +54,7 @@ func set_show_symbols(is_show: bool) -> void:
 # *****************************************************************************
 
 func _ready():
-	Global.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 
 func _refresh_gui() -> void:
 	emit_signal("show_huds_changed")

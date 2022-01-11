@@ -21,10 +21,10 @@
 
 extends CheckBox
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
-var _state: Dictionary = Global.state
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
+var _state: Dictionary = IVGlobal.state
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 # GUI widget. Parent control should modify is_splash_config, if appropriate.
-# To add buttons, use MainMenuManager (prog_refs/main_menu_manager.gd).
+# To add buttons, use IVMainMenuManager (prog_refs/main_menu_manager.gd).
 # The menu is built on project_builder_finished signal with all buttons
 # disabled. Button state is updated on state_manager_inited signal.
 
@@ -26,17 +26,17 @@ extends VBoxContainer
 
 var is_splash_config := false # splash screen needs to set this
 
-var _state: Dictionary = Global.state
-onready var _state_manager: StateManager = Global.program.StateManager
-onready var _main_menu_manager: MainMenuManager = Global.program.MainMenuManager
+var _state: Dictionary = IVGlobal.state
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 onready var _button_infos: Array = _main_menu_manager.button_infos
 var _is_project_built := false
 
 
 func _ready() -> void:
-	theme = Global.themes.main_menu
-	Global.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
+	theme = IVGlobal.themes.main_menu
+	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
+	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	_main_menu_manager.connect("buttons_changed", self, "_build")
 	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
 	connect("visibility_changed", self, "_grab_button_focus")

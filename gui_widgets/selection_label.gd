@@ -21,13 +21,13 @@
 
 extends Label
 
-var _selection_manager: SelectionManager
+var _selection_manager: IVSelectionManager
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_on_selection_changed()
 

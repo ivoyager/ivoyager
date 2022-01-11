@@ -18,10 +18,10 @@
 # limitations under the License.
 # *****************************************************************************
 
-extends Reference
-class_name SelectionItem
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+class_name IVSelectionItem
+
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
@@ -30,7 +30,7 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 
 # persisted - read only
-var name: String # BodyRegistry guaranties these are unique
+var name: String # IVBodyRegistry guaranties these are unique
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var system_radius := 0.0
@@ -40,7 +40,7 @@ var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var spatial: Spatial # for camera reference
-var body: Body # = spatial if is_body else null
+var body: IVBody # = spatial if is_body else null
 var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
 
 
@@ -55,7 +55,7 @@ var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
 
 # private
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
@@ -94,10 +94,10 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 func get_radius_for_camera() -> float:
 	if is_body:
 		return body.get_mean_radius()
-	return UnitDefs.KM
+	return IVUnits.KM
 
 func _init() -> void:
-	Global.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
+	IVGlobal.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:

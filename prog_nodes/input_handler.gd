@@ -22,27 +22,27 @@
 #
 # I, Voyager handles input in three  ways:
 #   - here as _input()
-#   - VygrCameraHandler as _unhandled_input()
+#   - IVCameraHandler as _unhandled_input()
 #   - various GUIs as _gui_input() or _unhandled_key_input()
 #
 
 extends Node
-class_name InputHandler
+class_name IVInputHandler
 
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 
 onready var _tree: SceneTree = get_tree()
-onready var _huds_manager: HUDsManager = Global.program.HUDsManager
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
-var _selection_manager: SelectionManager
-var _state: Dictionary = Global.state
-var _script_classes: Dictionary = Global.script_classes
-var _disable_pause: bool = Global.disable_pause
-var _allow_time_reversal: bool = Global.allow_time_reversal
-var _allow_dev_tools: bool = Global.allow_dev_tools
-var _allow_fullscreen_toggle: bool = Global.allow_fullscreen_toggle
+onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+var _selection_manager: IVSelectionManager
+var _state: Dictionary = IVGlobal.state
+var _script_classes: Dictionary = IVGlobal.script_classes
+var _disable_pause: bool = IVGlobal.disable_pause
+var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
+var _allow_dev_tools: bool = IVGlobal.allow_dev_tools
+var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _suppressors := []
 
 func suppress(object: Object) -> void:
@@ -62,11 +62,11 @@ func make_action(action: String, is_pressed := true) -> void:
 # *****************************************************************************
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_ready")
-	Global.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_ready")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
 
 func _on_system_ready(_is_new_game: bool) -> void:
-	var project_gui = Global.program.ProjectGUI
+	var project_gui = IVGlobal.program.ProjectGUI
 	if "selection_manager" in project_gui:
 		_selection_manager = project_gui.selection_manager
 
@@ -92,28 +92,28 @@ func _on_input(event: InputEvent) -> void:
 	# troublesome for player modified hotkeys. One way to solve is to match
 	# event.get_scancode_with_modifiers().
 	if event.is_action_pressed("toggle_options"):
-		Global.emit_signal("options_requested")
+		IVGlobal.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
-		Global.emit_signal("hotkeys_requested")
+		IVGlobal.emit_signal("hotkeys_requested")
 	elif event.is_action_pressed("toggle_all_gui"):
-		Global.emit_signal("toggle_show_hide_gui_requested")
+		IVGlobal.emit_signal("toggle_show_hide_gui_requested")
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
 	elif event.is_action_pressed("quick_save"):
-		Global.emit_signal("save_requested", "", true)
+		IVGlobal.emit_signal("save_requested", "", true)
 	elif event.is_action_pressed("save_as"):
-		Global.emit_signal("save_requested", "", false)
+		IVGlobal.emit_signal("save_requested", "", false)
 	elif event.is_action_pressed("quick_load"):
-		Global.emit_signal("load_requested", "", true)
+		IVGlobal.emit_signal("load_requested", "", true)
 	elif event.is_action_pressed("load_game"):
-		Global.emit_signal("load_requested", "", false)
+		IVGlobal.emit_signal("load_requested", "", false)
 	elif event.is_action_pressed("quit"):
-		Global.emit_signal("quit_requested", false)
+		IVGlobal.emit_signal("quit_requested", false)
 	elif event.is_action_pressed("save_quit"):
-		Global.emit_signal("save_quit_requested")
+		IVGlobal.emit_signal("save_quit_requested")
 	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
 		if _state.network_state != IS_CLIENT:
-			Global.emit_signal("pause_requested", false, true)
+			IVGlobal.emit_signal("pause_requested", false, true)
 	elif event.is_action_pressed("incr_speed"):
 		_timekeeper.change_speed(1)
 	elif event.is_action_pressed("decr_speed"):
@@ -135,7 +135,7 @@ func _on_input(event: InputEvent) -> void:
 
 func _test_input_for_debug(event: InputEvent) -> bool:
 	if _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
-		Global.emit_signal("debug_pressed")
+		IVGlobal.emit_signal("debug_pressed")
 	else:
 		return false # input NOT handled!
 	_tree.set_input_as_handled()
@@ -178,15 +178,15 @@ func _input_for_selection_manager(event: InputEvent) -> void:
 
 func _input_for_splash_screen(event: InputEvent) -> void:
 	if event.is_action_pressed("load_game"):
-		Global.emit_signal("load_requested", "", false)
+		IVGlobal.emit_signal("load_requested", "", false)
 	elif event.is_action_pressed("quick_load"):
-		Global.emit_signal("load_requested", "", true)
+		IVGlobal.emit_signal("load_requested", "", true)
 	elif event.is_action_pressed("toggle_options"):
-		Global.emit_signal("options_requested")
+		IVGlobal.emit_signal("options_requested")
 	elif event.is_action_pressed("toggle_hotkeys"):
-		Global.emit_signal("hotkeys_requested")
+		IVGlobal.emit_signal("hotkeys_requested")
 	elif event.is_action_pressed("quit"):
-		Global.emit_signal("quit_requested", true)
+		IVGlobal.emit_signal("quit_requested", true)
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()

@@ -17,11 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: simplify code with the new TableReader class.
+# TODO: simplify code with the new IVTableReader class.
 
-
-extends Reference
-class_name MinorBodiesBuilder
+class_name IVMinorBodiesBuilder
 
 signal minor_bodies_added()
 
@@ -31,24 +29,24 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 	"18.5", "99.9"]
 
 # dependencies
-var _settings: Dictionary = Global.settings
-var _table_reader: TableReader
-var _l_point_builder: LPointBuilder
-var _minor_bodies_manager: MinorBodiesManager
-var _points_manager: PointsManager
-var _body_registry: BodyRegistry
+var _settings: Dictionary = IVGlobal.settings
+var _table_reader: IVTableReader
+var _l_point_builder: IVLagrangePointBuilder
+var _minor_bodies_manager: IVMinorBodiesManager
+var _points_manager: IVPointsManager
+var _body_registry: IVBodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
-var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
+var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 
 var _running_count := 0
 
 
 func build() -> void:
-	if Global.skip_asteroids:
+	if IVGlobal.skip_asteroids:
 		return
-	var star: Body = _body_registry.top_bodies[0] # TODO: multistar
+	var star: IVBody = _body_registry.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")
@@ -56,25 +54,25 @@ func build() -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_table_reader = Global.program.TableReader
-	_l_point_builder = Global.program.LPointBuilder
-	_minor_bodies_manager = Global.program.MinorBodiesManager
-	_points_manager = Global.program.PointsManager
-	_body_registry = Global.program.BodyRegistry
-	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
-	_HUDPoints_ = Global.script_classes._HUDPoints_
-	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_table_reader = IVGlobal.program.TableReader
+	_l_point_builder = IVGlobal.program.LagrangePointBuilder
+	_minor_bodies_manager = IVGlobal.program.MinorBodiesManager
+	_points_manager = IVGlobal.program.PointsManager
+	_body_registry = IVGlobal.program.BodyRegistry
+	_AsteroidGroup_ = IVGlobal.script_classes._AsteroidGroup_
+	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
+	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	var group_refs_by_name := _minor_bodies_manager.group_refs_by_name
 	for group_name in group_refs_by_name:
-		var asteroid_group := group_refs_by_name[group_name] as AsteroidGroup
+		var asteroid_group := group_refs_by_name[group_name] as IVAsteroidGroup
 		if asteroid_group:
 			_init_hud_points(asteroid_group, group_name)
 
-func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void:
-	var hud_points: HUDPoints = _HUDPoints_.new()
+func _init_hud_points(asteroid_group: IVAsteroidGroup, group_name: String) -> void:
+	var hud_points: IVHUDPoints = _HUDPoints_.new()
 	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
 	_points_manager.register_points_group(hud_points, group_name)
@@ -82,7 +80,7 @@ func _init_hud_points(asteroid_group: AsteroidGroup, group_name: String) -> void
 	var star := asteroid_group.star
 	star.add_child(hud_points)
 
-func _load_binaries(star: Body) -> void:
+func _load_binaries(star: IVBody) -> void:
 	_running_count = 0
 	var n_asteroid_groups := _table_reader.get_n_rows("asteroid_groups")
 	var row := 0
@@ -97,13 +95,13 @@ func _load_binaries(star: Body) -> void:
 				_load_group_binaries(star, l_group, row, l_point, trojan_of)
 		row += 1
 	
-func _load_group_binaries(star: Body, group: String, table_row: int, l_point := -1,
-		trojan_of: Body = null) -> void:
+func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point := -1,
+		trojan_of: IVBody = null) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
-	var lagrange_point: LPoint
-	# make the AsteroidGroup
-	var asteroid_group: AsteroidGroup = _AsteroidGroup_.new()
+	var lagrange_point: IVLPoint
+	# make the IVAsteroidGroup
+	var asteroid_group: IVAsteroidGroup = _AsteroidGroup_.new()
 	if !is_trojans:
 		asteroid_group.init(star, group)
 	else:
@@ -122,14 +120,14 @@ func _load_group_binaries(star: Body, group: String, table_row: int, l_point := 
 			break
 	asteroid_group.finish_binary_import()
 	_running_count += asteroid_group.get_number()
-	# register in MinorBodiesManager
+	# register in IVMinorBodiesManager
 	if is_trojans:
 		_minor_bodies_manager.lagrange_points[group] = lagrange_point
 	_minor_bodies_manager.group_refs_by_name[group] = asteroid_group
 	_minor_bodies_manager.group_names.append(group)
 	_minor_bodies_manager.ids_by_group[group] = []
 
-func _load_binary(asteroid_group: AsteroidGroup, group: String, mag_str: String) -> void:
+func _load_binary(asteroid_group: IVAsteroidGroup, group: String, mag_str: String) -> void:
 	var binary_name := group + "." + mag_str + ".vbinary"
 	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
 	var binary := File.new()

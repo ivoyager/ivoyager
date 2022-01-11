@@ -19,24 +19,24 @@
 # *****************************************************************************
 # Base class for spatial nodes that have an orbit or can be orbited, including
 # non-physical barycenters & lagrange points. The system tree is composed of
-# Body instances from top to bottom, each Body having its orbiting children
-# (other Body instances) and other spatial children that are visuals: Model,
-# Rings, HUDOrbit.
+# IVBody instances from top to bottom, each IVBody having its orbiting children
+# (other IVBody instances) and other spatial children that are visuals: Model,
+# Rings, IVHUDOrbit.
 #
 # Node name is table row name: "PLANET_EARTH", "MOON_EUROPA", etc.
 #
-# TODO?: Make LPoint into Body instances?
+# TODO?: Make IVLPoint into IVBody instances?
 # TODO: barycenters
 #
 # TODO: Make this node "drag-and_drop" as much as possible.
 #
-# TODO: Implement network sync! This will mainly involve synching Orbit
+# TODO: Implement network sync! This will mainly involve synching IVOrbit
 # anytime it changes (e.g., impulse from a rocket engine).
 
 extends Spatial
-class_name Body
+class_name IVBody
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const DPRINT := false
 
@@ -44,7 +44,7 @@ const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_Z := IDENTITY_BASIS.z
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR2_NULL := Vector2(-INF, -INF)
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_TOP := BodyFlags.IS_TOP
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
@@ -54,15 +54,15 @@ const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 const IS_AXIS_LOCKED := BodyFlags.IS_AXIS_LOCKED
 const TUMBLES_CHAOTICALLY := BodyFlags.TUMBLES_CHAOTICALLY
 const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
-const IS_SERVER = Enums.NetworkState.IS_SERVER
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 
 # persisted
 var body_id := -1
-var flags := 0 # see Enums.BodyFlags
+var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
-var satellites := [] # Body instances
-var lagrange_points := [] # LPoint instances (lazy init as needed)
+var satellites := [] # IVBody instances
+var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
@@ -70,12 +70,12 @@ const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "com
 
 # public - read-only except builder classes; not persisted unless noted
 var m_radius := NAN # persisted in characteristics
-var orbit: Orbit # persisted in components
-var model_controller: ModelController
+var orbit: IVOrbit # persisted in components
+var model_controller: IVModelController
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
-var hud_orbit: HUDOrbit
-var hud_label: HUDLabel
+var hud_orbit: IVHUDOrbit
+var hud_label: IVHUDLabel
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var min_click_radius: float
@@ -88,12 +88,12 @@ var min_hud_dist: float
 var is_asleep := false
 
 # private
-var _times: Array = Global.times
-var _state: Dictionary = Global.state
-var _ecliptic_rotation: Basis = Global.ecliptic_rotation
+var _times: Array = IVGlobal.times
+var _state: Dictionary = IVGlobal.state
+var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 onready var _tree := get_tree()
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-var _huds_manager: HUDsManager = Global.program.HUDsManager
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
 var _model_visible := false
@@ -165,7 +165,7 @@ func get_north_pole(_time := NAN) -> Vector3:
 	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
 	# However, it is common usage to assign "north" to Pluto and Charon's
 	# positive poles, even though this is south by above definition. We attempt
-	# to sort this out in our data tables and BodyBuilder assigning
+	# to sort this out in our data tables and IVBodyBuilder assigning
 	# model_controller.rotation_vector to a sensible "north" as follows:
 	#  * Star - same as true planet below.
 	#  * True planets and their satellites - use pole pointing in positive z-
@@ -190,7 +190,7 @@ func get_positive_pole(_time := NAN) -> Vector3:
 	return model_controller.rotation_vector
 
 func get_up_pole(_time := NAN) -> Vector3:
-	# See comments in ModelController.
+	# See comments in IVModelController.
 	if !model_controller:
 		return ECLIPTIC_Z
 	return model_controller.rotation_vector
@@ -254,7 +254,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 # *****************************************************************************
 # ivoyager mechanics & private
 
-func set_orbit(orbit_: Orbit) -> void:
+func set_orbit(orbit_: IVOrbit) -> void:
 	if orbit == orbit_:
 		return
 	if orbit:
@@ -276,7 +276,7 @@ func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	else:
 		min_hud_dist = 0.0
 
-func set_sleep(sleep: bool) -> void: # called by SleepManager
+func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 	if flags & NEVER_SLEEP or sleep == is_asleep:
 		return
 	if sleep:
@@ -296,10 +296,10 @@ func set_sleep(sleep: bool) -> void: # called by SleepManager
 		set_process(true) # will show on next _process()
 
 func reset_orientation_and_rotation() -> void:
-	# If we have tidal and/or axis lock, then Orbit determines rotation and/or
-	# orientation. If so, we use Orbit to set values in characteristics and
-	# ModelController. Otherwise, characteristics already holds table-loaded
-	# values (RA, dec, period) which we use to set ModelController values.
+	# If we have tidal and/or axis lock, then IVOrbit determines rotation and/or
+	# orientation. If so, we use IVOrbit to set values in characteristics and
+	# IVModelController. Otherwise, characteristics already holds table-loaded
+	# values (RA, dec, period) which we use to set IVModelController values.
 	# Note: Earth's Moon is the unusual case that is tidally locked but not
 	# axis locked (its axis is tilted to its orbit). Axis of other moons are
 	# not exactly orbit normal but stay within ~1 degree. E.g., see:
@@ -389,11 +389,11 @@ func _on_enter_tree() -> void:
 		orbit.connect("changed", self, "_on_orbit_changed")
 
 func _on_ready() -> void:
-#	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	Global.connect("setting_changed", self, "_settings_listener")
+#	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 
 func _on_time_altered(_previous_time: float) -> void:
@@ -406,7 +406,7 @@ func _on_time_altered(_previous_time: float) -> void:
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	Global.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
 	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _on_process(_delta: float) -> void:

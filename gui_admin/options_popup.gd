@@ -20,14 +20,14 @@
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
 
-extends CachedItemsPopup
-class_name OptionsPopup
+extends IVCachedItemsPopup
+class_name IVOptionsPopup
 
 const DPRINT := true
 
 var setting_enums := {
-	gui_size = Enums.GUISize,
-	starmap = Enums.StarmapSize,
+	gui_size = IVEnums.GUISize,
+	starmap = IVEnums.StarmapSize,
 }
 
 var format_overrides := {
@@ -36,8 +36,8 @@ var format_overrides := {
 	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
 }
 
-var _settings: Dictionary = Global.settings
-onready var _settings_manager: SettingsManager = Global.program.SettingsManager
+var _settings: Dictionary = IVGlobal.settings
+onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 
 
 func open() -> void:
@@ -93,9 +93,9 @@ func _on_init():
 
 func _project_init() -> void:
 	._project_init()
-	Global.connect("options_requested", self, "open")
-	Global.connect("setting_changed", self, "_settings_listener")
-	if !Global.enable_save_load:
+	IVGlobal.connect("options_requested", self, "open")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	if !IVGlobal.enable_save_load:
 		remove_subpanel("LABEL_SAVE_LOAD")
 
 func _on_ready() -> void:
@@ -210,8 +210,8 @@ func _on_cancel_changes() -> void:
 	hide()
 
 func _open_hotkeys() -> void:
-	if !is_connected("popup_hide", Global, "emit_signal"):
-		connect("popup_hide", Global, "emit_signal", ["hotkeys_requested"], CONNECT_ONESHOT)
+	if !is_connected("popup_hide", IVGlobal, "emit_signal"):
+		connect("popup_hide", IVGlobal, "emit_signal", ["hotkeys_requested"], CONNECT_ONESHOT)
 	_on_cancel()
 
 func _settings_listener(setting: String, _value) -> void:

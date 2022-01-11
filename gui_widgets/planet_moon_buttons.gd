@@ -27,8 +27,8 @@
 extends HBoxContainer
 
 
-const IS_PLANET := Enums.BodyFlags.IS_TRUE_PLANET | Enums.BodyFlags.IS_DWARF_PLANET
-const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
+const IS_PLANET := IVEnums.BodyFlags.IS_TRUE_PLANET | IVEnums.BodyFlags.IS_DWARF_PLANET
+const IS_NAVIGATOR_MOON := IVEnums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 const INIT_WIDTH := 560.0
 
@@ -40,16 +40,16 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-onready var _body_registry: BodyRegistry = Global.program.BodyRegistry
-onready var _mouse_only_gui_nav: bool = Global.settings.mouse_only_gui_nav
-var _selection_manager: SelectionManager # get from ancestor selection_manager
+onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
+onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
 var _resize_control_multipliers := {}
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_build")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_start_simulator", self, "_build")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	connect("resized", self, "_resize")
 
 func _clear() -> void:
@@ -89,12 +89,12 @@ func _settings_resize() -> void:
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
 	# calculate star "slice" relative size
-	var star: Body = _body_registry.top_bodies[0]
+	var star: IVBody = _body_registry.top_bodies[0]
 	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
 	var size := 0.0
@@ -153,7 +153,7 @@ func _build(_is_new_game: bool) -> void:
 			_add_nav_button(planet_vbox, moon, size)
 		column += 1
 
-func _add_nav_button(box_container: BoxContainer, body: Body, image_size: float) -> void:
+func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
 	button.connect("selected", self, "_change_selection", [button])
@@ -171,7 +171,7 @@ func _change_selection(selected: Button) -> void:
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"gui_size":
-			if Global.state.is_system_built:
+			if IVGlobal.state.is_system_built:
 				_settings_resize()
 		"mouse_only_gui_nav":
 			_mouse_only_gui_nav = value
@@ -187,16 +187,16 @@ class NavButton extends Button:
 	signal selected()
 	
 	var _has_mouse := false
-	var _selection_item: SelectionItem
-	var _selection_manager: SelectionManager
+	var _selection_item: IVSelectionItem
+	var _selection_manager: IVSelectionManager
 	
-	func _init(selection_item: SelectionItem, selection_manager: SelectionManager,
+	func _init(selection_item: IVSelectionItem, selection_manager: IVSelectionManager,
 			image_size: float) -> void:
 		_selection_item = selection_item
 		_selection_manager = selection_manager
 		toggle_mode = true
 		hint_tooltip = selection_item.name
-		set("custom_fonts/font", Global.fonts.two_pt) # hack to allow smaller button height
+		set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
 		rect_min_size = Vector2(image_size, image_size)
 		flat = true
 		focus_mode = FOCUS_ALL
@@ -211,7 +211,7 @@ class NavButton extends Button:
 		connect("mouse_exited", self, "_on_mouse_exited")
 
 	func _ready():
-		Global.connect("update_gui_needed", self, "_update_selection")
+		IVGlobal.connect("update_gui_needed", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		set_default_cursor_shape(CURSOR_POINTING_HAND)

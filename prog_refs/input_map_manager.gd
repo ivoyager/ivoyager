@@ -19,13 +19,13 @@
 # *****************************************************************************
 # We define InputMap actions here to decouple version control for ivoyager and
 # extensions/addons (i.e., get them out of project.godot), and to allow player
-# modification via HotkeysPopup. Non-default actions are persisted in
+# modification via IVHotkeysPopup. Non-default actions are persisted in
 # <cache_dir>/<cache_file_name> (specified below).
 #
-# This node and HotkeysPopup are unaware of actions defined in project.godot.
+# This node and IVHotkeysPopup are unaware of actions defined in project.godot.
 
-extends CacheManager
-class_name InputMapManager
+extends IVCacheManager
+class_name IVInputMapManager
 
 # project vars
 var reserved_scancodes := [] # user can't overwrite w/ or w/out key mods

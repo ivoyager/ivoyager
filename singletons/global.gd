@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "Global". Global init values should be modified by extension in
+# Singleton "IVGlobal". IVGlobal init values should be modified by extension in
 # their _extension_init() function and treated as immutable thereafter.
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
@@ -29,12 +29,12 @@ const IVOYAGER_VERSION_YMD := 20220110
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
-signal extentions_inited() # ProjectBuilder; nothing else added yet
-signal translations_imported() # TranslationImporter; useful for boot screen
-signal project_objects_instantiated() # ProjectBuilder; Global.program populated
-signal project_inited() # ProjectBuilder; after all _project_init() calls
-signal project_nodes_added() # ProjectBuilder; prog_nodes & gui_nodes added
-signal project_builder_finished() # ProjectBuilder; 1 frame after above
+signal extentions_inited() # IVProjectBuilder; nothing else added yet
+signal translations_imported() # IVTranslationImporter; useful for boot screen
+signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
+signal project_inited() # IVProjectBuilder; after all _project_init() calls
+signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added
+signal project_builder_finished() # IVProjectBuilder; 1 frame after above
 signal state_manager_inited()
 signal world_environment_added() # on Main after I/O thread finishes (slow!)
 signal about_to_build_system_tree()
@@ -54,7 +54,7 @@ signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running) # is_running != SceneTree.paused
 signal sim_pause_changed(is_paused) # Sim pause! (Godot paused = Sim stopped)
-signal network_state_changed(network_state) # Enums.NetworkState
+signal network_state_changed(network_state) # IVEnums.NetworkState
 
 # other broadcasts
 signal setting_changed(setting, value)
@@ -62,7 +62,7 @@ signal camera_ready(camera)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # requests for state change
-signal sim_stop_required(who, network_sync_type, bypass_checks) # see StateManager
+signal sim_stop_required(who, network_sync_type, bypass_checks) # see IVStateManager
 signal sim_run_allowed(who) # all objects requiring stop must allow!
 signal pause_requested(is_pause, is_toggle) # 1st arg ignored if is_toggle
 signal quit_requested(force_quit) # force_quit bypasses dialog
@@ -93,25 +93,25 @@ signal rich_text_popup_requested(header_text, bbcode_text)
 signal open_wiki_requested(wiki_title)
 
 # containers - write authority indicated; safe to keep container reference
-var state := {} # see comments in StateManager; is_inited, is_running, etc.
-var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
-var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
-var program := {} # all objects instantiated by ProjectBuilder 
-var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
+var state := {} # see comments in IVStateManager; is_inited, is_running, etc.
+var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
+var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
+var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
+var program := {} # all objects instantiated by IVProjectBuilder 
+var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
-var settings := {} # SettingsManager
-var table_rows := {} # TableImporter; row number for all row names
-var wiki_titles := {} # TableImporter; en.wikipedia; TODO: non-en & internal
-var themes := {} # ThemeManager
-var fonts := {} # FontManager
-var bodies := [] # BodyRegistry; indexed by body_id
-var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var settings := {} # IVSettingsManager
+var table_rows := {} # IVTableImporter; row number for all row names
+var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
+var themes := {} # IVThemeManager
+var fonts := {} # IVFontManager
+var bodies := [] # IVBodyRegistry; indexed by body_id
+var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
+var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
 
-# project vars - extensions modify via _extension_init(); see ProjectBuilder
+# project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
 var project_version_ymd := 0
@@ -119,7 +119,7 @@ var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
-var enums: Script = Enums # replace w/ extended static class
+var enums: Script = IVEnums # replace w/ extended static class
 var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
@@ -131,7 +131,7 @@ var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 22.0 * UnitDefs.YEAR # from J2000 epoch
+var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
 var home_view_from_user_time_zone := false # get user latitude
@@ -143,11 +143,11 @@ var limit_stops_in_multiplayer := true # overrides most stops
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
 var vertecies_per_orbit: int = 500
-var max_camera_distance: float = 200.0 * UnitDefs.AU
-var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
-var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
-var unit_multipliers := UnitDefs.MULTIPLIERS
-var unit_functions := UnitDefs.FUNCTIONS
+var max_camera_distance: float = 200.0 * IVUnits.AU
+var obliquity_of_the_ecliptic := 23.439 * IVUnits.DEG
+var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
+var unit_multipliers := IVUnits.MULTIPLIERS
+var unit_functions := IVUnits.FUNCTIONS
 var cache_dir := "user://cache"
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
@@ -181,7 +181,7 @@ var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
 
 # We search for assets based on "file_prefix" and sometimes other name elements
-# like "albedo". To build a model, ModelBuilder first looks for an existing
+# like "albedo". To build a model, IVModelBuilder first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
 # a premade generic mesh (e.g., globe_mesh) and search for map textures in
 # maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will
@@ -199,14 +199,14 @@ var asset_paths := {
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
-var asset_paths_for_load := { # loaded into "assets" dict by AssetInitializer
+var asset_paths_for_load := { # loaded into "assets" dict by IVAssetInitializer
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
 }
 var translations := [
-	# Added here so extensions can modify. Note that TranslationImporter will
+	# Added here so extensions can modify. Note that IVTranslationImporter will
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
 	# be kept. So prepend this array if you want to override ivoyager text keys.
@@ -223,8 +223,8 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 # read-only!
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
-var wiki: String # WikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
-var debug_log: File # LogInitializer sets if debug build and debug_log_path
+var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
+var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
 
 func _ready():
 	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,

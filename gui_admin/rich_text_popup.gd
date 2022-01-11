@@ -21,23 +21,23 @@
 # BBCode is really limited, but I think improvements are coming in Godot 3.2.
 
 extends PopupPanel
-class_name RichTextPopup
+class_name IVRichTextPopup
 const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
 var stop_sim := true
 
-var _state_manager: StateManager
+var _state_manager: IVStateManager
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
 
 func _project_init() -> void:
 	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("rich_text_popup_requested", self, "_open")
-	_state_manager = Global.program.StateManager
+	IVGlobal.connect("rich_text_popup_requested", self, "_open")
+	_state_manager = IVGlobal.program.StateManager
 
 func _on_ready() -> void:
-	theme = Global.themes.main
+	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
 	$VBox/Close.connect("pressed", self, "hide")
 

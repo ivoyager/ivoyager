@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Used by HotkeysPopup.
+# Used by IVHotkeysPopup.
 
 extends ConfirmationDialog
 
@@ -27,14 +27,14 @@ var _action: String
 var _index: int
 var _layout: Array
 var _input_event_key: InputEventKey
-var _in_use_color: Color = Global.colors.danger
-var _ok_color: Color = Global.colors.normal
+var _in_use_color: Color = IVGlobal.colors.danger
+var _ok_color: Color = IVGlobal.colors.normal
 onready var _key_label: Label = $HBox/KeyLabel
 onready var _delete: Button = $HBox/Delete
 onready var _ok_button: Button = get_ok()
 onready var _tree := get_tree()
-onready var _input_handler: InputHandler = Global.program.InputHandler
-onready var _input_map_manager: InputMapManager = Global.program.InputMapManager
+onready var _input_handler: IVInputHandler = IVGlobal.program.InputHandler
+onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 
 func open(action: String, index: int, action_label_str: String, key_as_text: String, layout: Array) -> void:
 	_action = action

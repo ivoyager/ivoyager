@@ -17,21 +17,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# [Not added in core ivoyager!] Add to ProjectBuilder.prog_nodes in your
+# [Not added in core ivoyager!] Add to IVProjectBuilder.prog_nodes in your
 # extension file if you want camera view to be cached and restored on start.
 # Used by Planetarium.
 #
-# You only need to set cache_interval if Global.disable_quit = true. Otherwise,
+# You only need to set cache_interval if IVGlobal.disable_quit = true. Otherwise,
 # cache happens on quit and we don't use the Timer function.
 
 extends Timer
-class_name ViewCaching
+class_name IVViewCaching
 
-var cache_interval := 0.0 # s; enable (set >0.0) if Global.disable_quit
+var cache_interval := 0.0 # s; enable (set >0.0) if IVGlobal.disable_quit
 var cache_file_name := "view.vbinary"
 
-var _cache_dir: String = Global.cache_dir
-var _camera: VygrCamera
+var _cache_dir: String = IVGlobal.cache_dir
+var _camera: IVCamera
 
 func _project_init() -> void:
 	var dir = Directory.new()
@@ -43,18 +43,18 @@ func _project_init() -> void:
 		paused = true # start() order won't do anything
 
 func _ready():
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("camera_ready", self, "_set_camera")
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("simulator_started", self, "start")
-	Global.connect("about_to_quit", self, "_cache_now")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("camera_ready", self, "_set_camera")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("simulator_started", self, "start")
+	IVGlobal.connect("about_to_quit", self, "_cache_now")
 	connect("timeout", self, "_cache_now")
 
 func _clear() -> void:
 	_camera = null
 	stop()
 
-func _set_camera(camera: VygrCamera) -> void:
+func _set_camera(camera: IVCamera) -> void:
 	_camera = camera
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
@@ -62,7 +62,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	if !file:
 		return
 	var view_dict: Dictionary = file.get_var()
-	var view: View = dict2inst(view_dict)
+	var view: IVView = dict2inst(view_dict)
 	_camera.set_start_view(view)
 
 func _cache_now() -> void:

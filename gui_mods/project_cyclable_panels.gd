@@ -24,7 +24,7 @@
 # You will need to define initial hotkeys. In your extension file, add code:
 #
 # func _on_project_objects_instantiated() -> void:
-#	var hotkeys_popup: HotkeysPopup = Global.program.HotkeysPopup
+#	var hotkeys_popup: IVHotkeysPopup = IVGlobal.program.HotkeysPopup
 #	hotkeys_popup.add_item("cycle_next_panel", "LABEL_CYCLE_NEXT_PANEL", "LABEL_GUI")
 #	hotkeys_popup.add_item("cycle_prev_panel", "LABEL_CYCLE_PREV_PANEL", "LABEL_GUI")
 #

@@ -22,7 +22,7 @@
 
 extends HBoxContainer
 
-const ViewType := Enums.ViewType
+const ViewType := IVEnums.ViewType
 
 var enable_outward := false # under dev for astronomy; it's pretty crappy now
 var use_small_txt := false
@@ -34,15 +34,15 @@ onready var _top_button: Button = $Top
 onready var _outward_button: Button = $Outward
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_zoom_button.connect("pressed", self, "_on_zoom_pressed")
 	_45_button.connect("pressed", self, "_on_45_pressed")
 	_top_button.connect("pressed", self, "_on_top_pressed")
 	_outward_button.connect("pressed", self, "_on_outward_pressed")
-	if Global.state.is_system_built:
+	if IVGlobal.state.is_system_built:
 		_on_system_built(false)
 	else:
-		Global.connect("system_tree_built_or_loaded", self, "_on_system_built")
+		IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_built")
 	_connect_camera(get_viewport().get_camera())
 
 func _on_system_built(_is_loaded_game: bool) -> void:

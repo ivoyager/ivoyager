@@ -23,26 +23,26 @@
 # be set to something larger than the max number of lazy models likely to be
 # visible at a give time (however, a small value helps on low end systems).
 
-class_name ModelBuilder
+class_name IVModelBuilder
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
-const METER := UnitDefs.METER
+const files := preload("res://ivoyager/static/files.gd")
+const METER := IVUnits.METER
 
 var max_lazy := 20
 var model_too_far_radius_multiplier := 1e3
 var model_tables := ["stars", "planets", "moons"]
 var map_search_suffixes := [".albedo", ".emission"]
-var star_grow_dist := 2.0 * UnitDefs.AU # grow to stay visible at greater range
+var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6
-var star_energy_ref_dist := 3.8e6 * UnitDefs.KM # ~4x radius works
+var star_energy_ref_dist := 3.8e6 * IVUnits.KM # ~4x radius works
 var star_energy_near := 10.0 # energy at _star_energy_ref_dist
 var star_energy_exponent := 1.9
 var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
 # private
-var _times: Array = Global.times
-var _table_reader: TableReader
-var _io_manager: IOManager
+var _times: Array = IVGlobal.times
+var _table_reader: IVTableReader
+var _io_manager: IVIOManager
 var _globe_mesh: SphereMesh
 var _fallback_albedo_map: Texture
 
@@ -53,7 +53,7 @@ var _n_lazy := 0
 var _recycled_placeholders := [] # unmodified, un-treed Spatials
 
 
-func add_model(body: Body, lazy_init: bool) -> void: # Main thread
+func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_controller := body.model_controller
 	var m_radius := body.get_mean_radius()
@@ -71,29 +71,29 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_stop_before_quit", self, "_clear")
-	_table_reader = Global.program.TableReader
-	_io_manager = Global.program.IOManager
-	_globe_mesh = Global.shared_resources.globe_mesh
-	_fallback_albedo_map = Global.assets.fallback_albedo_map
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
+	_table_reader = IVGlobal.program.TableReader
+	_io_manager = IVGlobal.program.IOManager
+	_globe_mesh = IVGlobal.shared_resources.globe_mesh
+	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
 	_preregister_files()
 
 func _preregister_files() -> void:
-	var models_search := Global.models_search
-	var maps_search := Global.maps_search
+	var models_search := IVGlobal.models_search
+	var maps_search := IVGlobal.maps_search
 	for table in model_tables:
 		var n_rows := _table_reader.get_n_rows(table)
 		var row := 0
 		while row < n_rows:
 			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
 			assert(file_prefix)
-			var model_file := FileUtils.find_resource_file(models_search, file_prefix)
+			var model_file := files.find_resource_file(models_search, file_prefix)
 			if model_file:
 				_model_files[file_prefix] = model_file
 			for suffix in map_search_suffixes:
 				var file_match := file_prefix + (suffix as String)
-				var map_file := FileUtils.find_resource_file(maps_search, file_match)
+				var map_file := files.find_resource_file(maps_search, file_match)
 				if map_file:
 					_map_files[file_match] = map_file
 			row += 1
@@ -104,7 +104,7 @@ func _clear() -> void:
 	_lazy_tracker.clear()
 	_n_lazy = 0
 
-func _add_placeholder(body: Body, model_controller: ModelController) -> void: # Main thread
+func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void: # Main thread
 	var placeholder: Spatial
 	if _recycled_placeholders:
 		placeholder = _recycled_placeholders.pop_back()
@@ -115,7 +115,7 @@ func _add_placeholder(body: Body, model_controller: ModelController) -> void: # 
 	model_controller.set_model(placeholder, false)
 	body.add_child(placeholder)
 
-func _lazy_init(body: Body) -> void: # Main thread
+func _lazy_init(body: IVBody) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
 	var model_controller := body.model_controller
@@ -169,8 +169,8 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		# FIXME! Should cast shadows, but it doesn't...!
 
 func _finish_model(array: Array) -> void: # Main thread
-	var body: Body = array[0]
-	var model_controller: ModelController = array[1]
+	var body: IVBody = array[0]
+	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
 	if body.get_light_type() != -1: # is a star
@@ -182,8 +182,8 @@ func _finish_model(array: Array) -> void: # Main thread
 	body.add_child(model)
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
-	var body: Body = array[0]
-	var model_controller: ModelController = array[1]
+	var body: IVBody = array[0]
+	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
 	var placeholder := model_controller.model
 	body.remove_child(placeholder)
@@ -214,7 +214,7 @@ func _lazy_uninit(model: Spatial) -> void: # Main thread
 	model.disconnect("visibility_changed", self, "_record_lazy_event")
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
-	var body: Body = model.get_parent_spatial()
+	var body: IVBody = model.get_parent_spatial()
 	var model_controller := body.model_controller
 	_add_placeholder(body, model_controller)
 	model.queue_free() # it's now up to the Engine what to cache!

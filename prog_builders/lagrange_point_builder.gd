@@ -1,4 +1,4 @@
-# lagramge_point_helper.gd
+# lagrange_point_builder.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,16 +19,16 @@
 # *****************************************************************************
 
 extends Reference
-class_name LPointBuilder
+class_name IVLagrangePointBuilder
 
 var _LPoint_: Script
 
-func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
-	# Any Body can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
+func get_or_make_lagrange_point(body: IVBody, l_point: int) -> IVLPoint:
+	# Any IVBody can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
 	# will never be used, we create them only as needed. The L-point is orbiting
-	# this object's parent Body, but will define its orbital elements
+	# this object's parent IVBody, but will define its orbital elements
 	# in reference to this object.
-	var lagrange_point: LPoint
+	var lagrange_point: IVLPoint
 	if body.lagrange_points:
 		lagrange_point = body.lagrange_points[l_point - 1]
 	else:
@@ -43,4 +43,4 @@ func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
 # *****************************************************************************
 
 func _project_init() -> void:
-	_LPoint_ = Global.script_classes._LPoint_
+	_LPoint_ = IVGlobal.script_classes._LPoint_

@@ -17,10 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains Global.fonts.
+# Maintains IVGlobal.fonts.
 
-extends Reference
-class_name FontManager
+class_name IVFontManager
 
 # project vars - modify on signal project_objects_instantiated
 var fixed_sizes := {
@@ -33,13 +32,13 @@ var gui_medium_sizes := [15, 20, 25]
 var gui_large_sizes := [18, 24, 31] 
 
 # private
-var _fonts: Dictionary = Global.fonts
-var _settings: Dictionary = Global.settings
+var _fonts: Dictionary = IVGlobal.fonts
+var _settings: Dictionary = IVGlobal.settings
 var _primary_font_data: DynamicFontData
 
 func _project_init() -> void:
-	Global.connect("setting_changed", self, "_settings_listener")
-	_primary_font_data = Global.assets.primary_font_data
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	_primary_font_data = IVGlobal.assets.primary_font_data
 	for key in fixed_sizes:
 		_fonts[key] = DynamicFont.new()
 		_fonts[key].font_data = _primary_font_data

@@ -19,45 +19,45 @@
 # *****************************************************************************
 # Builds the star system(s) from data tables & binaries.
 
-class_name SystemBuilder
+class_name IVSystemBuilder
 
 # project vars
 var add_camera := true
 
 # private
-var _table_reader: TableReader
-var _body_builder: BodyBuilder
+var _table_reader: IVTableReader
+var _body_builder: IVBodyBuilder
 
 
 func build_system_tree() -> void:
-	if !Global.state.is_splash_screen:
+	if !IVGlobal.state.is_splash_screen:
 		return
-	var state_manager: StateManager = Global.program.StateManager
-	state_manager.require_stop(state_manager, Enums.NetworkStopSync.BUILD_SYSTEM, true)
-	Global.emit_signal("about_to_build_system_tree")
+	var state_manager: IVStateManager = IVGlobal.program.StateManager
+	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
+	IVGlobal.emit_signal("about_to_build_system_tree")
 	_body_builder.init_system_build()
 	_add_bodies("stars")
 	_add_bodies("planets")
 	_add_bodies("moons")
-	var minor_bodies_builder: MinorBodiesBuilder = Global.program.MinorBodiesBuilder
+	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
-	var selection_builder: SelectionBuilder = Global.program.SelectionBuilder
+	var selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 	selection_builder.build_body_selection_items()
 	if add_camera:
-		var camera_script: Script = Global.script_classes._Camera_
+		var camera_script: Script = IVGlobal.script_classes._Camera_
 		var camera: Camera = camera_script.new()
 		camera.add_to_tree()
-	Global.emit_signal("system_tree_built_or_loaded", true)
+	IVGlobal.emit_signal("system_tree_built_or_loaded", true)
 
 # *****************************************************************************
 
 func _project_init():
-	_table_reader = Global.program.TableReader
-	_body_builder = Global.program.BodyBuilder
-	Global.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
+	_table_reader = IVGlobal.program.TableReader
+	_body_builder = IVGlobal.program.BodyBuilder
+	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 
 func _on_state_manager_inited() -> void:
-	if Global.skip_splash_screen:
+	if IVGlobal.skip_splash_screen:
 		build_system_tree()
 
 func _add_bodies(table_name: String) -> void:
@@ -71,6 +71,6 @@ func _add_bodies(table_name: String) -> void:
 			parent.add_child(body)
 			parent.satellites.append(body)
 		else:
-			var universe: Spatial = Global.program.Universe
+			var universe: Spatial = IVGlobal.program.Universe
 			universe.add_child(body)
 		row += 1

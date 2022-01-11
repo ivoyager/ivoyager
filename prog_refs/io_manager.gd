@@ -19,7 +19,7 @@
 # *****************************************************************************
 # Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,
-# you should not mix use of IOManager with resource loading on the Main thread.
+# you should not mix use of IVIOManager with resource loading on the Main thread.
 #
 # The "io_method" supplied in callback() is handy for doing "I/O-adjacent" work
 # such as processing resources or assembling parts of scene trees. However, all
@@ -30,16 +30,16 @@
 # on the Main thread will occur in future frames, but are guarantied to be in
 # the order added. TEST THIS!!!
 #
-# All methods will work on the Main thread if Global.use_threads == false.
+# All methods will work on the Main thread if IVGlobal.use_threads == false.
 
-class_name IOManager
+class_name IVIOManager
 
 signal finished() # emitted when all I/O jobs completed 
 
 const DPRINT := false
 
-var _use_threads: bool = Global.use_threads
-var _state_manager: StateManager
+var _use_threads: bool = IVGlobal.use_threads
+var _state_manager: IVStateManager
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
@@ -56,7 +56,7 @@ func callback(object: Object, io_method: String, finish_method := "", array := [
 	# Callback to io_method will happen on the I/O thread. Callback to optional
 	# finish_method will happen subsequently on the main thread. The array arg
 	# is optional here but is required in callback methods signatures.
-	# IOManager will emit "finished" on a later frame after all current
+	# IVIOManager will emit "finished" on a later frame after all current
 	# callbacks have been processed. This is guaranteed to be delayed at least
 	# one frame.
 	_job_count += 1
@@ -137,10 +137,10 @@ func _get_var_from_file_finish(array: Array) -> void:
 # Init & private
 
 func _project_init() -> void:
-	_state_manager = Global.program.StateManager
+	_state_manager = IVGlobal.program.StateManager
 	if !_use_threads:
 		return
-	Global.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
