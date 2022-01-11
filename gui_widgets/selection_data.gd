@@ -35,7 +35,7 @@
 
 extends VBoxContainer
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const NULL_ARRAY := []
 const NO_ARGS := []
 
@@ -235,7 +235,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0
@@ -347,7 +347,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 			return NULL_ARRAY
 	# get value from SelectionItem or nested object
 	var method_args: Array = line_data[2]
-	var value = GDUtils.get_path_result(_selection_item, _path, method_args)
+	var value = IVUtils.get_path_result(_selection_item, _path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text and possibly wiki key
@@ -520,7 +520,7 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = "~%s d (%s)" % [round(value / UnitDefs.DAY), tr("TXT_CHAOTIC").to_lower()]
+			value_txt = "~%s d (%s)" % [round(value / IVUnits.DAY), tr("TXT_CHAOTIC").to_lower()]
 		elif _body.name == "PLANET_MERCURY":
 			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
 		elif _body.is_rotation_retrograde():

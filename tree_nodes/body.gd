@@ -36,7 +36,7 @@
 extends Spatial
 class_name Body
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const DPRINT := false
 
@@ -44,7 +44,7 @@ const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_Z := IDENTITY_BASIS.z
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR2_NULL := Vector2(-INF, -INF)
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_TOP := BodyFlags.IS_TOP
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
@@ -54,11 +54,11 @@ const IS_TIDALLY_LOCKED := BodyFlags.IS_TIDALLY_LOCKED
 const IS_AXIS_LOCKED := BodyFlags.IS_AXIS_LOCKED
 const TUMBLES_CHAOTICALLY := BodyFlags.TUMBLES_CHAOTICALLY
 const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
-const IS_SERVER = Enums.NetworkState.IS_SERVER
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 
 # persisted
 var body_id := -1
-var flags := 0 # see Enums.BodyFlags
+var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
 var satellites := [] # Body instances

@@ -23,8 +23,8 @@
 
 class_name RingsBuilder
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const files := preload("res://ivoyager/static/files.gd")
 
 var rings_too_far_radius_multiplier := 2e3
 
@@ -44,7 +44,7 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var radius: float = array[2]
 	var north: Vector3 = array[3]
 	var rings_search: Array = IVGlobal.rings_search
-	var texture: Texture = file_utils.find_and_load_resource(rings_search, file_prefix)
+	var texture: Texture = files.find_and_load_resource(rings_search, file_prefix)
 	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()
 	var rings_material := SpatialMaterial.new()

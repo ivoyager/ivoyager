@@ -30,7 +30,7 @@ extends Node
 class_name InputHandler
 
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 
 onready var _tree: SceneTree = get_tree()

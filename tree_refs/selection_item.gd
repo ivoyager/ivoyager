@@ -21,7 +21,7 @@
 extends Reference
 class_name SelectionItem
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
@@ -94,7 +94,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 func get_radius_for_camera() -> float:
 	if is_body:
 		return body.get_mean_radius()
-	return UnitDefs.KM
+	return IVUnits.KM
 
 func _init() -> void:
 	IVGlobal.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)

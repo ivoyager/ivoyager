@@ -1,4 +1,4 @@
-# unit_defs.gd
+# units.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 # Godot issue #37529 prevents localization of global class_name to const. Use:
-# const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+# const units := preload("res://ivoyager/static/units.gd")
 #
 # This class defines units from base SI units in universe.gd. You should need
 # it only when converting to and from simulator values: e.g., data import,
@@ -29,7 +29,7 @@
 #
 # See additional comments in universe.gd.
 
-class_name UnitDefs
+class_name IVUnits
 
 # SI base units - all sim units derived from these!
 const SECOND := SIBaseUnits.SECOND
@@ -219,8 +219,8 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 		return x / multiplier if to_unit else x * multiplier
 	if functions.has(unit):
 		# TODO 4.0: fix this hack when we have 1st class functions!
-		var unit_defs = load("res://ivoyager/static/unit_defs.gd")
-		return unit_defs.call(functions[unit], x, to_unit)
+		var units = load("res://ivoyager/static/units.gd")
+		return units.call(functions[unit], x, to_unit)
 	assert(false, "Unknown unit symbol: " + unit)
 	return x
 

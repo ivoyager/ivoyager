@@ -29,8 +29,8 @@ class_name View
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 var selection_name := ""
-var track_type := -1 # Enums.CameraTrackType
-var view_type := -1 # Enums.ViewType (may or may not specify var values below)
+var track_type := -1 # IVEnums.CameraTrackType
+var view_type := -1 # IVEnums.ViewType (may or may not specify var values below)
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
 

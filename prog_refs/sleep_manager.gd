@@ -26,7 +26,7 @@
 
 class_name SleepManager
 
-const IS_STAR_ORBITING := Enums.BodyFlags.IS_STAR_ORBITING
+const IS_STAR_ORBITING := IVEnums.BodyFlags.IS_STAR_ORBITING
 
 var _camera: Camera
 var _current_star_orbiter: Body

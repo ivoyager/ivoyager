@@ -32,7 +32,7 @@
 #  Default (optional; all types except X): If cell is blank, it will be
 #    replaced with this value.
 #  Units (optional; REAL only!). Reals will be converted from provided units
-#    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS or
+#    symbol. The symbol must be present in IVUnits.MULTIPLIERS or FUNCTIONS or
 #    replacement dicts specified in IVGlobal.unit_multipliers, .unit_functions.
 #
 # False is represented internally as "", so bool(internal_value) will give
@@ -40,7 +40,7 @@
 
 class_name TableImporter
 
-const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 const DPRINT := false
@@ -230,7 +230,7 @@ func _process_cell_value() -> void:
 		_cell = _cell.replace("E", "e")
 	elif _data_type == "STRING":
 		_cell = _cell.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
-		_cell = StrUtils.c_unescape_patch(_cell) # handles "\uXXXX"
+		_cell = IVUtils.c_unescape_patch(_cell) # handles "\uXXXX"
 
 func _data_types_test() -> bool:
 	for data_type in _data_types:
@@ -240,7 +240,7 @@ func _data_types_test() -> bool:
 func _units_test() -> bool:
 	for unit in _units:
 		if unit:
-			assert(unit_defs.is_valid_unit(unit, true, IVGlobal.unit_multipliers, IVGlobal.unit_functions),
+			assert(units.is_valid_unit(unit, true, IVGlobal.unit_multipliers, IVGlobal.unit_functions),
 					"Unkown unit '" + unit + "' in " + _path)
 	return true
 

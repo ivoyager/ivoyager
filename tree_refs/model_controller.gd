@@ -28,7 +28,7 @@
 
 class_name ModelController
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 signal changed() # public properties; whoever changes must emit
 

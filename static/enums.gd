@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name Enums
+class_name IVEnums
 
 enum NetworkState {
 	NO_NETWORK,

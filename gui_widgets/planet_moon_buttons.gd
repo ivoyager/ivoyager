@@ -27,8 +27,8 @@
 extends HBoxContainer
 
 
-const IS_PLANET := Enums.BodyFlags.IS_TRUE_PLANET | Enums.BodyFlags.IS_DWARF_PLANET
-const IS_NAVIGATOR_MOON := Enums.BodyFlags.IS_NAVIGATOR_MOON
+const IS_PLANET := IVEnums.BodyFlags.IS_TRUE_PLANET | IVEnums.BodyFlags.IS_DWARF_PLANET
+const IS_NAVIGATOR_MOON := IVEnums.BodyFlags.IS_NAVIGATOR_MOON
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 const INIT_WIDTH := 560.0
 
@@ -89,7 +89,7 @@ func _settings_resize() -> void:
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)

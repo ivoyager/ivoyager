@@ -18,7 +18,8 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name GUIUtils
+class_name IVGUIUtils
+
 
 static func get_selection_manager(control: Control) -> SelectionManager:
 	var ancestor: Node = control.get_parent()

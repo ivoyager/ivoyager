@@ -23,7 +23,7 @@
 extends Node
 class_name BodyRegistry
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_MOON := BodyFlags.IS_MOON
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET

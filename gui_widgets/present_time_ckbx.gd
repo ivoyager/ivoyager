@@ -21,7 +21,7 @@
 
 extends CheckBox
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper

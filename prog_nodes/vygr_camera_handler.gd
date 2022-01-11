@@ -30,12 +30,12 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
-const VIEW_ZOOM = Enums.ViewType.VIEW_ZOOM
-const VIEW_45 = Enums.ViewType.VIEW_45
-const VIEW_TOP = Enums.ViewType.VIEW_TOP
-const VIEW_OUTWARD = Enums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = Enums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = Enums.ViewType.VIEW_BUMPED_ROTATED
+const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
+const VIEW_45 = IVEnums.ViewType.VIEW_45
+const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
+const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
+const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)

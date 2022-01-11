@@ -1,4 +1,4 @@
-# file_utils.gd
+# files.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,9 +19,9 @@
 # *****************************************************************************
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
-# const file_utils := preload("res://ivoyager/static/file_utils.gd")
+# const files := preload("res://ivoyager/static/files.gd")
 
-class_name FileUtils
+class_name IVFiles
 
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:

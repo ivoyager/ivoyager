@@ -24,8 +24,8 @@
 # https://en.wikipedia.org/wiki/Julian_day.
 #
 # "time" here always refers to sim time, which runs in seconds (assuming
-# UnitDefs.SECOND = 1.0) from J2000 epoch, which was at 2000-01-01 12:00.
-# "j2000days" is just time / UnitDefs.DAY. We avoid using Julian Day for
+# IVUnits.SECOND = 1.0) from J2000 epoch, which was at 2000-01-01 12:00.
+# "j2000days" is just time / IVUnits.DAY. We avoid using Julian Day for
 # float calculations due to precision loss.
 #
 # In priciple, "UT", "UT1", etc., are all approximations (in some way) of solar
@@ -49,25 +49,25 @@ signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_secon
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
 
-const SECOND := UnitDefs.SECOND # sim_time conversion
-const MINUTE := UnitDefs.MINUTE
-const HOUR := UnitDefs.HOUR
-const DAY := UnitDefs.DAY
+const SECOND := IVUnits.SECOND # sim_time conversion
+const MINUTE := IVUnits.MINUTE
+const HOUR := IVUnits.HOUR
+const DAY := IVUnits.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const NO_NETWORK = Enums.NetworkState.NO_NETWORK
-const IS_SERVER = Enums.NetworkState.IS_SERVER
-const IS_CLIENT = Enums.NetworkState.IS_CLIENT
+const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
+const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
 
 # project vars
 var sync_tolerance := 0.2 # engine time (seconds)
 var start_real_world_time := false # true overrides other start settings
 var speeds := [ # sim_units / delta
-		UnitDefs.SECOND, # real-time if UnitDefs.SECOND = 1.0
-		UnitDefs.MINUTE,
-		UnitDefs.HOUR,
-		UnitDefs.DAY,
-		7.0 * UnitDefs.DAY,
-		30.4375 * UnitDefs.DAY,
+		IVUnits.SECOND, # real-time if IVUnits.SECOND = 1.0
+		IVUnits.MINUTE,
+		IVUnits.HOUR,
+		IVUnits.DAY,
+		7.0 * IVUnits.DAY,
+		30.4375 * IVUnits.DAY,
 ]
 var speed_names := [
 	"GAME_SPEED_REAL_TIME",

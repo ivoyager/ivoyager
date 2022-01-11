@@ -21,7 +21,7 @@
 
 extends HBoxContainer
 
-const IS_CLIENT := Enums.NetworkState.IS_CLIENT
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 onready var _tree: SceneTree = get_tree()

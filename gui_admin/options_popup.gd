@@ -26,8 +26,8 @@ class_name OptionsPopup
 const DPRINT := true
 
 var setting_enums := {
-	gui_size = Enums.GUISize,
-	starmap = Enums.StarmapSize,
+	gui_size = IVEnums.GUISize,
+	starmap = IVEnums.StarmapSize,
 }
 
 var format_overrides := {

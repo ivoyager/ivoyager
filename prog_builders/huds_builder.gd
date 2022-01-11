@@ -20,9 +20,8 @@
 
 class_name HUDsBuilder
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON

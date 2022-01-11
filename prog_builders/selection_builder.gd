@@ -21,7 +21,7 @@
 extends Reference
 class_name SelectionBuilder
 
-const BodyFlags := Enums.BodyFlags
+const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
 const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
@@ -46,7 +46,7 @@ var latitude_offset_top := deg2rad(85.0)
 var latitude_offset_45 := deg2rad(45.0)
 var min_system_m_radius_multiplier := 15.0
 var min_view_dist_radius_multiplier := 1.65
-var zoom_divisor := 1.5e-4 * UnitDefs.KM # bigger makes zoom closer
+var zoom_divisor := 1.5e-4 * IVUnits.KM # bigger makes zoom closer
 var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
 var system_radius_multiplier_top := 2.5
 
@@ -109,7 +109,7 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 		use_orbit_latitude_offset = orbit_latitude_offset_moon
 	var m_radius := body.get_mean_radius()
 	selection_item.view_min_distance = m_radius * min_view_dist_radius_multiplier
-	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * UnitDefs.KM
+	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * IVUnits.KM
 	var view_dist_top := selection_item.system_radius * system_radius_multiplier_top * 50.0 # /fov
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
 	match body.name:

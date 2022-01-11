@@ -21,9 +21,9 @@
 
 extends HBoxContainer
 
-const TRACK_NONE = Enums.CameraTrackType.TRACK_NONE
-const TRACK_ORBIT = Enums.CameraTrackType.TRACK_ORBIT
-const TRACK_GROUND = Enums.CameraTrackType.TRACK_GROUND
+const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
+const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
 onready var _orbit_checkbox: CheckBox = $Orbit
 onready var _ground_checkbox: CheckBox = $Ground

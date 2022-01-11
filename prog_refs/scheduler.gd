@@ -33,7 +33,7 @@ var _is_reversed := false
 
 func interval_connect(interval: float, target: Object, method: String, binds := [],
 		flags := 0) -> void:
-	# E.g., for 2-day repeating signal, use interval = 2.0 * UnitDefs.DAY.
+	# E.g., for 2-day repeating signal, use interval = 2.0 * IVUnits.DAY.
 	# Note: Scheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	assert(interval > 0.0)

@@ -22,7 +22,7 @@
 
 class_name TableReader
 
-const unit_defs := preload("res://ivoyager/static/unit_defs.gd")
+const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
@@ -388,7 +388,7 @@ func convert_real(value: String, unit := "") -> float:
 	value = value.lstrip("~")
 	var real := float(value)
 	if unit:
-		real = unit_defs.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
+		real = units.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
 	return float(real)
 
 func convert_data(value: String) -> int:

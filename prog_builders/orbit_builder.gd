@@ -20,7 +20,7 @@
 
 class_name OrbitBuilder
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const DPRINT := false
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001

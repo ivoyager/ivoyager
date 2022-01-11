@@ -36,7 +36,7 @@ func _ready():
 	size_flags_horizontal = SIZE_EXPAND_FILL
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	if use_selection_as_text:
 		_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 		_on_selection_changed()

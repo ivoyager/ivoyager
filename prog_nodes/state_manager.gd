@@ -28,7 +28,7 @@
 #   is_quitting: bool
 #   is_loaded_game: bool - this node & SaveManager
 #   last_save_path: String - this node & SaveManager
-#   network_state: Enums.NetworkState - if exists, NetworkLobby also writes
+#   network_state: IVEnums.NetworkState - if exists, NetworkLobby also writes
 #
 # Note: SceneTree.paused is set only when simulatator "stopped". Simulator
 # "paused" is managed by Timekeeper and works more like a game speed (process
@@ -51,15 +51,14 @@ signal run_threads_allowed() # ok to start threads that affect gamestate
 signal run_threads_must_stop() # finish threads that affect gamestate
 signal threads_finished() # all blocking threads removed
 signal client_is_dropping_out(is_exit)
-signal server_about_to_stop(network_sync_type) # Enums.NetworkStopSync; server only
+signal server_about_to_stop(network_sync_type) # IVEnums.NetworkStopSync; server only
 signal server_about_to_run() # server only
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
 const DPRINT := false
-const NO_NETWORK = Enums.NetworkState.NO_NETWORK
-const IS_SERVER = Enums.NetworkState.IS_SERVER
-const IS_CLIENT = Enums.NetworkState.IS_CLIENT
-const NetworkStopSync = Enums.NetworkStopSync
+const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
+const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
+const NetworkStopSync = IVEnums.NetworkStopSync
 
 
 # public - read-only!

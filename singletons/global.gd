@@ -54,7 +54,7 @@ signal game_load_started()
 signal game_load_finished()
 signal run_state_changed(is_running) # is_running != SceneTree.paused
 signal sim_pause_changed(is_paused) # Sim pause! (Godot paused = Sim stopped)
-signal network_state_changed(network_state) # Enums.NetworkState
+signal network_state_changed(network_state) # IVEnums.NetworkState
 
 # other broadcasts
 signal setting_changed(setting, value)
@@ -119,7 +119,7 @@ var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
-var enums: Script = Enums # replace w/ extended static class
+var enums: Script = IVEnums # replace w/ extended static class
 var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
@@ -131,7 +131,7 @@ var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
-var start_time: float = 22.0 * UnitDefs.YEAR # from J2000 epoch
+var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
 var home_view_from_user_time_zone := false # get user latitude
@@ -143,11 +143,11 @@ var limit_stops_in_multiplayer := true # overrides most stops
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
 var vertecies_per_orbit: int = 500
-var max_camera_distance: float = 200.0 * UnitDefs.AU
-var obliquity_of_the_ecliptic := 23.439 * UnitDefs.DEG
-var ecliptic_rotation := Math.get_x_rotation_matrix(obliquity_of_the_ecliptic)
-var unit_multipliers := UnitDefs.MULTIPLIERS
-var unit_functions := UnitDefs.FUNCTIONS
+var max_camera_distance: float = 200.0 * IVUnits.AU
+var obliquity_of_the_ecliptic := 23.439 * IVUnits.DEG
+var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
+var unit_multipliers := IVUnits.MULTIPLIERS
+var unit_functions := IVUnits.FUNCTIONS
 var cache_dir := "user://cache"
 
 var colors := { # user settable colors in program_refs/settings_manager.gd

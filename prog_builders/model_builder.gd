@@ -25,16 +25,16 @@
 
 class_name ModelBuilder
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
-const METER := UnitDefs.METER
+const files := preload("res://ivoyager/static/files.gd")
+const METER := IVUnits.METER
 
 var max_lazy := 20
 var model_too_far_radius_multiplier := 1e3
 var model_tables := ["stars", "planets", "moons"]
 var map_search_suffixes := [".albedo", ".emission"]
-var star_grow_dist := 2.0 * UnitDefs.AU # grow to stay visible at greater range
+var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6
-var star_energy_ref_dist := 3.8e6 * UnitDefs.KM # ~4x radius works
+var star_energy_ref_dist := 3.8e6 * IVUnits.KM # ~4x radius works
 var star_energy_near := 10.0 # energy at _star_energy_ref_dist
 var star_energy_exponent := 1.9
 var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
@@ -88,12 +88,12 @@ func _preregister_files() -> void:
 		while row < n_rows:
 			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
 			assert(file_prefix)
-			var model_file := FileUtils.find_resource_file(models_search, file_prefix)
+			var model_file := files.find_resource_file(models_search, file_prefix)
 			if model_file:
 				_model_files[file_prefix] = model_file
 			for suffix in map_search_suffixes:
 				var file_match := file_prefix + (suffix as String)
-				var map_file := FileUtils.find_resource_file(maps_search, file_match)
+				var map_file := files.find_resource_file(maps_search, file_match)
 				if map_file:
 					_map_files[file_match] = map_file
 			row += 1

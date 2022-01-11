@@ -73,6 +73,6 @@ func _process_translation(translation: Translation,	load_dict: Dictionary,
 		load_dict[txt_key] = translation
 		var text: String = translation.get_message(txt_key)
 		# Patch for Godot issue #38716 not understanding "\uXXXX".
-		var new_text := StrUtils.c_unescape_patch(text)
+		var new_text := IVUtils.c_unescape_patch(text)
 		if new_text != text:
 			translation.add_message(txt_key, new_text)

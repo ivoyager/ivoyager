@@ -22,7 +22,7 @@
 
 extends HBoxContainer
 
-const ViewType := Enums.ViewType
+const ViewType := IVEnums.ViewType
 
 var enable_outward := false # under dev for astronomy; it's pretty crappy now
 var use_small_txt := false

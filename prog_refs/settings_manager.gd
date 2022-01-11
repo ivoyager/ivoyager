@@ -50,7 +50,7 @@ func _on_init():
 		camera_key_roll_rate = 1.0,
 
 		# UI & HUD display
-		gui_size = Enums.GUISize.GUI_MEDIUM,
+		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
 		viewport_symbols_size = 25,
 		hide_hud_when_close = true, # restart or load required
@@ -64,7 +64,7 @@ func _on_init():
 		asteroid_point_color = Color("008800"),
 		
 		# graphics/performance
-		starmap = Enums.StarmapSize.STARMAP_16K,
+		starmap = IVEnums.StarmapSize.STARMAP_16K,
 	
 		# misc
 		mouse_action_releases_gui_focus = true,

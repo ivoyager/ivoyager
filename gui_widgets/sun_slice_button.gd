@@ -50,7 +50,7 @@ func _clear() -> void:
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	assert(_selection_manager)
 	var sun: Body = _body_registry.top_bodies[0]
 	_selection_item = _body_registry.get_selection_for_body(sun)

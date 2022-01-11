@@ -28,12 +28,12 @@
 extends Node
 class_name SaveManager
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const files := preload("res://ivoyager/static/files.gd")
 const DPRINT := false
-const NO_NETWORK = Enums.NetworkState.NO_NETWORK
-const IS_SERVER = Enums.NetworkState.IS_SERVER
-const IS_CLIENT = Enums.NetworkState.IS_CLIENT
-const NetworkStopSync = Enums.NetworkStopSync
+const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
+const IS_SERVER = IVEnums.NetworkState.IS_SERVER
+const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
+const NetworkStopSync = IVEnums.NetworkStopSync
 
 # persistence - values will be replaced by file values on game load!
 var project_version: String = IVGlobal.project_version
@@ -68,14 +68,14 @@ func save_quit() -> void:
 func quick_save() -> bool:
 	if _state.network_state == IS_CLIENT:
 		return false
-	if !_has_been_saved or !_settings.save_base_name or !file_utils.is_valid_dir(_settings.save_dir):
+	if !_has_been_saved or !_settings.save_base_name or !files.is_valid_dir(_settings.save_dir):
 		IVGlobal.emit_signal("save_dialog_requested")
 		return false
 	IVGlobal.emit_signal("close_main_menu_requested")
 	var date_string := ""
 	if _settings.append_date_to_save:
 		date_string = _timekeeper.get_current_date_for_file()
-	var path := file_utils.get_save_path(_settings.save_dir, _settings.save_base_name,
+	var path := files.get_save_path(_settings.save_dir, _settings.save_base_name,
 			date_string, true)
 	save_game(path)
 	return true
@@ -91,8 +91,8 @@ func save_game(path := "") -> void:
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
 	yield(_state_manager, "threads_finished")
 	IVGlobal.emit_signal("game_save_started")
-	assert(Debug.dlog("Tree status before save..."))
-	assert(Debug.dlog(_save_builder.debug_log(_universe)))
+	assert(IVDebug.dlog("Tree status before save..."))
+	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
 	var gamesave := _save_builder.generate_gamesave(_universe)
 	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
 	IVGlobal.emit_signal("game_save_finished")
@@ -165,8 +165,8 @@ func _load_callback(gamesave: Array, err: int) -> void:
 func _simulator_started_after_load() -> void:
 	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
 	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
-	assert(Debug.dlog("Tree status after load & simulator started..."))
-	assert(Debug.dlog(_save_builder.debug_log(_universe)))
+	assert(IVDebug.dlog("Tree status after load & simulator started..."))
+	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
 
 # *****************************************************************************
 

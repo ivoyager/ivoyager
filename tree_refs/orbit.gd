@@ -31,7 +31,7 @@
 # calculating and applying changes to elements_at_epoch (and then updating
 # endongenous purturbations if needed based on new orbital configuration). 
 #
-# See static/unit_defs.gd for base units.
+# See static/units.gd for base units.
 #
 # TODO: This is by far the largest CPU hog. Here is a data-oriented fix: 
 #   - SystemOrbits will house all orbit data in packed arrays, and have all
@@ -42,17 +42,17 @@
 
 class_name Orbit
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 signal changed(is_scheduled) # is_scheduled == false triggers network sync
 
 const DPRINT := false
 const PIdiv2 := PI / 2.0
 const ECLIPTIC_UP := Vector3(0.0, 0.0, 1.0)
-const T_3000BCE := -50.0 * UnitDefs.CENTURY # 3000 BCE
-const T_3000CE := 10.0 * UnitDefs.CENTURY # 3000 CE
+const T_3000BCE := -50.0 * IVUnits.CENTURY # 3000 BCE
+const T_3000CE := 10.0 * IVUnits.CENTURY # 3000 CE
 const UPDATE_TOLERANCE := 0.0002
-const UPDATE_LIMITER := UnitDefs.HOUR # up to -10% to avoid schedular clumping
+const UPDATE_LIMITER := IVUnits.HOUR # up to -10% to avoid schedular clumping
 
 # persisted
 var reference_normal := ECLIPTIC_UP # moons are often different
@@ -293,7 +293,7 @@ func get_position_velocity(time := NAN) -> Array:
 
 func get_elements(time := NAN) -> Array:
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
-		var elements := GDUtils.init_array(7)
+		var elements := IVUtils.init_array(7)
 		_set_elements(time, elements)
 		return elements
 	return current_elements.duplicate() # safe
@@ -423,7 +423,7 @@ func reset_elements_and_interval_update() -> void:
 		return
 	# Set _update_interval based on fastest element rate. We normalize to
 	# values that are (very!) roughly analogous to "parts per second".
-	var a_pps: float = abs(element_rates[0]) / UnitDefs.AU
+	var a_pps: float = abs(element_rates[0]) / IVUnits.AU
 	var e_pps: float = abs(element_rates[1]) / 0.1 # arbitrary
 	var i_pps: float = abs(element_rates[2]) / TAU
 	var Om_pps: float = abs(element_rates[3]) / TAU

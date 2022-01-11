@@ -31,7 +31,7 @@
 extends Camera
 class_name VygrCamera
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 # ********************************* SIGNALS ***********************************
 
@@ -46,15 +46,15 @@ signal tracking_changed(track_type, is_ecliptic)
 
 # ***************************** ENUMS & CONSTANTS *****************************
 
-const VIEW_ZOOM = Enums.ViewType.VIEW_ZOOM
-const VIEW_45 = Enums.ViewType.VIEW_45
-const VIEW_TOP = Enums.ViewType.VIEW_TOP
-const VIEW_OUTWARD = Enums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = Enums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = Enums.ViewType.VIEW_BUMPED_ROTATED
-const TRACK_NONE = Enums.CameraTrackType.TRACK_NONE
-const TRACK_ORBIT = Enums.CameraTrackType.TRACK_ORBIT
-const TRACK_GROUND = Enums.CameraTrackType.TRACK_GROUND
+const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
+const VIEW_45 = IVEnums.ViewType.VIEW_45
+const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
+const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
+const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
+const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
+const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
+const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
 # TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
 # circumstances, PATH_CARTESION looks better.
@@ -111,10 +111,10 @@ const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection_item", "view_t
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var track_dist: float = 4e7 * UnitDefs.KM # km after dividing by fov
-var use_local_up: float = 5e7 * UnitDefs.KM # must be > track_dist
-var use_ecliptic_up: float = 5e10 * UnitDefs.KM # must be > use_local_up
-var max_compensated_dist: float = 5e7 * UnitDefs.KM
+var track_dist: float = 4e7 * IVUnits.KM # km after dividing by fov
+var use_local_up: float = 5e7 * IVUnits.KM # must be > track_dist
+var use_ecliptic_up: float = 5e10 * IVUnits.KM # must be > use_local_up
+var max_compensated_dist: float = 5e7 * IVUnits.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.8 # 1.0 is full size compensation

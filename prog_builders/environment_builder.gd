@@ -62,11 +62,11 @@ func _get_environment() -> Environment: # I/O thread!
 	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
 	match settings.starmap:
-		Enums.StarmapSize.STARMAP_8K:
+		IVEnums.StarmapSize.STARMAP_8K:
 			starmap_file = asset_paths.starmap_8k
-		Enums.StarmapSize.STARMAP_16K:
+		IVEnums.StarmapSize.STARMAP_16K:
 			starmap_file = asset_paths.starmap_16k
-	if !FileUtils.exists(starmap_file):
+	if !IVFiles.exists(starmap_file):
 		starmap_file = asset_paths[fallback_starmap]
 	var starmap: Texture = load(starmap_file)
 	panorama_sky.panorama = starmap

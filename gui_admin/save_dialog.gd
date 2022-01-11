@@ -22,7 +22,7 @@ extends FileDialog
 class_name SaveDialog
 const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const files := preload("res://ivoyager/static/files.gd")
 
 # project var
 var add_quick_save_button := true
@@ -50,15 +50,15 @@ func _open() -> void:
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir = file_utils.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
+	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
 	var date_string: String = _timekeeper.get_current_date_for_file() \
 			if _settings.append_date_to_save else ""
-	current_path = file_utils.get_save_path(save_dir, _settings.save_base_name, date_string, false)
+	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_items()
 	
 func _save_file(path: String) -> void:
 	var cache_settings := false
-	var save_base_name := file_utils.get_base_file_name(current_file)
+	var save_base_name := files.get_base_file_name(current_file)
 	if save_base_name != _settings.save_base_name:
 		_settings_manager.change_current("save_base_name", save_base_name, true)
 		cache_settings = true

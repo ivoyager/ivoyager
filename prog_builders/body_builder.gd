@@ -28,13 +28,13 @@
 extends Reference
 class_name BodyBuilder
 
-const math := preload("res://ivoyager/static/math.gd") # =Math when issue #37529 fixed
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const files := preload("res://ivoyager/static/files.gd")
 
 const DPRINT := false
 const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
-const G := UnitDefs.GRAVITATIONAL_CONSTANT
-const BodyFlags := Enums.BodyFlags
+const G := IVUnits.GRAVITATIONAL_CONSTANT
+const BodyFlags := IVEnums.BodyFlags
 
 # project vars
 var keep_real_precisions := true
@@ -134,7 +134,7 @@ func _set_flags_from_table(body: Body, parent: Body) -> void:
 		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_enum(_table_name, "hydrostatic_equilibrium", _row)
-	if hydrostatic_equilibrium >= Enums.ConfidenceType.PROBABLY:
+	if hydrostatic_equilibrium >= IVEnums.ConfidenceType.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match _table_name:
 		"stars":
@@ -315,13 +315,13 @@ func _build_unpersisted(body: Body) -> void: # Main thread
 func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
-	var texture_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, file_prefix)
+	var texture_2d: Texture = files.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !texture_2d:
 		texture_2d = _fallback_body_2d
 	array.append(texture_2d)
 	if is_star:
 		var slice_name = file_prefix + "_slice"
-		var texture_slice_2d: Texture = file_utils.find_and_load_resource(_bodies_2d_search, slice_name)
+		var texture_slice_2d: Texture = files.find_and_load_resource(_bodies_2d_search, slice_name)
 		array.append(texture_slice_2d)
 
 func _io_finish(array: Array) -> void: # Main thread

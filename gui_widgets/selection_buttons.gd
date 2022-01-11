@@ -30,7 +30,7 @@ func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_buttons")
 	_back.connect("pressed", _selection_manager, "back")
 	_forward.connect("pressed", _selection_manager, "forward")

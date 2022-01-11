@@ -22,7 +22,7 @@ extends FileDialog
 class_name LoadDialog
 const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const files := preload("res://ivoyager/static/files.gd")
 
 # project var
 var add_quick_load_button := true
@@ -54,7 +54,7 @@ func _open() -> void:
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir := file_utils.get_save_dir_path(IVGlobal.is_modded, IVGlobal.settings.save_dir)
+	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, IVGlobal.settings.save_dir)
 	current_dir = save_dir
 	if _state.last_save_path:
 		current_path = _state.last_save_path

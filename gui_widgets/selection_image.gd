@@ -29,7 +29,7 @@ func _ready() -> void:
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
-	_selection_manager = GUIUtils.get_selection_manager(self)
+	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_on_selection_changed()
 

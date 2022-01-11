@@ -48,7 +48,7 @@
 
 extends Node
 
-const file_utils := preload("res://ivoyager/static/file_utils.gd")
+const files := preload("res://ivoyager/static/files.gd")
 
 signal init_step_finished()
 
@@ -202,7 +202,7 @@ func init_extensions() -> void:
 	while dir_name:
 		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
 			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-			if file_utils.exists(path):
+			if files.exists(path):
 				var extension_script: Script = load(path)
 				if "EXTENSION_NAME" in extension_script \
 						and "EXTENSION_VERSION" in extension_script \
