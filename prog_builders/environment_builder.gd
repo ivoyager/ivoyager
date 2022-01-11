@@ -26,7 +26,7 @@ var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
 
 
 func add_world_environment() -> void:
-	var io_manager: IOManager = IVGlobal.program.IOManager
+	var io_manager: IVIOManager = IVGlobal.program.IOManager
 	io_manager.callback(self, "_io_callback", "_io_finish")
 
 # *****************************************************************************

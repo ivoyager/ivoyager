@@ -22,8 +22,8 @@
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
 
-extends CacheManager
-class_name SettingsManager
+extends IVCacheManager
+class_name IVSettingsManager
 
 
 func _on_init():

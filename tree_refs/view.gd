@@ -21,8 +21,8 @@
 # target object. Passing a null-equivalent value (= init values) tells the
 # camera to maintain its current value. We use selection_name to facilitate
 # cache persistence. Most likely you want to persist via IVSaveBuilder system
-# (so a player could save one or more views in an active game) or via a
-# CacheManager (e.g., I, Voyager Planetarium; see planetarium/view_cacher.gd).
+# (so a player could save one or more views in an active game) or via an
+# IVCacheManager (e.g., I, Voyager Planetarium; see planetarium/view_cacher.gd).
 
 
 class_name IVView

@@ -70,7 +70,7 @@ var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 # private
 var _times: Array = IVGlobal.times
-var _scheduler: Scheduler
+var _scheduler: IVScheduler
 var _update_interval := 0.0
 var _begin_current := INF
 var _end_current := -INF
@@ -431,7 +431,7 @@ func reset_elements_and_interval_update() -> void:
 	var max_pps: float = [a_pps, e_pps, i_pps, Om_pps, w_pps].max()
 	var interval := UPDATE_TOLERANCE / max_pps
 	if interval < UPDATE_LIMITER:
-		# Allow up to -10% below limiter to avoid Scheduler clumping
+		# Allow up to -10% below limiter to avoid IVScheduler clumping
 		interval = interval / 10.0 + UPDATE_LIMITER * 0.9
 	_begin_current = time
 	_end_current = time + interval * 1.1

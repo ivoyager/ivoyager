@@ -61,7 +61,7 @@ var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
 var _settings: Dictionary = IVGlobal.settings
-var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()

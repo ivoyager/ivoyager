@@ -20,15 +20,15 @@
 # Reads external data tables (.tsv files) and adds results to:
 #    - IVGlobal.table_rows
 #    - IVGlobal.wiki_titles (if IVGlobal.wiki_enabled)
-#    - table containers in TableReader via init_tables()
+#    - table containers in IVTableReader via init_tables()
 #
-# Use TableReader to interact with imported table data! This object removes
+# Use IVTableReader to interact with imported table data! This object removes
 # itself from IVGlobal.program after table import. No other object should
 # reference it.
 #
 # ivoyager/data/solar_system/*.tsv table construction:
 #  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
-#    See tables for examples; see TableReader for conversions.
+#    See tables for examples; see IVTableReader for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
 #    replaced with this value.
 #  Units (optional; REAL only!). Reals will be converted from provided units
@@ -93,7 +93,7 @@ func _on_init() -> void:
 			% [time, _count_rows, _count_cells, _count_non_null, _unique_register.size()])
 
 func _project_init() -> void:
-	var table_reader: TableReader = IVGlobal.program.TableReader
+	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _table_row_dicts)
 	IVGlobal.program.erase("TableImporter") # frees self
 

@@ -41,8 +41,8 @@ var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint
 
 # private
 var _times: Array = IVGlobal.times
-var _table_reader: TableReader
-var _io_manager: IOManager
+var _table_reader: IVTableReader
+var _io_manager: IVIOManager
 var _globe_mesh: SphereMesh
 var _fallback_albedo_map: Texture
 

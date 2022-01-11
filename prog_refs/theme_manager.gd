@@ -20,11 +20,10 @@
 # Maintains IVGlobal.themes dictionary. All controls are expected to set their
 # own theme from this dictionary.
 
-extends Reference
-class_name ThemeManager
+class_name IVThemeManager
 
 # project vars
-var global_font := "gui_main" # these are defined in FontManager
+var global_font := "gui_main" # these are defined in IVFontManager
 var main_menu_font := "large"
 var splash_screen_font := "medium"
 

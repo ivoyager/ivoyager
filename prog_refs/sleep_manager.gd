@@ -24,7 +24,7 @@
 # which could represent many 1000s of IVBody instances depending on extension
 # project.
 
-class_name SleepManager
+class_name IVSleepManager
 
 const IS_STAR_ORBITING := IVEnums.BodyFlags.IS_STAR_ORBITING
 

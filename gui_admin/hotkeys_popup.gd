@@ -27,7 +27,7 @@ const DPRINT := true
 
 var key_box_min_size_x := 300
 
-onready var _input_map_manager: InputMapManager = IVGlobal.program.InputMapManager
+onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 onready var _actions: Dictionary = _input_map_manager.current
 var _hotkey_dialog: ConfirmationDialog = \
 		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()

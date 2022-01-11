@@ -27,25 +27,25 @@ var mean := NAN
 var minimum := NAN
 var maximum := NAN
 
-var _qty_txt_converter: QtyTxtConverter = IVGlobal.program.QtyTxtConverter
+var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 
-func get_one_liner(option_type: int, unit := "", precision := -1, num_type := QtyTxtConverter.NUM_DYNAMIC,
-		long_form := false, case_type := QtyTxtConverter.CASE_MIXED) -> String:
+func get_one_liner(option_type: int, unit := "", precision := -1, num_type := IVQuantityFormatter.NUM_DYNAMIC,
+		long_form := false, case_type := IVQuantityFormatter.CASE_MIXED) -> String:
 	var mean_str := ""
 	var min_str := ""
 	var max_str := ""
 	if is_inf(mean):
 		mean_str = "?"
 	elif !is_nan(mean):
-		mean_str = _qty_txt_converter.number_option(mean, option_type, unit, precision, num_type, long_form, case_type)
+		mean_str = _quantity_formatter.number_option(mean, option_type, unit, precision, num_type, long_form, case_type)
 	if is_inf(minimum):
 		mean_str = "?"
 	elif !is_nan(minimum):
-		min_str = _qty_txt_converter.number_option(minimum, option_type, unit, precision, num_type, long_form, case_type)
+		min_str = _quantity_formatter.number_option(minimum, option_type, unit, precision, num_type, long_form, case_type)
 	if is_inf(maximum):
 		mean_str = "?"
 	elif !is_nan(maximum):
-		max_str = _qty_txt_converter.number_option(maximum, option_type, unit, precision, num_type, long_form, case_type)
+		max_str = _quantity_formatter.number_option(maximum, option_type, unit, precision, num_type, long_form, case_type)
 	
 	var result_str := ""
 	if min_str:

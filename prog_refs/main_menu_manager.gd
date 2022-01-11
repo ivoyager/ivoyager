@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name MainMenuManager
+class_name IVMainMenuManager
 
 signal buttons_changed()
 signal button_state_changed()

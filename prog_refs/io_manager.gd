@@ -19,7 +19,7 @@
 # *****************************************************************************
 # Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,
-# you should not mix use of IOManager with resource loading on the Main thread.
+# you should not mix use of IVIOManager with resource loading on the Main thread.
 #
 # The "io_method" supplied in callback() is handy for doing "I/O-adjacent" work
 # such as processing resources or assembling parts of scene trees. However, all
@@ -32,7 +32,7 @@
 #
 # All methods will work on the Main thread if IVGlobal.use_threads == false.
 
-class_name IOManager
+class_name IVIOManager
 
 signal finished() # emitted when all I/O jobs completed 
 
@@ -56,7 +56,7 @@ func callback(object: Object, io_method: String, finish_method := "", array := [
 	# Callback to io_method will happen on the I/O thread. Callback to optional
 	# finish_method will happen subsequently on the main thread. The array arg
 	# is optional here but is required in callback methods signatures.
-	# IOManager will emit "finished" on a later frame after all current
+	# IVIOManager will emit "finished" on a later frame after all current
 	# callbacks have been processed. This is guaranteed to be delayed at least
 	# one frame.
 	_job_count += 1

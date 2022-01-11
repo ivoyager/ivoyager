@@ -92,7 +92,7 @@ var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 onready var _tree := get_tree()
-var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
@@ -276,7 +276,7 @@ func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
 	else:
 		min_hud_dist = 0.0
 
-func set_sleep(sleep: bool) -> void: # called by SleepManager
+func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 	if flags & NEVER_SLEEP or sleep == is_asleep:
 		return
 	if sleep:

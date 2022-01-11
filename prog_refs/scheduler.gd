@@ -21,7 +21,7 @@
 # once per frame if interval is very small and/or game speed is very fast.
 # There is no save/load persistence! Interval connections must be remade.
 
-class_name Scheduler
+class_name IVScheduler
 
 var _times: Array = IVGlobal.times
 var _ordered_signal_infos := [] # array "top" is always the next signal
@@ -34,7 +34,7 @@ var _is_reversed := false
 func interval_connect(interval: float, target: Object, method: String, binds := [],
 		flags := 0) -> void:
 	# E.g., for 2-day repeating signal, use interval = 2.0 * IVUnits.DAY.
-	# Note: Scheduler will disconnet all interval signals on IVGlobal signal
+	# Note: IVScheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	assert(interval > 0.0)
 	var oneshot := bool(flags & CONNECT_ONESHOT)
@@ -42,7 +42,7 @@ func interval_connect(interval: float, target: Object, method: String, binds := 
 	connect(signal_str, target, method, binds, flags)
 
 func interval_disconnect(interval: float, target: Object, method: String) -> void:
-	# Note: Scheduler will disconnet all interval signals on IVGlobal signal
+	# Note: IVScheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	var i := 0
 	var signal_str := ""

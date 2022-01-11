@@ -28,7 +28,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var add_quick_load_button := true
 
 var _state: Dictionary = IVGlobal.state
-var _main_menu_manager: MainMenuManager
+var _main_menu_manager: IVMainMenuManager
 
 func _project_init():
 	if !IVGlobal.enable_save_load:

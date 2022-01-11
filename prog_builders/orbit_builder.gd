@@ -52,7 +52,7 @@ var t := {
 	ref_plane = "",
 }
 
-var _table_reader: TableReader
+var _table_reader: IVTableReader
 var _Orbit_: Script
 var _dynamic_orbits: bool
 

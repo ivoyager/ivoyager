@@ -24,7 +24,7 @@ class_name IVLightBuilder
 var omni_fields := ["omni_range"]
 
 func add_omni_light(body: IVBody) -> void:
-	var table_reader: TableReader = IVGlobal.program.TableReader
+	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	if body.get_light_type() == -1:
 		return
 	var omni_light := OmniLight.new()

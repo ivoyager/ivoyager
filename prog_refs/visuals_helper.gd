@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-class_name VisualsHelper
+class_name IVVisualsHelper
 
 const VECTOR2_NULL := Vector2(-INF, -INF)
 

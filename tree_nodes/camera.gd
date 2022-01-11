@@ -129,7 +129,7 @@ var is_moving := false # body to body move in progress
 # private
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
-var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
 var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body

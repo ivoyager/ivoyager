@@ -37,7 +37,7 @@ var format_overrides := {
 }
 
 var _settings: Dictionary = IVGlobal.settings
-onready var _settings_manager: SettingsManager = IVGlobal.program.SettingsManager
+onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 
 
 func open() -> void:

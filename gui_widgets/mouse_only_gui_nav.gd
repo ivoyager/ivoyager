@@ -28,7 +28,7 @@
 extends CheckBox
 
 var _settings: Dictionary = IVGlobal.settings
-onready var _settings_manager: SettingsManager = IVGlobal.program.SettingsManager
+onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _project_gui: Control = IVGlobal.program.ProjectGUI
 
 var _init_focus_mode_by_class := {} # if not FOCUS_NONE

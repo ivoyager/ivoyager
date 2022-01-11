@@ -24,8 +24,8 @@
 #
 # This node and HotkeysPopup are unaware of actions defined in project.godot.
 
-extends CacheManager
-class_name InputMapManager
+extends IVCacheManager
+class_name IVInputMapManager
 
 # project vars
 var reserved_scancodes := [] # user can't overwrite w/ or w/out key mods

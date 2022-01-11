@@ -30,7 +30,7 @@ signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
 
-var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 

@@ -106,7 +106,7 @@ var prog_builders := {
 	_LightBuilder_ = IVLightBuilder,
 	_HUDsBuilder_ = IVHUDsBuilder,
 	_MinorBodiesBuilder_ = IVMinorBodiesBuilder,
-	_LPointBuilder_ = LPointBuilder,
+	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder,
 }
@@ -114,18 +114,18 @@ var prog_builders := {
 var prog_refs := {
 	# Reference classes. IVProjectBuilder instances one of each. No save/load
 	# persistence.
-	_SettingsManager_ = SettingsManager, # 1st so IVGlobal.settings are valid
-	_InputMapManager_ = InputMapManager,
-	_IOManager_ = IOManager,
-	_FontManager_ = FontManager, # ok to replace
-	_ThemeManager_ = ThemeManager, # after FontManager; ok to replace
-	_QtyTxtConverter_ = QtyTxtConverter,
-	_TableReader_ = TableReader,
-	_MainMenuManager_ = MainMenuManager,
-	_SleepManager_ = SleepManager,
-	_VisualsHelper_ = VisualsHelper,
-	_Scheduler_ = Scheduler,
-	_WikiManager_ = WikiManager,
+	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
+	_InputMapManager_ = IVInputMapManager,
+	_IOManager_ = IVIOManager,
+	_FontManager_ = IVFontManager, # ok to replace
+	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
+	_QuantityFormatter_ = IVQuantityFormatter,
+	_TableReader_ = IVTableReader,
+	_MainMenuManager_ = IVMainMenuManager,
+	_SleepManager_ = IVSleepManager,
+	_VisualsHelper_ = IVVisualsHelper,
+	_Scheduler_ = IVScheduler,
+	_WikiManager_ = IVWikiManager,
 }
 
 var prog_nodes := {

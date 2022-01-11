@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For get functions, table_name is "planets", "moons", etc. Supply either row
-# or row_name.
+# For get functions, table_name is "planets", "moons", etc. Most get functions
+# will take either row or row_name.
 
-class_name TableReader
+class_name IVTableReader
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")

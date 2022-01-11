@@ -19,8 +19,7 @@
 # *****************************************************************************
 # Maintains IVGlobal.fonts.
 
-extends Reference
-class_name FontManager
+class_name IVFontManager
 
 # project vars - modify on signal project_objects_instantiated
 var fixed_sizes := {

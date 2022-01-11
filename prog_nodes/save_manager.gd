@@ -47,7 +47,7 @@ const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 
 # private
-onready var _io_manager: IOManager = IVGlobal.program.IOManager
+onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
 onready var _state_manager: StateManager = IVGlobal.program.StateManager
 onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
@@ -145,7 +145,7 @@ func load_game(path := "", network_gamesave := []) -> void:
 		_load_callback(network_gamesave, OK)
 
 # *****************************************************************************
-# IOManager callbacks
+# IVIOManager callbacks
 
 func _save_callback(err: int) -> void: # Main thread
 	if err != OK:

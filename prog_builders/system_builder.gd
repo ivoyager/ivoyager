@@ -25,7 +25,7 @@ class_name IVSystemBuilder
 var add_camera := true
 
 # private
-var _table_reader: TableReader
+var _table_reader: IVTableReader
 var _body_builder: IVBodyBuilder
 
 

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 # GUI widget. Parent control should modify is_splash_config, if appropriate.
-# To add buttons, use MainMenuManager (prog_refs/main_menu_manager.gd).
+# To add buttons, use IVMainMenuManager (prog_refs/main_menu_manager.gd).
 # The menu is built on project_builder_finished signal with all buttons
 # disabled. Button state is updated on state_manager_inited signal.
 
@@ -28,7 +28,7 @@ var is_splash_config := false # splash screen needs to set this
 
 var _state: Dictionary = IVGlobal.state
 onready var _state_manager: StateManager = IVGlobal.program.StateManager
-onready var _main_menu_manager: MainMenuManager = IVGlobal.program.MainMenuManager
+onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 onready var _button_infos: Array = _main_menu_manager.button_infos
 var _is_project_built := false
 

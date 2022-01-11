@@ -1,4 +1,4 @@
-# lagramge_point_helper.gd
+# lagrange_point_builder.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends Reference
-class_name LPointBuilder
+class_name IVLagrangePointBuilder
 
 var _LPoint_: Script
 

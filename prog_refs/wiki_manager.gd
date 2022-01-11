@@ -22,7 +22,7 @@
 # 2) hook up directly to IVGlobal signal "open_wiki_requested". If the latter,
 # you can safely erase this class from IVProjectBuilder.prog_refs.
 
-class_name WikiManager
+class_name IVWikiManager
 
 
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles

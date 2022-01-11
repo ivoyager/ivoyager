@@ -67,30 +67,30 @@ var section_data := [ # one array element per header
 	# [3] data_type [4] arg or args specific for data_type
 	[ # Orbital Characteristics
 		["LABEL_PERIAPSIS", "body/orbit/get_periapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_APOAPSIS", "body/orbit/get_apoapsis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_SEMI_MAJOR_AXIS", "body/orbit/get_semimajor_axis", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.LENGTH_KM_AU, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.LENGTH_KM_AU, "", 5]],
 		["LABEL_ECCENTRICITY", "body/orbit/get_eccentricity", NO_ARGS, AS_IS],
 		["LABEL_ORBITAL_PERIOD", "body/orbit/get_orbital_perioid", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.TIME_D_Y, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.TIME_D_Y, "", 5]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/orbit/get_average_orbital_speed", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.VELOCITY_MPS_KMPS, "", 5]],
+				QTY_TXT, [IVQuantityFormatter.VELOCITY_MPS_KMPS, "", 5]],
 		["LABEL_INCLINATION_TO_ECLIPTIC", "body/orbit/get_inclination_to_ecliptic", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 3, IVQuantityFormatter.NUM_DECIMAL_PL]],
 		["LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 3, QtyTxtConverter.NUM_DECIMAL_PL]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 3, IVQuantityFormatter.NUM_DECIMAL_PL]],
 		["LABEL_DIST_GALACTIC_CORE", "body/characteristics/dist_galactic_core", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.LENGTH_KM_AU]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.LENGTH_KM_AU]],
 		["LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "yr"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "yr"]],
 		["LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		["LABEL_VELOCITY_VS_CMB", "body/characteristics/velocity_vs_cmb", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		["LABEL_VELOCITY_VS_NEAR_STARS", "body/characteristics/velocity_vs_near_stars", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km/s"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km/s"]],
 		
 		["LABEL_KN_PLANETS", "body/characteristics/n_kn_planets", NO_ARGS, AS_IS],
 		["LABEL_KN_DWF_PLANETS", "body/characteristics/n_kn_dwf_planets", NO_ARGS, AS_IS],
@@ -105,66 +105,66 @@ var section_data := [ # one array element per header
 				TABLE_ROW, "classes"],
 		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
 		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_EQUATORIAL_RADIUS", "body/characteristics/e_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "km"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
 				ENUM, "ConfidenceType"],
 		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.MASS_G_KG]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "_g"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "_g"]],
 		["LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.VELOCITY_MPS_KMPS]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.VELOCITY_MPS_KMPS]],
 		["LABEL_MEAN_DENSITY", "body/characteristics/mean_density", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "g/cm^3"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "g/cm^3"]],
 		["LABEL_ALBEDO", "body/characteristics/albedo", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.NUMBER]],
+				QTY_TXT, [IVQuantityFormatter.NUMBER]],
 		["LABEL_SURFACE_TEMP_MIN", "body/characteristics/min_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MEAN", "body/characteristics/surf_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_SURFACE_TEMP_MAX", "body/characteristics/max_t", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_CENTER", "body/characteristics/temp_center", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_TEMP_PHOTOSPHERE", "body/characteristics/temp_photosphere", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_TEMP_CORONA", "body/characteristics/temp_corona", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "K"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
 		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "W"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "W"]],
 		["LABEL_COLOR_B_V", "body/characteristics/color_b_v", NO_ARGS, AS_IS],
 		["LABEL_METALLICITY", "body/characteristics/metallicity", NO_ARGS, AS_IS],
-		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [QtyTxtConverter.UNIT, "yr"]],
+		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [IVQuantityFormatter.UNIT, "yr"]],
 		
 		
 		
 		["LABEL_ROTATION_PERIOD", "body/characteristics/rotation_period", NO_ARGS,
-				QTY_TXT_W_PRECISION, [QtyTxtConverter.UNIT, "d", 5]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "d", 5]],
 		["LABEL_AXIAL_TILT_TO_ORBIT", "body/get_axial_tilt_to_orbit", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 4]],
 		["LABEL_AXIAL_TILT_TO_ECLIPTIC", "body/get_axial_tilt_to_ecliptic", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "deg", 4]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "deg", 4]],
 	],
 	[ # Atmosphere
 		["LABEL_SURFACE_PRESSURE", "body/characteristics/surf_pres", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "bar"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "bar"]],
 		["LABEL_TRACE_PRESSURE", "body/characteristics/trace_pres", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TRACE_PRESSURE_HIGH", "body/characteristics/trace_pres_high", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TRACE_PRESSURE_LOW", "body/characteristics/trace_pres_low", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.PREFIXED_UNIT, "Pa"]],
+				QTY_TXT, [IVQuantityFormatter.PREFIXED_UNIT, "Pa"]],
 		["LABEL_TEMP_AT_1_BAR", "body/characteristics/one_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_AT_HALF_BAR", "body/characteristics/half_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 		["LABEL_TEMP_AT_10TH_BAR", "body/characteristics/tenth_bar_t", NO_ARGS,
-				QTY_TXT, [QtyTxtConverter.UNIT, "degC"]],
+				QTY_TXT, [IVQuantityFormatter.UNIT, "degC"]],
 	],
 	[ # Atmosphere composition
 		["", "body/components/atmosphere", NO_ARGS, OBJECT_LABELS_VALUES],
@@ -189,8 +189,8 @@ var special_processing := {
 	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
-onready var _qty_txt_converter: QtyTxtConverter = IVGlobal.program.QtyTxtConverter
-onready var _table_reader: TableReader = IVGlobal.program.TableReader
+onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
 var _state: Dictionary = IVGlobal.state
 var _enums: Script = IVGlobal.enums
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
@@ -394,15 +394,15 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 					var kept_precision: int = _selection_item.real_precisions.get(_path, -1)
 					if kept_precision != -1:
 						precision = kept_precision
-				var num_type: int = args[3] if n_args > 3 else QtyTxtConverter.NUM_DYNAMIC
+				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC
 				var long_form: bool = args[4] if n_args > 4 else false
-				var case_type: int = args[5] if n_args > 5 else QtyTxtConverter.CASE_MIXED
+				var case_type: int = args[5] if n_args > 5 else IVQuantityFormatter.CASE_MIXED
 				
 #				if _path == "body/characteristics/dist_galactic_core":
 #					print("precision = ", precision)
 #
 				
-				value_txt = _qty_txt_converter.number_option(value, option_type, unit, precision,
+				value_txt = _quantity_formatter.number_option(value, option_type, unit, precision,
 						num_type, long_form, case_type)
 				if precision == 0:
 					value_txt = "~" + value_txt

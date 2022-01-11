@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: simplify code with the new TableReader class.
+# TODO: simplify code with the new IVTableReader class.
 
 class_name IVMinorBodiesBuilder
 
@@ -30,8 +30,8 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 # dependencies
 var _settings: Dictionary = IVGlobal.settings
-var _table_reader: TableReader
-var _l_point_builder: LPointBuilder
+var _table_reader: IVTableReader
+var _l_point_builder: IVLagrangePointBuilder
 var _minor_bodies_manager: MinorBodiesManager
 var _points_manager: PointsManager
 var _body_registry: BodyRegistry
@@ -56,7 +56,7 @@ func build() -> void:
 func _project_init() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
 	_table_reader = IVGlobal.program.TableReader
-	_l_point_builder = IVGlobal.program.LPointBuilder
+	_l_point_builder = IVGlobal.program.LagrangePointBuilder
 	_minor_bodies_manager = IVGlobal.program.MinorBodiesManager
 	_points_manager = IVGlobal.program.PointsManager
 	_body_registry = IVGlobal.program.BodyRegistry

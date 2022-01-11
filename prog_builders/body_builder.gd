@@ -81,9 +81,9 @@ var _light_builder: IVLightBuilder
 var _huds_builder: IVHUDsBuilder
 var _orbit_builder: IVOrbitBuilder
 var _composition_builder: IVCompositionBuilder
-var _io_manager: IOManager
-var _scheduler: Scheduler
-var _table_reader: TableReader
+var _io_manager: IVIOManager
+var _scheduler: IVScheduler
+var _table_reader: IVTableReader
 var _main_prog_bar: MainProgBar
 var _Body_: Script
 var _ModelController_: Script
@@ -287,7 +287,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
 	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
 	
-	# Note: many builders called here ask for IOManager.callback. These are
+	# Note: many builders called here ask for IVIOManager.callback. These are
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
 	if body.get_model_type() != -1:
