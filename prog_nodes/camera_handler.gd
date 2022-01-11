@@ -1,4 +1,4 @@
-# vygr_camera_handler.gd
+# camera_handler.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -21,7 +21,7 @@
 # this class if you have a different camera.
 
 extends Node
-class_name VygrCameraHandler
+class_name IVCameraHandler
 
 enum {
 	DRAG_MOVE,

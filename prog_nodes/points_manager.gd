@@ -19,7 +19,7 @@
 # *****************************************************************************
 
 extends Node
-class_name PointsManager
+class_name IVPointsManager
 
 const DPRINT := false
 

@@ -29,7 +29,7 @@ var add_quick_save_button := true
 
 var _settings: Dictionary = IVGlobal.settings
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _project_init() -> void:

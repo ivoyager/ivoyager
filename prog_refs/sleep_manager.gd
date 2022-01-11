@@ -53,7 +53,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	var body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
+	var body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 	for body in body_registry.top_bodies:
 		_change_sleep_recursive(body, true)
 

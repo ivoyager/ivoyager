@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Indexes IVBody and IVSelectionItem instances. Also holds IVSelectionItems so they
-# aren't freed (they are References that need at least one reference).
+# Indexes IVBody and IVSelectionItem instances. Also holds IVSelectionItems so
+# they aren't freed (they are References that need at least one reference).
 
 extends Node
-class_name BodyRegistry
+class_name IVBodyRegistry
 
 const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR

@@ -25,7 +25,7 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 onready var _tree: SceneTree = get_tree()
-onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
 onready var _pause: Button = $Pause

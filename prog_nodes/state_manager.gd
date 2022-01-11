@@ -21,17 +21,17 @@
 # writes IVGlobal.state except where noted:
 #
 #   is_inited: bool
-#   is_splash_screen: bool - this node & SaveManager
-#   is_system_built: bool - this node & SaveManager
+#   is_splash_screen: bool - this node & IVSaveManager
+#   is_system_built: bool - this node & IVSaveManager
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
-#   is_paused: bool - Timekeeper maintains; NOT SceneTree.paused !!!!
+#   is_paused: bool - IVTimekeeper maintains; NOT SceneTree.paused !!!!
 #   is_quitting: bool
-#   is_loaded_game: bool - this node & SaveManager
-#   last_save_path: String - this node & SaveManager
+#   is_loaded_game: bool - this node & IVSaveManager
+#   last_save_path: String - this node & IVSaveManager
 #   network_state: IVEnums.NetworkState - if exists, NetworkLobby also writes
 #
 # Note: SceneTree.paused is set only when simulatator "stopped". Simulator
-# "paused" is managed by Timekeeper and works more like a game speed (process
+# "paused" is managed by IVTimekeeper and works more like a game speed (process
 # still happens so the camera can move, etc.).
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
@@ -45,7 +45,7 @@
 # load, exit, quit, etc.
 
 extends Node
-class_name StateManager
+class_name IVStateManager
 
 signal run_threads_allowed() # ok to start threads that affect gamestate
 signal run_threads_must_stop() # finish threads that affect gamestate

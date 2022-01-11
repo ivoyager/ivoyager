@@ -37,7 +37,7 @@ onready var _reverse_color: Color = IVGlobal.colors.danger
 
 
 func _ready() -> void:
-	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_update")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
 

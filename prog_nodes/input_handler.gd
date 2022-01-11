@@ -22,20 +22,20 @@
 #
 # I, Voyager handles input in three  ways:
 #   - here as _input()
-#   - VygrCameraHandler as _unhandled_input()
+#   - IVCameraHandler as _unhandled_input()
 #   - various GUIs as _gui_input() or _unhandled_key_input()
 #
 
 extends Node
-class_name InputHandler
+class_name IVInputHandler
 
 
 const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 
 onready var _tree: SceneTree = get_tree()
-onready var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
-onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 var _selection_manager: IVSelectionManager
 var _state: Dictionary = IVGlobal.state
 var _script_classes: Dictionary = IVGlobal.script_classes

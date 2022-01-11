@@ -25,7 +25,7 @@
 # cache happens on quit and we don't use the Timer function.
 
 extends Timer
-class_name ViewCaching
+class_name IVViewCaching
 
 var cache_interval := 0.0 # s; enable (set >0.0) if IVGlobal.disable_quit
 var cache_file_name := "view.vbinary"

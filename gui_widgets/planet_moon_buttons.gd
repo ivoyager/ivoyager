@@ -40,7 +40,7 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-onready var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
+onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button

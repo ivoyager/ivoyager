@@ -38,11 +38,11 @@
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 #
 # This node processes during SceneTree pause, but stops and starts processing
-# following StateManager "is_running" state. StateManager has authority over
+# following IVStateManager "is_running" state. IVStateManager has authority over
 # pause, but we signal pause changes here as a "speed_changed" event.
 
 extends Node
-class_name Timekeeper
+class_name IVTimekeeper
 
 signal processed(sim_time, engine_delta) # this drives the simulator
 signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
@@ -247,7 +247,7 @@ func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 func set_paused(pause: bool, is_toggle := false) -> void:
-	# 1st arg ignored if is_toggle. Timekeeper has authority over pause, so
+	# 1st arg ignored if is_toggle. IVTimekeeper has authority over pause, so
 	# all changes should use this function or IVGlobal signal "pause_requested".
 	var new_paused: bool
 	if is_toggle:

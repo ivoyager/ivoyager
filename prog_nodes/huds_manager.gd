@@ -20,7 +20,7 @@
 # Manages visibility of HUD elements.
 
 extends Node
-class_name HUDsManager
+class_name IVHUDsManager
 
 signal show_huds_changed()
 

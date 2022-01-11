@@ -74,7 +74,7 @@ var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _settings: Dictionary = IVGlobal.settings
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _times: Array = IVGlobal.times
-var _body_registry: BodyRegistry
+var _body_registry: IVBodyRegistry
 var _model_builder: IVModelBuilder
 var _rings_builder: IVRingsBuilder
 var _light_builder: IVLightBuilder
@@ -130,7 +130,7 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
 	var flags := _table_reader.build_flags(0, flag_fields, _table_name, _row)
 	if !parent:
-		flags |= BodyFlags.IS_TOP # must be in BodyRegistry.top_bodies
+		flags |= BodyFlags.IS_TOP # must be in IVBodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_enum(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= IVEnums.ConfidenceType.PROBABLY:

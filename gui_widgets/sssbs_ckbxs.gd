@@ -24,7 +24,7 @@
 
 extends VBoxContainer
 
-onready var _points_manager: PointsManager = IVGlobal.program.PointsManager
+onready var _points_manager: IVPointsManager = IVGlobal.program.PointsManager
 onready var _buttons := {
 	all_asteroids = $HBox1/AllAsteroids,
 	NE = $HBox2/NE,

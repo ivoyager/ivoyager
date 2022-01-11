@@ -62,7 +62,7 @@ signal camera_ready(camera)
 signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # requests for state change
-signal sim_stop_required(who, network_sync_type, bypass_checks) # see StateManager
+signal sim_stop_required(who, network_sync_type, bypass_checks) # see IVStateManager
 signal sim_run_allowed(who) # all objects requiring stop must allow!
 signal pause_requested(is_pause, is_toggle) # 1st arg ignored if is_toggle
 signal quit_requested(force_quit) # force_quit bypasses dialog
@@ -93,10 +93,10 @@ signal rich_text_popup_requested(header_text, bbcode_text)
 signal open_wiki_requested(wiki_title)
 
 # containers - write authority indicated; safe to keep container reference
-var state := {} # see comments in StateManager; is_inited, is_running, etc.
-var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
-var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
+var state := {} # see comments in IVStateManager; is_inited, is_running, etc.
+var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
+var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
+var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
 var program := {} # all objects instantiated by IVProjectBuilder 
 var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
@@ -105,8 +105,8 @@ var table_rows := {} # IVTableImporter; row number for all row names
 var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
-var bodies := [] # BodyRegistry; indexed by body_id
-var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var bodies := [] # IVBodyRegistry; indexed by body_id
+var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]

@@ -21,12 +21,12 @@
 # can then (optionally) delete these from IVProjectBuilder:
 #
 #   - SaveManager
-#   - IVSaveBuilder
+#   - SaveBuilder
 #   - SaveDialog
 #   - LoadDialog
 
 extends Node
-class_name SaveManager
+class_name IVSaveManager
 
 const files := preload("res://ivoyager/static/files.gd")
 const DPRINT := false
@@ -48,8 +48,8 @@ const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 
 # private
 onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
-onready var _state_manager: StateManager = IVGlobal.program.StateManager
-onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
 onready var _universe: Spatial = IVGlobal.program.Universe
 onready var _tree := get_tree()

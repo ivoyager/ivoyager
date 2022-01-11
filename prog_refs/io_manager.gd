@@ -39,7 +39,7 @@ signal finished() # emitted when all I/O jobs completed
 const DPRINT := false
 
 var _use_threads: bool = IVGlobal.use_threads
-var _state_manager: StateManager
+var _state_manager: IVStateManager
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore

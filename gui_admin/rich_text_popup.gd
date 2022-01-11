@@ -26,7 +26,7 @@ const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
 var stop_sim := true
 
-var _state_manager: StateManager
+var _state_manager: IVStateManager
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
 

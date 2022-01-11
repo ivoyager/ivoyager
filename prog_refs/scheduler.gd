@@ -65,7 +65,7 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 	if IVGlobal.allow_time_reversal:

@@ -93,7 +93,7 @@ var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 onready var _tree := get_tree()
 var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
-var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
+var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
 var _model_visible := false
@@ -393,7 +393,7 @@ func _on_ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
-	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 
 func _on_time_altered(_previous_time: float) -> void:

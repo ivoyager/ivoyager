@@ -30,7 +30,7 @@ const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
 var stop_sim := true
 var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 
-var _state_manager: StateManager
+var _state_manager: IVStateManager
 
 
 func open() -> void:

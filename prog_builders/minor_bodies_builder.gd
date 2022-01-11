@@ -32,9 +32,9 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 var _settings: Dictionary = IVGlobal.settings
 var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
-var _minor_bodies_manager: MinorBodiesManager
-var _points_manager: PointsManager
-var _body_registry: BodyRegistry
+var _minor_bodies_manager: IVMinorBodiesManager
+var _points_manager: IVPointsManager
+var _body_registry: IVBodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
@@ -120,7 +120,7 @@ func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point :
 			break
 	asteroid_group.finish_binary_import()
 	_running_count += asteroid_group.get_number()
-	# register in MinorBodiesManager
+	# register in IVMinorBodiesManager
 	if is_trojans:
 		_minor_bodies_manager.lagrange_points[group] = lagrange_point
 	_minor_bodies_manager.group_refs_by_name[group] = asteroid_group

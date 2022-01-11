@@ -32,7 +32,7 @@ const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY
 var _settings: Dictionary = IVGlobal.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
-var _huds_manager: HUDsManager
+var _huds_manager: IVHUDsManager
 var _projection_surface: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []

@@ -131,15 +131,15 @@ var prog_refs := {
 var prog_nodes := {
 	# IVProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
-	_StateManager_ = StateManager,
-	_SaveManager_ = SaveManager, # remove if you don't need game saves
-	_Timekeeper_ = Timekeeper,
-	_BodyRegistry_ = BodyRegistry,
-	_InputHandler_ = InputHandler,
-	_VygrCameraHandler_ = VygrCameraHandler, # replace if not using IVCamera
-	_HUDsManager_ = HUDsManager,
-	_PointsManager_ = PointsManager,
-	_MinorBodiesManager_ = MinorBodiesManager,
+	_StateManager_ = IVStateManager,
+	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
+	_Timekeeper_ = IVTimekeeper,
+	_BodyRegistry_ = IVBodyRegistry,
+	_InputHandler_ = IVInputHandler,
+	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
+	_HUDsManager_ = IVHUDsManager,
+	_PointsManager_ = IVPointsManager,
+	_MinorBodiesManager_ = IVMinorBodiesManager,
 }
 
 var keep_gui_under_existing_controls := true # add before other children

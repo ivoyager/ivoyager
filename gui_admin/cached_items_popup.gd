@@ -27,7 +27,7 @@ const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 var stop_sim := true
 var layout: Array # subclass sets in _init()
 
-onready var _state_manager: StateManager = IVGlobal.program.StateManager
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer

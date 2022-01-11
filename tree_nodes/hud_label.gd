@@ -26,7 +26,7 @@ var _body_name: String
 var _body_symbol: String
 var _name_font: Font
 var _symbol_font: Font
-onready var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
+onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 
 func set_body_name(body_name: String) -> void:
 	_body_name = body_name

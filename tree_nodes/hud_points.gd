@@ -43,7 +43,7 @@ func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	else:
 		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_lagrangian_shader
 	material_override = _orbit_points
-	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 
 func draw_points() -> void:

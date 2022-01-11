@@ -32,7 +32,7 @@ var _body_builder: IVBodyBuilder
 func build_system_tree() -> void:
 	if !IVGlobal.state.is_splash_screen:
 		return
-	var state_manager: StateManager = IVGlobal.program.StateManager
+	var state_manager: IVStateManager = IVGlobal.program.StateManager
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
 	IVGlobal.emit_signal("about_to_build_system_tree")
 	_body_builder.init_system_build()

@@ -21,7 +21,7 @@
 
 extends HBoxContainer
 
-onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 func set_current() -> void:
 	var date_time := _timekeeper.get_gregorian_date_time()

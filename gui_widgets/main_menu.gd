@@ -27,7 +27,7 @@ extends VBoxContainer
 var is_splash_config := false # splash screen needs to set this
 
 var _state: Dictionary = IVGlobal.state
-onready var _state_manager: StateManager = IVGlobal.program.StateManager
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 onready var _button_infos: Array = _main_menu_manager.button_infos
 var _is_project_built := false

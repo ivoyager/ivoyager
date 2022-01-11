@@ -20,7 +20,7 @@
 # Not much here after consolidation. Depreciate?
 
 extends Node
-class_name MinorBodiesManager
+class_name IVMinorBodiesManager
 
 
 # Public

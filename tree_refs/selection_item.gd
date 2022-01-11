@@ -30,7 +30,7 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 
 # persisted - read only
-var name: String # BodyRegistry guaranties these are unique
+var name: String # IVBodyRegistry guaranties these are unique
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var system_radius := 0.0

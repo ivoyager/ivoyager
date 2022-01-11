@@ -19,8 +19,8 @@
 # *****************************************************************************
 # Has currently selected item and keeps selection history. You can have >1 of
 # these. GUI widgets search up their ancestor tree and grab an IVSelectionManager
-# from the first control with a "selection_manager" member. InputHandler and
-# VygrCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
+# from the first control with a "selection_manager" member. IVInputHandler and
+# IVCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
 
 
 class_name IVSelectionManager
@@ -67,7 +67,7 @@ const PERSIST_PROPERTIES := ["selection_item"]
 
 # private
 var _root: Viewport = IVGlobal.get_tree().get_root()
-var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
+var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false

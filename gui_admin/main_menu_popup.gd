@@ -29,7 +29,7 @@ var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
 var _state: Dictionary = IVGlobal.state
-onready var _state_manager: StateManager = IVGlobal.program.StateManager
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 func _project_init():
 	connect("popup_hide", self, "_on_popup_hide")

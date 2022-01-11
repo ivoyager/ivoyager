@@ -33,7 +33,7 @@ onready var _key_label: Label = $HBox/KeyLabel
 onready var _delete: Button = $HBox/Delete
 onready var _ok_button: Button = get_ok()
 onready var _tree := get_tree()
-onready var _input_handler: InputHandler = IVGlobal.program.InputHandler
+onready var _input_handler: IVInputHandler = IVGlobal.program.InputHandler
 onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 
 func open(action: String, index: int, action_label_str: String, key_as_text: String, layout: Array) -> void:
