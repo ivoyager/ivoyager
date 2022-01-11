@@ -20,7 +20,7 @@
 # We report key duplicates and process text under the following conditions:
 #
 #   1. Translation is not added by editor (i.e., not in project.godot).
-#   2. Translation path is added to Global.translations.
+#   2. Translation path is added to IVGlobal.translations.
 #   3. Translation are reimported with compress OFF (compress=false in *.import file).
 #
 # Processing modifications:
@@ -34,13 +34,13 @@ func _init():
 	
 func _on_init() -> void:
 	_load_translations()
-	Global.emit_signal("translations_imported")
-	Global.program.erase("TranslationImporter") # frees self
+	IVGlobal.emit_signal("translations_imported")
+	IVGlobal.program.erase("TranslationImporter") # frees self
 
 func _load_translations() -> void:
 	var load_dict := {}
 	var duplications := []
-	for tr_path in Global.translations:
+	for tr_path in IVGlobal.translations:
 		var translation: Translation = load(tr_path)
 		if translation is PHashTranslation:
 			# Note: PHashTranslation doesn't work in add_translation in export

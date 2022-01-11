@@ -35,7 +35,7 @@ const PERSIST_PROPERTIES := ["group_names", "ids_by_group", "group_refs_by_name"
 
 
 func _ready():
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 
 func _restore_init_state() -> void:
 	group_names.clear()

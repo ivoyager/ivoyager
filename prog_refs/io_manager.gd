@@ -30,7 +30,7 @@
 # on the Main thread will occur in future frames, but are guarantied to be in
 # the order added. TEST THIS!!!
 #
-# All methods will work on the Main thread if Global.use_threads == false.
+# All methods will work on the Main thread if IVGlobal.use_threads == false.
 
 class_name IOManager
 
@@ -38,7 +38,7 @@ signal finished() # emitted when all I/O jobs completed
 
 const DPRINT := false
 
-var _use_threads: bool = Global.use_threads
+var _use_threads: bool = IVGlobal.use_threads
 var _state_manager: StateManager
 var _thread: Thread
 var _mutex: Mutex
@@ -137,10 +137,10 @@ func _get_var_from_file_finish(array: Array) -> void:
 # Init & private
 
 func _project_init() -> void:
-	_state_manager = Global.program.StateManager
+	_state_manager = IVGlobal.program.StateManager
 	if !_use_threads:
 		return
-	Global.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()

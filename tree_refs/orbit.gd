@@ -69,7 +69,7 @@ const PERSIST_PROPERTIES := ["reference_normal",
 var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 # private
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 var _scheduler: Scheduler
 var _update_interval := 0.0
 var _begin_current := INF
@@ -461,7 +461,7 @@ func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
 		reset_elements_and_interval_update()
 
 func _init() -> void:
-	_scheduler = Global.program.Scheduler
+	_scheduler = IVGlobal.program.Scheduler
 
 func _set_elements(time: float, elements: Array) -> void:
 	# elements must be size 7.

@@ -40,16 +40,16 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-onready var _body_registry: BodyRegistry = Global.program.BodyRegistry
-onready var _mouse_only_gui_nav: bool = Global.settings.mouse_only_gui_nav
+onready var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
+onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
 var _selection_manager: SelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
 var _resize_control_multipliers := {}
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_build")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_start_simulator", self, "_build")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	connect("resized", self, "_resize")
 
 func _clear() -> void:
@@ -171,7 +171,7 @@ func _change_selection(selected: Button) -> void:
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"gui_size":
-			if Global.state.is_system_built:
+			if IVGlobal.state.is_system_built:
 				_settings_resize()
 		"mouse_only_gui_nav":
 			_mouse_only_gui_nav = value
@@ -196,7 +196,7 @@ class NavButton extends Button:
 		_selection_manager = selection_manager
 		toggle_mode = true
 		hint_tooltip = selection_item.name
-		set("custom_fonts/font", Global.fonts.two_pt) # hack to allow smaller button height
+		set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
 		rect_min_size = Vector2(image_size, image_size)
 		flat = true
 		focus_mode = FOCUS_ALL
@@ -211,7 +211,7 @@ class NavButton extends Button:
 		connect("mouse_exited", self, "_on_mouse_exited")
 
 	func _ready():
-		Global.connect("update_gui_needed", self, "_update_selection")
+		IVGlobal.connect("update_gui_needed", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		set_default_cursor_shape(CURSOR_POINTING_HAND)

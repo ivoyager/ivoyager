@@ -32,7 +32,7 @@ func make_from_string(string: String) -> Composition:
 
 
 func _project_init() -> void:
-	_Composition_ = Global.script_classes._Composition_
+	_Composition_ = IVGlobal.script_classes._Composition_
 	item_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
 #	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
 

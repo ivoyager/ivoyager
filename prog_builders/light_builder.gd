@@ -24,7 +24,7 @@ class_name LightBuilder
 var omni_fields := ["omni_range"]
 
 func add_omni_light(body: Body) -> void:
-	var table_reader: TableReader = Global.program.TableReader
+	var table_reader: TableReader = IVGlobal.program.TableReader
 	if body.get_light_type() == -1:
 		return
 	var omni_light := OmniLight.new()
@@ -35,11 +35,11 @@ func add_omni_light(body: Body) -> void:
 	omni_light.omni_attenuation = 8.0
 	omni_light.light_energy = 1.5
 	omni_light.light_specular = 0.5
-	if Global.is_gles2:
+	if IVGlobal.is_gles2:
 		omni_light.omni_attenuation = 3.0
 		omni_light.light_energy = 1.2
 		omni_light.light_specular = 0.25
-	elif Global.auto_exposure_enabled:
+	elif IVGlobal.auto_exposure_enabled:
 		omni_light.omni_attenuation = 3.0
 	body.omni_light = omni_light
 	body.add_child(omni_light)

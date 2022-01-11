@@ -33,7 +33,7 @@ func remove_track_label() -> void:
 	$TrackLabel.queue_free()
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
 	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")

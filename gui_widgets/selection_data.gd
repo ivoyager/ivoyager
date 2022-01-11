@@ -49,8 +49,8 @@ enum { # data_type
 }
 
 # project vars
-var test_wiki_labels: bool = Global.enable_wiki # can override to false if needed
-var test_wiki_values: bool = Global.enable_wiki # can override to false if needed
+var test_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
+var test_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
 var use_kept_precisions := true # set same as BodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
@@ -189,12 +189,12 @@ var special_processing := {
 	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
-onready var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
-onready var _table_reader: TableReader = Global.program.TableReader
-var _state: Dictionary = Global.state
-var _enums: Script = Global.enums
-var _wiki_titles: Dictionary = Global.wiki_titles
-var _wiki_locale: String = Global.wiki
+onready var _qty_txt_converter: QtyTxtConverter = IVGlobal.program.QtyTxtConverter
+onready var _table_reader: TableReader = IVGlobal.program.TableReader
+var _state: Dictionary = IVGlobal.state
+var _enums: Script = IVGlobal.enums
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki_locale: String = IVGlobal.wiki
 var _selection_manager: SelectionManager
 var _header_buttons := []
 var _grids := []
@@ -207,9 +207,9 @@ var _body: Body
 var _path: String
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_stop_before_quit", self, "_clear_recycled")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
 	_start_interval_updates()
 
 func _clear() -> void:
@@ -511,7 +511,7 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
-	Global.emit_signal("open_wiki_requested", wiki_title)
+	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
 
 # special processing functions
 

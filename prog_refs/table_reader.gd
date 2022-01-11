@@ -30,8 +30,8 @@ var _table_fields: Dictionary # a dict of columns for each table
 var _table_data_types: Dictionary # an array for each table
 var _table_units: Dictionary # an array for each table
 var _table_row_dicts: Dictionary
-var _table_rows: Dictionary = Global.table_rows # indexed by ALL table rows
-var _bodies_by_name: Dictionary = Global.bodies_by_name
+var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table rows
+var _bodies_by_name: Dictionary = IVGlobal.bodies_by_name
 var _enums: Script
 var _unit_multipliers: Dictionary
 var _unit_functions: Dictionary
@@ -48,7 +48,7 @@ func get_row_name(table_name: String, row: int) -> String:
 func get_row(table_name: String, row_name: String) -> int:
 	# Returns -1 if missing.
 	# Since all table row names are checked to be globaly unique, you can
-	# obtain the same result using Global.table_rows[row_name]. 
+	# obtain the same result using IVGlobal.table_rows[row_name]. 
 	var table_rows: Dictionary = _table_row_dicts[table_name]
 	if table_rows.has(row_name):
 		return table_rows[row_name]
@@ -420,6 +420,6 @@ func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_ty
 	_table_row_dicts = table_row_dicts
 
 func _project_init() -> void:
-	_enums = Global.enums
-	_unit_multipliers = Global.unit_multipliers
-	_unit_functions = Global.unit_functions
+	_enums = IVGlobal.enums
+	_unit_multipliers = IVGlobal.unit_multipliers
+	_unit_functions = IVGlobal.unit_functions

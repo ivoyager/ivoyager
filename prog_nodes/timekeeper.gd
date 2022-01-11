@@ -95,7 +95,7 @@ var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
 var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
-var is_paused := false # always same as Global.state.is_paused
+var is_paused := false # always same as IVGlobal.state.is_paused
 var is_reversed := false
 
 # persistence
@@ -110,15 +110,15 @@ var show_clock := false
 var show_seconds := false
 var speed_name: String
 var speed_symbol: String
-var times: Array = Global.times # [0] time (s, J2000) [1] engine_time [2] UT1
-var date: Array = Global.date # Gregorian [0] year [1] month [2] day (ints)
-var clock: Array = Global.clock # UT1 [0] hour [1] minute [2] second (ints)
+var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1
+var date: Array = IVGlobal.date # Gregorian [0] year [1] month [2] day (ints)
+var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _state: Dictionary = Global.state
+var _state: Dictionary = IVGlobal.state
 onready var _tree := get_tree()
-onready var _allow_real_world_time: bool = Global.allow_real_world_time
-onready var _allow_time_reversal: bool = Global.allow_time_reversal
+onready var _allow_real_world_time: bool = IVGlobal.allow_real_world_time
+onready var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
@@ -248,7 +248,7 @@ func get_current_date_for_file() -> String:
 
 func set_paused(pause: bool, is_toggle := false) -> void:
 	# 1st arg ignored if is_toggle. Timekeeper has authority over pause, so
-	# all changes should use this function or Global signal "pause_requested".
+	# all changes should use this function or IVGlobal signal "pause_requested".
 	var new_paused: bool
 	if is_toggle:
 		new_paused = !is_paused
@@ -257,7 +257,7 @@ func set_paused(pause: bool, is_toggle := false) -> void:
 	if is_paused != new_paused:
 		is_paused = new_paused
 		_state.is_paused = new_paused
-		Global.emit_signal("sim_pause_changed", new_paused)
+		IVGlobal.emit_signal("sim_pause_changed", new_paused)
 		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
 				show_seconds, is_real_world_time)
 
@@ -331,14 +331,14 @@ func _ready() -> void:
 	_on_ready() # subclass can override
 
 func _on_ready() -> void:
-	Global.connect("pause_requested", self, "set_paused")
-	Global.connect("network_state_changed", self, "_on_network_state_changed")
-	Global.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	Global.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	Global.connect("game_load_finished", self, "_set_ready_state")
-	Global.connect("simulator_exited", self, "_set_ready_state")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("pause_requested", self, "set_paused")
+	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
+	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 	connect("speed_changed", self, "_on_speed_changed")
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
@@ -351,7 +351,7 @@ func _set_init_state() -> void:
 	if start_real_world_time:
 		time = get_real_world_time()
 	else:
-		time = Global.start_time
+		time = IVGlobal.start_time
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
@@ -389,7 +389,7 @@ func _on_about_to_start_simulator(is_new_game: bool) -> void:
 		if start_real_world_time:
 			set_real_world()
 	else:
-		is_paused = is_paused or Global.settings.loaded_game_is_paused
+		is_paused = is_paused or IVGlobal.settings.loaded_game_is_paused
 		_state.is_paused = is_paused
 
 func _on_run_state_changed(is_running: bool) -> void:
@@ -430,7 +430,7 @@ remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused
 	show_seconds = show_seconds_
 	is_real_world_time = is_real_world_time_
 	if is_paused != is_paused_:
-		Global.emit_signal("pause_requested", is_paused_) # will trigger update
+		IVGlobal.emit_signal("pause_requested", is_paused_) # will trigger update
 	else:
 		emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
 				show_seconds_, is_real_world_time_)

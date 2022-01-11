@@ -51,7 +51,7 @@ var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
 var system_radius_multiplier_top := 2.5
 
 # private
-var _home_view_from_user_time_zone: bool = Global.home_view_from_user_time_zone
+var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zone
 var _body_registry: BodyRegistry
 var _SelectionItem_: Script
 
@@ -142,5 +142,5 @@ func set_view_parameters_from_body(selection_item: SelectionItem, body: Body) ->
 # *****************************************************************************
 
 func _project_init() -> void:
-	_body_registry = Global.program.BodyRegistry
-	_SelectionItem_ = Global.script_classes._SelectionItem_
+	_body_registry = IVGlobal.program.BodyRegistry
+	_SelectionItem_ = IVGlobal.script_classes._SelectionItem_

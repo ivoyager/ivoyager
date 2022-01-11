@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains high-level simulator state and writes Global.state; only this node
-# writes Global.state except where noted:
+# Maintains high-level simulator state and writes IVGlobal.state; only this node
+# writes IVGlobal.state except where noted:
 #
 #   is_inited: bool
 #   is_splash_screen: bool - this node & SaveManager
@@ -37,7 +37,7 @@
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
 # https://docs.godotengine.org/en/stable/tutorials/networking/high_level_multiplayer.html
-# Be sure to set Global.state.network_state and emit Global signal
+# Be sure to set IVGlobal.state.network_state and emit IVGlobal signal
 # "network_state_changed".
 #
 # IMPORTANT! Non-main threads should coordinate with signals and functions here
@@ -68,7 +68,7 @@ var blocking_threads := []
 
 # private
 onready var _tree: SceneTree = get_tree()
-var _state: Dictionary = Global.state
+var _state: Dictionary = IVGlobal.state
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
 
@@ -110,12 +110,12 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	# via add_blocking_thread() should then be removed as they finish).
 	# In many cases, you should yield to "threads_finished" after calling this.
 	if !bypass_checks:
-		if !Global.popops_can_stop_sim and who is Popup:
+		if !IVGlobal.popops_can_stop_sim and who is Popup:
 			return false
 		if _state.network_state == IS_CLIENT:
 			return false
 		elif _state.network_state == IS_SERVER:
-			if Global.limit_stops_in_multiplayer:
+			if IVGlobal.limit_stops_in_multiplayer:
 				return false
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
@@ -139,13 +139,13 @@ func allow_run(who: Object) -> void:
 
 func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
-	if Global.disable_exit:
+	if IVGlobal.disable_exit:
 		return
 	if !force_exit:
 		if _state.network_state == IS_CLIENT:
 			OneUseConfirm.new("Disconnect from multiplayer game?", self, "exit", [true]) # TODO: text key
 			return
-		elif Global.enable_save_load: # single player or network server
+		elif IVGlobal.enable_save_load: # single player or network server
 			OneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
@@ -159,30 +159,30 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.last_save_path = ""
 	require_stop(self, NetworkStopSync.EXIT, true)
 	yield(self, "threads_finished")
-	Global.emit_signal("about_to_exit")
-	Global.emit_signal("about_to_free_procedural_nodes")
+	IVGlobal.emit_signal("about_to_exit")
+	IVGlobal.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
-	SaveBuilder.free_procedural_nodes(Global.program.Universe)
-	Global.emit_signal("close_all_admin_popups_requested")
-	Global.emit_signal("simulator_exited")
+	SaveBuilder.free_procedural_nodes(IVGlobal.program.Universe)
+	IVGlobal.emit_signal("close_all_admin_popups_requested")
+	IVGlobal.emit_signal("simulator_exited")
 
 func quit(force_quit := false) -> void:
-	if Global.disable_quit:
+	if IVGlobal.disable_quit:
 		return
 	if !force_quit:
 		if _state.network_state == IS_CLIENT:
 			OneUseConfirm.new("Disconnect from multiplayer game?", self, "quit", [true]) # TODO: text key
 			return
-		elif Global.enable_save_load and !_state.is_splash_screen:
+		elif IVGlobal.enable_save_load and !_state.is_splash_screen:
 			OneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	Global.emit_signal("about_to_stop_before_quit")
+	IVGlobal.emit_signal("about_to_stop_before_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
-	Global.emit_signal("about_to_quit")
+	IVGlobal.emit_signal("about_to_quit")
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
@@ -196,7 +196,7 @@ func _on_init() -> void:
 	_state.is_inited = false
 	_state.is_splash_screen = true
 	_state.is_system_built = false
-	_state.is_running = false # SceneTree.pause set in ProjectBuilder
+	_state.is_running = false # SceneTree.pause set in IVProjectBuilder
 	_state.is_quitting = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
@@ -206,20 +206,20 @@ func _ready():
 	_on_ready()
 
 func _on_ready() -> void:
-	Global.connect("project_builder_finished", self, "_finish_init", [], CONNECT_ONESHOT)
-	Global.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
-	Global.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("sim_stop_required", self, "require_stop")
-	Global.connect("sim_run_allowed", self, "allow_run")
-	Global.connect("quit_requested", self, "quit")
-	Global.connect("exit_requested", self, "exit")
+	IVGlobal.connect("project_builder_finished", self, "_finish_init", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("sim_stop_required", self, "require_stop")
+	IVGlobal.connect("sim_run_allowed", self, "allow_run")
+	IVGlobal.connect("quit_requested", self, "quit")
+	IVGlobal.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
 
 func _finish_init() -> void:
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
-	Global.emit_signal("state_manager_inited")
+	IVGlobal.emit_signal("state_manager_inited")
 
 func _on_about_to_build_system_tree() -> void:
 	_state.is_splash_screen = false
@@ -230,14 +230,14 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	print("System tree ready...")
 	yield(_tree, "idle_frame")
-	Global.emit_signal("about_to_start_simulator", is_new_game)
-	Global.emit_signal("close_all_admin_popups_requested")
+	IVGlobal.emit_signal("about_to_start_simulator", is_new_game)
+	IVGlobal.emit_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	allow_run(self)
 	yield(_tree, "idle_frame")
-	Global.emit_signal("update_gui_needed")
+	IVGlobal.emit_signal("update_gui_needed")
 	yield(_tree, "idle_frame")
-	Global.emit_signal("simulator_started")
+	IVGlobal.emit_signal("simulator_started")
 
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
@@ -248,13 +248,13 @@ func _stop_simulator() -> void:
 	emit_signal("run_threads_must_stop")
 	_state.is_running = false
 	_tree.paused = true
-	Global.emit_signal("run_state_changed", false)
+	IVGlobal.emit_signal("run_state_changed", false)
 	
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	_tree.paused = false
-	Global.emit_signal("run_state_changed", true)
+	IVGlobal.emit_signal("run_state_changed", true)
 	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true
 	emit_signal("run_threads_allowed")

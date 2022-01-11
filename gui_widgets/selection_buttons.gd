@@ -27,7 +27,7 @@ onready var _forward: Button = $Forward
 onready var _up: Button = $Up
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_selection_manager = GUIUtils.get_selection_manager(self)

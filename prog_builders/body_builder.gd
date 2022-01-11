@@ -71,10 +71,10 @@ var flag_fields := {
 var progress := 0 # for external progress bar
 
 # private
-var _ecliptic_rotation: Basis = Global.ecliptic_rotation
-var _settings: Dictionary = Global.settings
-var _bodies_2d_search: Array = Global.bodies_2d_search
-var _times: Array = Global.times
+var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
+var _settings: Dictionary = IVGlobal.settings
+var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
+var _times: Array = IVGlobal.times
 var _body_registry: BodyRegistry
 var _model_builder: ModelBuilder
 var _rings_builder: RingsBuilder
@@ -256,22 +256,22 @@ func _register(body: Body, parent: Body) -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("game_load_started", self, "init_system_build")
-	Global.get_tree().connect("node_added", self, "_on_node_added")
-	_body_registry = Global.program.BodyRegistry
-	_model_builder = Global.program.ModelBuilder
-	_rings_builder = Global.program.RingsBuilder
-	_light_builder = Global.program.LightBuilder
-	_huds_builder = Global.program.HUDsBuilder
-	_orbit_builder = Global.program.OrbitBuilder
-	_composition_builder = Global.program.CompositionBuilder
-	_io_manager = Global.program.IOManager
-	_scheduler = Global.program.Scheduler
-	_table_reader = Global.program.TableReader
-	_main_prog_bar = Global.program.get("MainProgBar") # safe if doesn't exist
-	_Body_ = Global.script_classes._Body_
-	_ModelController_ = Global.script_classes._ModelController_
-	_fallback_body_2d = Global.assets.fallback_body_2d
+	IVGlobal.connect("game_load_started", self, "init_system_build")
+	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	_body_registry = IVGlobal.program.BodyRegistry
+	_model_builder = IVGlobal.program.ModelBuilder
+	_rings_builder = IVGlobal.program.RingsBuilder
+	_light_builder = IVGlobal.program.LightBuilder
+	_huds_builder = IVGlobal.program.HUDsBuilder
+	_orbit_builder = IVGlobal.program.OrbitBuilder
+	_composition_builder = IVGlobal.program.CompositionBuilder
+	_io_manager = IVGlobal.program.IOManager
+	_scheduler = IVGlobal.program.Scheduler
+	_table_reader = IVGlobal.program.TableReader
+	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
+	_Body_ = IVGlobal.script_classes._Body_
+	_ModelController_ = IVGlobal.script_classes._ModelController_
+	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
 
 # *****************************************************************************
 # Build non-persisted after added to tree
@@ -346,7 +346,7 @@ func _finish_system_build() -> void: # Main thread
 		_is_building_system = false
 		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
-		var is_new_game: bool = !Global.state.is_loaded_game
-		Global.emit_signal("system_tree_ready", is_new_game)
+		var is_new_game: bool = !IVGlobal.state.is_loaded_game
+		IVGlobal.emit_signal("system_tree_ready", is_new_game)
 		if _main_prog_bar:
 			_main_prog_bar.stop()

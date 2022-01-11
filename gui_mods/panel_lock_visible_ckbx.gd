@@ -49,8 +49,8 @@ func set_panel_container(panel_container: PanelContainer):
 	_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")
 
 func _ready():
-	Global.connect("run_state_changed", self, "_on_run_state_changed")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_set_ancestor_panel_container()
 	if _panel_container:
 		_panel_container.connect("item_rect_changed", self, "_adjust_detection_rect")

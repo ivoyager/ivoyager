@@ -25,7 +25,7 @@ extends CheckBox
 var _camera: Camera
 
 func _ready():
-	Global.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	pressed = true
 

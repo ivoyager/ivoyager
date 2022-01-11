@@ -27,7 +27,7 @@ const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 var stop_sim := true
 var layout: Array # subclass sets in _init()
 
-onready var _state_manager: StateManager = Global.program.StateManager
+onready var _state_manager: StateManager = IVGlobal.program.StateManager
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer
@@ -118,8 +118,8 @@ func _ready():
 
 func _on_ready() -> void:
 	connect("popup_hide", self, "_on_popup_hide")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
-	theme = Global.themes.main
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel

@@ -40,7 +40,7 @@ var star_energy_exponent := 1.9
 var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
 # private
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 var _table_reader: TableReader
 var _io_manager: IOManager
 var _globe_mesh: SphereMesh
@@ -71,17 +71,17 @@ func add_model(body: Body, lazy_init: bool) -> void: # Main thread
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("about_to_stop_before_quit", self, "_clear")
-	_table_reader = Global.program.TableReader
-	_io_manager = Global.program.IOManager
-	_globe_mesh = Global.shared_resources.globe_mesh
-	_fallback_albedo_map = Global.assets.fallback_albedo_map
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
+	_table_reader = IVGlobal.program.TableReader
+	_io_manager = IVGlobal.program.IOManager
+	_globe_mesh = IVGlobal.shared_resources.globe_mesh
+	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
 	_preregister_files()
 
 func _preregister_files() -> void:
-	var models_search := Global.models_search
-	var maps_search := Global.maps_search
+	var models_search := IVGlobal.models_search
+	var maps_search := IVGlobal.maps_search
 	for table in model_tables:
 		var n_rows := _table_reader.get_n_rows(table)
 		var row := 0

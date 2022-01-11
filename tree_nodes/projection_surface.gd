@@ -30,7 +30,7 @@ signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
 
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
+var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 
@@ -39,7 +39,7 @@ func _project_init() -> void:
 	pass
 
 func _ready() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 

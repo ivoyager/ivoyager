@@ -27,7 +27,7 @@ var mean := NAN
 var minimum := NAN
 var maximum := NAN
 
-var _qty_txt_converter: QtyTxtConverter = Global.program.QtyTxtConverter
+var _qty_txt_converter: QtyTxtConverter = IVGlobal.program.QtyTxtConverter
 
 func get_one_liner(option_type: int, unit := "", precision := -1, num_type := QtyTxtConverter.NUM_DYNAMIC,
 		long_form := false, case_type := QtyTxtConverter.CASE_MIXED) -> String:

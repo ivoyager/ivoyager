@@ -27,15 +27,15 @@
 
 extends CheckBox
 
-var _settings: Dictionary = Global.settings
-onready var _settings_manager: SettingsManager = Global.program.SettingsManager
-onready var _project_gui: Control = Global.program.ProjectGUI
+var _settings: Dictionary = IVGlobal.settings
+onready var _settings_manager: SettingsManager = IVGlobal.program.SettingsManager
+onready var _project_gui: Control = IVGlobal.program.ProjectGUI
 
 var _init_focus_mode_by_class := {} # if not FOCUS_NONE
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_remember_focus_mode_recursive(_project_gui)
 	var mouse_only_gui_nav: bool = _settings.mouse_only_gui_nav
 	if pressed == mouse_only_gui_nav:

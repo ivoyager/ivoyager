@@ -35,8 +35,8 @@ const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
 
 # unpersisted - public are read-only!
-var bodies: Array = Global.bodies # indexed by body_id
-var bodies_by_name: Dictionary = Global.bodies_by_name # indexed by name
+var bodies: Array = IVGlobal.bodies # indexed by body_id
+var bodies_by_name: Dictionary = IVGlobal.bodies_by_name # indexed by name
 var _removed_body_ids := []
 
 func get_body_above_selection(selection_item: SelectionItem) -> Body:
@@ -116,8 +116,8 @@ func remove_selection_item(selection_item: SelectionItem) -> void:
 # *****************************************************************************
 
 func _ready():
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("game_load_finished", self, "_index_bodies")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("game_load_finished", self, "_index_bodies")
 
 func _clear() -> void:
 	top_bodies.clear()

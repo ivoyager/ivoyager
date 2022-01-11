@@ -42,14 +42,14 @@ func open() -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	_state_manager = Global.program.StateManager
+	_state_manager = IVGlobal.program.StateManager
 
 func _ready() -> void:
-	theme = Global.themes.main
+	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
-	Global.connect("credits_requested", self, "open")
+	IVGlobal.connect("credits_requested", self, "open")
 	
-	Global.connect("close_all_admin_popups_requested", self, "hide")
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	connect("popup_hide", self, "_on_hide")
 	find_node("Close").connect("pressed", self, "hide")
 	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")

@@ -23,7 +23,7 @@
 
 class_name Scheduler
 
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 var _ordered_signal_infos := [] # array "top" is always the next signal
 var _counter := 0
 var _signal_intervals := []
@@ -34,7 +34,7 @@ var _is_reversed := false
 func interval_connect(interval: float, target: Object, method: String, binds := [],
 		flags := 0) -> void:
 	# E.g., for 2-day repeating signal, use interval = 2.0 * UnitDefs.DAY.
-	# Note: Scheduler will disconnet all interval signals on Global signal
+	# Note: Scheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	assert(interval > 0.0)
 	var oneshot := bool(flags & CONNECT_ONESHOT)
@@ -42,7 +42,7 @@ func interval_connect(interval: float, target: Object, method: String, binds := 
 	connect(signal_str, target, method, binds, flags)
 
 func interval_disconnect(interval: float, target: Object, method: String) -> void:
-	# Note: Scheduler will disconnet all interval signals on Global signal
+	# Note: Scheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	var i := 0
 	var signal_str := ""
@@ -64,11 +64,11 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 	timekeeper.connect("time_altered", self, "_on_time_altered")
-	if Global.allow_time_reversal:
+	if IVGlobal.allow_time_reversal:
 		timekeeper.connect("speed_changed", self, "_on_speed_changed")
 
 func _make_interval_signal(interval: float, oneshot := false) -> String:
@@ -125,7 +125,7 @@ func _clear() -> void:
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
-	# Connected only if Global.allow_time_reversal.
+	# Connected only if IVGlobal.allow_time_reversal.
 	if _is_reversed == is_reversed:
 		return
 	_is_reversed = is_reversed

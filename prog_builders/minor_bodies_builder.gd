@@ -31,7 +31,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 	"18.5", "99.9"]
 
 # dependencies
-var _settings: Dictionary = Global.settings
+var _settings: Dictionary = IVGlobal.settings
 var _table_reader: TableReader
 var _l_point_builder: LPointBuilder
 var _minor_bodies_manager: MinorBodiesManager
@@ -40,13 +40,13 @@ var _body_registry: BodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
-var _asteroid_mag_cutoff_override: float = Global.asteroid_mag_cutoff_override
+var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 
 var _running_count := 0
 
 
 func build() -> void:
-	if Global.skip_asteroids:
+	if IVGlobal.skip_asteroids:
 		return
 	var star: Body = _body_registry.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
@@ -56,15 +56,15 @@ func build() -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
-	_table_reader = Global.program.TableReader
-	_l_point_builder = Global.program.LPointBuilder
-	_minor_bodies_manager = Global.program.MinorBodiesManager
-	_points_manager = Global.program.PointsManager
-	_body_registry = Global.program.BodyRegistry
-	_AsteroidGroup_ = Global.script_classes._AsteroidGroup_
-	_HUDPoints_ = Global.script_classes._HUDPoints_
-	_asteroid_binaries_dir = Global.asset_paths.asteroid_binaries_dir
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_table_reader = IVGlobal.program.TableReader
+	_l_point_builder = IVGlobal.program.LPointBuilder
+	_minor_bodies_manager = IVGlobal.program.MinorBodiesManager
+	_points_manager = IVGlobal.program.PointsManager
+	_body_registry = IVGlobal.program.BodyRegistry
+	_AsteroidGroup_ = IVGlobal.script_classes._AsteroidGroup_
+	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
+	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	var group_refs_by_name := _minor_bodies_manager.group_refs_by_name

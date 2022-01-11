@@ -25,7 +25,7 @@ var _selection_manager: SelectionManager
 var _hint_extension := "\n\n" + tr("HINT_SELECTION_IMAGE")
 
 func _ready() -> void:
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
@@ -42,5 +42,5 @@ func _on_selection_changed() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
 		# image click centers and "levels" the target body
-		Global.emit_signal("move_camera_to_selection_requested", _selection_manager.selection_item,
+		IVGlobal.emit_signal("move_camera_to_selection_requested", _selection_manager.selection_item,
 				-1, Vector3.ZERO, Vector3.ZERO, -1)

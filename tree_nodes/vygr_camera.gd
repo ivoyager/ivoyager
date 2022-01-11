@@ -20,7 +20,7 @@
 # This camera is always locked to a Body and constantly orients itself based on
 # that Body's orbit around its parent. You can replace this with another Camera
 # class, but see:
-#    Global signals related to camera (singletons/global.gd)
+#    IVGlobal signals related to camera (singletons/global.gd)
 #    VygrCameraHandler (prog_nodes/vygr_camera_handler.gd); replace this!
 #
 # The camera stays "in place" by maintaining view_position & view_rotations.
@@ -124,11 +124,11 @@ var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
 # private
-var _times: Array = Global.times
-var _settings: Dictionary = Global.settings
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-var _body_registry: BodyRegistry = Global.program.BodyRegistry
-var _max_dist: float = Global.max_camera_distance
+var _times: Array = IVGlobal.times
+var _settings: Dictionary = IVGlobal.settings
+var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
+var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
 var _use_local_up_dist: float
@@ -156,8 +156,8 @@ var _is_ecliptic := false
 var _last_dist := 0.0
 var _lat_long := Vector2(-INF, -INF)
 
-var _universe: Spatial = Global.program.Universe
-var _View_: Script = Global.script_classes._View_
+var _universe: Spatial = IVGlobal.program.Universe
+var _View_: Script = IVGlobal.script_classes._View_
 
 # settings
 onready var _transfer_time: float = _settings.camera_transfer_time
@@ -170,7 +170,7 @@ func set_start_view(view: View) -> void:
 
 func add_to_tree() -> void:
 	var start_body_name: String
-	start_body_name = Global.start_body_name
+	start_body_name = IVGlobal.start_body_name
 	var start_body: Body = _body_registry.bodies_by_name[start_body_name]
 	start_body.add_child(self)
 
@@ -330,12 +330,12 @@ func _ready() -> void:
 func _on_ready():
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
 	name = "VygrCamera"
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	Global.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
-	Global.connect("update_gui_needed", self, "_send_gui_refresh")
-	Global.connect("move_camera_to_selection_requested", self, "move_to_selection")
-	Global.connect("move_camera_to_body_requested", self, "move_to_body")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
+	IVGlobal.connect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.connect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
@@ -357,14 +357,14 @@ func _on_ready():
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_visuals_helper.camera = self
 	_visuals_helper.camera_fov = fov
-	Global.emit_signal("camera_ready", self)
+	IVGlobal.emit_signal("camera_ready", self)
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	Global.disconnect("update_gui_needed", self, "_send_gui_refresh")
-	Global.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
-	Global.disconnect("move_camera_to_body_requested", self, "move_to_body")
-	Global.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.disconnect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
+	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
 	selection_item = null
 	parent = null
 	_to_spatial = null

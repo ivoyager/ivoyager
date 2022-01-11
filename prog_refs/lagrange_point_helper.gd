@@ -43,4 +43,4 @@ func get_or_make_lagrange_point(body: Body, l_point: int) -> LPoint:
 # *****************************************************************************
 
 func _project_init() -> void:
-	_LPoint_ = Global.script_classes._LPoint_
+	_LPoint_ = IVGlobal.script_classes._LPoint_

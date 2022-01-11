@@ -21,19 +21,19 @@
 class_name AssetInitializer
 
 
-var _asset_replacement_dir: String = Global.asset_replacement_dir
-var _asset_paths_for_load: Dictionary = Global.asset_paths_for_load
-var _assets: Dictionary = Global.assets
+var _asset_replacement_dir: String = IVGlobal.asset_replacement_dir
+var _asset_paths_for_load: Dictionary = IVGlobal.asset_paths_for_load
+var _assets: Dictionary = IVGlobal.assets
 
 var _asset_path_arrays := [
-	Global.models_search,
-	Global.maps_search,
-	Global.bodies_2d_search,
-	Global.rings_search
+	IVGlobal.models_search,
+	IVGlobal.maps_search,
+	IVGlobal.bodies_2d_search,
+	IVGlobal.rings_search
 ]
 var _asset_path_dicts := [
-	Global.asset_paths,
-	Global.asset_paths_for_load
+	IVGlobal.asset_paths,
+	IVGlobal.asset_paths_for_load
 ]
 
 
@@ -45,7 +45,7 @@ func _on_init() -> void:
 	_load_assets()
 
 func _project_init() -> void:
-	Global.program.erase("AssetInitializer") # frees self
+	IVGlobal.program.erase("AssetInitializer") # frees self
 
 func _modify_asset_paths() -> void:
 	if !_asset_replacement_dir:

@@ -30,7 +30,7 @@ const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
 
-var _settings: Dictionary = Global.settings
+var _settings: Dictionary = IVGlobal.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _huds_manager: HUDsManager
@@ -81,12 +81,12 @@ func add_orbit(body: Body) -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	_HUDLabel_ = Global.script_classes._HUDLabel_
-	_HUDOrbit_ = Global.script_classes._HUDOrbit_
-	_huds_manager = Global.program.HUDsManager
-	_projection_surface = Global.program.ProjectionSurface
-	_orbit_ellipse_shader = Global.shared_resources.orbit_ellipse_shader
-	_build_orbit_mesh_arrays(Global.vertecies_per_orbit)
+	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
+	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
+	_huds_manager = IVGlobal.program.HUDsManager
+	_projection_surface = IVGlobal.program.ProjectionSurface
+	_orbit_ellipse_shader = IVGlobal.shared_resources.orbit_ellipse_shader
+	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
 
 func _build_orbit_mesh_arrays(n_vertecies: int) -> void:
 	var verteces := PoolVector3Array()

@@ -42,7 +42,7 @@ var basis_at_epoch := Basis.IDENTITY
 var model: Spatial # program-built MeshInstance or imported Spatial scene
 var model_reference_basis := Basis.IDENTITY # z up
 
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 var _dynamic_star: Array
 var _working_basis: Basis
 var _is_visible := false

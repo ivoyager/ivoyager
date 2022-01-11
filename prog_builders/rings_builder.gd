@@ -34,7 +34,7 @@ func add_rings(body: Body) -> void:
 	var radius: float = body.get_rings_radius()
 	var north: Vector3 = body.get_north_pole()
 	var array := [body, file_prefix, radius, north]
-	var io_manager: IOManager = Global.program.IOManager
+	var io_manager: IOManager = IVGlobal.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
 
 # *****************************************************************************
@@ -43,7 +43,7 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var radius: float = array[2]
 	var north: Vector3 = array[3]
-	var rings_search: Array = Global.rings_search
+	var rings_search: Array = IVGlobal.rings_search
 	var texture: Texture = file_utils.find_and_load_resource(rings_search, file_prefix)
 	assert(texture, "Could not find rings texture (no fallback!)")
 	var rings := MeshInstance.new()

@@ -88,12 +88,12 @@ var min_hud_dist: float
 var is_asleep := false
 
 # private
-var _times: Array = Global.times
-var _state: Dictionary = Global.state
-var _ecliptic_rotation: Basis = Global.ecliptic_rotation
+var _times: Array = IVGlobal.times
+var _state: Dictionary = IVGlobal.state
+var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 onready var _tree := get_tree()
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-var _huds_manager: HUDsManager = Global.program.HUDsManager
+var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
 var _model_visible := false
@@ -389,11 +389,11 @@ func _on_enter_tree() -> void:
 		orbit.connect("changed", self, "_on_orbit_changed")
 
 func _on_ready() -> void:
-#	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	Global.connect("setting_changed", self, "_settings_listener")
+#	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 
 func _on_time_altered(_previous_time: float) -> void:
@@ -406,7 +406,7 @@ func _on_time_altered(_previous_time: float) -> void:
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	Global.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
 	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
 func _on_process(_delta: float) -> void:

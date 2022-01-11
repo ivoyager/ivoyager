@@ -27,7 +27,7 @@ const DPRINT := true
 
 var key_box_min_size_x := 300
 
-onready var _input_map_manager: InputMapManager = Global.program.InputMapManager
+onready var _input_map_manager: InputMapManager = IVGlobal.program.InputMapManager
 onready var _actions: Dictionary = _input_map_manager.current
 var _hotkey_dialog: ConfirmationDialog = \
 		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()
@@ -136,20 +136,20 @@ func _on_init():
 
 func _project_init() -> void:
 	._project_init()
-	Global.connect("hotkeys_requested", self, "open")
-	if Global.disable_pause:
+	IVGlobal.connect("hotkeys_requested", self, "open")
+	if IVGlobal.disable_pause:
 		remove_item("toggle_pause")
-	if !Global.allow_time_reversal:
+	if !IVGlobal.allow_time_reversal:
 		remove_item("reverse_time")
-	if !Global.allow_dev_tools:
+	if !IVGlobal.allow_dev_tools:
 		remove_subpanel("LABEL_DEVELOPER")
-	if !Global.enable_save_load:
+	if !IVGlobal.enable_save_load:
 		remove_item("load_game")
 		remove_item("quick_load")
 		remove_item("save_as")
 		remove_item("quick_save")
 		remove_item("save_quit")
-	if Global.disable_quit:
+	if IVGlobal.disable_quit:
 		remove_item("quit")
 
 func _on_ready():
@@ -242,6 +242,6 @@ func _on_cancel_changes() -> void:
 	hide()
 
 func _open_options() -> void:
-	if !is_connected("popup_hide", Global, "emit_signal"):
-		connect("popup_hide", Global, "emit_signal", ["options_requested"], CONNECT_ONESHOT)
+	if !is_connected("popup_hide", IVGlobal, "emit_signal"):
+		connect("popup_hide", IVGlobal, "emit_signal", ["options_requested"], CONNECT_ONESHOT)
 	_on_cancel()

@@ -30,15 +30,15 @@ extends Button
 
 # private
 onready var _texture_rect: TextureRect = $TextureRect
-onready var _body_registry: BodyRegistry = Global.program.BodyRegistry
+onready var _body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
 var _selection_manager: SelectionManager # get from ancestor selection_manager
 var _selection_item: SelectionItem
 var _has_mouse := false
 
 func _ready():
-	Global.connect("about_to_start_simulator", self, "_build")
-	Global.connect("update_gui_needed", self, "_update_selection")
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_start_simulator", self, "_build")
+	IVGlobal.connect("update_gui_needed", self, "_update_selection")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_default_cursor_shape(CURSOR_POINTING_HAND)

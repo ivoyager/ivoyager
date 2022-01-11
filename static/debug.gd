@@ -22,7 +22,7 @@
 class_name Debug
 
 static func dlog(value) -> bool:
-	var file: File = Global.debug_log
+	var file: File = IVGlobal.debug_log
 	if !file:
 		return true
 	var line := str(value)

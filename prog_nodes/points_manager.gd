@@ -80,8 +80,8 @@ func forget_points_category(category: String) -> void: # not needed for load
 # *****************************************************************************
 
 func _ready():
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	Global.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 
 func _restore_init_state() -> void:
 	_show_points.clear()

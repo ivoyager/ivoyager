@@ -28,8 +28,8 @@ enum {ACTIVE, DISABLED, HIDDEN} # button_state
 # project var
 var button_inits := [
 	# External project can modify this array at _project_init() or use API
-	# below. "target" here must be a key in Global.program. Core buttons here
-	# may be excluded depending on Global project settings.
+	# below. "target" here must be a key in IVGlobal.program. Core buttons here
+	# may be excluded depending on IVGlobal project settings.
 	# [text, priority, is_splash, is_running, target_name, method, args]
 	["BUTTON_START", 1100, true, false, "SystemBuilder", "build_system_tree"],
 	["BUTTON_SAVE_AS", 1000, false, true, "SaveManager", "save_game"],
@@ -73,31 +73,31 @@ func change_button_state(text: String, button_state: int) -> void:
 # *****************************************************************************
 
 func _project_init() -> void:
-	Global.connect("project_inited", self, "_init_buttons")
-	Global.connect("about_to_quit", self, "_clear_for_quit")
+	IVGlobal.connect("project_inited", self, "_init_buttons")
+	IVGlobal.connect("about_to_quit", self, "_clear_for_quit")
 
 func _init_buttons() -> void:
 	for init_info in button_inits:
 		var text: String = init_info[0]
 		var target_name: String = init_info[4]
-		if !Global.program.has(target_name):
+		if !IVGlobal.program.has(target_name):
 			continue
 		var skip := false
 		match text:
 			"BUTTON_START":
-				skip = Global.skip_splash_screen
+				skip = IVGlobal.skip_splash_screen
 			"BUTTON_SAVE_AS", "BUTTON_QUICK_SAVE", "BUTTON_LOAD_FILE", "BUTTON_QUICK_LOAD":
-				skip = !Global.enable_save_load
+				skip = !IVGlobal.enable_save_load
 			"BUTTON_EXIT":
-				skip = Global.disable_exit or Global.skip_splash_screen
+				skip = IVGlobal.disable_exit or IVGlobal.skip_splash_screen
 			"BUTTON_QUIT":
-				skip = Global.disable_quit
+				skip = IVGlobal.disable_quit
 		if skip:
 			continue
 		var priority: int = init_info[1]
 		var is_splash: bool = init_info[2]
 		var is_running: bool = init_info[3]
-		var target: Object = Global.program[target_name]
+		var target: Object = IVGlobal.program[target_name]
 		var method: String = init_info[5]
 		var has_args: bool = init_info.size() > 6
 		var args: Array = init_info[6] if has_args else []

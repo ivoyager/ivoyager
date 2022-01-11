@@ -18,12 +18,12 @@
 # limitations under the License.
 # *****************************************************************************
 # Reads external data tables (.tsv files) and adds results to:
-#    - Global.table_rows
-#    - Global.wiki_titles (if Global.wiki_enabled)
+#    - IVGlobal.table_rows
+#    - IVGlobal.wiki_titles (if IVGlobal.wiki_enabled)
 #    - table containers in TableReader via init_tables()
 #
 # Use TableReader to interact with imported table data! This object removes
-# itself from Global.program after table import. No other object should
+# itself from IVGlobal.program after table import. No other object should
 # reference it.
 #
 # ivoyager/data/solar_system/*.tsv table construction:
@@ -33,7 +33,7 @@
 #    replaced with this value.
 #  Units (optional; REAL only!). Reals will be converted from provided units
 #    symbol. The symbol must be present in UnitDefs.MULTIPLIERS or FUNCTIONS or
-#    replacement dicts specified in Global.unit_multipliers, .unit_functions.
+#    replacement dicts specified in IVGlobal.unit_multipliers, .unit_functions.
 #
 # False is represented internally as "", so bool(internal_value) will give
 # meaningful result for both BOOL and X type.
@@ -47,22 +47,22 @@ const DPRINT := false
 const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
 
 # source files
-var _table_import: Dictionary = Global.table_import
-var _wiki_titles_import: Array = Global.wiki_titles_import
+var _table_import: Dictionary = IVGlobal.table_import
+var _wiki_titles_import: Array = IVGlobal.wiki_titles_import
 # imported data
 var _table_data := {}
 var _table_fields := {}
 var _table_data_types := {}
 var _table_units := {}
 var _table_row_dicts := {}
-var _table_rows: Dictionary = Global.table_rows # Global shared
-var _wiki_titles: Dictionary = Global.wiki_titles # Global shared
+var _table_rows: Dictionary = IVGlobal.table_rows # IVGlobal shared
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles # IVGlobal shared
 var _unique_register := {}
 
 # localization
-var _enable_wiki: bool = Global.enable_wiki
-var _enums: Script = Global.enums
-var _wiki: String = Global.wiki # wiki column header
+var _enable_wiki: bool = IVGlobal.enable_wiki
+var _enums: Script = IVGlobal.enums
+var _wiki: String = IVGlobal.wiki # wiki column header
 
 # current processing
 var _path: String
@@ -93,9 +93,9 @@ func _on_init() -> void:
 			% [time, _count_rows, _count_cells, _count_non_null, _unique_register.size()])
 
 func _project_init() -> void:
-	var table_reader: TableReader = Global.program.TableReader
+	var table_reader: TableReader = IVGlobal.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _table_row_dicts)
-	Global.program.erase("TableImporter") # frees self
+	IVGlobal.program.erase("TableImporter") # frees self
 
 func _import() -> void:
 	for table_name in _table_import:
@@ -105,8 +105,8 @@ func _import() -> void:
 		_data_types = []
 		_rows = {} # row index by name
 		_read_table()
-		# wiki_titles was populated on the fly (if Global.enable_wiki); but we
-		# save everything else to Global dicts below
+		# wiki_titles was populated on the fly (if IVGlobal.enable_wiki); but we
+		# save everything else to IVGlobal dicts below
 		_table_data[table_name] = _data
 		_table_fields[table_name] = _fields
 		for i in range(_data_types.size()):
@@ -240,7 +240,7 @@ func _data_types_test() -> bool:
 func _units_test() -> bool:
 	for unit in _units:
 		if unit:
-			assert(unit_defs.is_valid_unit(unit, true, Global.unit_multipliers, Global.unit_functions),
+			assert(unit_defs.is_valid_unit(unit, true, IVGlobal.unit_multipliers, IVGlobal.unit_functions),
 					"Unkown unit '" + unit + "' in " + _path)
 	return true
 

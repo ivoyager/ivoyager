@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "Global". Global init values should be modified by extension in
+# Singleton "IVGlobal". IVGlobal init values should be modified by extension in
 # their _extension_init() function and treated as immutable thereafter.
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
@@ -29,12 +29,12 @@ const IVOYAGER_VERSION_YMD := 20220110
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
-signal extentions_inited() # ProjectBuilder; nothing else added yet
+signal extentions_inited() # IVProjectBuilder; nothing else added yet
 signal translations_imported() # TranslationImporter; useful for boot screen
-signal project_objects_instantiated() # ProjectBuilder; Global.program populated
-signal project_inited() # ProjectBuilder; after all _project_init() calls
-signal project_nodes_added() # ProjectBuilder; prog_nodes & gui_nodes added
-signal project_builder_finished() # ProjectBuilder; 1 frame after above
+signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
+signal project_inited() # IVProjectBuilder; after all _project_init() calls
+signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added
+signal project_builder_finished() # IVProjectBuilder; 1 frame after above
 signal state_manager_inited()
 signal world_environment_added() # on Main after I/O thread finishes (slow!)
 signal about_to_build_system_tree()
@@ -97,8 +97,8 @@ var state := {} # see comments in StateManager; is_inited, is_running, etc.
 var times := [] # Timekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # Timekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # Timekeeper; UT [hour, minute, second] (ints)
-var program := {} # all objects instantiated by ProjectBuilder 
-var script_classes := {} # ProjectBuilder; script classes (possibly overriden)
+var program := {} # all objects instantiated by IVProjectBuilder 
+var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # SettingsManager
 var table_rows := {} # TableImporter; row number for all row names
@@ -109,9 +109,9 @@ var bodies := [] # BodyRegistry; indexed by body_id
 var bodies_by_name := {} # BodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # ProjectBuilder [[name, version, version_ymd], ...]
+var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
 
-# project vars - extensions modify via _extension_init(); see ProjectBuilder
+# project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
 var project_version_ymd := 0

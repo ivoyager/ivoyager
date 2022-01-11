@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains Global.themes dictionary. All controls are expected to set their
+# Maintains IVGlobal.themes dictionary. All controls are expected to set their
 # own theme from this dictionary.
 
 extends Reference
@@ -28,8 +28,8 @@ var global_font := "gui_main" # these are defined in FontManager
 var main_menu_font := "large"
 var splash_screen_font := "medium"
 
-var _themes: Dictionary = Global.themes
-var _fonts: Dictionary = Global.fonts
+var _themes: Dictionary = IVGlobal.themes
+var _fonts: Dictionary = IVGlobal.fonts
 
 func _project_init() -> void:
 	_themes.main = Theme.new()

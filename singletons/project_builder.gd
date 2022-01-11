@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "ProjectBuilder"
+# Singleton "IVProjectBuilder"
 #
 # This node builds the program (not the solar system!) and makes program
-# nodes, references and classes availible in Global dictionaries. All
+# nodes, references and classes availible in IVGlobal dictionaries. All
 # dictionaries here (except procedural_classes) define "small-s singletons".
-# A single instance of each class is instantiated and added to Global.program.
+# A single instance of each class is instantiated and added to IVGlobal.program.
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
@@ -34,11 +34,11 @@
 #    <name> is the name of your project or addon. This file should have an
 #    _extension_init() function. Instructions 2-3 refer to this file.
 # 2. Use _extension_init() to:
-#     a. modify "project init" values in Global singleton.
+#     a. modify "project init" values in IVGlobal singleton.
 #     b. modify this node's dictionaries to extend (i.e., subclass) or replace
 #        existing classes, remove classes, or add new classes.
 #     (Above happens before anything else is instantiated!)
-# 3. Hook up to Global "project_objects_instantiated" signal to modify
+# 3. Hook up to IVGlobal "project_objects_instantiated" signal to modify
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
 #    be accessed after instantiation in the "program" dictionary.
@@ -66,8 +66,8 @@ var init_sequence := [
 ]
 
 # Extension can assign another Spatial to var universe here. Code below will
-# assign this value to Global.program.Universe. I, Voyager always uses the
-# Global.program dictionary to find Universe and other program nodes, so node
+# assign this value to IVGlobal.program.Universe. I, Voyager always uses the
+# IVGlobal.program dictionary to find Universe and other program nodes, so node
 # names and tree locations don't matter.
 
 onready var universe: Spatial = get_node_or_null("/root/Universe")
@@ -78,13 +78,13 @@ onready var universe: Spatial = get_node_or_null("/root/Universe")
 #
 # Key formatting "_ClassName_" below is meant to be a reminder that the keyed
 # item at runtime might be a project-specific subclass (or in some cases
-# replacement) for the original class. For objects instanced by ProjectBuilder,
-# edge underscores are removed to form keys in the Global.program dictionary
+# replacement) for the original class. For objects instanced by IVProjectBuilder,
+# edge underscores are removed to form keys in the IVGlobal.program dictionary
 # and the "name" property of nodes.
 
 var initializers := {
-	# Reference classes. ProjectBuilder instances these first. They may erase
-	# themselves from Global.program when done (thereby freeing themselves).
+	# Reference classes. IVProjectBuilder instances these first. They may erase
+	# themselves from IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = LogInitializer,
 	_AssetInitializer_ = AssetInitializer,
 	_WikiInitializer_ = WikiInitializer,
@@ -93,7 +93,7 @@ var initializers := {
 }
 
 var prog_builders := {
-	# Reference classes. ProjectBuilder instances one of each. No save/load
+	# Reference classes. IVProjectBuilder instances one of each. No save/load
 	# persistence. These are treated exactly like prog_refs below, but
 	# separated for project organization.
 	_SaveBuilder_ = SaveBuilder, # ok to remove if you don't need game save
@@ -112,9 +112,9 @@ var prog_builders := {
 }
 
 var prog_refs := {
-	# Reference classes. ProjectBuilder instances one of each. No save/load
+	# Reference classes. IVProjectBuilder instances one of each. No save/load
 	# persistence.
-	_SettingsManager_ = SettingsManager, # 1st so Global.settings are valid
+	_SettingsManager_ = SettingsManager, # 1st so IVGlobal.settings are valid
 	_InputMapManager_ = InputMapManager,
 	_IOManager_ = IOManager,
 	_FontManager_ = FontManager, # ok to replace
@@ -129,7 +129,7 @@ var prog_refs := {
 }
 
 var prog_nodes := {
-	# ProjectBuilder instances one of each and adds as child of Universe. Use
+	# IVProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
 	_StateManager_ = StateManager,
 	_SaveManager_ = SaveManager, # remove if you don't need game saves
@@ -145,14 +145,14 @@ var prog_nodes := {
 var keep_gui_under_existing_controls := true # add before other children
 
 var gui_nodes := {
-	# ProjectBuilder instances one of each and adds as child of Universe. Use
+	# IVProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
 	# project init, or 2) reorder children of Universe after project build.
 	_ProjectionSurface_ = ProjectionSurface, # Control ok
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
-	_SplashScreen_ = null, # Project MUST set unless Global.skip_splash_screen
+	_SplashScreen_ = null, # Project MUST set unless IVGlobal.skip_splash_screen
 	_MainMenuPopup_ = MainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = LoadDialog, # safe to replace or remove
 	_SaveDialog_ = SaveDialog, # safe to replace or remove
@@ -164,8 +164,8 @@ var gui_nodes := {
 }
 
 var procedural_classes := {
-	# Nodes and references NOT instantiated by ProjectBuilder. These classes
-	# plus all above can be accessed from Global.script_classes (keys still
+	# Nodes and references NOT instantiated by IVProjectBuilder. These classes
+	# plus all above can be accessed from IVGlobal.script_classes (keys still
 	# have underscores). 
 	# tree_nodes
 	_Body_ = Body,
@@ -186,8 +186,8 @@ var procedural_classes := {
 }
 
 var extensions := []
-var program: Dictionary = Global.program
-var script_classes: Dictionary = Global.script_classes
+var program: Dictionary = IVGlobal.program
+var script_classes: Dictionary = IVGlobal.script_classes
 
 # **************************** INIT SEQUENCE **********************************
 
@@ -213,12 +213,12 @@ func init_extensions() -> void:
 	for extension in extensions:
 		if extension.has_method("_extension_init"):
 			extension._extension_init()
-		Global.extensions.append([extension.EXTENSION_NAME,
+		IVGlobal.extensions.append([extension.EXTENSION_NAME,
 				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
-	Global.emit_signal("extentions_inited")
+	IVGlobal.emit_signal("extentions_inited")
 
 func instantiate_and_index() -> void:
-	program.Global = Global
+	program.IVGlobal = IVGlobal
 	program.Universe = universe
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
@@ -233,7 +233,7 @@ func instantiate_and_index() -> void:
 		for key in dict:
 			assert(!script_classes.has(key))
 			script_classes[key] = dict[key]
-	Global.emit_signal("project_objects_instantiated")
+	IVGlobal.emit_signal("project_objects_instantiated")
 
 func init_project() -> void:
 	for key in initializers:
@@ -248,7 +248,7 @@ func init_project() -> void:
 			var object: Object = program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
-	Global.emit_signal("project_inited")
+	IVGlobal.emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
@@ -263,12 +263,12 @@ func add_project_nodes() -> void:
 	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(program[object_key])
-	Global.emit_signal("project_nodes_added")
+	IVGlobal.emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
 func signal_finished() -> void:
-	Global.emit_signal("project_builder_finished")
+	IVGlobal.emit_signal("project_builder_finished")
 
 # ****************************** PROJECT BUILD ********************************
 

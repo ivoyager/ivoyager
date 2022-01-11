@@ -60,9 +60,9 @@ var hybrid_drag_center_zone := 0.2 # for DRAG_PITCH_YAW_ROLL_HYBRID
 var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
-var _settings: Dictionary = Global.settings
-var _visuals_helper: VisualsHelper = Global.program.VisualsHelper
-onready var _projection_surface: ProjectionSurface = Global.program.ProjectionSurface
+var _settings: Dictionary = IVGlobal.settings
+var _visuals_helper: VisualsHelper = IVGlobal.program.VisualsHelper
+onready var _projection_surface: ProjectionSurface = IVGlobal.program.ProjectionSurface
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 var _camera: VygrCamera
@@ -86,11 +86,11 @@ var _suppress_camera_move := false
 
 
 func _ready():
-	Global.connect("system_tree_ready", self, "_on_system_tree_ready")
-	Global.connect("run_state_changed", self, "_on_run_state_changed")
-	Global.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	Global.connect("camera_ready", self, "_connect_camera")
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
 	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
 	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
@@ -117,7 +117,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
-	_selection_manager = Global.program.ProjectGUI.selection_manager
+	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 
 func _on_run_state_changed(is_running: bool) -> void:

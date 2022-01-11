@@ -55,7 +55,7 @@ var texture_2d: Texture
 var texture_slice_2d: Texture # stars only
 
 # private
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
@@ -97,7 +97,7 @@ func get_radius_for_camera() -> float:
 	return UnitDefs.KM
 
 func _init() -> void:
-	Global.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
+	IVGlobal.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:

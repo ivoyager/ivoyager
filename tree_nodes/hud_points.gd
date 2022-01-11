@@ -39,11 +39,11 @@ func init(group_: AsteroidGroup, color_: Color) -> void:
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_orbit_points.shader = Global.shared_resources.orbit_points_shader
+		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_shader
 	else:
-		_orbit_points.shader = Global.shared_resources.orbit_points_lagrangian_shader
+		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_lagrangian_shader
 	material_override = _orbit_points
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
 
 func draw_points() -> void:
@@ -71,7 +71,7 @@ func _init():
 	hide()
 
 func _ready() -> void:
-	Global.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
 func _timekeeper_process(time: float, _e_delta: float) -> void:
 	if !visible or time == _last_update_time:

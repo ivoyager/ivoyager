@@ -26,18 +26,18 @@ var date_format := "%02d/%02d/%02d"
 var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
 var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
 
-var _date: Array = Global.date
-var _clock: Array = Global.clock
+var _date: Array = IVGlobal.date
+var _clock: Array = IVGlobal.clock
 var _is_paused := false
 var _show_clock := false
 var _show_seconds := false
 var _hm := [0, 0]
-onready var _forward_color: Color = Global.colors.normal
-onready var _reverse_color: Color = Global.colors.danger
+onready var _forward_color: Color = IVGlobal.colors.normal
+onready var _reverse_color: Color = IVGlobal.colors.danger
 
 
 func _ready() -> void:
-	var timekeeper: Timekeeper = Global.program.Timekeeper
+	var timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_update")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
 

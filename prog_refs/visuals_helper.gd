@@ -50,8 +50,8 @@ func remove_mouse_target(target: Object) -> void:
 		target_dist = INF
 
 func _project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_reset")
-	var viewport := Global.get_viewport()
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_reset")
+	var viewport := IVGlobal.get_viewport()
 	viewport.connect("size_changed", self, "_on_viewport_size_changed")
 	veiwport_height = viewport.size.y
 
@@ -60,5 +60,5 @@ func _reset() -> void:
 	target_dist = INF
 
 func _on_viewport_size_changed() -> void:
-	var viewport := Global.get_viewport()
+	var viewport := IVGlobal.get_viewport()
 	veiwport_height = viewport.size.y

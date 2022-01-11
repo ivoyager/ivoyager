@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# To remove save/load functionality, set Global.enable_save_load = false. You
-# can then (optionally) delete these from ProjectBuilder:
+# To remove save/load functionality, set IVGlobal.enable_save_load = false. You
+# can then (optionally) delete these from IVProjectBuilder:
 #
 #   - SaveManager
 #   - SaveBuilder
@@ -36,26 +36,26 @@ const IS_CLIENT = Enums.NetworkState.IS_CLIENT
 const NetworkStopSync = Enums.NetworkStopSync
 
 # persistence - values will be replaced by file values on game load!
-var project_version: String = Global.project_version
-var project_version_ymd: int = Global.project_version_ymd
-var ivoyager_version: String = Global.IVOYAGER_VERSION
-var ivoyager_version_ymd: int = Global.IVOYAGER_VERSION_YMD
-var is_modded: bool = Global.is_modded
+var project_version: String = IVGlobal.project_version
+var project_version_ymd: int = IVGlobal.project_version_ymd
+var ivoyager_version: String = IVGlobal.IVOYAGER_VERSION
+var ivoyager_version_ymd: int = IVGlobal.IVOYAGER_VERSION_YMD
+var is_modded: bool = IVGlobal.is_modded
 
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 
 # private
-onready var _io_manager: IOManager = Global.program.IOManager
-onready var _state_manager: StateManager = Global.program.StateManager
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
-onready var _save_builder: SaveBuilder = Global.program.SaveBuilder
-onready var _universe: Spatial = Global.program.Universe
+onready var _io_manager: IOManager = IVGlobal.program.IOManager
+onready var _state_manager: StateManager = IVGlobal.program.StateManager
+onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
+onready var _save_builder: SaveBuilder = IVGlobal.program.SaveBuilder
+onready var _universe: Spatial = IVGlobal.program.Universe
 onready var _tree := get_tree()
-var _state: Dictionary = Global.state
-var _settings: Dictionary = Global.settings
-var _enable_save_load: bool = Global.enable_save_load
+var _state: Dictionary = IVGlobal.state
+var _settings: Dictionary = IVGlobal.settings
+var _enable_save_load: bool = IVGlobal.enable_save_load
 var _has_been_saved := false
 
 
@@ -63,15 +63,15 @@ func save_quit() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if quick_save():
-		Global.connect("game_save_finished", _state_manager, "quit", [true])
+		IVGlobal.connect("game_save_finished", _state_manager, "quit", [true])
 
 func quick_save() -> bool:
 	if _state.network_state == IS_CLIENT:
 		return false
 	if !_has_been_saved or !_settings.save_base_name or !file_utils.is_valid_dir(_settings.save_dir):
-		Global.emit_signal("save_dialog_requested")
+		IVGlobal.emit_signal("save_dialog_requested")
 		return false
-	Global.emit_signal("close_main_menu_requested")
+	IVGlobal.emit_signal("close_main_menu_requested")
 	var date_string := ""
 	if _settings.append_date_to_save:
 		date_string = _timekeeper.get_current_date_for_file()
@@ -84,18 +84,18 @@ func save_game(path := "") -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if !path:
-		Global.emit_signal("save_dialog_requested")
+		IVGlobal.emit_signal("save_dialog_requested")
 		return
 	print("Saving " + path)
 	_state.last_save_path = path
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
 	yield(_state_manager, "threads_finished")
-	Global.emit_signal("game_save_started")
+	IVGlobal.emit_signal("game_save_started")
 	assert(Debug.dlog("Tree status before save..."))
 	assert(Debug.dlog(_save_builder.debug_log(_universe)))
 	var gamesave := _save_builder.generate_gamesave(_universe)
 	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
-	Global.emit_signal("game_save_finished")
+	IVGlobal.emit_signal("game_save_finished")
 	_has_been_saved = true
 	_state_manager.allow_run(self)
 
@@ -103,16 +103,16 @@ func quick_load() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if _state.last_save_path:
-		Global.emit_signal("close_main_menu_requested")
+		IVGlobal.emit_signal("close_main_menu_requested")
 		load_game(_state.last_save_path)
 	else:
-		Global.emit_signal("load_dialog_requested")
+		IVGlobal.emit_signal("load_dialog_requested")
 
 func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and _state.network_state == IS_CLIENT:
 		return
 	if !network_gamesave and path == "":
-		Global.emit_signal("load_dialog_requested")
+		IVGlobal.emit_signal("load_dialog_requested")
 		return
 	var save_file: File
 	if !network_gamesave:
@@ -128,8 +128,8 @@ func load_game(path := "", network_gamesave := []) -> void:
 	_state_manager.require_stop(_state_manager, NetworkStopSync.LOAD, true)
 	yield(_state_manager, "threads_finished")
 	_state.is_loaded_game = true
-	Global.emit_signal("about_to_free_procedural_nodes")
-	Global.emit_signal("game_load_started")
+	IVGlobal.emit_signal("about_to_free_procedural_nodes")
+	IVGlobal.emit_signal("game_load_started")
 	yield(_tree, "idle_frame")
 	_save_builder.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
@@ -157,10 +157,10 @@ func _load_callback(gamesave: Array, err: int) -> void:
 		return # TODO: Exit and give user feedback
 	_save_builder.build_tree(_universe, gamesave)
 	_test_version()
-	Global.emit_signal("game_load_finished")
+	IVGlobal.emit_signal("game_load_finished")
 	_state.is_system_built = true
-	Global.emit_signal("system_tree_built_or_loaded", false)
-	Global.connect("simulator_started", self, "_simulator_started_after_load", [], CONNECT_ONESHOT)
+	IVGlobal.emit_signal("system_tree_built_or_loaded", false)
+	IVGlobal.connect("simulator_started", self, "_simulator_started_after_load", [], CONNECT_ONESHOT)
 
 func _simulator_started_after_load() -> void:
 	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
@@ -171,9 +171,9 @@ func _simulator_started_after_load() -> void:
 # *****************************************************************************
 
 func _ready():
-	Global.connect("save_requested", self, "_on_save_requested")
-	Global.connect("load_requested", self, "_on_load_requested")
-	Global.connect("save_quit_requested", self, "save_quit")
+	IVGlobal.connect("save_requested", self, "_on_save_requested")
+	IVGlobal.connect("load_requested", self, "_on_load_requested")
+	IVGlobal.connect("save_quit_requested", self, "save_quit")
 
 func _on_save_requested(path: String, is_quick_save := false) -> void:
 	if path or !is_quick_save:
@@ -188,12 +188,12 @@ func _on_load_requested(path: String, is_quick_load := false) -> void:
 		quick_load()
 
 func _test_version() -> void:
-	if project_version != Global.project_version \
-			or project_version_ymd != Global.project_version_ymd \
-			or ivoyager_version != Global.IVOYAGER_VERSION \
-			or ivoyager_version_ymd != Global.IVOYAGER_VERSION_YMD:
+	if project_version != IVGlobal.project_version \
+			or project_version_ymd != IVGlobal.project_version_ymd \
+			or ivoyager_version != IVGlobal.IVOYAGER_VERSION \
+			or ivoyager_version_ymd != IVGlobal.IVOYAGER_VERSION_YMD:
 		print("WARNING! Loaded game was created with different program version...")
-		prints(" ivoayger running: ", Global.IVOYAGER_VERSION, Global.IVOYAGER_VERSION_YMD)
+		prints(" ivoayger running: ", IVGlobal.IVOYAGER_VERSION, IVGlobal.IVOYAGER_VERSION_YMD)
 		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
-		prints(" project running:  ", Global.project_version, Global.project_version_ymd)
+		prints(" project running:  ", IVGlobal.project_version, IVGlobal.project_version_ymd)
 		prints(" project loaded:   ", project_version, project_version_ymd)

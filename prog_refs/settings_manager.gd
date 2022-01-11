@@ -80,7 +80,7 @@ func _on_init():
 		}
 	
 	# read-only
-	current = Global.settings
+	current = IVGlobal.settings
 
 func _on_change_current(setting: String) -> void:
-	Global.emit_signal("setting_changed", setting, current[setting])
+	IVGlobal.emit_signal("setting_changed", setting, current[setting])

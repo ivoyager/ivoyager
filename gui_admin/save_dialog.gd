@@ -27,30 +27,30 @@ const file_utils := preload("res://ivoyager/static/file_utils.gd")
 # project var
 var add_quick_save_button := true
 
-var _settings: Dictionary = Global.settings
-onready var _settings_manager: SettingsManager = Global.program.SettingsManager
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
+var _settings: Dictionary = IVGlobal.settings
+onready var _settings_manager: SettingsManager = IVGlobal.program.SettingsManager
+onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 
 
 func _project_init() -> void:
-	if !Global.enable_save_load:
+	if !IVGlobal.enable_save_load:
 		return
-	add_filter("*." + Global.save_file_extension + ";" + Global.save_file_extension_name)
-	Global.connect("save_dialog_requested", self, "_open")
-	Global.connect("close_all_admin_popups_requested", self, "hide")
+	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
+	IVGlobal.connect("save_dialog_requested", self, "_open")
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	connect("file_selected", self, "_save_file")
 	connect("popup_hide", self, "_on_hide")
 
 func _ready():
-	theme = Global.themes.main
+	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
-	Global.emit_signal("sim_stop_required", self)
+	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir = file_utils.get_save_dir_path(Global.is_modded, _settings.save_dir)
+	var save_dir = file_utils.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
 	var date_string: String = _timekeeper.get_current_date_for_file() \
 			if _settings.append_date_to_save else ""
 	current_path = file_utils.get_save_path(save_dir, _settings.save_base_name, date_string, false)
@@ -67,12 +67,12 @@ func _save_file(path: String) -> void:
 		cache_settings = true
 	if cache_settings:
 		_settings_manager.cache_now()
-	Global.emit_signal("close_main_menu_requested")
-	Global.emit_signal("save_requested", path, false)
+	IVGlobal.emit_signal("close_main_menu_requested")
+	IVGlobal.emit_signal("save_requested", path, false)
 
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
-	Global.emit_signal("sim_run_allowed", self)
+	IVGlobal.emit_signal("sim_run_allowed", self)
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	_on_unhandled_key_input(event)

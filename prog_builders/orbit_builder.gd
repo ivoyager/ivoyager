@@ -157,7 +157,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 		var orbit_ra: float = _table_reader.get_real(table_name, "orbit_RA", table_row)
 		var orbit_dec: float = _table_reader.get_real(table_name, "orbit_dec", table_row)
 		orbit.reference_normal = math.convert_spherical2(orbit_ra, orbit_dec)
-		orbit.reference_normal = Global.ecliptic_rotation * orbit.reference_normal
+		orbit.reference_normal = IVGlobal.ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
 	elif t.ref_plane:
 		assert(t.ref_plane == "Ecliptic")
@@ -168,9 +168,9 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: Body) -> O
 # *****************************************************************************
 
 func _project_init() -> void:
-	_table_reader = Global.program.TableReader
-	_Orbit_ = Global.script_classes._Orbit_
-	_dynamic_orbits = Global.dynamic_orbits
+	_table_reader = IVGlobal.program.TableReader
+	_Orbit_ = IVGlobal.script_classes._Orbit_
+	_dynamic_orbits = IVGlobal.dynamic_orbits
 
 func _reset_table_dict() -> void:
 	for field in t:

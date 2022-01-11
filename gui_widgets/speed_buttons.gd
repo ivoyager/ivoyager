@@ -23,22 +23,22 @@ extends HBoxContainer
 
 const IS_CLIENT := Enums.NetworkState.IS_CLIENT
 
-var _state: Dictionary = Global.state
+var _state: Dictionary = IVGlobal.state
 onready var _tree: SceneTree = get_tree()
-onready var _timekeeper: Timekeeper = Global.program.Timekeeper
+onready var _timekeeper: Timekeeper = IVGlobal.program.Timekeeper
 onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
 onready var _pause: Button = $Pause
 onready var _reverse: Button = $Reverse
 
 func remove_pause_button() -> void:
-	# not nessessary to call if Global.disable_pause
+	# not nessessary to call if IVGlobal.disable_pause
 	if _pause:
 		_pause.queue_free()
 		_pause = null
 
 func remove_reverse_button() -> void:
-	# not nessessary to call if !Global.allow_time_reversal
+	# not nessessary to call if !IVGlobal.allow_time_reversal
 	if _reverse:
 		_reverse.queue_free()
 		_reverse = null
@@ -47,12 +47,12 @@ func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
-	if !Global.disable_pause:
+	if !IVGlobal.disable_pause:
 		_pause.connect("pressed", self, "_change_paused")
 	else:
 		_pause.queue_free()
 		_pause = null
-	if Global.allow_time_reversal:
+	if IVGlobal.allow_time_reversal:
 		_reverse.connect("pressed", self, "_change_reversed")
 	else:
 		_reverse.queue_free()
@@ -82,7 +82,7 @@ func _increment_speed(increment: int) -> void:
 
 func _change_paused() -> void:
 	if _state.network_state != IS_CLIENT:
-		Global.emit_signal("pause_requested", _pause.pressed)
+		IVGlobal.emit_signal("pause_requested", _pause.pressed)
 
 func _change_reversed() -> void:
 	_timekeeper.set_time_reversed(_reverse.pressed)

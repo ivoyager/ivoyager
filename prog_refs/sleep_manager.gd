@@ -33,9 +33,9 @@ var _current_star_orbiter: Body
 
 
 func _project_init() -> void:
-	Global.connect("about_to_free_procedural_nodes", self, "_clear")
-	Global.connect("camera_ready", self, "_connect_camera")
-	Global.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 
 func _clear() -> void:
 	_current_star_orbiter = null
@@ -53,7 +53,7 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	var body_registry: BodyRegistry = Global.program.BodyRegistry
+	var body_registry: BodyRegistry = IVGlobal.program.BodyRegistry
 	for body in body_registry.top_bodies:
 		_change_sleep_recursive(body, true)
 

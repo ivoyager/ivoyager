@@ -26,7 +26,7 @@ var orbit: Orbit
 var orbit_mesh := ArrayMesh.new()
 var shader_material := ShaderMaterial.new()
 
-var _times: Array = Global.times
+var _times: Array = IVGlobal.times
 # shader params
 var _color: Color
 var _reference_normal: Vector3

@@ -21,7 +21,7 @@
 
 extends HBoxContainer
 
-onready var _huds_manager: HUDsManager = Global.program.HUDsManager
+onready var _huds_manager: HUDsManager = IVGlobal.program.HUDsManager
 onready var _orbits_button: CheckBox = $Orbits
 onready var _names_button: CheckBox = $Names
 onready var _symbols_button: CheckBox = $Symbols

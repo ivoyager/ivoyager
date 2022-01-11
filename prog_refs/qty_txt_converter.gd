@@ -433,8 +433,8 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 # *****************************************************************************
 
 func _project_init():
-	_multipliers = Global.unit_multipliers
-	_functions = Global.unit_functions
+	_multipliers = IVGlobal.unit_multipliers
+	_functions = IVGlobal.unit_functions
 	_n_prefixes = prefix_symbols.size()
 	assert(_n_prefixes == prefix_names.size())
 	_prefix_offset = prefix_symbols.find("")
