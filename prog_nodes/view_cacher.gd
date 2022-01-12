@@ -1,4 +1,4 @@
-# view_caching.gd
+# view_cacher.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -21,13 +21,13 @@
 # extension file if you want camera view to be cached and restored on start.
 # Used by Planetarium.
 #
-# You only need to set cache_interval if IVGlobal.disable_quit = true. Otherwise,
-# cache happens on quit and we don't use the Timer function.
+# You only need to set cache_interval for HTML5 export. Otherwise, _cache_view()
+# will be called on quit.
 
 extends Timer
-class_name IVViewCaching
+class_name IVViewCacher
 
-var cache_interval := 0.0 # s; enable (set >0.0) if IVGlobal.disable_quit
+var cache_interval := 0.0 # s; set >0.0 to enable Timer
 var cache_file_name := "view.vbinary"
 
 var _cache_dir: String = IVGlobal.cache_dir
@@ -42,13 +42,18 @@ func _project_init() -> void:
 	else:
 		paused = true # start() order won't do anything
 
-func _ready():
+func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("camera_ready", self, "_set_camera")
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("simulator_started", self, "start")
-	IVGlobal.connect("about_to_quit", self, "_cache_now")
-	connect("timeout", self, "_cache_now")
+	IVGlobal.connect("system_tree_ready", self, "_set_view")
+	IVGlobal.connect("simulator_started", self, "start") # start if not paused
+	IVGlobal.connect("about_to_quit", self, "_cache_view") # app quit button
+	connect("timeout", self, "_cache_view")
+
+func _notification(what: int) -> void:
+	# This should work for all desktop exports; does NOT work for HTML5 export.
+	if what == NOTIFICATION_WM_QUIT_REQUEST:
+		_cache_view()
 
 func _clear() -> void:
 	_camera = null
@@ -57,7 +62,9 @@ func _clear() -> void:
 func _set_camera(camera: IVCamera) -> void:
 	_camera = camera
 
-func _on_system_tree_ready(_is_new_game: bool) -> void:
+func _set_view(_is_new_game: bool) -> void:
+	if !_camera:
+		return
 	var file := _get_file(File.READ)
 	if !file:
 		return
@@ -65,7 +72,9 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	var view: IVView = dict2inst(view_dict)
 	_camera.set_start_view(view)
 
-func _cache_now() -> void:
+func _cache_view() -> void:
+	if !_camera:
+		return
 	var file := _get_file(File.WRITE)
 	if !file:
 		return
