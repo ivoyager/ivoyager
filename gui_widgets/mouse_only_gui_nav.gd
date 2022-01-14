@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends CheckBox
+
 # GUI widget. This exist due to current Godot Engine hard-coding of GUI
 # navigation hotkeys, specifically arrow keys (w/out mods). See issue #43663;
 # hopefully will be fixed in 4.0. This checkbox widget allows the user to
@@ -25,13 +27,12 @@
 # Assumes that focus_mode is initially class-based only (i.e., Button, etc.,
 # have focus_mode = FOCUS_ALL).
 
-extends CheckBox
-
 var _settings: Dictionary = IVGlobal.settings
+var _init_focus_mode_by_class := {} # if not FOCUS_NONE
+
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _project_gui: Control = IVGlobal.program.ProjectGUI
 
-var _init_focus_mode_by_class := {} # if not FOCUS_NONE
 
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
@@ -43,14 +44,17 @@ func _ready():
 	else:
 		pressed = mouse_only_gui_nav # causes _toggled() call
 
+
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	_remember_focus_mode_recursive(_project_gui)
+	_change_focus_mode_recursive(_project_gui, pressed)
+
+
 func _toggled(button_pressed):
 	if button_pressed != _settings.mouse_only_gui_nav:
 		_settings_manager.change_current("mouse_only_gui_nav", button_pressed)
 		_change_focus_mode_recursive(_project_gui, button_pressed)
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	_remember_focus_mode_recursive(_project_gui)
-	_change_focus_mode_recursive(_project_gui, pressed)
 
 func _remember_focus_mode_recursive(control: Control) -> void:
 	var focus_mode_ := control.get_focus_mode()
@@ -59,6 +63,7 @@ func _remember_focus_mode_recursive(control: Control) -> void:
 	for child in control.get_children():
 		if child is Control:
 			_remember_focus_mode_recursive(child)
+
 
 func _change_focus_mode_recursive(control: Control, disable: bool) -> void:
 #	prints(control.get_focus_mode(), control, control.get_class())
@@ -72,9 +77,9 @@ func _change_focus_mode_recursive(control: Control, disable: bool) -> void:
 		if child is Control:
 			_change_focus_mode_recursive(child, disable)
 
+
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"mouse_only_gui_nav":
 			if pressed != value:
 				pressed = value
-				

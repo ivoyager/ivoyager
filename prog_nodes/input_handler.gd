@@ -17,6 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVInputHandler
+extends Node
+
 # Most actions are defined in prog_refs/input_map_manager.gd, not in
 # project.godot!
 #
@@ -24,19 +27,9 @@
 #   - here as _input()
 #   - IVCameraHandler as _unhandled_input()
 #   - various GUIs as _gui_input() or _unhandled_key_input()
-#
-
-extends Node
-class_name IVInputHandler
-
 
 const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
-
-onready var _tree: SceneTree = get_tree()
-onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-var _selection_manager: IVSelectionManager
 var _state: Dictionary = IVGlobal.state
 var _script_classes: Dictionary = IVGlobal.script_classes
 var _disable_pause: bool = IVGlobal.disable_pause
@@ -44,37 +37,31 @@ var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 var _allow_dev_tools: bool = IVGlobal.allow_dev_tools
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _suppressors := []
+var _selection_manager: IVSelectionManager
 
-func suppress(object: Object) -> void:
-	_suppressors.append(object)
+onready var _tree: SceneTree = get_tree()
+onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
-func unsuppress(object: Object) -> void:
-	_suppressors.erase(object)
-
-func make_action(action: String, is_pressed := true) -> void:
-	# Cause an action as if a key was pressed or released. Many camera actions
-	# require a release (is_pressed = false) after a press.
-	var event := InputEventAction.new()
-	event.action = action
-	event.pressed = is_pressed
-	_tree.input_event(event)
-
-# *****************************************************************************
 
 func _ready():
 	IVGlobal.connect("system_tree_ready", self, "_on_system_ready")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
+
 
 func _on_system_ready(_is_new_game: bool) -> void:
 	var project_gui = IVGlobal.program.ProjectGUI
 	if "selection_manager" in project_gui:
 		_selection_manager = project_gui.selection_manager
 
+
 func _on_about_to_free_procedural_nodes() -> void:
 	_selection_manager = null
 
+
 func _input(event: InputEvent) -> void:
 	_on_input(event)
+
 
 func _on_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
@@ -133,6 +120,24 @@ func _on_input(event: InputEvent) -> void:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
 
+
+func suppress(object: Object) -> void:
+	_suppressors.append(object)
+
+
+func unsuppress(object: Object) -> void:
+	_suppressors.erase(object)
+
+
+func make_action(action: String, is_pressed := true) -> void:
+	# Cause an action as if a key was pressed or released. Many camera actions
+	# require a release (is_pressed = false) after a press.
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = is_pressed
+	_tree.input_event(event)
+
+
 func _test_input_for_debug(event: InputEvent) -> bool:
 	if _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
 		IVGlobal.emit_signal("debug_pressed")
@@ -140,6 +145,7 @@ func _test_input_for_debug(event: InputEvent) -> bool:
 		return false # input NOT handled!
 	_tree.set_input_as_handled()
 	return true
+
 
 func _input_for_selection_manager(event: InputEvent) -> void:
 	if event.is_action_pressed("select_forward"):
@@ -190,4 +196,3 @@ func _input_for_splash_screen(event: InputEvent) -> void:
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
-

@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVHUDPoints
+extends MeshInstance
+
 # This node constitutes many (up to 100000s of) display points as shaders that
 # maintain their own orbit.
-
-extends MeshInstance
-class_name IVHUDPoints
 
 const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR
@@ -34,6 +34,15 @@ var color: Color # read only
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
+
+func _init():
+	hide()
+
+
+func _ready() -> void:
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+
+
 func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	group = group_
 	color = color_
@@ -45,6 +54,7 @@ func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	material_override = _orbit_points
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_timekeeper_process")
+
 
 func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
@@ -67,11 +77,6 @@ func draw_points() -> void:
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_orbit_points.set_shader_param("point_size", 3.0)
 
-func _init():
-	hide()
-
-func _ready() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
 func _timekeeper_process(time: float, _e_delta: float) -> void:
 	if !visible or time == _last_update_time:
@@ -85,6 +90,7 @@ func _timekeeper_process(time: float, _e_delta: float) -> void:
 		_orbit_points.set_shader_param("frame_data", Vector3(time, lagrange_a, lagrange_L))
 	else:
 		_orbit_points.set_shader_param("time", time)
+
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == "asteroid_point_color":

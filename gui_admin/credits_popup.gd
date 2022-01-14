@@ -17,14 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVCreditsPopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
+
 # WIP - I'm not super happy with the credits appearance right now. Needs work!
 # This was narrowly coded to parse ivoyager/CREDITS.md or file with identical
 # markup. Someone can generalize if they want.
-
-extends PopupPanel
-class_name IVCreditsPopup
-const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
-
 
 # project vars - modify on project_objects_instantiated signal
 var stop_sim := true
@@ -33,36 +32,38 @@ var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 var _state_manager: IVStateManager
 
 
+func _project_init() -> void:
+	_state_manager = IVGlobal.program.StateManager
+
+
+func _ready() -> void:
+	theme = IVGlobal.themes.main
+	set_process_unhandled_key_input(false)
+	IVGlobal.connect("credits_requested", self, "open")
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	connect("popup_hide", self, "_on_hide")
+	find_node("Close").connect("pressed", self, "hide")
+	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_tree().set_input_as_handled()
+		hide()
+
+
 func open() -> void:
 	set_process_unhandled_key_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	popup_centered_minsize()
 
-# *****************************************************************************
-
-func _project_init() -> void:
-	_state_manager = IVGlobal.program.StateManager
-
-func _ready() -> void:
-	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
-	IVGlobal.connect("credits_requested", self, "open")
-	
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	connect("popup_hide", self, "_on_hide")
-	find_node("Close").connect("pressed", self, "hide")
-	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
 
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-	
-func _on_unhandled_key_input(event: InputEventKey) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		hide()

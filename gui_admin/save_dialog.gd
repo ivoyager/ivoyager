@@ -17,9 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-extends FileDialog
 class_name IVSaveDialog
+extends FileDialog
 const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 
 const files := preload("res://ivoyager/static/files.gd")
@@ -28,6 +27,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var add_quick_save_button := true
 
 var _settings: Dictionary = IVGlobal.settings
+
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
@@ -41,9 +41,21 @@ func _project_init() -> void:
 	connect("file_selected", self, "_save_file")
 	connect("popup_hide", self, "_on_hide")
 
+
 func _ready():
 	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_tree().set_input_as_handled()
+		hide()
+
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
@@ -55,7 +67,8 @@ func _open() -> void:
 			if _settings.append_date_to_save else ""
 	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_items()
-	
+
+
 func _save_file(path: String) -> void:
 	var cache_settings := false
 	var save_base_name := files.get_base_file_name(current_file)
@@ -70,14 +83,7 @@ func _save_file(path: String) -> void:
 	IVGlobal.emit_signal("close_main_menu_requested")
 	IVGlobal.emit_signal("save_requested", path, false)
 
+
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
 	IVGlobal.emit_signal("sim_run_allowed", self)
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-
-func _on_unhandled_key_input(event: InputEventKey) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		hide()

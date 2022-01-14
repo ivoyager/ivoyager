@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVWikiInitializer
 
 
 func _init() -> void:
 	_on_init()
+	
 	
 func _on_init() -> void:
 	if !IVGlobal.enable_wiki:
@@ -35,6 +35,7 @@ func _on_init() -> void:
 			IVGlobal.wiki = locale + ".wikipedia"
 		else:
 			IVGlobal.wiki = "en.wikipedia"
+
 
 func _project_init() -> void:
 	IVGlobal.program.erase("WikiInitializer") # frees self

@@ -17,11 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. For usage in a setter popup, see gui_widgets/time_set_popup.tscn.
-
 extends HBoxContainer
 
+# GUI widget. For usage in a setter popup, see gui_widgets/time_set_popup.tscn.
+
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+
+
+func _ready() -> void:
+	$Set.connect("pressed", self, "_on_set")
+	$Year.connect("value_changed", self, "_on_date_changed")
+	$Month.connect("value_changed", self, "_on_date_changed")
+	$Day.connect("value_changed", self, "_on_date_changed")
+
 
 func set_current() -> void:
 	var date_time := _timekeeper.get_gregorian_date_time()
@@ -34,11 +42,6 @@ func set_current() -> void:
 	$Minute.value = time_array[1]
 	$Second.value = time_array[2]
 
-func _ready() -> void:
-	$Set.connect("pressed", self, "_on_set")
-	$Year.connect("value_changed", self, "_on_date_changed")
-	$Month.connect("value_changed", self, "_on_date_changed")
-	$Day.connect("value_changed", self, "_on_date_changed")
 
 func _on_set() -> void:
 	var year := int($Year.value)
@@ -49,6 +52,7 @@ func _on_set() -> void:
 	var second := int($Second.value)
 	var new_time := _timekeeper.get_sim_time(year, month, day, hour, minute, second)
 	_timekeeper.set_time(new_time)
+
 
 func _on_date_changed(_value: float) -> void:
 	var day := int($Day.value)

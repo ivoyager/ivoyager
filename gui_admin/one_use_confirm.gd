@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-extends ConfirmationDialog
 class_name IVOneUseConfirm
+extends ConfirmationDialog
 
 var _stop_sim: bool
+
 
 func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 		args := [], stop_sim := true):
@@ -37,12 +37,14 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	theme = IVGlobal.themes.main
 	popup_centered()
 
-func _on_hide() -> void:
-	if _stop_sim:
-		IVGlobal.emit_signal("sim_run_allowed", self)
-	queue_free()
 
 func _unhandled_key_input(event: InputEventKey) -> void:
 	get_tree().set_input_as_handled() # eat all keys
 	if event.is_action_pressed("ui_cancel"):
 		hide()
+
+
+func _on_hide() -> void:
+	if _stop_sim:
+		IVGlobal.emit_signal("sim_run_allowed", self)
+	queue_free()

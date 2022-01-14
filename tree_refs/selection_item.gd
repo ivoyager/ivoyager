@@ -17,9 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-
 class_name IVSelectionItem
+
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -42,8 +41,6 @@ var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var spatial: Spatial # for camera reference
 var body: IVBody # = spatial if is_body else null
 var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
-
-
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"system_radius", "view_rotate_when_close", "view_min_distance",
@@ -58,49 +55,57 @@ var texture_slice_2d: Texture # stars only
 var _times: Array = IVGlobal.times
 
 
-func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
-	if !is_body:
-		return VECTOR2_ZERO
-	return body.get_latitude_longitude(at_translation, time)
-
-func get_global_origin() -> Vector3:
-	return spatial.global_transform.origin
-
-func get_flags() -> int:
-	if is_body:
-		return body.flags
-	return 0
-
-func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
-	if !is_body:
-		return ECLIPTIC_Z
-	return body.get_orbit_normal(time, flip_retrograde)
-
-func get_up(time := NAN) -> Vector3:
-	if !is_body:
-		return ECLIPTIC_Z
-	return body.get_north_pole(time)
-
-func get_ground_ref_basis(time := NAN) -> Basis:
-	if !is_body:
-		return IDENTITY_BASIS
-	return body.get_ground_ref_basis(time)
-
-func get_orbit_ref_basis(time := NAN) -> Basis:
-	if !is_body:
-		return IDENTITY_BASIS
-	return body.get_orbit_ref_basis(time)
-
-func get_radius_for_camera() -> float:
-	if is_body:
-		return body.get_mean_radius()
-	return IVUnits.KM
-
 func _init() -> void:
 	IVGlobal.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
+
 
 func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:
 		texture_2d = body.texture_2d
 		texture_slice_2d = body.texture_slice_2d
 
+
+func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
+	if !is_body:
+		return VECTOR2_ZERO
+	return body.get_latitude_longitude(at_translation, time)
+
+
+func get_global_origin() -> Vector3:
+	return spatial.global_transform.origin
+
+
+func get_flags() -> int:
+	if is_body:
+		return body.flags
+	return 0
+
+
+func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
+	if !is_body:
+		return ECLIPTIC_Z
+	return body.get_orbit_normal(time, flip_retrograde)
+
+
+func get_up(time := NAN) -> Vector3:
+	if !is_body:
+		return ECLIPTIC_Z
+	return body.get_north_pole(time)
+
+
+func get_ground_ref_basis(time := NAN) -> Basis:
+	if !is_body:
+		return IDENTITY_BASIS
+	return body.get_ground_ref_basis(time)
+
+
+func get_orbit_ref_basis(time := NAN) -> Basis:
+	if !is_body:
+		return IDENTITY_BASIS
+	return body.get_orbit_ref_basis(time)
+
+
+func get_radius_for_camera() -> float:
+	if is_body:
+		return body.get_mean_radius()
+	return IVUnits.KM

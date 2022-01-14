@@ -17,15 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVInputMapManager
+extends IVCacheManager
+
 # We define InputMap actions here to decouple version control for ivoyager and
 # extensions/addons (i.e., get them out of project.godot), and to allow player
 # modification via IVHotkeysPopup. Non-default actions are persisted in
 # <cache_dir>/<cache_file_name> (specified below).
 #
 # This node and IVHotkeysPopup are unaware of actions defined in project.godot.
-
-extends IVCacheManager
-class_name IVInputMapManager
 
 # project vars
 var reserved_scancodes := [] # user can't overwrite w/ or w/out key mods
@@ -37,127 +37,6 @@ var event_classes := { # we'll expand this as needed
 # read-only!
 var actions_by_scancode_w_mods := {}
 
-func set_action_event_dict(action: String, event_dict: Dictionary, index: int,
-		suppress_caching := false) -> void:
-	# index can be arbitrarily large to add to end.
-	# If suppress_caching = true, be sure to call cache_now() later.
-	var events_array: Array = current[action]
-	_about_to_change_current(action) # un-indexes scancodes, if any
-	var event_class: String = event_dict.event_class
-	var event_array_index := get_event_array_index(action, event_class, index)
-	if event_array_index == events_array.size():
-		events_array.append(event_dict)
-	else:
-		events_array[event_array_index] = event_dict
-	_on_change_current(action)
-	if !suppress_caching:
-		cache_now()
-
-func get_event_array_index(action: String, event_class: String, index: int) -> int:
-	# index can be arbitrarily large
-	var events_array: Array = current[action]
-	var i := 0
-	var class_index := 0
-	while i < events_array.size():
-		var event_dict: Dictionary = events_array[i]
-		if event_dict.event_class == event_class:
-			if index == class_index:
-				return i
-			class_index += 1
-		i += 1
-	return i # size of events_array
-
-func get_event_dicts(action: String, event_class: String) -> Array:
-	var result := []
-	var events_array: Array = current[action]
-	for event_dict in events_array:
-		if event_dict.event_class == event_class:
-			result.append(event_dict)
-	return result
-
-func remove_event_dict_by_index(action: String, event_class: String, index: int,
-		suppress_caching := false) -> void:
-	# index is for event dicts of specified event_class (not array index!)
-	var scancodes_w_mods: Array
-	if event_class == "InputEventKey":
-		scancodes_w_mods = get_scancodes_w_mods_for_action(action)
-	var events_array: Array = current[action]
-	var i := 0
-	var class_index := 0
-	while i < events_array.size():
-		var event_dict: Dictionary = events_array[i]
-		if event_dict.event_class == event_class:
-			if index == class_index:
-				events_array.remove(i)
-				if event_class == "InputEventKey":
-					var scancode_w_mods: int = scancodes_w_mods[index]
-					actions_by_scancode_w_mods.erase(scancode_w_mods)
-				break
-			class_index += 1
-		i += 1
-	_on_change_current(action)
-	if !suppress_caching:
-		cache_now()
-
-func remove_event_dict_by_match(action: String, event_class: String, scancode_w_mods := -1,
-		button_index := -1, suppress_caching := false) -> void:
-	# NOT TESTED!!!
-	# supply scancode_w_mods or button_index, depending on event_class
-	var events_array: Array = current[action]
-	var i := 0
-	while i < events_array.size():
-		var event_dict: Dictionary = events_array[i]
-		if event_dict.event_class == event_class:
-			if event_class == "InputEventKey":
-				if scancode_w_mods == get_scancode_w_mods_for_event_dict(event_dict):
-					events_array.remove(i)
-					actions_by_scancode_w_mods.erase(scancode_w_mods)
-					break
-			elif event_class == "InputEventJoypadButton":
-				if button_index == event_dict.button_index:
-					events_array.remove(i)
-					break
-		i += 1
-	if !suppress_caching:
-		cache_now()
-
-func get_scancodes_w_mods_for_action(action: String) -> Array:
-	var scancodes := []
-	var events_array: Array = current[action]
-	for event_dict in events_array:
-		if event_dict.event_class == "InputEventKey":
-			var scancode := get_scancode_w_mods_for_event_dict(event_dict)
-			scancodes.append(scancode)
-	return scancodes
-
-static func get_scancode_w_mods_for_event_dict(event_dict: Dictionary) -> int:
-	assert(event_dict.event_class == "InputEventKey")
-	var scancode: int = event_dict.scancode
-	var shift: bool = event_dict.get("shift", false)
-	var control: bool = event_dict.get("control", false)
-	var alt: bool = event_dict.get("alt", false)
-	var meta: bool = event_dict.get("meta", false)
-	return get_scancode_w_mods(scancode, shift, control, alt, meta)
-
-static func get_scancode_w_mods(scancode: int, shift := false, control := false,
-		alt := false, meta := false) -> int:
-	if shift:
-		scancode |= KEY_MASK_SHIFT
-	if control:
-		scancode |= KEY_MASK_CTRL
-	if alt:
-		scancode |= KEY_MASK_ALT
-	if meta:
-		scancode |= KEY_MASK_META
-	return scancode
-
-static func strip_scancode_mods(scancode: int) -> int:
-	# Note: InputEventKey.scancode is already stripped.
-	scancode &= ~KEY_MASK_SHIFT
-	scancode &= ~KEY_MASK_CTRL
-	scancode &= ~KEY_MASK_ALT
-	scancode &= ~KEY_MASK_META
-	return scancode
 
 # *****************************************************************************
 
@@ -313,6 +192,151 @@ func _project_init() -> void:
 	._project_init()
 	_init_actions()
 
+
+func _init_actions() -> void:
+	for action in current:
+		var scancodes := get_scancodes_w_mods_for_action(action)
+		for scancode_w_mods in scancodes:
+#			assert(!actions_by_scancode_w_mods.has(scancode_w_mods))
+			actions_by_scancode_w_mods[scancode_w_mods] = action
+		_set_input_map(action)
+
+
+# *****************************************************************************
+
+func set_action_event_dict(action: String, event_dict: Dictionary, index: int,
+		suppress_caching := false) -> void:
+	# index can be arbitrarily large to add to end.
+	# If suppress_caching = true, be sure to call cache_now() later.
+	var events_array: Array = current[action]
+	_about_to_change_current(action) # un-indexes scancodes, if any
+	var event_class: String = event_dict.event_class
+	var event_array_index := get_event_array_index(action, event_class, index)
+	if event_array_index == events_array.size():
+		events_array.append(event_dict)
+	else:
+		events_array[event_array_index] = event_dict
+	_on_change_current(action)
+	if !suppress_caching:
+		cache_now()
+
+
+func get_event_array_index(action: String, event_class: String, index: int) -> int:
+	# index can be arbitrarily large
+	var events_array: Array = current[action]
+	var i := 0
+	var class_index := 0
+	while i < events_array.size():
+		var event_dict: Dictionary = events_array[i]
+		if event_dict.event_class == event_class:
+			if index == class_index:
+				return i
+			class_index += 1
+		i += 1
+	return i # size of events_array
+
+
+func get_event_dicts(action: String, event_class: String) -> Array:
+	var result := []
+	var events_array: Array = current[action]
+	for event_dict in events_array:
+		if event_dict.event_class == event_class:
+			result.append(event_dict)
+	return result
+
+
+func remove_event_dict_by_index(action: String, event_class: String, index: int,
+		suppress_caching := false) -> void:
+	# index is for event dicts of specified event_class (not array index!)
+	var scancodes_w_mods: Array
+	if event_class == "InputEventKey":
+		scancodes_w_mods = get_scancodes_w_mods_for_action(action)
+	var events_array: Array = current[action]
+	var i := 0
+	var class_index := 0
+	while i < events_array.size():
+		var event_dict: Dictionary = events_array[i]
+		if event_dict.event_class == event_class:
+			if index == class_index:
+				events_array.remove(i)
+				if event_class == "InputEventKey":
+					var scancode_w_mods: int = scancodes_w_mods[index]
+					actions_by_scancode_w_mods.erase(scancode_w_mods)
+				break
+			class_index += 1
+		i += 1
+	_on_change_current(action)
+	if !suppress_caching:
+		cache_now()
+
+
+func remove_event_dict_by_match(action: String, event_class: String, scancode_w_mods := -1,
+		button_index := -1, suppress_caching := false) -> void:
+	# NOT TESTED!!!
+	# supply scancode_w_mods or button_index, depending on event_class
+	var events_array: Array = current[action]
+	var i := 0
+	while i < events_array.size():
+		var event_dict: Dictionary = events_array[i]
+		if event_dict.event_class == event_class:
+			if event_class == "InputEventKey":
+				if scancode_w_mods == get_scancode_w_mods_for_event_dict(event_dict):
+					events_array.remove(i)
+					actions_by_scancode_w_mods.erase(scancode_w_mods)
+					break
+			elif event_class == "InputEventJoypadButton":
+				if button_index == event_dict.button_index:
+					events_array.remove(i)
+					break
+		i += 1
+	if !suppress_caching:
+		cache_now()
+
+
+func get_scancodes_w_mods_for_action(action: String) -> Array:
+	var scancodes := []
+	var events_array: Array = current[action]
+	for event_dict in events_array:
+		if event_dict.event_class == "InputEventKey":
+			var scancode := get_scancode_w_mods_for_event_dict(event_dict)
+			scancodes.append(scancode)
+	return scancodes
+
+
+static func get_scancode_w_mods_for_event_dict(event_dict: Dictionary) -> int:
+	assert(event_dict.event_class == "InputEventKey")
+	var scancode: int = event_dict.scancode
+	var shift: bool = event_dict.get("shift", false)
+	var control: bool = event_dict.get("control", false)
+	var alt: bool = event_dict.get("alt", false)
+	var meta: bool = event_dict.get("meta", false)
+	return get_scancode_w_mods(scancode, shift, control, alt, meta)
+
+
+static func get_scancode_w_mods(scancode: int, shift := false, control := false,
+		alt := false, meta := false) -> int:
+	if shift:
+		scancode |= KEY_MASK_SHIFT
+	if control:
+		scancode |= KEY_MASK_CTRL
+	if alt:
+		scancode |= KEY_MASK_ALT
+	if meta:
+		scancode |= KEY_MASK_META
+	return scancode
+
+
+static func strip_scancode_mods(scancode: int) -> int:
+	# Note: InputEventKey.scancode is already stripped.
+	scancode &= ~KEY_MASK_SHIFT
+	scancode &= ~KEY_MASK_CTRL
+	scancode &= ~KEY_MASK_ALT
+	scancode &= ~KEY_MASK_META
+	return scancode
+
+
+# *****************************************************************************
+
 func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:
 	var events_array_2_size := events_array_2.size()
 	if events_array_1.size() != events_array_2_size:
@@ -335,6 +359,7 @@ func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:
 #	prints("_is_equal:", events_array_1, events_array_2)
 	return true
 
+
 func _is_event_dict_equal(event_dict_1: Dictionary, event_dict_2: Dictionary) -> bool:
 	if event_dict_1.size() != event_dict_2.size():
 		return false
@@ -345,10 +370,12 @@ func _is_event_dict_equal(event_dict_1: Dictionary, event_dict_2: Dictionary) ->
 			return false
 	return true
 
+
 func _about_to_change_current(action: String) -> void:
 	var scancodes := get_scancodes_w_mods_for_action(action)
 	for scancode_w_mods in scancodes:
 		actions_by_scancode_w_mods.erase(scancode_w_mods)
+
 
 func _on_change_current(action: String) -> void:
 	var scancodes := get_scancodes_w_mods_for_action(action)
@@ -356,13 +383,6 @@ func _on_change_current(action: String) -> void:
 		actions_by_scancode_w_mods[scancode_w_mods] = action
 	_set_input_map(action)
 
-func _init_actions() -> void:
-	for action in current:
-		var scancodes := get_scancodes_w_mods_for_action(action)
-		for scancode_w_mods in scancodes:
-#			assert(!actions_by_scancode_w_mods.has(scancode_w_mods))
-			actions_by_scancode_w_mods[scancode_w_mods] = action
-		_set_input_map(action)
 
 func _set_input_map(action: String) -> void:
 	if InputMap.has_action(action):

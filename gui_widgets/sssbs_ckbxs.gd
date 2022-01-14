@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends VBoxContainer
+
 # GUI widget. Small Solar System Bodies. This one is hard-coded for our
 # specific Solar System composition.
 #
 # Comets check box is present but hidden (until they are implemented). 
-
-extends VBoxContainer
 
 onready var _points_manager: IVPointsManager = IVGlobal.program.PointsManager
 onready var _buttons := {
@@ -35,11 +35,13 @@ onready var _buttons := {
 	TN = $HBox3/TN,
 }
 
+
 func _ready() -> void:
 	_points_manager.connect("show_points_changed", self, "_on_show_points_changed")
 	for key in _buttons:
 		var button: Button = _buttons[key]
 		button.connect("pressed", self, "_on_pressed", [key, button])
+
 
 func _on_pressed(group_or_category: String, button: Button) -> void:
 	if group_or_category == "JT":
@@ -47,6 +49,7 @@ func _on_pressed(group_or_category: String, button: Button) -> void:
 		_points_manager.show_points("JT5", button.pressed)
 	else:
 		_points_manager.show_points(group_or_category, button.pressed)
+
 
 func _on_show_points_changed(group_or_category: String, is_show: bool) -> void:
 	if group_or_category == "JT4" or group_or_category == "JT5":

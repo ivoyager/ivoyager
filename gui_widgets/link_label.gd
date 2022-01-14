@@ -1,4 +1,4 @@
-# ivoyager_homepage.gd
+# link_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,18 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. A hyperlink!
-
 extends RichTextLabel
 
+# GUI widget. A hyperlink!
+
 var _link_url := "https://www.ivoyager.dev"
+
+
+func _meta_clicked(_meta: String) -> void:
+	OS.shell_open(_link_url)
+
 
 func set_hyperlink(link_text: String, link_url: String) -> void:
 	bbcode_text = "[url]" + link_text + "[/url]"
 	_link_url = link_url
-
-func _ready() -> void:
-	connect("meta_clicked", self, "_on_meta_clicked")
-
-func _on_meta_clicked(_meta: String) -> void:
-	OS.shell_open(_link_url)

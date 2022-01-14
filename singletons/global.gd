@@ -17,15 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "IVGlobal". IVGlobal init values should be modified by extension in
-# their _extension_init() function and treated as immutable thereafter.
+extends Node
+
+# Singleton "IVGlobal"
+#
+# IVGlobal init values should be modified by extension in their
+# _extension_init() function and treated as immutable thereafter.
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
 
-extends Node
-
-const IVOYAGER_VERSION := "0.0.11-dev"
-const IVOYAGER_VERSION_YMD := 20220110
+const IVOYAGER_VERSION := "0.0.11-DEV"
+const IVOYAGER_VERSION_YMD := 20220113
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -225,6 +227,7 @@ var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/drive
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
+
 
 func _ready():
 	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,

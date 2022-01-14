@@ -17,11 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-extends Reference
 class_name IVLagrangePointBuilder
 
+
 var _LPoint_: Script
+
+
+func _project_init() -> void:
+	_LPoint_ = IVGlobal.script_classes._LPoint_
+
 
 func get_or_make_lagrange_point(body: IVBody, l_point: int) -> IVLPoint:
 	# Any IVBody can have Lagrange Points: L1, L2, L3, L4 or L5. Since most
@@ -39,8 +43,3 @@ func get_or_make_lagrange_point(body: IVBody, l_point: int) -> IVLPoint:
 		body.get_parent().add_child(lagrange_point)
 		body.lagrange_points[l_point - 1] = lagrange_point
 	return lagrange_point
-
-# *****************************************************************************
-
-func _project_init() -> void:
-	_LPoint_ = IVGlobal.script_classes._LPoint_

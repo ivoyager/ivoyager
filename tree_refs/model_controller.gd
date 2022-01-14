@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVModelController
+
 # Handles rotation (TODO: and rotation precession). For star, handles dynamic
 # emission and scaling (to maintain effects & visibility at great distance)
 #
@@ -26,12 +28,9 @@
 # For astronomical bodies, we set rotation_vector to match "north". See
 # comments under IVBody.get_north().
 
-class_name IVModelController
-
-const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
-
 signal changed() # public properties; whoever changes must emit
 
+const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 # IVBody
 var rotation_vector := Vector3(0.0, 0.0, 1.0)
@@ -54,6 +53,7 @@ func get_ground_ref_basis(time := NAN) -> Basis:
 	var rotation_angle := wrapf(time * rotation_rate, 0.0, TAU)
 	return basis_at_epoch.rotated(rotation_vector, rotation_angle)
 
+
 func set_body_parameters(rotation_vector_: Vector3, rotation_rate_: float,
 		rotation_at_epoch_: float) -> void:
 	rotation_vector = rotation_vector_
@@ -63,15 +63,18 @@ func set_body_parameters(rotation_vector_: Vector3, rotation_rate_: float,
 	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch_)
 	_working_basis = basis_at_epoch * model_reference_basis
 
+
 func set_model_reference_basis(model_basis_: Basis) -> void:
 	model_reference_basis = model_basis_
 	_working_basis = basis_at_epoch * model_reference_basis
+
 
 func set_model(model_: Spatial, use_basis_as_reference := true) -> void:
 	model = model_
 	model.visible = _is_visible
 	if use_basis_as_reference:
 		set_model_reference_basis(model.transform.basis)
+
 
 func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent: float,
 		energy_ref_dist: float, energy_near: float, energy_exponent: float) -> void:
@@ -84,6 +87,7 @@ func set_dynamic_star(surface: SpatialMaterial, grow_dist: float, grow_exponent:
 		energy_near,
 		energy_exponent
 	]
+
 
 func process_visible(time: float, camera_dist: float) -> void:
 	if !model:
@@ -110,6 +114,7 @@ func process_visible(time: float, camera_dist: float) -> void:
 		if dist_ratio < 1.0:
 			dist_ratio = 1.0
 		surface.emission_energy = emission_near * pow(dist_ratio, emission_exponent)
+
 
 func change_visibility(is_visible: bool) -> void:
 	_is_visible = is_visible

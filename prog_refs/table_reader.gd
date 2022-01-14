@@ -17,10 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# For get functions, table_name is "planets", "moons", etc. Most get functions
-# will take either row or row_name.
-
 class_name IVTableReader
+
+# Public API for all data loaded from .tsv files.
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -30,20 +29,40 @@ var _table_fields: Dictionary # a dict of columns for each table
 var _table_data_types: Dictionary # an array for each table
 var _table_units: Dictionary # an array for each table
 var _table_row_dicts: Dictionary
-var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table rows
+var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table row names
 var _bodies_by_name: Dictionary = IVGlobal.bodies_by_name
-var _enums: Script
-var _unit_multipliers: Dictionary
-var _unit_functions: Dictionary
+var _enums: Script = IVGlobal.enums
+var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
+var _unit_functions: Dictionary = IVGlobal.unit_functions
 
+
+# *****************************************************************************
+# init
+
+func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
+		table_units: Dictionary, table_row_dicts: Dictionary) -> void:
+	# Called by IVTableImporter at _project_init()
+	_table_data = table_data
+	_table_fields = table_fields
+	_table_data_types = table_data_types
+	_table_units = table_units
+	_table_row_dicts = table_row_dicts
+
+
+# *****************************************************************************
+# public functions
+# For get functions, table_name is "planets", "moons", etc. Most get functions
+# will take either row or row_name.
 
 func get_n_rows(table_name: String) -> int:
 	var data: Array = _table_data[table_name]
 	return data.size()
 
+
 func get_row_name(table_name: String, row: int) -> String:
 	var row_data: Array = _table_data[table_name][row]
 	return row_data[0]
+
 
 func get_row(table_name: String, row_name: String) -> int:
 	# Returns -1 if missing.
@@ -54,9 +73,11 @@ func get_row(table_name: String, row_name: String) -> int:
 		return table_rows[row_name]
 	return -1
 
+
 func get_names_dict(table_name: String) -> Dictionary:
 	# Returns an enum-like dict of row number keyed by row names. Don't modify!
 	return _table_row_dicts[table_name]
+
 
 func get_column_array(table_name: String, field_name: String) -> Array:
 	# field_name must exist in specified table
@@ -78,6 +99,7 @@ func get_column_array(table_name: String, field_name: String) -> Array:
 		row += 1
 	return result
 
+
 func get_1st_true_row(table_name: String, field_name: String) -> int:
 	# field_name must exist in specified table
 	var column_fields: Dictionary = _table_fields[table_name]
@@ -92,9 +114,11 @@ func get_1st_true_row(table_name: String, field_name: String) -> int:
 		row += 1
 	return -1
 
+
 func has_row_name(table_name: String, row_name: String) -> bool:
 	var table_rows: Dictionary = _table_row_dicts[table_name]
 	return table_rows.has(row_name)
+
 
 func has_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
@@ -107,6 +131,7 @@ func has_value(table_name: String, field_name: String, row := -1, row_name := ""
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
 	return bool(row_data[column]) # "" is missing value
+
 
 func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
 	# Use for STRING or to obtain a "raw", unconverted table value.
@@ -122,6 +147,7 @@ func get_string(table_name: String, field_name: String, row := -1, row_name := "
 	var column = column_fields[field_name]
 	return row_data[column]
 
+
 func get_bool(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
 	# Use for table Type "BOOL" or "X"; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
@@ -135,6 +161,7 @@ func get_bool(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = column_fields[field_name]
 	return convert_bool(row_data[column])
 
+
 func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
@@ -147,6 +174,7 @@ func get_int(table_name: String, field_name: String, row := -1, row_name := "") 
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
 	return convert_int(row_data[column])
+
 
 func get_real(table_name: String, field_name: String, row := -1, row_name := "") -> float:
 	# Returns NAN if missing.
@@ -163,13 +191,15 @@ func get_real(table_name: String, field_name: String, row := -1, row_name := "")
 	var unit: String = units[column]
 	return convert_real(row_data[column], unit)
 
+
 func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var real_str := get_string(table_name, field_name, row, row_name)
 	if !real_str:
 		return -1 # missing value
 	return get_real_str_precision(real_str)
-	
+
+
 func get_least_real_precision(table_name: String, field_names: Array, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var min_precision := 9999
@@ -181,6 +211,7 @@ func get_least_real_precision(table_name: String, field_names: Array, row := -1,
 		if min_precision > precission:
 			min_precision = precission
 	return min_precision
+
 
 func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> IVBody:
 	# Use for Type = "BODY" to get the IVBody instance.
@@ -196,6 +227,7 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	var column = column_fields[field_name]
 	return convert_body(row_data[column])
 
+
 func get_data(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Use for Type = "DATA" to get row number of the cell item.
 	# Returns -1 if missing.
@@ -209,6 +241,7 @@ func get_data(table_name: String, field_name: String, row := -1, row_name := "")
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
 	return convert_data(row_data[column])
+
 
 func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
 	# Returns -1 if missing.
@@ -224,6 +257,7 @@ func get_enum(table_name: String, field_name: String, row := -1, row_name := "")
 	var data_types: Array = _table_data_types[table_name]
 	var enum_name: String = data_types[column]
 	return convert_enum(row_data[column], enum_name)
+
 
 func build_dictionary_from_keys(dict: Dictionary, table_name: String, row: int) -> void:
 	# Sets dict value for each dict key that exactly matches a column field
@@ -243,6 +277,7 @@ func build_dictionary_from_keys(dict: Dictionary, table_name: String, row: int) 
 		var unit: String = units[column]
 		dict[column_field] = convert_value(value, data_type, unit)
 
+
 func build_dictionary(dict: Dictionary, fields: Array, table_name: String, row: int) -> void:
 	# Sets dict value for each fields that exactly matches a column field in
 	# table. Missing value in table without default will not be set.
@@ -260,6 +295,7 @@ func build_dictionary(dict: Dictionary, fields: Array, table_name: String, row: 
 		var data_type: String = data_types[column]
 		var unit: String = units[column]
 		dict[column_field] = convert_value(value, data_type, unit)
+
 
 func build_object(object: Object, fields: Array, table_name: String, row: int) -> void:
 	# Sets object property for each fields that exactly matches a column field
@@ -279,6 +315,7 @@ func build_object(object: Object, fields: Array, table_name: String, row: int) -
 		var unit: String = units[column]
 		object[column_field] = convert_value(value, data_type, unit)
 
+
 func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: int) -> int:
 	# Sets flag if table value exists and would evaluate true in get_bool(),
 	# i.e., is true or x. Does not unset.
@@ -296,6 +333,7 @@ func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: i
 		if convert_bool(value):
 			flags |= flag
 	return flags
+
 
 func get_real_precisions(fields: Array, table_name: String, row: int) -> Array:
 	# Return array is same size as fields. Missing and non-REALs are -1.
@@ -319,6 +357,7 @@ func get_real_precisions(fields: Array, table_name: String, row: int) -> Array:
 		var precision := get_real_str_precision(value)
 		result.append(precision)
 	return result
+
 
 func get_real_str_precision(real_str: String) -> int:
 	# See table REAL format rules in solar_system/planets.tsv.
@@ -357,6 +396,7 @@ func get_real_str_precision(real_str: String) -> int:
 		n_digits -= n_unsig_zeros
 	return n_digits
 
+
 func convert_value(value: String, data_type: String, unit := ""): # untyped return
 	match data_type:
 		"REAL":
@@ -374,11 +414,14 @@ func convert_value(value: String, data_type: String, unit := ""): # untyped retu
 		_: # must be valid enum name (this was verified on import)
 			return convert_enum(value, data_type)
 
+
 func convert_bool(value: String) -> bool:
 	return value == "true"
 
+
 func convert_int(value: String) -> int:
 	return int(value) if value else -1
+
 
 func convert_real(value: String, unit := "") -> float:
 	if !value:
@@ -391,35 +434,22 @@ func convert_real(value: String, unit := "") -> float:
 		real = units.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
 	return float(real)
 
+
 func convert_data(value: String) -> int:
 	if !value:
 		return -1
 	assert(_table_rows.has(value), "Unknown table row name " + value)
 	return _table_rows[value]
 
+
 func convert_body(value: String) -> IVBody:
 	if !value:
 		return null
 	return _bodies_by_name.get(value)
+
 
 func convert_enum(value: String, enum_name: String) -> int:
 	if !value:
 		return -1
 	var dict: Dictionary = _enums[enum_name]
 	return dict[value]
-
-# *****************************************************************************
-# init
-
-func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
-		table_units: Dictionary, table_row_dicts: Dictionary) -> void:
-	_table_data = table_data
-	_table_fields = table_fields
-	_table_data_types = table_data_types
-	_table_units = table_units
-	_table_row_dicts = table_row_dicts
-
-func _project_init() -> void:
-	_enums = IVGlobal.enums
-	_unit_multipliers = IVGlobal.unit_multipliers
-	_unit_functions = IVGlobal.unit_functions

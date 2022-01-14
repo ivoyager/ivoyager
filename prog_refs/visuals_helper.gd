@@ -17,8 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVVisualsHelper
+
+# Helps IVBody instances, IVCamera and IVProjectionSurface coordinate for mouse
+# icon and mouse click selection.
+
 
 const VECTOR2_NULL := Vector2(-INF, -INF)
 
@@ -26,28 +29,9 @@ var camera: Camera # IVCamera sets
 var camera_fov: float # IVCamera sets
 var veiwport_height: float
 var mouse_position: Vector2 # IVProjectionSurface sets
-var mouse_target: Object
+var mouse_target: Object # IVProjectionSurface reads
 var target_dist := INF
 
-
-func get_distance_to_camera(global_translation: Vector3) -> float:
-	var camera_global_translation := camera.global_transform.origin
-	return global_translation.distance_to(camera_global_translation)
-
-func unproject_position_in_front(global_translation: Vector3) -> Vector2:
-	if camera.is_position_behind(global_translation):
-		return VECTOR2_NULL
-	return camera.unproject_position(global_translation)
-
-func set_mouse_target(target: Object, camera_dist: float) -> void:
-	if camera_dist < target_dist:
-		mouse_target = target
-		target_dist = camera_dist
-
-func remove_mouse_target(target: Object) -> void:
-	if mouse_target == target:
-		mouse_target = null
-		target_dist = INF
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_reset")
@@ -55,9 +39,34 @@ func _project_init() -> void:
 	viewport.connect("size_changed", self, "_on_viewport_size_changed")
 	veiwport_height = viewport.size.y
 
+
 func _reset() -> void:
 	mouse_target = null
 	target_dist = INF
+
+
+func get_distance_to_camera(global_translation: Vector3) -> float:
+	var camera_global_translation := camera.global_transform.origin
+	return global_translation.distance_to(camera_global_translation)
+
+
+func unproject_position_in_front(global_translation: Vector3) -> Vector2:
+	if camera.is_position_behind(global_translation):
+		return VECTOR2_NULL
+	return camera.unproject_position(global_translation)
+
+
+func set_mouse_target(target: Object, camera_dist: float) -> void:
+	if camera_dist < target_dist:
+		mouse_target = target
+		target_dist = camera_dist
+
+
+func remove_mouse_target(target: Object) -> void:
+	if mouse_target == target:
+		mouse_target = null
+		target_dist = INF
+
 
 func _on_viewport_size_changed() -> void:
 	var viewport := IVGlobal.get_viewport()

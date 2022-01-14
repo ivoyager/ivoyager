@@ -17,6 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSaveManager
+extends Node
+
 # To remove save/load functionality, set IVGlobal.enable_save_load = false. You
 # can then (optionally) delete these from IVProjectBuilder:
 #
@@ -25,17 +28,15 @@
 #   - SaveDialog
 #   - LoadDialog
 
-extends Node
-class_name IVSaveManager
-
 const files := preload("res://ivoyager/static/files.gd")
-const DPRINT := false
 const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
 const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
 const NetworkStopSync = IVEnums.NetworkStopSync
 
-# persistence - values will be replaced by file values on game load!
+const DPRINT := false
+
+# persisted - values will be replaced by file values on game load!
 var project_version: String = IVGlobal.project_version
 var project_version_ymd: int = IVGlobal.project_version_ymd
 var ivoyager_version: String = IVGlobal.IVOYAGER_VERSION
@@ -47,16 +48,23 @@ const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 
 # private
+var _state: Dictionary = IVGlobal.state
+var _settings: Dictionary = IVGlobal.settings
+var _enable_save_load: bool = IVGlobal.enable_save_load
+var _has_been_saved := false
+
 onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
 onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
 onready var _universe: Spatial = IVGlobal.program.Universe
 onready var _tree := get_tree()
-var _state: Dictionary = IVGlobal.state
-var _settings: Dictionary = IVGlobal.settings
-var _enable_save_load: bool = IVGlobal.enable_save_load
-var _has_been_saved := false
+
+
+func _ready():
+	IVGlobal.connect("save_requested", self, "_on_save_requested")
+	IVGlobal.connect("load_requested", self, "_on_load_requested")
+	IVGlobal.connect("save_quit_requested", self, "save_quit")
 
 
 func save_quit() -> void:
@@ -64,6 +72,7 @@ func save_quit() -> void:
 		return
 	if quick_save():
 		IVGlobal.connect("game_save_finished", _state_manager, "quit", [true])
+
 
 func quick_save() -> bool:
 	if _state.network_state == IS_CLIENT:
@@ -79,6 +88,7 @@ func quick_save() -> bool:
 			date_string, true)
 	save_game(path)
 	return true
+
 
 func save_game(path := "") -> void:
 	if _state.network_state == IS_CLIENT:
@@ -99,6 +109,7 @@ func save_game(path := "") -> void:
 	_has_been_saved = true
 	_state_manager.allow_run(self)
 
+
 func quick_load() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
@@ -107,6 +118,7 @@ func quick_load() -> void:
 		load_game(_state.last_save_path)
 	else:
 		IVGlobal.emit_signal("load_dialog_requested")
+
 
 func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and _state.network_state == IS_CLIENT:
@@ -144,12 +156,42 @@ func load_game(path := "", network_gamesave := []) -> void:
 	else:
 		_load_callback(network_gamesave, OK)
 
+
+# *****************************************************************************
+
+func _on_save_requested(path: String, is_quick_save := false) -> void:
+	if path or !is_quick_save:
+		save_game(path)
+	else:
+		quick_save()
+
+
+func _on_load_requested(path: String, is_quick_load := false) -> void:
+	if path or !is_quick_load:
+		load_game(path)
+	else:
+		quick_load()
+
+
+func _test_version() -> void:
+	if project_version != IVGlobal.project_version \
+			or project_version_ymd != IVGlobal.project_version_ymd \
+			or ivoyager_version != IVGlobal.IVOYAGER_VERSION \
+			or ivoyager_version_ymd != IVGlobal.IVOYAGER_VERSION_YMD:
+		print("WARNING! Loaded game was created with different program version...")
+		prints(" ivoayger running: ", IVGlobal.IVOYAGER_VERSION, IVGlobal.IVOYAGER_VERSION_YMD)
+		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
+		prints(" project running:  ", IVGlobal.project_version, IVGlobal.project_version_ymd)
+		prints(" project loaded:   ", project_version, project_version_ymd)
+
+
 # *****************************************************************************
 # IVIOManager callbacks
 
 func _save_callback(err: int) -> void: # Main thread
 	if err != OK:
 		print("ERROR on Save; error code = ", err)
+
 
 func _load_callback(gamesave: Array, err: int) -> void:
 	if err != OK:
@@ -162,38 +204,9 @@ func _load_callback(gamesave: Array, err: int) -> void:
 	IVGlobal.emit_signal("system_tree_built_or_loaded", false)
 	IVGlobal.connect("simulator_started", self, "_simulator_started_after_load", [], CONNECT_ONESHOT)
 
+
 func _simulator_started_after_load() -> void:
 	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
 	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
 	assert(IVDebug.dlog("Tree status after load & simulator started..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
-
-# *****************************************************************************
-
-func _ready():
-	IVGlobal.connect("save_requested", self, "_on_save_requested")
-	IVGlobal.connect("load_requested", self, "_on_load_requested")
-	IVGlobal.connect("save_quit_requested", self, "save_quit")
-
-func _on_save_requested(path: String, is_quick_save := false) -> void:
-	if path or !is_quick_save:
-		save_game(path)
-	else:
-		quick_save()
-
-func _on_load_requested(path: String, is_quick_load := false) -> void:
-	if path or !is_quick_load:
-		load_game(path)
-	else:
-		quick_load()
-
-func _test_version() -> void:
-	if project_version != IVGlobal.project_version \
-			or project_version_ymd != IVGlobal.project_version_ymd \
-			or ivoyager_version != IVGlobal.IVOYAGER_VERSION \
-			or ivoyager_version_ymd != IVGlobal.IVOYAGER_VERSION_YMD:
-		print("WARNING! Loaded game was created with different program version...")
-		prints(" ivoayger running: ", IVGlobal.IVOYAGER_VERSION, IVGlobal.IVOYAGER_VERSION_YMD)
-		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
-		prints(" project running:  ", IVGlobal.project_version, IVGlobal.project_version_ymd)
-		prints(" project loaded:   ", project_version, project_version_ymd)

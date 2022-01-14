@@ -17,9 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Wrap all calls in assert(). E.g., assert(IVDebug.dlog("something")).
-
 class_name IVDebug
+
+# Static debug print functions. Wrap all calls in assert(). E.g.,
+#     assert(IVDebug.dlog("something")).
+
 
 static func dlog(value) -> bool:
 	var file: File = IVGlobal.debug_log
@@ -28,6 +30,7 @@ static func dlog(value) -> bool:
 	var line := str(value)
 	file.store_line(line)
 	return true
+
 
 static func no_nans(thing) -> bool:
 	# returns false for unsupported typeof(thing)
@@ -52,4 +55,3 @@ static func no_nans(thing) -> bool:
 			if is_nan(thing[index]):
 				return false
 	return true
-

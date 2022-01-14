@@ -17,18 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVProjectionSurface
+extends Control
+
 # Receives mouse events in the 3D window area, sets cursor shape, and
 # interprets drags, target object click, and wheel turn.
 # Parent control for HUD labels or similar 2D projections of 3D objects.
 # All children are freed on exit or game load.
 
-extends Control
-class_name IVProjectionSurface
-
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
-
 
 var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 var _drag_start := Vector2.ZERO
@@ -38,14 +37,17 @@ var _drag_segment_start := Vector2.ZERO
 func _project_init() -> void:
 	pass
 
+
 func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 
+
 func _clear() -> void:
 	for child in get_children():
 		child.queue_free()
+
 
 func _process(_delta: float) -> void:
 	if _drag_start:
@@ -54,6 +56,7 @@ func _process(_delta: float) -> void:
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 	else:
 		set_default_cursor_shape(CURSOR_ARROW)
+
 
 func _gui_input(input_event: InputEvent) -> void:
 	# _gui_input events are consumed
@@ -91,6 +94,7 @@ func _gui_input(input_event: InputEvent) -> void:
 			_drag_segment_start = mouse_pos
 			emit_signal("mouse_dragged", drag_vector, event.button_mask,
 					_get_key_modifier_mask(event))
+
 
 func _get_key_modifier_mask(event: InputEventMouse) -> int:
 	var mask := 0

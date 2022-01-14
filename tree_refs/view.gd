@@ -17,28 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVView
+
 # Specifies (optionally) target identity and where and how camera tracks its
-# target object. Passing a null-equivalent value (= init values) tells the
+# target object. Passing a null-equivalent value (=init values) tells the
 # camera to maintain its current value. We use selection_name to facilitate
 # cache persistence. Most likely you want to persist via IVSaveBuilder system
 # (so a player could save one or more views in an active game) or via an
 # IVCacheManager (e.g., I, Voyager Planetarium; see planetarium/view_cacher.gd).
 
-
-class_name IVView
-
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
+# persisted
 var selection_name := ""
 var track_type := -1 # IVEnums.CameraTrackType
 var view_type := -1 # IVEnums.ViewType (may or may not specify var values below)
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
-
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["selection_name", "track_type", "view_type",
 	"view_position", "view_rotations"]
-
-func program_init() -> void:
-	pass
-

@@ -17,15 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. Expects the camera to have signal "focal_length_changed".
-
 extends Label
 
+# GUI widget. Expects the camera to have signal "focal_length_changed".
+
 var _camera: Camera
+
 
 func _ready():
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
+
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -33,10 +35,12 @@ func _connect_camera(camera: Camera) -> void:
 		_camera = camera
 		_camera.connect("focal_length_changed", self, "_update_focal_length")
 
+
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
 	_camera = null
+
 
 func _update_focal_length(focal_length: float) -> void:
 	text = "%2.f mm" % focal_length

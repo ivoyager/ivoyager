@@ -17,29 +17,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVRichTextPopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
+
 # Generic PopupPanel with RichTextLabel using BBCode.
 # BBCode is really limited, but I think improvements are coming in Godot 3.2.
-
-extends PopupPanel
-class_name IVRichTextPopup
-const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
 var stop_sim := true
 
 var _state_manager: IVStateManager
+
 onready var _header: Label = $VBox/Header
 onready var _rt_label: RichTextLabel = $VBox/RTLabel
 
+
 func _project_init() -> void:
-	connect("ready", self, "_on_ready")
 	connect("popup_hide", self, "_on_popup_hide")
 	IVGlobal.connect("rich_text_popup_requested", self, "_open")
 	_state_manager = IVGlobal.program.StateManager
 
-func _on_ready() -> void:
+
+func _ready() -> void:
 	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
 	$VBox/Close.connect("pressed", self, "hide")
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_tree().set_input_as_handled()
+		hide()
+
 
 func _open(header_text: String, bbcode_text: String) -> void:
 	set_process_unhandled_key_input(true)
@@ -50,17 +59,9 @@ func _open(header_text: String, bbcode_text: String) -> void:
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
+
 func _on_popup_hide() -> void:
 	_rt_label.bbcode_text = ""
 	set_process_unhandled_key_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-	
-func _on_unhandled_key_input(event: InputEventKey) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		hide()
-

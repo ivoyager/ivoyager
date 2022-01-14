@@ -17,17 +17,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVCachedItemsPopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
+
 # Abstract base class for user interface with cached items. I, Voyager
 # subclasses: IVOptionsPopup, IVHotkeysPopup.
-
-extends PopupPanel
-class_name IVCachedItemsPopup
-const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
 
 var stop_sim := true
 var layout: Array # subclass sets in _init()
 
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer
@@ -36,6 +35,55 @@ var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
 
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+
+
+# virtual & overridable virtual functions
+
+func _init():
+	_on_init()
+
+
+func _on_init():
+	pass
+
+
+func _project_init() -> void:
+	pass
+
+
+func _ready():
+	_on_ready()
+
+
+func _on_ready() -> void:
+	connect("popup_hide", self, "_on_popup_hide")
+	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	theme = IVGlobal.themes.main
+	set_process_unhandled_key_input(false)
+	_header_left = $VBox/TopHBox/HeaderLeft
+	_header_label = $VBox/TopHBox/HeaderLabel
+	_header_right = $VBox/TopHBox/HeaderRight
+	_content_container = $VBox/Content
+	_cancel = $VBox/BottomHBox/Cancel
+	_confirm_changes = $VBox/BottomHBox/ConfirmChanges
+	_restore_defaults = $VBox/BottomHBox/RestoreDefaults
+	_cancel.connect("pressed", self, "_on_cancel")
+	_restore_defaults.connect("pressed", self, "_on_restore_defaults")
+	_confirm_changes.connect("pressed", self, "_on_confirm_changes")
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_tree().set_input_as_handled()
+		_on_cancel()
+
+
+# public
 
 func add_subpanel(subpanel_dict: Dictionary, to_column: int, to_row := 999) -> void:
 	# See example subpanel_dict formats in IVOptionsPopup or IVHotkeysPopup.
@@ -47,6 +95,7 @@ func add_subpanel(subpanel_dict: Dictionary, to_column: int, to_row := 999) -> v
 	if to_row >= column_array.size():
 		to_row = column_array.size()
 	column_array.insert(to_row, subpanel_dict)
+
 
 func remove_subpanel(header: String) -> Dictionary:
 	for column_array in layout:
@@ -60,11 +109,13 @@ func remove_subpanel(header: String) -> Dictionary:
 	print("Could not find subpanel with header ", header)
 	return {}
 
+
 func move_subpanel(header: String, to_column: int, to_row: int) -> void:
 	# to_column and/or to_row can be arbitrarily big to move to end
 	var subpanel_dict := remove_subpanel(header)
 	if subpanel_dict:
 		add_subpanel(subpanel_dict, to_column, to_row)
+
 
 func add_item(item: String, setting_label_str: String, header: String, at_index := 999) -> void:
 	# use add_subpanel() instead if subpanel doesn't exist already.
@@ -90,6 +141,7 @@ func add_item(item: String, setting_label_str: String, header: String, at_index 
 			dict_index += 1
 	print("Could not find Options subpanel with header ", header)
 
+
 func remove_item(item: String) -> void:
 	assert(item != "header")
 	for column_array in layout:
@@ -102,35 +154,8 @@ func remove_item(item: String) -> void:
 				dict_index -= 1
 			dict_index += 1
 
-# *****************************************************************************
 
-func _project_init() -> void:
-	pass
-
-func _init():
-	_on_init()
-
-func _on_init():
-	pass
-
-func _ready():
-	_on_ready()
-
-func _on_ready() -> void:
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
-	_header_left = $VBox/TopHBox/HeaderLeft
-	_header_label = $VBox/TopHBox/HeaderLabel
-	_header_right = $VBox/TopHBox/HeaderRight
-	_content_container = $VBox/Content
-	_cancel = $VBox/BottomHBox/Cancel
-	_confirm_changes = $VBox/BottomHBox/ConfirmChanges
-	_restore_defaults = $VBox/BottomHBox/RestoreDefaults
-	_cancel.connect("pressed", self, "_on_cancel")
-	_restore_defaults.connect("pressed", self, "_on_restore_defaults")
-	_confirm_changes.connect("pressed", self, "_on_confirm_changes")
+# private
 
 func _open() -> void:
 	set_process_unhandled_key_input(true)
@@ -139,6 +164,7 @@ func _open() -> void:
 	_build_content()
 	popup()
 	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
+
 
 func _build_content() -> void:
 	for child in _content_container.get_children():
@@ -161,25 +187,31 @@ func _build_content() -> void:
 					subpanel_vbox.add_child(setting_hbox)
 	_on_content_built()
 
+
 func _build_item(_item: String, _item_label_str: String) -> HBoxContainer:
 	# subclass must override!
 	return HBoxContainer.new()
+
 
 func _on_content_built() -> void:
 	# subclass logic
 	pass
 
+
 func _on_restore_defaults() -> void:
 	# subclass logic
 	call_deferred("_build_content")
+
 
 func _on_confirm_changes() -> void:
 	# subclass logic
 	hide()
 
+
 func _on_cancel_changes() -> void:
 	# subclass logic
 	hide()
+
 
 func _on_cancel() -> void:
 	if _confirm_changes.disabled:
@@ -187,18 +219,10 @@ func _on_cancel() -> void:
 	else:
 		IVOneUseConfirm.new("LABEL_DISCARD_CHANGES", self, "_on_cancel_changes")
 
+
 func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)
 	for child in _content_container.get_children():
 		child.free()
 	if stop_sim:
 		_state_manager.allow_run(self)
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-	
-func _on_unhandled_key_input(event: InputEventKey) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		_on_cancel()
-

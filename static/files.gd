@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVFiles
+
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
 # const files := preload("res://ivoyager/static/files.gd")
-
-class_name IVFiles
 
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
@@ -43,6 +43,7 @@ static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> Str
 		make_dir_if_doesnt_exist(save_dir)
 	return save_dir
 
+
 static func get_base_file_name(file_name : String) -> String:
 	# Strips file type and date extensions
 	file_name = file_name.replace("." + IVGlobal.save_file_extension, "")
@@ -54,6 +55,7 @@ static func get_base_file_name(file_name : String) -> String:
 		file_name = file_name.replace(date_extension, "")
 	return file_name
 
+
 static func get_save_path(save_dir: String, base_name: String, date_string := "", append_file_extension := false) -> String:
 	var path := save_dir.plus_file(base_name)
 	if date_string:
@@ -62,6 +64,7 @@ static func get_save_path(save_dir: String, base_name: String, date_string := ""
 		path += "." + IVGlobal.save_file_extension
 	return path
 
+
 static func exists(file_path: String) -> bool:
 	var file := File.new()
 	if file_path.ends_with(".gd"):
@@ -69,11 +72,13 @@ static func exists(file_path: String) -> bool:
 		return file.file_exists(file_path) or file.file_exists(file_path + "c")
 	return file.file_exists(file_path)
 
+
 static func is_valid_dir(dir_path: String) -> bool:
 	if dir_path == "":
 		return false
 	var dir := Directory.new()
 	return dir.open(dir_path) == OK
+
 
 static func make_dir_if_doesnt_exist(dir_path: String, recursive := true) -> void:
 	var dir := Directory.new()
@@ -82,6 +87,7 @@ static func make_dir_if_doesnt_exist(dir_path: String, recursive := true) -> voi
 			dir.make_dir_recursive(dir_path)
 		else:
 			dir.make_dir(dir_path)
+
 
 static func make_or_clear_dir(dir_path: String) -> void:
 	var dir := Directory.new()
@@ -95,6 +101,7 @@ static func make_or_clear_dir(dir_path: String) -> void:
 			file_name = dir.get_next()
 	else:
 		dir.make_dir(dir_path)
+
 
 # loading assets & data files
 
@@ -112,6 +119,7 @@ static func get_dir_files(dir_path: String) -> Array:
 			result.append(file_name)
 		file_name = dir.get_next()
 	return result
+
 
 static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
@@ -133,11 +141,13 @@ static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 			file_name = dir.get_next()
 	return ""
 
+
 static func find_and_load_resource(dir_paths: Array, file_prefix: String) -> Resource:
 	var path := find_resource_file(dir_paths, file_prefix)
 	if path:
 		return load(path)
 	return null
+
 
 static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")

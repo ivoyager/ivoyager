@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVIOManager
+
 # Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,
 # you should not mix use of IVIOManager with resource loading on the Main thread.
@@ -32,8 +34,6 @@
 #
 # All methods will work on the Main thread if IVGlobal.use_threads == false.
 
-class_name IVIOManager
-
 signal finished() # emitted when all I/O jobs completed 
 
 const DPRINT := false
@@ -48,6 +48,31 @@ var _process_stack := []
 var _is_work := false
 var _stop_thread := false
 var _job_count := 0
+
+
+# *****************************************************************************
+# Init & app exit
+
+func _project_init() -> void:
+	_state_manager = IVGlobal.program.StateManager
+	if !_use_threads:
+		return
+	IVGlobal.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
+	_thread = Thread.new()
+	_mutex = Mutex.new()
+	_semaphore = Semaphore.new()
+	_thread.start(self, "_run_thread", 0)
+
+
+func _block_quit_until_finished() -> void:
+	# Block the quit until we finish the thread; otherwise, we'll have leaks.
+	_stop_thread = true
+	if _thread.is_active():
+		_state_manager.add_blocking_thread(_thread) # block quit
+		_semaphore.post()
+		_thread.wait_to_finish()
+		_state_manager.call_deferred("remove_blocking_thread", _thread)
+
 
 # *****************************************************************************
 # Public. These are NOT thread-safe! Call on Main thread.
@@ -70,6 +95,7 @@ func callback(object: Object, io_method: String, finish_method := "", array := [
 	_mutex.unlock()
 	_semaphore.post()
 
+
 func store_var_to_file(value, file_path: String, err_object: Object = null, err_method := "") -> void:
 	# If err_object and err_method supplied, you WILL get a callback with
 	# single err argument (most likely, err = OK). If not, we print a simple
@@ -82,11 +108,13 @@ func store_var_to_file(value, file_path: String, err_object: Object = null, err_
 		finish_method = "_store_var_to_file_finish"
 	callback(self, "_store_var_to_file", finish_method, array)
 
+
 func get_var_from_file(file_path: String, callback_object: Object, callback_method: String) -> void:
 	# Gets var from file on O/I thread; sends to callback_method on Main thread.
 	# Callback will receive 2 args: value, err. If err != OK, value = null.
 	var array := [file_path, callback_object, callback_method]
 	callback(self, "_get_var_from_file", "_get_var_from_file_finish", array)
+
 
 # *****************************************************************************
 # specific function callbacks
@@ -106,6 +134,7 @@ func _store_var_to_file(array: Array) -> void:
 	if !user_callback: # no err callback; just do simple error print
 		prints("ERROR! Could not open for write:", file_path)
 
+
 func _store_var_to_file_finish(array: Array) -> void:
 	# only here if user wanted err callback
 	var err_object: Object = array[2]
@@ -113,6 +142,7 @@ func _store_var_to_file_finish(array: Array) -> void:
 	var err: int = array[4]
 	if is_instance_valid(err_object):
 		err_object.call(err_method, err)
+
 
 func _get_var_from_file(array: Array) -> void:
 	var file_path: String = array[0]
@@ -122,6 +152,7 @@ func _get_var_from_file(array: Array) -> void:
 	if err == OK:
 		array.append(file.get_var())
 		file.close()
+
 
 func _get_var_from_file_finish(array: Array) -> void:
 	var callback_object: Object = array[1]
@@ -133,28 +164,8 @@ func _get_var_from_file_finish(array: Array) -> void:
 	if is_instance_valid(callback_object):
 		callback_object.call(callback_method, value, err)
 
+
 # *****************************************************************************
-# Init & private
-
-func _project_init() -> void:
-	_state_manager = IVGlobal.program.StateManager
-	if !_use_threads:
-		return
-	IVGlobal.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
-	_thread = Thread.new()
-	_mutex = Mutex.new()
-	_semaphore = Semaphore.new()
-	_thread.start(self, "_run_thread", 0)
-
-func _block_quit_until_finished() -> void:
-	# Block the quit until we finish the thread; otherwise, we'll have leaks.
-	_stop_thread = true
-	if _thread.is_active():
-		_state_manager.add_blocking_thread(_thread) # block quit
-		_semaphore.post()
-		_thread.wait_to_finish()
-		_state_manager.call_deferred("remove_blocking_thread", _thread)
-
 # I/O processing
 
 func _run_thread(_dummy: int) -> void: # I/O thread
@@ -173,6 +184,7 @@ func _run_thread(_dummy: int) -> void: # I/O thread
 		_semaphore.wait()
 	print("Stop I/O thread!")
 
+
 func _process_callback(args: Array) -> void: # I/O thread, or Main if !_use_threads
 	var object: Object = args[0]
 	var io_method: String = args[1]
@@ -180,6 +192,7 @@ func _process_callback(args: Array) -> void: # I/O thread, or Main if !_use_thre
 	if is_instance_valid(object):
 		object.call(io_method, array)
 	call_deferred("_finish", args)
+
 
 func _finish(args: Array) -> void: # Main thread
 	var finish_method: String = args[2]

@@ -17,9 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# TODO: simplify code with the new IVTableReader class.
-
 class_name IVMinorBodiesBuilder
+
 
 signal minor_bodies_added()
 
@@ -28,7 +27,7 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 	"14.0", "14.5", "15.0", "15.5", "16.0", "16.5", "17.0", "17.5", "18.0",
 	"18.5", "99.9"]
 
-# dependencies
+var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 var _settings: Dictionary = IVGlobal.settings
 var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
@@ -38,20 +37,8 @@ var _body_registry: IVBodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
-var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
-
 var _running_count := 0
 
-
-func build() -> void:
-	if IVGlobal.skip_asteroids:
-		return
-	var star: IVBody = _body_registry.top_bodies[0] # TODO: multistar
-	_load_binaries(star)
-	print("Added orbital data for ", _running_count, " asteroids")
-	emit_signal("minor_bodies_added")
-
-# *****************************************************************************
 
 func _project_init() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
@@ -64,12 +51,23 @@ func _project_init() -> void:
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
+
 func _init_unpersisted(_is_new_game: bool) -> void:
 	var group_refs_by_name := _minor_bodies_manager.group_refs_by_name
 	for group_name in group_refs_by_name:
 		var asteroid_group := group_refs_by_name[group_name] as IVAsteroidGroup
 		if asteroid_group:
 			_init_hud_points(asteroid_group, group_name)
+
+
+func build() -> void:
+	if IVGlobal.skip_asteroids:
+		return
+	var star: IVBody = _body_registry.top_bodies[0] # TODO: multistar
+	_load_binaries(star)
+	print("Added orbital data for ", _running_count, " asteroids")
+	emit_signal("minor_bodies_added")
+
 
 func _init_hud_points(asteroid_group: IVAsteroidGroup, group_name: String) -> void:
 	var hud_points: IVHUDPoints = _HUDPoints_.new()
@@ -79,6 +77,7 @@ func _init_hud_points(asteroid_group: IVAsteroidGroup, group_name: String) -> vo
 	_points_manager.register_points_group_in_category(group_name, "all_asteroids")
 	var star := asteroid_group.star
 	star.add_child(hud_points)
+
 
 func _load_binaries(star: IVBody) -> void:
 	_running_count = 0
@@ -94,7 +93,8 @@ func _load_binaries(star: IVBody) -> void:
 				var l_group: String = group + str(l_point)
 				_load_group_binaries(star, l_group, row, l_point, trojan_of)
 		row += 1
-	
+
+
 func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point := -1,
 		trojan_of: IVBody = null) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
@@ -127,6 +127,7 @@ func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point :
 	_minor_bodies_manager.group_names.append(group)
 	_minor_bodies_manager.ids_by_group[group] = []
 
+
 func _load_binary(asteroid_group: IVAsteroidGroup, group: String, mag_str: String) -> void:
 	var binary_name := group + "." + mag_str + ".vbinary"
 	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
@@ -136,6 +137,3 @@ func _load_binary(asteroid_group: IVAsteroidGroup, group: String, mag_str: Strin
 	assert(DPRINT and print("Reading binary %s" % path) or true)
 	asteroid_group.read_binary(binary)
 	binary.close()
-	
-	
-

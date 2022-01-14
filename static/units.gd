@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVUnits
+
 # Godot issue #37529 prevents localization of global class_name to const. Use:
 # const units := preload("res://ivoyager/static/units.gd")
 #
@@ -28,8 +30,6 @@
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
 # See additional comments in universe.gd.
-
-class_name IVUnits
 
 # SI base units - all sim units derived from these!
 const SECOND := SIBaseUnits.SECOND
@@ -224,6 +224,7 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 	assert(false, "Unknown unit symbol: " + unit)
 	return x
 
+
 static func is_valid_unit(unit: String, preprocess := false,
 		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> bool:
 	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
@@ -240,8 +241,10 @@ static func is_valid_unit(unit: String, preprocess := false,
 			unit = unit.substr(space_pos + 1, 999)
 	return multipliers.has(unit) or functions.has(unit)
 
+
 static func conv_centigrade(x: float, to := false) -> float:
 	return x - 273.15 if to else x + 273.15
+
 
 static func conv_fahrenheit(x: float, to := false) -> float:
 	return x * (9.0 / 5.0) - 459.67 if to else (x + 459.67) * (5.0 / 9.0)

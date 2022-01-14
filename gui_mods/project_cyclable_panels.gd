@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Node
+
 # Add to top level GUI parent if you want user to be able to cycle through
 # child PanelContainers. Cycled PanelContainer will become visible (if hidden)
 # and a focusable control will be grabbed (if any).
@@ -34,15 +36,24 @@
 #
 # This GUI mod is used in the Planetarium.
 
-extends Node
-
 const FOCUS_NONE := Control.FOCUS_NONE
 
-onready var _tree: SceneTree = get_tree()
-onready var _parent: Control = get_parent()
 var _last_panel_container: PanelContainer
 var _last_panel_container_was_hidden: bool
 var _child_idx := -1
+
+onready var _tree: SceneTree = get_tree()
+onready var _parent: Control = get_parent()
+
+
+func _unhandled_key_input(event):
+	if event.is_action_pressed("cycle_next_panel"):
+		_cycle(1)
+	elif event.is_action_pressed("cycle_prev_panel"):
+		_cycle(-1)
+	else:
+		return # input NOT handled!
+	_tree.set_input_as_handled()
 
 
 func _cycle(incr: int) -> void:
@@ -61,6 +72,7 @@ func _cycle(incr: int) -> void:
 			return
 	_grab_any_focus_recursive(panel_container)
 
+
 func _get_panel_container(incr: int) -> PanelContainer:
 	var child_count := _parent.get_child_count()
 	var loop_counter := 0
@@ -76,6 +88,7 @@ func _get_panel_container(incr: int) -> PanelContainer:
 		loop_counter += 1
 	return null
 
+
 func _grab_any_focus_recursive(control: Control) -> bool:
 	if control.focus_mode != FOCUS_NONE and control.is_visible_in_tree():
 		control.grab_focus()
@@ -85,12 +98,3 @@ func _grab_any_focus_recursive(control: Control) -> bool:
 			if _grab_any_focus_recursive(child):
 				return true
 	return false
-
-func _unhandled_key_input(event):
-	if event.is_action_pressed("cycle_next_panel"):
-		_cycle(1)
-	elif event.is_action_pressed("cycle_prev_panel"):
-		_cycle(-1)
-	else:
-		return # input NOT handled!
-	_tree.set_input_as_handled()

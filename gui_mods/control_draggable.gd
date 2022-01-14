@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Node
+
 # Use only one of the Control mods:
 #    ControlSized - resizes with Options/GUI Size
 #    ControlDraggable - above plus user draggable
@@ -30,8 +32,6 @@
 # Modify default sizes and snap values from _ready() in the parent Control.
 #
 # This mod is used in the Planetarium.
-
-extends Node
 
 # project vars
 var screen_edge_snap := 100.0
@@ -47,25 +47,49 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 
 # private
 var _settings: Dictionary = IVGlobal.settings
-onready var _viewport := get_viewport()
-onready var _parent: Control = get_parent()
 var _drag_point := Vector2.ZERO
 var _default_size: Vector2
 
-func set_min_size() -> void:
-	for i in range(default_sizes.size()):
-		default_sizes[i] = Vector2.ZERO
+onready var _viewport := get_viewport()
+onready var _parent: Control = get_parent()
 
-func _ready():
+
+func _ready() -> void:
 	IVGlobal.connect("update_gui_needed", self, "_on_update_gui_needed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag
 
+
+func _input(event: InputEvent) -> void:
+	# We process input only during drag. It is posible for the parent control
+	# to never get the button-up event (happens in HTML5 builds).
+	if event is InputEventMouseButton:
+		if !event.pressed and event.button_index == BUTTON_LEFT:
+			_finish_move()
+			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)
+
+
+func set_min_size() -> void:
+	for i in range(default_sizes.size()):
+		default_sizes[i] = Vector2.ZERO
+
+
+func _on_parent_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.pressed and event.button_index == BUTTON_LEFT:
+			_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
+			set_process_input(true)
+			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
+	elif event is InputEventMouseMotion and _drag_point:
+		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
+
+
 func _on_update_gui_needed() -> void:
 	_resize()
 	_finish_move()
+
 
 func _finish_move() -> void:
 	_drag_point = Vector2.ZERO
@@ -74,6 +98,7 @@ func _finish_move() -> void:
 	_snap_vertical()
 	_fix_offscreen()
 	_set_anchors_to_position()
+
 
 func _snap_horizontal() -> void:
 	var left := _parent.rect_position.x
@@ -106,6 +131,7 @@ func _snap_horizontal() -> void:
 			_parent.rect_position.x = panel_right
 			return
 
+
 func _snap_vertical() -> void:
 	var top := _parent.rect_position.y
 	if top < screen_edge_snap:
@@ -134,6 +160,7 @@ func _snap_vertical() -> void:
 			_parent.rect_position.y = panel_bottom
 			return
 
+
 func _fix_offscreen() -> void:
 	var rect := _parent.get_rect()
 	var screen_rect := _parent.get_viewport_rect()
@@ -147,6 +174,7 @@ func _fix_offscreen() -> void:
 		_parent.rect_position.y = 0.0
 	elif rect.end.y > screen_rect.end.y:
 		_parent.rect_position.y = screen_rect.end.y - rect.size.y
+
 
 func _set_anchors_to_position() -> void:
 	var position := _parent.rect_position
@@ -165,6 +193,7 @@ func _set_anchors_to_position() -> void:
 	_parent.anchor_bottom = vertical_anchor
 	_parent.rect_position = position # setting anchors screws up position (Godot bug?)
 
+
 func _resize() -> void:
 	var default_size := _get_default_size()
 	if _default_size == default_size:
@@ -178,6 +207,7 @@ func _resize() -> void:
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
+
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = default_sizes[gui_size]
@@ -189,23 +219,7 @@ func _get_default_size() -> Vector2:
 		default_size.y = max_y
 	return default_size
 
+
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
 		_resize()
-
-func _on_parent_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == BUTTON_LEFT:
-			_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
-			set_process_input(true)
-			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
-	elif event is InputEventMouseMotion and _drag_point:
-		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
-
-func _input(event):
-	# We process input only during drag. It is posible for the parent control
-	# to never get the button-up event (happens in HTML5 builds).
-	if event is InputEventMouseButton:
-		if !event.pressed and event.button_index == BUTTON_LEFT:
-			_finish_move()
-			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)

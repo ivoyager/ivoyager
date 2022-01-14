@@ -17,13 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVModelBuilder
+
 # We have a lazy_init option and culling system to keep model number low at any
 # given time. We cull based on staleness of last visibility change. Use it for
 # minor moons, visited asteroids, spacecraft, etc. Project var max_lazy should
 # be set to something larger than the max number of lazy models likely to be
 # visible at a give time (however, a small value helps on low end systems).
-
-class_name IVModelBuilder
 
 const files := preload("res://ivoyager/static/files.gd")
 const METER := IVUnits.METER
@@ -39,18 +39,26 @@ var star_energy_near := 10.0 # energy at _star_energy_ref_dist
 var star_energy_exponent := 1.9
 var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
-# private
 var _times: Array = IVGlobal.times
 var _table_reader: IVTableReader
 var _io_manager: IVIOManager
 var _globe_mesh: SphereMesh
 var _fallback_albedo_map: Texture
-
 var _map_files := {}
 var _model_files := {}
 var _lazy_tracker := {}
 var _n_lazy := 0
 var _recycled_placeholders := [] # unmodified, un-treed Spatials
+
+
+func _project_init() -> void:
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
+	_table_reader = IVGlobal.program.TableReader
+	_io_manager = IVGlobal.program.IOManager
+	_globe_mesh = IVGlobal.shared_resources.globe_mesh
+	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
+	_preregister_files()
 
 
 func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
@@ -68,16 +76,6 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 	var array := [body, model_controller, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
-# *****************************************************************************
-
-func _project_init() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
-	_table_reader = IVGlobal.program.TableReader
-	_io_manager = IVGlobal.program.IOManager
-	_globe_mesh = IVGlobal.shared_resources.globe_mesh
-	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
-	_preregister_files()
 
 func _preregister_files() -> void:
 	var models_search := IVGlobal.models_search
@@ -98,11 +96,13 @@ func _preregister_files() -> void:
 					_map_files[file_match] = map_file
 			row += 1
 
+
 func _clear() -> void:
 	while _recycled_placeholders:
 		_recycled_placeholders.pop_back().queue_free()
 	_lazy_tracker.clear()
 	_n_lazy = 0
+
 
 func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void: # Main thread
 	var placeholder: Spatial
@@ -115,6 +115,7 @@ func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void
 	model_controller.set_model(placeholder, false)
 	body.add_child(placeholder)
 
+
 func _lazy_init(body: IVBody) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
@@ -122,6 +123,7 @@ func _lazy_init(body: IVBody) -> void: # Main thread
 	var model_basis: Basis = model_controller.model_reference_basis
 	var array := [body, model_controller, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
+
 
 func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[2]
@@ -168,6 +170,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
 		# FIXME! Should cast shadows, but it doesn't...!
 
+
 func _finish_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
 	var model_controller: IVModelController = array[1]
@@ -180,6 +183,7 @@ func _finish_model(array: Array) -> void: # Main thread
 			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
 					star_energy_ref_dist, star_energy_near, star_energy_exponent)
 	body.add_child(model)
+
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
@@ -196,6 +200,7 @@ func _finish_lazy_model(array: Array) -> void: # Main thread
 		_cull_lazy()
 	_lazy_tracker[model] = _times[1] # engine time
 
+
 func _cull_lazy() -> void: # Main thread
 	# Cull models w/ last view earlier than average (easier than median)
 	var time_cutoff := 0.0
@@ -206,6 +211,7 @@ func _cull_lazy() -> void: # Main thread
 	for model in tracker_keys:
 		if _lazy_tracker[model] < time_cutoff:
 			_lazy_uninit(model)
+
 
 func _lazy_uninit(model: Spatial) -> void: # Main thread
 	if model.visible:
@@ -219,8 +225,10 @@ func _lazy_uninit(model: Spatial) -> void: # Main thread
 	_add_placeholder(body, model_controller)
 	model.queue_free() # it's now up to the Engine what to cache!
 
+
 func _record_lazy_event(model: Spatial) -> void: # Main thread
 	_lazy_tracker[model] = _times[1] # engine time
+
 
 func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> Basis:
 	# radii used only for ellipsoid

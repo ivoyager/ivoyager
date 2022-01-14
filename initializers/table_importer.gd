@@ -17,10 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVTableImporter
+
 # Reads external data tables (.tsv files) and adds results to:
 #    - IVGlobal.table_rows
 #    - IVGlobal.wiki_titles (if IVGlobal.wiki_enabled)
-#    - table containers in IVTableReader via init_tables()
+#    - table containers in IVTableReader
 #
 # Use IVTableReader to interact with imported table data! This object removes
 # itself from IVGlobal.program after table import. No other object should
@@ -37,8 +39,6 @@
 #
 # False is represented internally as "", so bool(internal_value) will give
 # meaningful result for both BOOL and X type.
-
-class_name IVTableImporter
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -84,7 +84,8 @@ var _count_non_null := 0
 
 func _init():
 	_on_init()
-	
+
+
 func _on_init() -> void:
 	var start_time := OS.get_system_time_msecs()
 	_import()
@@ -92,10 +93,12 @@ func _on_init() -> void:
 	print("Imported tables in %s msec; %s rows; %s cells (%s non-null; %s unique)" \
 			% [time, _count_rows, _count_cells, _count_non_null, _unique_register.size()])
 
+
 func _project_init() -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	table_reader.init_tables(_table_data, _table_fields, _table_data_types, _table_units, _table_row_dicts)
 	IVGlobal.program.erase("TableImporter") # frees self
+
 
 func _import() -> void:
 	for table_name in _table_import:
@@ -131,6 +134,7 @@ func _import() -> void:
 		_fields.clear()
 		_data_types.clear()
 		_rows.clear()
+
 
 func _read_table() -> void:
 	assert(DPRINT and prints("Reading", _path) or true)
@@ -188,6 +192,7 @@ func _read_table() -> void:
 			_read_data_line()
 		line = file.get_line()
 
+
 func _read_data_line() -> void:
 	var row := _data.size()
 	var row_data := []
@@ -216,6 +221,7 @@ func _read_data_line() -> void:
 	_data.append(row_data)
 	_count_rows += 1
 
+
 func _process_cell_value() -> void:
 	if _cell.begins_with("\"") and _cell.ends_with("\""):
 		_cell = _cell.lstrip("\"").rstrip("\"")
@@ -232,10 +238,12 @@ func _process_cell_value() -> void:
 		_cell = _cell.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
 		_cell = IVUtils.c_unescape_patch(_cell) # handles "\uXXXX"
 
+
 func _data_types_test() -> bool:
 	for data_type in _data_types:
 		assert(DATA_TYPES.has(data_type) or data_type in _enums, "Unknown Type: " + data_type)
 	return true
+
 
 func _units_test() -> bool:
 	for unit in _units:
@@ -243,6 +251,7 @@ func _units_test() -> bool:
 			assert(units.is_valid_unit(unit, true, IVGlobal.unit_multipliers, IVGlobal.unit_functions),
 					"Unkown unit '" + unit + "' in " + _path)
 	return true
+
 
 func _table_test(n_columns: int) -> bool:
 	for column in range(n_columns):
@@ -264,6 +273,7 @@ func _table_test(n_columns: int) -> bool:
 				assert(data_type in _enums, "Non-existent enum dict '" + data_type + "' in " + _path)
 	return true
 
+
 func _cell_test() -> bool:
 	# "" is always ok and not checked here; _process_cell_value() has already
 	# processed table values to our internal format (e.g., REAL "E" -> "e").
@@ -282,6 +292,7 @@ func _cell_test() -> bool:
 		_: # must be valid enum name
 			assert(_enums[_data_type].has(_cell) or _line_error("Non-existent enum value " + _cell))
 	return true
+
 
 func _line_error(msg := "") -> bool:
 	print("ERROR in _read_data_line...")

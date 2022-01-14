@@ -17,26 +17,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI Widget.
-
 extends HBoxContainer
+
+# GUI Widget.
 
 const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
 const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
 const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
-onready var _orbit_checkbox: CheckBox = $Orbit
-onready var _ground_checkbox: CheckBox = $Ground
 var _camera: Camera
 
-func remove_track_label() -> void:
-	$TrackLabel.queue_free()
+onready var _orbit_checkbox: CheckBox = $Orbit
+onready var _ground_checkbox: CheckBox = $Ground
+
 
 func _ready():
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
 	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")
+
+
+func remove_track_label() -> void:
+	$TrackLabel.queue_free()
+
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -45,16 +49,19 @@ func _connect_camera(camera: Camera) -> void:
 		_camera.connect("tracking_changed", self, "_update_tracking")
 #		_update_tracking(_camera.track_type)
 
+
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("tracking_changed", self, "_update_tracking")
 	_camera = null
+
 
 func _update_tracking(track_type: int, is_ecliptic: bool) -> void:
 	_orbit_checkbox.pressed = track_type == TRACK_ORBIT
 	_ground_checkbox.disabled = is_ecliptic
 	_ground_checkbox.pressed = track_type == TRACK_GROUND
 	_orbit_checkbox.disabled = is_ecliptic
+
 
 func _on_orbit_pressed() -> void:
 	if !_camera:
@@ -64,6 +71,7 @@ func _on_orbit_pressed() -> void:
 	else:
 		_camera.change_track_type(TRACK_NONE)
 
+
 func _on_ground_pressed() -> void:
 	if !_camera:
 		return
@@ -71,4 +79,3 @@ func _on_ground_pressed() -> void:
 		_camera.change_track_type(TRACK_GROUND)
 	else:
 		_camera.change_track_type(TRACK_NONE)
-

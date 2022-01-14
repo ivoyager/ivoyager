@@ -17,21 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# [Not added in core ivoyager!] Add to IVProjectBuilder.prog_nodes in your
+class_name IVViewCacher
+extends Timer
+
+# Not added in core ivoyager! Add to IVProjectBuilder.prog_nodes in your
 # extension file if you want camera view to be cached and restored on start.
 # Used by Planetarium.
 #
 # You only need to set cache_interval for HTML5 export. Otherwise, _cache_view()
 # will be called on quit.
 
-extends Timer
-class_name IVViewCacher
 
 var cache_interval := 0.0 # s; set >0.0 to enable Timer
 var cache_file_name := "view.vbinary"
 
 var _cache_dir: String = IVGlobal.cache_dir
 var _camera: IVCamera
+
 
 func _project_init() -> void:
 	var dir = Directory.new()
@@ -42,6 +44,7 @@ func _project_init() -> void:
 	else:
 		paused = true # start() order won't do anything
 
+
 func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("camera_ready", self, "_set_camera")
@@ -50,17 +53,21 @@ func _ready() -> void:
 	IVGlobal.connect("about_to_quit", self, "_cache_view") # app quit button
 	connect("timeout", self, "_cache_view")
 
+
 func _notification(what: int) -> void:
 	# This should work for all desktop exports; does NOT work for HTML5 export.
 	if what == NOTIFICATION_WM_QUIT_REQUEST:
 		_cache_view()
 
+
 func _clear() -> void:
 	_camera = null
 	stop()
 
+
 func _set_camera(camera: IVCamera) -> void:
 	_camera = camera
+
 
 func _set_view(_is_new_game: bool) -> void:
 	if !_camera:
@@ -72,6 +79,7 @@ func _set_view(_is_new_game: bool) -> void:
 	var view: IVView = dict2inst(view_dict)
 	_camera.set_start_view(view)
 
+
 func _cache_view() -> void:
 	if !_camera:
 		return
@@ -81,6 +89,7 @@ func _cache_view() -> void:
 	var view := _camera.create_view()
 	var view_dict := inst2dict(view)
 	file.store_var(view_dict)
+
 
 func _get_file(flags: int) -> File:
 	var file_path := _cache_dir.plus_file(cache_file_name)

@@ -17,15 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends HBoxContainer
+
 # GUI widget. Builds itself from an existing solar system!
 #
 # To use in conjuction with SunSliceButton, make both SIZE_FILL_EXPAND and give
 # strech ratios: 1.0 (SunSliceButton) and 10.0 (this widget or container that
 # contains this widget).
-#
-
-extends HBoxContainer
-
 
 const IS_PLANET := IVEnums.BodyFlags.IS_TRUE_PLANET | IVEnums.BodyFlags.IS_DWARF_PLANET
 const IS_NAVIGATOR_MOON := IVEnums.BodyFlags.IS_NAVIGATOR_MOON
@@ -40,52 +38,20 @@ var min_body_size_ratio := 0.008929 # proportion of widget width, rounded
 var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 
 # private
-onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
-onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
 var _resize_control_multipliers := {}
 
+onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
+onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+
+
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_build")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	connect("resized", self, "_resize")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
-func _clear() -> void:
-	_selection_manager = null
-	_currently_selected = null
-	_resize_control_multipliers.clear()
-	for child in get_children():
-		child.queue_free()
-
-func _resize() -> void:
-	# Column widths are mostly controled by size_flags_stretch_ratio. However,
-	# some planets are smaller than the minimum button width so we can't depend
-	# on that for image sizing. We also need to resize the vertical spacer
-	# above planets.
-	# WARNING: Shrinking by user mouse drag works, but I think it is a little
-	# iffy. We have a few images already smaller than their bounding buttons
-	# (Ceres & Pluto, depending on min_button_width_proportion) and this is why
-	# it is possible to shrink the widget before image resizing.
-	var widget_width := rect_size.x
-	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-	set("custom_constants/separation", column_separation)
-	for key in _resize_control_multipliers:
-		var control := key as Control
-		var multipliers: Vector2 = _resize_control_multipliers[control]
-		control.rect_min_size = multipliers * widget_width
-
-func _settings_resize() -> void:
-	# It's a hack, but but we hide our content so the widget can shrink with
-	# its bounding container. The _resize() function then resizes images to fit
-	# the widget.
-	for child in get_children():
-		child.hide()
-	yield(get_tree(), "idle_frame")
-	_resize()
-	for child in get_children():
-		child.show()
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
@@ -153,6 +119,7 @@ func _build(_is_new_game: bool) -> void:
 			_add_nav_button(planet_vbox, moon, size)
 		column += 1
 
+
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
@@ -162,11 +129,39 @@ func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: floa
 	var size_multiplier := image_size / INIT_WIDTH
 	_resize_control_multipliers[button] = Vector2(size_multiplier, size_multiplier)
 
+
+func _clear() -> void:
+	_selection_manager = null
+	_currently_selected = null
+	_resize_control_multipliers.clear()
+	for child in get_children():
+		child.queue_free()
+
+
+func _resize() -> void:
+	# Column widths are mostly controled by size_flags_stretch_ratio. However,
+	# some planets are smaller than the minimum button width so we can't depend
+	# on that for image sizing. We also need to resize the vertical spacer
+	# above planets.
+	# WARNING: Shrinking by user mouse drag works, but I think it is a little
+	# iffy. We have a few images already smaller than their bounding buttons
+	# (Ceres & Pluto, depending on min_button_width_proportion) and this is why
+	# it is possible to shrink the widget before image resizing.
+	var widget_width := rect_size.x
+	var column_separation := int(widget_width * column_separation_ratio + 0.5)
+	set("custom_constants/separation", column_separation)
+	for key in _resize_control_multipliers:
+		var control := key as Control
+		var multipliers: Vector2 = _resize_control_multipliers[control]
+		control.rect_min_size = multipliers * widget_width
+
+
 func _change_selection(selected: Button) -> void:
 	_currently_selected = selected
 	if !_mouse_only_gui_nav and !get_focus_owner():
 		if selected.focus_mode != FOCUS_NONE:
 			selected.grab_focus()
+
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
@@ -180,6 +175,19 @@ func _settings_listener(setting: String, value) -> void:
 				if _currently_selected.focus_mode != FOCUS_NONE:
 					_currently_selected.grab_focus()
 
+
+func _settings_resize() -> void:
+	# It's a hack, but but we hide our content so the widget can shrink with
+	# its bounding container. The _resize() function then resizes images to fit
+	# the widget.
+	for child in get_children():
+		child.hide()
+	yield(get_tree(), "idle_frame")
+	_resize()
+	for child in get_children():
+		child.show()
+
+
 # ****************************** INNER CLASS **********************************
 
 class NavButton extends Button:
@@ -189,6 +197,7 @@ class NavButton extends Button:
 	var _has_mouse := false
 	var _selection_item: IVSelectionItem
 	var _selection_manager: IVSelectionManager
+	
 	
 	func _init(selection_item: IVSelectionItem, selection_manager: IVSelectionManager,
 			image_size: float) -> void:
@@ -210,14 +219,17 @@ class NavButton extends Button:
 		connect("mouse_entered", self, "_on_mouse_entered")
 		connect("mouse_exited", self, "_on_mouse_exited")
 
+
 	func _ready():
 		IVGlobal.connect("update_gui_needed", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 
+
 	func _pressed() -> void:
 		_selection_manager.select(_selection_item)
+
 
 	func _update_selection() -> void:
 		var is_selected := _selection_manager.selection_item == _selection_item
@@ -226,9 +238,11 @@ class NavButton extends Button:
 			emit_signal("selected")
 		flat = !is_selected and !_has_mouse
 
+
 	func _on_mouse_entered() -> void:
 		_has_mouse = true
 		flat = false
+
 
 	func _on_mouse_exited() -> void:
 		_has_mouse = false

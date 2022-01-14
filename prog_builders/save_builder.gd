@@ -1,4 +1,4 @@
-# saver_loader.gd
+# saver_builder.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSaveBuilder
+
 # IVSaveBuilder can persist specified data (which may include nested objects) and
 # rebuild procedurally generated node trees and references on load. It can
 # persist built-in types and four kinds of objects:
@@ -51,8 +53,6 @@
 #    3. Be careful not to have both pesist and non-persist references to the
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
-
-class_name IVSaveBuilder
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
@@ -106,6 +106,7 @@ static func make_object_or_scene(script: Script) -> Object:
 		root_node.set_script(script)
 	return root_node
 
+
 static func free_procedural_nodes(root: Node) -> void:
 	# See "root" comments below; it may or may not be the main scene tree root.
 	if "PERSIST_AS_PROCEDURAL_OBJECT" in root:
@@ -115,6 +116,7 @@ static func free_procedural_nodes(root: Node) -> void:
 	for child in root.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			free_procedural_nodes(child)
+
 
 func generate_gamesave(root: Node) -> Array:
 	# "root" may or may not be the main scene tree root. Data in the result
@@ -136,6 +138,7 @@ func generate_gamesave(root: Node) -> Array:
 			root.get_tree().get_node_count())
 	_reset()
 	return gamesave
+
 
 func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	# "root" must be the same node specified in generate_gamesave(root).
@@ -164,6 +167,7 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	var result := _build_result
 	_reset()
 	return result
+
 
 # *****************************************************************************
 # Debug logging
@@ -208,6 +212,7 @@ func debug_log(root: Node) -> String:
 	_log = ""
 	return return_log
 
+
 func _log_nodes(node: Node) -> void:
 	_log_count += 1
 	var class_ := node.get_class()
@@ -226,6 +231,7 @@ func _log_nodes(node: Node) -> void:
 		if debug_log_all_nodes or "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_log_nodes(child)
 
+
 # *****************************************************************************
 
 func _reset():
@@ -240,6 +246,7 @@ func _reset():
 	_key_ids.clear()
 	_objects.resize(1) # 1st element is null
 	_build_result = []
+
 
 # Procedural save
 
@@ -260,11 +267,13 @@ func _serialize_tree() -> void:
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_serialize_tree_recursive(child)
 
+
 func _serialize_tree_recursive(node: Node) -> void:
 	_serialize_node(node)
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
 			_serialize_tree_recursive(child)
+
 
 # Procedural load
 
@@ -299,12 +308,14 @@ func _register_and_instance_load_objects() -> void:
 		_objects[object_id] = reference
 		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
 
+
 func _deserialize_load_objects() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
 	for serialized_node in _gs_serialized_nodes:
 		_deserialize_object_data(serialized_node, 3)
 	for serialized_reference in _gs_serialized_references:
 		_deserialize_object_data(serialized_reference, 2)
+
 
 func _build_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
@@ -319,6 +330,7 @@ func _build_tree() -> void:
 						continue
 				var parent: Node = _objects[parent_save_id]
 				parent.add_child(node)
+
 
 # Serialize/deserialize functions
 
@@ -344,6 +356,7 @@ func _serialize_node(node: Node):
 	_serialize_object_data(node, serialized_node)
 	_gs_serialized_nodes.append(serialized_node)
 
+
 func _register_and_serialize_reference(reference: Reference) -> int:
 	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
 	var object_id := _gs_n_objects
@@ -358,6 +371,7 @@ func _register_and_serialize_reference(reference: Reference) -> int:
 	_gs_serialized_references.append(serialized_reference)
 	return object_id
 
+
 func _get_or_create_script_id(object: Object) -> int:
 	var script_path: String = object.get_script().resource_path
 	assert(script_path)
@@ -367,6 +381,7 @@ func _get_or_create_script_id(object: Object) -> int:
 		_gs_script_paths.append(script_path)
 		_path_ids[script_path] = script_id
 	return script_id
+
 
 func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 	assert(object is Node or object is Reference)
@@ -387,6 +402,7 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 				array.append(object.get(property))
 			var serialized_array := _get_serialized_array(array)
 			serialized_object.append(serialized_array)
+
 
 func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
 	# The order of persist properties must be exactly the same from game save
@@ -412,6 +428,7 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 				object.set(property, array[property_index])
 				property_index += 1
 
+
 func _get_serialized_array(array: Array) -> Array:
 	var n_items := array.size()
 	var serialized_array := []
@@ -430,6 +447,7 @@ func _get_serialized_array(array: Array) -> Array:
 			serialized_array[index] = item
 		index += 1
 	return serialized_array
+
 
 func _get_serialized_dict(dict: Dictionary) -> Dictionary:
 	var serialized_dict := {}
@@ -451,6 +469,7 @@ func _get_serialized_dict(dict: Dictionary) -> Dictionary:
 			serialized_dict[key_id] = item
 	return serialized_dict
 
+
 func _deserialize_array(serialized_array: Array) -> void:
 	# deserialize in place
 	var n_items := serialized_array.size()
@@ -469,6 +488,7 @@ func _deserialize_array(serialized_array: Array) -> void:
 		else: # other built-in type
 			serialized_array[index] = item
 		index += 1
+
 
 func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
 	var dict := {}
@@ -489,6 +509,7 @@ func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
 			dict[key] = item
 	return dict
 
+
 func _encode_object(object: Object) -> Dictionary:
 	# Encoded object is a dictionary with key "_" and a sign-coded object_id.
 	var is_weak_ref := false
@@ -505,6 +526,7 @@ func _encode_object(object: Object) -> Dictionary:
 	if is_weak_ref:
 		return {_ = -object_id} # negative object_id for WeakRef
 	return {_ = object_id}
+
 
 func _decode_object(test_dict: Dictionary) -> Object:
 	if !test_dict.has("_"):

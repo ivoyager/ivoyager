@@ -17,14 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. 
-
 extends HBoxContainer
+
+# GUI widget. 
 
 onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 onready var _orbits_button: CheckBox = $Orbits
 onready var _names_button: CheckBox = $Names
 onready var _symbols_button: CheckBox = $Symbols
+
 
 func _ready() -> void:
 	_orbits_button.connect("pressed", self, "_show_hide_orbits")
@@ -32,14 +33,18 @@ func _ready() -> void:
 	_symbols_button.connect("pressed", self, "_show_hide_symbols")
 	_huds_manager.connect("show_huds_changed", self, "_update_ckbxs")
 
+
 func _show_hide_orbits() -> void:
 	_huds_manager.set_show_orbits(_orbits_button.pressed)
+
 
 func _show_hide_names() -> void:
 	_huds_manager.set_show_names(_names_button.pressed)
 
+
 func _show_hide_symbols() -> void:
 	_huds_manager.set_show_symbols(_symbols_button.pressed)
+
 
 func _update_ckbxs() -> void:
 	_orbits_button.pressed = _huds_manager.show_orbits

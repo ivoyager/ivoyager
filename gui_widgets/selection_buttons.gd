@@ -17,17 +17,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget.
-
 extends HBoxContainer
 
+# GUI widget.
+
 var _selection_manager: IVSelectionManager
+
 onready var _back: Button = $Back
 onready var _forward: Button = $Forward
 onready var _up: Button = $Up
 
+
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_selection_manager = IVGUIUtils.get_selection_manager(self)
@@ -37,8 +40,8 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_up.connect("pressed", _selection_manager, "up")
 	_update_buttons()
 
+
 func _update_buttons() -> void:
 	_back.disabled = !_selection_manager.can_go_back()
 	_forward.disabled = !_selection_manager.can_go_forward()
 	_up.disabled = !_selection_manager.can_go_up()
-	

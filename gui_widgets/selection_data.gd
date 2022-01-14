@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends VBoxContainer
+
 # GUI widget. Requires Control ancestor with member "selection_manager".
 #
 # Typed values interpreted as n/a; widget skips row and doesn't display:
@@ -32,13 +34,6 @@
 #
 # TODO: tooltips.
 
-
-extends VBoxContainer
-
-const BodyFlags := IVEnums.BodyFlags
-const NULL_ARRAY := []
-const NO_ARGS := []
-
 enum { # data_type
 	AS_IS,
 	QTY_TXT,
@@ -48,6 +43,10 @@ enum { # data_type
 	OBJECT_LABELS_VALUES,
 }
 
+const BodyFlags := IVEnums.BodyFlags
+const NULL_ARRAY := []
+const NO_ARGS := []
+
 # project vars
 var test_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
 var test_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
@@ -55,7 +54,6 @@ var use_kept_precisions := true # set same as IVBodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var interval := 1.0 # seconds; set 0.0 for no periodic updates
-
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
 	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
@@ -176,12 +174,10 @@ var section_data := [ # one array element per header
 		["", "body/components/photosphere", NO_ARGS, OBJECT_LABELS_VALUES],
 	],
 ]
-
 var body_flags_test := { # show criteria
 	"body/m_radius" : BodyFlags.DISPLAY_M_RADIUS,
 	"body/characteristics/hydrostatic_equilibrium" : BodyFlags.IS_MOON,
 }
-
 var special_processing := {
 	"body/characteristics/rotation_period" : "_mod_rotation_period",
 	"body/get_axial_tilt_to_orbit" : "_mod_axial_tilt_to_orbit",
@@ -189,22 +185,23 @@ var special_processing := {
 	"body/characteristics/n_kn_dwf_planets" : "_mod_n_kn_dwf_planets",
 }
 
-onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
-onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
 var _state: Dictionary = IVGlobal.state
 var _enums: Script = IVGlobal.enums
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _wiki_locale: String = IVGlobal.wiki
-var _selection_manager: IVSelectionManager
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
-# currently processing
+var _selection_manager: IVSelectionManager
 var _selection_item: IVSelectionItem
 var _body: IVBody
 var _path: String
+
+onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
+
 
 func _ready() -> void:
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
@@ -212,24 +209,6 @@ func _ready() -> void:
 	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
 	_start_interval_updates()
 
-func _clear() -> void:
-	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", self, "_update_selection")
-		_selection_manager = null
-	_selection_item = null
-	_body = null
-	_header_buttons.clear()
-	_grids.clear()
-	_meta_lookup.clear()
-	for child in get_children():
-		child.queue_free()
-	_clear_recycled()
-
-func _clear_recycled() -> void:
-	while _recycled_labels:
-		_recycled_labels.pop_back().queue_free()
-	while _recycled_rtlabels:
-		_recycled_rtlabels.pop_back().queue_free()
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == subsection_of.size())
@@ -264,6 +243,28 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		section += 1
 	_update_selection()
 
+
+func _clear() -> void:
+	if _selection_manager:
+		_selection_manager.disconnect("selection_changed", self, "_update_selection")
+		_selection_manager = null
+	_selection_item = null
+	_body = null
+	_header_buttons.clear()
+	_grids.clear()
+	_meta_lookup.clear()
+	for child in get_children():
+		child.queue_free()
+	_clear_recycled()
+
+
+func _clear_recycled() -> void:
+	while _recycled_labels:
+		_recycled_labels.pop_back().queue_free()
+	while _recycled_rtlabels:
+		_recycled_rtlabels.pop_back().queue_free()
+
+
 func _start_interval_updates() -> void:
 	if !interval:
 		return
@@ -271,6 +272,7 @@ func _start_interval_updates() -> void:
 		yield(get_tree().create_timer(interval), "timeout")
 		if _state.is_running:
 			_update_selection()
+
 
 func _update_selection() -> void:
 	_selection_item = _selection_manager.selection_item
@@ -285,6 +287,7 @@ func _update_selection() -> void:
 	while section < n_sections:
 		_process_section(section, false)
 		section += 1
+
 
 func _process_section(section: int, toggle: bool) -> void:
 	var grid: GridContainer = _grids[section]
@@ -335,6 +338,7 @@ func _process_section(section: int, toggle: bool) -> void:
 	if header_button:
 		header_button.show()
 	grid.show()
+
 
 func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# Returns [label_txt, value_txt, is_label_link, is_value_link], or empty array if n/a (skip)
@@ -450,6 +454,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 		is_value_link = true
 	return [prespace + label_txt, value_txt, is_label_link, is_value_link]
 
+
 func _add_row(grid: GridContainer, row_info: Array) -> void:
 	var label_txt: String = row_info[0]
 	var value_txt: String = row_info[1]
@@ -472,6 +477,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 		value_cell.text = value_txt
 		grid.add_child(value_cell)
 
+
 func _clear_grid(grid: GridContainer) -> void:
 	if grid.get_child_count() == 0:
 		return
@@ -484,6 +490,7 @@ func _clear_grid(grid: GridContainer) -> void:
 		else:
 			_recycled_rtlabels.append(child)
 
+
 func _get_label(is_value: bool) -> Label:
 	var label: Label
 	if _recycled_labels:
@@ -493,6 +500,7 @@ func _get_label(is_value: bool) -> Label:
 		label.size_flags_horizontal = SIZE_EXPAND_FILL
 	label.size_flags_stretch_ratio = values_stretch_ratio if is_value else labels_stretch_ratio
 	return label
+
 
 func _get_rtlabel(is_value: bool) -> RichTextLabel:
 	var rtlabel: RichTextLabel
@@ -508,10 +516,12 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 	rtlabel.size_flags_stretch_ratio = values_stretch_ratio if is_value else labels_stretch_ratio
 	return rtlabel
 
+
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
 	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
+
 
 # special processing functions
 
@@ -527,6 +537,7 @@ func _mod_rotation_period(value_txt: String, value: float) -> String:
 			value_txt += " (%s)" % tr("TXT_RETROGRADE").to_lower()
 	return value_txt
 
+
 func _mod_axial_tilt_to_orbit(value_txt: String, value: float) -> String:
 	if _body:
 		if is_zero_approx(value) and _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
@@ -535,11 +546,13 @@ func _mod_axial_tilt_to_orbit(value_txt: String, value: float) -> String:
 			value_txt = tr("TXT_VARIABLE")
 	return value_txt
 
+
 func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
 	if _body:
 		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
 			value_txt = tr("TXT_VARIABLE")
 	return value_txt
+
 
 func _mod_n_kn_dwf_planets(value_txt: String, _value: float) -> String:
 	return "%s (%s)" % [value_txt, tr("TXT_POSSIBLE").to_lower()]

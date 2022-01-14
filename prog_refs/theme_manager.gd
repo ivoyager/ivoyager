@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVThemeManager
+
 # Maintains IVGlobal.themes dictionary. All controls are expected to set their
 # own theme from this dictionary.
-
-class_name IVThemeManager
 
 # project vars
 var global_font := "gui_main" # these are defined in IVFontManager
@@ -29,6 +29,7 @@ var splash_screen_font := "medium"
 
 var _themes: Dictionary = IVGlobal.themes
 var _fonts: Dictionary = IVGlobal.fonts
+
 
 func _project_init() -> void:
 	_themes.main = Theme.new()

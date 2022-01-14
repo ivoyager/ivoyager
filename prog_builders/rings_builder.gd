@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVRingsBuilder
+
 # TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 # What we have now is a QuadMesh & Texture.
-
-class_name IVRingsBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const files := preload("res://ivoyager/static/files.gd")
@@ -36,7 +36,6 @@ func add_rings(body: IVBody) -> void:
 	var io_manager: IVIOManager = IVGlobal.program.IOManager
 	io_manager.callback(self, "_make_rings_on_io_thread", "_io_finish", array)
 
-# *****************************************************************************
 
 func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
@@ -59,6 +58,7 @@ func _make_rings_on_io_thread(array: Array) -> void: # I/O thread
 	rings.set_surface_material(0, rings_material)
 	rings.hide()
 	array.append(rings)
+
 
 func _io_finish(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]

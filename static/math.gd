@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVMath
+
 # Call directly using IVMath, or better, localize in your class header area.
 # Issue #37529 prevents localization of global class_name to const. Use:
 # const math := preload("res://ivoyager/static/math.gd")
@@ -26,8 +28,6 @@
 #   right_ascension, declination, distance (= longitude, latitude, distance)
 #   right_ascension, declination (= longitude, latitude)
 # Elsewhere in code these might be ecliptic2, equatorial2, geographic2, etc.
-
-class_name IVMath
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const Z_VECTOR := Vector3(0.0, 0.0, 1.0)
@@ -49,6 +49,7 @@ static func rotate_vector_z(vector: Vector3, new_z: Vector3) -> Vector3:
 	var k := X / sin_th # normalized cross product
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
 
+
 static func unrotate_vector_z(vector: Vector3, old_z: Vector3) -> Vector3:
 	# converse of above function
 	if old_z == Z_VECTOR:
@@ -58,6 +59,7 @@ static func unrotate_vector_z(vector: Vector3, old_z: Vector3) -> Vector3:
 	var sin_th := X.length()
 	var k := X / sin_th # normalized cross product
 	return vector * cos_th + k.cross(vector) * sin_th + k * k.dot(vector) * (1.0 - cos_th)
+
 
 static func rotate_basis_z(basis: Basis, new_z: Vector3) -> Basis:
 	if new_z == Z_VECTOR:
@@ -71,6 +73,7 @@ static func rotate_basis_z(basis: Basis, new_z: Vector3) -> Basis:
 	basis.y = basis.y * cos_th + k.cross(basis.y) * sin_th + k * k.dot(basis.y) * c1
 	basis.z = basis.z * cos_th + k.cross(basis.z) * sin_th + k * k.dot(basis.z) * c1
 	return basis
+
 
 static func get_rotation_matrix(keplerian_elements: Array) -> Basis:
 	var i: float = keplerian_elements[2]
@@ -100,6 +103,7 @@ static func get_rotation_matrix(keplerian_elements: Array) -> Basis:
 		)
 	)
 
+
 # Obliquity of the ecliptic (=23.439 deg) is rotation around the x-axis
 static func get_x_rotation_matrix(th: float) -> Basis:
 	return Basis(
@@ -108,18 +112,22 @@ static func get_x_rotation_matrix(th: float) -> Basis:
 		Vector3(0, sin(th), cos(th))
 	)
 
+
 static func get_y_rotation_matrix(th: float) -> Basis:
 	return Basis(
 		Vector3(cos(th), 0, sin(th)),
 		Vector3(0, 1, 0),
 		Vector3(-sin(th), 0, cos(th))
 	)
+
+
 static func get_z_rotation_matrix(th: float) -> Basis:
 	return Basis(
 		Vector3(cos(th), -sin(th), 0),
 		Vector3(sin(th), cos(th), 0),
 		Vector3(0, 0, 1)
 	)
+
 
 static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 	# WIP - I started this and didn't finish. Never tested.
@@ -139,6 +147,7 @@ static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 		Vector3(z1, z2, z3)
 	)
 
+
 # Spherical
 static func get_spherical2(translation: Vector3) -> Vector2:
 	var r := translation.length()
@@ -147,6 +156,7 @@ static func get_spherical2(translation: Vector3) -> Vector2:
 	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU) # 0,0 safe
 	var declination := asin(translation.z / r)
 	return Vector2(right_ascension, declination)
+
 
 static func convert_spherical2(right_ascension: float, declination: float) -> Vector3:
 	# returns translation with r = 1.0
@@ -157,6 +167,7 @@ static func convert_spherical2(right_ascension: float, declination: float) -> Ve
 		sin(declination)
 	)
 
+
 static func get_spherical3(translation: Vector3) -> Vector3:
 	var r := translation.length()
 	if r == 0.0:
@@ -164,6 +175,7 @@ static func get_spherical3(translation: Vector3) -> Vector3:
 	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU)
 	var declination := asin(translation.z / r)
 	return Vector3(right_ascension, declination, r)
+
 
 static func convert_spherical3(spherical3: Vector3) -> Vector3:
 	var right_ascension: float = spherical3[0]
@@ -176,13 +188,16 @@ static func convert_spherical3(spherical3: Vector3) -> Vector3:
 		r * sin(declination)
 	)
 
+
 static func get_rotated_spherical3(translation: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
 	translation = rotation.xform_inv(translation)
 	return get_spherical3(translation)
 
+
 static func convert_rotated_spherical3(spherical3: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
 	var translation := convert_spherical3(spherical3)
 	return rotation.xform(translation)
+
 
 static func wrap_spherical3(spherical3: Vector3) -> Vector3:
 	var ra: float = spherical3[0] # make this 0 to TAU
@@ -198,6 +213,7 @@ static func wrap_spherical3(spherical3: Vector3) -> Vector3:
 	spherical3[0] = ra
 	spherical3[1] = dec
 	return spherical3
+
 
 static func get_latitude_longitude(translation: Vector3) -> Vector2:
 	# Convinience function; order & wrapping differ from spherical2 
@@ -218,9 +234,11 @@ static func get_fov_from_focal_length(focal_length: float) -> float:
 	# default, so we use horizonal height of a full-frame sensor (11.67mm)
 	# to calculate: fov = 2 * arctan(sensor_size / focal_length).
 	return rad2deg(2.0 * atan(11.67 / focal_length))
-	
+
+
 static func get_focal_length_from_fov(fov: float) -> float:
 	return 11.67 / tan(deg2rad(fov) / 2.0)
+
 
 static func get_fov_scaling_factor(fov: float) -> float:
 	# This polynomial was empirically determined (with a tape measure!) to
@@ -228,6 +246,7 @@ static func get_fov_scaling_factor(fov: float) -> float:
 	# werer depreciated, but it may be more generally useful for scale
 	# corrections after fov change.
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
+
 
 # Conversions (use IVUnits for most conversions!)
 static func srgb2linear(color: Color) -> Color:
@@ -244,10 +263,10 @@ static func srgb2linear(color: Color) -> Color:
 	else:
 		color.b = pow((color.b + 0.055) / 1.055, 2.4)
 	return color
-		
+
+
 static func linear2srgb(x: float) -> float:
 	if x <= 0.0031308:
 		return x * 12.92
 	else:
 		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
-

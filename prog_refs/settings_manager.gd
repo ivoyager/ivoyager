@@ -17,13 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSettingsManager
+extends IVCacheManager
+
 # Settings are persisted in <cache_dir>/<cache_file_name> (specified below).
 #
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
-
-extends IVCacheManager
-class_name IVSettingsManager
 
 
 func _on_init():
@@ -81,6 +81,7 @@ func _on_init():
 	
 	# read-only
 	current = IVGlobal.settings
+
 
 func _on_change_current(setting: String) -> void:
 	IVGlobal.emit_signal("setting_changed", setting, current[setting])

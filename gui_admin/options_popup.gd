@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVOptionsPopup
+extends IVCachedItemsPopup
+
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
-
-extends IVCachedItemsPopup
-class_name IVOptionsPopup
 
 const DPRINT := true
 
@@ -29,7 +29,6 @@ var setting_enums := {
 	gui_size = IVEnums.GUISize,
 	starmap = IVEnums.StarmapSize,
 }
-
 var format_overrides := {
 	camera_transfer_time = {max_value = 10.0},
 	viewport_names_size = {min_value = 4.0, max_value = 50.0},
@@ -37,13 +36,21 @@ var format_overrides := {
 }
 
 var _settings: Dictionary = IVGlobal.settings
+
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+
+
+func _project_init() -> void:
+	._project_init()
+	IVGlobal.connect("options_requested", self, "open")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	if !IVGlobal.enable_save_load:
+		remove_subpanel("LABEL_SAVE_LOAD")
 
 
 func open() -> void:
 	._open()
 
-# *****************************************************************************
 
 func _on_init():
 	# Edit layout directly or use parent class functions at project init.
@@ -91,12 +98,6 @@ func _on_init():
 		],
 	]
 
-func _project_init() -> void:
-	._project_init()
-	IVGlobal.connect("options_requested", self, "open")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	if !IVGlobal.enable_save_load:
-		remove_subpanel("LABEL_SAVE_LOAD")
 
 func _on_ready() -> void:
 	._on_ready()
@@ -106,6 +107,7 @@ func _on_ready() -> void:
 	hotkeys_button.text = "BUTTON_HOTKEYS"
 	hotkeys_button.connect("pressed", self, "_open_hotkeys")
 	_header_right.add_child(hotkeys_button)
+
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	var setting_hbox := HBoxContainer.new()
@@ -175,19 +177,23 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	setting_hbox.add_child(default_button)
 	return setting_hbox
 
+
 func _set_overrides(control: Control, setting: String) -> void:
 	if format_overrides.has(setting):
 		var overrides: Dictionary = format_overrides[setting]
 		for override in overrides:
 			control.set(override, overrides[override])
 
+
 func _on_content_built() -> void:
 	_confirm_changes.disabled = _settings_manager.is_cache_current()
 	_restore_defaults.disabled = _settings_manager.is_all_defaults()
 
+
 func _restore_default(setting: String) -> void:
 	_settings_manager.restore_default(setting, true)
 	call_deferred("_build_content")
+
 
 func _on_change(value, setting: String, default_button: Button, convert_to_int := false) -> void:
 	if convert_to_int:
@@ -197,26 +203,30 @@ func _on_change(value, setting: String, default_button: Button, convert_to_int :
 	default_button.disabled = _settings_manager.is_default(setting)
 	_confirm_changes.disabled = _settings_manager.is_cache_current()
 
+
 func _on_restore_defaults() -> void:
 	_settings_manager.restore_all_defaults(true)
 	call_deferred("_build_content")
+
 
 func _on_confirm_changes() -> void:
 	_settings_manager.cache_now()
 	hide()
 
+
 func _on_cancel_changes() -> void:
 	_settings_manager.restore_from_cache()
 	hide()
+
 
 func _open_hotkeys() -> void:
 	if !is_connected("popup_hide", IVGlobal, "emit_signal"):
 		connect("popup_hide", IVGlobal, "emit_signal", ["hotkeys_requested"], CONNECT_ONESHOT)
 	_on_cancel()
 
+
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
 		yield(get_tree(), "idle_frame") # allow font changes
 		hide()
 		_open()
-

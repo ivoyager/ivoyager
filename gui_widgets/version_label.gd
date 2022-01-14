@@ -17,10 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Label
+
 # GUI widget. Use set_version_label to display an extension version. Otherwise,
 # displays I, Voyager version.
 
-extends Label
+
+func _ready():
+	set_version_label()
+
 
 func set_version_label(extension_name := "", include_name := true,
 		prepend_v := true, name_version_separator := " ",
@@ -47,6 +52,3 @@ func set_version_label(extension_name := "", include_name := true,
 		label_text += "v"
 	label_text += version + append_text
 	text = label_text
-
-func _ready():
-	set_version_label()

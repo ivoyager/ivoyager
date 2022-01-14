@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVBodyList
+
 # WIP - not implemented!
 # Manages lists of instanced and "virtual" bodies. Virtual bodies are simply
 # names that are instanced only if/when individually selected (eg, our 300000+
 # Main Belt asteroids).
-
-class_name IVBodyList
 
 enum {
 	SORT_NO_SORT, # leave as is, eg, from a data table
@@ -30,17 +30,16 @@ enum {
 	SORT_ASTEROIDS
 	}
 
+# persisted
 var list_name: String
 var body_names: Array
 var bodies_by_name := {}
-
 var _instance_builder: Object
 var _sort_type: int
 #var _asteroid_integers: Dictionary
-
-# persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["list_name", "body_names", "_sort_type", "bodies_by_name", "_instance_builder"]
+
 
 func init_virtual_bodies(list_name_: String, sort_type := SORT_DEFAULT, body_names_ := [], instance_builder: Object = null) -> void:
 	# body_names_ is kept & modified
@@ -53,6 +52,7 @@ func init_virtual_bodies(list_name_: String, sort_type := SORT_DEFAULT, body_nam
 			body_names.sort()
 		SORT_ASTEROIDS:
 			body_names.sort_custom(self, "_sort_asteroids")
+
 
 func init_bodies(list_name_: String, sort_type := SORT_DEFAULT, bodies := [], instance_builder: Object = null) -> void:
 	# bodies is released w/out modification
@@ -71,14 +71,18 @@ func init_bodies(list_name_: String, sort_type := SORT_DEFAULT, bodies := [], in
 		SORT_ASTEROIDS:
 			body_names.sort_custom(self, "_sort_asteroids")
 
+
 func add_body(_body: IVBody) -> void:
 	pass
+
 
 func add_virtual_body(_body_name: String) -> void:
 	pass
 
+
 func remove_body(_body: IVBody) -> void:
 	pass
+
 
 func remove_virtual_body(_body_name: String) -> void:
 	pass
@@ -101,5 +105,3 @@ func _sort_asteroids(a: String, b: String) -> bool:
 	# Sort on id, if this is "id [name]" format, but sort alphabetically if
 	# string is "year letters digits" format.
 	return a < b
-
-

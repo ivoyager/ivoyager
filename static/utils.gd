@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVUtils
 
 
@@ -32,6 +31,7 @@ static func get_deep(target, path: String): # untyped return
 		if target == null:
 			return null
 	return target
+
 
 const NO_ARGS := []
 
@@ -51,6 +51,7 @@ static func get_path_result(target, path: String, args := NO_ARGS): # untyped re
 			return null
 	return target
 
+
 # Arrays
 static func init_array(size: int, init_value = null) -> Array:
 	var array := []
@@ -63,12 +64,14 @@ static func init_array(size: int, init_value = null) -> Array:
 		i += 1
 	return array
 
+
 static func fill_array(array: Array, fill_value) -> void:
 	var size := array.size()
 	var i := 0
 	while i < size:
 		array[i] = fill_value
 		i += 1
+
 
 # patch
 static func c_unescape_patch(text: String) -> String:

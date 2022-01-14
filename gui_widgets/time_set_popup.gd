@@ -17,13 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends PopupPanel
+
 # Call popup() to show.
 
-extends PopupPanel
 
 func _ready() -> void:
 	$ControlDraggable.set_min_size()
 	connect("about_to_show", self, "_on_about_to_show")
+
 
 func _on_about_to_show() -> void:
 	$MarginContainer/TimeSetter.set_current()

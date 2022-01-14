@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-extends Node
 class_name IVPointsManager
+extends Node
+
 
 const DPRINT := false
 
@@ -33,6 +33,18 @@ const PERSIST_PROPERTIES := ["_show_points"]
 # unpersisted
 var _points_groups := {}
 var _points_categories := {} # holds arrays of group names
+
+
+func _ready():
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
+
+
+func _restore_init_state() -> void:
+	_show_points.clear()
+	_points_groups.clear()
+	_points_categories.clear()
+
 
 func show_points(group_or_category: String, is_show: bool) -> void:
 	assert(DPRINT and prints("show_points", group_or_category, is_show) or true)
@@ -55,6 +67,7 @@ func show_points(group_or_category: String, is_show: bool) -> void:
 			_points_groups[group_or_category].hide()
 	emit_signal("show_points_changed", group_or_category, is_show)
 
+
 func register_points_group(hud_points: IVHUDPoints, group: String) -> void:
 	if !_show_points.has(group):
 		_show_points[group] = false
@@ -62,9 +75,11 @@ func register_points_group(hud_points: IVHUDPoints, group: String) -> void:
 		hud_points.show()
 	_points_groups[group] = hud_points
 
+
 func forget_points_group(group: String) -> void: # not needed for load
 	_show_points.erase(group)
 	_points_groups.erase(group)
+
 
 func register_points_group_in_category(group: String, category: String) -> void:
 	if !_show_points.has(category):
@@ -73,20 +88,11 @@ func register_points_group_in_category(group: String, category: String) -> void:
 		_points_categories[category] = []
 	_points_categories[category].append(group)
 
+
 func forget_points_category(category: String) -> void: # not needed for load
 	_show_points.erase(category)
 	_points_categories.erase(category)
 
-# *****************************************************************************
-
-func _ready():
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
-
-func _restore_init_state() -> void:
-	_show_points.clear()
-	_points_groups.clear()
-	_points_categories.clear()
 
 func _refresh_gui() -> void:
 	for group_or_category in _show_points:

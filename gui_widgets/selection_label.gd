@@ -17,19 +17,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget. An ancestor Control must have member selection_manager.
-
 extends Label
+
+# GUI widget. An ancestor Control must have member selection_manager.
 
 var _selection_manager: IVSelectionManager
 
+
 func _ready() -> void:
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_on_selection_changed()
+
 
 func _on_selection_changed() -> void:
 	var selection_item := _selection_manager.selection_item
