@@ -123,7 +123,7 @@ func _build(_is_new_game: bool) -> void:
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
-	button.connect("selected", self, "_change_selection", [button])
+	button.connect("selected", self, "_on_nav_button_selected", [button])
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
@@ -156,7 +156,7 @@ func _resize() -> void:
 		control.rect_min_size = multipliers * widget_width
 
 
-func _change_selection(selected: Button) -> void:
+func _on_nav_button_selected(selected: Button) -> void:
 	_currently_selected = selected
 	if !_mouse_only_gui_nav and !get_focus_owner():
 		if selected.focus_mode != FOCUS_NONE:
@@ -223,6 +223,7 @@ class NavButton extends Button:
 	func _ready():
 		IVGlobal.connect("update_gui_needed", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
+		_selection_manager.connect("selection_reselected", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 

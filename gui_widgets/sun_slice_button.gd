@@ -52,6 +52,7 @@ func _build(_is_new_game: bool) -> void:
 	var sun: IVBody = _body_registry.top_bodies[0]
 	_selection_item = _body_registry.get_selection_for_body(sun)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_selection_manager.connect("selection_reselected", self, "_update_selection")
 	flat = true
 	hint_tooltip = _selection_item.name
 	_texture_rect.texture = _selection_item.texture_slice_2d
