@@ -1,9 +1,13 @@
 # I, Voyager Style Guide
-We adhear to Godot's [GDScript style guide](https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_styleguide.html) with a few project-specific changes or additions described here.
+We adhear to Godot's [GDScript style guide](https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_styleguide.html) with a few changes and additions described here.
 
 ## Naming conventions
+
 ### 'IV'-prefixing classes and globals
 All class names and the two autoload/singletons in the core 'ivoyager' submodule are prefixed with 'IV' to avoid name collisions with embedding projects. We drop this prefix for the names of files, nodes, variables and dictionary indexes that relate to these classes.
+
+### Astronomy over code convention, in isolation
+Within certain functions we favor standard orbital mechanics symbols over code convention. For example, in orbit calculations: `var e: float` for eccentricity and `var E: float` for eccentric anomaly. Avoid this for class properties and methods.
 
 ### Static classes assigned to const
 Use lower case for local assignment of static classes to constants:  
@@ -38,18 +42,23 @@ const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "com
 	"satellites", "lagrange_points"]
 ```
 
-### IVProjectBuilder virtual-like functions
-There are two virtual-like functions for classes instantiated by IVProjectBuilder: `_extention_init()` and `_project_init()`. Keep these at the top of functions with Godot's virtual functions. They logically follow `_init()`.
+### Keep init code together
+Keep init and destructor functions together (whether virtual or not) before all other functions.
 
-### Overridable virtual substitute functions
-Because Godot virtual functions are not overridable by subclasses, we often "pass-through" to functions that can be overridden. Order these substitute functions after the virtual functions that they replace. E.g.:
 ```
 func _init() -> void:
-	_on_init()
+	_on_init() # we do this so subclasses can override
 
 
 func _on_init() -> void:
-	# overridable code
+	pass
+
+
+func _project_init() -> void:
+	# This is a 'virtual-like' function called for classes instantiated by
+	# IVProjectBuilder (before adding to tree). It's not a Godot virtual
+	# function so subclasses can override.
+	pass
 
 
 func _ready() -> void:
@@ -57,11 +66,28 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
-	# overridable code
+	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
+	IVGlobal.connect("simulator_started", self, "_on_simulator_started")
+	IVGlobal.connect("simulator_exited", self, "_on_simulator_exited")
+
+
+func _on_project_builder_finished() -> void:
+	pass
+
+
+func _on_simulator_started() -> void:
+	pass
+
+
+func _on_simulator_exited() -> void:
+	pass
+
+
+# Other virtual functions, then public functions, then private functions...
 ```
 
 ## Static typing
-Use static typing **everywhere** except where it is absolutely necessary to used an untyped varible. There are only a couple exceptions in 'ivoyager' involving table reading and settings, where `value` is generally used as var name for an untyped item:
+**Always** use static typing except where it is absolutely necessary to use untyped. There are only a couple exceptions in 'ivoyager' involving table reading and settings, where `value` is generally used as var name for an untyped item:
 ```
 func _on_ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")

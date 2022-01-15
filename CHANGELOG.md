@@ -12,14 +12,16 @@ Under development using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Project Breaking Changes
+### API-breaking changes
 * Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
 * Submodule now depends on external static class SIBaseUnits with SI base units (previously in Universe). We keep this file external to 'ivoyager' so projects can change the scale const METER.
 * Renamed IVUnits.conv() to convert_quantity() and changed function signature.
+* Renamed IVGlobal signal 'gui_update_needed' to 'gui_update_needed'.
 
 ### Changes
 * universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this). It's a spatial that does nothing. The .gd file is only there for comments.
 * Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
+* Camera now re-levels itself and re-centers the target on object selection.
 
 ## [v0.0.10] - 2022-01-09
 
@@ -37,7 +39,7 @@ Developed using Godot 3.3.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.9**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Project Changes
+### Project changes
 The first two will break external projects using the ivoyager submodule! Make changes as needed.
 * [project breaking!] The Universe node was moved from the ivoyager submodule to the top level project directory. External projects can now add scenes to the simulator root node in the editor (before you could do this only by code).
 * [project breaking!] [universe.gd](https://github.com/ivoyager/project_template/blob/master/universe.gd) now has the constants that define base SI units. By "externalizing" this, external projects can now change simulator internal representation of values (in particular, METER, which sets the scale of the simulation).

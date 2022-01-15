@@ -97,7 +97,7 @@ func _on_init() -> void:
 	_state.network_state = NO_NETWORK
 
 
-func _ready():
+func _ready() -> void:
 	_on_ready()
 
 
