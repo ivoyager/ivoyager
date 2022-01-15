@@ -9,8 +9,8 @@ All class names and the two autoload/singletons in the core 'ivoyager' submodule
 ### Astronomy over code convention, in isolation
 Within certain functions we favor standard orbital mechanics symbols over code convention. For example, in orbit calculations: `var e: float` for eccentricity and `var E: float` for eccentric anomaly. Avoid this for class properties and methods.
 
-### Static classes assigned to const
-Use lower case for local assignment of static classes to constants:  
+### Static function classes assigned to const
+Use lower case for local assignment of static function classes to constants:  
 ```const math := preload("res://ivoyager/static/math.gd")```
 
 ## Code order
@@ -29,6 +29,8 @@ const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 ### Persisted variable blocks
 I, Voyager's save/load system uses two constants to identify object properties to persist. Keep persisted variables together with these constants in a unified block:
 ```
+# Enums, constants first
+
 # persisted
 var body_id := -1
 var flags := 0
@@ -36,28 +38,32 @@ var characteristics := {}
 var components := {}
 var satellites := []
 var lagrange_points := []
-
+var _something_private: float
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
-	"satellites", "lagrange_points"]
+	"satellites", "lagrange_points", "_something_private"]
+
+# Other public, then private vars
 ```
 
-### Keep init code together
+### Keep init and destructor code together
 Keep init and destructor functions together (whether virtual or not) before all other functions.
 
 ```
 func _init() -> void:
-	_on_init() # we do this so subclasses can override
+	_on_init()
 
 
 func _on_init() -> void:
+ 	# This function can be overriden by a subclass, unlike the virtual
+	# function above.
 	pass
 
 
 func _project_init() -> void:
 	# This is a 'virtual-like' function called for classes instantiated by
-	# IVProjectBuilder (before adding to tree). It's not a Godot virtual
-	# function so subclasses can override.
+	# IVProjectBuilder before they are added to the tree. It's not a Godot
+	# virtual function so subclasses can override.
 	pass
 
 
