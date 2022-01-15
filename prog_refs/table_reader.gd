@@ -431,7 +431,7 @@ func convert_real(value: String, unit := "") -> float:
 	value = value.lstrip("~")
 	var real := float(value)
 	if unit:
-		real = units.conv(real, unit, false, true, _unit_multipliers, _unit_functions)
+		real = units.convert_quantity(real, unit, true, true, _unit_multipliers, _unit_functions)
 	return float(real)
 
 

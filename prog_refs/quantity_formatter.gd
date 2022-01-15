@@ -396,7 +396,7 @@ func number_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMI
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/units.gd)
-	x = units.conv(x, unit, true, false, _multipliers, _functions)
+	x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
 	var number_str := number(x, precision, num_type)
 	if long_form and long_forms.has(unit):
 		unit = long_forms[unit]
@@ -421,7 +421,7 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
 	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
 	if unit:
-		x = units.conv(x, unit, true, false, _multipliers, _functions)
+		x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
