@@ -12,6 +12,9 @@ Under development using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
+### Added
+* New [STYLE_GUIDE.md](https://github.com/ivoyager/ivoyager/blob/master/STYLE_GUIDE.md) documents the (very few) departures from Godot's GDScript style guide.
+
 ### API-breaking changes
 * Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
 * Submodule now depends on external static class SIBaseUnits with SI base units (previously in Universe). We keep this file external to 'ivoyager' so projects can change the scale const METER.
