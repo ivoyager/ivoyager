@@ -25,6 +25,7 @@ class_name IVSelectionManager
 # IVCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
 
 signal selection_changed()
+signal selection_reselected()
 
 enum {
 	# some implemented but many planned
@@ -73,6 +74,7 @@ var _supress_history := false
 
 func select(selection_item_: IVSelectionItem) -> void:
 	if selection_item == selection_item_:
+		emit_signal("selection_reselected")
 		return
 	selection_item = selection_item_
 	_add_history()

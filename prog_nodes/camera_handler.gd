@@ -101,6 +101,7 @@ func _ready():
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
 
 
 func _process(delta: float) -> void:
@@ -240,9 +241,15 @@ func _on_run_state_changed(is_running: bool) -> void:
 
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
+		# Cancel rotations, but keep relative position.
 		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
-				NULL_ROTATION, -1)
+				Vector3.ZERO, -1)
 
+func _on_selection_reselected() -> void:
+	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
+		# Cancel rotations, but keep relative position.
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				Vector3.ZERO, -1)
 
 func _on_camera_move_started(to_body: IVBody, is_camera_lock: bool) -> void:
 	if is_camera_lock:
@@ -261,7 +268,8 @@ func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_m
 	# We only handle IVBody as target object for now (this could change).
 	var body := target as IVBody
 	if body and _camera:
-		_camera.move_to_body(body)
+		# Cancel rotations, but keep relative position.
+		_camera.move_to_body(body, -1, Vector3.ZERO, Vector3.ZERO, -1)
 
 
 func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:

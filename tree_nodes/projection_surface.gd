@@ -21,7 +21,7 @@ class_name IVProjectionSurface
 extends Control
 
 # Receives mouse events in the 3D window area, sets cursor shape, and
-# interprets drags, target object click, and wheel turn.
+# interprets/signals mouse drags, clicks and wheel turn.
 # Parent control for HUD labels or similar 2D projections of 3D objects.
 # All children are freed on exit or game load.
 
