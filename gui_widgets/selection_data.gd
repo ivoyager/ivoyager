@@ -205,6 +205,7 @@ onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
 
 func _ready() -> void:
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("update_gui_requested", self, "_update_selection")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
 	_start_interval_updates()
@@ -241,7 +242,6 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		_grids.append(grid)
 		add_child(grid)
 		section += 1
-	_update_selection()
 
 
 func _clear() -> void:

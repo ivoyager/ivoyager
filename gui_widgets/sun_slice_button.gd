@@ -38,7 +38,7 @@ onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_build")
-	IVGlobal.connect("update_gui_needed", self, "_update_selection")
+	IVGlobal.connect("update_gui_requested", self, "_update_selection")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")

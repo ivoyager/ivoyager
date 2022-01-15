@@ -55,11 +55,16 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_needed", self, "_on_update_gui_needed")
+	IVGlobal.connect("simulator_started", self, "_on_simulator_started")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag
+
+
+func _on_simulator_started() -> void:
+	_resize()
+	_finish_move()
 
 
 func _input(event: InputEvent) -> void:
@@ -84,11 +89,6 @@ func _on_parent_input(event: InputEvent) -> void:
 			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
 	elif event is InputEventMouseMotion and _drag_point:
 		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
-
-
-func _on_update_gui_needed() -> void:
-	_resize()
-	_finish_move()
 
 
 func _finish_move() -> void:

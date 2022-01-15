@@ -221,7 +221,7 @@ class NavButton extends Button:
 
 
 	func _ready():
-		IVGlobal.connect("update_gui_needed", self, "_update_selection")
+		IVGlobal.connect("update_gui_requested", self, "_update_selection")
 		_selection_manager.connect("selection_changed", self, "_update_selection")
 		_selection_manager.connect("selection_reselected", self, "_update_selection")
 		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS

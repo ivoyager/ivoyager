@@ -33,6 +33,7 @@ var _selection_manager: IVSelectionManager
 
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("update_gui_requested", self, "_update_selection")
 	connect("meta_clicked", self, "_on_wiki_clicked")
 	size_flags_horizontal = SIZE_EXPAND_FILL
 
@@ -40,13 +41,12 @@ func _ready():
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_selection_manager = IVGUIUtils.get_selection_manager(self)
 	if use_selection_as_text:
-		_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-		_on_selection_changed()
+		_selection_manager.connect("selection_changed", self, "_update_selection")
 	else:
 		bbcode_text = "[url]" + tr(fallback_text) + "[/url]"
 
 
-func _on_selection_changed() -> void:
+func _update_selection() -> void:
 	var object_name: String = _selection_manager.get_name()
 	bbcode_text = "[url]" + tr(object_name) + "[/url]"
 

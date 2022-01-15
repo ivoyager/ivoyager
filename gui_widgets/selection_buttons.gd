@@ -30,6 +30,7 @@ onready var _up: Button = $Up
 
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
 
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
@@ -38,7 +39,6 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	_back.connect("pressed", _selection_manager, "back")
 	_forward.connect("pressed", _selection_manager, "forward")
 	_up.connect("pressed", _selection_manager, "up")
-	_update_buttons()
 
 
 func _update_buttons() -> void:

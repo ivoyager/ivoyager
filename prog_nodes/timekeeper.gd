@@ -147,7 +147,7 @@ func _on_ready() -> void: # subclass can override
 	IVGlobal.connect("pause_requested", self, "set_paused")
 	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
 	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
 	connect("speed_changed", self, "_on_speed_changed")
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal

@@ -43,7 +43,7 @@ signal about_to_build_system_tree()
 signal system_tree_built_or_loaded(is_new_game) # still some I/O tasks to do!
 signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
-signal update_gui_needed() # send signals with GUI info now!
+signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()

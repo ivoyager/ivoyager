@@ -168,7 +168,7 @@ func _ready() -> void:
 	name = "Camera"
 	IVGlobal.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	IVGlobal.connect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -205,7 +205,7 @@ func _start_sim(_is_new_game: bool) -> void:
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	IVGlobal.disconnect("update_gui_needed", self, "_send_gui_refresh")
+	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
 	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")

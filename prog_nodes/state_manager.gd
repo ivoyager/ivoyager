@@ -135,7 +135,7 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	yield(_tree, "idle_frame")
 	allow_run(self)
 	yield(_tree, "idle_frame")
-	IVGlobal.emit_signal("update_gui_needed")
+	IVGlobal.emit_signal("update_gui_requested")
 	yield(_tree, "idle_frame")
 	IVGlobal.emit_signal("simulator_started")
 

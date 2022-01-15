@@ -37,7 +37,7 @@ var _points_categories := {} # holds arrays of group names
 
 func _ready():
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
 
 
 func _restore_init_state() -> void:

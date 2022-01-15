@@ -34,7 +34,7 @@ const PERSIST_PROPERTIES := ["show_orbits", "show_names", "show_symbols"]
 
 
 func _ready():
-	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
+	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
 
 
 func set_show_orbits(is_show: bool) -> void:

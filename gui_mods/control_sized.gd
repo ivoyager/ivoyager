@@ -53,7 +53,7 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_needed", self, "_resize")
+	IVGlobal.connect("simulator_started", self, "_resize")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 
