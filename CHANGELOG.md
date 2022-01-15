@@ -16,7 +16,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
 * Submodule now depends on external static class SIBaseUnits with SI base units (previously in Universe). We keep this file external to 'ivoyager' so projects can change the scale const METER.
 * Renamed IVUnits.conv() to convert_quantity() and changed function signature.
-* Renamed IVGlobal signal 'gui_update_needed' to 'gui_update_needed'.
+* Renamed IVGlobal signal 'gui_update_needed' to 'gui_update_requested'.
 
 ### Changes
 * universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this). It's a spatial that does nothing. The .gd file is only there for comments.
