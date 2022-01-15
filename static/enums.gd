@@ -17,8 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVEnums
+
+# We keep enums here that are broadly needed by the program.
+#
+# You can extend this class and assign your extended class to IVGlobal.enums.
+# This is used by program systems that need to interpret enums without specific
+# knowledge of their context. E.g.:
+#  - IVTableImporter for interpretting enum names in external *.tsv files
+#  - GUI widget selection_data.gd for object info display 
 
 enum NetworkState {
 	NO_NETWORK,

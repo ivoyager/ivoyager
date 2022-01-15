@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVScheduler
+
 # Creates interval signals using simulation time. Max signal frequency will be
 # once per frame if interval is very small and/or game speed is very fast.
 # There is no save/load persistence! Interval connections must be remade.
-
-class_name IVScheduler
 
 var _times: Array = IVGlobal.times
 var _ordered_signal_infos := [] # array "top" is always the next signal
@@ -30,6 +30,38 @@ var _signal_intervals := []
 var _available_signals := []
 var _is_reversed := false
 
+
+# *****************************************************************************
+
+func _project_init() -> void:
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+	timekeeper.connect("processed", self, "_timekeeper_process")
+	timekeeper.connect("time_altered", self, "_on_time_altered")
+	if IVGlobal.allow_time_reversal:
+		timekeeper.connect("speed_changed", self, "_on_speed_changed")
+
+
+func _clear() -> void:
+	_ordered_signal_infos.clear()
+	_signal_intervals.clear()
+	_available_signals.clear()
+	var i := 0
+	while i < _counter:
+		var signal_str := str(i)
+		_signal_intervals.append(0.0)
+		_available_signals.append(signal_str)
+		var connection_list := get_signal_connection_list(signal_str)
+		if connection_list:
+			assert(connection_list.size() == 1)
+			var connection_dict: Dictionary = connection_list[0] # never >1
+			var target: Object = connection_dict.target
+			var method: String = connection_dict.method
+			disconnect(signal_str, target, method)
+		i += 1
+
+
+# *****************************************************************************
 
 func interval_connect(interval: float, target: Object, method: String, binds := [],
 		flags := 0) -> void:
@@ -40,6 +72,7 @@ func interval_connect(interval: float, target: Object, method: String, binds := 
 	var oneshot := bool(flags & CONNECT_ONESHOT)
 	var signal_str := _make_interval_signal(interval, oneshot)
 	connect(signal_str, target, method, binds, flags)
+
 
 func interval_disconnect(interval: float, target: Object, method: String) -> void:
 	# Note: IVScheduler will disconnet all interval signals on IVGlobal signal
@@ -61,15 +94,8 @@ func interval_disconnect(interval: float, target: Object, method: String) -> voi
 		return
 	_remove_active_interval_signal(signal_str)
 
-# *****************************************************************************
 
-func _project_init() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("processed", self, "_timekeeper_process")
-	timekeeper.connect("time_altered", self, "_on_time_altered")
-	if IVGlobal.allow_time_reversal:
-		timekeeper.connect("speed_changed", self, "_on_speed_changed")
+# *****************************************************************************
 
 func _make_interval_signal(interval: float, oneshot := false) -> String:
 	var signal_str: String
@@ -93,6 +119,7 @@ func _make_interval_signal(interval: float, oneshot := false) -> String:
 	_ordered_signal_infos.insert(index, signal_info)
 	return signal_str
 
+
 func _remove_active_interval_signal(signal_str: String) -> void:
 	var ordered_size := _ordered_signal_infos.size()
 	var i := 0
@@ -105,23 +132,6 @@ func _remove_active_interval_signal(signal_str: String) -> void:
 		i += 1
 	assert(false, "Attept to remove non-active signal")
 
-func _clear() -> void:
-	_ordered_signal_infos.clear()
-	_signal_intervals.clear()
-	_available_signals.clear()
-	var i := 0
-	while i < _counter:
-		var signal_str := str(i)
-		_signal_intervals.append(0.0)
-		_available_signals.append(signal_str)
-		var connection_list := get_signal_connection_list(signal_str)
-		if connection_list:
-			assert(connection_list.size() == 1)
-			var connection_dict: Dictionary = connection_list[0] # never >1
-			var target: Object = connection_dict.target
-			var method: String = connection_dict.method
-			disconnect(signal_str, target, method)
-		i += 1
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
@@ -137,6 +147,7 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 		i += 1
 	_ordered_signal_infos.sort_custom(self, "_sort_reverse" if is_reversed else "_sort_forward")
 
+
 func _on_time_altered(previous_time: float) -> void:
 	var time_diff: float = _times[0] - previous_time
 	var n_signals := _ordered_signal_infos.size()
@@ -145,6 +156,7 @@ func _on_time_altered(previous_time: float) -> void:
 		var signal_info: Array = _ordered_signal_infos[i]
 		signal_info[0] += time_diff
 		i += 1
+
 
 func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 	if !_ordered_signal_infos:
@@ -192,14 +204,18 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 			if !_ordered_signal_infos:
 				return
 
+
 func _bsearch_forward(signal_info: Array, signal_time: float) -> bool:
 	return signal_info[0] > signal_time # earliest signal_time will be on "top"
+
 
 func _sort_forward(a: Array, b: Array) -> bool:
 	return a[0] > b[0] # earliest signal_time will be on "top"
 
+
 func _bsearch_reverse(signal_info: Array, signal_time: float) -> bool:
 	return signal_info[0] < signal_time # latest signal_time will be on "top"
+
 
 func _sort_reverse(a: Array, b: Array) -> bool:
 	return a[0] < b[0] # latest signal_time will be on "top"

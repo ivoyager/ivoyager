@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# GUI widget.
-
 extends Label
+
+# GUI widget.
 
 var show_pause := true
 var date_format := "%02d/%02d/%02d"
@@ -32,6 +32,7 @@ var _is_paused := false
 var _show_clock := false
 var _show_seconds := false
 var _hm := [0, 0]
+
 onready var _forward_color: Color = IVGlobal.colors.normal
 onready var _reverse_color: Color = IVGlobal.colors.danger
 
@@ -40,6 +41,7 @@ func _ready() -> void:
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("processed", self, "_update")
 	timekeeper.connect("speed_changed", self, "_on_speed_changed")
+
 
 func _update(_time: float, _e_delta: float) -> void:
 	var new_text := date_format % _date
@@ -54,6 +56,7 @@ func _update(_time: float, _e_delta: float) -> void:
 		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
 
+
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		show_clock: bool, show_seconds: bool, _is_real_world_time: bool) -> void:
 	_is_paused = is_paused
@@ -64,4 +67,3 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 	else:
 		set("custom_colors/font_color", _forward_color)
 	_update(0.0, 0.0)
-

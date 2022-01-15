@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVMainMenuManager
+
 
 signal buttons_changed()
 signal button_state_changed()
@@ -47,34 +47,11 @@ var button_inits := [
 # read-only!
 var button_infos := []
 
-func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
-		target: Object, method: String, args := [], button_state := ACTIVE) -> void:
-	# Highest priority will be top menu item.
-	button_infos.append([text, priority, is_splash, is_running, target, method, args, button_state])
-	button_infos.sort_custom(self, "_sort_button_infos")
-	emit_signal("buttons_changed")
-
-func remove_button(text: String) -> void:
-	var i := 0
-	while i < button_infos.size():
-		if button_infos[i][0] == text:
-			button_infos.remove(i)
-			emit_signal("buttons_changed")
-			return
-		i += 1
-
-func change_button_state(text: String, button_state: int) -> void:
-	for button_info in button_infos:
-		if text == button_info[0]:
-			button_info[7] = button_state
-			break
-	emit_signal("button_state_changed")
-
-# *****************************************************************************
 
 func _project_init() -> void:
 	IVGlobal.connect("project_inited", self, "_init_buttons")
 	IVGlobal.connect("about_to_quit", self, "_clear_for_quit")
+
 
 func _init_buttons() -> void:
 	for init_info in button_inits:
@@ -103,8 +80,36 @@ func _init_buttons() -> void:
 		var args: Array = init_info[6] if has_args else []
 		make_button(text, priority, is_splash, is_running, target, method, args)
 
+
 func _clear_for_quit() -> void:
 	button_infos.clear()
+
+
+func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
+		target: Object, method: String, args := [], button_state := ACTIVE) -> void:
+	# Highest priority will be top menu item.
+	button_infos.append([text, priority, is_splash, is_running, target, method, args, button_state])
+	button_infos.sort_custom(self, "_sort_button_infos")
+	emit_signal("buttons_changed")
+
+
+func remove_button(text: String) -> void:
+	var i := 0
+	while i < button_infos.size():
+		if button_infos[i][0] == text:
+			button_infos.remove(i)
+			emit_signal("buttons_changed")
+			return
+		i += 1
+
+
+func change_button_state(text: String, button_state: int) -> void:
+	for button_info in button_infos:
+		if text == button_info[0]:
+			button_info[7] = button_state
+			break
+	emit_signal("button_state_changed")
+
 
 func _sort_button_infos(a: Array, b: Array) -> bool:
 	return a[1] > b[1] # priority

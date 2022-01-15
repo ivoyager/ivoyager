@@ -17,14 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Manages visibility of HUD elements.
-
-extends Node
 class_name IVHUDsManager
+extends Node
+
+# Manages visibility of HUD elements.
 
 signal show_huds_changed()
 
-# public - read-only except at project init
+# persisted - read-only except at project init
 var show_orbits := true
 var show_names := true # exclusive w/ show_symbols
 var show_symbols := false # exclusive w/ show_symbols
@@ -33,9 +33,14 @@ const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_names", "show_symbols"]
 
 
+func _ready():
+	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
+
+
 func set_show_orbits(is_show: bool) -> void:
 	show_orbits = is_show
 	emit_signal("show_huds_changed")
+
 
 func set_show_names(is_show: bool) -> void:
 	show_names = is_show
@@ -44,6 +49,7 @@ func set_show_names(is_show: bool) -> void:
 	else:
 		emit_signal("show_huds_changed")
 
+
 func set_show_symbols(is_show: bool) -> void:
 	show_symbols = is_show
 	if is_show and show_names:
@@ -51,10 +57,6 @@ func set_show_symbols(is_show: bool) -> void:
 	else:
 		emit_signal("show_huds_changed")
 
-# *****************************************************************************
-
-func _ready():
-	IVGlobal.connect("update_gui_needed", self, "_refresh_gui")
 
 func _refresh_gui() -> void:
 	emit_signal("show_huds_changed")

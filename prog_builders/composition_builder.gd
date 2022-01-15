@@ -17,12 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVCompositionBuilder
+
+
+var item_regex := RegEx.new()
 
 var _Composition_: Script
 
-var item_regex := RegEx.new()
+
+func _project_init() -> void:
+	_Composition_ = IVGlobal.script_classes._Composition_
+	item_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
+#	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
 
 
 func make_from_string(string: String) -> IVComposition:
@@ -30,11 +36,6 @@ func make_from_string(string: String) -> IVComposition:
 	composition.components = _parse_simple_list_string(string)
 	return composition
 
-
-func _project_init() -> void:
-	_Composition_ = IVGlobal.script_classes._Composition_
-	item_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
-#	item_regex.compile("(?:([~\\d\\.]+%) )?(.+)")
 
 func _parse_simple_list_string(string: String) -> Dictionary:
 	# "item 0.0%, item2 0.0%"

@@ -17,16 +17,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVComposition
+
 # This object is designed for simple display. It could be extended to do more.
 # For I, Voyager, we keep amounts as strings to preserve significant digits.
 
-class_name IVComposition
-
 enum CompositionType {BY_WEIGHT, BY_VOLUME}
 
+# persisted
 var type: int
 var components := {} # chemicals w/ amount string or null
-
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["type", "components"]
 

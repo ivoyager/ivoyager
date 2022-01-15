@@ -17,15 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Singleton "IVGlobal". IVGlobal init values should be modified by extension in
-# their _extension_init() function and treated as immutable thereafter.
+extends Node
+
+# Singleton "IVGlobal"
+#
+# IVGlobal init values should be modified by extension in their
+# _extension_init() function and treated as immutable thereafter.
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
 
-extends Node
-
-const IVOYAGER_VERSION := "0.0.11-dev"
-const IVOYAGER_VERSION_YMD := 20220110
+const IVOYAGER_VERSION := "0.0.11-DEV"
+const IVOYAGER_VERSION_YMD := 20220113
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -41,7 +43,7 @@ signal about_to_build_system_tree()
 signal system_tree_built_or_loaded(is_new_game) # still some I/O tasks to do!
 signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
-signal update_gui_needed() # send signals with GUI info now!
+signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
@@ -225,6 +227,7 @@ var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/drive
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
+
 
 func _ready():
 	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,

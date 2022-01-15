@@ -17,26 +17,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVHotkeysPopup
+extends IVCachedItemsPopup
+
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
-
-extends IVCachedItemsPopup
-class_name IVHotkeysPopup
 
 const DPRINT := true
 
 var key_box_min_size_x := 300
 
-onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
-onready var _actions: Dictionary = _input_map_manager.current
 var _hotkey_dialog: ConfirmationDialog = \
 		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()
 
+onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
+onready var _actions: Dictionary = _input_map_manager.current
 
-func open() -> void:
-	._open()
-
-# *****************************************************************************
 
 func _on_init():
 	# Edit layout directly or use IVCachedItemsPopup functions at project init.
@@ -134,6 +130,7 @@ func _on_init():
 		],
 	]
 
+
 func _project_init() -> void:
 	._project_init()
 	IVGlobal.connect("hotkeys_requested", self, "open")
@@ -151,6 +148,7 @@ func _project_init() -> void:
 		remove_item("save_quit")
 	if IVGlobal.disable_quit:
 		remove_item("quit")
+
 
 func _on_ready():
 	._on_ready()
@@ -176,9 +174,15 @@ func _on_ready():
 	add_child(_hotkey_dialog)
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 
+
+func open() -> void:
+	._open()
+
+
 func _on_content_built() -> void:
 	_confirm_changes.disabled = _input_map_manager.is_cache_current()
 	_restore_defaults.disabled = _input_map_manager.is_all_defaults()
+
 
 func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 	var action_hbox := HBoxContainer.new()
@@ -207,9 +211,11 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 	default_button.connect("pressed", self, "_restore_default", [action])
 	return action_hbox
 
+
 func _restore_default(action: String) -> void:
 	_input_map_manager.restore_default(action, true)
 	call_deferred("_build_content")
+
 
 func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
@@ -229,17 +235,21 @@ func _on_hotkey_confirmed(action: String, index: int, scancode: int,
 		_input_map_manager.set_action_event_dict(action, event_dict, index, true)
 	_build_content()
 
+
 func _on_restore_defaults() -> void:
 	_input_map_manager.restore_all_defaults(true)
 	call_deferred("_build_content")
+
 
 func _on_confirm_changes() -> void:
 	_input_map_manager.cache_now()
 	hide()
 
+
 func _on_cancel_changes() -> void:
 	_input_map_manager.restore_from_cache()
 	hide()
+
 
 func _open_options() -> void:
 	if !is_connected("popup_hide", IVGlobal, "emit_signal"):

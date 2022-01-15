@@ -17,13 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Node
+
 # Use only one of the Control mods:
 #    ControlSized - resizes with Options/GUI Size
 #    ControlDraggable - above plus user draggable
 #    ControlDynamic - above plus user resizing margins
 #
-# This widget will resize a Control (eg, a PanelContainer or PopupPanel) with
-# changes in Options/gui_size, maintaining position based on existing anchors.
+# Add to Control (eg, a PanelContainer or PopupPanel) for resizing based on
+# Options/gui_size. Maintains position based on existing anchors.
 # Assumes anchor_left == anchor_right and anchor_top == anchor_bottom (i.e.,
 # the parent Control is fixed-size for a given gui_size and not expected to
 # stretch with screen resize).
@@ -31,8 +33,6 @@
 # Modify sizes values from _ready() in the parent Control.
 #
 # For draggable and user resizable windows, use ControlDynamic instead.
-
-extends Node
 
 # project vars
 var default_sizes := [
@@ -46,14 +46,17 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 
 # private
 var _settings: Dictionary = IVGlobal.settings
-onready var _viewport := get_viewport()
-onready var _parent: Control = get_parent()
 var _default_size: Vector2
 
+onready var _viewport := get_viewport()
+onready var _parent: Control = get_parent()
+
+
 func _ready() -> void:
-	IVGlobal.connect("update_gui_needed", self, "_resize")
+	IVGlobal.connect("simulator_started", self, "_resize")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
+
 
 func _resize() -> void:
 	var default_size := _get_default_size()
@@ -68,6 +71,7 @@ func _resize() -> void:
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
+
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = default_sizes[gui_size]
@@ -78,6 +82,7 @@ func _get_default_size() -> Vector2:
 	if default_size.y > max_y:
 		default_size.y = max_y
 	return default_size
+
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":

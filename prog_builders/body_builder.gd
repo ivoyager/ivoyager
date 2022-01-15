@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVBodyBuilder
+
 # TODO: We need API to assist building IVBody not from table data.
 #
 # Note: below the huge build_from_table() function, we have functions that
@@ -24,8 +26,6 @@
 # I/O threaded resource loading. These are rate-limiting for building the solar
 # system. Hence, we use these to determine and signal "system_ready" and to
 # run the progress bar.
-
-class_name IVBodyBuilder
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const files := preload("res://ivoyager/static/files.gd")
@@ -41,7 +41,6 @@ var min_click_radius := 20.0
 var max_hud_dist_orbit_radius_multiplier := 100.0
 var min_hud_dist_radius_multiplier := 500.0
 var min_hud_dist_star_multiplier := 20.0 # combines w/ above
-
 var characteristics_fields := [
 	"symbol", "class_type", "model_type", "light_type", "file_prefix",
 	"rings_file_prefix", "rings_radius",
@@ -65,7 +64,6 @@ var flag_fields := {
 	BodyFlags.TUMBLES_CHAOTICALLY : "tumbles_chaotically",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
 }
-
 # read-only
 var progress := 0 # for external progress bar
 
@@ -98,6 +96,26 @@ var _table_name: String
 var _row: int
 var _real_precisions := {}
 
+
+func _project_init() -> void:
+	IVGlobal.connect("game_load_started", self, "init_system_build")
+	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	_body_registry = IVGlobal.program.BodyRegistry
+	_model_builder = IVGlobal.program.ModelBuilder
+	_rings_builder = IVGlobal.program.RingsBuilder
+	_light_builder = IVGlobal.program.LightBuilder
+	_huds_builder = IVGlobal.program.HUDsBuilder
+	_orbit_builder = IVGlobal.program.OrbitBuilder
+	_composition_builder = IVGlobal.program.CompositionBuilder
+	_io_manager = IVGlobal.program.IOManager
+	_scheduler = IVGlobal.program.Scheduler
+	_table_reader = IVGlobal.program.TableReader
+	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
+	_Body_ = IVGlobal.script_classes._Body_
+	_ModelController_ = IVGlobal.script_classes._ModelController_
+	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
+
+
 func init_system_build() -> void:
 	# Track when Bodies are completely finished (including I/O threaded
 	# resource loading) to signal "system_ready" and run the progress bar.
@@ -108,6 +126,7 @@ func init_system_build() -> void:
 	_io_manager.callback(self, "_start_system_build_msec") # after existing I/O jobs
 	if _main_prog_bar:
 		_main_prog_bar.start(self)
+
 
 func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
 	_table_name = table_name
@@ -125,6 +144,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 		body.characteristics.temp_real_precisions = _real_precisions
 		_real_precisions = {}
 	return body
+
 
 func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
@@ -153,11 +173,13 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 				flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 
+
 func _set_orbit_from_table(body: IVBody, parent: IVBody) -> void:
 	if body.flags & BodyFlags.IS_TOP:
 		return
 	var orbit := _orbit_builder.make_orbit_from_data(_table_name, _row, parent)
 	body.set_orbit(orbit)
+
 
 func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
@@ -232,6 +254,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 					if keep_real_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 
+
 func _set_compositions_from_table(body: IVBody) -> void:
 	var components := body.components
 	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
@@ -247,6 +270,7 @@ func _set_compositions_from_table(body: IVBody) -> void:
 		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition
 
+
 func _register(body: IVBody, parent: IVBody) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
@@ -254,31 +278,13 @@ func _register(body: IVBody, parent: IVBody) -> void:
 
 # *****************************************************************************
 
-func _project_init() -> void:
-	IVGlobal.connect("game_load_started", self, "init_system_build")
-	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
-	_body_registry = IVGlobal.program.BodyRegistry
-	_model_builder = IVGlobal.program.ModelBuilder
-	_rings_builder = IVGlobal.program.RingsBuilder
-	_light_builder = IVGlobal.program.LightBuilder
-	_huds_builder = IVGlobal.program.HUDsBuilder
-	_orbit_builder = IVGlobal.program.OrbitBuilder
-	_composition_builder = IVGlobal.program.CompositionBuilder
-	_io_manager = IVGlobal.program.IOManager
-	_scheduler = IVGlobal.program.Scheduler
-	_table_reader = IVGlobal.program.TableReader
-	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
-	_Body_ = IVGlobal.script_classes._Body_
-	_ModelController_ = IVGlobal.script_classes._ModelController_
-	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
-
-# *****************************************************************************
 # Build non-persisted after added to tree
 
 func _on_node_added(node: Node) -> void:
 	var body := node as IVBody
 	if body:
 		_build_unpersisted(body)
+
 
 func _build_unpersisted(body: IVBody) -> void: # Main thread
 	# This is after IVBody._enter_tree(), but before IVBody._ready()
@@ -311,6 +317,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	var array := [body, file_prefix, is_star]
 	_io_manager.callback(self, "_load_textures_on_io_thread", "_io_finish", array)
 
+
 func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
@@ -322,6 +329,7 @@ func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 		var slice_name = file_prefix + "_slice"
 		var texture_slice_2d: Texture = files.find_and_load_resource(_bodies_2d_search, slice_name)
 		array.append(texture_slice_2d)
+
 
 func _io_finish(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
@@ -338,8 +346,10 @@ func _io_finish(array: Array) -> void: # Main thread
 		if _system_finished_count == _system_build_count:
 			_finish_system_build()
 
+
 func _start_system_build_msec(_array: Array) -> void: # I/O thread
 	_system_build_start_msec = OS.get_system_time_msecs()
+
 
 func _finish_system_build() -> void: # Main thread
 		_is_building_system = false

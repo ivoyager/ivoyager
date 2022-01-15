@@ -17,17 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends CheckBox
+
 # GUI widget. Expects the camera to have signal "camera_lock_changed" and
 # function "change_camera_lock".
 
-extends CheckBox
-
 var _camera: Camera
+
 
 func _ready():
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
 	pressed = true
+
+
+func _pressed() -> void:
+	if _camera:
+		_camera.change_camera_lock(pressed)
+
 
 func _connect_camera(camera: Camera) -> void:
 	if _camera != camera:
@@ -35,14 +42,12 @@ func _connect_camera(camera: Camera) -> void:
 		_camera = camera
 		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
 
+
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
 		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
 	_camera = null
 
-func _pressed() -> void:
-	if _camera:
-		_camera.change_camera_lock(pressed)
 
 func _on_camera_lock_changed(is_locked: bool) -> void:
 	pressed = is_locked

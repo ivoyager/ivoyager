@@ -17,13 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# UI widget.
-
 extends HBoxContainer
+
+# UI widget.
 
 const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
+
 onready var _tree: SceneTree = get_tree()
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 onready var _minus: Button = $Minus
@@ -31,17 +32,6 @@ onready var _plus: Button = $Plus
 onready var _pause: Button = $Pause
 onready var _reverse: Button = $Reverse
 
-func remove_pause_button() -> void:
-	# not nessessary to call if IVGlobal.disable_pause
-	if _pause:
-		_pause.queue_free()
-		_pause = null
-
-func remove_reverse_button() -> void:
-	# not nessessary to call if !IVGlobal.allow_time_reversal
-	if _reverse:
-		_reverse.queue_free()
-		_reverse = null
 
 func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
@@ -57,6 +47,21 @@ func _ready() -> void:
 	else:
 		_reverse.queue_free()
 		_reverse = null
+
+
+func remove_pause_button() -> void:
+	# not nessessary to call if IVGlobal.disable_pause
+	if _pause:
+		_pause.queue_free()
+		_pause = null
+
+
+func remove_reverse_button() -> void:
+	# not nessessary to call if !IVGlobal.allow_time_reversal
+	if _reverse:
+		_reverse.queue_free()
+		_reverse = null
+
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
@@ -77,12 +82,15 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 	_plus.disabled = !_timekeeper.can_incr_speed()
 	_minus.disabled = !_timekeeper.can_decr_speed()
 
+
 func _increment_speed(increment: int) -> void:
 	_timekeeper.change_speed(increment)
+
 
 func _change_paused() -> void:
 	if _state.network_state != IS_CLIENT:
 		IVGlobal.emit_signal("pause_requested", _pause.pressed)
+
 
 func _change_reversed() -> void:
 	_timekeeper.set_time_reversed(_reverse.pressed)

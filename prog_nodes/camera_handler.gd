@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVCameraHandler
+extends Node
+
 # Handles input for IVCamera movements and click selection. Remove or replace
 # this class if you have a different camera.
-
-extends Node
-class_name IVCameraHandler
 
 enum {
 	DRAG_MOVE,
@@ -62,12 +62,18 @@ var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 # private
 var _settings: Dictionary = IVGlobal.settings
 var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
-onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
-onready var _tree := get_tree()
-onready var _viewport := get_viewport()
 var _camera: IVCamera
 var _selection_manager: IVSelectionManager
 
+var _drag_mode := -1 # one of DRAG_ enums when active
+var _drag_vector := VECTOR2_ZERO
+var _mwheel_turning := 0.0
+var _move_pressed := VECTOR3_ZERO
+var _rotate_pressed := VECTOR3_ZERO
+
+onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
+onready var _tree := get_tree()
+onready var _viewport := get_viewport()
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
 onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
 onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
@@ -76,13 +82,6 @@ onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * key_in_
 onready var _key_move_rate: float = _settings.camera_key_move_rate * key_move_adj
 onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * key_pitch_yaw_adj
 onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
-
-var _drag_mode := -1 # one of DRAG_ enums when active
-var _drag_vector := VECTOR2_ZERO
-var _mwheel_turning := 0.0
-var _move_pressed := VECTOR3_ZERO
-var _rotate_pressed := VECTOR3_ZERO
-var _suppress_camera_move := false
 
 
 func _ready():
@@ -97,48 +96,16 @@ func _ready():
 	set_process(false)
 	set_process_unhandled_input(false)
 
-func _restore_init_state() -> void:
-	_disconnect_camera()
-	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
-		_selection_manager = null
 
-func _connect_camera(camera: IVCamera) -> void:
-	_disconnect_camera()
-	_camera = camera
-	_camera.connect("move_started", self, "_on_camera_move_started")
-	_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
-
-func _disconnect_camera() -> void:
-	if !_camera:
-		return
-	_camera.disconnect("move_started", self, "_on_camera_move_started")
-	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
-	_camera = null
-
-func _on_system_tree_ready(_is_new_game: bool) -> void:
+func _on_system_tree_ready(is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
+	# SelectionManager needs a SelectionItem, which we provide if new game
+	if is_new_game and _camera:
+		var selection_item: IVSelectionItem = _camera.selection_item
+		_selection_manager.select(selection_item)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
+	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
 
-func _on_run_state_changed(is_running: bool) -> void:
-	set_process(is_running)
-	set_process_unhandled_input(is_running)
-
-func _on_selection_changed() -> void:
-	if _camera and _camera.is_camera_lock and !_suppress_camera_move:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
-				NULL_ROTATION, -1)
-
-func _on_camera_move_started(to_body: IVBody, is_camera_lock: bool) -> void:
-	if is_camera_lock:
-		_suppress_camera_move = true
-		_selection_manager.select_body(to_body)
-	_suppress_camera_move = false
-
-func _on_camera_lock_changed(is_camera_lock: bool) -> void:
-	if is_camera_lock and !_suppress_camera_move:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
-				NULL_ROTATION, -1)
 
 func _process(delta: float) -> void:
 	if _drag_vector:
@@ -175,30 +142,6 @@ func _process(delta: float) -> void:
 	if _rotate_pressed:
 		_camera.add_rotate_action(_rotate_pressed * delta)
 
-
-func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
-	# We only handle IVBody as target object for now (this could change).
-	var body := target as IVBody
-	if body and _camera:
-		_camera.move_to_body(body)
-
-func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:
-	_drag_vector += drag_vector
-	if key_modifier_mask & KEY_MASK_CMD:
-		_drag_mode = cmd_drag
-	elif key_modifier_mask & KEY_MASK_CTRL:
-		_drag_mode = ctrl_drag
-	elif key_modifier_mask & KEY_MASK_ALT:
-		_drag_mode = alt_drag
-	elif key_modifier_mask & KEY_MASK_SHIFT:
-		_drag_mode = shift_drag
-	elif button_mask & BUTTON_MASK_RIGHT:
-		_drag_mode = right_drag
-	else:
-		_drag_mode = left_drag
-
-func _on_mouse_wheel_turned(is_up: bool) -> void:
-	_mwheel_turning = _mouse_in_out_rate * (1.0 if is_up else -1.0)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if !_camera:
@@ -270,6 +213,85 @@ func _unhandled_input(event: InputEvent) -> void:
 		is_handled = true
 	if is_handled:
 		_tree.set_input_as_handled()
+
+
+func _restore_init_state() -> void:
+	_disconnect_camera()
+	if _selection_manager:
+		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
+		_selection_manager = null
+
+
+func _connect_camera(camera: IVCamera) -> void:
+	_disconnect_camera()
+	_camera = camera
+	_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+
+
+func _disconnect_camera() -> void:
+	if !_camera:
+		return
+	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
+	_camera = null
+
+
+func _on_run_state_changed(is_running: bool) -> void:
+	set_process(is_running)
+	set_process_unhandled_input(is_running)
+
+
+func _on_selection_changed() -> void:
+	if _camera and _camera.is_camera_lock:
+		# Cancel rotations, but keep relative position.
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				Vector3.ZERO, -1)
+
+func _on_selection_reselected() -> void:
+	if _camera and _camera.is_camera_lock:
+		# Cancel rotations, but keep relative position.
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				Vector3.ZERO, -1)
+
+
+func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+	if is_camera_lock:
+		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+				NULL_ROTATION, -1)
+
+
+func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
+	# We only handle IVBody as target object for now. This could change.
+	if !_camera:
+		return
+	var body := target as IVBody
+	if !body:
+		return
+	if _camera.is_camera_lock: # move via selection
+		_selection_manager.select_body(body)
+	else: # move camera directly
+		# Cancel rotations, but keep relative position.
+		_camera.move_to_body(body, -1, Vector3.ZERO, Vector3.ZERO, -1)
+
+
+func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:
+	_drag_vector += drag_vector
+	if key_modifier_mask & KEY_MASK_CMD:
+		_drag_mode = cmd_drag
+	elif key_modifier_mask & KEY_MASK_CTRL:
+		_drag_mode = ctrl_drag
+	elif key_modifier_mask & KEY_MASK_ALT:
+		_drag_mode = alt_drag
+	elif key_modifier_mask & KEY_MASK_SHIFT:
+		_drag_mode = shift_drag
+	elif button_mask & BUTTON_MASK_RIGHT:
+		_drag_mode = right_drag
+	else:
+		_drag_mode = left_drag
+
+
+func _on_mouse_wheel_turned(is_up: bool) -> void:
+	_mwheel_turning = _mouse_in_out_rate * (1.0 if is_up else -1.0)
+
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:

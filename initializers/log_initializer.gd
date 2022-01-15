@@ -17,19 +17,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVLogInitializer
 
+# Inits a debug file specified in IVGlobal when in debug mode.
 
 func _init() -> void:
 	_on_init()
-	
+
+
 func _on_init() -> void:
 	if !OS.is_debug_build() or !IVGlobal.debug_log_path:
 		return
 	var debug_log := File.new()
 	if debug_log.open(IVGlobal.debug_log_path, File.WRITE) == OK:
 		IVGlobal.debug_log = debug_log
+
 
 func _project_init() -> void:
 	IVGlobal.program.erase("LogInitializer") # frees self

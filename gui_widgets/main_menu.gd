@@ -17,20 +17,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends VBoxContainer
+
 # GUI widget. Parent control should modify is_splash_config, if appropriate.
 # To add buttons, use IVMainMenuManager (prog_refs/main_menu_manager.gd).
 # The menu is built on project_builder_finished signal with all buttons
 # disabled. Button state is updated on state_manager_inited signal.
 
-extends VBoxContainer
-
 var is_splash_config := false # splash screen needs to set this
 
 var _state: Dictionary = IVGlobal.state
+var _is_project_built := false
+
 onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 onready var _button_infos: Array = _main_menu_manager.button_infos
-var _is_project_built := false
 
 
 func _ready() -> void:
@@ -41,17 +42,21 @@ func _ready() -> void:
 	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
 	connect("visibility_changed", self, "_grab_button_focus")
 
+
 func _on_project_builder_finished() -> void:
 	_is_project_built = true
 	_build()
+
 
 func _on_state_manager_inited() -> void:
 	_update_button_states()
 	_grab_button_focus()
 
+
 func _clear() -> void:
 	for child in get_children():
 		child.queue_free()
+
 
 func _build() -> void:
 	if !_is_project_built:
@@ -77,6 +82,7 @@ func _build() -> void:
 		button.disabled = !_state.is_inited or button_state == _main_menu_manager.DISABLED
 		add_child(button)
 
+
 func _update_button_states() -> void:
 	if !_state.is_inited:
 		return
@@ -91,6 +97,7 @@ func _update_button_states() -> void:
 				button.visible = button_state != _main_menu_manager.HIDDEN
 				button.disabled = button_state == _main_menu_manager.DISABLED
 				break
+
 
 func _grab_button_focus() -> void:
 	# Only grabs if no one else has focus

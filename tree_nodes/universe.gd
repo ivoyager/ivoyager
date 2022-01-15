@@ -17,20 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Spatial
+
+# *****************************************************************************
 #
 #             Developers! The place to start is:
 #                ivoyager/singletons/project_builder.gd
 #                ivoyager/singletons/global.gd
 #
 # *****************************************************************************
-# Universe does nothing but is the simulator root node by default. You can
-# change the simulator root node by using a different main scene named
-# 'Universe' or by modifying var 'universe' in IVProjectBuilder during
-# extension init. The simulator does not care about root node name. However,
-# it is critical that the correct simulator root is set in IVProjectBuilder so
-# it will be correctly set in IVGlobal.program.Universe before simulator start.
-# Note that we use origin shifting to prevent float "imprecision shakes" when
-# way out at Pluto (for example). This is the camera shifting the root node's
+#
+# Universe is the main scene and simulator root node used by Project Template.
+# You can change the simulator root node by modifying var 'universe' in
+# IVProjectBuilder during extension init, or by having a different main scene
+# named 'Universe' at boot time. Except for boot sequence in IVProjectBuilder,
+# the simulator does not care about node names. (Except for GUI, ivoyager
+# almost never obtains nodes by name. Dictionaries in IVGlobal are used
+# instead.)
+#
+# Note that we use origin shifting to prevent float "imprecision shakes" (for
+# example, when way out at Pluto). This is the camera shifting the root node's
 # translation.
-
-extends Spatial

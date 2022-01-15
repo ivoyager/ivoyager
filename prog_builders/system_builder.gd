@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Builds the star system(s) from data tables & binaries.
-
 class_name IVSystemBuilder
+
+# Builds the star system(s) from data tables & binaries.
 
 # project vars
 var add_camera := true
@@ -27,6 +27,17 @@ var add_camera := true
 # private
 var _table_reader: IVTableReader
 var _body_builder: IVBodyBuilder
+
+
+func _project_init():
+	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
+	_table_reader = IVGlobal.program.TableReader
+	_body_builder = IVGlobal.program.BodyBuilder
+
+
+func _on_state_manager_inited() -> void:
+	if IVGlobal.skip_splash_screen:
+		build_system_tree()
 
 
 func build_system_tree() -> void:
@@ -49,16 +60,6 @@ func build_system_tree() -> void:
 		camera.add_to_tree()
 	IVGlobal.emit_signal("system_tree_built_or_loaded", true)
 
-# *****************************************************************************
-
-func _project_init():
-	_table_reader = IVGlobal.program.TableReader
-	_body_builder = IVGlobal.program.BodyBuilder
-	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
-
-func _on_state_manager_inited() -> void:
-	if IVGlobal.skip_splash_screen:
-		build_system_tree()
 
 func _add_bodies(table_name: String) -> void:
 	var n_rows := _table_reader.get_n_rows(table_name)

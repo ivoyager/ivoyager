@@ -17,19 +17,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Not much here after consolidation. Depreciate?
-
-extends Node
 class_name IVMinorBodiesManager
+extends Node
 
 
-# Public
+# persisted
 var group_names := []
 var ids_by_group := {} # arrays of ids indexed by group name
 var group_refs_by_name := {} # AsteroidGroups now
 var lagrange_points := {} # dict of lagrange_point objects indexed by group name
 
-# persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["group_names", "ids_by_group", "group_refs_by_name", "lagrange_points"]
 

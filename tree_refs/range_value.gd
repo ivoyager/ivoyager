@@ -17,17 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVRangeValue
+
 # WIP - NOT IMPLEMENTED YET!
 # Holds and creates display string for value that may have min, mean, max.
 # Use NAN for not applicable (i.e., don't show). Use INF for ?.
-
-class_name IVRangeValue
 
 var mean := NAN
 var minimum := NAN
 var maximum := NAN
 
 var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+
 
 func get_one_liner(option_type: int, unit := "", precision := -1, num_type := IVQuantityFormatter.NUM_DYNAMIC,
 		long_form := false, case_type := IVQuantityFormatter.CASE_MIXED) -> String:
@@ -55,4 +56,3 @@ func get_one_liner(option_type: int, unit := "", precision := -1, num_type := IV
 	if max_str:
 		result_str += "; " + tr("MAX") + ": " + max_str
 	return result_str
-

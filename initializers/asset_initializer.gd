@@ -17,14 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVAssetInitializer
 
+# Loads assets specified in IVGlobal.
 
 var _asset_replacement_dir: String = IVGlobal.asset_replacement_dir
 var _asset_paths_for_load: Dictionary = IVGlobal.asset_paths_for_load
 var _assets: Dictionary = IVGlobal.assets
-
 var _asset_path_arrays := [
 	IVGlobal.models_search,
 	IVGlobal.maps_search,
@@ -39,13 +38,16 @@ var _asset_path_dicts := [
 
 func _init() -> void:
 	_on_init()
-	
+
+
 func _on_init() -> void:
 	_modify_asset_paths()
 	_load_assets()
 
+
 func _project_init() -> void:
 	IVGlobal.program.erase("AssetInitializer") # frees self
+
 
 func _modify_asset_paths() -> void:
 	if !_asset_replacement_dir:
@@ -63,6 +65,7 @@ func _modify_asset_paths() -> void:
 			var old_path: String = dict[asset_name]
 			var new_path := old_path.replace("ivoyager_assets", _asset_replacement_dir)
 			dict[asset_name] = new_path
+
 
 func _load_assets() -> void:
 	for asset_name in _asset_paths_for_load:

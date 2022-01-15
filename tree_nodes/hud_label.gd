@@ -17,22 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# IVBody sets its own IVHUDLabel visibility during _process().
-
 extends Label
 class_name IVHUDLabel
+
+# IVBody sets its own IVHUDLabel visibility during _process().
 
 var _body_name: String
 var _body_symbol: String
 var _name_font: Font
 var _symbol_font: Font
+
 onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 
-func set_body_name(body_name: String) -> void:
-	_body_name = body_name
-
-func set_body_symbol(body_symbol: String) -> void:
-	_body_symbol = body_symbol
 
 func _ready() -> void:
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
@@ -40,6 +36,15 @@ func _ready() -> void:
 	_symbol_font = IVGlobal.fonts.hud_symbols
 	align = ALIGN_CENTER
 	valign = VALIGN_CENTER
+
+
+func set_body_name(body_name: String) -> void:
+	_body_name = body_name
+
+
+func set_body_symbol(body_symbol: String) -> void:
+	_body_symbol = body_symbol
+
 
 func _on_show_huds_changed() -> void:
 	if _huds_manager.show_names:

@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+extends Node
+
 # Singleton "IVProjectBuilder"
 #
 # This node builds the program (not the solar system!) and makes program
@@ -41,16 +43,15 @@
 # 3. Hook up to IVGlobal "project_objects_instantiated" signal to modify
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
-#    be accessed after instantiation in the "program" dictionary.
+#    be accessed after instantiation in the IVGlobal.program dictionary.
 #
 # See comments in ivoyager/gui_example/example_game_gui.gd for project GUI
 # construction and how to use I, Voyager GUI widgets.
 
-extends Node
+signal init_step_finished() # for internal use only
 
 const files := preload("res://ivoyager/static/files.gd")
 
-signal init_step_finished()
 
 # ******************** PROJECT VARS - EXTEND HERE !!! *************************
 
@@ -64,13 +65,6 @@ var init_sequence := [
 	[self, "add_project_nodes", true],
 	[self, "signal_finished", false]
 ]
-
-# Extension can assign another Spatial to var universe here. Code below will
-# assign this value to IVGlobal.program.Universe. I, Voyager always uses the
-# IVGlobal.program dictionary to find Universe and other program nodes, so node
-# names and tree locations don't matter.
-
-onready var universe: Spatial = get_node_or_null("/root/Universe")
 
 # Replace classes below with a subclass of the original unless comment
 # indicates otherwise. E.g., "Spatial ok", replace with a class that extends
@@ -185,9 +179,19 @@ var procedural_classes := {
 	# _BodyList_ = IVBodyList, # WIP
 }
 
-var extensions := []
-var program: Dictionary = IVGlobal.program
-var script_classes: Dictionary = IVGlobal.script_classes
+# Extension can assign another Spatial to var 'universe' here. Code will
+# assign this value to IVGlobal.program.Universe. I, Voyager always uses the
+# IVGlobal.program dictionary to find Universe and other program nodes, so node
+# names and tree locations don't matter.
+onready var universe: Spatial = get_node_or_null("/root/Universe")
+
+
+# ***************************** PRIVATE VARS **********************************
+
+var _project_extensions := [] # keep reference so they don't self-free
+var _program: Dictionary = IVGlobal.program
+var _script_classes: Dictionary = IVGlobal.script_classes
+
 
 # **************************** INIT SEQUENCE **********************************
 
@@ -208,74 +212,83 @@ func init_extensions() -> void:
 						and "EXTENSION_VERSION" in extension_script \
 						and "EXTENSION_VERSION_YMD" in extension_script:
 					var extension: Object = extension_script.new()
-					extensions.append(extension)
+					_project_extensions.append(extension)
+					IVGlobal.extensions.append([
+						extension.EXTENSION_NAME,
+						extension.EXTENSION_VERSION,
+						extension.EXTENSION_VERSION_YMD
+						])
 		dir_name = dir.get_next()
-	for extension in extensions:
+	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
 			extension._extension_init()
-		IVGlobal.extensions.append([extension.EXTENSION_NAME,
-				extension.EXTENSION_VERSION, extension.EXTENSION_VERSION_YMD])
 	IVGlobal.emit_signal("extentions_inited")
 
+
 func instantiate_and_index() -> void:
-	program.IVGlobal = IVGlobal
-	program.Universe = universe
+	_program.IVGlobal = IVGlobal
+	_program.Universe = universe
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
-			assert(!program.has(object_key))
+			assert(!_program.has(object_key))
 			var object: Object = IVSaveBuilder.make_object_or_scene(dict[key])
-			program[object_key] = object
+			_program[object_key] = object
 			if object is Node:
 				object.name = object_key
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes,
 			procedural_classes]:
 		for key in dict:
-			assert(!script_classes.has(key))
-			script_classes[key] = dict[key]
+			assert(!_script_classes.has(key))
+			_script_classes[key] = dict[key]
 	IVGlobal.emit_signal("project_objects_instantiated")
+
 
 func init_project() -> void:
 	for key in initializers:
 		var object_key: String = key.rstrip("_").lstrip("_")
-		if program.has(object_key): # might have removed themselves already
-			var object: Object = program[object_key]
+		if _program.has(object_key): # might have removed themselves already
+			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
 	for dict in [prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
-			var object: Object = program[object_key]
+			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
 	IVGlobal.emit_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
+
 func add_project_nodes() -> void:
 	var index := 0
 	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(program[object_key])
+		universe.add_child(_program[object_key])
 		if keep_gui_under_existing_controls:
-			universe.move_child(program[object_key], index)
+			universe.move_child(_program[object_key], index)
 		index += 1
 	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(program[object_key])
+		universe.add_child(_program[object_key])
 	IVGlobal.emit_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
+
 func signal_finished() -> void:
 	IVGlobal.emit_signal("project_builder_finished")
+
 
 # ****************************** PROJECT BUILD ********************************
 
 func _ready() -> void:
 	get_tree().paused = true
 	call_deferred("_build_deferred")
-	
+
+
 func _build_deferred() -> void:
 	var init_index := 0
 	while init_index < init_sequence.size():

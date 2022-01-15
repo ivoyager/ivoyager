@@ -17,6 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVLPoint
+extends Spatial
+
 # This is a Spatial in case we want to update its translation in future
 # implementation for a graphic symbol (there is no translation update now). Its
 # real purpose is to provide dynamic_elements for use by objects at Lagrange
@@ -28,8 +31,6 @@
 # TODO: Decide whether or not this should be a IVBody! Code & comments elsewhere
 # indicate that this is our intention.
 
-extends Spatial
-class_name IVLPoint
 
 # persisted
 var l_point: int # 1, 2, 3, 4, 5
@@ -46,6 +47,7 @@ func init(focal_orbit_: IVOrbit, l_point_: int) -> void:
 	focal_orbit.connect("changed", self, "_update_elements")
 	_update_elements(false)
 
+
 func _update_elements(_dummy: bool) -> void:
 	var new_dynamic_elements := focal_orbit.get_elements(IVGlobal.times[0]).duplicate()
 	var new_elements_at_epoch := focal_orbit.elements_at_epoch.duplicate()
@@ -53,6 +55,7 @@ func _update_elements(_dummy: bool) -> void:
 	_offset_l_point(new_elements_at_epoch)
 	dynamic_elements = new_dynamic_elements
 	elements_at_epoch = new_elements_at_epoch
+
 
 func _offset_l_point(elements: Array) -> void:
 	match l_point:
@@ -62,7 +65,3 @@ func _offset_l_point(elements: Array) -> void:
 		5: # shift M0 back 60 degrees
 			elements[5] -= PI / 3.0
 			elements[5] = fposmod(elements[5], TAU)
-
-
-
-

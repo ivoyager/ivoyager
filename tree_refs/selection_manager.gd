@@ -17,15 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSelectionManager
+
 # Has currently selected item and keeps selection history. You can have >1 of
 # these. GUI widgets search up their ancestor tree and grab an IVSelectionManager
 # from the first control with a "selection_manager" member. IVInputHandler and
 # IVCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
 
-
-class_name IVSelectionManager
-
 signal selection_changed()
+signal selection_reselected()
 
 enum {
 	# some implemented but many planned
@@ -61,7 +61,6 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
 var selection_item: IVSelectionItem
-
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["selection_item"]
 
@@ -75,33 +74,40 @@ var _supress_history := false
 
 func select(selection_item_: IVSelectionItem) -> void:
 	if selection_item == selection_item_:
+		emit_signal("selection_reselected")
 		return
 	selection_item = selection_item_
 	_add_history()
 	emit_signal("selection_changed")
+
 
 func select_body(body_: IVBody) -> void:
 	var name := body_.name
 	var selection_item_: IVSelectionItem = _body_registry.selection_items[name]
 	select(selection_item_)
 
+
 func get_name() -> String:
 	if selection_item:
 		return selection_item.name
 	return ""
-	
+
+
 func get_texture_2d() -> Texture:
 	if selection_item:
 		return selection_item.texture_2d
 	return null
 
+
 func get_body() -> IVBody:
 	if selection_item:
 		return selection_item.body
 	return null
-	
+
+
 func is_body() -> bool:
 	return selection_item.is_body
+
 
 func back() -> void:
 	if _history_index < 1:
@@ -114,7 +120,8 @@ func back() -> void:
 		select(new_selection)
 	else:
 		back()
-	
+
+
 func forward() -> void:
 	if _history_index > _history.size() - 2:
 		return
@@ -126,25 +133,31 @@ func forward() -> void:
 		select(new_selection)
 	else:
 		forward()
-	
+
+
 func up() -> void:
 	if selection_item.up_selection_name:
 		var new_selection: IVSelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
 		select(new_selection)
 
+
 func can_go_back() -> bool:
 	return _history_index > 0
-	
+
+
 func can_go_forward() -> bool:
 	return _history_index < _history.size() - 1
-	
+
+
 func can_go_up() -> bool:
 	return selection_item and selection_item.up_selection_name
+
 
 func down() -> void:
 	var body: IVBody = selection_item.body
 	if body and body.satellites:
 		select_body(body.satellites[0])
+
 
 func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> void:
 	var current_body := selection_item.body # could be null
@@ -215,6 +228,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			select_body(body)
 			return
 		count += 1
+
 
 func _add_history() -> void:
 	if _supress_history:

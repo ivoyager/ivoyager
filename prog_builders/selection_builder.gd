@@ -17,9 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-extends Reference
 class_name IVSelectionBuilder
+
 
 const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
@@ -28,7 +27,6 @@ const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
 const IS_STAR_ORBITING := BodyFlags.IS_STAR_ORBITING
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
-
 
 # project vars
 var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
@@ -55,9 +53,16 @@ var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zon
 var _body_registry: IVBodyRegistry
 var _SelectionItem_: Script
 
+
+func _project_init() -> void:
+	_body_registry = IVGlobal.program.BodyRegistry
+	_SelectionItem_ = IVGlobal.script_classes._SelectionItem_
+
+
 func build_body_selection_items() -> void:
 	for top_body in _body_registry.top_bodies:
 		build_body_selection_items_recursive(top_body, null)
+
 
 func build_body_selection_items_recursive(body: IVBody, parent_body: IVBody) -> void:
 	# build bottom up to calculate system_radius
@@ -69,6 +74,7 @@ func build_body_selection_items_recursive(body: IVBody, parent_body: IVBody) -> 
 		build_body_selection_items_recursive(satellite, body)
 	var selection_item := build_body_selection_item(body, parent_body, system_radius)
 	_body_registry.register_selection_item(selection_item)
+
 
 func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius: float) -> IVSelectionItem:
 	var selection_item: IVSelectionItem = _SelectionItem_.new()
@@ -87,6 +93,7 @@ func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius:
 	else:
 		selection_item.up_selection_name = above_bodies_selection_name
 	return selection_item
+
 
 func set_view_parameters_from_body(selection_item: IVSelectionItem, body: IVBody) -> void:
 	var use_ground_longitude_offset: float
@@ -138,9 +145,3 @@ func set_view_parameters_from_body(selection_item: IVSelectionItem, body: IVBody
 		Vector3(ecliptic_longitude_offset, latitude_offset_top, view_dist_top), # VIEW_TOP
 		Vector3(ecliptic_longitude_offset, ecliptic_latitude_offset, view_dist_zoom) # VIEW_OUTWARD
 	]
-
-# *****************************************************************************
-
-func _project_init() -> void:
-	_body_registry = IVGlobal.program.BodyRegistry
-	_SelectionItem_ = IVGlobal.script_classes._SelectionItem_

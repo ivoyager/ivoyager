@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVOrbit
+
 # Orbit info is kept in standardized arrays of fixed size. reference_normal is
 # normal to the reference plane (ecliptic, equatorial or specified Laplace
 # plane; many moons use the latter two); the "orbit normal" precesses around
@@ -40,11 +42,9 @@
 #   - Depreciate this class.
 #   - GDNative version of SystemOrbits
 
-class_name IVOrbit
+signal changed(is_scheduled) # is_scheduled == false triggers network sync
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
-
-signal changed(is_scheduled) # is_scheduled == false triggers network sync
 
 const DPRINT := false
 const PIdiv2 := PI / 2.0
@@ -59,18 +59,16 @@ var reference_normal := ECLIPTIC_UP # moons are often different
 var elements_at_epoch := [] # [a, e, i, Om, w, M0, n]; required
 var element_rates := [] # [a, e, i, Om, w]; optional
 var m_modifiers := [] # [b, c, s, f]; planets Jupiter to Pluto only
-
-# persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["reference_normal",
-	"elements_at_epoch", "element_rates", "m_modifiers"]
+const PERSIST_PROPERTIES := ["reference_normal", "elements_at_epoch",
+	"element_rates", "m_modifiers"]
 
 # read-only
 var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 # private
 var _times: Array = IVGlobal.times
-var _scheduler: IVScheduler
+var _scheduler: IVScheduler = IVGlobal.program.Scheduler
 var _update_interval := 0.0
 var _begin_current := INF
 var _end_current := -INF
@@ -85,6 +83,7 @@ func perturb(_delta_v: Vector3, _at_time := NAN) -> void:
 	# m_modifiers.
 	pass
 
+
 # information about orbit
 
 func get_semimajor_axis(time := NAN) -> float:
@@ -94,12 +93,14 @@ func get_semimajor_axis(time := NAN) -> float:
 		_set_elements(time, elements)
 	return elements[0]
 
+
 func get_eccentricity(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return elements[1]
+
 
 func get_inclination(time := NAN) -> float:
 	var elements := current_elements
@@ -108,12 +109,14 @@ func get_inclination(time := NAN) -> float:
 		_set_elements(time, elements)
 	return elements[2]
 
+
 func get_longitude_of_ascending_node(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return elements[3]
+
 
 func get_argument_of_periapsis(time := NAN) -> float:
 	var elements := current_elements
@@ -122,12 +125,14 @@ func get_argument_of_periapsis(time := NAN) -> float:
 		_set_elements(time, elements)
 	return elements[4]
 
+
 func get_mean_anomaly_at_epoch(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return elements[5]
+
 
 func get_mean_motion(time := NAN) -> float:
 	var elements := current_elements
@@ -136,11 +141,13 @@ func get_mean_motion(time := NAN) -> float:
 		_set_elements(time, elements)
 	return elements[6]
 
+
 func get_inclination_to_ecliptic(time := NAN) -> float:
 	if reference_normal == ECLIPTIC_UP:
 		return get_inclination(time)
 	var orbit_normal := get_normal(time)
 	return orbit_normal.angle_to(ECLIPTIC_UP)
+
 
 func get_apoapsis(time := NAN) -> float:
 	var elements := current_elements
@@ -149,12 +156,14 @@ func get_apoapsis(time := NAN) -> float:
 		_set_elements(time, elements)
 	return (1.0 + elements[1]) * elements[0] # (1 + e) * a
 
+
 func get_periapsis(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return (1.0 - elements[1]) * elements[0] # (1 - e) * a
+
 
 func is_retrograde(time := NAN) -> bool:
 	var elements := current_elements
@@ -163,12 +172,14 @@ func is_retrograde(time := NAN) -> bool:
 		_set_elements(time, elements)
 	return elements[2] > PIdiv2 # inclination > 90 degrees
 
+
 func get_orbital_perioid(time := NAN) -> float:
 	var elements := current_elements
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return TAU / elements[6]
+
 
 func get_average_orbital_speed(time := NAN) -> float:
 	var elements := current_elements
@@ -185,6 +196,7 @@ func get_average_orbital_speed(time := NAN) -> float:
 		var e8 := e4 * e4
 		ave_orbit_speed *= 1.0 - 0.25 * e2 - 0.046875 * e4 - 0.01953125 * e6 - 0.01068115 * e8
 	return ave_orbit_speed
+
 
 func get_normal(time := NAN, flip_retrograde := false) -> Vector3:
 	var elements := current_elements
@@ -204,6 +216,7 @@ func get_normal(time := NAN, flip_retrograde := false) -> Vector3:
 		orbit_normal = math.rotate_vector_z(reference_normal, relative_normal)
 	return orbit_normal
 
+
 # information about current position or velocity
 
 func get_mean_anomaly(time := NAN) -> float:
@@ -214,6 +227,7 @@ func get_mean_anomaly(time := NAN) -> float:
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return wrapf(elements[6] * time + elements[5], -PI, PI) # M = n * time + M0
+
 
 func get_true_anomaly(time := NAN) -> float:
 	var elements := current_elements
@@ -234,6 +248,7 @@ func get_true_anomaly(time := NAN) -> float:
 		E -= dE
 	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 
+
 func get_mean_longitude(time := NAN) -> float:
 	var elements := current_elements
 	if is_nan(time):
@@ -243,6 +258,7 @@ func get_mean_longitude(time := NAN) -> float:
 		_set_elements(time, elements)
 	var M: float = elements[6] * time + elements[5]
 	return wrapf(M + elements[3] + elements[4], -PI, PI) # M + Om + w
+
 
 func get_true_longitude(time := NAN) -> float:
 	var elements := current_elements
@@ -264,6 +280,7 @@ func get_true_longitude(time := NAN) -> float:
 	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
 	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
 
+
 func get_position(time := NAN) -> Vector3:
 	var elements := current_elements
 	if is_nan(time):
@@ -275,6 +292,7 @@ func get_position(time := NAN) -> Vector3:
 	if reference_normal != ECLIPTIC_UP:
 		R = math.rotate_vector_z(R, reference_normal)
 	return R
+
 
 func get_position_velocity(time := NAN) -> Array:
 	# returns [Vector3(x, y, z), Vector3(vx, vy, vz)]
@@ -291,12 +309,14 @@ func get_position_velocity(time := NAN) -> Array:
 		RV[1] = math.rotate_vector_z(RV[1], reference_normal)
 	return RV
 
+
 func get_elements(time := NAN) -> Array:
 	if !is_nan(time) and (time > _end_current or time < _begin_current):
 		var elements := IVUtils.init_array(7)
 		_set_elements(time, elements)
 		return elements
 	return current_elements.duplicate() # safe
+
 
 static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	# Derived from https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf. However,
@@ -329,6 +349,7 @@ static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	var y := r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i)
 	var z := r * (sin_w_nu * sin_i)
 	return Vector3(x, y, z)
+
 
 static func get_vectors_from_elements(elements: Array, time: float) -> Array:
 	# NOT TESTED!!!
@@ -369,6 +390,7 @@ static func get_vectors_from_elements(elements: Array, time: float) -> Array:
 	var vz := c1 * z - c2 * (cos_w_nu * sin_i)
 	return [Vector3(x, y, z), Vector3(vx, vy, vz)]
 
+
 static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: float) -> Array:
 	# returns an elements array
 	# NOT TESTED!!!
@@ -405,12 +427,14 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 	var M0 := E - e * sin(E) - n * time
 	return [a, e, i, Om, w, M0, n]
 
+
 # *****************************************************************************
-# ivoyager mechanics & private
+# ivoyager internal mechanics & private
 
 func disconnect_interval_update() -> void:
 	if _update_interval:
 		_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
+
 
 func reset_elements_and_interval_update() -> void:
 	# Sets current_elements, calculates update interval for element_rates, and
@@ -442,12 +466,6 @@ func reset_elements_and_interval_update() -> void:
 		_scheduler.interval_connect(interval, self, "_scheduler_update")
 		_update_interval = interval
 
-func _scheduler_update() -> void:
-	var time: float = _times[0]
-	_begin_current = time
-	_end_current = time + _update_interval * 1.1
-	_set_elements(time + _update_interval / 2.0, current_elements)
-	emit_signal("changed", true)
 
 func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
 		element_rates_: Array, m_modifiers_: Array) -> void:
@@ -460,8 +478,14 @@ func orbit_sync(reference_normal_: Vector3, elements_at_epoch_: Array,
 		element_rates = element_rates_
 		reset_elements_and_interval_update()
 
-func _init() -> void:
-	_scheduler = IVGlobal.program.Scheduler
+
+func _scheduler_update() -> void:
+	var time: float = _times[0]
+	_begin_current = time
+	_end_current = time + _update_interval * 1.1
+	_set_elements(time + _update_interval / 2.0, current_elements)
+	emit_signal("changed", true)
+
 
 func _set_elements(time: float, elements: Array) -> void:
 	# elements must be size 7.

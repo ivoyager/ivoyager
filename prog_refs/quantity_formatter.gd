@@ -17,9 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# All functions assume sim-standard units defined in IVUnits.
-
 class_name IVQuantityFormatter
+
+# Helper for formatting numbers and quanties for GUI. All functions assume
+# caller wants conversion to or from internal units defined in IVUnits.
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -75,14 +76,12 @@ var prefix_symbols := [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ]
-
 var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
 	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
 	 "TXT_NONILLION", "TXT_DECILLION"] # e6, ..., e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
 # or functions dictionaries. (The converse is not true.)
-
 var short_forms := {
 	# If missing here, we fallback to the unit string itself, which is usually
 	# the desired short form. Asterisk before TXT_KEY means no space before
@@ -95,7 +94,6 @@ var short_forms := {
 	"deg/Cy" : "*TXT_DEG_PER_CENTURY",
 	"_g" : "g", # reused symbol ("_g" in function call; "g" in GUI)
 }
-
 var long_forms := {
 	# If missing here, we fallback to short_forms, then the unit string itself.
 	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
@@ -204,6 +202,26 @@ var _multipliers: Dictionary
 var _functions: Dictionary
 
 
+func _project_init():
+	_multipliers = IVGlobal.unit_multipliers
+	_functions = IVGlobal.unit_functions
+	_n_prefixes = prefix_symbols.size()
+	assert(_n_prefixes == prefix_names.size())
+	_prefix_offset = prefix_symbols.find("")
+	assert(_prefix_offset == prefix_names.find(""))
+	_n_lg_numbers = large_numbers.size()
+	for i in range(_n_lg_numbers):
+		large_numbers[i] = tr(large_numbers[i])
+	for unit in short_forms:
+		var txt_key: String = short_forms[unit]
+		if txt_key.begins_with("*"):
+			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
+		else:
+			short_forms[unit] = " " + tr(short_forms[unit])
+	for unit in long_forms:
+		long_forms[unit] = " " + tr(long_forms[unit])
+
+
 func number_option(x: float, option_type: int, unit := "", precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# wrapper for functions below
@@ -285,10 +303,12 @@ func number_option(x: float, option_type: int, unit := "", precision := -1, num_
 	assert(false, "Unkknown option_type: " + String(option_type))
 	return String(x)
 
+
 func latitude_longitude(lat_long: Vector2, decimal_pl := 0, long_form := false,
 		case_type := CASE_MIXED) -> String:
 	return latitude(lat_long[0], decimal_pl, long_form, case_type) + " " \
 			+ longitude(lat_long[1], decimal_pl, long_form, case_type)
+
 
 func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
@@ -303,6 +323,7 @@ func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_M
 	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
 	return (num_str + suffix).lstrip("-")
 
+
 func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
 	var suffix: String
 	if x > -0.0001 and x < PI - 0.0001: # nearly 0 is E; nearly PI is W
@@ -315,6 +336,7 @@ func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_
 		suffix = suffix.to_upper()
 	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
 	return (num_str + suffix).lstrip("-")
+
 
 func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 	# precision = -1 displays "as is" from internal representation. This will
@@ -349,6 +371,7 @@ func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 		_format2[1] = x
 		return "%.*f" % _format2 # e.g., 0.0555
 
+
 func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	# returns integer string up to "999999", then "1.00 Million", etc.;
 	if abs(x) < 1e6:
@@ -368,11 +391,12 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 		lg_number_str = lg_number_str.to_upper()
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
 
+
 func number_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/units.gd)
-	x = units.conv(x, unit, true, false, _multipliers, _functions)
+	x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
 	var number_str := number(x, precision, num_type)
 	if long_form and long_forms.has(unit):
 		unit = long_forms[unit]
@@ -386,6 +410,7 @@ func number_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMI
 		unit = unit.to_upper()
 	return number_str + unit
 
+
 func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
@@ -396,7 +421,7 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
 	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
 	if unit:
-		x = units.conv(x, unit, true, false, _multipliers, _functions)
+		x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
@@ -429,24 +454,3 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	if prepend_space:
 		return number_str + " " + unit
 	return number_str + unit
-
-# *****************************************************************************
-
-func _project_init():
-	_multipliers = IVGlobal.unit_multipliers
-	_functions = IVGlobal.unit_functions
-	_n_prefixes = prefix_symbols.size()
-	assert(_n_prefixes == prefix_names.size())
-	_prefix_offset = prefix_symbols.find("")
-	assert(_prefix_offset == prefix_names.find(""))
-	_n_lg_numbers = large_numbers.size()
-	for i in range(_n_lg_numbers):
-		large_numbers[i] = tr(large_numbers[i])
-	for unit in short_forms:
-		var txt_key: String = short_forms[unit]
-		if txt_key.begins_with("*"):
-			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
-		else:
-			short_forms[unit] = " " + tr(short_forms[unit])
-	for unit in long_forms:
-		long_forms[unit] = " " + tr(long_forms[unit])

@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
 class_name IVHUDsBuilder
 
 
@@ -26,7 +25,6 @@ const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
 const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
 const IS_MOON := BodyFlags.IS_MOON
 const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
-
 const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
 
 var _settings: Dictionary = IVGlobal.settings
@@ -38,6 +36,15 @@ var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
 
+func _project_init() -> void:
+	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
+	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
+	_huds_manager = IVGlobal.program.HUDsManager
+	_projection_surface = IVGlobal.program.ProjectionSurface
+	_orbit_ellipse_shader = IVGlobal.shared_resources.orbit_ellipse_shader
+	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
+
+
 func add_label(body: IVBody) -> void:
 	var hud_label: IVHUDLabel = _HUDLabel_.new()
 	hud_label.set_body_name(body.name)
@@ -45,6 +52,7 @@ func add_label(body: IVBody) -> void:
 	hud_label.hide()
 	body.hud_label = hud_label
 	_projection_surface.add_child(hud_label)
+
 
 func add_orbit(body: IVBody) -> void:
 	if !body.orbit:
@@ -77,15 +85,6 @@ func add_orbit(body: IVBody) -> void:
 	var parent: Spatial = body.get_parent()
 	parent.call_deferred("add_child", hud_orbit)
 
-# *****************************************************************************
-
-func _project_init() -> void:
-	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
-	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
-	_huds_manager = IVGlobal.program.HUDsManager
-	_projection_surface = IVGlobal.program.ProjectionSurface
-	_orbit_ellipse_shader = IVGlobal.shared_resources.orbit_ellipse_shader
-	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
 
 func _build_orbit_mesh_arrays(n_vertecies: int) -> void:
 	var verteces := PoolVector3Array()

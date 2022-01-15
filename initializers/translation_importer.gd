@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVTranslationImporter
+
 # We report key duplicates and process text under the following conditions:
 #
 #   1. Translation is not added by editor (i.e., not in project.godot).
@@ -27,7 +29,6 @@
 #
 #   1. Interpret unicode escape "\uHHHH" (patches Godot issue #38716)
 
-class_name IVTranslationImporter
 
 func _init():
 	_on_init()
@@ -36,6 +37,7 @@ func _on_init() -> void:
 	_load_translations()
 	IVGlobal.emit_signal("translations_imported")
 	IVGlobal.program.erase("TranslationImporter") # frees self
+
 
 func _load_translations() -> void:
 	var load_dict := {}
@@ -61,6 +63,7 @@ func _load_translations() -> void:
 			var tr2: Translation = duplication[2]
 			prints(" ", key, load_dict[tr1])
 			prints(" ", key, load_dict[tr2])
+
 
 func _process_translation(translation: Translation,	load_dict: Dictionary,
 		duplications: Array) -> void:

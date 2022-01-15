@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVUnits
+
 # Godot issue #37529 prevents localization of global class_name to const. Use:
 # const units := preload("res://ivoyager/static/units.gd")
 #
@@ -28,8 +30,6 @@
 # WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
 #
 # See additional comments in universe.gd.
-
-class_name IVUnits
 
 # SI base units - all sim units derived from these!
 const SECOND := SIBaseUnits.SECOND
@@ -191,13 +191,15 @@ const MULTIPLIERS := {
 
 const FUNCTIONS := {
 	# TODO 4.0: this will become a real functions dictionary
-	"degC" : "conv_centigrade",
-	"degF" : "conv_fahrenheit",
+	"degC" : "convert_centigrade",
+	"degF" : "convert_fahrenheit",
 }
 
 
-static func conv(x: float, unit: String, to_unit := false, preprocess := false,
-		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> float:
+static func convert_quantity(x: float, unit: String, to_internal := true,
+		preprocess := false, multipliers := MULTIPLIERS, functions := FUNCTIONS) -> float:
+	# Converts x in specified units to internal representation (to_internal =
+	# true) or from internal to specified units (to_internal = false).
 	# unit can be any key in MULTIPLIERS or FUNCTIONS (or supplied replacement
 	# dictionaries); preprocess = true handles prefixes "10^x " or "1/".
 	# Valid examples: "1/Cy", "10^24 kg", "1/(10^3 yr)".
@@ -206,7 +208,7 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 			unit = unit.lstrip("1/")
 			if unit.begins_with("(") and unit.ends_with(")"):
 				unit = unit.lstrip("(").rstrip(")")
-			to_unit = !to_unit
+			to_internal = !to_internal
 		if unit.begins_with("10^"):
 			var space_pos := unit.find(" ")
 			assert(space_pos > 3, "A space must follow '10^xx'")
@@ -216,13 +218,22 @@ static func conv(x: float, unit: String, to_unit := false, preprocess := false,
 			x *= pre_multiplier
 	var multiplier: float = multipliers.get(unit, 0.0)
 	if multiplier:
-		return x / multiplier if to_unit else x * multiplier
+		return x * multiplier if to_internal else x / multiplier
 	if functions.has(unit):
 		# TODO 4.0: fix this hack when we have 1st class functions!
 		var units = load("res://ivoyager/static/units.gd")
-		return units.call(functions[unit], x, to_unit)
+		return units.call(functions[unit], x, to_internal)
 	assert(false, "Unknown unit symbol: " + unit)
 	return x
+
+
+static func convert_centigrade(x: float, to_internal := true) -> float:
+	return x + 273.15 if to_internal else x - 273.15
+
+
+static func convert_fahrenheit(x: float, to_internal := true) -> float:
+	return  (x + 459.67) * (5.0 / 9.0) if to_internal else x * (9.0 / 5.0) - 459.67
+
 
 static func is_valid_unit(unit: String, preprocess := false,
 		multipliers := MULTIPLIERS, functions := FUNCTIONS) -> bool:
@@ -239,9 +250,3 @@ static func is_valid_unit(unit: String, preprocess := false,
 			assert(space_pos > 3, "A space must follow '10^xx'")
 			unit = unit.substr(space_pos + 1, 999)
 	return multipliers.has(unit) or functions.has(unit)
-
-static func conv_centigrade(x: float, to := false) -> float:
-	return x - 273.15 if to else x + 273.15
-
-static func conv_fahrenheit(x: float, to := false) -> float:
-	return x * (9.0 / 5.0) - 459.67 if to else (x + 459.67) * (5.0 / 9.0)

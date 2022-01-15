@@ -17,11 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Only a star's OmniLight for now.
-
 class_name IVLightBuilder
 
+# Only a star's OmniLight for now.
+
+
 var omni_fields := ["omni_range"]
+
 
 func add_omni_light(body: IVBody) -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader

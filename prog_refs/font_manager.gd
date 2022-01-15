@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# Maintains IVGlobal.fonts.
-
 class_name IVFontManager
+
+# Maintains IVGlobal.fonts.
 
 # project vars - modify on signal project_objects_instantiated
 var fixed_sizes := {
@@ -35,6 +35,7 @@ var gui_large_sizes := [18, 24, 31]
 var _fonts: Dictionary = IVGlobal.fonts
 var _settings: Dictionary = IVGlobal.settings
 var _primary_font_data: DynamicFontData
+
 
 func _project_init() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -59,6 +60,7 @@ func _project_init() -> void:
 	_fonts.hud_names.size = _settings.viewport_names_size
 	_fonts.hud_symbols.size = _settings.viewport_symbols_size
 
+
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"viewport_names_size":
@@ -69,4 +71,3 @@ func _settings_listener(setting: String, value) -> void:
 			_fonts.gui_main.size = gui_main_sizes[value]
 			_fonts.gui_medium.size = gui_medium_sizes[value]
 			_fonts.gui_large.size = gui_large_sizes[value]
-

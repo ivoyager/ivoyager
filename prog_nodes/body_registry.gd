@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVBodyRegistry
+extends Node
+
 # Indexes IVBody and IVSelectionItem instances. Also holds IVSelectionItems so
 # they aren't freed (they are References that need at least one reference).
-
-extends Node
-class_name IVBodyRegistry
 
 const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
@@ -37,7 +37,22 @@ const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
 # unpersisted - public are read-only!
 var bodies: Array = IVGlobal.bodies # indexed by body_id
 var bodies_by_name: Dictionary = IVGlobal.bodies_by_name # indexed by name
+
 var _removed_body_ids := []
+
+
+func _ready():
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("game_load_finished", self, "_index_bodies")
+
+
+func _clear() -> void:
+	top_bodies.clear()
+	selection_items.clear()
+	bodies.clear()
+	bodies_by_name.clear()
+	_removed_body_ids.clear()
+
 
 func get_body_above_selection(selection_item: IVSelectionItem) -> IVBody:
 	while selection_item.up_selection_name:
@@ -45,6 +60,7 @@ func get_body_above_selection(selection_item: IVSelectionItem) -> IVBody:
 		if selection_item.body:
 			return selection_item.body
 	return top_bodies[0]
+
 
 func get_selection_star(selection_item: IVSelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_STAR:
@@ -55,6 +71,7 @@ func get_selection_star(selection_item: IVSelectionItem) -> IVBody:
 			return selection_item.body
 	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
+
 func get_selection_planet(selection_item: IVSelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_PLANET:
 		return selection_item.body
@@ -63,6 +80,7 @@ func get_selection_planet(selection_item: IVSelectionItem) -> IVBody:
 		if selection_item.get_flags() & IS_PLANET:
 			return selection_item.body
 	return null
+
 
 func get_selection_moon(selection_item: IVSelectionItem) -> IVBody:
 	if selection_item.get_flags() & IS_MOON:
@@ -73,12 +91,15 @@ func get_selection_moon(selection_item: IVSelectionItem) -> IVBody:
 			return selection_item.body
 	return null
 
+
 func get_selection_for_body(body: IVBody) -> IVSelectionItem:
 	var name_ := body.name
 	return selection_items[name_]
 
+
 func register_top_body(body: IVBody) -> void:
 	top_bodies.append(body)
+
 
 func register_body(body: IVBody) -> void:
 	var name_ := body.name
@@ -95,6 +116,7 @@ func register_body(body: IVBody) -> void:
 		bodies.append(body)
 	bodies_by_name[name_] = body
 
+
 func remove_body(body: IVBody) -> void:
 	var name_ := body.name
 	assert(bodies_by_name.has(name_))
@@ -103,28 +125,18 @@ func remove_body(body: IVBody) -> void:
 	bodies[body_id] = null
 	_removed_body_ids.append(body_id)
 
+
 func register_selection_item(selection_item: IVSelectionItem) -> void:
 	var name_ := selection_item.name
 	assert(!selection_items.has(name_))
 	selection_items[name_] = selection_item
+
 
 func remove_selection_item(selection_item: IVSelectionItem) -> void:
 	var name_ := selection_item.name
 	assert(selection_items.has(name_))
 	selection_items.erase(name_)
 
-# *****************************************************************************
-
-func _ready():
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("game_load_finished", self, "_index_bodies")
-
-func _clear() -> void:
-	top_bodies.clear()
-	selection_items.clear()
-	bodies.clear()
-	bodies_by_name.clear()
-	_removed_body_ids.clear()
 
 func _index_bodies() -> void:
 	for body in top_bodies:
@@ -136,6 +148,7 @@ func _index_bodies() -> void:
 		if !body:
 			_removed_body_ids.append(index)
 		index += 1
+
 
 func _index_body_recursive(body: IVBody) -> void:
 	var body_id := body.body_id

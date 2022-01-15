@@ -17,17 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-# UI widget.
-
 extends Label
+
+# UI widget.
 
 var forward_color: Color = IVGlobal.colors.normal
 var reverse_color: Color = IVGlobal.colors.danger
 
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
+
 func _ready() -> void:
 	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+
 
 func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
 		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
