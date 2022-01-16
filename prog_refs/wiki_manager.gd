@@ -39,7 +39,9 @@ func _project_init() -> void:
 
 func _open_wiki(wiki_title: String) -> void:
 	if _wiki_url:
-		OS.shell_open(_wiki_url + wiki_title)
+		var url := _wiki_url + wiki_title
+		prints("Opening external link:", url)
+		OS.shell_open(url)
 	else:
 		_open_internal_wiki(wiki_title)
 

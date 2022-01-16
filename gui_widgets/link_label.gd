@@ -24,10 +24,15 @@ extends RichTextLabel
 var _link_url := "https://www.ivoyager.dev"
 
 
-func _meta_clicked(_meta: String) -> void:
-	OS.shell_open(_link_url)
+func _ready() -> void:
+	connect("meta_clicked", self, "_on_meta_clicked")
 
 
 func set_hyperlink(link_text: String, link_url: String) -> void:
 	bbcode_text = "[url]" + link_text + "[/url]"
 	_link_url = link_url
+
+
+func _on_meta_clicked(_meta: String) -> void:
+	prints("Opening external link:", _link_url)
+	OS.shell_open(_link_url)
