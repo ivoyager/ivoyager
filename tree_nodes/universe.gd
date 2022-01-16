@@ -36,5 +36,12 @@ extends Spatial
 # instead.)
 #
 # Note that we use origin shifting to prevent float "imprecision shakes" (for
-# example, when way out at Pluto). This is the camera shifting the root node's
-# translation.
+# example, when way out at Pluto). To do this, the camera shifts this node's
+# (or substitute root node's) translation every frame.
+
+# Presence of const PERSIST_AS_PROCEDURAL_OBJECT below is needed by 'ivoyager'
+# procedural save/load system. This tells the system that this node or children
+# might have data to persist or might have procedurally generated children.
+# This node itself is not procedurally generated.
+
+const PERSIST_AS_PROCEDURAL_OBJECT := false
