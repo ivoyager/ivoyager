@@ -33,16 +33,12 @@ var _urls := {}
 
 
 func _ready():
+	connect("meta_clicked", self, "_on_meta_clicked")
 	for regex_array in regexes:
 		var regular_expression = regex_array[1]
 		var regex := RegEx.new()
 		regex.compile(regular_expression)
 		regex_array[1] = regex
-
-
-func _meta_clicked(meta: String) -> void:
-	var url: String = _urls[meta]
-	OS.shell_open(url)
 
 
 func read_file(path: String, skip_header := true) -> void:
@@ -83,3 +79,9 @@ func convert_line(line: String) -> String:
 				_urls[txt] = url
 				line = line.replace(whole, "[url]" + txt + "[/url]")
 	return line + "\n"
+
+
+func _on_meta_clicked(meta: String) -> void:
+	var url: String = _urls[meta]
+	prints("Opening external link:", url)
+	OS.shell_open(url)
