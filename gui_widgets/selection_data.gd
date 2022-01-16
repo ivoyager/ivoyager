@@ -215,7 +215,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
-	_selection_manager = IVGUIUtils.get_selection_manager(self)
+	_selection_manager = IVWidgets.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0

@@ -232,7 +232,7 @@ func exit(force_exit := false, following_server := false) -> void:
 	IVGlobal.emit_signal("about_to_exit")
 	IVGlobal.emit_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
-	IVSaveBuilder.free_procedural_nodes(IVGlobal.program.Universe)
+	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
 	IVGlobal.emit_signal("close_all_admin_popups_requested")
 	IVGlobal.emit_signal("simulator_exited")
 

@@ -55,7 +55,7 @@ func _ready():
 
 func _build(_is_new_game: bool) -> void:
 	_clear()
-	_selection_manager = IVGUIUtils.get_selection_manager(self)
+	_selection_manager = IVWidgets.get_selection_manager(self)
 	assert(_selection_manager)
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)

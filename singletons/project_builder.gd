@@ -202,23 +202,27 @@ func init_extensions() -> void:
 	var dir := Directory.new()
 	dir.open("res://")
 	dir.list_dir_begin()
-	var dir_name := dir.get_next()
-	while dir_name:
-		if dir.current_is_dir() and dir_name != "ivoyager" and !dir_name.begins_with("."):
-			var path := "res://" + dir_name + "/" + dir_name + ".gd"
-			if files.exists(path):
-				var extension_script: Script = load(path)
-				if "EXTENSION_NAME" in extension_script \
-						and "EXTENSION_VERSION" in extension_script \
-						and "EXTENSION_VERSION_YMD" in extension_script:
-					var extension: Object = extension_script.new()
-					_project_extensions.append(extension)
-					IVGlobal.extensions.append([
-						extension.EXTENSION_NAME,
-						extension.EXTENSION_VERSION,
-						extension.EXTENSION_VERSION_YMD
-						])
-		dir_name = dir.get_next()
+	while true:
+		var dir_name := dir.get_next()
+		if !dir_name:
+			break
+		if !dir.current_is_dir() or dir_name == "ivoyager" or dir_name.begins_with("."):
+			continue
+		var path := "res://" + dir_name + "/" + dir_name + ".gd"
+		if !files.exists(path):
+			continue
+		var extension_script: Script = load(path)
+		if not "EXTENSION_NAME" in extension_script \
+				or not "EXTENSION_VERSION" in extension_script \
+				or not "EXTENSION_VERSION_YMD" in extension_script:
+			continue
+		var extension: Object = extension_script.new()
+		_project_extensions.append(extension)
+		IVGlobal.extensions.append([
+			extension.EXTENSION_NAME,
+			extension.EXTENSION_VERSION,
+			extension.EXTENSION_VERSION_YMD
+			])
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
 			extension._extension_init()
@@ -226,13 +230,13 @@ func init_extensions() -> void:
 
 
 func instantiate_and_index() -> void:
-	_program.IVGlobal = IVGlobal
+	_program.Global = IVGlobal
 	_program.Universe = universe
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!_program.has(object_key))
-			var object: Object = IVSaveBuilder.make_object_or_scene(dict[key])
+			var object: Object = files.make_object_or_scene(dict[key])
 			_program[object_key] = object
 			if object is Node:
 				object.name = object_key

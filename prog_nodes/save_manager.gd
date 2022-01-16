@@ -143,7 +143,7 @@ func load_game(path := "", network_gamesave := []) -> void:
 	IVGlobal.emit_signal("about_to_free_procedural_nodes")
 	IVGlobal.emit_signal("game_load_started")
 	yield(_tree, "idle_frame")
-	_save_builder.free_procedural_nodes(_universe)
+	IVUtils.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
 	yield(_tree, "idle_frame")
 	yield(_tree, "idle_frame")

@@ -19,15 +19,17 @@
 # *****************************************************************************
 class_name IVSaveBuilder
 
-# IVSaveBuilder can persist specified data (which may include nested objects) and
-# rebuild procedurally generated node trees and references on load. It can
+# IVSaveBuilder can persist specified data (which may include nested objects)
+# and rebuild procedurally generated node trees and references on load. It can
 # persist built-in types and four kinds of objects:
 #    1. Non-procedural Nodes
 #    2. Procedural Nodes (including base nodes of scenes)
 #    3. Procedural References
 #    4. WeakRef to any of above
+#
 # A "persist" node or reference is identified by presence of the constant:
 #    const PERSIST_AS_PROCEDURAL_OBJECT: bool
+#
 # Lists of properties to persists must be named in constant arrays:
 #    const PERSIST_PROPERTIES := [] # properties to persist
 #    const PERSIST_PROPERTIES_2 := []
@@ -35,9 +37,11 @@ class_name IVSaveBuilder
 #    (These list names can be modified in project settings below. The extra
 #    numbered lists are needed for subclasses where a list name is taken by a
 #    parent class.)
+#
 # To reconstruct a scene, the base node's gdscript must have one of:
-#    const SCENE: String = "<path to *.tscn>"
-#    const SCENE_OVERRIDE: String # as above; override may be useful in subclass
+#    const SCENE := "<path to .tscn file>"
+#    const SCENE_OVERRIDE := "" # as above; override may be useful in subclass
+#
 # Additional rules for persist objects:
 #    1. Nodes must be in the tree.
 #    2. All ancester nodes up to "root" must also be persist nodes. ("Root" is
@@ -45,14 +49,20 @@ class_name IVSaveBuilder
 #    3. A non-procedural node cannot be child of a procedural node.
 #    4. Non-procedural nodes must have stable names (path cannot change).
 #    5. Inner classes can't be persist objects
-#    6. For references, PERSIST_AS_PROCEDURAL_OBJECT = true
+#    6. For references, it is always PERSIST_AS_PROCEDURAL_OBJECT = true
 #    7. Virtual method _init() cannot have any required args.
+#
 # Warnings:
-#    1. A single table or dict persisted in two places will become two on load
-#    2. Persisted strings cannot begin with object_tag.
-#    3. Be careful not to have both pesist and non-persist references to the
+#    1. A single array or dict persisted in two places will become two on load.
+#    2. Be careful not to have both pesist and non-persist references to the
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
+#
+# TODO 4.0: Godot proposal #874 will add Array.id() and Dictionary.id().
+# This will allow us to handle multiple references to the same arrays and 
+# dicts as we do now for objects. (This will remove warning #1 above.)
+
+const files := preload("res://ivoyager/static/files.gd")
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
@@ -78,14 +88,14 @@ var _gs_serialized_references := []
 var _gs_script_paths := []
 var _gs_dict_keys := []
 
-# save/load processing
-var _root: Node # save & load
-var _path_ids := {} # save
-var _object_ids := {} # save
-var _key_ids := {} # save
-var _objects := [null] # load
-var _build_result := [] # load
-var _dont_attach: bool # load
+# save processing
+var _save_root: Node
+var _path_ids := {} # indexed by script paths
+var _object_ids := {} # indexed by objects
+var _key_ids := {} # indexed by dict keys
+
+# load processing
+var _objects := [null] # indexed by object_id (0 has a special meaning)
 
 # logging
 var _log_count := 0
@@ -93,40 +103,18 @@ var _log_count_by_class := {}
 var _log := ""
 
 
-static func make_object_or_scene(script: Script) -> Object:
-	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
-		return script.new()
-	# It's a scene if the script or an extended script has member "SCENE" or
-	# "SCENE_OVERRIDE". We create the scene and return the root node.
-	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
-	var pkd_scene: PackedScene = load(scene_path)
-	assert(pkd_scene, "Expected scene path at: " + scene_path)
-	var root_node: Node = pkd_scene.instance()
-	if root_node.script != script: # root_node.script may be parent class
-		root_node.set_script(script)
-	return root_node
-
-
-static func free_procedural_nodes(root: Node) -> void:
-	# See "root" comments below; it may or may not be the main scene tree root.
-	if "PERSIST_AS_PROCEDURAL_OBJECT" in root:
-		if root.PERSIST_AS_PROCEDURAL_OBJECT:
-			root.queue_free() # children will also be freed!
-			return
-	for child in root.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			free_procedural_nodes(child)
-
-
-func generate_gamesave(root: Node) -> Array:
-	# "root" may or may not be the main scene tree root. Data in the result
-	# array includes the root (if it is a persist node) and the continuous tree
+func generate_gamesave(save_root: Node) -> Array:
+	# "save_root" may or may not be the main scene tree root. It must be a
+	# persist node itelf with const PERSIST_AS_PROCEDURAL_OBJECT = false.
+	# Data in the result array includes the save_root and the continuous tree
 	# of persist nodes below that.
-	_root = root
+	assert("PERSIST_AS_PROCEDURAL_OBJECT" in save_root)
+	assert(!save_root.PERSIST_AS_PROCEDURAL_OBJECT)
+	_save_root = save_root
 	assert(DPRINT and print("* Registering tree for gamesave *") or true)
-	_register_tree_for_save(root)
+	_register_tree(save_root)
 	assert(DPRINT and print("* Serializing tree for gamesave *") or true)
-	_serialize_tree()
+	_serialize_tree(save_root)
 	var gamesave := [
 		_gs_n_objects,
 		_gs_serialized_nodes,
@@ -135,57 +123,52 @@ func generate_gamesave(root: Node) -> Array:
 		_gs_dict_keys,
 		]
 	print("Persist objects saved: ", _gs_n_objects, "; nodes in tree: ",
-			root.get_tree().get_node_count())
+			save_root.get_tree().get_node_count())
 	_reset()
 	return gamesave
 
 
-func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
-	# "root" must be the same node specified in generate_gamesave(root).
-	# Return array has the children of root, or the not-yet-added children
-	# if dont_attach = true.
+func build_tree(save_root: Node, gamesave: Array) -> void:
+	# "save_root" must be the same non-procedural persist node specified in
+	# generate_gamesave(save_root).
 	#
-	# To call this function on another thread, either root can't be part of the
-	# current scene tree OR set dont_attach = true. If the latter, you can
-	# subsequently attach base procedural node(s) to root in the Main thread.
+	# To call this function on another thread, save_root can't be part of the
+	# current scene.
 	#
 	# If building for a loaded game, be sure to free the old procedural tree
-	# using free_procedural_nodes(). It is recommended to delay a few frames
-	# after that so old freeing objects are no longer recieving signals.
-	_root = root
-	_dont_attach = dont_attach
+	# using IVUtils.free_procedural_nodes(). It is recommended to delay a few
+	# frames after that so old freeing objects are no longer recieving signals.
+	_save_root = save_root
 	_gs_n_objects = gamesave[0]
 	_gs_serialized_nodes = gamesave[1]
 	_gs_serialized_references = gamesave[2]
 	_gs_script_paths = gamesave[3]
 	_gs_dict_keys = gamesave[4]
 	_objects.resize(_gs_n_objects)
-	_register_and_instance_load_objects()
-	_deserialize_load_objects()
-	_build_tree()
+	_locate_or_instantiate_objects(save_root)
+	_deserialize_all_object_data()
+	_build_procedural_tree()
 	print("Persist objects loaded: ", _gs_n_objects)
-	var result := _build_result
 	_reset()
-	return result
 
 
 # *****************************************************************************
 # Debug logging
 
-func debug_log(root: Node) -> String:
+func debug_log(save_root: Node) -> String:
 	# Call before and after all external save/load stuff completed. Wrap in
 	# in assert to compile only in debug builds, e.g.:
 	# assert(print(save_manager.debug_log(get_tree())) or true)
-	_log += "Number tree nodes: %s\n" % root.get_tree().get_node_count()
+	_log += "Number tree nodes: %s\n" % save_root.get_tree().get_node_count()
 	_log += "Memory usage: %s\n" % OS.get_dynamic_memory_usage()
 	# This doesn't work: OS.dump_memory_to_file(mem_dump_path)
 	if debug_print_stray_nodes:
 		print("Stray Nodes:")
-		root.print_stray_nodes()
+		save_root.print_stray_nodes()
 		print("***********************")
 	if debug_print_tree:
 		print("Tree:")
-		root.print_tree_pretty()
+		save_root.print_tree_pretty()
 		print("***********************")
 	if debug_log_all_nodes or debug_log_persist_nodes:
 		_log_count = 0
@@ -193,7 +176,7 @@ func debug_log(root: Node) -> String:
 		if _log_count_by_class:
 			last_log_count_by_class = _log_count_by_class.duplicate()
 		_log_count_by_class.clear()
-		_log_nodes(root)
+		_log_nodes(save_root)
 		if last_log_count_by_class:
 			_log += "Class counts difference from last count:\n"
 			for class_ in _log_count_by_class:
@@ -240,48 +223,39 @@ func _reset():
 	_gs_serialized_references = []
 	_gs_script_paths = []
 	_gs_dict_keys = []
-	_root = null
+	_save_root = null
 	_path_ids.clear()
 	_object_ids.clear()
 	_key_ids.clear()
-	_objects.resize(1) # 1st element is null
-	_build_result = []
+	_objects.resize(1) # 1st element is always null
 
 
 # Procedural save
 
-func _register_tree_for_save(node: Node) -> void:
-	# Make an object_id for all persist nodes by indexing in _object_ids
-	# Initial call is the tree root which may or may not be a persist node
-	# itself.
+func _register_tree(node: Node) -> void:
+	# Make an object_id for all persist nodes by indexing in _object_ids.
+	# Initial call is the save_root which must be a persist node itself.
 	_object_ids[node] = _gs_n_objects
 	_gs_n_objects += 1
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			_register_tree_for_save(child)
-
-func _serialize_tree() -> void:
-	if "PERSIST_AS_PROCEDURAL_OBJECT" in _root:
-		_serialize_node(_root)
-	for child in _root.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			_serialize_tree_recursive(child)
+			_register_tree(child)
 
 
-func _serialize_tree_recursive(node: Node) -> void:
+func _serialize_tree(node: Node) -> void:
 	_serialize_node(node)
 	for child in node.get_children():
 		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			_serialize_tree_recursive(child)
+			_serialize_tree(child)
 
 
 # Procedural load
 
-func _register_and_instance_load_objects() -> void:
+func _locate_or_instantiate_objects(save_root: Node) -> void:
 	# Instantiates procecural objects (nodes & references) without data.
 	# Indexes root and all persist objects (procedural and non-procedural).
 	assert(DPRINT and print("* Registering(/Instancing) Objects for Load *") or true)
-	_objects[1] = _root
+	_objects[1] = save_root
 	var scripts := []
 	for script_path in _gs_script_paths:
 		scripts.append(load(script_path))
@@ -291,11 +265,11 @@ func _register_and_instance_load_objects() -> void:
 		var node: Node
 		if script_id == -1: # non-procedural node; find it
 			var node_path: NodePath = serialized_node[2] # relative
-			node = _root.get_node(node_path)
+			node = save_root.get_node(node_path)
 			assert(DPRINT and prints(object_id, node, node.name) or true)
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
-			node = make_object_or_scene(script)
+			node = files.make_object_or_scene(script)
 			assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
 		assert(node)
 		_objects[object_id] = node
@@ -309,27 +283,22 @@ func _register_and_instance_load_objects() -> void:
 		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
 
 
-func _deserialize_load_objects() -> void:
+func _deserialize_all_object_data() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
 	for serialized_node in _gs_serialized_nodes:
-		_deserialize_object_data(serialized_node, 3)
+		_deserialize_object_data(serialized_node, true)
 	for serialized_reference in _gs_serialized_references:
-		_deserialize_object_data(serialized_reference, 2)
+		_deserialize_object_data(serialized_reference, false)
 
 
-func _build_tree() -> void:
+func _build_procedural_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
 		var object_id: int = serialized_node[0]
 		var node: Node = _objects[object_id]
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in node:
-			if node.PERSIST_AS_PROCEDURAL_OBJECT:
-				var parent_save_id: int = serialized_node[2]
-				if parent_save_id == 0: # root!
-					_build_result.append(node)
-					if _dont_attach:
-						continue
-				var parent: Node = _objects[parent_save_id]
-				parent.add_child(node)
+		if node.PERSIST_AS_PROCEDURAL_OBJECT:
+			var parent_save_id: int = serialized_node[2]
+			var parent: Node = _objects[parent_save_id]
+			parent.add_child(node)
 
 
 # Serialize/deserialize functions
@@ -351,7 +320,7 @@ func _serialize_node(node: Node):
 		var parent_save_id: int = _object_ids[parent]
 		serialized_node.append(parent_save_id) # index 2
 	else:
-		var node_path := _root.get_path_to(node)
+		var node_path := _save_root.get_path_to(node)
 		serialized_node.append(node_path) # index 2
 	_serialize_object_data(node, serialized_node)
 	_gs_serialized_nodes.append(serialized_node)
@@ -385,8 +354,8 @@ func _get_or_create_script_id(object: Object) -> int:
 
 func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 	assert(object is Node or object is Reference)
-	# serialized_object already has some header info. We now append the size of
-	# each persist array followed by data.
+	# serialized_object already has 3 elements (if Node) or 2 (if Reference).
+	# We now append the size of each persist array followed by data.
 	for properties_array in properties_arrays:
 		var properties: Array
 		var n_properties: int
@@ -400,11 +369,11 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 			var array := []
 			for property in properties:
 				array.append(object.get(property))
-			var serialized_array := _get_serialized_array(array)
-			serialized_object.append(serialized_array)
+			var encoded_array := _get_encoded_array(array)
+			serialized_object.append(encoded_array)
 
 
-func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
+func _deserialize_object_data(serialized_object: Array, is_node: bool) -> void:
 	# The order of persist properties must be exactly the same from game save
 	# to game load. However, if a newer version (loading an older save) has
 	# added more persist properties at the end of a persist array const, these
@@ -412,15 +381,16 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 	# There is some opportunity here for backward compatibility if the newer
 	# version knows to init-on-load its added persist properties when loading
 	# an older version save file.
+	var index: int = 3 if is_node else 2
 	var object_id: int = serialized_object[0]
 	var object: Object = _objects[object_id]
 	for properties_array in properties_arrays:
-		var n_properties: int = serialized_object[data_index]
-		data_index += 1
+		var n_properties: int = serialized_object[index]
+		index += 1
 		if n_properties > 0:
-			var array: Array = serialized_object[data_index]
-			data_index += 1
-			_deserialize_array(array)
+			var array: Array = serialized_object[index]
+			index += 1
+			_decode_array(array)
 			var properties: Array = object.get(properties_array)
 			var property_index := 0
 			while property_index < n_properties:
@@ -429,28 +399,30 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 				property_index += 1
 
 
-func _get_serialized_array(array: Array) -> Array:
+func _get_encoded_array(array: Array) -> Array:
 	var n_items := array.size()
-	var serialized_array := []
-	serialized_array.resize(n_items)
+	var encoded_array := []
+	encoded_array.resize(n_items)
 	var index := 0
 	while index < n_items:
 		var item = array[index] # untyped
 		var type := typeof(item)
 		if type == TYPE_OBJECT:
-			serialized_array[index] = _encode_object(item)
+			encoded_array[index] = _get_encoded_object(item)
 		elif type == TYPE_ARRAY:
-			serialized_array[index] = _get_serialized_array(item)
+			encoded_array[index] = _get_encoded_array(item)
 		elif type == TYPE_DICTIONARY:
-			serialized_array[index] = _get_serialized_dict(item)
+			encoded_array[index] = _get_encoded_dict(item)
 		else: # built-in type
-			serialized_array[index] = item
+			encoded_array[index] = item
 		index += 1
-	return serialized_array
+	return encoded_array
 
 
-func _get_serialized_dict(dict: Dictionary) -> Dictionary:
-	var serialized_dict := {}
+func _get_encoded_dict(dict: Dictionary) -> Dictionary:
+	# Very many dicts will have shared keys, so we index these rather than
+	# packing the gamesave with many redundant key strings.
+	var encoded_dict := {}
 	for key in dict:
 		var key_id: int = _key_ids.get(key, -1)
 		if key_id == -1:
@@ -460,63 +432,64 @@ func _get_serialized_dict(dict: Dictionary) -> Dictionary:
 		var item = dict[key] # untyped
 		var type := typeof(item)
 		if type == TYPE_OBJECT:
-			serialized_dict[key_id] = _encode_object(item)
+			encoded_dict[key_id] = _get_encoded_object(item)
 		elif type == TYPE_ARRAY:
-			serialized_dict[key_id] = _get_serialized_array(item)
+			encoded_dict[key_id] = _get_encoded_array(item)
 		elif type == TYPE_DICTIONARY:
-			serialized_dict[key_id] = _get_serialized_dict(item)
+			encoded_dict[key_id] = _get_encoded_dict(item)
 		else: # built-in type
-			serialized_dict[key_id] = item
-	return serialized_dict
+			encoded_dict[key_id] = item
+	return encoded_dict
 
 
-func _deserialize_array(serialized_array: Array) -> void:
-	# deserialize in place
-	var n_items := serialized_array.size()
+func _decode_array(encoded_array: Array) -> void:
+	# decode in place; encoded_array will become decoded
+	var n_items := encoded_array.size()
 	var index := 0
 	while index < n_items:
-		var item = serialized_array[index] # untyped
+		var item = encoded_array[index] # untyped
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_deserialize_array(item)
+			_decode_array(item)
 		elif type == TYPE_DICTIONARY:
-			var object := _decode_object(item)
-			if object:
-				serialized_array[index] = object
+			if item.has("_"):
+				var object := _get_decoded_object(item)
+				encoded_array[index] = object
 			else: # it's a dictionary!
-				serialized_array[index] = _get_deserialized_dict(item)
+				encoded_array[index] = _get_decoded_dict(item)
 		else: # other built-in type
-			serialized_array[index] = item
+			encoded_array[index] = item
 		index += 1
 
 
-func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
+func _get_decoded_dict(encoded_dict: Dictionary) -> Dictionary:
+	# encoded_dict keys are all integers
 	var dict := {}
-	for key_id in serialized_dict:
+	for key_id in encoded_dict:
 		var key = _gs_dict_keys[key_id]
-		var item = serialized_dict[key_id] # dynamic type!
+		var item = encoded_dict[key_id] # dynamic type!
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_deserialize_array(item)
+			_decode_array(item)
 			dict[key] = item
 		elif type == TYPE_DICTIONARY:
-			var object := _decode_object(item)
-			if object:
+			if item.has("_"):
+				var object := _get_decoded_object(item)
 				dict[key] = object
 			else: # it's a dictionary!
-				dict[key] = _get_deserialized_dict(item)
+				dict[key] = _get_decoded_dict(item)
 		else: # other built-in type
 			dict[key] = item
 	return dict
 
 
-func _encode_object(object: Object) -> Dictionary:
-	# Encoded object is a dictionary with key "_" and a sign-coded object_id.
+func _get_encoded_object(object: Object) -> Dictionary:
+	# Encoded object is a dictionary with key "_" = sign-coded object_id.
 	var is_weak_ref := false
 	if object is WeakRef:
 		object = object.get_ref()
 		if object == null:
-			return {_ = 0} # 0 is always weak ref to dead object
+			return {_ = 0} # object_id = 0 represents a weak ref to dead object
 		is_weak_ref = true
 	assert("PERSIST_AS_PROCEDURAL_OBJECT" in object, "Can't persist a non-persist obj")
 	var object_id: int = _object_ids.get(object, -1)
@@ -528,10 +501,8 @@ func _encode_object(object: Object) -> Dictionary:
 	return {_ = object_id}
 
 
-func _decode_object(test_dict: Dictionary) -> Object:
-	if !test_dict.has("_"):
-		return null # it's just a dictionary!
-	var object_id: int = test_dict._
+func _get_decoded_object(encoded_object: Dictionary) -> Object:
+	var object_id: int = encoded_object._
 	if object_id == 0:
 		return WeakRef.new() # weak ref to dead object
 	if object_id < 0: # weak ref
