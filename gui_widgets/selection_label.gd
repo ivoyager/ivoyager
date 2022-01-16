@@ -30,7 +30,7 @@ func _ready() -> void:
 
 
 func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
-	_selection_manager = IVGUIUtils.get_selection_manager(self)
+	_selection_manager = IVWidgets.get_selection_manager(self)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 
 

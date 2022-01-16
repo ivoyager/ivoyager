@@ -54,6 +54,8 @@ class_name IVSaveBuilder
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
 
+const files := preload("res://ivoyager/static/files.gd")
+
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
 
@@ -93,31 +95,6 @@ var _log_count_by_class := {}
 var _log := ""
 
 
-static func make_object_or_scene(script: Script) -> Object:
-	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
-		return script.new()
-	# It's a scene if the script or an extended script has member "SCENE" or
-	# "SCENE_OVERRIDE". We create the scene and return the root node.
-	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
-	var pkd_scene: PackedScene = load(scene_path)
-	assert(pkd_scene, "Expected scene path at: " + scene_path)
-	var root_node: Node = pkd_scene.instance()
-	if root_node.script != script: # root_node.script may be parent class
-		root_node.set_script(script)
-	return root_node
-
-
-static func free_procedural_nodes(root: Node) -> void:
-	# See "root" comments below; it may or may not be the main scene tree root.
-	if "PERSIST_AS_PROCEDURAL_OBJECT" in root:
-		if root.PERSIST_AS_PROCEDURAL_OBJECT:
-			root.queue_free() # children will also be freed!
-			return
-	for child in root.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			free_procedural_nodes(child)
-
-
 func generate_gamesave(root: Node) -> Array:
 	# "root" may or may not be the main scene tree root. Data in the result
 	# array includes the root (if it is a persist node) and the continuous tree
@@ -150,8 +127,8 @@ func build_tree(root: Node, gamesave: Array, dont_attach := false) -> Array:
 	# subsequently attach base procedural node(s) to root in the Main thread.
 	#
 	# If building for a loaded game, be sure to free the old procedural tree
-	# using free_procedural_nodes(). It is recommended to delay a few frames
-	# after that so old freeing objects are no longer recieving signals.
+	# using IVUtils.free_procedural_nodes(). It is recommended to delay a few
+	# frames after that so old freeing objects are no longer recieving signals.
 	_root = root
 	_dont_attach = dont_attach
 	_gs_n_objects = gamesave[0]
@@ -295,7 +272,7 @@ func _register_and_instance_load_objects() -> void:
 			assert(DPRINT and prints(object_id, node, node.name) or true)
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
-			node = make_object_or_scene(script)
+			node = files.make_object_or_scene(script)
 			assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
 		assert(node)
 		_objects[object_id] = node

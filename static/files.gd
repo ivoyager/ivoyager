@@ -24,6 +24,20 @@ class_name IVFiles
 # const files := preload("res://ivoyager/static/files.gd")
 
 
+static func make_object_or_scene(script: Script) -> Object:
+	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
+		return script.new()
+	# It's a scene if the script or an extended script has member "SCENE" or
+	# "SCENE_OVERRIDE". We create the scene and return the root node.
+	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
+	var pkd_scene: PackedScene = load(scene_path)
+	assert(pkd_scene, "Expected scene path at: " + scene_path)
+	var root_node: Node = pkd_scene.instance()
+	if root_node.script != script: # root_node.script may be parent class
+		root_node.set_script(script)
+	return root_node
+
+
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
 	var save_dir := override_dir
 	if save_dir:

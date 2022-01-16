@@ -19,8 +19,27 @@
 # *****************************************************************************
 class_name IVUtils
 
+# Miscellaneous utility static functions. There are no references to 'ivoyager'
+# classes here.
+# Usage note: issue #37529 prevents localization of global class_name to const.
+# For now, use:
+# const utils := preload("res://ivoyager/static/utils.gd")
 
-# Untyped tree search
+# Tree utilities
+
+static func free_procedural_nodes(root: Node) -> void:
+	# root may or may not be the main scene tree root.
+	if "PERSIST_AS_PROCEDURAL_OBJECT" in root:
+		if root.PERSIST_AS_PROCEDURAL_OBJECT:
+			root.queue_free() # children will also be freed!
+			return
+	for child in root.get_children():
+		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+			free_procedural_nodes(child)
+
+
+# Untyped tree/property searches
+
 static func get_deep(target, path: String): # untyped return
 	if !path:
 		return target
@@ -53,6 +72,7 @@ static func get_path_result(target, path: String, args := NO_ARGS): # untyped re
 
 
 # Arrays
+
 static func init_array(size: int, init_value = null) -> Array:
 	var array := []
 	array.resize(size)
