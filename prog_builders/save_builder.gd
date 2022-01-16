@@ -19,15 +19,17 @@
 # *****************************************************************************
 class_name IVSaveBuilder
 
-# IVSaveBuilder can persist specified data (which may include nested objects) and
-# rebuild procedurally generated node trees and references on load. It can
+# IVSaveBuilder can persist specified data (which may include nested objects)
+# and rebuild procedurally generated node trees and references on load. It can
 # persist built-in types and four kinds of objects:
 #    1. Non-procedural Nodes
 #    2. Procedural Nodes (including base nodes of scenes)
 #    3. Procedural References
 #    4. WeakRef to any of above
+#
 # A "persist" node or reference is identified by presence of the constant:
 #    const PERSIST_AS_PROCEDURAL_OBJECT: bool
+#
 # Lists of properties to persists must be named in constant arrays:
 #    const PERSIST_PROPERTIES := [] # properties to persist
 #    const PERSIST_PROPERTIES_2 := []
@@ -35,9 +37,11 @@ class_name IVSaveBuilder
 #    (These list names can be modified in project settings below. The extra
 #    numbered lists are needed for subclasses where a list name is taken by a
 #    parent class.)
+#
 # To reconstruct a scene, the base node's gdscript must have one of:
-#    const SCENE: String = "<path to *.tscn>"
-#    const SCENE_OVERRIDE: String # as above; override may be useful in subclass
+#    const SCENE := "<path to .tscn file>"
+#    const SCENE_OVERRIDE := "" # as above; override may be useful in subclass
+#
 # Additional rules for persist objects:
 #    1. Nodes must be in the tree.
 #    2. All ancester nodes up to "root" must also be persist nodes. ("Root" is
@@ -45,13 +49,18 @@ class_name IVSaveBuilder
 #    3. A non-procedural node cannot be child of a procedural node.
 #    4. Non-procedural nodes must have stable names (path cannot change).
 #    5. Inner classes can't be persist objects
-#    6. For references, PERSIST_AS_PROCEDURAL_OBJECT = true
+#    6. For references, it is always PERSIST_AS_PROCEDURAL_OBJECT = true
 #    7. Virtual method _init() cannot have any required args.
+#
 # Warnings:
-#    1. A single table or dict persisted in two places will become two on load
+#    1. A single array or dict persisted in two places will become two on load.
 #    2. Be careful not to have both pesist and non-persist references to the
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
+#
+# TODO 4.0: Godot proposal #874 will add Array.id() and Dictionary.id().
+# This will allow us to handle multiple references to the same arrays and 
+# dicts as we do now for objects. (This will remove warning #1 above.)
 
 const files := preload("res://ivoyager/static/files.gd")
 
@@ -79,12 +88,14 @@ var _gs_serialized_references := []
 var _gs_script_paths := []
 var _gs_dict_keys := []
 
-# save/load processing
-var _save_root: Node # save
-var _path_ids := {} # save; indexed by script paths
-var _object_ids := {} # save; indexed by objects
-var _key_ids := {} # save; indexed by dict keys
-var _objects := [null] # load; indexed by object_id (0 has a special meaning)
+# save processing
+var _save_root: Node
+var _path_ids := {} # indexed by script paths
+var _object_ids := {} # indexed by objects
+var _key_ids := {} # indexed by dict keys
+
+# load processing
+var _objects := [null] # indexed by object_id (0 has a special meaning)
 
 # logging
 var _log_count := 0
@@ -134,9 +145,9 @@ func build_tree(save_root: Node, gamesave: Array) -> void:
 	_gs_script_paths = gamesave[3]
 	_gs_dict_keys = gamesave[4]
 	_objects.resize(_gs_n_objects)
-	_register_and_instance_load_objects(save_root)
-	_deserialize_load_objects()
-	_build_tree()
+	_locate_or_instantiate_objects(save_root)
+	_deserialize_all_object_data()
+	_build_procedural_tree()
 	print("Persist objects loaded: ", _gs_n_objects)
 	_reset()
 
@@ -240,7 +251,7 @@ func _serialize_tree(node: Node) -> void:
 
 # Procedural load
 
-func _register_and_instance_load_objects(save_root: Node) -> void:
+func _locate_or_instantiate_objects(save_root: Node) -> void:
 	# Instantiates procecural objects (nodes & references) without data.
 	# Indexes root and all persist objects (procedural and non-procedural).
 	assert(DPRINT and print("* Registering(/Instancing) Objects for Load *") or true)
@@ -272,15 +283,15 @@ func _register_and_instance_load_objects(save_root: Node) -> void:
 		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
 
 
-func _deserialize_load_objects() -> void:
+func _deserialize_all_object_data() -> void:
 	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
 	for serialized_node in _gs_serialized_nodes:
-		_deserialize_object_data(serialized_node, 3)
+		_deserialize_object_data(serialized_node, true)
 	for serialized_reference in _gs_serialized_references:
-		_deserialize_object_data(serialized_reference, 2)
+		_deserialize_object_data(serialized_reference, false)
 
 
-func _build_tree() -> void:
+func _build_procedural_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
 		var object_id: int = serialized_node[0]
 		var node: Node = _objects[object_id]
@@ -343,8 +354,8 @@ func _get_or_create_script_id(object: Object) -> int:
 
 func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 	assert(object is Node or object is Reference)
-	# serialized_object already has some header info. We now append the size of
-	# each persist array followed by data.
+	# serialized_object already has 3 elements (if Node) or 2 (if Reference).
+	# We now append the size of each persist array followed by data.
 	for properties_array in properties_arrays:
 		var properties: Array
 		var n_properties: int
@@ -358,11 +369,11 @@ func _serialize_object_data(object: Object, serialized_object: Array) -> void:
 			var array := []
 			for property in properties:
 				array.append(object.get(property))
-			var serialized_array := _get_serialized_array(array)
-			serialized_object.append(serialized_array)
+			var encoded_array := _get_encoded_array(array)
+			serialized_object.append(encoded_array)
 
 
-func _deserialize_object_data(serialized_object: Array, data_index: int) -> void:
+func _deserialize_object_data(serialized_object: Array, is_node: bool) -> void:
 	# The order of persist properties must be exactly the same from game save
 	# to game load. However, if a newer version (loading an older save) has
 	# added more persist properties at the end of a persist array const, these
@@ -370,15 +381,16 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 	# There is some opportunity here for backward compatibility if the newer
 	# version knows to init-on-load its added persist properties when loading
 	# an older version save file.
+	var index: int = 3 if is_node else 2
 	var object_id: int = serialized_object[0]
 	var object: Object = _objects[object_id]
 	for properties_array in properties_arrays:
-		var n_properties: int = serialized_object[data_index]
-		data_index += 1
+		var n_properties: int = serialized_object[index]
+		index += 1
 		if n_properties > 0:
-			var array: Array = serialized_object[data_index]
-			data_index += 1
-			_deserialize_array(array)
+			var array: Array = serialized_object[index]
+			index += 1
+			_decode_array(array)
 			var properties: Array = object.get(properties_array)
 			var property_index := 0
 			while property_index < n_properties:
@@ -387,30 +399,30 @@ func _deserialize_object_data(serialized_object: Array, data_index: int) -> void
 				property_index += 1
 
 
-func _get_serialized_array(array: Array) -> Array:
+func _get_encoded_array(array: Array) -> Array:
 	var n_items := array.size()
-	var serialized_array := []
-	serialized_array.resize(n_items)
+	var encoded_array := []
+	encoded_array.resize(n_items)
 	var index := 0
 	while index < n_items:
 		var item = array[index] # untyped
 		var type := typeof(item)
 		if type == TYPE_OBJECT:
-			serialized_array[index] = _get_serialized_object(item)
+			encoded_array[index] = _get_encoded_object(item)
 		elif type == TYPE_ARRAY:
-			serialized_array[index] = _get_serialized_array(item)
+			encoded_array[index] = _get_encoded_array(item)
 		elif type == TYPE_DICTIONARY:
-			serialized_array[index] = _get_serialized_dict(item)
+			encoded_array[index] = _get_encoded_dict(item)
 		else: # built-in type
-			serialized_array[index] = item
+			encoded_array[index] = item
 		index += 1
-	return serialized_array
+	return encoded_array
 
 
-func _get_serialized_dict(dict: Dictionary) -> Dictionary:
+func _get_encoded_dict(dict: Dictionary) -> Dictionary:
 	# Very many dicts will have shared keys, so we index these rather than
 	# packing the gamesave with many redundant key strings.
-	var serialized_dict := {}
+	var encoded_dict := {}
 	for key in dict:
 		var key_id: int = _key_ids.get(key, -1)
 		if key_id == -1:
@@ -420,58 +432,58 @@ func _get_serialized_dict(dict: Dictionary) -> Dictionary:
 		var item = dict[key] # untyped
 		var type := typeof(item)
 		if type == TYPE_OBJECT:
-			serialized_dict[key_id] = _get_serialized_object(item)
+			encoded_dict[key_id] = _get_encoded_object(item)
 		elif type == TYPE_ARRAY:
-			serialized_dict[key_id] = _get_serialized_array(item)
+			encoded_dict[key_id] = _get_encoded_array(item)
 		elif type == TYPE_DICTIONARY:
-			serialized_dict[key_id] = _get_serialized_dict(item)
+			encoded_dict[key_id] = _get_encoded_dict(item)
 		else: # built-in type
-			serialized_dict[key_id] = item
-	return serialized_dict
+			encoded_dict[key_id] = item
+	return encoded_dict
 
 
-func _deserialize_array(serialized_array: Array) -> void:
-	# deserialize in place
-	var n_items := serialized_array.size()
+func _decode_array(encoded_array: Array) -> void:
+	# decode in place; encoded_array will become decoded
+	var n_items := encoded_array.size()
 	var index := 0
 	while index < n_items:
-		var item = serialized_array[index] # untyped
+		var item = encoded_array[index] # untyped
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_deserialize_array(item)
+			_decode_array(item)
 		elif type == TYPE_DICTIONARY:
 			if item.has("_"):
-				var object := _get_deserialized_object(item)
-				serialized_array[index] = object
+				var object := _get_decoded_object(item)
+				encoded_array[index] = object
 			else: # it's a dictionary!
-				serialized_array[index] = _get_deserialized_dict(item)
+				encoded_array[index] = _get_decoded_dict(item)
 		else: # other built-in type
-			serialized_array[index] = item
+			encoded_array[index] = item
 		index += 1
 
 
-func _get_deserialized_dict(serialized_dict: Dictionary) -> Dictionary:
-	# serialized_dict keys are all integers
+func _get_decoded_dict(encoded_dict: Dictionary) -> Dictionary:
+	# encoded_dict keys are all integers
 	var dict := {}
-	for key_id in serialized_dict:
+	for key_id in encoded_dict:
 		var key = _gs_dict_keys[key_id]
-		var item = serialized_dict[key_id] # dynamic type!
+		var item = encoded_dict[key_id] # dynamic type!
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_deserialize_array(item)
+			_decode_array(item)
 			dict[key] = item
 		elif type == TYPE_DICTIONARY:
 			if item.has("_"):
-				var object := _get_deserialized_object(item)
+				var object := _get_decoded_object(item)
 				dict[key] = object
 			else: # it's a dictionary!
-				dict[key] = _get_deserialized_dict(item)
+				dict[key] = _get_decoded_dict(item)
 		else: # other built-in type
 			dict[key] = item
 	return dict
 
 
-func _get_serialized_object(object: Object) -> Dictionary:
+func _get_encoded_object(object: Object) -> Dictionary:
 	# Encoded object is a dictionary with key "_" = sign-coded object_id.
 	var is_weak_ref := false
 	if object is WeakRef:
@@ -489,8 +501,8 @@ func _get_serialized_object(object: Object) -> Dictionary:
 	return {_ = object_id}
 
 
-func _get_deserialized_object(serialized_object: Dictionary) -> Object:
-	var object_id: int = serialized_object._
+func _get_decoded_object(encoded_object: Dictionary) -> Object:
+	var object_id: int = encoded_object._
 	if object_id == 0:
 		return WeakRef.new() # weak ref to dead object
 	if object_id < 0: # weak ref
