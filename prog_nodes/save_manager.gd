@@ -61,13 +61,34 @@ onready var _universe: Spatial = IVGlobal.program.Universe
 onready var _tree := get_tree()
 
 
-func _ready():
+func _ready() -> void:
 	IVGlobal.connect("save_requested", self, "_on_save_requested")
 	IVGlobal.connect("load_requested", self, "_on_load_requested")
 	IVGlobal.connect("save_quit_requested", self, "save_quit")
+	pause_mode = PAUSE_MODE_PROCESS
+
+
+func _input(event: InputEvent) -> void:
+	if !event.is_action_type() or !event.is_pressed():
+		return
+	if event.is_action_pressed("quick_save"):
+		_on_save_requested("", true)
+	elif event.is_action_pressed("save_as"):
+		_on_save_requested("", false)
+	elif event.is_action_pressed("quick_load"):
+		_on_load_requested("", true)
+	elif event.is_action_pressed("load_game"):
+		_on_load_requested("", false)
+	elif event.is_action_pressed("save_quit"):
+		save_quit()
+	else:
+		return
+	_tree.set_input_as_handled()
 
 
 func save_quit() -> void:
+	if !_state.is_system_built:
+		return
 	if _state.network_state == IS_CLIENT:
 		return
 	if quick_save():
@@ -75,6 +96,8 @@ func save_quit() -> void:
 
 
 func quick_save() -> bool:
+	if !_state.is_system_built:
+		return false
 	if _state.network_state == IS_CLIENT:
 		return false
 	if !_has_been_saved or !_settings.save_base_name or !files.is_valid_dir(_settings.save_dir):
@@ -91,6 +114,8 @@ func quick_save() -> bool:
 
 
 func save_game(path := "") -> void:
+	if !_state.is_system_built:
+		return
 	if _state.network_state == IS_CLIENT:
 		return
 	if !path:
@@ -111,6 +136,8 @@ func save_game(path := "") -> void:
 
 
 func quick_load() -> void:
+	if !(_state.is_splash_screen or _state.is_system_built):
+		return
 	if _state.network_state == IS_CLIENT:
 		return
 	if _state.last_save_path:
@@ -121,6 +148,8 @@ func quick_load() -> void:
 
 
 func load_game(path := "", network_gamesave := []) -> void:
+	if !(_state.is_splash_screen or _state.is_system_built):
+		return
 	if !network_gamesave and _state.network_state == IS_CLIENT:
 		return
 	if !network_gamesave and path == "":

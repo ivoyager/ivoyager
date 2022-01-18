@@ -39,6 +39,7 @@ func _project_init() -> void:
 func _ready() -> void:
 	theme = IVGlobal.themes.main
 	set_process_input(false)
+	IVGlobal.connect("credits_requested", self, "open")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	connect("popup_hide", self, "_on_hide")
 	find_node("Close").connect("pressed", self, "hide")

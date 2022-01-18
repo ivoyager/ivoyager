@@ -21,6 +21,8 @@ class_name IVLoadDialog
 extends FileDialog
 const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 
+# Key actions for save/load are handled in save_manager.gd. This Control handles
+# dialog request and only processes _input() when open.
 
 const files := preload("res://ivoyager/static/files.gd")
 
@@ -47,7 +49,7 @@ func _project_init():
 
 func _ready():
 	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	_blocking_popups.append(self)
 
 
@@ -55,20 +57,19 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_update_quick_load_button()
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-
-
-func _on_unhandled_key_input(event: InputEventKey) -> void:
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
 
 
 func _open() -> void:
+	if visible:
+		hide()
+		return
 	if _is_blocking_popup():
 		return
-	set_process_unhandled_key_input(true)
+	set_process_input(true)
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
@@ -93,7 +94,7 @@ func _update_quick_load_button() -> void:
 
 
 func _on_hide() -> void:
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	IVGlobal.emit_signal("sim_run_allowed", self)
 
 

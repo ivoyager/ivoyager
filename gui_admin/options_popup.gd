@@ -40,18 +40,6 @@ var _settings: Dictionary = IVGlobal.settings
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 
 
-func _project_init() -> void:
-	._project_init()
-	IVGlobal.connect("options_requested", self, "open")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	if !IVGlobal.enable_save_load:
-		remove_subpanel("LABEL_SAVE_LOAD")
-
-
-func open() -> void:
-	._open()
-
-
 func _on_init():
 	# Edit layout directly or use parent class functions at project init.
 	layout = [
@@ -99,6 +87,14 @@ func _on_init():
 	]
 
 
+func _project_init() -> void:
+	._project_init()
+	IVGlobal.connect("options_requested", self, "open")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	if !IVGlobal.enable_save_load:
+		remove_subpanel("LABEL_SAVE_LOAD")
+
+
 func _on_ready() -> void:
 	._on_ready()
 	_header_label.text = "LABEL_OPTIONS"
@@ -107,6 +103,19 @@ func _on_ready() -> void:
 	hotkeys_button.text = "BUTTON_HOTKEYS"
 	hotkeys_button.connect("pressed", self, "_open_hotkeys")
 	_header_right.add_child(hotkeys_button)
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_options"):
+		get_tree().set_input_as_handled()
+		if visible:
+			_on_cancel()
+		else:
+			_open()
+
+
+func open() -> void:
+	._open()
 
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:

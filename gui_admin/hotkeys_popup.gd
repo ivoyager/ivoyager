@@ -175,6 +175,15 @@ func _on_ready():
 	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_hotkeys"):
+		get_tree().set_input_as_handled()
+		if visible:
+			_on_cancel()
+		else:
+			_open()
+
+
 func open() -> void:
 	._open()
 

@@ -24,17 +24,30 @@ extends Node
 
 signal show_huds_changed()
 
-# persisted - read-only except at project init
+# persisted - can set at project init but otherwise read-only
 var show_orbits := true
 var show_names := true # exclusive w/ show_symbols
 var show_symbols := false # exclusive w/ show_symbols
-
 const PERSIST_AS_PROCEDURAL_OBJECT := false
 const PERSIST_PROPERTIES := ["show_orbits", "show_names", "show_symbols"]
+
+onready var _tree := get_tree()
 
 
 func _ready():
 	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
+
+
+func _unhandled_key_input(event: InputEventKey):
+	if event.is_action_pressed("toggle_orbits"):
+		set_show_orbits(!show_orbits)
+	elif event.is_action_pressed("toggle_symbols"):
+		set_show_symbols(!show_symbols)
+	elif event.is_action_pressed("toggle_names"):
+		set_show_names(!show_names)
+	else:
+		return # input NOT handled!
+	_tree.set_input_as_handled()
 
 
 func set_show_orbits(is_show: bool) -> void:

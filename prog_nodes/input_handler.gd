@@ -32,7 +32,6 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 var _script_classes: Dictionary = IVGlobal.script_classes
-var _disable_pause: bool = IVGlobal.disable_pause
 var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 var _allow_dev_tools: bool = IVGlobal.allow_dev_tools
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
@@ -40,8 +39,6 @@ var _suppressors := []
 var _selection_manager: IVSelectionManager
 
 onready var _tree: SceneTree = get_tree()
-onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready():
@@ -70,49 +67,17 @@ func _on_input(event: InputEvent) -> void:
 		return
 	if _suppressors:
 		return
-	if _state.is_splash_screen and _state.is_inited:
-		_input_for_splash_screen(event)
-		return
 	if !_state.is_running:
 		return # main menu or some other admin GUI has input control
 	# Order matters! E.g., cntr-S must be captured before S. This could be
 	# troublesome for player modified hotkeys. One way to solve is to match
 	# event.get_scancode_with_modifiers().
-	if event.is_action_pressed("toggle_options"):
-		IVGlobal.emit_signal("options_requested")
-	elif event.is_action_pressed("toggle_hotkeys"):
-		IVGlobal.emit_signal("hotkeys_requested")
-	elif event.is_action_pressed("toggle_all_gui"):
+	if event.is_action_pressed("toggle_all_gui"):
 		IVGlobal.emit_signal("toggle_show_hide_gui_requested")
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
-	elif event.is_action_pressed("quick_save"):
-		IVGlobal.emit_signal("save_requested", "", true)
-	elif event.is_action_pressed("save_as"):
-		IVGlobal.emit_signal("save_requested", "", false)
-	elif event.is_action_pressed("quick_load"):
-		IVGlobal.emit_signal("load_requested", "", true)
-	elif event.is_action_pressed("load_game"):
-		IVGlobal.emit_signal("load_requested", "", false)
-	elif event.is_action_pressed("quit"):
-		IVGlobal.emit_signal("quit_requested", false)
-	elif event.is_action_pressed("save_quit"):
-		IVGlobal.emit_signal("save_quit_requested")
-	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
-		if _state.network_state != IS_CLIENT:
-			IVGlobal.emit_signal("pause_requested", false, true)
-	elif event.is_action_pressed("incr_speed"):
-		_timekeeper.change_speed(1)
-	elif event.is_action_pressed("decr_speed"):
-		_timekeeper.change_speed(-1)
-	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
-		_timekeeper.set_time_reversed(!_timekeeper.is_reversed)
-	elif event.is_action_pressed("toggle_orbits"):
-		_huds_manager.set_show_orbits(!_huds_manager.show_orbits)
-	elif event.is_action_pressed("toggle_symbols"):
-		_huds_manager.set_show_symbols(!_huds_manager.show_symbols)
-	elif event.is_action_pressed("toggle_names"):
-		_huds_manager.set_show_names(!_huds_manager.show_names)
+
+
 	elif _selection_manager:
 		_input_for_selection_manager(event)
 		return
@@ -178,21 +143,6 @@ func _input_for_selection_manager(event: InputEvent) -> void:
 		_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
 	elif event.is_action_pressed("next_spacecraft"):
 		_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
-	else:
-		return # input NOT handled!
-	_tree.set_input_as_handled()
-
-func _input_for_splash_screen(event: InputEvent) -> void:
-	if event.is_action_pressed("load_game"):
-		IVGlobal.emit_signal("load_requested", "", false)
-	elif event.is_action_pressed("quick_load"):
-		IVGlobal.emit_signal("load_requested", "", true)
-	elif event.is_action_pressed("toggle_options"):
-		IVGlobal.emit_signal("options_requested")
-	elif event.is_action_pressed("toggle_hotkeys"):
-		IVGlobal.emit_signal("hotkeys_requested")
-	elif event.is_action_pressed("quit"):
-		IVGlobal.emit_signal("quit_requested", true)
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()

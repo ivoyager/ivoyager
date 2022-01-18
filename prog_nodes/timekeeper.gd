@@ -113,6 +113,7 @@ var date: Array = IVGlobal.date # Gregorian [0] year [1] month [2] day (ints)
 var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
+var _disable_pause: bool = IVGlobal.disable_pause
 var _state: Dictionary = IVGlobal.state
 var _network_state := NO_NETWORK
 var _is_sync := false
@@ -211,6 +212,23 @@ func _on_process(delta: float) -> void: # subclass can override
 	if is_date_change:
 		emit_signal("date_changed")
 	emit_signal("processed", time, delta)
+
+
+func _unhandled_key_input(event: InputEventKey):
+	if !event.is_action_type() or !event.is_pressed():
+		return
+	if event.is_action_pressed("incr_speed"):
+		change_speed(1)
+	elif event.is_action_pressed("decr_speed"):
+		change_speed(-1)
+	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
+		if _state.network_state != IS_CLIENT:
+			IVGlobal.emit_signal("pause_requested", false, true)
+	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
+		set_time_reversed(!is_reversed)
+	else:
+		return # input NOT handled!
+	_tree.set_input_as_handled()
 
 
 # *****************************************************************************
