@@ -26,6 +26,7 @@ const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
 
 var stop_sim := true
 
+var _blocking_popups: Array = IVGlobal.blocking_popups
 var _state_manager: IVStateManager
 
 onready var _header: Label = $VBox/Header
@@ -40,18 +41,21 @@ func _project_init() -> void:
 
 func _ready() -> void:
 	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	$VBox/Close.connect("pressed", self, "hide")
+	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
 
 
 func _open(header_text: String, bbcode_text: String) -> void:
-	set_process_unhandled_key_input(true)
+	if _is_blocking_popup():
+		return
+	set_process_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	_header.text = header_text
@@ -62,6 +66,13 @@ func _open(header_text: String, bbcode_text: String) -> void:
 
 func _on_popup_hide() -> void:
 	_rt_label.bbcode_text = ""
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
+
+
+func _is_blocking_popup() -> bool:
+	for popup in _blocking_popups:
+		if popup.visible:
+			return true
+	return false

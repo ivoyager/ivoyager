@@ -21,12 +21,16 @@ class_name IVSaveDialog
 extends FileDialog
 const SCENE := "res://ivoyager/gui_admin/save_dialog.tscn"
 
+# Key actions for save/load are handled in save_manager.gd. This Control handles
+# dialog request and only processes _input() when open.
+
 const files := preload("res://ivoyager/static/files.gd")
 
 # project var
 var add_quick_save_button := true
 
 var _settings: Dictionary = IVGlobal.settings
+var _blocking_popups: Array = IVGlobal.blocking_popups
 
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
@@ -44,21 +48,23 @@ func _project_init() -> void:
 
 func _ready():
 	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
+	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-
-
-func _on_unhandled_key_input(event: InputEventKey) -> void:
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
 
 
 func _open() -> void:
-	set_process_unhandled_key_input(true)
+	if visible:
+		hide()
+		return
+	if _is_blocking_popup():
+		return
+	set_process_input(true)
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
@@ -85,5 +91,12 @@ func _save_file(path: String) -> void:
 
 
 func _on_hide() -> void:
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	IVGlobal.emit_signal("sim_run_allowed", self)
+
+
+func _is_blocking_popup() -> bool:
+	for popup in _blocking_popups:
+		if popup.visible:
+			return true
+	return false

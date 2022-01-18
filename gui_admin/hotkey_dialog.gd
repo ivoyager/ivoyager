@@ -34,7 +34,6 @@ onready var _key_label: Label = $HBox/KeyLabel
 onready var _delete: Button = $HBox/Delete
 onready var _ok_button: Button = get_ok()
 onready var _tree := get_tree()
-onready var _input_handler: IVInputHandler = IVGlobal.program.InputHandler
 onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 
 
@@ -48,9 +47,9 @@ func _ready():
 
 func _input(event: InputEvent) -> void:
 	# only processes when not hidden
+	_tree.set_input_as_handled() # eat all input
 	if not event is InputEventKey:
 		return
-	_tree.set_input_as_handled() # eat all keys
 	if event.is_action_pressed("ui_cancel"):
 		hide()
 		return
@@ -103,7 +102,6 @@ func open(action: String, index: int, action_label_str: String, key_as_text: Str
 	_key_label.text = key_as_text
 	_key_label.set("custom_colors/font_color", _ok_color)
 	set_process_input(true)
-	_input_handler.suppress(self)
 	popup_centered()
 
 
@@ -129,9 +127,7 @@ func _on_confirmed() -> void:
 
 
 func _on_popup_hide() -> void:
-#	print("hide")
 	set_process_input(false)
-	_input_handler.unsuppress(self)
 
 
 func _scancode_is_valid(scancode: int) -> bool:

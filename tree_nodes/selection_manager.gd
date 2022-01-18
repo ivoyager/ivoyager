@@ -18,11 +18,11 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelectionManager
+extends Node
 
 # Has currently selected item and keeps selection history. You can have >1 of
 # these. GUI widgets search up their ancestor tree and grab an IVSelectionManager
-# from the first control with a "selection_manager" member. IVInputHandler and
-# IVCameraHandler grab selection_manager from IVGlobal.program.ProjectGUI.
+# from the first control with a child named "SelectionManager".
 
 signal selection_changed()
 signal selection_reselected()
@@ -70,6 +70,65 @@ var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
+
+onready var _tree: SceneTree = get_tree()
+
+
+func _ready() -> void:
+	name = "SelectionManager"
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+
+
+func _on_system_tree_ready(is_new_game: bool) -> void:
+	if is_new_game:
+		var start_body_name: String = IVGlobal.start_body_name
+		var selection_item_: IVSelectionItem = _body_registry.selection_items[start_body_name]
+		select(selection_item_)
+	else:
+		_add_history()
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	if !event.is_action_type() or !event.is_pressed():
+		return
+	if event.is_action_pressed("select_forward"):
+		forward()
+	elif event.is_action_pressed("select_back"):
+		back()
+	elif event.is_action_pressed("select_left"):
+		next_last(-1)
+	elif event.is_action_pressed("select_right"):
+		next_last(1)
+	elif event.is_action_pressed("select_up"):
+		up()
+	elif event.is_action_pressed("select_down"):
+		down()
+	elif event.is_action_pressed("next_star"):
+		next_last(1, SELECTION_STAR)
+	elif event.is_action_pressed("previous_planet"):
+		next_last(-1, SELECTION_PLANET)
+	elif event.is_action_pressed("next_planet"):
+		next_last(1, SELECTION_PLANET)
+	elif event.is_action_pressed("previous_nav_moon"):
+		next_last(-1, SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("next_nav_moon"):
+		next_last(1, SELECTION_NAVIGATOR_MOON)
+	elif event.is_action_pressed("previous_moon"):
+		next_last(-1, SELECTION_MOON)
+	elif event.is_action_pressed("next_moon"):
+		next_last(1, SELECTION_MOON)
+	elif event.is_action_pressed("previous_spacecraft"):
+		next_last(-1, SELECTION_SPACECRAFT)
+	elif event.is_action_pressed("next_spacecraft"):
+		next_last(1, SELECTION_SPACECRAFT)
+	else:
+		return # input NOT handled!
+	_tree.set_input_as_handled()
+
+
+func set_action_response(is_action_handler: bool) -> void:
+	# Only needed if this instance shouldn't responde to key actions
+	set_process_unhandled_key_input(is_action_handler)
 
 
 func select(selection_item_: IVSelectionItem) -> void:

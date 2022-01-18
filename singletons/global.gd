@@ -61,7 +61,6 @@ signal network_state_changed(network_state) # IVEnums.NetworkState
 # other broadcasts
 signal setting_changed(setting, value)
 signal camera_ready(camera)
-signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # requests for state change
 signal sim_stop_required(who, network_sync_type, bypass_checks) # see IVStateManager
@@ -82,8 +81,7 @@ signal move_camera_to_body_requested(body, view_type, view_position, view_rotati
 # requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
-signal show_hide_gui_requested(is_show)
-signal toggle_show_hide_gui_requested()
+signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
@@ -109,6 +107,7 @@ var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := [] # IVBodyRegistry; indexed by body_id
 var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
@@ -131,7 +130,6 @@ var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
-var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds

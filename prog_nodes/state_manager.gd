@@ -72,6 +72,7 @@ var allow_threads := false
 var blocking_threads := []
 
 # private
+var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _state: Dictionary = IVGlobal.state
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
@@ -88,7 +89,7 @@ func _init() -> void:
 
 func _on_init() -> void:
 	_state.is_inited = false
-	_state.is_splash_screen = true
+	_state.is_splash_screen = false
 	_state.is_system_built = false
 	_state.is_running = false # SceneTree.pause set in IVProjectBuilder
 	_state.is_quitting = false
@@ -111,11 +112,13 @@ func _on_ready() -> void:
 	IVGlobal.connect("quit_requested", self, "quit")
 	IVGlobal.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
+	pause_mode = PAUSE_MODE_PROCESS
 
 
 func _on_project_builder_finished() -> void:
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
+	_state.is_splash_screen = true
 	IVGlobal.emit_signal("state_manager_inited")
 
 
@@ -138,6 +141,16 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	IVGlobal.emit_signal("update_gui_requested")
 	yield(_tree, "idle_frame")
 	IVGlobal.emit_signal("simulator_started")
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("quit"):
+		quit(false)
+	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
+		OS.window_fullscreen = !OS.window_fullscreen
+	else:
+		return
+	_tree.set_input_as_handled()
 
 
 # *****************************************************************************
@@ -209,7 +222,7 @@ func allow_run(who: Object) -> void:
 
 func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
-	if IVGlobal.disable_exit:
+	if !_state.is_system_built or IVGlobal.disable_exit:
 		return
 	if !force_exit:
 		if _state.network_state == IS_CLIENT:
@@ -221,7 +234,6 @@ func exit(force_exit := false, following_server := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		if !following_server:
 			emit_signal("client_is_dropping_out", true)
-	_state.is_splash_screen = true
 	_state.is_system_built = false
 	_state.is_running = false
 	_tree.paused = true
@@ -234,11 +246,13 @@ func exit(force_exit := false, following_server := false) -> void:
 	yield(_tree, "idle_frame")
 	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
 	IVGlobal.emit_signal("close_all_admin_popups_requested")
+	yield(_tree, "idle_frame")
+	_state.is_splash_screen = true
 	IVGlobal.emit_signal("simulator_exited")
 
 
 func quit(force_quit := false) -> void:
-	if IVGlobal.disable_quit:
+	if !(_state.is_splash_screen or _state.is_system_built) or IVGlobal.disable_quit:
 		return
 	if !force_quit:
 		if _state.network_state == IS_CLIENT:
