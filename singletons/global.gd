@@ -81,8 +81,7 @@ signal move_camera_to_body_requested(body, view_type, view_position, view_rotati
 # requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
-signal show_hide_gui_requested(is_show)
-signal toggle_show_hide_gui_requested()
+signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()

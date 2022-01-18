@@ -72,6 +72,7 @@ var allow_threads := false
 var blocking_threads := []
 
 # private
+var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _state: Dictionary = IVGlobal.state
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
@@ -145,6 +146,8 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("quit"):
 		quit(false)
+	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
+		OS.window_fullscreen = !OS.window_fullscreen
 	else:
 		return
 	_tree.set_input_as_handled()
