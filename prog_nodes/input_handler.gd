@@ -36,24 +36,8 @@ var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 var _allow_dev_tools: bool = IVGlobal.allow_dev_tools
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _suppressors := []
-var _selection_manager: IVSelectionManager
 
 onready var _tree: SceneTree = get_tree()
-
-
-func _ready():
-	IVGlobal.connect("system_tree_ready", self, "_on_system_ready")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_on_about_to_free_procedural_nodes")
-
-
-func _on_system_ready(_is_new_game: bool) -> void:
-	var project_gui = IVGlobal.program.ProjectGUI
-	if "selection_manager" in project_gui:
-		_selection_manager = project_gui.selection_manager
-
-
-func _on_about_to_free_procedural_nodes() -> void:
-	_selection_manager = null
 
 
 func _input(event: InputEvent) -> void:
@@ -76,11 +60,6 @@ func _on_input(event: InputEvent) -> void:
 		IVGlobal.emit_signal("toggle_show_hide_gui_requested")
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
-
-
-	elif _selection_manager:
-		_input_for_selection_manager(event)
-		return
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
@@ -111,38 +90,3 @@ func _test_input_for_debug(event: InputEvent) -> bool:
 	_tree.set_input_as_handled()
 	return true
 
-
-func _input_for_selection_manager(event: InputEvent) -> void:
-	if event.is_action_pressed("select_forward"):
-		_selection_manager.forward()
-	elif event.is_action_pressed("select_back"):
-		_selection_manager.back()
-	elif event.is_action_pressed("select_left"):
-		_selection_manager.next_last(-1)
-	elif event.is_action_pressed("select_right"):
-		_selection_manager.next_last(1)
-	elif event.is_action_pressed("select_up"):
-		_selection_manager.up()
-	elif event.is_action_pressed("select_down"):
-		_selection_manager.down()
-	elif event.is_action_pressed("next_star"):
-		_selection_manager.next_last(1, _selection_manager.SELECTION_STAR)
-	elif event.is_action_pressed("previous_planet"):
-		_selection_manager.next_last(-1, _selection_manager.SELECTION_PLANET)
-	elif event.is_action_pressed("next_planet"):
-		_selection_manager.next_last(1, _selection_manager.SELECTION_PLANET)
-	elif event.is_action_pressed("previous_nav_moon"):
-		_selection_manager.next_last(-1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-	elif event.is_action_pressed("next_nav_moon"):
-		_selection_manager.next_last(1, _selection_manager.SELECTION_NAVIGATOR_MOON)
-	elif event.is_action_pressed("previous_moon"):
-		_selection_manager.next_last(-1, _selection_manager.SELECTION_MOON)
-	elif event.is_action_pressed("next_moon"):
-		_selection_manager.next_last(1, _selection_manager.SELECTION_MOON)
-	elif event.is_action_pressed("previous_spacecraft"):
-		_selection_manager.next_last(-1, _selection_manager.SELECTION_SPACECRAFT)
-	elif event.is_action_pressed("next_spacecraft"):
-		_selection_manager.next_last(1, _selection_manager.SELECTION_SPACECRAFT)
-	else:
-		return # input NOT handled!
-	_tree.set_input_as_handled()

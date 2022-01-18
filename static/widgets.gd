@@ -24,7 +24,7 @@ class_name IVWidgets
 static func get_selection_manager(control: Control) -> IVSelectionManager:
 	var ancestor: Node = control.get_parent()
 	while ancestor is Control:
-		if "selection_manager" in ancestor:
-			return ancestor.selection_manager
+		if ancestor.has_node("SelectionManager"):
+			return ancestor.get_node("SelectionManager") as IVSelectionManager
 		ancestor = ancestor.get_parent()
 	return null

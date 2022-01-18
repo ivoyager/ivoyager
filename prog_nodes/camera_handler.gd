@@ -86,23 +86,16 @@ onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_ad
 
 func _ready():
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
 	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
 	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
-	set_process(false)
-	set_process_unhandled_input(false)
 
 
-func _on_system_tree_ready(is_new_game: bool) -> void:
+func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
-	# SelectionManager needs a SelectionItem, which we provide if new game
-	if is_new_game and _camera:
-		var selection_item: IVSelectionItem = _camera.selection_item
-		_selection_manager.select(selection_item)
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
 
@@ -143,75 +136,72 @@ func _process(delta: float) -> void:
 		_camera.add_rotate_action(_rotate_pressed * delta)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if !_camera:
+func _unhandled_key_input(event: InputEventKey) -> void:
+	if !event.is_action_type() or !_camera:
 		return
-	var is_handled := false
-	if event.is_action_type():
-		if event.is_pressed():
-			if event.is_action_pressed("camera_zoom_view"):
-				_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
-			elif event.is_action_pressed("camera_45_view"):
-				_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
-			elif event.is_action_pressed("camera_top_view"):
-				_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
-			elif event.is_action_pressed("recenter"):
-				_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
-			elif event.is_action_pressed("camera_left"):
-				_move_pressed.x = -_key_move_rate
-			elif event.is_action_pressed("camera_right"):
-				_move_pressed.x = _key_move_rate
-			elif event.is_action_pressed("camera_up"):
-				_move_pressed.y = _key_move_rate
-			elif event.is_action_pressed("camera_down"):
-				_move_pressed.y = -_key_move_rate
-			elif event.is_action_pressed("camera_in"):
-				_move_pressed.z = -_key_in_out_rate
-			elif event.is_action_pressed("camera_out"):
-				_move_pressed.z = _key_in_out_rate
-			elif event.is_action_pressed("pitch_up"):
-				_rotate_pressed.x = _key_pitch_yaw_rate
-			elif event.is_action_pressed("pitch_down"):
-				_rotate_pressed.x = -_key_pitch_yaw_rate
-			elif event.is_action_pressed("yaw_left"):
-				_rotate_pressed.y = _key_pitch_yaw_rate
-			elif event.is_action_pressed("yaw_right"):
-				_rotate_pressed.y = -_key_pitch_yaw_rate
-			elif event.is_action_pressed("roll_left"):
-				_rotate_pressed.z = -_key_roll_rate
-			elif event.is_action_pressed("roll_right"):
-				_rotate_pressed.z = _key_roll_rate
-			else:
-				return  # no input handled
-		else: # key release
-			if event.is_action_released("camera_left"):
-				_move_pressed.x = 0.0
-			elif event.is_action_released("camera_right"):
-				_move_pressed.x = 0.0
-			elif event.is_action_released("camera_up"):
-				_move_pressed.y = 0.0
-			elif event.is_action_released("camera_down"):
-				_move_pressed.y = 0.0
-			elif event.is_action_released("camera_in"):
-				_move_pressed.z = 0.0
-			elif event.is_action_released("camera_out"):
-				_move_pressed.z = 0.0
-			elif event.is_action_released("pitch_up"):
-				_rotate_pressed.x = 0.0
-			elif event.is_action_released("pitch_down"):
-				_rotate_pressed.x = 0.0
-			elif event.is_action_released("yaw_left"):
-				_rotate_pressed.y = 0.0
-			elif event.is_action_released("yaw_right"):
-				_rotate_pressed.y = 0.0
-			elif event.is_action_released("roll_left"):
-				_rotate_pressed.z = 0.0
-			elif event.is_action_released("roll_right"):
-				_rotate_pressed.z = 0.0
-			else:
-				return  # no input handled
-		is_handled = true
-	if is_handled:
+	if event.is_pressed():
+		if event.is_action_pressed("camera_zoom_view"):
+			_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+		elif event.is_action_pressed("camera_45_view"):
+			_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+		elif event.is_action_pressed("camera_top_view"):
+			_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+		elif event.is_action_pressed("recenter"):
+			_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
+		elif event.is_action_pressed("camera_left"):
+			_move_pressed.x = -_key_move_rate
+		elif event.is_action_pressed("camera_right"):
+			_move_pressed.x = _key_move_rate
+		elif event.is_action_pressed("camera_up"):
+			_move_pressed.y = _key_move_rate
+		elif event.is_action_pressed("camera_down"):
+			_move_pressed.y = -_key_move_rate
+		elif event.is_action_pressed("camera_in"):
+			_move_pressed.z = -_key_in_out_rate
+		elif event.is_action_pressed("camera_out"):
+			_move_pressed.z = _key_in_out_rate
+		elif event.is_action_pressed("pitch_up"):
+			_rotate_pressed.x = _key_pitch_yaw_rate
+		elif event.is_action_pressed("pitch_down"):
+			_rotate_pressed.x = -_key_pitch_yaw_rate
+		elif event.is_action_pressed("yaw_left"):
+			_rotate_pressed.y = _key_pitch_yaw_rate
+		elif event.is_action_pressed("yaw_right"):
+			_rotate_pressed.y = -_key_pitch_yaw_rate
+		elif event.is_action_pressed("roll_left"):
+			_rotate_pressed.z = -_key_roll_rate
+		elif event.is_action_pressed("roll_right"):
+			_rotate_pressed.z = _key_roll_rate
+		else:
+			return  # no input handled
+		_tree.set_input_as_handled()
+	else: # key release
+		if event.is_action_released("camera_left"):
+			_move_pressed.x = 0.0
+		elif event.is_action_released("camera_right"):
+			_move_pressed.x = 0.0
+		elif event.is_action_released("camera_up"):
+			_move_pressed.y = 0.0
+		elif event.is_action_released("camera_down"):
+			_move_pressed.y = 0.0
+		elif event.is_action_released("camera_in"):
+			_move_pressed.z = 0.0
+		elif event.is_action_released("camera_out"):
+			_move_pressed.z = 0.0
+		elif event.is_action_released("pitch_up"):
+			_rotate_pressed.x = 0.0
+		elif event.is_action_released("pitch_down"):
+			_rotate_pressed.x = 0.0
+		elif event.is_action_released("yaw_left"):
+			_rotate_pressed.y = 0.0
+		elif event.is_action_released("yaw_right"):
+			_rotate_pressed.y = 0.0
+		elif event.is_action_released("roll_left"):
+			_rotate_pressed.z = 0.0
+		elif event.is_action_released("roll_right"):
+			_rotate_pressed.z = 0.0
+		else:
+			return  # no input handled
 		_tree.set_input_as_handled()
 
 
@@ -233,11 +223,6 @@ func _disconnect_camera() -> void:
 		return
 	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
 	_camera = null
-
-
-func _on_run_state_changed(is_running: bool) -> void:
-	set_process(is_running)
-	set_process_unhandled_input(is_running)
 
 
 func _on_selection_changed() -> void:

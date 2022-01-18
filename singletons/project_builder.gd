@@ -136,8 +136,6 @@ var prog_nodes := {
 	_MinorBodiesManager_ = IVMinorBodiesManager,
 }
 
-var keep_gui_under_existing_controls := true # add before other children
-
 var gui_nodes := {
 	# IVProjectBuilder instances one of each and adds as child of Universe. Use
 	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
@@ -168,11 +166,11 @@ var procedural_classes := {
 	_HUDLabel_ = IVHUDLabel,
 	_HUDOrbit_ = IVHUDOrbit,
 	_HUDPoints_ = IVHUDPoints,
+	_SelectionManager_ = IVSelectionManager,
 	# tree_refs
 	_Orbit_ = IVOrbit,
 	_ModelController_ = IVModelController,
 	_SelectionItem_ = IVSelectionItem,
-	_SelectionManager_ = IVSelectionManager,
 	_View_ = IVView,
 	_AsteroidGroup_ = IVAsteroidGroup,
 	_Composition_ = IVComposition,
@@ -267,14 +265,10 @@ func init_project() -> void:
 
 
 func add_project_nodes() -> void:
-	var index := 0
-	for key in gui_nodes:
+	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
-		if keep_gui_under_existing_controls:
-			universe.move_child(_program[object_key], index)
-		index += 1
-	for key in prog_nodes:
+	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
 	IVGlobal.emit_signal("project_nodes_added")
