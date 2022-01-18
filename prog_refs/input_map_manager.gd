@@ -181,8 +181,6 @@ func _on_init() -> void:
 		cycle_next_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT}],
 		cycle_prev_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT, shift = true}],
 		
-		# dev
-		emit_debug_signal = [{event_class = "InputEventKey", scancode = KEY_D, control = true, shift = true}],
 	}
 
 	current = {}

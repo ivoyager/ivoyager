@@ -123,10 +123,6 @@ func _on_init():
 				roll_left = "LABEL_ROLL_LEFT",
 				roll_right = "LABEL_ROLL_RIGHT",
 			},
-			{
-				header = "LABEL_DEVELOPER",
-				emit_debug_signal = "LABEL_EMIT_DEBUG_SIGNAL",
-			}
 		],
 	]
 
@@ -138,8 +134,6 @@ func _project_init() -> void:
 		remove_item("toggle_pause")
 	if !IVGlobal.allow_time_reversal:
 		remove_item("reverse_time")
-	if !IVGlobal.allow_dev_tools:
-		remove_subpanel("LABEL_DEVELOPER")
 	if !IVGlobal.enable_save_load:
 		remove_item("load_game")
 		remove_item("quick_load")

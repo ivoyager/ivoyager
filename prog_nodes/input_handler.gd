@@ -33,7 +33,7 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 var _state: Dictionary = IVGlobal.state
 var _script_classes: Dictionary = IVGlobal.script_classes
 var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
-var _allow_dev_tools: bool = IVGlobal.allow_dev_tools
+
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _suppressors := []
 
@@ -47,8 +47,7 @@ func _input(event: InputEvent) -> void:
 func _on_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
-	if _allow_dev_tools and _test_input_for_debug(event):
-		return
+
 	if _suppressors:
 		return
 	if !_state.is_running:
@@ -81,12 +80,4 @@ func make_action(action: String, is_pressed := true) -> void:
 	event.pressed = is_pressed
 	_tree.input_event(event)
 
-
-func _test_input_for_debug(event: InputEvent) -> bool:
-	if _allow_dev_tools and event.is_action_pressed("emit_debug_signal"):
-		IVGlobal.emit_signal("debug_pressed")
-	else:
-		return false # input NOT handled!
-	_tree.set_input_as_handled()
-	return true
 

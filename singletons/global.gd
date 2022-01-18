@@ -61,7 +61,6 @@ signal network_state_changed(network_state) # IVEnums.NetworkState
 # other broadcasts
 signal setting_changed(setting, value)
 signal camera_ready(camera)
-signal debug_pressed() # probably cntr-shift-D; hookup as needed
 
 # requests for state change
 signal sim_stop_required(who, network_sync_type, bypass_checks) # see IVStateManager
@@ -132,7 +131,6 @@ var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
-var allow_dev_tools := false
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds
