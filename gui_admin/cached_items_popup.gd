@@ -34,6 +34,7 @@ var _content_container: HBoxContainer
 var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
+var _blocking_popups: Array = IVGlobal.blocking_popups
 
 onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
@@ -71,6 +72,7 @@ func _on_ready() -> void:
 	_cancel.connect("pressed", self, "_on_cancel")
 	_restore_defaults.connect("pressed", self, "_on_restore_defaults")
 	_confirm_changes.connect("pressed", self, "_on_confirm_changes")
+	_blocking_popups.append(self)
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
@@ -158,6 +160,8 @@ func remove_item(item: String) -> void:
 # private
 
 func _open() -> void:
+	if _is_blocking_popup():
+		return
 	set_process_unhandled_key_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
@@ -226,3 +230,10 @@ func _on_popup_hide() -> void:
 		child.free()
 	if stop_sim:
 		_state_manager.allow_run(self)
+
+
+func _is_blocking_popup() -> bool:
+	for popup in _blocking_popups:
+		if popup.visible:
+			return true
+	return false

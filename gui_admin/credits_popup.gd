@@ -29,8 +29,8 @@ const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
 var stop_sim := true
 var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 
+var _blocking_popups: Array = IVGlobal.blocking_popups
 var _state_manager: IVStateManager
-
 
 func _project_init() -> void:
 	_state_manager = IVGlobal.program.StateManager
@@ -38,32 +38,37 @@ func _project_init() -> void:
 
 func _ready() -> void:
 	theme = IVGlobal.themes.main
-	set_process_unhandled_key_input(false)
-	IVGlobal.connect("credits_requested", self, "open")
+	set_process_input(false)
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	connect("popup_hide", self, "_on_hide")
 	find_node("Close").connect("pressed", self, "hide")
 	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
+	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	_on_unhandled_key_input(event)
-
-
-func _on_unhandled_key_input(event: InputEventKey) -> void:
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
 
 
 func open() -> void:
-	set_process_unhandled_key_input(true)
+	if _is_blocking_popup():
+		return
+	set_process_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	popup_centered_minsize()
 
 
 func _on_hide() -> void:
-	set_process_unhandled_key_input(false)
+	set_process_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
+
+
+func _is_blocking_popup() -> bool:
+	for popup in _blocking_popups:
+		if popup.visible:
+			return true
+	return false

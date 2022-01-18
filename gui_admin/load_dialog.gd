@@ -28,6 +28,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var add_quick_load_button := true
 
 var _state: Dictionary = IVGlobal.state
+var _blocking_popups: Array = IVGlobal.blocking_popups
 var _main_menu_manager: IVMainMenuManager
 
 
@@ -47,6 +48,7 @@ func _project_init():
 func _ready():
 	theme = IVGlobal.themes.main
 	set_process_unhandled_key_input(false)
+	_blocking_popups.append(self)
 
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
@@ -64,6 +66,8 @@ func _on_unhandled_key_input(event: InputEventKey) -> void:
 
 
 func _open() -> void:
+	if _is_blocking_popup():
+		return
 	set_process_unhandled_key_input(true)
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
@@ -91,3 +95,10 @@ func _update_quick_load_button() -> void:
 func _on_hide() -> void:
 	set_process_unhandled_key_input(false)
 	IVGlobal.emit_signal("sim_run_allowed", self)
+
+
+func _is_blocking_popup() -> bool:
+	for popup in _blocking_popups:
+		if popup.visible:
+			return true
+	return false

@@ -86,7 +86,7 @@ signal show_hide_gui_requested(is_show)
 signal toggle_show_hide_gui_requested()
 signal options_requested()
 signal hotkeys_requested()
-signal credits_requested()
+#signal credits_requested()
 signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
@@ -109,6 +109,7 @@ var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := [] # IVBodyRegistry; indexed by body_id
 var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
