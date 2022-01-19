@@ -54,8 +54,7 @@ signal game_save_started()
 signal game_save_finished()
 signal game_load_started()
 signal game_load_finished()
-signal run_state_changed(is_running) # is_running != SceneTree.paused
-signal sim_pause_changed(is_paused) # Sim pause! (Godot paused = Sim stopped)
+signal run_state_changed(is_running) # is_system_built and !SceneTree.paused
 signal network_state_changed(network_state) # IVEnums.NetworkState
 
 # other broadcasts

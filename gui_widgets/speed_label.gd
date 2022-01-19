@@ -24,14 +24,19 @@ extends Label
 var forward_color: Color = IVGlobal.colors.normal
 var reverse_color: Color = IVGlobal.colors.danger
 
+var _is_reversed := false
+
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	IVGlobal.connect("update_gui_requested", self, "_update_speed")
+	_timekeeper.connect("speed_changed", self, "_update_speed")
+	set("custom_colors/font_color", forward_color)
 
 
-func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
-		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
+func _update_speed() -> void:
 		text = _timekeeper.speed_name
-		set("custom_colors/font_color", reverse_color if is_reversed else forward_color)
+		if _is_reversed != _timekeeper.is_reversed:
+			_is_reversed = !_is_reversed
+			set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)

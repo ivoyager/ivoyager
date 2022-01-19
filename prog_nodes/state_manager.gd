@@ -28,7 +28,6 @@ extends Node
 #   is_splash_screen: bool - this node & IVSaveManager
 #   is_system_built: bool - this node & IVSaveManager
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
-#   is_paused: bool - IVTimekeeper maintains; NOT SceneTree.paused !!!!
 #   is_quitting: bool
 #   is_loaded_game: bool - this node & IVSaveManager
 #   last_save_path: String - this node & IVSaveManager
@@ -103,6 +102,7 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
@@ -112,7 +112,6 @@ func _on_ready() -> void:
 	IVGlobal.connect("quit_requested", self, "quit")
 	IVGlobal.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
-	pause_mode = PAUSE_MODE_PROCESS
 
 
 func _on_project_builder_finished() -> void:
@@ -286,7 +285,8 @@ func _stop_simulator() -> void:
 	_state.is_running = false
 	_tree.paused = true
 	IVGlobal.emit_signal("run_state_changed", false)
-	
+
+
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true

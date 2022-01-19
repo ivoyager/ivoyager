@@ -29,13 +29,13 @@ onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	IVGlobal.connect("update_gui_requested", self, "_update_ckbx")
+	_timekeeper.connect("speed_changed", self, "_update_ckbx")
 	_timekeeper.connect("time_altered", self, "_on_time_altered")
 	connect("pressed", self, "_set_real_world")
 
 
-func _on_speed_changed(_speed_index: int, _is_reversed: bool, _is_paused: bool,
-		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
+func _update_ckbx() -> void:
 	pressed = _timekeeper.is_real_world_time
 
 

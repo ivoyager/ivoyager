@@ -25,25 +25,38 @@ var show_pause := true
 var date_format := "%02d/%02d/%02d"
 var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
 var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
+var forward_color: Color = IVGlobal.colors.normal
+var reverse_color: Color = IVGlobal.colors.danger
+
 
 var _date: Array = IVGlobal.date
 var _clock: Array = IVGlobal.clock
-var _is_paused := false
+#var _is_paused := false
 var _show_clock := false
 var _show_seconds := false
+var _is_reversed := false
 var _hm := [0, 0]
 
-onready var _forward_color: Color = IVGlobal.colors.normal
-onready var _reverse_color: Color = IVGlobal.colors.danger
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("processed", self, "_update")
-	timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	IVGlobal.connect("update_gui_requested", self, "_update_all")
+	_timekeeper.connect("speed_changed", self, "_update_all")
+	_timekeeper.connect("processed", self, "_update_label")
+	set("custom_colors/font_color", forward_color)
 
 
-func _update(_time: float, _e_delta: float) -> void:
+func _update_all() -> void:
+	_show_clock = _timekeeper.show_clock
+	_show_seconds = _timekeeper.show_seconds
+	if _is_reversed != _timekeeper.is_reversed:
+		_is_reversed = !_is_reversed
+		set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)
+	_update_label(0.0, 0.0)
+
+
+func _update_label(_time: float, _e_delta: float) -> void:
 	var new_text := date_format % _date
 	if _show_clock:
 		if _show_seconds:
@@ -52,18 +65,6 @@ func _update(_time: float, _e_delta: float) -> void:
 			_hm[0] = _clock[0]
 			_hm[1] = _clock[1]
 			new_text += clock_hm_format % _hm
-	if _is_paused and show_pause:
-		new_text += " " + tr("LABEL_PAUSED")
+#	if _is_paused and show_pause:
+#		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
-
-
-func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
-		show_clock: bool, show_seconds: bool, _is_real_world_time: bool) -> void:
-	_is_paused = is_paused
-	_show_clock = show_clock
-	_show_seconds = show_seconds
-	if is_reversed:
-		set("custom_colors/font_color", _reverse_color)
-	else:
-		set("custom_colors/font_color", _forward_color)
-	_update(0.0, 0.0)
