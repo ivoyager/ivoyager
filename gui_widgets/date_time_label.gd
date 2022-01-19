@@ -36,11 +36,13 @@ var _show_seconds := false
 var _is_reversed := false
 var _hm := [0, 0]
 
+onready var _tree := get_tree()
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
 	IVGlobal.connect("update_gui_requested", self, "_configure_display")
+	IVGlobal.connect("paused_changed", self, "_process", [0.0]) # force if paused
 	_timekeeper.connect("speed_changed", self, "_configure_display")
 	set("custom_colors/font_color", forward_color)
 
@@ -54,8 +56,8 @@ func _process(_delta: float) -> void:
 			_hm[0] = _clock[0]
 			_hm[1] = _clock[1]
 			new_text += clock_hm_format % _hm
-#	if _is_paused and show_pause:
-#		new_text += " " + tr("LABEL_PAUSED")
+	if show_pause and _tree.paused:
+		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
 
 

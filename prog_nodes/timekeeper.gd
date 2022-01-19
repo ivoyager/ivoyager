@@ -139,7 +139,6 @@ func _on_ready() -> void: # subclass can override
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
 	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
-#	IVGlobal.connect("pause_requested", self, "set_paused")
 	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
 	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
@@ -208,9 +207,6 @@ func _unhandled_key_input(event: InputEventKey):
 		change_speed(1)
 	elif event.is_action_pressed("decr_speed"):
 		change_speed(-1)
-#	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
-#		if _state.network_state != IS_CLIENT:
-#			IVGlobal.emit_signal("pause_requested", false, true)
 	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
 		set_time_reversed(!is_reversed)
 	else:

@@ -35,6 +35,7 @@ onready var _reverse: Button = $Reverse
 
 func _ready() -> void:
 	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
+	IVGlobal.connect("paused_changed", self, "_update_buttons")
 	_timekeeper.connect("speed_changed", self, "_update_buttons")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
@@ -88,8 +89,7 @@ func _increment_speed(increment: int) -> void:
 
 
 func _change_paused() -> void:
-	if _state.network_state != IS_CLIENT:
-		IVGlobal.emit_signal("pause_requested", _pause.pressed)
+	IVGlobal.emit_signal("change_pause_requested", false, _pause.pressed)
 
 
 func _change_reversed() -> void:

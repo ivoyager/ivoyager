@@ -3,7 +3,6 @@
 [ext_resource path="res://ivoyager/gui_widgets/date_time_label.gd" type="Script" id=1]
 
 [node name="DateTimeLabel" type="Label"]
-pause_mode = 2
 margin_right = 40.0
 margin_bottom = 14.0
 size_flags_horizontal = 4

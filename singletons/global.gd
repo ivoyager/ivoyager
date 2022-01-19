@@ -45,6 +45,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
+signal paused_changed() # there is no SceneTree signal, so we hacked one here
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
 signal about_to_quit()
@@ -64,7 +65,7 @@ signal camera_ready(camera)
 # requests for state change
 signal sim_stop_required(who, network_sync_type, bypass_checks) # see IVStateManager
 signal sim_run_allowed(who) # all objects requiring stop must allow!
-signal pause_requested(is_pause, is_toggle) # 1st arg ignored if is_toggle
+signal change_pause_requested(is_toggle, is_pause) # 2nd arg ignored if is_toggle
 signal quit_requested(force_quit) # force_quit bypasses dialog
 signal exit_requested(force_exit) # force_exit bypasses dialog
 signal save_requested(path, is_quick_save) # ["", false] will trigger dialog
@@ -125,6 +126,7 @@ var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
 var skip_splash_screen := false
+var disable_pause := false
 var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
@@ -134,7 +136,6 @@ var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
 var home_view_from_user_time_zone := false # get user latitude
-var disable_pause := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
 var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true
