@@ -27,9 +27,10 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 	* Removed 'toggle_show_hide_gui_requested'
 
 ### Changes
-* universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this). It's a spatial that does nothing. The .gd file is only there for comments.
-* Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
+* Improved integration with SceneTree.paused (we no longer have our own separate pause).
 * Camera now re-levels itself and re-centers the target on object selection.
+* universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this).
+* Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
 
 ## [v0.0.10] - 2022-01-09
 
