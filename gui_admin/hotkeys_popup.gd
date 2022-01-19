@@ -73,8 +73,8 @@ func _on_init():
 				header = "LABEL_TIME",
 				incr_speed = "LABEL_SPEED_UP",
 				decr_speed = "LABEL_SLOW_DOWN",
-				toggle_pause = "LABEL_PAUSE",
 				reverse_time = "LABEL_REVERSE_TIME",
+				toggle_pause = "LABEL_TOGGLE_PAUSE",
 			},
 		],
 		[ # column 2

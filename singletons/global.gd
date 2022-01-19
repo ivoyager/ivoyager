@@ -26,8 +26,8 @@ extends Node
 # Containers here (arrays and dictionaries) are never replaced, so it is safe
 # to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.11-DEV"
-const IVOYAGER_VERSION_YMD := 20220118
+const IVOYAGER_VERSION := "0.0.11-RC1"
+const IVOYAGER_VERSION_YMD := 20220119
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
