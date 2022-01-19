@@ -6,20 +6,25 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
-## [v0.0.11 Unreleased] - TBD
+## [v0.0.11] - 2022-01-19
 
-Under development using Godot 3.4.2.stable.
+Developed using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
 ### Added
 * New [STYLE_GUIDE.md](https://github.com/ivoyager/ivoyager/blob/master/STYLE_GUIDE.md) documents the (very few) departures from Godot's GDScript style guide.
+* New IVWindowManager handles fullscreen toggle and optionally adds main menu button.
+
+### Project integration changes
+* Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
+* Submodule now depends on external static class SIBaseUnits with SI base units (previously in universe.gd). We keep this file external to 'ivoyager' so projects can change the scale const METER.
+* universe.tscn & universe.gd were external (project-level outside of 'ivoyager') but have been moved internally to ivoyager/tree_nodes/. They act as default simulator root and main scene (as set by Project Template; this can be changed).
+* Removed gui_example directory from the submodule. Moved externally to Project Template.
 
 ### API-breaking changes
-* Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
-* Submodule now depends on external static class SIBaseUnits with SI base units (previously in Universe). We keep this file external to 'ivoyager' so projects can change the scale const METER.
 * Renamed IVUnits.conv() to convert_quantity() and changed function signature.
-* Removed IVInputHandler. All input now handled by target class.
+* Removed IVInputHandler. All input now handled by target classes.
 * IVSelectionManager changed from Reference to Node. ProjectGUI needs to add it as child now.
 * IVGlobal signal changes:
     * Renamed 'gui_update_needed' to 'gui_update_requested'
@@ -29,8 +34,6 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 ### Changes
 * Improved integration with SceneTree.paused (we no longer have our own separate pause).
 * Camera now re-levels itself and re-centers the target on object selection.
-* universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this).
-* Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
 
 ## [v0.0.10] - 2022-01-09
 
@@ -48,7 +51,7 @@ Developed using Godot 3.3.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.9**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Project changes
+### Project integration changes
 The first two will break external projects using the ivoyager submodule! Make changes as needed.
 * [project breaking!] The Universe node was moved from the ivoyager submodule to the top level project directory. External projects can now add scenes to the simulator root node in the editor (before you could do this only by code).
 * [project breaking!] [universe.gd](https://github.com/ivoyager/project_template/blob/master/universe.gd) now has the constants that define base SI units. By "externalizing" this, external projects can now change simulator internal representation of values (in particular, METER, which sets the scale of the simulation).
@@ -370,7 +373,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[v0.0.11 Unreleased]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...HEAD
+[v0.0.11]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...v0.0.11
 [v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
 [v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha

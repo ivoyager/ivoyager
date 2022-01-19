@@ -133,6 +133,7 @@ var prog_nodes := {
 	_HUDsManager_ = IVHUDsManager,
 	_PointsManager_ = IVPointsManager,
 	_MinorBodiesManager_ = IVMinorBodiesManager,
+	_WindowManager_ = IVWindowManager,
 }
 
 var gui_nodes := {
