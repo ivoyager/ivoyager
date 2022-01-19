@@ -20,12 +20,13 @@
 class_name IVViewCacher
 extends Timer
 
-# Not added in core ivoyager! Add to IVProjectBuilder.prog_nodes in your
-# extension file if you want camera view to be cached and restored on start.
-# Used by Planetarium.
+# NOT ADDED BY DEFAULT! Add to IVProjectBuilder.prog_nodes in your extension
+# file if you want camera view to be cached and restored on start.
 #
 # You only need to set cache_interval for HTML5 export. Otherwise, _cache_view()
 # will be called on quit.
+#
+# Used by Planetarium
 
 
 var cache_interval := 0.0 # s; set >0.0 to enable Timer

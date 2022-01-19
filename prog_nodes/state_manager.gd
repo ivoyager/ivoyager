@@ -71,7 +71,6 @@ var allow_threads := false
 var blocking_threads := []
 
 # private
-var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
 var _nodes_requiring_stop := []
@@ -158,14 +157,10 @@ func _process(_delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if !event.is_action_type() or !event.is_pressed():
-		return
 	if event.is_action_pressed("toggle_pause"):
 		change_pause()
 	elif event.is_action_pressed("quit"):
 		quit(false)
-	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
-		OS.window_fullscreen = !OS.window_fullscreen
 	else:
 		return
 	_tree.set_input_as_handled()
