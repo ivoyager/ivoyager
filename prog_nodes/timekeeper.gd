@@ -40,7 +40,6 @@ extends Node
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 
-signal processed(sim_time, engine_delta) # this drives the simulator
 signal speed_changed()
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
@@ -200,7 +199,6 @@ func _on_process(delta: float) -> void: # subclass can override
 	# signal time and date
 	if is_date_change:
 		emit_signal("date_changed")
-	emit_signal("processed", time, delta)
 
 
 func _unhandled_key_input(event: InputEventKey):

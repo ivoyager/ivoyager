@@ -19,7 +19,7 @@
 # *****************************************************************************
 extends Label
 
-# GUI widget.
+# GUI widget. pause_mode = Process.
 
 var show_pause := true
 var date_format := "%02d/%02d/%02d"
@@ -27,7 +27,6 @@ var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
 var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
 var forward_color: Color = IVGlobal.colors.normal
 var reverse_color: Color = IVGlobal.colors.danger
-
 
 var _date: Array = IVGlobal.date
 var _clock: Array = IVGlobal.clock
@@ -41,22 +40,12 @@ onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_all")
-	_timekeeper.connect("speed_changed", self, "_update_all")
-	_timekeeper.connect("processed", self, "_update_label")
+	IVGlobal.connect("update_gui_requested", self, "_configure_display")
+	_timekeeper.connect("speed_changed", self, "_configure_display")
 	set("custom_colors/font_color", forward_color)
 
 
-func _update_all() -> void:
-	_show_clock = _timekeeper.show_clock
-	_show_seconds = _timekeeper.show_seconds
-	if _is_reversed != _timekeeper.is_reversed:
-		_is_reversed = !_is_reversed
-		set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)
-	_update_label(0.0, 0.0)
-
-
-func _update_label(_time: float, _e_delta: float) -> void:
+func _process(_delta: float) -> void:
 	var new_text := date_format % _date
 	if _show_clock:
 		if _show_seconds:
@@ -68,3 +57,11 @@ func _update_label(_time: float, _e_delta: float) -> void:
 #	if _is_paused and show_pause:
 #		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
+
+
+func _configure_display() -> void:
+	_show_clock = _timekeeper.show_clock
+	_show_seconds = _timekeeper.show_seconds
+	if _is_reversed != _timekeeper.is_reversed:
+		_is_reversed = !_is_reversed
+		set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)

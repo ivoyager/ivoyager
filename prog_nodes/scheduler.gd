@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVScheduler
+extends Node
 
 # Creates interval signals using simulation time. Max signal frequency will be
 # once per frame if interval is very small and/or game speed is very fast.
@@ -29,15 +30,14 @@ var _counter := 0
 var _signal_intervals := []
 var _available_signals := []
 var _is_reversed := false
-var _timekeeper: IVTimekeeper
+
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 # *****************************************************************************
 
-func _project_init() -> void:
+func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	_timekeeper = IVGlobal.program.Timekeeper
-	_timekeeper.connect("processed", self, "_timekeeper_process")
 	_timekeeper.connect("time_altered", self, "_on_time_altered")
 	if IVGlobal.allow_time_reversal:
 		_timekeeper.connect("speed_changed", self, "_update_for_time_reversal")
@@ -158,11 +158,12 @@ func _on_time_altered(previous_time: float) -> void:
 		i += 1
 
 
-func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
+func _process(_delta: float) -> void:
 	if !_ordered_signal_infos:
 		return
+	var time: float = _times[0]
 	if !_is_reversed:
-		while sim_time > _ordered_signal_infos[-1][0]: # test last element
+		while time > _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
 			var signal_str: String = signal_info[2]
 			var oneshot: bool = signal_info[3]
@@ -173,8 +174,8 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
 				signal_time += interval
-				if signal_time < sim_time:
-					signal_time = sim_time # will signal next frame
+				if signal_time < time:
+					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_forward")
@@ -183,7 +184,7 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 			if !_ordered_signal_infos:
 				return
 	else:
-		while sim_time < _ordered_signal_infos[-1][0]: # test last element
+		while time < _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
 			var signal_str: String = signal_info[2]
 			var oneshot: bool = signal_info[3]
@@ -194,8 +195,8 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
 				signal_time -= interval
-				if signal_time > sim_time:
-					signal_time = sim_time # will signal next frame
+				if signal_time > time:
+					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_reverse")
