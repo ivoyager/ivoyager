@@ -39,13 +39,8 @@ extends Node
 # For calendar calculations see:
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
-#
-# This node processes during SceneTree pause, but stops and starts processing
-# following IVStateManager "is_running" state. IVStateManager has authority over
-# pause, but we signal pause changes here as a "speed_changed" event.
 
-signal processed(sim_time, engine_delta) # this drives the simulator
-signal speed_changed(speed_index, is_reversed, is_paused, show_clock, show_seconds, is_real_world_time)
+signal speed_changed()
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
 
@@ -95,10 +90,9 @@ var date_format_for_file := "%02d-%02d-%02d" # keep safe for file name!
 var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
-var is_paused := false # always same as IVGlobal.state.is_paused
 var is_reversed := false
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["time", "solar_day", "speed_index", "is_paused", "is_reversed"]
+const PERSIST_PROPERTIES := ["time", "solar_day", "speed_index", "is_reversed"]
 
 # public - read only!
 var is_real_world_time := false
@@ -145,7 +139,6 @@ func _on_ready() -> void: # subclass can override
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
 	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
 	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
-	IVGlobal.connect("pause_requested", self, "set_paused")
 	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
 	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
 	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
@@ -159,9 +152,6 @@ func _on_about_to_start_simulator(is_new_game: bool) -> void:
 	if is_new_game:
 		if start_real_world_time:
 			set_real_world()
-	else:
-		is_paused = is_paused or IVGlobal.settings.loaded_game_is_paused
-		_state.is_paused = is_paused
 
 
 func _set_init_state() -> void:
@@ -172,8 +162,6 @@ func _set_init_state() -> void:
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
-	is_paused = false
-	_state.is_paused = false
 	speed_index = start_speed
 
 
@@ -191,19 +179,18 @@ func _on_process(delta: float) -> void: # subclass can override
 		engine_time += delta
 	times[1] = engine_time
 	var is_date_change := false
-	if !is_paused:
-		if !_is_sync:
-			time += delta * speed_multiplier
-		solar_day = get_solar_day(time)
-		var whole_solar_day := floor(solar_day)
-		if _prev_whole_solar_day != whole_solar_day:
-			var jdn := get_jdn_for_solar_day(solar_day)
-			set_gregorian_date_array(jdn, date)
-			is_date_change = true
-			_prev_whole_solar_day = whole_solar_day
-		set_clock_array(solar_day - whole_solar_day, clock)
-		times[0] = time
-		times[2] = solar_day
+	if !_is_sync:
+		time += delta * speed_multiplier
+	solar_day = get_solar_day(time)
+	var whole_solar_day := floor(solar_day)
+	if _prev_whole_solar_day != whole_solar_day:
+		var jdn := get_jdn_for_solar_day(solar_day)
+		set_gregorian_date_array(jdn, date)
+		is_date_change = true
+		_prev_whole_solar_day = whole_solar_day
+	set_clock_array(solar_day - whole_solar_day, clock)
+	times[0] = time
+	times[2] = solar_day
 	# network sync
 	if _network_state == IS_SERVER:
 		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
@@ -211,7 +198,6 @@ func _on_process(delta: float) -> void: # subclass can override
 	# signal time and date
 	if is_date_change:
 		emit_signal("date_changed")
-	emit_signal("processed", time, delta)
 
 
 func _unhandled_key_input(event: InputEventKey):
@@ -221,9 +207,6 @@ func _unhandled_key_input(event: InputEventKey):
 		change_speed(1)
 	elif event.is_action_pressed("decr_speed"):
 		change_speed(-1)
-	elif !_disable_pause and event.is_action_pressed("toggle_pause"):
-		if _state.network_state != IS_CLIENT:
-			IVGlobal.emit_signal("pause_requested", false, true)
 	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
 		set_time_reversed(!is_reversed)
 	else:
@@ -367,22 +350,6 @@ func get_current_date_for_file() -> String:
 	return date_format_for_file % date
 
 
-func set_paused(pause: bool, is_toggle := false) -> void:
-	# 1st arg ignored if is_toggle. IVTimekeeper has authority over pause, so
-	# all changes should use this function or IVGlobal signal "pause_requested".
-	var new_paused: bool
-	if is_toggle:
-		new_paused = !is_paused
-	else:
-		new_paused = pause
-	if is_paused != new_paused:
-		is_paused = new_paused
-		_state.is_paused = new_paused
-		IVGlobal.emit_signal("sim_pause_changed", new_paused)
-		emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
-				show_seconds, is_real_world_time)
-
-
 func set_real_world() -> void:
 	if _network_state == IS_CLIENT:
 		return
@@ -416,8 +383,7 @@ func set_time_reversed(new_is_reversed: bool) -> void:
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
 	is_real_world_time = false
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
-			show_seconds, is_real_world_time)
+	emit_signal("speed_changed")
 
 
 func change_speed(delta_index: int, new_index := -1) -> void:
@@ -435,8 +401,7 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	speed_index = new_index
 	is_real_world_time = false
 	_reset_speed()
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
-			show_seconds, is_real_world_time)
+	emit_signal("speed_changed")
 
 
 func can_incr_speed() -> bool:
@@ -474,8 +439,7 @@ func _reset_speed() -> void:
 
 
 func _refresh_gui() -> void:
-	emit_signal("speed_changed", speed_index, is_reversed, is_paused, show_clock,
-			show_seconds, is_real_world_time)
+	emit_signal("speed_changed")
 
 
 func _on_run_state_changed(is_running: bool) -> void:
@@ -505,7 +469,7 @@ remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: flo
 	engine_time = 0.75 * engine_time + 0.25 * engine_time_
 
 
-remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused_: bool,
+remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
 	# client-side network game only
 	if _tree.get_rpc_sender_id() != 1:
@@ -517,16 +481,11 @@ remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool, is_paused
 	show_clock = show_clock_
 	show_seconds = show_seconds_
 	is_real_world_time = is_real_world_time_
-	if is_paused != is_paused_:
-		IVGlobal.emit_signal("pause_requested", is_paused_) # will trigger update
-	else:
-		emit_signal("speed_changed", speed_index_, is_reversed_, is_paused_, show_clock_,
-				show_seconds_, is_real_world_time_)
+	emit_signal("speed_changed")
 
 
-func _on_speed_changed(speed_index_: int, is_reversed_: bool, is_paused_: bool,
-		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+func _on_speed_changed() -> void:
 	if _network_state != IS_SERVER:
 		return
-	rpc("_speed_changed_sync", speed_index_, is_reversed_, is_paused_, show_clock_,
-			show_seconds_, is_real_world_time_)
+	rpc("_speed_changed_sync", speed_index, is_reversed, show_clock,
+			show_seconds, is_real_world_time)

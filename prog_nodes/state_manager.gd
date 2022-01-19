@@ -28,7 +28,6 @@ extends Node
 #   is_splash_screen: bool - this node & IVSaveManager
 #   is_system_built: bool - this node & IVSaveManager
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
-#   is_paused: bool - IVTimekeeper maintains; NOT SceneTree.paused !!!!
 #   is_quitting: bool
 #   is_loaded_game: bool - this node & IVSaveManager
 #   last_save_path: String - this node & IVSaveManager
@@ -74,8 +73,11 @@ var blocking_threads := []
 # private
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _state: Dictionary = IVGlobal.state
+var _settings: Dictionary = IVGlobal.settings
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
+var _paused := true # hack to generate paused_changed signal
+var _was_paused := false
 
 onready var _tree: SceneTree = get_tree()
 
@@ -103,16 +105,17 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("change_pause_requested", self, "change_pause")
 	IVGlobal.connect("sim_stop_required", self, "require_stop")
 	IVGlobal.connect("sim_run_allowed", self, "allow_run")
 	IVGlobal.connect("quit_requested", self, "quit")
 	IVGlobal.connect("exit_requested", self, "exit")
 	require_stop(self, -1, true)
-	pause_mode = PAUSE_MODE_PROCESS
 
 
 func _on_project_builder_finished() -> void:
@@ -136,15 +139,30 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	IVGlobal.emit_signal("about_to_start_simulator", is_new_game)
 	IVGlobal.emit_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
+	_was_paused = false
 	allow_run(self)
 	yield(_tree, "idle_frame")
 	IVGlobal.emit_signal("update_gui_requested")
 	yield(_tree, "idle_frame")
 	IVGlobal.emit_signal("simulator_started")
+	if !is_new_game and _settings.pause_on_load:
+		yield(_tree, "idle_frame")
+		change_pause(false, true)
+
+
+func _process(_delta: float) -> void:
+	# There is no SceneTree paused_changed signal, so we hacked one here.
+	if _paused != _tree.paused:
+		_paused = _tree.paused
+		IVGlobal.emit_signal("paused_changed")
 
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("quit"):
+	if !event.is_action_type() or !event.is_pressed():
+		return
+	if event.is_action_pressed("toggle_pause"):
+		change_pause()
+	elif event.is_action_pressed("quit"):
 		quit(false)
 	elif _allow_fullscreen_toggle and event.is_action_pressed("toggle_fullscreen"):
 		OS.window_fullscreen = !OS.window_fullscreen
@@ -180,6 +198,14 @@ func signal_threads_finished() -> void:
 	if !_signal_when_threads_finished:
 		_signal_when_threads_finished = true
 		remove_blocking_thread(null)
+
+
+func change_pause(is_toggle := true, is_pause := true) -> void:
+	if _state.network_state == IS_CLIENT:
+		return
+	if !_state.is_running or IVGlobal.disable_pause:
+		return
+	_tree.paused = !_tree.paused if is_toggle else is_pause
 
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
@@ -283,14 +309,16 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal run_threads_must_stop") or true)
 	allow_threads = false
 	emit_signal("run_threads_must_stop")
+	_was_paused = _tree.paused
 	_state.is_running = false
 	_tree.paused = true
 	IVGlobal.emit_signal("run_state_changed", false)
-	
+
+
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
-	_tree.paused = false
+	_tree.paused = _was_paused
 	IVGlobal.emit_signal("run_state_changed", true)
 	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true

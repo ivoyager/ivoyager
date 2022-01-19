@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVScheduler
+extends Node
 
 # Creates interval signals using simulation time. Max signal frequency will be
 # once per frame if interval is very small and/or game speed is very fast.
@@ -30,16 +31,16 @@ var _signal_intervals := []
 var _available_signals := []
 var _is_reversed := false
 
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+
 
 # *****************************************************************************
 
-func _project_init() -> void:
+func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("processed", self, "_timekeeper_process")
-	timekeeper.connect("time_altered", self, "_on_time_altered")
+	_timekeeper.connect("time_altered", self, "_on_time_altered")
 	if IVGlobal.allow_time_reversal:
-		timekeeper.connect("speed_changed", self, "_on_speed_changed")
+		_timekeeper.connect("speed_changed", self, "_update_for_time_reversal")
 
 
 func _clear() -> void:
@@ -133,19 +134,18 @@ func _remove_active_interval_signal(signal_str: String) -> void:
 	assert(false, "Attept to remove non-active signal")
 
 
-func _on_speed_changed(_speed_index: int, is_reversed: bool, _is_paused: bool,
-		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
+func _update_for_time_reversal() -> void:
 	# Connected only if IVGlobal.allow_time_reversal.
-	if _is_reversed == is_reversed:
+	if _is_reversed == _timekeeper.is_reversed:
 		return
-	_is_reversed = is_reversed
+	_is_reversed = !_is_reversed
 	var n_signals := _ordered_signal_infos.size()
 	var i := 0
 	while i < n_signals:
 		var signal_info: Array = _ordered_signal_infos[i]
-		signal_info[0] += (-signal_info[1] if is_reversed else signal_info[1])
+		signal_info[0] += (-signal_info[1] if _is_reversed else signal_info[1])
 		i += 1
-	_ordered_signal_infos.sort_custom(self, "_sort_reverse" if is_reversed else "_sort_forward")
+	_ordered_signal_infos.sort_custom(self, "_sort_reverse" if _is_reversed else "_sort_forward")
 
 
 func _on_time_altered(previous_time: float) -> void:
@@ -158,11 +158,12 @@ func _on_time_altered(previous_time: float) -> void:
 		i += 1
 
 
-func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
+func _process(_delta: float) -> void:
 	if !_ordered_signal_infos:
 		return
+	var time: float = _times[0]
 	if !_is_reversed:
-		while sim_time > _ordered_signal_infos[-1][0]: # test last element
+		while time > _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
 			var signal_str: String = signal_info[2]
 			var oneshot: bool = signal_info[3]
@@ -173,8 +174,8 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
 				signal_time += interval
-				if signal_time < sim_time:
-					signal_time = sim_time # will signal next frame
+				if signal_time < time:
+					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_forward")
@@ -183,7 +184,7 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 			if !_ordered_signal_infos:
 				return
 	else:
-		while sim_time < _ordered_signal_infos[-1][0]: # test last element
+		while time < _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
 			var signal_str: String = signal_info[2]
 			var oneshot: bool = signal_info[3]
@@ -194,8 +195,8 @@ func _timekeeper_process(sim_time: float, _engine_delta: float) -> void:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
 				signal_time -= interval
-				if signal_time > sim_time:
-					signal_time = sim_time # will signal next frame
+				if signal_time > time:
+					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_reverse")

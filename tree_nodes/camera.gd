@@ -176,7 +176,6 @@ func _ready() -> void:
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
-	pause_mode = PAUSE_MODE_PROCESS
 	parent = get_parent()
 	_to_spatial = parent
 	_from_spatial = parent

@@ -118,7 +118,6 @@ var prog_refs := {
 	_MainMenuManager_ = IVMainMenuManager,
 	_SleepManager_ = IVSleepManager,
 	_VisualsHelper_ = IVVisualsHelper,
-	_Scheduler_ = IVScheduler,
 	_WikiManager_ = IVWikiManager,
 }
 
@@ -128,6 +127,7 @@ var prog_nodes := {
 	_StateManager_ = IVStateManager,
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_Timekeeper_ = IVTimekeeper,
+	_Scheduler_ = IVScheduler,
 	_BodyRegistry_ = IVBodyRegistry,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
 	_HUDsManager_ = IVHUDsManager,

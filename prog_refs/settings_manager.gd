@@ -33,7 +33,7 @@ func _on_init():
 		# save/load
 		save_base_name = "I Voyager",
 		append_date_to_save = true,
-		loaded_game_is_paused = false,
+		pause_on_load = false,
 	#	autosave = false,
 	#	autosave_number = 5,
 	#	autosave_minutes = 30,

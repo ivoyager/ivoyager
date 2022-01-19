@@ -31,6 +31,7 @@ const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMA
 var group: IVAsteroidGroup
 var color: Color # read only
 
+var _times: Array = IVGlobal.times
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
@@ -52,8 +53,6 @@ func init(group_: IVAsteroidGroup, color_: Color) -> void:
 	else:
 		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_lagrangian_shader
 	material_override = _orbit_points
-	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("processed", self, "_timekeeper_process")
 
 
 func draw_points() -> void:
@@ -78,7 +77,8 @@ func draw_points() -> void:
 	_orbit_points.set_shader_param("point_size", 3.0)
 
 
-func _timekeeper_process(time: float, _e_delta: float) -> void:
+func _process(_delta: float) -> void:
+	var time: float = _times[0]
 	if !visible or time == _last_update_time:
 		return
 	_last_update_time = time

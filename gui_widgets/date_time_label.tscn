@@ -2,7 +2,6 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/date_time_label.gd" type="Script" id=1]
 
-
 [node name="DateTimeLabel" type="Label"]
 margin_right = 40.0
 margin_bottom = 14.0

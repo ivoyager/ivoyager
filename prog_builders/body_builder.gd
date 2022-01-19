@@ -80,7 +80,6 @@ var _huds_builder: IVHUDsBuilder
 var _orbit_builder: IVOrbitBuilder
 var _composition_builder: IVCompositionBuilder
 var _io_manager: IVIOManager
-var _scheduler: IVScheduler
 var _table_reader: IVTableReader
 var _main_prog_bar: IVMainProgBar
 var _Body_: Script
@@ -108,7 +107,6 @@ func _project_init() -> void:
 	_orbit_builder = IVGlobal.program.OrbitBuilder
 	_composition_builder = IVGlobal.program.CompositionBuilder
 	_io_manager = IVGlobal.program.IOManager
-	_scheduler = IVGlobal.program.Scheduler
 	_table_reader = IVGlobal.program.TableReader
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 	_Body_ = IVGlobal.script_classes._Body_

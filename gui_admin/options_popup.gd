@@ -48,7 +48,7 @@ func _on_init():
 				header = "LABEL_SAVE_LOAD",
 				save_base_name = "LABEL_BASE_NAME",
 				append_date_to_save = "LABEL_APPEND_DATE",
-				loaded_game_is_paused = "LABEL_ALWAYS_PAUSE_ON_LOAD",
+				pause_on_load = "LABEL_PAUSE_ON_LOAD",
 			},
 			{
 				header = "LABEL_CAMERA",

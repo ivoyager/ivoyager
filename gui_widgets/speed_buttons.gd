@@ -25,7 +25,7 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _tree: SceneTree = get_tree()
+onready var _tree := get_tree()
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
@@ -34,7 +34,9 @@ onready var _reverse: Button = $Reverse
 
 
 func _ready() -> void:
-	_timekeeper.connect("speed_changed", self, "_on_speed_changed")
+	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
+	IVGlobal.connect("paused_changed", self, "_update_buttons")
+	_timekeeper.connect("speed_changed", self, "_update_buttons")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
 	if !IVGlobal.disable_pause:
@@ -63,8 +65,7 @@ func remove_reverse_button() -> void:
 		_reverse = null
 
 
-func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
-		_show_clock: bool, _show_seconds: bool, _is_real_world_time: bool) -> void:
+func _update_buttons() -> void:
 	if _state.network_state == IS_CLIENT:
 		if _pause:
 			_pause.disabled = true
@@ -75,10 +76,10 @@ func _on_speed_changed(_speed_index: int, is_reversed: bool, is_paused: bool,
 		return
 	if _pause:
 		_pause.disabled = false
-		_pause.pressed = is_paused
+		_pause.pressed = _tree.paused
 	if _reverse:
 		_reverse.disabled = false
-		_reverse.pressed = is_reversed
+		_reverse.pressed = _timekeeper.is_reversed
 	_plus.disabled = !_timekeeper.can_incr_speed()
 	_minus.disabled = !_timekeeper.can_decr_speed()
 
@@ -88,8 +89,7 @@ func _increment_speed(increment: int) -> void:
 
 
 func _change_paused() -> void:
-	if _state.network_state != IS_CLIENT:
-		IVGlobal.emit_signal("pause_requested", _pause.pressed)
+	IVGlobal.emit_signal("change_pause_requested", false, _pause.pressed)
 
 
 func _change_reversed() -> void:
