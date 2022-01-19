@@ -6,9 +6,9 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
-## [v0.0.11 Unreleased] - TBD
+## [v0.0.11] - 2022-01-19
 
-Under development using Godot 3.4.2.stable.
+Developed using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
@@ -373,7 +373,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[v0.0.11 Unreleased]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...HEAD
+[v0.0.11]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...v0.0.11
 [v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
 [v0.0.8]: https://github.com/ivoyager/ivoyager/compare/v0.0.7-alpha...0.0.8-alpha
