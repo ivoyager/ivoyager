@@ -16,11 +16,15 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * New [STYLE_GUIDE.md](https://github.com/ivoyager/ivoyager/blob/master/STYLE_GUIDE.md) documents the (very few) departures from Godot's GDScript style guide.
 * New IVWindowManager handles fullscreen toggle and optionally adds main menu button.
 
-### API-breaking changes
+### Project integration changes
 * Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
-* Submodule now depends on external static class SIBaseUnits with SI base units (previously in Universe). We keep this file external to 'ivoyager' so projects can change the scale const METER.
+* Submodule now depends on external static class SIBaseUnits with SI base units (previously in universe.gd). We keep this file external to 'ivoyager' so projects can change the scale const METER.
+* universe.tscn & universe.gd were external (project-level outside of 'ivoyager') but have been moved internally to ivoyager/tree_nodes/. They act as default simulator root and main scene (as set by Project Template; this can be changed).
+* Removed gui_example directory from the submodule. Moved externally to Project Template.
+
+### API-breaking changes
 * Renamed IVUnits.conv() to convert_quantity() and changed function signature.
-* Removed IVInputHandler. All input now handled by target class.
+* Removed IVInputHandler. All input now handled by target classes.
 * IVSelectionManager changed from Reference to Node. ProjectGUI needs to add it as child now.
 * IVGlobal signal changes:
     * Renamed 'gui_update_needed' to 'gui_update_requested'
@@ -30,8 +34,6 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 ### Changes
 * Improved integration with SceneTree.paused (we no longer have our own separate pause).
 * Camera now re-levels itself and re-centers the target on object selection.
-* universe.tscn & universe.gd were added to 'tree_nodes' directory to act as default root node (projects can change this).
-* Removed gui_example directory from the submodule (moved to 'project_template' project where it belongs).
 
 ## [v0.0.10] - 2022-01-09
 
@@ -49,7 +51,7 @@ Developed using Godot 3.3.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.9**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Project changes
+### Project integration changes
 The first two will break external projects using the ivoyager submodule! Make changes as needed.
 * [project breaking!] The Universe node was moved from the ivoyager submodule to the top level project directory. External projects can now add scenes to the simulator root node in the editor (before you could do this only by code).
 * [project breaking!] [universe.gd](https://github.com/ivoyager/project_template/blob/master/universe.gd) now has the constants that define base SI units. By "externalizing" this, external projects can now change simulator internal representation of values (in particular, METER, which sets the scale of the simulation).
