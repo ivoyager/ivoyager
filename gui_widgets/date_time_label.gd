@@ -21,7 +21,7 @@ extends Label
 
 # GUI widget. pause_mode = Process.
 
-var show_pause := true
+var show_pause := !IVGlobal.disable_pause
 var date_format := "%02d/%02d/%02d"
 var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
 var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"

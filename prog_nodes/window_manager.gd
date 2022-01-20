@@ -27,7 +27,7 @@ var button_priority := 1001
 
 var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _is_fullscreen := false
-var _extended_test_counter := 0
+var _test_countdown := 0
 
 onready var _tree := get_tree()
 onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
@@ -71,12 +71,12 @@ func _update_buttons() -> void:
 func _extended_test_for_screen_resize() -> void:
 	# In some browsers OS.window_fullscreen takes a while to give changed
 	# result. So we keep checking for a while.
-	if _extended_test_counter: # already running
-		_extended_test_counter = 20
+	if _test_countdown: # already running
+		_test_countdown = 20
 		return
-	_extended_test_counter = 20
+	_test_countdown = 20
 	_update_buttons()
-	while _extended_test_counter:
+	while _test_countdown:
 		yield(_tree, "idle_frame")
 		_update_buttons()
-		_extended_test_counter -= 1
+		_test_countdown -= 1

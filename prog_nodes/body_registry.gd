@@ -92,9 +92,12 @@ func get_selection_moon(selection_item: IVSelectionItem) -> IVBody:
 	return null
 
 
+func get_selection_by_name(selection_name: String) -> IVSelectionItem:
+	return selection_items.get(selection_name)
+
+
 func get_selection_for_body(body: IVBody) -> IVSelectionItem:
-	var name_ := body.name
-	return selection_items[name_]
+	return selection_items.get(body.name)
 
 
 func register_top_body(body: IVBody) -> void:

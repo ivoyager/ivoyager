@@ -6,6 +6,18 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
+## [v0.0.12] - Unreleased
+
+Developed using Godot 3.4.2.stable.
+
+Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
+
+### Added
+* Can start with cached time (including speed & time reversal). Used by Planetarium.
+
+### Bug fixes
+* Fixed bug where start body wasn't updated in GUI when using IVViewCacher.
+
 ## [v0.0.11] - 2022-01-19
 
 Developed using Godot 3.4.2.stable.
@@ -373,6 +385,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
+[v0.0.12]: https://github.com/ivoyager/ivoyager/compare/v0.0.11...HEAD
 [v0.0.11]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...v0.0.11
 [v0.0.10]: https://github.com/ivoyager/ivoyager/compare/v0.0.9-alpha...v0.0.10
 [v0.0.9]: https://github.com/ivoyager/ivoyager/compare/0.0.8-alpha...v0.0.9-alpha
