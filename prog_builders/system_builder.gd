@@ -55,9 +55,7 @@ func build_system_tree() -> void:
 	var selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 	selection_builder.build_body_selection_items()
 	if add_camera:
-		var camera_script: Script = IVGlobal.script_classes._Camera_
-		var camera: Camera = camera_script.new()
-		camera.add_to_tree()
+		_add_camera()
 	IVGlobal.emit_signal("system_tree_built_or_loaded", true)
 
 
@@ -75,3 +73,12 @@ func _add_bodies(table_name: String) -> void:
 			var universe: Spatial = IVGlobal.program.Universe
 			universe.add_child(body)
 		row += 1
+
+
+func _add_camera() -> void:
+	var camera_script: Script = IVGlobal.script_classes._Camera_
+	var camera: Camera = camera_script.new()
+	var body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
+	var start_body_name: String = IVGlobal.start_body_name
+	var start_body: IVBody = body_registry.bodies_by_name[start_body_name]
+	start_body.add_child(camera)

@@ -21,19 +21,23 @@ class_name IVViewCacher
 extends Timer
 
 # NOT ADDED BY DEFAULT! Add to IVProjectBuilder.prog_nodes in your extension
-# file if you want camera view to be cached and restored on start.
+# file if you want camera view (and time!) to be cached and restored on start.
 #
-# You only need to set cache_interval for HTML5 export. Otherwise, _cache_view()
+# You only need to set cache_interval for HTML5 export. Otherwise, _write_cache()
 # will be called on quit.
 #
 # Used by Planetarium
 
+const CACHE_VERSION := 2
 
 var cache_interval := 0.0 # s; set >0.0 to enable Timer
 var cache_file_name := "view.vbinary"
+var is_time_cache := true
 
 var _cache_dir: String = IVGlobal.cache_dir
 var _camera: IVCamera
+
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _project_init() -> void:
@@ -47,18 +51,18 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("camera_ready", self, "_set_camera")
-	IVGlobal.connect("system_tree_ready", self, "_set_view")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	IVGlobal.connect("simulator_started", self, "start") # start if not paused
-	IVGlobal.connect("about_to_quit", self, "_cache_view") # app quit button
-	connect("timeout", self, "_cache_view")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_quit", self, "_write_cache") # app quit button
+	connect("timeout", self, "_write_cache")
 
 
 func _notification(what: int) -> void:
 	# This should work for all desktop exports; does NOT work for HTML5 export.
 	if what == NOTIFICATION_WM_QUIT_REQUEST:
-		_cache_view()
+		_write_cache()
 
 
 func _clear() -> void:
@@ -70,18 +74,47 @@ func _set_camera(camera: IVCamera) -> void:
 	_camera = camera
 
 
-func _set_view(_is_new_game: bool) -> void:
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	if !_camera:
 		return
+	var cache := _read_cache()
+	if !cache:
+		print("Missing or obsolete view cache!")
+		return
+	var view: IVView = cache[1]
+	var selection_name := view.selection_name
+	var has_time_cache := is_time_cache and cache.size() > 2
+	var project_gui: Control = IVGlobal.program.ProjectGUI
+	var selection_manager: IVSelectionManager = project_gui.selection_manager
+	if !selection_manager:
+		return
+	print("Moving camera to cached view", " and setting cached time" if has_time_cache else "")
+	selection_manager.erase_history()
+	# Select to set selection history & GUI, then move camera to view
+	selection_manager.select_by_name(selection_name)
+	_camera.move_to_view(view, true)
+	if has_time_cache:
+		_timekeeper.set_time(cache[2])
+		_timekeeper.change_speed(0, cache[3])
+		_timekeeper.set_time_reversed(cache[4])
+
+
+func _read_cache() -> Array:
+	# Be careful of old version cache differences (was dict pre-v0.0.12)
 	var file := _get_file(File.READ)
 	if !file:
-		return
-	var view_dict: Dictionary = file.get_var()
-	var view: IVView = dict2inst(view_dict)
-	_camera.set_start_view(view)
+		return []
+	var untyped_cache = file.get_var()
+	if typeof(untyped_cache) != TYPE_ARRAY:
+		return []
+	var cache := untyped_cache as Array
+	if !cache or cache[0] != CACHE_VERSION:
+		return []
+	cache[1] = dict2inst(cache[1]) # IVView
+	return cache
 
 
-func _cache_view() -> void:
+func _write_cache() -> void:
 	if !_camera:
 		return
 	var file := _get_file(File.WRITE)
@@ -89,7 +122,13 @@ func _cache_view() -> void:
 		return
 	var view := _camera.create_view()
 	var view_dict := inst2dict(view)
-	file.store_var(view_dict)
+	var cache := [CACHE_VERSION, view_dict]
+	if is_time_cache and !_timekeeper.is_real_world_time:
+		# cache.size() > 2
+		cache.append(_timekeeper.time)
+		cache.append(_timekeeper.speed_index)
+		cache.append(_timekeeper.is_reversed)
+	file.store_var(cache)
 
 
 func _get_file(flags: int) -> File:

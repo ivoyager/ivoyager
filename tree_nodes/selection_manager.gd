@@ -141,9 +141,15 @@ func select(selection_item_: IVSelectionItem) -> void:
 
 
 func select_body(body_: IVBody) -> void:
-	var name := body_.name
-	var selection_item_: IVSelectionItem = _body_registry.selection_items[name]
-	select(selection_item_)
+	var selection_item_: IVSelectionItem = _body_registry.get_selection_for_body(body_)
+	if selection_item_:
+		select(selection_item_)
+
+
+func select_by_name(selection_name: String) -> void:
+	var selection_item_: IVSelectionItem = _body_registry.get_selection_by_name(selection_name)
+	if selection_item_:
+		select(selection_item_)
 
 
 func get_name() -> String:
@@ -287,6 +293,11 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			select_body(body)
 			return
 		count += 1
+
+
+func erase_history() -> void:
+	_history.clear()
+	_history_index = -1
 
 
 func _add_history() -> void:

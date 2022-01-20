@@ -132,7 +132,6 @@ var _track_dist: float
 var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
 var _max_compensated_dist: float
-var _init_view: IVView
 
 # move/rotate actions - these are accumulators
 var _move_action := VECTOR3_ZERO
@@ -196,10 +195,7 @@ func _ready() -> void:
 
 
 func _start_sim(_is_new_game: bool) -> void:
-	if _init_view:
-		move_to_view(_init_view, true)
-	else:
-		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 
 func _prepare_to_free() -> void:
@@ -231,17 +227,6 @@ func _process(delta: float) -> void:
 
 
 # public functions
-
-func set_start_view(view: IVView) -> void:
-	# Set before about_to_start_simulator to start camera at this IVView.
-	_init_view = view
-
-
-func add_to_tree() -> void:
-	var start_body_name: String
-	start_body_name = IVGlobal.start_body_name
-	var start_body: IVBody = _body_registry.bodies_by_name[start_body_name]
-	start_body.add_child(self)
 
 
 func add_move_action(move_action: Vector3) -> void:
