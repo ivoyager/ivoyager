@@ -116,6 +116,7 @@ var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
 var project_version_ymd := 0
+var verbose := false # prints state broadcast signals and whatever else we add
 var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
@@ -230,3 +231,21 @@ var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
 func _ready():
 	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,
 			"- https://www.ivoyager.dev")
+
+
+func verbose_signal(signal_str: String, arg1 = null, arg2 = null) -> void:
+	# Used mainly for state broadcasts
+	var print_arg1 = "" if typeof(arg1) == TYPE_NIL \
+			else '"' + arg1 + '"' if typeof(arg1) == TYPE_STRING \
+			else arg1
+	var print_arg2 = "" if typeof(arg2) == TYPE_NIL \
+			else '"' + arg2 + '"' if typeof(arg2) == TYPE_STRING \
+			else arg2
+	if verbose:
+		prints("IVGlobal signaling", signal_str, print_arg1, print_arg2)
+	if arg1 == null:
+		emit_signal(signal_str)
+	elif arg2 == null:
+		emit_signal(signal_str, arg1)
+	else:
+		emit_signal(signal_str, arg1, arg2)

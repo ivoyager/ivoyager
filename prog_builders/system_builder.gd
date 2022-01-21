@@ -45,7 +45,7 @@ func build_system_tree() -> void:
 		return
 	var state_manager: IVStateManager = IVGlobal.program.StateManager
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
-	IVGlobal.emit_signal("about_to_build_system_tree")
+	IVGlobal.verbose_signal("about_to_build_system_tree")
 	_body_builder.init_system_build()
 	_add_bodies("stars")
 	_add_bodies("planets")
@@ -56,7 +56,7 @@ func build_system_tree() -> void:
 	selection_builder.build_body_selection_items()
 	if add_camera:
 		_add_camera()
-	IVGlobal.emit_signal("system_tree_built_or_loaded", true)
+	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)
 
 
 func _add_bodies(table_name: String) -> void:

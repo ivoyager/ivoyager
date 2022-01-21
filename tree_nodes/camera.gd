@@ -191,7 +191,7 @@ func _ready() -> void:
 	_min_dist = selection_item.view_min_distance * 50.0 / fov
 	_visuals_helper.camera = self
 	_visuals_helper.camera_fov = fov
-	IVGlobal.emit_signal("camera_ready", self)
+	IVGlobal.verbose_signal("camera_ready", self)
 
 
 func _start_sim(_is_new_game: bool) -> void:

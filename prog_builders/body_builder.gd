@@ -354,6 +354,6 @@ func _finish_system_build() -> void: # Main thread
 		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
 		var is_new_game: bool = !IVGlobal.state.is_loaded_game
-		IVGlobal.emit_signal("system_tree_ready", is_new_game)
+		IVGlobal.verbose_signal("system_tree_ready", is_new_game)
 		if _main_prog_bar:
 			_main_prog_bar.stop()

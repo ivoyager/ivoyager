@@ -224,7 +224,7 @@ func init_extensions() -> void:
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
 			extension._extension_init()
-	IVGlobal.emit_signal("extentions_inited")
+	IVGlobal.verbose_signal("extentions_inited")
 
 
 func instantiate_and_index() -> void:
@@ -243,7 +243,7 @@ func instantiate_and_index() -> void:
 		for key in dict:
 			assert(!_script_classes.has(key))
 			_script_classes[key] = dict[key]
-	IVGlobal.emit_signal("project_objects_instantiated")
+	IVGlobal.verbose_signal("project_objects_instantiated")
 
 
 func init_project() -> void:
@@ -259,7 +259,7 @@ func init_project() -> void:
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
-	IVGlobal.emit_signal("project_inited")
+	IVGlobal.verbose_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
@@ -271,13 +271,13 @@ func add_project_nodes() -> void:
 	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
-	IVGlobal.emit_signal("project_nodes_added")
+	IVGlobal.verbose_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
 
 func signal_finished() -> void:
-	IVGlobal.emit_signal("project_builder_finished")
+	IVGlobal.verbose_signal("project_builder_finished")
 
 
 # ****************************** PROJECT BUILD ********************************
