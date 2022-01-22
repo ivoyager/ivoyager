@@ -83,14 +83,6 @@ static func init_array(size: int, init_value = null) -> Array:
 	return array
 
 
-static func fill_array(array: Array, fill_value) -> void:
-	var size := array.size()
-	var i := 0
-	while i < size:
-		array[i] = fill_value
-		i += 1
-
-
 # patch
 static func c_unescape_patch(text: String) -> String:
 	# Use as patch until c_unescape() is fixed (Godot issue #38716).
