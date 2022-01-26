@@ -59,7 +59,7 @@ onready var _parent: Control = get_parent()
 
 
 func _ready():
-	IVGlobal.connect("simulator_started", self, "_on_simulator_started")
+	IVGlobal.connect("simulator_started", self, "_reset")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
@@ -72,9 +72,12 @@ func _ready():
 	$BL.connect("gui_input", self, "_on_margin_input", [BL])
 	$L.connect("gui_input", self, "_on_margin_input", [L])
 	set_process_input(false) # only during drag
+	_reset()
 
 
-func _on_simulator_started() -> void:
+func _reset() -> void:
+	if !IVGlobal.state.is_system_built:
+		return
 	_resize()
 	_finish_move()
 

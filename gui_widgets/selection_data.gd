@@ -198,25 +198,32 @@ var _selection_manager: IVSelectionManager
 var _selection_item: IVSelectionItem
 var _body: IVBody
 var _path: String
+var _is_running := false
 
 onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
+onready var _timer: Timer = $Timer
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_configure")
 	IVGlobal.connect("update_gui_requested", self, "_update_selection")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
-	_start_interval_updates()
+	_configure()
+	_start_timer_coroutine()
 
 
-func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
+func _configure(_dummy := false) -> void:
+	if _selection_manager:
+		return
+	_selection_manager = IVWidgets.get_selection_manager(self)
+	if !_selection_manager:
+		return
+	_selection_manager.connect("selection_changed", self, "_update_selection")
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
-	_selection_manager = IVWidgets.get_selection_manager(self)
-	_selection_manager.connect("selection_changed", self, "_update_selection")
 	var n_sections := section_headers.size()
 	var section := 0
 	while section < n_sections:
@@ -242,6 +249,7 @@ func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
 		_grids.append(grid)
 		add_child(grid)
 		section += 1
+	_update_selection()
 
 
 func _clear() -> void:
@@ -265,11 +273,16 @@ func _clear_recycled() -> void:
 		_recycled_rtlabels.pop_back().queue_free()
 
 
-func _start_interval_updates() -> void:
+func _start_timer_coroutine() -> void:
 	if !interval:
 		return
+	if _is_running:
+		return
+	_is_running = true
+	_timer.wait_time = interval
+	_timer.start()
 	while true:
-		yield(get_tree().create_timer(interval), "timeout")
+		yield(_timer, "timeout")
 		if _state.is_running:
 			_update_selection()
 

@@ -49,6 +49,7 @@ func _ready() -> void:
 	else:
 		_reverse.queue_free()
 		_reverse = null
+	_update_buttons()
 
 
 func remove_pause_button() -> void:

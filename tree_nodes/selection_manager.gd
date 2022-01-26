@@ -60,9 +60,10 @@ const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
+var is_action_listener := true
 var selection_item: IVSelectionItem
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["selection_item"]
+const PERSIST_PROPERTIES := ["is_action_listener", "selection_item"]
 
 # private
 var _root: Viewport = IVGlobal.get_tree().get_root()
@@ -74,9 +75,14 @@ var _supress_history := false
 onready var _tree: SceneTree = get_tree()
 
 
-func _ready() -> void:
+func _init() -> void:
 	name = "SelectionManager"
+	
+
+func _ready() -> void:
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	set_process_unhandled_key_input(is_action_listener)
+	print(self, " ready...")
 
 
 func _on_system_tree_ready(is_new_game: bool) -> void:
@@ -126,9 +132,8 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 	_tree.set_input_as_handled()
 
 
-func set_action_response(is_action_handler: bool) -> void:
-	# Only needed if this instance shouldn't responde to key actions
-	set_process_unhandled_key_input(is_action_handler)
+func has_item() -> bool:
+	return selection_item != null
 
 
 func select(selection_item_: IVSelectionItem) -> void:
@@ -201,8 +206,9 @@ func forward() -> void:
 
 
 func up() -> void:
-	if selection_item.up_selection_name:
-		var new_selection: IVSelectionItem = _body_registry.selection_items[selection_item.up_selection_name]
+	var up_name := selection_item.up_selection_name
+	if up_name:
+		var new_selection: IVSelectionItem = _body_registry.get_selection_by_name(up_name)
 		select(new_selection)
 
 
@@ -298,6 +304,16 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 func erase_history() -> void:
 	_history.clear()
 	_history_index = -1
+
+
+func get_selection_and_history() -> Array:
+	return [selection_item, _history.duplicate(), _history_index]
+
+
+func set_selection_and_history(array: Array) -> void:
+	selection_item = array[0]
+	_history = array[1]
+	_history_index = array[2]
 
 
 func _add_history() -> void:

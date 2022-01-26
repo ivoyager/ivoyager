@@ -121,7 +121,7 @@ func _on_project_builder_finished() -> void:
 	yield(_tree, "idle_frame")
 	_state.is_inited = true
 	_state.is_splash_screen = true
-	IVGlobal.emit_signal("state_manager_inited")
+	IVGlobal.verbose_signal("state_manager_inited")
 
 
 func _on_about_to_build_system_tree() -> void:
@@ -135,15 +135,15 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	print("System tree ready...")
 	yield(_tree, "idle_frame")
-	IVGlobal.emit_signal("about_to_start_simulator", is_new_game)
-	IVGlobal.emit_signal("close_all_admin_popups_requested")
+	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
+	IVGlobal.verbose_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	_was_paused = false
 	allow_run(self)
 	yield(_tree, "idle_frame")
-	IVGlobal.emit_signal("update_gui_requested")
+	IVGlobal.verbose_signal("update_gui_requested")
 	yield(_tree, "idle_frame")
-	IVGlobal.emit_signal("simulator_started")
+	IVGlobal.verbose_signal("simulator_started")
 	if !is_new_game and _settings.pause_on_load:
 		yield(_tree, "idle_frame")
 		change_pause(false, true)
@@ -153,7 +153,7 @@ func _process(_delta: float) -> void:
 	# There is no SceneTree paused_changed signal, so we hacked one here.
 	if _paused != _tree.paused:
 		_paused = _tree.paused
-		IVGlobal.emit_signal("paused_changed")
+		IVGlobal.verbose_signal("paused_changed")
 
 
 func _input(event: InputEvent) -> void:
@@ -262,14 +262,14 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.last_save_path = ""
 	require_stop(self, NetworkStopSync.EXIT, true)
 	yield(self, "threads_finished")
-	IVGlobal.emit_signal("about_to_exit")
-	IVGlobal.emit_signal("about_to_free_procedural_nodes")
+	IVGlobal.verbose_signal("about_to_exit")
+	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
 	yield(_tree, "idle_frame")
 	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
-	IVGlobal.emit_signal("close_all_admin_popups_requested")
+	IVGlobal.verbose_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
 	_state.is_splash_screen = true
-	IVGlobal.emit_signal("simulator_exited")
+	IVGlobal.verbose_signal("simulator_exited")
 
 
 func quit(force_quit := false) -> void:
@@ -285,10 +285,10 @@ func quit(force_quit := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	IVGlobal.emit_signal("about_to_stop_before_quit")
+	IVGlobal.verbose_signal("about_to_stop_before_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
 	yield(self, "threads_finished")
-	IVGlobal.emit_signal("about_to_quit")
+	IVGlobal.verbose_signal("about_to_quit")
 	assert(!print_stray_nodes())
 	print("Quitting...")
 	_tree.quit()
@@ -307,14 +307,14 @@ func _stop_simulator() -> void:
 	_was_paused = _tree.paused
 	_state.is_running = false
 	_tree.paused = true
-	IVGlobal.emit_signal("run_state_changed", false)
+	IVGlobal.verbose_signal("run_state_changed", false)
 
 
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	_tree.paused = _was_paused
-	IVGlobal.emit_signal("run_state_changed", true)
+	IVGlobal.verbose_signal("run_state_changed", true)
 	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true
 	emit_signal("run_threads_allowed")

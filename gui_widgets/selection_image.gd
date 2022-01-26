@@ -26,14 +26,25 @@ var _selection_manager: IVSelectionManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
 	IVGlobal.connect("update_gui_requested", self, "_update_image")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
+	_connect_selection_manager()
 
 
-func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
+func _clear() -> void:
+	_selection_manager = null
+
+
+func _connect_selection_manager(_dummy := false) -> void:
+	if _selection_manager:
+		return
 	_selection_manager = IVWidgets.get_selection_manager(self)
+	if !_selection_manager:
+		return
 	_selection_manager.connect("selection_changed", self, "_update_image")
+	_update_image()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -44,6 +55,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _update_image() -> void:
+	if !_selection_manager.has_item():
+		return
 	hint_tooltip = tr(_selection_manager.get_name()) + _hint_extension
 	var texture_2d := _selection_manager.get_texture_2d()
 	if texture_2d:
