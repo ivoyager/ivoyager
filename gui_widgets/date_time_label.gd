@@ -45,6 +45,7 @@ func _ready() -> void:
 	IVGlobal.connect("paused_changed", self, "_process", [0.0]) # force if paused
 	_timekeeper.connect("speed_changed", self, "_configure_display")
 	set("custom_colors/font_color", forward_color)
+	_configure_display()
 
 
 func _process(_delta: float) -> void:

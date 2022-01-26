@@ -31,6 +31,7 @@ extends Button
 var _has_mouse := false
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _selection_item: IVSelectionItem
+var _is_built := false
 
 onready var _texture_rect: TextureRect = $TextureRect
 onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
@@ -43,12 +44,22 @@ func _ready():
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
+	_build()
 
 
-func _build(_is_new_game: bool) -> void:
-	_clear()
+func _pressed() -> void:
+	_selection_manager.select(_selection_item)
+
+
+func _build(_dummy := false) -> void:
+	if _is_built:
+		return
+	if !IVGlobal.state.is_system_built:
+		return
 	_selection_manager = IVWidgets.get_selection_manager(self)
-	assert(_selection_manager)
+	if !_selection_manager:
+		return
+	_is_built = true
 	var sun: IVBody = _body_registry.top_bodies[0]
 	_selection_item = _body_registry.get_selection_for_body(sun)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
@@ -56,13 +67,11 @@ func _build(_is_new_game: bool) -> void:
 	flat = true
 	hint_tooltip = _selection_item.name
 	_texture_rect.texture = _selection_item.texture_slice_2d
-
-
-func _pressed() -> void:
-	_selection_manager.select(_selection_item)
+	_update_selection()
 
 
 func _clear() -> void:
+	_is_built = false
 	_selection_manager = null
 	_selection_item = null
 	_has_mouse = false

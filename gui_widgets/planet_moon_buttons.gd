@@ -41,6 +41,7 @@ var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
 var _resize_control_multipliers := {}
+var _is_built := false
 
 onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
@@ -51,12 +52,18 @@ func _ready():
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	connect("resized", self, "_resize")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	_build()
 
 
-func _build(_is_new_game: bool) -> void:
-	_clear()
+func _build(_dummy := false) -> void:
+	if _is_built:
+		return
+	if !IVGlobal.state.is_system_built:
+		return
 	_selection_manager = IVWidgets.get_selection_manager(self)
-	assert(_selection_manager)
+	if !_selection_manager:
+		return
+	_is_built = true
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
 	# calculate star "slice" relative size
@@ -120,6 +127,15 @@ func _build(_is_new_game: bool) -> void:
 		column += 1
 
 
+func _clear() -> void:
+	_is_built = false
+	_selection_manager = null
+	_currently_selected = null
+	_resize_control_multipliers.clear()
+	for child in get_children():
+		child.queue_free()
+
+
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var selection_item := _body_registry.get_selection_for_body(body)
 	var button := NavButton.new(selection_item, _selection_manager, image_size)
@@ -128,14 +144,6 @@ func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: floa
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
 	_resize_control_multipliers[button] = Vector2(size_multiplier, size_multiplier)
-
-
-func _clear() -> void:
-	_selection_manager = null
-	_currently_selected = null
-	_resize_control_multipliers.clear()
-	for child in get_children():
-		child.queue_free()
 
 
 func _resize() -> void:

@@ -25,17 +25,27 @@ var _selection_manager: IVSelectionManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
 	IVGlobal.connect("update_gui_requested", self, "_update_selection")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	_connect_selection_manager()
 
 
-func _on_about_to_start_simulator(_is_loaded_game: bool) -> void:
+func _clear() -> void:
+	_selection_manager = null
+
+
+func _connect_selection_manager(_dummy := false) -> void:
+	if _selection_manager:
+		return
 	_selection_manager = IVWidgets.get_selection_manager(self)
+	if !_selection_manager:
+		return
 	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_update_selection()
 
 
 func _update_selection() -> void:
-	var selection_item := _selection_manager.selection_item
-	if !selection_item:
+	if !_selection_manager.has_item():
 		return
-	text = selection_item.name
+	text = _selection_manager.get_name()

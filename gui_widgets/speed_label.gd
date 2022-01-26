@@ -33,6 +33,7 @@ func _ready() -> void:
 	IVGlobal.connect("update_gui_requested", self, "_update_speed")
 	_timekeeper.connect("speed_changed", self, "_update_speed")
 	set("custom_colors/font_color", forward_color)
+	_update_speed()
 
 
 func _update_speed() -> void:
