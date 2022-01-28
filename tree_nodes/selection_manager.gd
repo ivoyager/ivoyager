@@ -136,6 +136,10 @@ func has_item() -> bool:
 	return selection_item != null
 
 
+func get_item() -> IVSelectionItem:
+	return selection_item
+
+
 func select(selection_item_: IVSelectionItem) -> void:
 	if selection_item == selection_item_:
 		emit_signal("selection_reselected")
