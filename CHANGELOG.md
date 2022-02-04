@@ -24,6 +24,9 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 ### Added
 * Can start with cached time (including speed & time reversal). Used by Planetarium.
 
+### API-breaking changes
+* Renamed imported tables (*.tsv) data type from 'DATA' to 'TABLE_ROW'. Also changed some related function names in IVTableReader.
+
 ### Bug fixes
 * Fixed bug where start body wasn't updated in GUI when using IVViewCacher.
 
