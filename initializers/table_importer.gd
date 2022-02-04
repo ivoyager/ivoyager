@@ -198,7 +198,8 @@ func _read_data_line() -> void:
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
 	_row_name = _line_array[0]
-	assert(!_rows.has(_row_name))
+	assert(_row_name, "name cell is blank!")
+	assert(!_rows.has(_row_name), "name is already used in this or another table!")
 	_rows[_row_name] = row
 	for field in _fields:
 		_count_cells += 1

@@ -154,6 +154,9 @@ const MULTIPLIERS := {
 	"atm" : ATM,
 	# energy
 	"J" : JOULE,
+	"kJ" : 1e3 * JOULE,
+	"MJ" : 1e6 * JOULE,
+	"GJ" : 1e9 * JOULE,
 	"Wh" : WATT * HOUR,
 	"kWh" : 1e3 * WATT * HOUR,
 	"MWh" : 1e6 * WATT * HOUR,

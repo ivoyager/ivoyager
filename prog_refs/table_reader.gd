@@ -39,6 +39,10 @@ var _unit_functions: Dictionary = IVGlobal.unit_functions
 # *****************************************************************************
 # init
 
+func _project_init() -> void:
+	pass
+
+
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
 		table_units: Dictionary, table_row_dicts: Dictionary) -> void:
 	# Called by IVTableImporter at _project_init()
