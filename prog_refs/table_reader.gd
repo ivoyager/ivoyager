@@ -104,6 +104,22 @@ func get_column_array(table_name: String, field_name: String) -> Array:
 	return result
 
 
+func get_true_rows(table_name: String, field_name: String) -> Array:
+	# field_name must exist in specified table
+	var column_fields: Dictionary = _table_fields[table_name]
+	var column = column_fields[field_name]
+	var data: Array = _table_data[table_name]
+	var n_rows := data.size()
+	var result := []
+	var row := 0
+	while row < n_rows:
+		var row_data: Array = data[row]
+		if convert_bool(row_data[column]):
+			result.append(row)
+		row += 1
+	return result
+
+
 func get_1st_true_row(table_name: String, field_name: String) -> int:
 	# field_name must exist in specified table
 	var column_fields: Dictionary = _table_fields[table_name]
