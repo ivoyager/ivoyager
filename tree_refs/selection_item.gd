@@ -19,6 +19,9 @@
 # *****************************************************************************
 class_name IVSelectionItem
 
+# Wrapper for whatever you want selected, which could be anything. In core
+# ivoyager we only select Body instances and provide some associated UI info
+# here, such as camera view angles and data precision (significant digets).
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
