@@ -27,7 +27,7 @@ extends Node
 # to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220203
+const IVOYAGER_VERSION_YMD := 20220209
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts

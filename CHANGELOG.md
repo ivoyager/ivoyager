@@ -12,6 +12,13 @@ Developed using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
+### Changes
+* Redesigned the core selection object (now IVSelection) to be more easily extensible. It's a wrapper object that can hold anything that might be selected (in core ivoyager we only select Body instances). It is now dynamically generated.
+
+### API-breaking changes
+* Replaced class IVSelectionItem with IVSelection.
+* Changed function names in IVBodyRegistry for selection related actions .
+
 ### Bug fixes
 * Widgets fixed to work when GUI is added after solar system build.
 
