@@ -22,6 +22,10 @@ class_name IVSelectionItem
 # Wrapper for whatever you want selected, which could be anything. In core
 # ivoyager we only select Body instances and provide some associated UI info
 # here, such as camera view angles and data precision (significant digets).
+#
+# TODO: This class is overcomplicated and needs refactor. It should just be a
+# name holder with some optional components (for core ivoyager, some View
+# objects and shortcut to Body values; for the Planetarium, real_precisions).
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
