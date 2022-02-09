@@ -19,13 +19,11 @@
 # *****************************************************************************
 class_name IVSelectionItem
 
+# DEPRECIATE for IVSelection
+
 # Wrapper for whatever you want selected, which could be anything. In core
 # ivoyager we only select Body instances and provide some associated UI info
 # here, such as camera view angles and data precision (significant digets).
-#
-# TODO: This class is overcomplicated and needs refactor. It should just be a
-# name holder with some optional components (for core ivoyager, some View
-# objects and shortcut to Body values; for the Planetarium, real_precisions).
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -47,12 +45,11 @@ var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var spatial: Spatial # for camera reference
 var body: IVBody # = spatial if is_body else null
-var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
 	"system_radius", "view_rotate_when_close", "view_min_distance",
 	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
-	"spatial", "body", "real_precisions"]
+	"spatial", "body"]
 
 # read-only
 var texture_2d: Texture
@@ -70,6 +67,12 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 	if is_body:
 		texture_2d = body.texture_2d
 		texture_slice_2d = body.texture_slice_2d
+
+
+func get_real_precision(path: String) -> int:
+	if !is_body:
+		return -1
+	return body.get_real_precision(path)
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:

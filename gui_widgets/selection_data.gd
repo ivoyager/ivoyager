@@ -408,7 +408,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var unit: String = args[1] if n_args > 1 else ""
 				var precision: int = args[2] if n_args > 2 else -1
 				if use_kept_precisions and data_type == QTY_TXT_W_PRECISION:
-					var kept_precision: int = _selection_item.real_precisions.get(_path, -1)
+					var kept_precision: int = _selection_item.get_real_precision(_path)
 					if kept_precision != -1:
 						precision = kept_precision
 				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC

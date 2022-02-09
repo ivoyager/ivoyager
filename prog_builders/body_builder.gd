@@ -138,8 +138,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_set_compositions_from_table(body)
 	_register(body, parent)
 	if keep_real_precisions:
-		# IVSelectionBuilder will grab temp dict, then erase from characteristics
-		body.characteristics.temp_real_precisions = _real_precisions
+		body.characteristics.real_precisions = _real_precisions
 		_real_precisions = {}
 	return body
 

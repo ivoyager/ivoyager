@@ -83,9 +83,6 @@ func build_body_selection_item(body: IVBody, parent_body: IVBody, system_radius:
 	selection_item.spatial = body
 	selection_item.body = body
 	selection_item.name = body.name
-	if body.characteristics.has("temp_real_precisions"):
-		selection_item.real_precisions = body.characteristics.temp_real_precisions
-		body.characteristics.erase("temp_real_precisions")
 	set_view_parameters_from_body(selection_item, body)
 	if parent_body:
 		selection_item.up_selection_name = parent_body.name

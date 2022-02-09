@@ -208,6 +208,15 @@ func _on_process(_delta: float) -> void:
 
 # public functions
 
+func get_real_precision(path: String) -> int:
+	# Available only if IVBodyBuilder.keep_real_precisions = true. Gets the
+	# precision (significant digits) of a real value as it was entered in the
+	# table *.tsv file. Used by Planetarium.
+	if !characteristics.has("real_precisions"):
+		return -1
+	return characteristics.real_precisions.get(path, -1)
+
+
 func get_symbol() -> String:
 	return characteristics.get("symbol", "\u25CC") # default is dashed circle
 
