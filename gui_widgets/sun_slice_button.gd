@@ -30,7 +30,7 @@ extends Button
 
 var _has_mouse := false
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
-var _selection_item: IVSelectionItem
+var _selection: IVSelection
 var _is_built := false
 
 onready var _texture_rect: TextureRect = $TextureRect
@@ -48,7 +48,7 @@ func _ready():
 
 
 func _pressed() -> void:
-	_selection_manager.select(_selection_item)
+	_selection_manager.select(_selection)
 
 
 func _build(_dummy := false) -> void:
@@ -61,24 +61,24 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	var sun: IVBody = _body_registry.top_bodies[0]
-	_selection_item = _body_registry.get_selection_for_body(sun)
+	_selection = _body_registry.get_selection_for_body(sun)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	_selection_manager.connect("selection_reselected", self, "_update_selection")
 	flat = true
-	hint_tooltip = _selection_item.name
-	_texture_rect.texture = _selection_item.texture_slice_2d
+	hint_tooltip = _selection.name
+	_texture_rect.texture = _selection.texture_slice_2d
 	_update_selection()
 
 
 func _clear() -> void:
 	_is_built = false
 	_selection_manager = null
-	_selection_item = null
+	_selection = null
 	_has_mouse = false
 
 
 func _update_selection() -> void:
-	var is_selected := _selection_manager.selection_item == _selection_item
+	var is_selected := _selection_manager.selection == _selection
 	pressed = is_selected
 	flat = !is_selected and !_has_mouse
 

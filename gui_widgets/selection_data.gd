@@ -195,7 +195,7 @@ var _meta_lookup := {} # translate link text to wiki key
 var _recycled_labels := []
 var _recycled_rtlabels := []
 var _selection_manager: IVSelectionManager
-var _selection_item: IVSelectionItem
+var _selection: IVSelection
 var _body: IVBody
 var _path: String
 var _is_running := false
@@ -256,7 +256,7 @@ func _clear() -> void:
 	if _selection_manager:
 		_selection_manager.disconnect("selection_changed", self, "_update_selection")
 		_selection_manager = null
-	_selection_item = null
+	_selection = null
 	_body = null
 	_header_buttons.clear()
 	_grids.clear()
@@ -288,8 +288,8 @@ func _start_timer_coroutine() -> void:
 
 
 func _update_selection() -> void:
-	_selection_item = _selection_manager.selection_item
-	if !_selection_item:
+	_selection = _selection_manager.selection
+	if !_selection:
 		return
 	if _selection_manager.is_body():
 		_body = _selection_manager.get_body()
@@ -362,9 +362,9 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	if body_flags:
 		if !_body or not _body.flags & body_flags:
 			return NULL_ARRAY
-	# get value from IVSelectionItem or nested object
+	# get value from IVSelection or nested object
 	var method_args: Array = line_data[2]
-	var value = IVUtils.get_path_result(_selection_item, _path, method_args)
+	var value = IVUtils.get_path_result(_selection, _path, method_args)
 	if value == null:
 		return NULL_ARRAY # doesn't exist
 	# get value text and possibly wiki key
@@ -408,7 +408,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var unit: String = args[1] if n_args > 1 else ""
 				var precision: int = args[2] if n_args > 2 else -1
 				if use_kept_precisions and data_type == QTY_TXT_W_PRECISION:
-					var kept_precision: int = _selection_item.get_real_precision(_path)
+					var kept_precision: int = _selection.get_real_precision(_path)
 					if kept_precision != -1:
 						precision = kept_precision
 				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC

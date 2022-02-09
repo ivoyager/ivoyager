@@ -85,7 +85,7 @@ const FAR_MULTIPLIER := 1e6 # see Note below
 var is_camera_lock := true
 
 # public - read only! (these are "to" during body-to-body transfer)
-var selection_item: IVSelectionItem
+var selection: IVSelection
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
 var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
@@ -99,7 +99,7 @@ var _view_type_memory := view_type
 
 # persistence
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection_item", "view_type", "track_type",
+const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection", "view_type", "track_type",
 	"view_position", "view_rotations", "focal_length", "focal_length_index",
 	"_transform", "_view_type_memory"]
 
@@ -144,7 +144,7 @@ var _to_spatial: Spatial
 var _from_spatial: Spatial
 var _transfer_ref_spatial: Spatial
 var _transfer_ref_basis: Basis
-var _from_selection_item: IVSelectionItem
+var _from_selection: IVSelection
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
@@ -178,8 +178,8 @@ func _ready() -> void:
 	parent = get_parent()
 	_to_spatial = parent
 	_from_spatial = parent
-	selection_item = _body_registry.get_selection_for_body(parent)
-	_from_selection_item = selection_item
+	selection = _body_registry.get_selection_for_body(parent)
+	_from_selection = selection
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
@@ -188,7 +188,7 @@ func _ready() -> void:
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
-	_min_dist = selection_item.view_min_distance * 50.0 / fov
+	_min_dist = selection.view_min_distance * 50.0 / fov
 	_visuals_helper.camera = self
 	_visuals_helper.camera_fov = fov
 	IVGlobal.verbose_signal("camera_ready", self)
@@ -204,7 +204,7 @@ func _prepare_to_free() -> void:
 	IVGlobal.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
 	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
-	selection_item = null
+	selection = null
 	parent = null
 	_to_spatial = null
 	_from_spatial = null
@@ -238,11 +238,11 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 
 
 func move_to_view(view: IVView, is_instant_move := false) -> void:
-	var to_selection_item: IVSelectionItem
+	var to_selection: IVSelection
 	if view.selection_name:
-		to_selection_item = _body_registry.selection_items.get(view.selection_name)
-		assert(to_selection_item)
-	move_to_selection(to_selection_item, view.view_type, view.view_position, view.view_rotations,
+		to_selection = _body_registry.selections.get(view.selection_name)
+		assert(to_selection)
+	move_to_selection(to_selection, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
 
 
@@ -250,7 +250,7 @@ func create_view(use_current_selection := true) -> IVView:
 	# IVView object is useful for cache or save persistence
 	var view: IVView = _View_.new()
 	if use_current_selection:
-		view.selection_name = selection_item.name
+		view.selection_name = selection.name
 	view.track_type = track_type
 	view.view_type = view_type
 	match view_type:
@@ -266,28 +266,28 @@ func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTO
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection_item := _body_registry.get_selection_for_body(to_body)
-	move_to_selection(to_selection_item, to_view_type, to_view_position, to_view_rotations, to_track_type,
+	var to_selection := _body_registry.get_selection_for_body(to_body)
+	move_to_selection(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
 
-func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to_selection(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Most view_type values override all or some components of view_position &
 	# view_rotations.
-	assert(DPRINT and prints("move_to_selection", to_selection_item, to_view_type, to_view_position,
+	assert(DPRINT and prints("move_to_selection", to_selection, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	_from_selection_item = selection_item
+	_from_selection = selection
 	_from_spatial = parent
 	_from_view_type = view_type
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
 	_from_track_type = track_type
-	if to_selection_item and to_selection_item.spatial:
-		selection_item = to_selection_item
-		_to_spatial = to_selection_item.spatial
-		_min_dist = selection_item.view_min_distance * 50.0 / fov
+	if to_selection and to_selection.spatial:
+		selection = to_selection
+		_to_spatial = to_selection.spatial
+		_min_dist = selection.view_min_distance * 50.0 / fov
 	if to_track_type != -1 and track_type != to_track_type:
 		track_type = to_track_type
 		emit_signal("tracking_changed", to_track_type, _is_ecliptic)
@@ -296,11 +296,11 @@ func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, t
 	match view_type:
 		VIEW_ZOOM, VIEW_45, VIEW_TOP, VIEW_OUTWARD:
 			if track_type == TRACK_GROUND:
-				view_position = selection_item.track_ground_positions[view_type]
+				view_position = selection.track_ground_positions[view_type]
 			elif track_type == TRACK_ORBIT:
-				view_position = selection_item.track_orbit_positions[view_type]
+				view_position = selection.track_orbit_positions[view_type]
 			else:
-				view_position = selection_item.track_ecliptic_positions[view_type]
+				view_position = selection.track_ecliptic_positions[view_type]
 			view_position[2] /= fov
 			if view_type == VIEW_OUTWARD:
 				view_rotations = OUTWARD_VIEW_ROTATION
@@ -309,11 +309,11 @@ func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, t
 		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
 			if to_view_position != VECTOR3_ZERO:
 				view_position = to_view_position
-			elif _from_selection_item != selection_item \
+			elif _from_selection != selection \
 					and view_position[2] < _max_compensated_dist:
 				# partial distance compensation
-				var from_radius := _from_selection_item.get_radius_for_camera()
-				var to_radius := selection_item.get_radius_for_camera()
+				var from_radius := _from_selection.get_radius_for_camera()
+				var to_radius := selection.get_radius_for_camera()
 				var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
 				view_position[2] *= adj_ratio
 			continue
@@ -324,7 +324,7 @@ func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, t
 				view_rotations = to_view_rotations
 		_:
 			assert(false, "Unknown view_type %s" % view_type)
-	var min_dist := selection_item.view_min_distance * sqrt(50.0 / fov)
+	var min_dist := selection.view_min_distance * sqrt(50.0 / fov)
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
 	if is_instant_move:
@@ -334,7 +334,7 @@ func move_to_selection(to_selection_item: IVSelectionItem, to_view_type := -1, t
 	else:
 		_move_progress = _transfer_time / 2.0 # move was in progress; user is in a hurry!
 	_transfer_ref_spatial = _get_transfer_ref_spatial(_from_spatial, _to_spatial)
-	_transfer_ref_basis = _get_transfer_ref_basis(_from_selection_item, selection_item)
+	_transfer_ref_basis = _get_transfer_ref_basis(_from_selection, selection)
 	is_moving = true
 	_move_action = VECTOR3_ZERO
 	_rotate_action = VECTOR3_ZERO
@@ -371,7 +371,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
-	_min_dist = selection_item.view_min_distance * 50.0 / fov
+	_min_dist = selection.view_min_distance * 50.0 / fov
 	_visuals_helper.camera_fov = fov
 	if !suppress_move:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
@@ -420,7 +420,7 @@ func _process_move_in_progress(delta: float) -> void:
 	if is_ecliptic:
 		_lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
-		_lat_long = selection_item.get_latitude_longitude(gui_translation)
+		_lat_long = selection.get_latitude_longitude(gui_translation)
 	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic)
 
 
@@ -433,9 +433,9 @@ func _do_camera_handoff() -> void:
 
 func _interpolate_cartesian_path(progress: float) -> void:
 	# interpolate global cartesian coordinates
-	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
+	var from_transform := _get_view_transform(_from_selection, _from_view_position,
 			_from_view_rotations, _from_track_type)
-	var to_transform := _get_view_transform(selection_item, view_position,
+	var to_transform := _get_view_transform(selection, view_position,
 			view_rotations, track_type)
 	var from_global_origin := _from_spatial.global_transform.origin
 	var to_global_origin := _to_spatial.global_transform.origin
@@ -451,9 +451,9 @@ func _interpolate_cartesian_path(progress: float) -> void:
 func _interpolate_spherical_path(progress: float) -> void:
 	# interpolate spherical coordinates relative to _transfer_ref_spatial and
 	# _transfer_ref_basis
-	var from_transform := _get_view_transform(_from_selection_item, _from_view_position,
+	var from_transform := _get_view_transform(_from_selection, _from_view_position,
 			_from_view_rotations, _from_track_type)
-	var to_transform := _get_view_transform(selection_item, view_position,
+	var to_transform := _get_view_transform(selection, view_position,
 			view_rotations, track_type)
 	var from_global_origin := _from_spatial.global_transform.origin
 	var to_global_origin := _to_spatial.global_transform.origin
@@ -482,7 +482,7 @@ func _interpolate_spherical_path(progress: float) -> void:
 func _process_at_target(delta: float) -> void:
 	var is_camera_bump := false
 	# maintain present "position" based on track_type
-	_transform = _get_view_transform(selection_item, view_position, view_rotations, track_type)
+	_transform = _get_view_transform(selection, view_position, view_rotations, track_type)
 	# process accumulated user inputs
 	if _move_action:
 		_process_move_action(delta)
@@ -511,7 +511,7 @@ func _process_at_target(delta: float) -> void:
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
-		lat_long = selection_item.get_latitude_longitude(_transform.origin)
+		lat_long = selection.get_latitude_longitude(_transform.origin)
 	if _lat_long != lat_long:
 		_lat_long = lat_long
 		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
@@ -542,7 +542,7 @@ func _process_move_action(delta: float) -> void:
 	# get values for adjustments below
 	var origin := _transform.origin
 	var dist: float = view_position[2]
-	var up := _get_up(selection_item, dist, track_type)
+	var up := _get_up(selection, dist, track_type)
 	var radial_movement := move_vector.dot(origin)
 	var normalized_origin := origin.normalized()
 	var longitude_vector := normalized_origin.cross(up).normalized()
@@ -566,7 +566,7 @@ func _process_move_action(delta: float) -> void:
 	_transform = _transform.looking_at(-origin, up)
 	_transform.basis *= Basis(view_rotations)
 	# reset view_position
-	var tracking_basis := _get_tracking_basis(selection_item, new_dist, track_type)
+	var tracking_basis := _get_tracking_basis(selection, new_dist, track_type)
 	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 
 
@@ -596,21 +596,21 @@ func _process_rotate_action(delta: float) -> void:
 	basis = basis.rotated(basis.z, rotate_now.z)
 	view_rotations = basis.get_euler()
 	var dist := view_position[2]
-	var up := _get_up(selection_item, dist, track_type)
+	var up := _get_up(selection, dist, track_type)
 	_transform = _transform.looking_at(-_transform.origin, up)
 	_transform.basis *= Basis(view_rotations)
 
 
 func _reset_view_position_and_rotations() -> void:
-	# update for current _transform, selection_item & track_type
+	# update for current _transform, selection & track_type
 	var origin := _transform.origin
 	var dist := origin.length()
 	# position
-	var tracking_basis := _get_tracking_basis(selection_item, dist, track_type)
+	var tracking_basis := _get_tracking_basis(selection, dist, track_type)
 	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 	# rotations
 	var basis_rotated := _transform.basis
-	var up := _get_up(selection_item, dist, track_type)
+	var up := _get_up(selection, dist, track_type)
 	var transform_looking_at := _transform.looking_at(-origin, up)
 	var basis_looking_at := transform_looking_at.basis
 	# From _process_rotate_action() we have...
@@ -621,11 +621,11 @@ func _reset_view_position_and_rotations() -> void:
 	view_rotations = rotations_basis.get_euler()
 
 
-func _get_view_transform(selection_item_: IVSelectionItem, view_position_: Vector3,
+func _get_view_transform(selection_: IVSelection, view_position_: Vector3,
 		view_rotations_: Vector3, track_type_: int) -> Transform:
 	var dist := view_position_[2]
-	var up := _get_up(selection_item_, dist, track_type_)
-	var tracking_basis := _get_tracking_basis(selection_item_, dist, track_type_)
+	var up := _get_up(selection_, dist, track_type_)
+	var tracking_basis := _get_tracking_basis(selection_, dist, track_type_)
 	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
 	assert(view_translation)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
@@ -634,14 +634,14 @@ func _get_view_transform(selection_item_: IVSelectionItem, view_position_: Vecto
 	return view_transform
 
 
-func _get_up(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Vector3:
+func _get_up(selection_: IVSelection, dist: float, track_type_: int) -> Vector3:
 	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_NONE:
 		return ECLIPTIC_Z
 	var local_up: Vector3
 	if track_type_ == TRACK_ORBIT:
-		local_up = selection_item_.get_orbit_normal(NAN, true)
+		local_up = selection_.get_orbit_normal(NAN, true)
 	else:
-		local_up = selection_item_.get_up()
+		local_up = selection_.get_up()
 	if dist <= _use_local_up_dist:
 		return local_up
 	# interpolate along a log scale
@@ -652,17 +652,17 @@ func _get_up(selection_item_: IVSelectionItem, dist: float, track_type_: int) ->
 	return (local_up - diff_vector * proportion).normalized()
 
 
-func _get_tracking_basis(selection_item_: IVSelectionItem, dist: float, track_type_: int) -> Basis:
+func _get_tracking_basis(selection_: IVSelection, dist: float, track_type_: int) -> Basis:
 	if dist > _track_dist:
 		return IDENTITY_BASIS
 	if track_type_ == TRACK_ORBIT:
-		return selection_item_.get_orbit_ref_basis()
+		return selection_.get_orbit_ref_basis()
 	if track_type_ == TRACK_GROUND:
-		return selection_item_.get_ground_ref_basis()
+		return selection_.get_ground_ref_basis()
 	return IDENTITY_BASIS
 
 
-func _get_transfer_ref_basis(s1: IVSelectionItem, s2: IVSelectionItem) -> Basis:
+func _get_transfer_ref_basis(s1: IVSelection, s2: IVSelection) -> Basis:
 	var normal1 := s1.get_orbit_normal(NAN, true)
 	var normal2 := s2.get_orbit_normal(NAN, true)
 	var z_axis := (normal1 + normal2).normalized()
@@ -697,7 +697,7 @@ func _send_gui_refresh() -> void:
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
-		lat_long = selection_item.get_latitude_longitude(translation)
+		lat_long = selection.get_latitude_longitude(translation)
 	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
 
 

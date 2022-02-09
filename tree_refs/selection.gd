@@ -1,4 +1,4 @@
-# selection_item.gd
+# selection.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,13 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSelectionItem
+class_name IVSelection
 
-# DEPRECIATE for IVSelection
+# Wrapper for whatever you want selected, which could be anything (extend for
+# more functionality) or possibly only a text string. We wrap selection so all
+# API expects the same type. SelectionManager maintains selection history.
+#
+# For core ivoyager we only select Body instances and provide view info for
+# camera and some data access for GUI.
 
-# Wrapper for whatever you want selected, which could be anything. In core
-# ivoyager we only select Body instances and provide some associated UI info
-# here, such as camera view angles and data precision (significant digets).
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 

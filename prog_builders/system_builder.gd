@@ -53,7 +53,7 @@ func build_system_tree() -> void:
 	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
 	var selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
-	selection_builder.build_body_selection_items()
+	selection_builder.build_body_selections()
 	if add_camera:
 		_add_camera()
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)

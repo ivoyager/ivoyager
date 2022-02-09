@@ -20,7 +20,7 @@
 class_name IVBodyRegistry
 extends Node
 
-# Indexes IVBody and IVSelectionItem instances. Also holds IVSelectionItems so
+# Indexes IVBody and IVSelection instances. Also holds IVSelectionItems so
 # they aren't freed (they are References that need at least one reference).
 
 const BodyFlags := IVEnums.BodyFlags
@@ -30,9 +30,9 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted - read only
 var top_bodies := []
-var selection_items := {} # indexed by IVBody.name (e.g., "MOON_EUROPA")
+var selections := {} # indexed by IVBody.name (e.g., "MOON_EUROPA")
 const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["top_bodies", "selection_items"]
+const PERSIST_PROPERTIES := ["top_bodies", "selections"]
 
 # unpersisted - public are read-only!
 var bodies: Array = IVGlobal.bodies # indexed by body_id
@@ -48,56 +48,56 @@ func _ready():
 
 func _clear() -> void:
 	top_bodies.clear()
-	selection_items.clear()
+	selections.clear()
 	bodies.clear()
 	bodies_by_name.clear()
 	_removed_body_ids.clear()
 
 
-func get_body_above_selection(selection_item: IVSelectionItem) -> IVBody:
-	while selection_item.up_selection_name:
-		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.body:
-			return selection_item.body
+func get_body_above_selection(selection: IVSelection) -> IVBody:
+	while selection.up_selection_name:
+		selection = selections[selection.up_selection_name]
+		if selection.body:
+			return selection.body
 	return top_bodies[0]
 
 
-func get_selection_star(selection_item: IVSelectionItem) -> IVBody:
-	if selection_item.get_flags() & IS_STAR:
-		return selection_item.body
-	while selection_item.up_selection_name:
-		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.get_flags() & IS_STAR:
-			return selection_item.body
+func get_selection_star(selection: IVSelection) -> IVBody:
+	if selection.get_flags() & IS_STAR:
+		return selection.body
+	while selection.up_selection_name:
+		selection = selections[selection.up_selection_name]
+		if selection.get_flags() & IS_STAR:
+			return selection.body
 	return top_bodies[0] # in case selection is Solar System; needs fix for multistar
 
 
-func get_selection_planet(selection_item: IVSelectionItem) -> IVBody:
-	if selection_item.get_flags() & IS_PLANET:
-		return selection_item.body
-	while selection_item.up_selection_name:
-		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.get_flags() & IS_PLANET:
-			return selection_item.body
+func get_selection_planet(selection: IVSelection) -> IVBody:
+	if selection.get_flags() & IS_PLANET:
+		return selection.body
+	while selection.up_selection_name:
+		selection = selections[selection.up_selection_name]
+		if selection.get_flags() & IS_PLANET:
+			return selection.body
 	return null
 
 
-func get_selection_moon(selection_item: IVSelectionItem) -> IVBody:
-	if selection_item.get_flags() & IS_MOON:
-		return selection_item.body
-	while selection_item.up_selection_name:
-		selection_item = selection_items[selection_item.up_selection_name]
-		if selection_item.get_flags() & IS_MOON:
-			return selection_item.body
+func get_selection_moon(selection: IVSelection) -> IVBody:
+	if selection.get_flags() & IS_MOON:
+		return selection.body
+	while selection.up_selection_name:
+		selection = selections[selection.up_selection_name]
+		if selection.get_flags() & IS_MOON:
+			return selection.body
 	return null
 
 
-func get_selection_by_name(selection_name: String) -> IVSelectionItem:
-	return selection_items.get(selection_name)
+func get_selection_by_name(selection_name: String) -> IVSelection:
+	return selections.get(selection_name)
 
 
-func get_selection_for_body(body: IVBody) -> IVSelectionItem:
-	return selection_items.get(body.name)
+func get_selection_for_body(body: IVBody) -> IVSelection:
+	return selections.get(body.name)
 
 
 func register_top_body(body: IVBody) -> void:
@@ -129,16 +129,16 @@ func remove_body(body: IVBody) -> void:
 	_removed_body_ids.append(body_id)
 
 
-func register_selection_item(selection_item: IVSelectionItem) -> void:
-	var name_ := selection_item.name
-	assert(!selection_items.has(name_))
-	selection_items[name_] = selection_item
+func register_selection(selection: IVSelection) -> void:
+	var name_ := selection.name
+	assert(!selections.has(name_))
+	selections[name_] = selection
 
 
-func remove_selection_item(selection_item: IVSelectionItem) -> void:
-	var name_ := selection_item.name
-	assert(selection_items.has(name_))
-	selection_items.erase(name_)
+func remove_selection(selection: IVSelection) -> void:
+	var name_ := selection.name
+	assert(selections.has(name_))
+	selections.erase(name_)
 
 
 func _index_bodies() -> void:

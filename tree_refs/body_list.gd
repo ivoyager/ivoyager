@@ -98,7 +98,7 @@ func select(body_name: String, selection_manager: IVSelectionManager) -> void:
 		prints(body_name, "selected!")
 		return
 #		body = _builder.make_body(body_name)
-#	selection_manager.select(selection_item)
+#	selection_manager.select(selection)
 
 
 func _sort_asteroids(a: String, b: String) -> bool:

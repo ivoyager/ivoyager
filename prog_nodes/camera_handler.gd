@@ -228,19 +228,19 @@ func _disconnect_camera() -> void:
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				Vector3.ZERO, -1)
 
 func _on_selection_reselected() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				Vector3.ZERO, -1)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				NULL_ROTATION, -1)
 
 
