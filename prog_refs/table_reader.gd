@@ -39,6 +39,10 @@ var _unit_functions: Dictionary = IVGlobal.unit_functions
 # *****************************************************************************
 # init
 
+func _project_init() -> void:
+	pass
+
+
 func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
 		table_units: Dictionary, table_row_dicts: Dictionary) -> void:
 	# Called by IVTableImporter at _project_init()
@@ -96,6 +100,22 @@ func get_column_array(table_name: String, field_name: String) -> Array:
 		var row_data: Array = data[row]
 		var value_str: String = row_data[column]
 		result[row] = convert_value(value_str, data_type, unit)
+		row += 1
+	return result
+
+
+func get_true_rows(table_name: String, field_name: String) -> Array:
+	# field_name must exist in specified table
+	var column_fields: Dictionary = _table_fields[table_name]
+	var column = column_fields[field_name]
+	var data: Array = _table_data[table_name]
+	var n_rows := data.size()
+	var result := []
+	var row := 0
+	while row < n_rows:
+		var row_data: Array = data[row]
+		if convert_bool(row_data[column]):
+			result.append(row)
 		row += 1
 	return result
 
@@ -228,8 +248,8 @@ func get_body(table_name: String, field_name: String, row := -1, row_name := "")
 	return convert_body(row_data[column])
 
 
-func get_data(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# Use for Type = "DATA" to get row number of the cell item.
+func get_table_row(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+	# Use for Type = "TABLE_ROW" to get row number of the cell item.
 	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var column_fields: Dictionary = _table_fields[table_name]
@@ -240,7 +260,7 @@ func get_data(table_name: String, field_name: String, row := -1, row_name := "")
 	var data: Array = _table_data[table_name]
 	var row_data: Array = data[row]
 	var column = column_fields[field_name]
-	return convert_data(row_data[column])
+	return convert_table_row(row_data[column])
 
 
 func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
@@ -407,8 +427,8 @@ func convert_value(value: String, data_type: String, unit := ""): # untyped retu
 			return value
 		"INT":
 			return convert_int(value)
-		"DATA":
-			return convert_data(value)
+		"TABLE_ROW":
+			return convert_table_row(value)
 		"BODY":
 			return convert_body(value)
 		_: # must be valid enum name (this was verified on import)
@@ -435,7 +455,7 @@ func convert_real(value: String, unit := "") -> float:
 	return float(real)
 
 
-func convert_data(value: String) -> int:
+func convert_table_row(value: String) -> int:
 	if !value:
 		return -1
 	assert(_table_rows.has(value), "Unknown table row name " + value)

@@ -170,7 +170,7 @@ var procedural_classes := {
 	# tree_refs
 	_Orbit_ = IVOrbit,
 	_ModelController_ = IVModelController,
-	_SelectionItem_ = IVSelectionItem,
+	_Selection_ = IVSelection,
 	_View_ = IVView,
 	_AsteroidGroup_ = IVAsteroidGroup,
 	_Composition_ = IVComposition,

@@ -35,13 +35,15 @@ extends Spatial
 # almost never obtains nodes by name. Dictionaries in IVGlobal are used
 # instead.)
 #
-# Note that we use origin shifting to prevent float "imprecision shakes" (for
-# example, when way out at Pluto). To do this, the camera shifts this node's
-# (or substitute root node's) translation every frame.
+# We use origin shifting to prevent float "imprecision shakes" (for example,
+# when way out at Pluto). To do this, the camera shifts this node's (or
+# substitute root node's) translation every frame.
+#
+# 'persist' dictionary is not used by ivoyager but is available for gamesave
+# persistence in extension projects. It can hold Godot built-ins, nested
+# containers or other 'persist objects'. See prog_builders/save_builder.gd for
+# details.
 
-# Presence of const PERSIST_AS_PROCEDURAL_OBJECT below is needed by 'ivoyager'
-# procedural save/load system. This tells the system that this node or children
-# might have data to persist or might have procedurally generated children.
-# This node itself is not procedurally generated.
-
-const PERSIST_AS_PROCEDURAL_OBJECT := false
+var persist := {}
+const PERSIST_AS_PROCEDURAL_OBJECT := false # persist but don't free on load
+const PERSIST_PROPERTIES := ["persist"]

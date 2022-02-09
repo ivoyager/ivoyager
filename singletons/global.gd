@@ -27,7 +27,7 @@ extends Node
 # to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220126
+const IVOYAGER_VERSION_YMD := 20220209
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -73,7 +73,7 @@ signal load_requested(path, is_quick_load) # ["", false] will trigger dialog
 signal save_quit_requested()
 
 # requests for camera action
-signal move_camera_to_selection_requested(selection_item, view_type, view_position,
+signal move_camera_to_selection_requested(selection, view_type, view_position,
 		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
 signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
 		track_type, is_instant_move) # 1st arg can be null; all others optional

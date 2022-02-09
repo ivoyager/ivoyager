@@ -1,4 +1,4 @@
-# selection_item.gd
+# selection.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSelectionItem
+class_name IVSelection
+
+# Wrapper for whatever you want selected, which could be anything or just a
+# text string. We wrap selection so all API expects the same type.
+# SelectionManager maintains selection history.
+#
+# For core ivoyager we only select Body instances and provide view info for
+# camera and some data access for GUI.
 
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
@@ -29,23 +36,21 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 
 # persisted - read only
-var name: String # IVBodyRegistry guaranties these are unique
+var name: String
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
-var system_radius := 0.0
 var view_rotate_when_close := false
 var view_min_distance: float # camera normalizes for fov = 50
 var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-var spatial: Spatial # for camera reference
+var spatial: Spatial # for camera; same as 'body' if is_body
 var body: IVBody # = spatial if is_body else null
-var real_precisions := {} # indexed by path as in gui_widgets/selection_data.gd
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
-	"system_radius", "view_rotate_when_close", "view_min_distance",
+	"view_rotate_when_close", "view_min_distance",
 	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
-	"spatial", "body", "real_precisions"]
+	"spatial", "body"]
 
 # read-only
 var texture_2d: Texture
@@ -56,13 +61,26 @@ var _times: Array = IVGlobal.times
 
 
 func _init() -> void:
-	IVGlobal.connect("system_tree_ready", self, "_init_unpersisted", [], CONNECT_ONESHOT)
+	IVGlobal.connect("system_tree_ready", self, "_init_after_system", [], CONNECT_ONESHOT)
 
 
-func _init_unpersisted(_is_new_game: bool) -> void:
+func _init_after_system(_dummy: bool) -> void:
+	# Called for gameload; dynamically created must set these
 	if is_body:
 		texture_2d = body.texture_2d
 		texture_slice_2d = body.texture_slice_2d
+
+
+func get_real_precision(path: String) -> int:
+	if !is_body:
+		return -1
+	return body.get_real_precision(path)
+
+
+func get_system_radius() -> float:
+	if !is_body:
+		return 0.0
+	return body.get_system_radius()
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
@@ -72,13 +90,15 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 
 
 func get_global_origin() -> Vector3:
+	if !spatial:
+		return Vector3.ZERO
 	return spatial.global_transform.origin
 
 
 func get_flags() -> int:
-	if is_body:
-		return body.flags
-	return 0
+	if !is_body:
+		return 0
+	return body.flags
 
 
 func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
@@ -106,6 +126,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 
 
 func get_radius_for_camera() -> float:
-	if is_body:
-		return body.get_mean_radius()
-	return IVUnits.KM
+	if !is_body:
+		return IVUnits.KM
+	return body.get_mean_radius()
+	

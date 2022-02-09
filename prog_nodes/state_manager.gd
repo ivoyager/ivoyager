@@ -27,6 +27,7 @@ extends Node
 #   is_inited: bool
 #   is_splash_screen: bool - this node & IVSaveManager
 #   is_system_built: bool - this node & IVSaveManager
+#   is_system_ready: bool
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
 #   is_quitting: bool
 #   is_loaded_game: bool - this node & IVSaveManager
@@ -92,6 +93,7 @@ func _on_init() -> void:
 	_state.is_inited = false
 	_state.is_splash_screen = false
 	_state.is_system_built = false
+	_state.is_system_ready = false
 	_state.is_running = false # SceneTree.pause set in IVProjectBuilder
 	_state.is_quitting = false
 	_state.is_loaded_game = false
@@ -133,6 +135,7 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 
 
 func _on_system_tree_ready(is_new_game: bool) -> void:
+	_state.is_system_ready = true
 	print("System tree ready...")
 	yield(_tree, "idle_frame")
 	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
@@ -243,7 +246,7 @@ func allow_run(who: Object) -> void:
 
 func exit(force_exit := false, following_server := false) -> void:
 	# force_exit == true means we've confirmed and finished other preliminaries
-	if !_state.is_system_built or IVGlobal.disable_exit:
+	if !_state.is_system_ready or IVGlobal.disable_exit:
 		return
 	if !force_exit:
 		if _state.network_state == IS_CLIENT:
@@ -256,6 +259,7 @@ func exit(force_exit := false, following_server := false) -> void:
 		if !following_server:
 			emit_signal("client_is_dropping_out", true)
 	_state.is_system_built = false
+	_state.is_system_ready = false
 	_state.is_running = false
 	_tree.paused = true
 	_state.is_loaded_game = false
@@ -273,7 +277,7 @@ func exit(force_exit := false, following_server := false) -> void:
 
 
 func quit(force_quit := false) -> void:
-	if !(_state.is_splash_screen or _state.is_system_built) or IVGlobal.disable_quit:
+	if !(_state.is_splash_screen or _state.is_system_ready) or IVGlobal.disable_quit:
 		return
 	if !force_quit:
 		if _state.network_state == IS_CLIENT:

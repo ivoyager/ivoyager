@@ -33,8 +33,10 @@ extends Control
 # Modify default sizes and snap values from _ready() in the parent Control.
 
 enum {TL, T, TR, R, BR, B, BL, L}
+enum {UP, DOWN, LEFT, RIGHT}
 
 # project vars
+var avoid_overlap := true
 var screen_edge_snap := 100.0
 var panel_edge_snap := 40.0
 var default_sizes := [
@@ -59,7 +61,7 @@ onready var _parent: Control = get_parent()
 
 
 func _ready():
-	IVGlobal.connect("simulator_started", self, "_reset")
+	IVGlobal.connect("simulator_started", self, "reset")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "_resize")
 	_parent.connect("gui_input", self, "_on_parent_input")
@@ -72,14 +74,7 @@ func _ready():
 	$BL.connect("gui_input", self, "_on_margin_input", [BL])
 	$L.connect("gui_input", self, "_on_margin_input", [L])
 	set_process_input(false) # only during drag
-	_reset()
-
-
-func _reset() -> void:
-	if !IVGlobal.state.is_system_built:
-		return
-	_resize()
-	_finish_move()
+	reset()
 
 
 func _input(event):
@@ -89,6 +84,13 @@ func _input(event):
 		if !event.pressed and event.button_index == BUTTON_LEFT:
 			_finish_move()
 			_parent.set_default_cursor_shape(CURSOR_ARROW)
+
+
+func reset() -> void:
+	if !IVGlobal.state.is_system_built:
+		return
+	_resize()
+	_finish_move()
 
 
 func set_min_size() -> void:
@@ -146,6 +148,8 @@ func _finish_move() -> void:
 	_snap_horizontal()
 	_snap_vertical()
 	_fix_offscreen()
+	if avoid_overlap:
+		_fix_overlap()
 	_set_anchors_to_position()
 
 
@@ -223,6 +227,124 @@ func _fix_offscreen() -> void:
 		_parent.rect_position.y = 0.0
 	elif rect.end.y > screen_rect.end.y:
 		_parent.rect_position.y = screen_rect.end.y - rect.size.y
+
+
+func _fix_overlap() -> void:
+	# Tries 8 directions and then gives up
+	var rect := _parent.get_rect()
+	var overlap := _get_overlap(rect)
+	if !overlap:
+		return
+	if _try_directions(rect, overlap.duplicate(), false):
+		return
+	_try_directions(rect, overlap, true)
+
+
+func _try_directions(rect: Rect2, overlap: Array, diagonals: bool) -> bool:
+	# smallest overlap is our prefered correction
+	var overlap2: Array
+	if diagonals:
+		overlap2 = overlap.duplicate()
+	while true:
+		var smallest_offset := INF
+		var smallest_direction := -1
+		var direction := 0
+		while direction < 4:
+			if abs(overlap[direction]) < abs(smallest_offset):
+				smallest_offset = overlap[direction]
+				smallest_direction = direction
+			direction += 1
+		if smallest_direction == -1:
+			return false # failed
+		if !diagonals:
+			if _try_cardinal_offset(rect, smallest_direction, smallest_offset):
+				return true # success
+		else:
+			var orthogonal := []
+			match smallest_direction:
+				UP, DOWN:
+					orthogonal.append(overlap2[LEFT])
+					orthogonal.append(overlap2[RIGHT])
+					if abs(overlap2[LEFT]) > abs(overlap2[RIGHT]):
+						orthogonal.invert()
+				RIGHT, LEFT:
+					orthogonal.append(overlap2[UP])
+					orthogonal.append(overlap2[DOWN])
+					if abs(overlap2[UP]) > abs(overlap2[DOWN]):
+						orthogonal.invert()
+			if _try_diagonal_offset(rect, smallest_direction, smallest_offset, orthogonal):
+				return true # success
+		overlap[smallest_direction] = INF
+	return false
+
+
+func _try_cardinal_offset(rect: Rect2, direction: int, offset: float) -> bool:
+	match direction:
+		UP, DOWN:
+			rect.position.y += offset
+			if _get_overlap(rect):
+				return false
+			_parent.rect_position.y += offset
+		LEFT, RIGHT:
+			rect.position.x += offset
+			if _get_overlap(rect):
+				return false
+			_parent.rect_position.x += offset
+	return true
+
+
+func _try_diagonal_offset(rect: Rect2, direction: int, offset: float, orthogonal: Array) -> bool:
+	match direction:
+		UP, DOWN:
+			rect.position.y += offset
+			rect.position.x += orthogonal[0]
+			if !_get_overlap(rect):
+				_parent.rect_position.y += offset
+				_parent.rect_position.x += orthogonal[0]
+				return true
+			rect.position.x += orthogonal[1] - orthogonal[0]
+			if !_get_overlap(rect):
+				_parent.rect_position.y += offset
+				_parent.rect_position.x += orthogonal[1]
+				return true
+		LEFT, RIGHT:
+			rect.position.x += offset
+			rect.position.y += orthogonal[0]
+			if !_get_overlap(rect):
+				_parent.rect_position.x += offset
+				_parent.rect_position.y += orthogonal[0]
+				return true
+			rect.position.y += orthogonal[1] - orthogonal[0]
+			if !_get_overlap(rect):
+				_parent.rect_position.x += offset
+				_parent.rect_position.y += orthogonal[1]
+				return true
+	return false
+
+
+func _get_overlap(rect: Rect2) -> Array:
+	for child in _parent.get_parent().get_children():
+		var other := child as Control
+		if !other or other == _parent:
+			continue
+		var other_rect := other.get_rect()
+		if rect.intersects(other_rect):
+			var right_down := other_rect.end - rect.position
+			var up_left := rect.end - other_rect.position
+			var overlap := [INF, INF, INF, INF]
+			if right_down.x > 0:
+				overlap[RIGHT] = right_down.x # move right to fix
+			if up_left.x > 0:
+				overlap[LEFT] = -up_left.x # move left to fix
+			if right_down.y > 0:
+				overlap[DOWN] = right_down.y # move down to fix
+			if up_left.y > 0:
+				overlap[UP] = -up_left.y # move up to fix
+			return overlap
+	var screen_rect := get_viewport_rect()
+	if screen_rect.encloses(rect):
+		return [] # good position
+	return [INF, INF, INF, INF] # bad position
 
 
 func _set_anchors_to_position() -> void:

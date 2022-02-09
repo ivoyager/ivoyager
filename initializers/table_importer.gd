@@ -29,7 +29,7 @@ class_name IVTableImporter
 # reference it.
 #
 # ivoyager/data/solar_system/*.tsv table construction:
-#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, DATA, BODY
+#  Data_Type (required!): X, BOOL, INT, FLOAT, STRING, ENUM, TABLE_ROW, BODY
 #    See tables for examples; see IVTableReader for conversions.
 #  Default (optional; all types except X): If cell is blank, it will be
 #    replaced with this value.
@@ -44,7 +44,7 @@ const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 const DPRINT := false
-const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "DATA"] # & enum names
+const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "BODY", "TABLE_ROW"] # & enum names
 
 # source files
 var _table_import: Dictionary = IVGlobal.table_import
@@ -198,7 +198,8 @@ func _read_data_line() -> void:
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
 	_row_name = _line_array[0]
-	assert(!_rows.has(_row_name))
+	assert(_row_name, "name cell is blank!")
+	assert(!_rows.has(_row_name), "name is already used in this or another table!")
 	_rows[_row_name] = row
 	for field in _fields:
 		_count_cells += 1
@@ -266,7 +267,7 @@ func _table_test(n_columns: int) -> bool:
 				assert(!_units[column], "Expected no Units for INT in" + _path)
 			"REAL":
 				pass
-			"STRING", "DATA", "BODY":
+			"STRING", "TABLE_ROW", "BODY":
 				assert(!_units[column], "Expected no Units for " + data_type + " in " + _path)
 			_: # must be valid enum name
 				assert(!_units or !_units[column], "Expected no Units for " + data_type + " in " + _path)
@@ -287,7 +288,7 @@ func _cell_test() -> bool:
 		"REAL":
 			var real := _cell.lstrip("~")
 			assert(real == "?" or real.is_valid_float() or _line_error("Expected REAL"))
-		"STRING", "DATA", "BODY":
+		"STRING", "TABLE_ROW", "BODY":
 			pass
 		_: # must be valid enum name
 			assert(_enums[_data_type].has(_cell) or _line_error("Non-existent enum value " + _cell))

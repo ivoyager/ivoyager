@@ -51,6 +51,7 @@ const IS_AXIS_LOCKED := BodyFlags.IS_AXIS_LOCKED
 const TUMBLES_CHAOTICALLY := BodyFlags.TUMBLES_CHAOTICALLY
 const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = IVEnums.NetworkState.IS_SERVER
+const MIN_SYSTEM_M_RADIUS_MULTIPLIER := 15.0
 
 
 # persisted
@@ -133,11 +134,23 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
+
+
+func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
+	if !is_new_game:
+		return
+	var system_radius := m_radius * MIN_SYSTEM_M_RADIUS_MULTIPLIER
+	for satellite in satellites:
+		var a: float = satellite.get_orbit_semi_major_axis()
+		if system_radius < a:
+			system_radius = a
+	characteristics.system_radius = system_radius
 
 
 func _prepare_to_free() -> void:
@@ -207,6 +220,19 @@ func _on_process(_delta: float) -> void:
 
 
 # public functions
+
+func get_real_precision(path: String) -> int:
+	# Available only if IVBodyBuilder.keep_real_precisions = true. Gets the
+	# precision (significant digits) of a real value as it was entered in the
+	# table *.tsv file. Used by Planetarium.
+	if !characteristics.has("real_precisions"):
+		return -1
+	return characteristics.real_precisions.get(path, -1)
+
+
+func get_system_radius() -> float:
+	return characteristics.system_radius
+
 
 func get_symbol() -> String:
 	return characteristics.get("symbol", "\u25CC") # default is dashed circle

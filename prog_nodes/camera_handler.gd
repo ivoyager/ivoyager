@@ -85,7 +85,7 @@ onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_ad
 
 
 func _ready():
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -94,7 +94,7 @@ func _ready():
 	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
 
 
-func _on_system_tree_ready(_is_new_game: bool) -> void:
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
@@ -228,19 +228,19 @@ func _disconnect_camera() -> void:
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				Vector3.ZERO, -1)
 
 func _on_selection_reselected() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				Vector3.ZERO, -1)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock:
-		_camera.move_to_selection(_selection_manager.selection_item, -1, Vector3.ZERO,
+		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
 				NULL_ROTATION, -1)
 
 

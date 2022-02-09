@@ -32,7 +32,7 @@ class_name IVSaveBuilder
 #
 # Lists of properties to persists must be named in constant arrays:
 #    const PERSIST_PROPERTIES := [] # properties to persist
-#    const PERSIST_PROPERTIES_2 := []
+#    const PERSIST_PROPERTIES2 := []
 #    etc...
 #    (These list names can be modified in project settings below. The extra
 #    numbered lists are needed for subclasses where a list name is taken by a
@@ -78,7 +78,7 @@ var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
 
 var properties_arrays := [
 	"PERSIST_PROPERTIES",
-	"PERSIST_PROPERTIES_2",
+	"PERSIST_PROPERTIES2",
 	]
 
 # gamesave contents

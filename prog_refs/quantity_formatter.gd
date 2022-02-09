@@ -229,7 +229,10 @@ func number_option(x: float, option_type: int, unit := "", precision := -1, num_
 		NAMED_NUMBER:
 			return named_number(x, precision, case_type)
 		NUMBER:
-			return number(x, precision, num_type)
+			if unit:
+				return number(x, precision, num_type) + " " + unit
+			else:
+				return number(x, precision, num_type)
 		UNIT:
 			return number_unit(x, unit, precision, num_type, long_form, case_type)
 		PREFIXED_UNIT:

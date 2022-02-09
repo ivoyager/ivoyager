@@ -61,9 +61,9 @@ const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 # persisted
 var is_action_listener := true
-var selection_item: IVSelectionItem
+var selection: IVSelection
 const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["is_action_listener", "selection_item"]
+const PERSIST_PROPERTIES := ["is_action_listener", "selection"]
 
 # private
 var _root: Viewport = IVGlobal.get_tree().get_root()
@@ -88,8 +88,8 @@ func _ready() -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	if is_new_game:
 		var start_body_name: String = IVGlobal.start_body_name
-		var selection_item_: IVSelectionItem = _body_registry.selection_items[start_body_name]
-		select(selection_item_)
+		var selection_: IVSelection = _body_registry.get_selection(start_body_name)
+		select(selection_)
 	else:
 		_add_history()
 
@@ -132,51 +132,55 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 	_tree.set_input_as_handled()
 
 
-func has_item() -> bool:
-	return selection_item != null
+func has_selection() -> bool:
+	return selection != null
 
 
-func select(selection_item_: IVSelectionItem) -> void:
-	if selection_item == selection_item_:
+func get_item() -> IVSelection:
+	return selection
+
+
+func select(selection_: IVSelection) -> void:
+	if selection == selection_:
 		emit_signal("selection_reselected")
 		return
-	selection_item = selection_item_
+	selection = selection_
 	_add_history()
 	emit_signal("selection_changed")
 
 
 func select_body(body_: IVBody) -> void:
-	var selection_item_: IVSelectionItem = _body_registry.get_selection_for_body(body_)
-	if selection_item_:
-		select(selection_item_)
+	var selection_: IVSelection = _body_registry.get_body_selection(body_)
+	if selection_:
+		select(selection_)
 
 
 func select_by_name(selection_name: String) -> void:
-	var selection_item_: IVSelectionItem = _body_registry.get_selection_by_name(selection_name)
-	if selection_item_:
-		select(selection_item_)
+	var selection_: IVSelection = _body_registry.get_selection(selection_name)
+	if selection_:
+		select(selection_)
 
 
 func get_name() -> String:
-	if selection_item:
-		return selection_item.name
+	if selection:
+		return selection.name
 	return ""
 
 
 func get_texture_2d() -> Texture:
-	if selection_item:
-		return selection_item.texture_2d
+	if selection:
+		return selection.texture_2d
 	return null
 
 
 func get_body() -> IVBody:
-	if selection_item:
-		return selection_item.body
+	if selection:
+		return selection.body
 	return null
 
 
 func is_body() -> bool:
-	return selection_item.is_body
+	return selection.is_body
 
 
 func back() -> void:
@@ -184,7 +188,7 @@ func back() -> void:
 		return
 	_history_index -= 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: IVSelectionItem = wr.get_ref()
+	var new_selection: IVSelection = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -197,7 +201,7 @@ func forward() -> void:
 		return
 	_history_index += 1
 	var wr: WeakRef = _history[_history_index]
-	var new_selection: IVSelectionItem = wr.get_ref()
+	var new_selection: IVSelection = wr.get_ref()
 	if new_selection:
 		_supress_history = true
 		select(new_selection)
@@ -206,9 +210,9 @@ func forward() -> void:
 
 
 func up() -> void:
-	var up_name := selection_item.up_selection_name
+	var up_name := selection.up_selection_name
 	if up_name:
-		var new_selection: IVSelectionItem = _body_registry.get_selection_by_name(up_name)
+		var new_selection: IVSelection = _body_registry.get_selection(up_name)
 		select(new_selection)
 
 
@@ -221,22 +225,22 @@ func can_go_forward() -> bool:
 
 
 func can_go_up() -> bool:
-	return selection_item and selection_item.up_selection_name
+	return selection and selection.up_selection_name
 
 
 func down() -> void:
-	var body: IVBody = selection_item.body
+	var body: IVBody = selection.body
 	if body and body.satellites:
 		select_body(body.satellites[0])
 
 
 func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> void:
-	var current_body := selection_item.body # could be null
+	var current_body := selection.body # could be null
 	var iteration_array: Array
 	var index := -1
 	match selection_type:
 		-1:
-			var up_body := _body_registry.get_body_above_selection(selection_item)
+			var up_body := _body_registry.get_body_above_selection(selection)
 			iteration_array = up_body.satellites
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
@@ -245,21 +249,21 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			select_body(sun)
 			return
 		SELECTION_PLANET:
-			var star := _body_registry.get_selection_star(selection_item)
+			var star := _body_registry.get_selection_star(selection)
 			if !star:
 				return
 			iteration_array = star.satellites
-			var planet := _body_registry.get_selection_planet(selection_item)
+			var planet := _body_registry.get_selection_planet(selection)
 			if planet:
 				index = iteration_array.find(planet)
 				if planet != current_body and incr == 1:
 					index -= 1
 		SELECTION_NAVIGATOR_MOON, SELECTION_MOON:
-			var planet := _body_registry.get_selection_planet(selection_item)
+			var planet := _body_registry.get_selection_planet(selection)
 			if !planet:
 				return
 			iteration_array = planet.satellites
-			var moon := _body_registry.get_selection_moon(selection_item)
+			var moon := _body_registry.get_selection_moon(selection)
 			if moon:
 				index = iteration_array.find(moon)
 				if moon != current_body and incr == 1:
@@ -268,7 +272,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			if current_body:
 				iteration_array = current_body.satellites
 			else:
-				var up_body := _body_registry.get_body_above_selection(selection_item)
+				var up_body := _body_registry.get_body_above_selection(selection)
 				iteration_array = up_body.satellites
 	if !iteration_array:
 		return
@@ -307,11 +311,11 @@ func erase_history() -> void:
 
 
 func get_selection_and_history() -> Array:
-	return [selection_item, _history.duplicate(), _history_index]
+	return [selection, _history.duplicate(), _history_index]
 
 
 func set_selection_and_history(array: Array) -> void:
-	selection_item = array[0]
+	selection = array[0]
 	_history = array[1]
 	_history_index = array[2]
 
@@ -322,11 +326,11 @@ func _add_history() -> void:
 		return
 	if _history_index >= 0:
 		var last_wr: WeakRef = _history[_history_index]
-		var last_selection_item: IVSelectionItem = last_wr.get_ref()
-		if last_selection_item == selection_item:
+		var last_selection: IVSelection = last_wr.get_ref()
+		if last_selection == selection:
 			return
 	_history_index += 1
 	if _history.size() > _history_index:
 		_history.resize(_history_index)
-	var wr := weakref(selection_item)
+	var wr := weakref(selection)
 	_history.append(wr)

@@ -46,6 +46,6 @@ func _connect_selection_manager(_dummy := false) -> void:
 
 
 func _update_selection() -> void:
-	if !_selection_manager.has_item():
+	if !_selection_manager.has_selection():
 		return
 	text = _selection_manager.get_name()
