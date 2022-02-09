@@ -36,7 +36,7 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 
 # persisted - read only
-var name: String # IVBodyRegistry guaranties these are unique
+var name: String
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var system_radius := 0.0
@@ -45,7 +45,7 @@ var view_min_distance: float # camera normalizes for fov = 50
 var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-var spatial: Spatial # for camera reference
+var spatial: Spatial # for camera; same as 'body' if is_body
 var body: IVBody # = spatial if is_body else null
 const PERSIST_AS_PROCEDURAL_OBJECT := true
 const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
@@ -84,13 +84,15 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 
 
 func get_global_origin() -> Vector3:
+	if !spatial:
+		return Vector3.ZERO
 	return spatial.global_transform.origin
 
 
 func get_flags() -> int:
-	if is_body:
-		return body.flags
-	return 0
+	if !is_body:
+		return 0
+	return body.flags
 
 
 func get_orbit_normal(time := NAN, flip_retrograde := false) -> Vector3:
@@ -118,6 +120,7 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 
 
 func get_radius_for_camera() -> float:
-	if is_body:
-		return body.get_mean_radius()
-	return IVUnits.KM
+	if !is_body:
+		return IVUnits.KM
+	return body.get_mean_radius()
+	
