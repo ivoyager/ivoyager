@@ -165,7 +165,7 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 func _ready() -> void:
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
 	name = "Camera"
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator",
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready",
 			[], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free",
 			[], CONNECT_ONESHOT)
@@ -190,7 +190,7 @@ func _ready() -> void:
 	IVGlobal.verbose_signal("camera_ready", self)
 
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+func _on_system_tree_ready(_is_new_game: bool) -> void:
 	parent = get_parent()
 	_to_spatial = parent
 	_from_spatial = parent
