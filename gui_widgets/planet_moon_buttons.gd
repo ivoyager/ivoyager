@@ -137,7 +137,7 @@ func _clear() -> void:
 
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
-	var selection := _body_registry.get_selection_for_body(body)
+	var selection := _body_registry.get_body_selection(body)
 	var button := NavButton.new(selection, _selection_manager, image_size)
 	button.connect("selected", self, "_on_nav_button_selected", [button])
 	button.size_flags_horizontal = SIZE_FILL

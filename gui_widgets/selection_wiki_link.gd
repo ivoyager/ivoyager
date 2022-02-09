@@ -58,7 +58,7 @@ func _connect_selection_manager(_dummy := false) -> void:
 
 
 func _update_selection() -> void:
-	if !_selection_manager.has_item():
+	if !_selection_manager.has_selection():
 		return
 	var object_name: String = _selection_manager.get_name()
 	bbcode_text = "[url]" + tr(object_name) + "[/url]"

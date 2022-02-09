@@ -165,8 +165,10 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 func _ready() -> void:
 	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
 	name = "Camera"
-	IVGlobal.connect("about_to_start_simulator", self, "_start_sim", [], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator",
+			[], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free",
+			[], CONNECT_ONESHOT)
 	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.connect("move_camera_to_selection_requested", self, "move_to_selection")
 	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
@@ -175,11 +177,6 @@ func _ready() -> void:
 	var dist := _transform.origin.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
-	parent = get_parent()
-	_to_spatial = parent
-	_from_spatial = parent
-	selection = _body_registry.get_selection_for_body(parent)
-	_from_selection = selection
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
@@ -188,13 +185,19 @@ func _ready() -> void:
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
-	_min_dist = selection.view_min_distance * 50.0 / fov
 	_visuals_helper.camera = self
 	_visuals_helper.camera_fov = fov
 	IVGlobal.verbose_signal("camera_ready", self)
 
 
-func _start_sim(_is_new_game: bool) -> void:
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+	parent = get_parent()
+	_to_spatial = parent
+	_from_spatial = parent
+	if !selection:
+		selection = _body_registry.get_body_selection(parent)
+	_from_selection = selection
+	_min_dist = selection.view_min_distance * 50.0 / fov
 	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 
@@ -240,7 +243,7 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 func move_to_view(view: IVView, is_instant_move := false) -> void:
 	var to_selection: IVSelection
 	if view.selection_name:
-		to_selection = _body_registry.selections.get(view.selection_name)
+		to_selection = _body_registry.get_selection(view.selection_name)
 		assert(to_selection)
 	move_to_selection(to_selection, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
@@ -266,7 +269,7 @@ func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTO
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection := _body_registry.get_selection_for_body(to_body)
+	var to_selection := _body_registry.get_body_selection(to_body)
 	move_to_selection(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 

@@ -61,7 +61,7 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	var sun: IVBody = _body_registry.top_bodies[0]
-	_selection = _body_registry.get_selection_for_body(sun)
+	_selection = _body_registry.get_body_selection(sun)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	_selection_manager.connect("selection_reselected", self, "_update_selection")
 	flat = true

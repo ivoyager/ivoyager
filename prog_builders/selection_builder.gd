@@ -42,7 +42,6 @@ var orbit_longitude_offset_moon := deg2rad(195.0)
 var orbit_latitude_offset_moon := deg2rad(15.0)
 var latitude_offset_top := deg2rad(85.0)
 var latitude_offset_45 := deg2rad(45.0)
-var min_system_m_radius_multiplier := 15.0
 var min_view_dist_radius_multiplier := 1.65
 var zoom_divisor := 1.5e-4 * IVUnits.KM # bigger makes zoom closer
 var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
@@ -50,39 +49,23 @@ var system_radius_multiplier_top := 2.5
 
 # private
 var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zone
-var _body_registry: IVBodyRegistry
+#var _body_registry: IVBodyRegistry
 var _Selection_: Script
 
 
 func _project_init() -> void:
-	_body_registry = IVGlobal.program.BodyRegistry
 	_Selection_ = IVGlobal.script_classes._Selection_
 
 
-func build_body_selections() -> void:
-	for top_body in _body_registry.top_bodies:
-		build_body_selections_recursive(top_body, null)
-
-
-func build_body_selections_recursive(body: IVBody, parent_body: IVBody) -> void:
-	# build bottom up to calculate system_radius
-	var system_radius := body.m_radius * min_system_m_radius_multiplier
-	for satellite in body.satellites:
-		var a: float = satellite.get_orbit_semi_major_axis()
-		if system_radius < a:
-			system_radius = a
-		build_body_selections_recursive(satellite, body)
-	var selection := build_body_selection(body, parent_body, system_radius)
-	_body_registry.register_selection(selection)
-
-
-func build_body_selection(body: IVBody, parent_body: IVBody, system_radius: float) -> IVSelection:
+func build_body_selection(body: IVBody) -> IVSelection:
+	var parent_body := body.get_parent() as IVBody
 	var selection: IVSelection = _Selection_.new()
-	selection.system_radius = system_radius
 	selection.is_body = true
 	selection.spatial = body
 	selection.body = body
 	selection.name = body.name
+	selection.texture_2d = body.texture_2d
+	selection.texture_slice_2d = body.texture_slice_2d
 	set_view_parameters_from_body(selection, body)
 	if parent_body:
 		selection.up_selection_name = parent_body.name
@@ -114,7 +97,7 @@ func set_view_parameters_from_body(selection: IVSelection, body: IVBody) -> void
 	var m_radius := body.get_mean_radius()
 	selection.view_min_distance = m_radius * min_view_dist_radius_multiplier
 	var view_dist_zoom := pow(m_radius / zoom_divisor, size_ratio_exponent) * IVUnits.KM
-	var view_dist_top := selection.system_radius * system_radius_multiplier_top * 50.0 # /fov
+	var view_dist_top := selection.get_system_radius() * system_radius_multiplier_top * 50.0 # /fov
 	var view_dist_45 := exp((log(view_dist_zoom) + log(view_dist_top)) / 2.0)
 	match body.name:
 		"STAR_SUN":

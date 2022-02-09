@@ -52,8 +52,6 @@ func build_system_tree() -> void:
 	_add_bodies("moons")
 	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
-	var selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
-	selection_builder.build_body_selections()
 	if add_camera:
 		_add_camera()
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)
@@ -78,7 +76,6 @@ func _add_bodies(table_name: String) -> void:
 func _add_camera() -> void:
 	var camera_script: Script = IVGlobal.script_classes._Camera_
 	var camera: Camera = camera_script.new()
-	var body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 	var start_body_name: String = IVGlobal.start_body_name
-	var start_body: IVBody = body_registry.bodies_by_name[start_body_name]
+	var start_body: IVBody = IVGlobal.bodies_by_name[start_body_name]
 	start_body.add_child(camera)

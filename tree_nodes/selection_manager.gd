@@ -88,7 +88,7 @@ func _ready() -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	if is_new_game:
 		var start_body_name: String = IVGlobal.start_body_name
-		var selection_: IVSelection = _body_registry.selections[start_body_name]
+		var selection_: IVSelection = _body_registry.get_selection(start_body_name)
 		select(selection_)
 	else:
 		_add_history()
@@ -132,7 +132,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 	_tree.set_input_as_handled()
 
 
-func has_item() -> bool:
+func has_selection() -> bool:
 	return selection != null
 
 
@@ -150,13 +150,13 @@ func select(selection_: IVSelection) -> void:
 
 
 func select_body(body_: IVBody) -> void:
-	var selection_: IVSelection = _body_registry.get_selection_for_body(body_)
+	var selection_: IVSelection = _body_registry.get_body_selection(body_)
 	if selection_:
 		select(selection_)
 
 
 func select_by_name(selection_name: String) -> void:
-	var selection_: IVSelection = _body_registry.get_selection_by_name(selection_name)
+	var selection_: IVSelection = _body_registry.get_selection(selection_name)
 	if selection_:
 		select(selection_)
 
@@ -212,7 +212,7 @@ func forward() -> void:
 func up() -> void:
 	var up_name := selection.up_selection_name
 	if up_name:
-		var new_selection: IVSelection = _body_registry.get_selection_by_name(up_name)
+		var new_selection: IVSelection = _body_registry.get_selection(up_name)
 		select(new_selection)
 
 

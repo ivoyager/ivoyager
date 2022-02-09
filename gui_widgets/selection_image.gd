@@ -55,7 +55,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _update_image() -> void:
-	if !_selection_manager.has_item():
+	if !_selection_manager.has_selection():
 		return
 	hint_tooltip = tr(_selection_manager.get_name()) + _hint_extension
 	var texture_2d := _selection_manager.get_texture_2d()
