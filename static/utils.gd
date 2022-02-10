@@ -33,7 +33,7 @@ static func free_procedural_nodes(node: Node) -> void:
 		return
 	for child in node.get_children():
 		if "PERSIST_MODE" in child:
-			if child.PERSIST_MODE != Enums.NO_PERSIST:
+			if child.PERSIST_MODE != IVEnums.NO_PERSIST:
 				free_procedural_nodes(child)
 
 

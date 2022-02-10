@@ -71,6 +71,7 @@ var _times: Array = IVGlobal.times
 
 func _init() -> void:
 	IVGlobal.connect("system_tree_ready", self, "_init_after_system", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 
 
 func _init_after_system(_dummy: bool) -> void:
@@ -78,6 +79,13 @@ func _init_after_system(_dummy: bool) -> void:
 	if is_body:
 		texture_2d = body.texture_2d
 		texture_slice_2d = body.texture_slice_2d
+
+
+func _clear() -> void:
+	if IVGlobal.is_connected("system_tree_ready", self, "_init_after_system"):
+		IVGlobal.disconnect("system_tree_ready", self, "_init_after_system")
+	spatial = null
+	body = null
 
 
 func get_real_precision(path: String) -> int:
