@@ -25,10 +25,11 @@ const DPRINT := false
 
 signal show_points_changed(group_or_category, is_show)
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := ["_show_points"]
+
 # persisted
 var _show_points := {}
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["_show_points"]
 
 # unpersisted
 var _points_groups := {}

@@ -123,7 +123,7 @@ var prog_refs := {
 
 var prog_nodes := {
 	# IVProjectBuilder instances one of each and adds as child of Universe. Use
-	# PERSIST_AS_PROCEDURAL_OBJECT = false if there is data to persist.
+	# PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_StateManager_ = IVStateManager,
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_Timekeeper_ = IVTimekeeper,
@@ -138,7 +138,7 @@ var prog_nodes := {
 
 var gui_nodes := {
 	# IVProjectBuilder instances one of each and adds as child of Universe. Use
-	# PERSIST_AS_PROCEDURAL_OBJECT = false for save/load persistence.
+	# PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
 	# project init, or 2) reorder children of Universe after project build.

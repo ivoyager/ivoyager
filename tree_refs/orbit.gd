@@ -54,14 +54,19 @@ const T_3000CE := 10.0 * IVUnits.CENTURY # 3000 CE
 const UPDATE_TOLERANCE := 0.0002
 const UPDATE_LIMITER := IVUnits.HOUR # up to -10% to avoid schedular clumping
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"reference_normal",
+	"elements_at_epoch",
+	"element_rates",
+	"m_modifiers",
+]
+
 # persisted
 var reference_normal := ECLIPTIC_UP # moons are often different
 var elements_at_epoch := [] # [a, e, i, Om, w, M0, n]; required
 var element_rates := [] # [a, e, i, Om, w]; optional
 var m_modifiers := [] # [b, c, s, f]; planets Jupiter to Pluto only
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["reference_normal", "elements_at_epoch",
-	"element_rates", "m_modifiers"]
 
 # read-only
 var current_elements := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

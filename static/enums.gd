@@ -27,6 +27,13 @@ class_name IVEnums
 #  - IVTableImporter for interpretting enum names in external *.tsv files
 #  - GUI widget selection_data.gd for object info display 
 
+enum { # duplicated from IVSaveBuilder so we can remove the gamesave system
+	NO_PERSIST,
+	PERSIST_PROPERTIES_ONLY,
+	PERSIST_PROCEDURAL,
+}
+
+
 enum NetworkState {
 	NO_NETWORK,
 	IS_SERVER,

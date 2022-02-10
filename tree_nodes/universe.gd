@@ -44,6 +44,7 @@ extends Spatial
 # containers or other 'persist objects'. See prog_builders/save_builder.gd for
 # details.
 
-var persist := {}
-const PERSIST_AS_PROCEDURAL_OBJECT := false # persist but don't free on load
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
 const PERSIST_PROPERTIES := ["persist"]
+
+var persist := {}

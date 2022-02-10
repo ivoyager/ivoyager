@@ -79,6 +79,21 @@ const FAR_MULTIPLIER := 1e6 # see Note below
 # It used to be that ~10 orders of magnitude was allowed between near and far,
 # but perhaps that is now only 7.
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"name",
+	"is_camera_lock",
+	"selection",
+	"view_type",
+	"track_type",
+	"view_position",
+	"view_rotations",
+	"focal_length",
+	"focal_length_index",
+	"_transform",
+	"_view_type_memory",
+]
+
 # ******************************* PERSISTED ***********************************
 
 # public - read only except project init
@@ -96,12 +111,6 @@ var focal_length_index: int # use init_focal_length_index below
 # private
 var _transform := Transform(Basis(), Vector3.ONE) # working value
 var _view_type_memory := view_type
-
-# persistence
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_camera_lock", "selection", "view_type", "track_type",
-	"view_position", "view_rotations", "focal_length", "focal_length_index",
-	"_transform", "_view_type_memory"]
 
 # *****************************************************************************
 

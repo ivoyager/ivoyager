@@ -30,6 +30,15 @@ enum {
 	SORT_ASTEROIDS
 	}
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"list_name",
+	"body_names",
+	"_sort_type",
+	"bodies_by_name",
+	"_instance_builder",
+]
+
 # persisted
 var list_name: String
 var body_names: Array
@@ -37,11 +46,10 @@ var bodies_by_name := {}
 var _instance_builder: Object
 var _sort_type: int
 #var _asteroid_integers: Dictionary
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["list_name", "body_names", "_sort_type", "bodies_by_name", "_instance_builder"]
 
 
-func init_virtual_bodies(list_name_: String, sort_type := SORT_DEFAULT, body_names_ := [], instance_builder: Object = null) -> void:
+func init_virtual_bodies(list_name_: String, sort_type := SORT_DEFAULT, body_names_ := [],
+		instance_builder: Object = null) -> void:
 	# body_names_ is kept & modified
 	list_name = list_name_
 	_instance_builder = instance_builder

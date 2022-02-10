@@ -31,14 +31,19 @@ extends Spatial
 # TODO: Decide whether or not this should be a IVBody! Code & comments elsewhere
 # indicate that this is our intention.
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"l_point",
+	"dynamic_elements",
+	"elements_at_epoch",
+	"focal_orbit",
+]
 
 # persisted
 var l_point: int # 1, 2, 3, 4, 5
 var dynamic_elements: Array
 var elements_at_epoch: Array
 var focal_orbit: IVOrbit
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["l_point", "dynamic_elements", "elements_at_epoch", "focal_orbit"]
 
 
 func init(focal_orbit_: IVOrbit, l_point_: int) -> void:
