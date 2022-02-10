@@ -147,6 +147,7 @@ func _read_table() -> void:
 	var reading_data := false
 	var n_columns := 0
 	var line := file.get_line()
+	var has_type := false
 	while !file.eof_reached():
 		var commenter := line.find("#")
 		if commenter != -1 and commenter < 4: # skip comment line
@@ -169,15 +170,22 @@ func _read_table() -> void:
 				_data_types[0] = "STRING" # always name field
 				_data_types.resize(n_columns) # truncate Comment column
 				assert(_data_types_test())
+				has_type = true
 			elif _line_array[0] == "Units":
 				_units = _line_array.duplicate()
 				_units[0] = ""
 				_units.resize(n_columns) # truncate Comment column
 				assert(_units_test())
 			elif _line_array[0] == "Default":
+				assert(has_type)
 				_defaults = _line_array.duplicate()
 				_defaults[0] = ""
 				_defaults.resize(n_columns) # truncate Comment column
+				var i := 1
+				while i < n_columns:
+					if _data_types[i] == "X":
+						_defaults[i] = "false"
+					i += 1
 			else:
 				assert(_data_types) # required
 				if !_units:
@@ -261,7 +269,6 @@ func _table_test(n_columns: int) -> bool:
 			"BOOL":
 				assert(!_units[column], "Expected no Units for BOOL in" + _path)
 			"X":
-				assert(!_defaults[column], "Expected no Default for X type in" + _path)
 				assert(!_units[column], "Expected no Units for X type in" + _path)
 			"INT":
 				assert(!_units[column], "Expected no Units for INT in" + _path)
@@ -282,7 +289,8 @@ func _cell_test() -> bool:
 		"BOOL":
 			assert(_cell == "true" or _cell == "false" or _line_error("Expected BOOL"))
 		"X":
-			assert(_cell == "true" or _line_error("X type must be x or blank cell"))
+			# blanks have been imputed as 'false' and 'x' converted to 'true'
+			assert(_cell == "true" or _cell == "false" or _line_error("X type must be x or blank cell"))
 		"INT":
 			assert(_cell.is_valid_integer() or _line_error("Expected INT"))
 		"REAL":

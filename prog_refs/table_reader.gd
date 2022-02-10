@@ -298,6 +298,34 @@ func build_dictionary_from_keys(dict: Dictionary, table_name: String, row: int) 
 		dict[column_field] = convert_value(value, data_type, unit)
 
 
+func get_data(fields: Array, table_name: String, row: int) -> Array:
+	# Sets array value for each fields that exactly matches a column field in
+	# table. Missing value in table without default will not be set.
+	var n_fields := fields.size()
+	var data := []
+	data.resize(n_fields)
+	var column_fields: Dictionary = _table_fields[table_name]
+	var data_types: Array = _table_data_types[table_name]
+	var units: Array = _table_units[table_name]
+	var row_data: Array = _table_data[table_name][row]
+	var i := 0
+	while i < n_fields:
+		var column_field: String = fields[i]
+		var column: int = column_fields.get(column_field, -1)
+		if column == -1:
+			i += 1
+			continue
+		var value: String = row_data[column]
+		if !value:
+			i += 1
+			continue
+		var data_type: String = data_types[column]
+		var unit: String = units[column]
+		data[i] = convert_value(value, data_type, unit)
+		i += 1
+	return data
+
+
 func build_dictionary(dict: Dictionary, fields: Array, table_name: String, row: int) -> void:
 	# Sets dict value for each fields that exactly matches a column field in
 	# table. Missing value in table without default will not be set.
