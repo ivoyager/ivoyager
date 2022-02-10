@@ -28,13 +28,13 @@ class_name IVUtils
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:
-	# node must have const PERSIST_AS_PROCEDURAL_OBJECT
-	if node.PERSIST_AS_PROCEDURAL_OBJECT:
+	if node.PERSIST_MODE == IVEnums.PERSIST_PROCEDURAL:
 		node.queue_free() # children will also be freed!
 		return
 	for child in node.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
-			free_procedural_nodes(child)
+		if "PERSIST_MODE" in child:
+			if child.PERSIST_MODE != Enums.NO_PERSIST:
+				free_procedural_nodes(child)
 
 
 # Untyped tree/property searches

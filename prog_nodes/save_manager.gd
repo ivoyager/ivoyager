@@ -42,7 +42,7 @@ var project_version_ymd: int = IVGlobal.project_version_ymd
 var ivoyager_version: String = IVGlobal.IVOYAGER_VERSION
 var ivoyager_version_ymd: int = IVGlobal.IVOYAGER_VERSION_YMD
 var is_modded: bool = IVGlobal.is_modded
-const PERSIST_AS_PROCEDURAL_OBJECT := false
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
 	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 

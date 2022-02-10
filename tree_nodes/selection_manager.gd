@@ -59,11 +59,15 @@ const IS_NAVIGATOR_MOON := BodyFlags.IS_NAVIGATOR_MOON
 const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"is_action_listener",
+	"selection",
+]
+
 # persisted
 var is_action_listener := true
 var selection: IVSelection
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["is_action_listener", "selection"]
 
 # private
 var _root: Viewport = IVGlobal.get_tree().get_root()

@@ -35,6 +35,26 @@ const units := preload("res://ivoyager/static/units.gd")
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"is_trojans",
+	"star",
+	"lagrange_point",
+	"group_name",
+	"max_apoapsis",
+	"names",
+	"iau_number",
+	"magnitudes",
+	"dummy_translations",
+	"a_e_i",
+	"Om_w_M0_n",
+	"s_g",
+	"d_e_i",
+	"Om_w_D_f",
+	"th0",
+	"_index",
+]
+	
 # ************************** PERSISTED VARS ***********************************
 
 var is_trojans := false
@@ -59,10 +79,6 @@ var th0 := PoolVector2Array()
 
 var _index := 0
 
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["is_trojans", "star", "lagrange_point", "group_name",
-	"max_apoapsis", "names", "iau_number", "magnitudes", "dummy_translations",
-	"a_e_i", "Om_w_M0_n", "s_g", "d_e_i", "Om_w_D_f", "th0", "_index"]
 
 # *****************************************************************************
 

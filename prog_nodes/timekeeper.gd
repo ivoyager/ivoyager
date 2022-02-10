@@ -53,6 +53,14 @@ const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
 const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := [
+	"time",
+	"solar_day",
+	"speed_index",
+	"is_reversed",
+]
+
 # project vars
 var sync_tolerance := 0.2 # engine time (seconds)
 var start_real_world_time := false # true overrides other start settings
@@ -91,8 +99,6 @@ var time: float # seconds from J2000 epoch
 var solar_day: float # calculate UT from the fractional part
 var speed_index: int
 var is_reversed := false
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["time", "solar_day", "speed_index", "is_reversed"]
 
 # public - read only!
 var is_real_world_time := false

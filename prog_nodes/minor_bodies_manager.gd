@@ -21,14 +21,19 @@ class_name IVMinorBodiesManager
 extends Node
 
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := [
+	"group_names",
+	"ids_by_group",
+	"group_refs_by_name",
+	"lagrange_points",
+]
+
 # persisted
 var group_names := []
 var ids_by_group := {} # arrays of ids indexed by group name
 var group_refs_by_name := {} # AsteroidGroups now
 var lagrange_points := {} # dict of lagrange_point objects indexed by group name
-
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["group_names", "ids_by_group", "group_refs_by_name", "lagrange_points"]
 
 
 func _ready():

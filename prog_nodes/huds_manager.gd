@@ -24,12 +24,17 @@ extends Node
 
 signal show_huds_changed()
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := [
+	"show_orbits",
+	"show_names",
+	"show_symbols",
+]
+
 # persisted - can set at project init but otherwise read-only
 var show_orbits := true
 var show_names := true # exclusive w/ show_symbols
 var show_symbols := false # exclusive w/ show_symbols
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["show_orbits", "show_names", "show_symbols"]
 
 onready var _tree := get_tree()
 

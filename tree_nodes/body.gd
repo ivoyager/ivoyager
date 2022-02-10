@@ -53,6 +53,17 @@ const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 const MIN_SYSTEM_M_RADIUS_MULTIPLIER := 15.0
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"name",
+	"body_id",
+	"flags",
+	"characteristics",
+	"components",
+	"satellites",
+	"lagrange_points",
+]
+
 
 # persisted
 var body_id := -1
@@ -61,10 +72,6 @@ var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
 var satellites := [] # IVBody instances
 var lagrange_points := [] # IVLPoint instances (lazy init as needed)
-
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "body_id", "flags", "characteristics", "components",
-	"satellites", "lagrange_points"]
 
 
 # public - read-only except builder classes

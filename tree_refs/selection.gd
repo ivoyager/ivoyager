@@ -35,6 +35,20 @@ const ECLIPTIC_Y := Vector3(0.0, 1.0, 0.0)
 const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"name",
+	"is_body",
+	"up_selection_name",
+	"view_rotate_when_close",
+	"view_min_distance",
+	"track_ground_positions",
+	"track_orbit_positions",
+	"track_ecliptic_positions",
+	"spatial",
+	"body",
+]
+	
 # persisted - read only
 var name: String
 var is_body: bool
@@ -46,11 +60,6 @@ var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
 var spatial: Spatial # for camera; same as 'body' if is_body
 var body: IVBody # = spatial if is_body else null
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["name", "is_body", "up_selection_name",
-	"view_rotate_when_close", "view_min_distance",
-	"track_ground_positions", "track_orbit_positions", "track_ecliptic_positions",
-	"spatial", "body"]
 
 # read-only
 var texture_2d: Texture

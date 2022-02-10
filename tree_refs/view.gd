@@ -28,12 +28,18 @@ class_name IVView
 
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"selection_name",
+	"track_type",
+	"view_type",
+	"view_position",
+	"view_rotations",
+]
+
 # persisted
 var selection_name := ""
 var track_type := -1 # IVEnums.CameraTrackType
 var view_type := -1 # IVEnums.ViewType (may or may not specify var values below)
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["selection_name", "track_type", "view_type",
-	"view_position", "view_rotations"]

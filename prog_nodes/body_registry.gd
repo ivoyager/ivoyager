@@ -28,10 +28,11 @@ const IS_STAR := BodyFlags.IS_STAR
 const IS_MOON := BodyFlags.IS_MOON
 const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := ["top_bodies"]
+
 # persisted - read only
 var top_bodies := []
-const PERSIST_AS_PROCEDURAL_OBJECT := false
-const PERSIST_PROPERTIES := ["top_bodies"]
 
 # private
 var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder

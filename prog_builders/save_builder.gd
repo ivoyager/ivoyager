@@ -27,8 +27,16 @@ class_name IVSaveBuilder
 #    3. Procedural References
 #    4. WeakRef to any of above
 #
-# A "persist" node or reference is identified by presence of the constant:
-#    const PERSIST_AS_PROCEDURAL_OBJECT: bool
+# A "persist" node or reference is identified by the presence of:
+#    const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+#    or...
+#    const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+#    or member 'persist_mode_override' with either of the above two values.
+#
+# Enum values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL are
+# duplicated here and in IVEnums (ivoyager/static/enums.gd) so we can use this
+# file elsewhere and/or remove it from core 'ivoyager' (it may become a
+# submodle). 
 #
 # Lists of properties to persists must be named in constant arrays:
 #    const PERSIST_PROPERTIES := [] # properties to persist
@@ -44,12 +52,13 @@ class_name IVSaveBuilder
 #
 # Additional rules for persist objects:
 #    1. Nodes must be in the tree.
-#    2. All ancester nodes up to "root" must also be persist nodes. ("Root" is
-#        specified in function calls; it may or may not be scene tree root.)
-#    3. A non-procedural node cannot be child of a procedural node.
+#    2. All ancester nodes up to 'save_root' must also be persist nodes.
+#       'save_root' may or may not be a scene root.
+#    3. Nodes that are PERSIST_PROPERTIES_ONLY cannot have any ancestors that
+#       are PERSIST_PROCEDURAL.
 #    4. Non-procedural nodes must have stable names (path cannot change).
-#    5. Inner classes can't be persist objects
-#    6. For references, it is always PERSIST_AS_PROCEDURAL_OBJECT = true
+#    5. Inner classes can't be persist objects.
+#    6. References are always PERSIST_MODE = PERSIST_PROCEDURAL.
 #    7. Virtual method _init() cannot have any required args.
 #
 # Warnings:
@@ -63,6 +72,12 @@ class_name IVSaveBuilder
 # dicts as we do now for objects. (This will remove warning #1 above.)
 
 const files := preload("res://ivoyager/static/files.gd")
+
+enum {
+	NO_PERSIST,
+	PERSIST_PROPERTIES_ONLY,
+	PERSIST_PROCEDURAL,
+}
 
 const DPRINT := false # true for debug print
 const DDPRINT := false # prints even more debug info
@@ -103,13 +118,37 @@ var _log_count_by_class := {}
 var _log := ""
 
 
+static func get_persist_mode(object: Object) -> int:
+	if "persist_mode_override" in object:
+		return object.persist_mode_override
+	if not "PERSIST_MODE" in object:
+		return NO_PERSIST
+	return object.PERSIST_MODE
+
+
+static func is_persist_object(object: Object) -> bool:
+	if "persist_mode_override" in object:
+		return object.persist_mode_override != NO_PERSIST
+	if not "PERSIST_MODE" in object:
+		return false
+	return object.PERSIST_MODE != NO_PERSIST
+
+
+static func is_procedural_persist(object: Object) -> bool:
+	if "persist_mode_override" in object:
+		return object.persist_mode_override == PERSIST_PROCEDURAL
+	if not "PERSIST_MODE" in object:
+		return false
+	return object.PERSIST_MODE == PERSIST_PROCEDURAL
+
+
 func generate_gamesave(save_root: Node) -> Array:
 	# "save_root" may or may not be the main scene tree root. It must be a
-	# persist node itelf with const PERSIST_AS_PROCEDURAL_OBJECT = false.
+	# persist node itelf with const PERSIST_MODE = PERSIST_PROPERTIES_ONLY.
 	# Data in the result array includes the save_root and the continuous tree
 	# of persist nodes below that.
-	assert("PERSIST_AS_PROCEDURAL_OBJECT" in save_root)
-	assert(!save_root.PERSIST_AS_PROCEDURAL_OBJECT)
+	assert(is_persist_object(save_root))
+	assert(!is_procedural_persist(save_root))
 	_save_root = save_root
 	assert(DPRINT and print("* Registering tree for gamesave *") or true)
 	_register_tree(save_root)
@@ -211,7 +250,7 @@ func _log_nodes(node: Node) -> void:
 			script_identifier = split[0]
 	_log += "%s %s %s %s\n" % [_log_count, node, node.name, script_identifier]
 	for child in node.get_children():
-		if debug_log_all_nodes or "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+		if debug_log_all_nodes or is_procedural_persist(child):
 			_log_nodes(child)
 
 
@@ -238,14 +277,14 @@ func _register_tree(node: Node) -> void:
 	_object_ids[node] = _gs_n_objects
 	_gs_n_objects += 1
 	for child in node.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+		if is_persist_object(child):
 			_register_tree(child)
 
 
 func _serialize_tree(node: Node) -> void:
 	_serialize_node(node)
 	for child in node.get_children():
-		if "PERSIST_AS_PROCEDURAL_OBJECT" in child:
+		if is_persist_object(child):
 			_serialize_tree(child)
 
 
@@ -295,7 +334,7 @@ func _build_procedural_tree() -> void:
 	for serialized_node in _gs_serialized_nodes:
 		var object_id: int = serialized_node[0]
 		var node: Node = _objects[object_id]
-		if node.PERSIST_AS_PROCEDURAL_OBJECT:
+		if is_procedural_persist(node):
 			var parent_save_id: int = serialized_node[2]
 			var parent: Node = _objects[parent_save_id]
 			parent.add_child(node)
@@ -308,14 +347,15 @@ func _serialize_node(node: Node):
 	var object_id: int = _object_ids[node]
 	serialized_node.append(object_id) # index 0
 	var script_id := -1
-	if node.PERSIST_AS_PROCEDURAL_OBJECT:
+	var is_procedural := is_procedural_persist(node)
+	if is_procedural:
 		script_id = _get_or_create_script_id(node)
 		assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
 	else:
 		assert(DPRINT and prints(object_id, node, node.name) or true)
 	serialized_node.append(script_id) # index 1
 	# index 2 will be parent_save_id *or* non-procedural node path
-	if node.PERSIST_AS_PROCEDURAL_OBJECT:
+	if is_procedural:
 		var parent := node.get_parent()
 		var parent_save_id: int = _object_ids[parent]
 		serialized_node.append(parent_save_id) # index 2
@@ -327,7 +367,7 @@ func _serialize_node(node: Node):
 
 
 func _register_and_serialize_reference(reference: Reference) -> int:
-	assert(reference.PERSIST_AS_PROCEDURAL_OBJECT) # must be true for References
+	assert(is_procedural_persist(reference)) # must be true for References
 	var object_id := _gs_n_objects
 	_gs_n_objects += 1
 	_object_ids[reference] = object_id
@@ -491,7 +531,7 @@ func _get_encoded_object(object: Object) -> Dictionary:
 		if object == null:
 			return {_ = 0} # object_id = 0 represents a weak ref to dead object
 		is_weak_ref = true
-	assert("PERSIST_AS_PROCEDURAL_OBJECT" in object, "Can't persist a non-persist obj")
+	assert(is_persist_object(object), "Can't persist a non-persist obj")
 	var object_id: int = _object_ids.get(object, -1)
 	if object_id == -1:
 		assert(object is Reference, "Nodes are already registered")

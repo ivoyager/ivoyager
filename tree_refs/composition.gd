@@ -22,13 +22,20 @@ class_name IVComposition
 # This object is designed for simple display. It could be extended to do more.
 # For I, Voyager, we keep amounts as strings to preserve significant digits.
 
-enum CompositionType {BY_WEIGHT, BY_VOLUME}
+enum CompositionType {
+	BY_WEIGHT, 
+	BY_VOLUME,
+}
+
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_PROPERTIES := [
+	"type",
+	"components",
+]
 
 # persisted
 var type: int
 var components := {} # chemicals w/ amount string or null
-const PERSIST_AS_PROCEDURAL_OBJECT := true
-const PERSIST_PROPERTIES := ["type", "components"]
 
 
 func get_labels_values_display(labels_prefix := "") -> Array:
