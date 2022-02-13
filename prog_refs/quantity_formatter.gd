@@ -196,8 +196,6 @@ var long_forms := {
 var _n_prefixes: int
 var _prefix_offset: int
 var _n_lg_numbers: int
-var _format2 := [null, null] # scratch array
-var _format4 := [null, null, null, null] # scratch array
 var _multipliers: Dictionary
 var _functions: Dictionary
 
@@ -349,15 +347,11 @@ func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 	
 	# specified decimal places
 	if num_type == NUM_DECIMAL_PL:
-		_format2[0] = precision
-		_format2[1] = x
-		return ("%.*f" % _format2)
+		return ("%.*f" % [precision, x])
 	
 	# handle 0.0 case
 	if x == 0.0: # don't do '0.00e0' even if NUM_SCIENTIFIC
-		_format2[0] = precision - 1
-		_format2[1] = 0.0
-		return "%.*f" % _format2 # e.g., '0.00' for precision 3
+		return "%.*f" % [precision - 1, 0.0] # e.g., '0.00' for precision 3
 	
 	# handel 0.01 - 99999 for dynamic display
 	var abs_x := abs(x)
@@ -369,9 +363,7 @@ func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 		if decimal_pl < 1:
 			return "%.f" % x # whole number
 		else:
-			_format2[0] = decimal_pl
-			_format2[1] = x
-			return "%.*f" % _format2 # e.g., '0.0555'
+			return "%.*f" % [decimal_pl, x] # e.g., '0.0555'
 	
 	# scientific
 	var exp10 := 0.0 if x == 0.0 else floor(log(abs_x) / LOG_OF_10)
@@ -384,11 +376,7 @@ func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
 		x /= 10.0
 		exp10 += 1
-	_format4[0] = precision - 1
-	_format4[1] = x
-	_format4[2] = exp_str
-	_format4[3] = exp10
-	return "%.*f%s%s" % _format4 # e.g., '5.55e5'
+	return "%.*f%s%s" % [precision - 1, x, exp_str, exp10] # e.g., '5.55e5'
 
 
 func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
