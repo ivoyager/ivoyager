@@ -346,33 +346,49 @@ func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
 	# show inappropriately large precision if there have been conversions from
 	# table value (e.g., conversion from degrees -> radians -> degrees).
 	# see NUM_ enums for num_type.
+	
+	# specified decimal places
 	if num_type == NUM_DECIMAL_PL:
 		_format2[0] = precision
 		_format2[1] = x
 		return ("%.*f" % _format2)
-	var exp10 := 0
-	if x != 0.0:
-		exp10 = int(floor(log(abs(x)) / LOG_OF_10))
-	if exp10 > 4 or exp10 < -2 or num_type == NUM_SCIENTIFIC:
-		var divisor := pow(10.0, exp10)
-		x = x / divisor if !is_zero_approx(divisor) else 1.0
+	
+	# handle 0.0 case
+	if x == 0.0: # don't do '0.00e0' even if NUM_SCIENTIFIC
+		_format2[0] = precision - 1
+		_format2[1] = 0.0
+		return "%.*f" % _format2 # e.g., '0.00' for precision 3
+	
+	# handel 0.01 - 99999 for dynamic display
+	var abs_x := abs(x)
+	if abs_x < 100000 and abs_x > 0.01 and num_type != NUM_SCIENTIFIC:
 		if precision == -1:
-			return String(x) + exp_str + String(exp10)
+			return (String(x))
+		var exp10 := floor(log(abs(x)) / LOG_OF_10)
+		var decimal_pl := precision - int(exp10) - 1
+		if decimal_pl < 1:
+			return "%.f" % x # whole number
 		else:
-			_format4[0] = precision - 1
-			_format4[1] = x
-			_format4[2] = exp_str
-			_format4[3] = exp10
-			return "%.*f%s%s" % _format4 # e.g., 5.55e5
+			_format2[0] = decimal_pl
+			_format2[1] = x
+			return "%.*f" % _format2 # e.g., '0.0555'
+	
+	# scientific
+	var exp10 := 0.0 if x == 0.0 else floor(log(abs_x) / LOG_OF_10)
+	var divisor := pow(10.0, exp10)
+	x = x / divisor if !is_zero_approx(divisor) else 1.0
 	if precision == -1:
-		return (String(x))
-	var decimal_pl := precision - exp10 - 1
-	if decimal_pl < 1:
-		return "%.f" % x # whole number
-	else:
-		_format2[0] = decimal_pl
-		_format2[1] = x
-		return "%.*f" % _format2 # e.g., 0.0555
+		return String(x) + exp_str + String(exp10)
+	var exp_precision := pow(10.0, precision - 1)
+	var precision_rounded := round(x * exp_precision) / exp_precision
+	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
+		x /= 10.0
+		exp10 += 1
+	_format4[0] = precision - 1
+	_format4[1] = x
+	_format4[2] = exp_str
+	_format4[3] = exp10
+	return "%.*f%s%s" % _format4 # e.g., '5.55e5'
 
 
 func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
