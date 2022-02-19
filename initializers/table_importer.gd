@@ -77,6 +77,7 @@ var _row_name: String
 var _field: String
 var _data_type: String
 var _cell: String
+var _has_row_names: bool
 var _count_rows := 0
 var _count_cells := 0
 var _count_non_null := 0
@@ -117,10 +118,11 @@ func _import() -> void:
 				_data_types[i] = "BOOL"
 		_table_data_types[table_name] = _data_types
 		_table_units[table_name] = _units
-		_table_row_dicts[table_name] = _rows
-		for row_name in _rows:
-			assert(!_table_rows.has(row_name))
-			_table_rows[row_name] = _rows[row_name]
+		if _has_row_names:
+			_table_row_dicts[table_name] = _rows
+			for row_name in _rows:
+				assert(!_table_rows.has(row_name))
+				_table_rows[row_name] = _rows[row_name]
 	if !_enable_wiki:
 		return
 	_data = []
@@ -156,7 +158,9 @@ func _read_table() -> void:
 		_line_array = line.split("\t")
 		if !reading_data:
 			if !have_fields: # always 1st line!
-				assert(_line_array[0] == "name", "1st field must be 'name'")
+				var cell00: String = _line_array[0]
+				assert(cell00 == "name" or cell00 == "nil", "1st field must be 'name' or 'nil'")
+				_has_row_names = cell00 == "name"
 				for field in _line_array:
 					if field == "Comments":
 						break
@@ -205,11 +209,14 @@ func _read_data_line() -> void:
 	var row := _data.size()
 	var row_data := []
 	row_data.resize(_fields.size()) # unfilled row_data are nulls
-	_row_name = _line_array[0]
-	assert(_row_name, "name cell is blank!")
-	assert(!_rows.has(_row_name), "name is already used in this or another table!")
-	_rows[_row_name] = row
+	if _has_row_names:
+		_row_name = _line_array[0]
+		assert(_row_name, "name cell is blank!")
+		assert(!_rows.has(_row_name), "name is already used in this or another table!")
+		_rows[_row_name] = row
 	for field in _fields:
+		if field == "nil":
+			continue
 		_count_cells += 1
 		_field = field
 		var column: int = _fields[_field]
