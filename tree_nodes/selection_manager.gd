@@ -86,7 +86,6 @@ func _init() -> void:
 func _ready() -> void:
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
 	set_process_unhandled_key_input(is_action_listener)
-	print(self, " ready...")
 
 
 func _on_system_tree_ready(is_new_game: bool) -> void:

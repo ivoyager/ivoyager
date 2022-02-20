@@ -84,6 +84,7 @@ var initializers := {
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableImporter_ = IVTableImporter,
+#	_TableImporter2_ = IVTableImporter2,
 }
 
 var prog_builders := {

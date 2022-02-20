@@ -37,6 +37,46 @@ static func free_procedural_nodes(node: Node) -> void:
 				free_procedural_nodes(child)
 
 
+# Strings
+
+static func get_real_str_precision(real_str: String) -> int:
+	# See table REAL format rules in solar_system/planets.tsv.
+	# IVTableImporter has stripped leading "_" and converted "E" to "e".
+	# We ignore leading zeroes before the decimal place.
+	# We count trailing zeroes IF there is a decimal place.
+	if real_str == "?":
+		return -1
+	if real_str.begins_with("~"):
+		return 0
+	var length := real_str.length()
+	var n_digits := 0
+	var started := false
+	var n_unsig_zeros := 0
+	var deduct_zeroes := true
+	var i := 0
+	while i < length:
+		var chr: String = real_str[i]
+		if chr == ".":
+			started = true
+			deduct_zeroes = false
+		elif chr == "e":
+			break
+		elif chr == "0":
+			if started:
+				n_digits += 1
+				if deduct_zeroes:
+					n_unsig_zeros += 1
+		elif chr != "-":
+			assert(chr.is_valid_integer(), "Unknown REAL character: " + chr)
+			started = true
+			n_digits += 1
+			n_unsig_zeros = 0
+		i += 1
+	if deduct_zeroes:
+		n_digits -= n_unsig_zeros
+	return n_digits
+
+
 # Untyped tree/property searches
 
 static func get_deep(target, path: String): # untyped return

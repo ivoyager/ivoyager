@@ -17,20 +17,21 @@ well for me so far and I recommend it.
 
 Overview:
 
-TableImporter reads *.tsv files specified in Global.table_import (and
-Global.wiki_titles_import) and stores data as modified string values. Use
-TableReader API (prog_refs/table_reader.gd) to read internal data tables; it
-will convert strings to typed values and convert REAL values to specified
-Units. Use TableReader get_ and build_ functions to init object properties
-with table values. Don't use TableReader for runtime logic that needs to be
-fast.
+TableImporter reads *.tsv files specified in IVGlobal.table_import and
+IVGlobal.wiki_titles_import, converts to Type, and stores in dictionaries in
+IVGlobal. Default can be specified for blank cells. For REAL values, value is
+converted based on Units and precision (significant digits) is determined from
+the table number string and saved. You can access data directly from IVGlobal
+dictionaries or use IVTableReader API for protected access and constructor
+methods.
 
 File rules:
 
 *	Any row with # in the first 3 characters is a comment (skipped).
 *	The first non-comment row must have headers.
 *	The last column is ignored if header is "Comment".
-*	The first column header must be "name".
+*	The first column header must be "name" or "nil". (If nil, there will be no
+    row_name access.)
 *	Row name must be globally unique among all data tables listed and imported
 	from Global.table_import. Tables listed in Global.wiki_titles_import can have
 	duplicate row names (duplicates will overwrite existing values).
@@ -64,14 +65,12 @@ Type (required row):
 		However, \UXXXXXXXX for advanced unicode does not currently work. 
 	BOOL
 		Case-insensitive "True" or "False". Note that blank cell (without
-		Default) is different than "False". A "False" value will be set to
-		false in TableReader build_ functions; a blank will not be set. Both
-		"False" and blank/missing value will return false in get_bool().
+		specified Default) is interpreted as False.
 	X
-		Must be "x" or blank. This is essentially the same as BOOL except
-		Default is not allowed. Use TableReader.get_bool() to read this type.
+		Must be "x" or blank, which are interpreted as true or false,
+		respectively. After import, these are identical to BOOL.
 	INT
-		Any valid integer.
+		Any valid integer. Blank without default in imputed as -1.
 	REAL
 		See WARNING about Excel above. If you must use it, then prefix all REAL
 		values with ' or _ to prevent number modification.
@@ -92,13 +91,9 @@ Type (required row):
 			1000.0 - 5 significant digits
 			1.0010 - 5 significant digits
 			0.0010 - 2 significant digits
-	DATA
+	TABLE_ROW
 		Expected to be a valid data table row name, e.g., "CLASS_GAS_GIANT".
 		Return from TableReader.get_data() is the data table row number.
-	BODY
-		Expected to be a Body name, e.g., "PLANET_EARTH". Return value from
-		TableReader.get_body() is the Body instance (if it exists in tree) or
-		null.
 	< enum name >
 		An enum name can be specified for Type. The enum must exist in a
 		static Reference class specified in Global.enums. If you need to add
