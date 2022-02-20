@@ -23,6 +23,7 @@ class_name IVTableImporter
 # IVGlobal dictionaries. These dictionaries are indexed as follows:
 #
 #    tables[table_name][column_field][row_name or row_int] -> typed_value
+#    tables["n_" + table_name] -> number of rows in table
 #    table_rows[row_name] -> row_int (row_name's are globally unique)
 #    table_types[table_name][column_field] -> Type string in table
 #    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
@@ -227,7 +228,7 @@ func _import_table(table_name: String, path: String) -> void:
 			row += 1
 		line = file.get_line()
 	
-	_tables[table_name].n_rows = row
+	_tables["n_" + table_name] = row
 
 
 func _read_line(table_name: String, row: int, line_array: Array, fields: Dictionary,
@@ -313,17 +314,18 @@ func _set_preprocessed(table_name: String, field: String, row: int, row_name: St
 
 
 func _postprocess() -> void:
-	# convert type TABLE_ROW to ints
+	# convert type TABLE_ROW to ints after all tables imported
 	for table_name in _tables:
+		if table_name.begins_with("n_"):
+			continue
 		for field in _tables[table_name]:
-			if field == "n_rows":
-				continue
 			var type: String = _table_types[table_name][field]
-			if type == "TABLE_ROW":
-				for row_key in _tables[table_name][field]:
-					var raw_value: String = _tables[table_name][field][row_key]
-					if raw_value:
-						_tables[table_name][field][row_key] = _table_rows[raw_value]
-					else:
-						_tables[table_name][field][row_key] = -1
+			if type != "TABLE_ROW":
+				continue
+			for row_key in _tables[table_name][field]:
+				var raw_value: String = _tables[table_name][field][row_key]
+				if raw_value:
+					_tables[table_name][field][row_key] = _table_rows[raw_value]
+				else:
+					_tables[table_name][field][row_key] = -1
 

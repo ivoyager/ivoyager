@@ -19,22 +19,23 @@
 # *****************************************************************************
 class_name IVTableReader
 
-# You can access data directly from IVGlobal dictionaries using indexing:
+# API here provides constructor methods and protections for missing table
+# fields and values. Alternatively, you can access data directly from IVGlobal
+# dictionaries as follows:
 #
 #    tables[table_name][column_field][row_name or row_int] -> typed_value
+#    tables["n_" + table_name] -> number of rows in table
 #    table_rows[row_name] -> row_int (row_name's are globally unique)
 #    table_types[table_name][column_field] -> Type string in table
 #    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
-#
-# API here provides protections for missing fields/values and constructor
-# methods.
+
 
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
-var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or _int]
+var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or row_int]
 var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table row names
 var _table_types: Dictionary = IVGlobal.table_types # indexed [table][field]
 var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
@@ -55,7 +56,7 @@ func _project_init() -> void:
 
 
 func get_n_rows(table: String) -> int:
-	return _tables[table].n_rows
+	return _tables["n_" + table]
 
 
 func get_row_name(table: String, row: int) -> String:
@@ -63,12 +64,12 @@ func get_row_name(table: String, row: int) -> String:
 
 
 func get_row(row_name: String) -> int:
-	# Returns -1 if missing.
+	# Returns -1 if missing. All row_name's are globally unique.
 	return _table_rows.get(row_name, -1)
 
 
 func get_names_dict(table: String) -> Dictionary:
-	# Returns an enum-like dict of row number keyed by row names.
+	# Returns an enum-like dict of row numbers keyed by row names.
 	var dict := {}
 	for key in _tables[table]["name"]:
 		if typeof(key) == TYPE_STRING:
@@ -79,7 +80,7 @@ func get_names_dict(table: String) -> Dictionary:
 func get_column_array(table: String, field: String) -> Array:
 	# field must exist in specified table
 	var array := []
-	var n_rows: int = _tables[table].n_rows
+	var n_rows: int = _tables["n_" + table]
 	array.resize(n_rows)
 	var field_dict: Dictionary = _tables[table][field]
 	var i := 0
@@ -93,7 +94,7 @@ func get_n_matching(table: String, field: String, match_value) -> int:
 	# field must exist in specified table
 	# match_value type must mach column type
 	var count := 0
-	var n_rows: int = _tables[table].n_rows
+	var n_rows: int = _tables["n_" + table]
 	var field_dict: Dictionary = _tables[table][field]
 	var i := 0
 	while i < n_rows:
@@ -107,7 +108,7 @@ func get_matching_rows(table: String, field: String, match_value) -> Array:
 	# field must exist in specified table
 	# match_value type must mach column type
 	var array := []
-	var n_rows: int = _tables[table].n_rows
+	var n_rows: int = _tables["n_" + table]
 	var field_dict: Dictionary = _tables[table][field]
 	var i := 0
 	while i < n_rows:
@@ -120,7 +121,7 @@ func get_matching_rows(table: String, field: String, match_value) -> Array:
 func get_true_rows(table: String, field: String) -> Array:
 	# field must exist in specified table
 	var array := []
-	var n_rows: int = _tables[table].n_rows
+	var n_rows: int = _tables["n_" + table]
 	var field_dict: Dictionary = _tables[table][field]
 	var i := 0
 	while i < n_rows:
