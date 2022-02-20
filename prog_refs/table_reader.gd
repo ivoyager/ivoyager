@@ -24,7 +24,8 @@ class_name IVTableReader
 #    tables[table_name][column_field][row_name or row_int] -> typed_value
 #    table_rows[row_name] -> row_int (row_name's are globally unique)
 #    table_types[table_name][column_field] -> Type string in table
-#    table_precisions[][][] indexed as tables but only REAL fields -> sig digits
+#    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
+#    wiki_titles[row_name] -> title string for wiki target resolution
 #
 # API here provides protections for missing fields/values and constructor
 # methods.
@@ -49,8 +50,8 @@ func _project_init() -> void:
 
 # *****************************************************************************
 # public functions
-# For get functions, table is "planets", "moons", etc. Most get functions
-# will take either row or row_name.
+# For get functions, table is "planets", "moons", etc. Many get functions will
+# accept either row_int or row_name (not both!).
 
 
 func get_n_rows(table: String) -> int:
@@ -134,6 +135,9 @@ func has_row_name(table: String, row_name: String) -> bool:
 
 
 func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
+	# Evaluates true if table does not contain type-specific 'null' value:
+	# i.e., "" (STRING), NAN (REAL), -1 (INT, TABLE_ROW or enum name).
+	# Always true for Type BOOL and X if field exists.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
@@ -161,7 +165,7 @@ func has_real_value(table: String, field: String, row := -1, row_name := "") -> 
 
 
 func get_string(table: String, field: String, row := -1, row_name := "") -> String:
-	# Use for table Type STRING; returns "" if missing
+	# Use for table Type 'STRING'; returns "" if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return ""
@@ -171,7 +175,7 @@ func get_string(table: String, field: String, row := -1, row_name := "") -> Stri
 
 
 func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
-	# Use for table Type "BOOL" or "X"; returns false if missing
+	# Use for table Type 'BOOL' or 'X'; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
@@ -181,7 +185,7 @@ func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
 
 
 func get_int(table: String, field: String, row := -1, row_name := "") -> int:
-	# Returns -1 if missing
+	# Use for table Type 'INT', 'TABLE_ROW', or enum name; returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return -1
@@ -191,7 +195,7 @@ func get_int(table: String, field: String, row := -1, row_name := "") -> int:
 
 
 func get_real(table: String, field: String, row := -1, row_name := "") -> float:
-	# Returns NAN if missing
+	# Use for table Type 'REAL'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return NAN
@@ -202,6 +206,8 @@ func get_real(table: String, field: String, row := -1, row_name := "") -> float:
 
 func get_real_precision(table: String, field: String, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	if !_table_precisions[table].has(field):
+		return -1
 	if row_name:
 		row = _table_rows[row_name]
 	return _table_precisions[table][field][row]
@@ -213,31 +219,10 @@ func get_least_real_precision(table: String, fields: Array, row := -1, row_name 
 		row = _table_rows[row_name]
 	var min_precision := 9999
 	for field in fields:
-		var precission: int = _table_precisions[table][field][row]
+		var precission := get_real_precision(table, field, row)
 		if min_precision > precission:
 			min_precision = precission
 	return min_precision
-
-
-func get_table_row(table: String, field: String, row := -1, row_name := "") -> int:
-	# Use for Type = "TABLE_ROW" to get row number of the cell item.
-	# Returns -1 if missing.
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
-		return -1
-	if row_name:
-		row = _table_rows[row_name]
-	return _tables[table][field][row]
-
-
-func get_enum(table: String, field: String, row := -1, row_name := "") -> int:
-	# Returns -1 if missing.
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
-		return -1
-	if row_name:
-		row = _table_rows[row_name]
-	return _tables[table][field][row]
 
 
 func build_dictionary_from_keys(dict: Dictionary, table: String, row: int) -> void:
@@ -249,8 +234,8 @@ func build_dictionary_from_keys(dict: Dictionary, table: String, row: int) -> vo
 
 
 func get_data(fields: Array, table: String, row: int) -> Array:
-	# Sets array value for each field that exactly matches a field in
-	# table. Missing value in table without default will not be set.
+	# Sets array value for each field that exactly matches a field in table.
+	# Missing values in table without default will not be set.
 	var n_fields := fields.size()
 	var data := []
 	data.resize(n_fields)
@@ -264,8 +249,8 @@ func get_data(fields: Array, table: String, row: int) -> Array:
 
 
 func build_dictionary(dict: Dictionary, fields: Array, table: String, row: int) -> void:
-	# Sets dict value for each field that exactly matches a field in
-	# table. Missing value in table without default will not be set.
+	# Sets dict value for each field that exactly matches a field in table.
+	# Missing value in table without default will not be set.
 	var n_fields := fields.size()
 	var i := 0
 	while i < n_fields:
@@ -276,8 +261,8 @@ func build_dictionary(dict: Dictionary, fields: Array, table: String, row: int) 
 
 
 func build_object(object: Object, fields: Array, table: String, row: int) -> void:
-	# Sets object property for each field that exactly matches a field
-	# in table. Missing value in table without default will not be set.
+	# Sets object property for each field that exactly matches a field in table.
+	# Missing value in table without default will not be set.
 	var n_fields := fields.size()
 	var i := 0
 	while i < n_fields:

@@ -149,7 +149,7 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in IVBodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
-	var hydrostatic_equilibrium: int = _table_reader.get_enum(_table_name, "hydrostatic_equilibrium", _row)
+	var hydrostatic_equilibrium: int = _table_reader.get_int(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= IVEnums.ConfidenceType.PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	match _table_name:

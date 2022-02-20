@@ -21,13 +21,14 @@ extends Node
 
 # Singleton "IVGlobal"
 #
-# IVGlobal init values should be modified by extension in their
-# _extension_init() function and treated as immutable thereafter.
-# Containers here (arrays and dictionaries) are never replaced, so it is safe
-# to keep a local reference in class files.
+# Project init values should be modified by extension in _extension_init() and
+# treated as immutable thereafter.
+#
+# Containers (arrays and dictionaries) are never replaced, so it is safe and
+# good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220209
+const IVOYAGER_VERSION_YMD := 20220220
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts

@@ -19,24 +19,19 @@
 # *****************************************************************************
 class_name IVTableImporter
 
-# Reads external data tables (.tsv files) and adds results to:
-#    - IVGlobal.tables
-#    - IVGlobal.table_rows
-#    - IVGlobal.table_types
-#    - IVGlobal.table_precisions
-#    - IVGlobal.wiki_titles (if IVGlobal.wiki_enabled)
-#    - private containers in IVTableReader via init_tables()
-#
-# You can access data directly from IVGlobal dictionariers using indexing:
+# Reads external data tables (.tsv files) and adds processed results to
+# IVGlobal dictionaries. These dictionaries are indexed as follows:
 #
 #    tables[table_name][column_field][row_name or row_int] -> typed_value
 #    table_rows[row_name] -> row_int (row_name's are globally unique)
 #    table_types[table_name][column_field] -> Type string in table
-#    table_precisions[][][] indexed as tables but only REAL fields -> sig digits
+#    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
+#    wiki_titles[row_name] -> title string for wiki target resolution
 #
-# ...or use protected access and contructor methods in IVTableReader.
+# IVTableReader provides protected access and constructor methods.
 #
-# ivoyager/data/solar_system/*.tsv table construction:
+# See data/solar_system/README.txt for table construction. In short:
+#
 #  Type (required!): X, BOOL, INT, FLOAT, STRING, TABLE_ROW or enum name.
 #    An enum must be present in static file referenced in IVGlobal.enums. 'X'
 #    type is really just BOOL where 'x' is true and blank cell is false.
