@@ -236,7 +236,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 	var model_file: String = _model_files.get(file_prefix, "")
 	if model_file:
 		var model_scale := NAN
-		var asset_row := _table_reader.get_row("asset_adjustments", model_file.get_file())
+		var asset_row := _table_reader.get_row(model_file.get_file())
 #		prints(file_prefix, asset_row, model_file)
 		if asset_row != -1:
 			model_scale = _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
@@ -256,7 +256,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		# map rotation - we only look for *.albedo file
 		var map_file: String = _map_files.get(file_prefix + ".albedo", "")
 		if map_file:
-			var asset_row := _table_reader.get_row("asset_adjustments", map_file.get_file())
+			var asset_row := _table_reader.get_row(map_file.get_file())
 			if asset_row != -1:
 				var longitude_offset := _table_reader.get_real("asset_adjustments",
 						"longitude_offset", asset_row)

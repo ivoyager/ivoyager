@@ -202,7 +202,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
 	if !characteristics.has("mass"): # moons.tsv has GM but not mass
-		assert(_table_reader.has_value(_table_name, "GM", _row)) # table test
+		assert(_table_reader.has_real_value(_table_name, "GM", _row)) # table test
 		# We could in principle calculate mass from GM, but small moon GM is poor
 		# estimator. Instead use mean_density if we have it; otherwise, assign INF
 		# for unknown mass.
@@ -214,7 +214,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 		else:
 			characteristics.mass = INF # displays "?"
 	if !characteristics.has("GM"): # planets.tsv has mass, not GM
-		assert(_table_reader.has_value(_table_name, "mass", _row))
+		assert(_table_reader.has_real_value(_table_name, "mass", _row))
 		characteristics.GM = G * characteristics.mass
 		if keep_real_precisions:
 			var precision := _table_reader.get_real_precision(_table_name, "mass", _row)
@@ -222,7 +222,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 				precision = 6 # limited by G
 			_real_precisions["body/characteristics/GM"] = precision
 	if !characteristics.has("esc_vel") or !characteristics.has("surface_gravity"):
-		if _table_reader.has_value(_table_name, "GM", _row):
+		if _table_reader.has_real_value(_table_name, "GM", _row):
 			# Use GM to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
 			var precision := _table_reader.get_least_real_precision(_table_name, ["GM", "m_radius"], _row)

@@ -85,7 +85,10 @@ func _load_binaries(star: IVBody) -> void:
 	var row := 0
 	while row < n_asteroid_groups:
 		var group := _table_reader.get_string("asteroid_groups", "group", row)
-		var trojan_of := _table_reader.get_body("asteroid_groups", "trojan_of", row)
+		var trojan_of: IVBody
+		var trojan_of_name := _table_reader.get_string("asteroid_groups", "trojan_of", row)
+		if trojan_of_name:
+			trojan_of = _body_registry.get_body_by_name(trojan_of_name)
 		if !trojan_of:
 			_load_group_binaries(star, group, row)
 		else: # trojans!

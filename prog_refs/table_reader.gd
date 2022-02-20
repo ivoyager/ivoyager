@@ -19,21 +19,25 @@
 # *****************************************************************************
 class_name IVTableReader
 
-# Public API for all data loaded from .tsv files.
+# You can access data directly from IVGlobal dictionaries using indexing:
+#
+#    tables[table_name][column_field][row_name or row_int] -> typed_value
+#    table_rows[row_name] -> row_int (row_name's are globally unique)
+#    table_types[table_name][column_field] -> Type string in table
+#    table_precisions[][][] indexed as tables but only REAL fields -> sig digits
+#
+# API here provides protections for missing fields/values and constructor
+# methods.
 
 const units := preload("res://ivoyager/static/units.gd")
+const utils := preload("res://ivoyager/static/utils.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
-var _table_data: Dictionary # arrays of arrays by "moons", "planets", etc.
-var _table_fields: Dictionary # a dict of columns for each table
-var _table_data_types: Dictionary # an array for each table
-var _table_units: Dictionary # an array for each table
-var _table_row_dicts: Dictionary
+var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or _int]
 var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table row names
-var _bodies_by_name: Dictionary = IVGlobal.bodies_by_name
+var _table_types: Dictionary = IVGlobal.table_types # indexed [table][field]
+var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
 var _enums: Script = IVGlobal.enums
-var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
-var _unit_functions: Dictionary = IVGlobal.unit_functions
 
 
 # *****************************************************************************
@@ -43,499 +47,266 @@ func _project_init() -> void:
 	pass
 
 
-func init_tables(table_data: Dictionary, table_fields: Dictionary, table_data_types: Dictionary,
-		table_units: Dictionary, table_row_dicts: Dictionary) -> void:
-	# Called by IVTableImporter at _project_init()
-	_table_data = table_data
-	_table_fields = table_fields
-	_table_data_types = table_data_types
-	_table_units = table_units
-	_table_row_dicts = table_row_dicts
-
-
 # *****************************************************************************
 # public functions
-# For get functions, table_name is "planets", "moons", etc. Most get functions
+# For get functions, table is "planets", "moons", etc. Most get functions
 # will take either row or row_name.
 
-func get_n_rows(table_name: String) -> int:
-	var data: Array = _table_data[table_name]
-	return data.size()
+
+func get_n_rows(table: String) -> int:
+	return _tables[table].n_rows
 
 
-func get_row_name(table_name: String, row: int) -> String:
-	var row_data: Array = _table_data[table_name][row]
-	return row_data[0]
+func get_row_name(table: String, row: int) -> String:
+	return _tables[table]["name"][row]
 
 
-func get_row(table_name: String, row_name: String) -> int:
+func get_row(row_name: String) -> int:
 	# Returns -1 if missing.
-	# Since all table row names are checked to be globaly unique, you can
-	# obtain the same result using IVGlobal.table_rows[row_name]. 
-	var table_rows: Dictionary = _table_row_dicts[table_name]
-	if table_rows.has(row_name):
-		return table_rows[row_name]
-	return -1
+	return _table_rows.get(row_name, -1)
 
 
-func get_names_dict(table_name: String) -> Dictionary:
-	# Returns an enum-like dict of row number keyed by row names. Don't modify!
-	return _table_row_dicts[table_name]
+func get_names_dict(table: String) -> Dictionary:
+	# Returns an enum-like dict of row number keyed by row names.
+	var dict := {}
+	for key in _tables[table]["name"]:
+		if typeof(key) == TYPE_STRING:
+			dict[key] = _table_rows[key]
+	return dict
 
 
-func get_column_array(table_name: String, field_name: String) -> Array:
-	# field_name must exist in specified table
-	var column_fields: Dictionary = _table_fields[table_name]
-	var column = column_fields[field_name]
-	var data_types: Array = _table_data_types[table_name]
-	var data_type: String = data_types[column]
-	var units: Array = _table_units[table_name]
-	var unit: String = units[column]
-	var data: Array = _table_data[table_name]
-	var n_rows := data.size()
-	var result := []
-	result.resize(n_rows)
-	var row := 0
-	while row < n_rows:
-		var row_data: Array = data[row]
-		var value_str: String = row_data[column]
-		result[row] = convert_value(value_str, data_type, unit)
-		row += 1
-	return result
+func get_column_array(table: String, field: String) -> Array:
+	# field must exist in specified table
+	var array := []
+	var n_rows: int = _tables[table].n_rows
+	array.resize(n_rows)
+	var field_dict: Dictionary = _tables[table][field]
+	var i := 0
+	while i < n_rows:
+		array[i] = field_dict[i]
+		i += 1
+	return array
 
 
-func get_n_matching(table_name: String, field_name: String, match_value) -> int:
-	# field_name must exist in specified table
+func get_n_matching(table: String, field: String, match_value) -> int:
+	# field must exist in specified table
 	# match_value type must mach column type
-	var column_fields: Dictionary = _table_fields[table_name]
-	var column = column_fields[field_name]
-	var data: Array = _table_data[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var data_type: String = data_types[column]
-	var n_rows := data.size()
 	var count := 0
-	var row := 0
-	while row < n_rows:
-		var row_data: Array = data[row]
-		if convert_value(row_data[column], data_type) == match_value:
+	var n_rows: int = _tables[table].n_rows
+	var field_dict: Dictionary = _tables[table][field]
+	var i := 0
+	while i < n_rows:
+		if field_dict[i] == match_value:
 			count += 1
-		row += 1
+		i += 1
 	return count
 
 
-func get_matching_rows(table_name: String, field_name: String, match_value) -> Array:
-	# field_name must exist in specified table
+func get_matching_rows(table: String, field: String, match_value) -> Array:
+	# field must exist in specified table
 	# match_value type must mach column type
-	var column_fields: Dictionary = _table_fields[table_name]
-	var column = column_fields[field_name]
-	var data: Array = _table_data[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var data_type: String = data_types[column]
-	var n_rows := data.size()
-	var result := []
-	var row := 0
-	while row < n_rows:
-		var row_data: Array = data[row]
-		if convert_value(row_data[column], data_type) == match_value:
-			result.append(row)
-		row += 1
-	return result
+	var array := []
+	var n_rows: int = _tables[table].n_rows
+	var field_dict: Dictionary = _tables[table][field]
+	var i := 0
+	while i < n_rows:
+		if field_dict[i] == match_value:
+			array.append(i)
+		i += 1
+	return array
 
 
-func get_true_rows(table_name: String, field_name: String) -> Array:
-	# field_name must exist in specified table
-	var column_fields: Dictionary = _table_fields[table_name]
-	var column = column_fields[field_name]
-	var data: Array = _table_data[table_name]
-	var n_rows := data.size()
-	var result := []
-	var row := 0
-	while row < n_rows:
-		var row_data: Array = data[row]
-		if convert_bool(row_data[column]):
-			result.append(row)
-		row += 1
-	return result
+func get_true_rows(table: String, field: String) -> Array:
+	# field must exist in specified table
+	var array := []
+	var n_rows: int = _tables[table].n_rows
+	var field_dict: Dictionary = _tables[table][field]
+	var i := 0
+	while i < n_rows:
+		if field_dict[i]:
+			array.append(i)
+		i += 1
+	return array
 
 
-func get_1st_true_row(table_name: String, field_name: String) -> int:
-	# field_name must exist in specified table
-	var column_fields: Dictionary = _table_fields[table_name]
-	var column = column_fields[field_name]
-	var data: Array = _table_data[table_name]
-	var n_rows := data.size()
-	var row := 0
-	while row < n_rows:
-		var row_data: Array = data[row]
-		if convert_bool(row_data[column]):
-			return row
-		row += 1
-	return -1
+func has_row_name(table: String, row_name: String) -> bool:
+	return _tables[table].has("name") and _tables[table]["name"].has(row_name)
 
 
-func has_row_name(table_name: String, row_name: String) -> bool:
-	var table_rows: Dictionary = _table_row_dicts[table_name]
-	return table_rows.has(row_name)
-
-
-func has_value(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
+func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return false
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return bool(row_data[column]) # "" is missing value
+	var type: String = _table_types[table][field]
+	match type:
+		"X", "BOOL":
+			return true
+		"STRING":
+			return _tables[table][field][row] != ""
+		"REAL":
+			return !is_nan(_tables[table][field][row])
+		_: # INT, TABLE_ROW or enum name
+			return _tables[table][field][row] != -1
 
 
-func get_string(table_name: String, field_name: String, row := -1, row_name := "") -> String:
-	# Use for STRING or to obtain a "raw", unconverted table value.
-	# Returns "" if missing.
+func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
+		return false
+	if row_name:
+		row = _table_rows[row_name]
+	return !is_nan(_tables[table][field][row])
+
+
+func get_string(table: String, field: String, row := -1, row_name := "") -> String:
+	# Use for table Type STRING; returns "" if missing
+	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	if !_tables[table].has(field):
 		return ""
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return row_data[column]
+	return _tables[table][field][row]
 
 
-func get_bool(table_name: String, field_name: String, row := -1, row_name := "") -> bool:
+func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
 	# Use for table Type "BOOL" or "X"; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return false
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_bool(row_data[column])
+	return _tables[table][field][row]
 
 
-func get_int(table_name: String, field_name: String, row := -1, row_name := "") -> int:
-	# Returns -1 if missing.
+func get_int(table: String, field: String, row := -1, row_name := "") -> int:
+	# Returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return -1
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_int(row_data[column])
+	return _tables[table][field][row]
 
 
-func get_real(table_name: String, field_name: String, row := -1, row_name := "") -> float:
-	# Returns NAN if missing.
+func get_real(table: String, field: String, row := -1, row_name := "") -> float:
+	# Returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return NAN
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	var units: Array = _table_units[table_name]
-	var unit: String = units[column]
-	return convert_real(row_data[column], unit)
+	return _tables[table][field][row]
 
 
-func get_real_precision(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+func get_real_precision(table: String, field: String, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var real_str := get_string(table_name, field_name, row, row_name)
-	if !real_str:
-		return -1 # missing value
-	return get_real_str_precision(real_str)
+	if row_name:
+		row = _table_rows[row_name]
+	return _table_precisions[table][field][row]
 
 
-func get_least_real_precision(table_name: String, field_names: Array, row := -1, row_name := "") -> int:
+func get_least_real_precision(table: String, fields: Array, row := -1, row_name := "") -> int:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	if row_name:
+		row = _table_rows[row_name]
 	var min_precision := 9999
-	for field_name in field_names:
-		var real_str := get_string(table_name, field_name, row, row_name)
-		if !real_str:
-			return -1 # missing value
-		var precission := get_real_str_precision(real_str)
+	for field in fields:
+		var precission: int = _table_precisions[table][field][row]
 		if min_precision > precission:
 			min_precision = precission
 	return min_precision
 
 
-func get_body(table_name: String, field_name: String, row := -1, row_name := "") -> IVBody:
-	# Use for Type = "BODY" to get the IVBody instance.
-	# Returns null if missing (from table) or no such IVBody exists in the tree.
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
-		return null
-	if row_name:
-		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_body(row_data[column])
-
-
-func get_table_row(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+func get_table_row(table: String, field: String, row := -1, row_name := "") -> int:
 	# Use for Type = "TABLE_ROW" to get row number of the cell item.
 	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return -1
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	return convert_table_row(row_data[column])
+	return _tables[table][field][row]
 
 
-func get_enum(table_name: String, field_name: String, row := -1, row_name := "") -> int:
+func get_enum(table: String, field: String, row := -1, row_name := "") -> int:
 	# Returns -1 if missing.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	var column_fields: Dictionary = _table_fields[table_name]
-	if !column_fields.has(field_name):
+	if !_tables[table].has(field):
 		return -1
 	if row_name:
 		row = _table_rows[row_name]
-	var data: Array = _table_data[table_name]
-	var row_data: Array = data[row]
-	var column = column_fields[field_name]
-	var data_types: Array = _table_data_types[table_name]
-	var enum_name: String = data_types[column]
-	return convert_enum(row_data[column], enum_name)
+	return _tables[table][field][row]
 
 
-func build_dictionary_from_keys(dict: Dictionary, table_name: String, row: int) -> void:
+func build_dictionary_from_keys(dict: Dictionary, table: String, row: int) -> void:
 	# Sets dict value for each dict key that exactly matches a column field
 	# in table. Missing value in table without default will not be set.
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for column_field in dict:
-		var column: int = column_fields.get(column_field, -1)
-		if column == -1:
-			continue
-		var value: String = row_data[column]
-		if !value:
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		dict[column_field] = convert_value(value, data_type, unit)
+	for field in dict:
+		if has_value(table, field, row):
+			dict[field] = _tables[table][field][row]
 
 
-func get_data(fields: Array, table_name: String, row: int) -> Array:
-	# Sets array value for each fields that exactly matches a column field in
+func get_data(fields: Array, table: String, row: int) -> Array:
+	# Sets array value for each field that exactly matches a field in
 	# table. Missing value in table without default will not be set.
 	var n_fields := fields.size()
 	var data := []
 	data.resize(n_fields)
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
 	var i := 0
 	while i < n_fields:
-		var column_field: String = fields[i]
-		var column: int = column_fields.get(column_field, -1)
-		if column == -1:
-			i += 1
-			continue
-		var value: String = row_data[column]
-		if !value:
-			i += 1
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		data[i] = convert_value(value, data_type, unit)
+		var field: String = fields[i]
+		if has_value(table, field, row):
+			data[i] = _tables[table][field][row]
 		i += 1
 	return data
 
 
-func build_dictionary(dict: Dictionary, fields: Array, table_name: String, row: int) -> void:
-	# Sets dict value for each fields that exactly matches a column field in
+func build_dictionary(dict: Dictionary, fields: Array, table: String, row: int) -> void:
+	# Sets dict value for each field that exactly matches a field in
 	# table. Missing value in table without default will not be set.
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for column_field in fields:
-		var column: int = column_fields.get(column_field, -1)
-		if column == -1:
-			continue
-		var value: String = row_data[column]
-		if !value:
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		dict[column_field] = convert_value(value, data_type, unit)
+	var n_fields := fields.size()
+	var i := 0
+	while i < n_fields:
+		var field: String = fields[i]
+		if has_value(table, field, row):
+			dict[field] = _tables[table][field][row]
+		i += 1
 
 
-func build_object(object: Object, fields: Array, table_name: String, row: int) -> void:
-	# Sets object property for each fields that exactly matches a column field
+func build_object(object: Object, fields: Array, table: String, row: int) -> void:
+	# Sets object property for each field that exactly matches a field
 	# in table. Missing value in table without default will not be set.
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var units: Array = _table_units[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for column_field in fields:
-		var column: int = column_fields.get(column_field, -1)
-		if column == -1:
-			continue
-		var value: String = row_data[column]
-		if !value:
-			continue
-		var data_type: String = data_types[column]
-		var unit: String = units[column]
-		object[column_field] = convert_value(value, data_type, unit)
+	var n_fields := fields.size()
+	var i := 0
+	while i < n_fields:
+		var field: String = fields[i]
+		if has_value(table, field, row):
+			object.set(field, _tables[table][field][row])
+		i += 1
 
 
-func build_flags(flags: int, flag_fields: Dictionary, table_name: String, row: int) -> int:
+func build_flags(flags: int, flag_fields: Dictionary, table: String, row: int) -> int:
 	# Sets flag if table value exists and would evaluate true in get_bool(),
 	# i.e., is true or x. Does not unset.
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var row_data: Array = _table_data[table_name][row]
 	for flag in flag_fields:
-		var column_field: String = flag_fields[flag]
-		if !column_fields.has(column_field):
-			continue
-		var column: int = column_fields[column_field]
-		var value: String = row_data[column]
-		var data_type: String = data_types[column]
-		assert(data_type == "BOOL", "Expected table Type = 'BOOL' or 'X'")
-		if convert_bool(value):
+		var field: String = flag_fields[flag]
+		if get_bool(table, field, row):
 			flags |= flag
 	return flags
 
 
-func get_real_precisions(fields: Array, table_name: String, row: int) -> Array:
-	# Return array is same size as fields. Missing and non-REALs are -1.
-	var result := []
-	var column_fields: Dictionary = _table_fields[table_name]
-	var data_types: Array = _table_data_types[table_name]
-	var row_data: Array = _table_data[table_name][row]
-	for column_field in fields:
-		var column: int = column_fields.get(column_field, -1)
-		if column == -1:
-			result.append(-1)
-			continue
-		var value: String = row_data[column]
-		if !value:
-			result.append(-1)
-			continue
-		var data_type: String = data_types[column]
-		if data_type != "REAL":
-			result.append(-1)
-			continue
-		var precision := get_real_str_precision(value)
-		result.append(precision)
-	return result
-
-
-func get_real_str_precision(real_str: String) -> int:
-	# See table REAL format rules in solar_system/planets.tsv.
-	# IVTableImporter has stripped leading "_" and converted "E" to "e".
-	# We ignore leading zeroes before the decimal place.
-	# We count trailing zeroes IF there is a decimal place.
-	if real_str == "?":
-		return -1
-	if real_str.begins_with("~"):
-		return 0
-	var length := real_str.length()
-	var n_digits := 0
-	var started := false
-	var n_unsig_zeros := 0
-	var deduct_zeroes := true
+func get_real_precisions(fields: Array, table: String, row: int) -> Array:
+	# Missing or non-REAL values will have precision -1.
+	var n_fields := fields.size()
+	var data := utils.init_array(n_fields, -1)
 	var i := 0
-	while i < length:
-		var chr: String = real_str[i]
-		if chr == ".":
-			started = true
-			deduct_zeroes = false
-		elif chr == "e":
-			break
-		elif chr == "0":
-			if started:
-				n_digits += 1
-				if deduct_zeroes:
-					n_unsig_zeros += 1
-		elif chr != "-":
-			assert(chr.is_valid_integer(), "Unknown REAL character: " + chr)
-			started = true
-			n_digits += 1
-			n_unsig_zeros = 0
+	while i < n_fields:
+		var field: String = fields[i]
+		if _table_types[table].has(field):
+			var type: String = _table_types[table][field]
+			if type == "REAL":
+				data[i] = _table_precisions[table][field][row]
 		i += 1
-	if deduct_zeroes:
-		n_digits -= n_unsig_zeros
-	return n_digits
-
-
-func convert_value(value: String, data_type: String, unit := ""): # untyped return
-	match data_type:
-		"REAL":
-			return convert_real(value, unit)
-		"BOOL":
-			return convert_bool(value)
-		"STRING":
-			return value
-		"INT":
-			return convert_int(value)
-		"TABLE_ROW":
-			return convert_table_row(value)
-		"BODY":
-			return convert_body(value)
-		_: # must be valid enum name (this was verified on import)
-			return convert_enum(value, data_type)
-
-
-func convert_bool(value: String) -> bool:
-	return value == "true"
-
-
-func convert_int(value: String) -> int:
-	return int(value) if value else -1
-
-
-func convert_real(value: String, unit := "") -> float:
-	if !value:
-		return NAN
-	if value == "?":
-		return INF
-	value = value.lstrip("~")
-	var real := float(value)
-	if unit:
-		real = units.convert_quantity(real, unit, true, true, _unit_multipliers, _unit_functions)
-	return float(real)
-
-
-func convert_table_row(value: String) -> int:
-	if !value:
-		return -1
-	assert(_table_rows.has(value), "Unknown table row name " + value)
-	return _table_rows[value]
-
-
-func convert_body(value: String) -> IVBody:
-	if !value:
-		return null
-	return _bodies_by_name.get(value)
-
-
-func convert_enum(value: String, enum_name: String) -> int:
-	if !value:
-		return -1
-	var dict: Dictionary = _enums[enum_name]
-	return dict[value]
+	return data

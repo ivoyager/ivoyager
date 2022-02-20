@@ -55,6 +55,16 @@ func _clear() -> void:
 	_removed_body_ids.clear()
 
 
+func get_body(body_id: int) -> IVBody:
+	if body_id >= _bodies.size():
+		return null
+	return _bodies[body_id]
+
+
+func get_body_by_name(body_name: String) -> IVBody:
+	return _bodies_by_name.get(body_name)
+
+
 func get_selection(selection_name: String) -> IVSelection:
 	var selection: IVSelection = _selections.get(selection_name)
 	if !selection:
