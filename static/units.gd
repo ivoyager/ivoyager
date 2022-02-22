@@ -157,14 +157,20 @@ const MULTIPLIERS := {
 	"kJ" : 1e3 * JOULE,
 	"MJ" : 1e6 * JOULE,
 	"GJ" : 1e9 * JOULE,
+	"TJ" : 1e12 * JOULE,
 	"Wh" : WATT * HOUR,
 	"kWh" : 1e3 * WATT * HOUR,
 	"MWh" : 1e6 * WATT * HOUR,
+	"GWh" : 1e9 * WATT * HOUR,
+	"TWh" : 1e12 * WATT * HOUR,
 	"eV" : ELECTRONVOLT,
 	# power
 	"W" : WATT,
 	"kW" : 1e3 * WATT,
 	"MW" : 1e6 * WATT,
+	"GW" : 1e9 * WATT,
+	"TW" : 1e12 * WATT,
+	"GJ/d" : 1e9 * JOULE / DAY,
 	# luminous intensity / luminous flux
 	"cd" : CANDELA,
 	"cd sr" : CANDELA, # sr is dimentionless

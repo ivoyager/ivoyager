@@ -1,8 +1,5 @@
 name	en.wikipedia
-# Class types for info display and planetarium wiki links.	
 Type	STRING
-Default	
-Units	
 CLASS_G_STAR	G-type_main-sequence_star
 CLASS_TERRESTRIAL_PLANET	Terrestrial_planet
 CLASS_GAS_GIANT	Gas_giant
@@ -13,3 +10,4 @@ CLASS_C_ASTEROID	C-type_asteroid
 CLASS_S_ASTEROID	S-type_asteroid
 CLASS_M_ASTEROID	M-type_asteroid
 CLASS_COMET	Comet
+# Class types for info display and planetarium wiki links.	

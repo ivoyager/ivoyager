@@ -1,4 +1,4 @@
-README for I, Voyager data table system
+README for I, Voyager tables
 
 WARNING! Do not use Excel for .tsv file editing! Excel will "interpret" and
 modify cell values. For example, the Sun's GM = "1.32712440018e20" will be
@@ -6,8 +6,7 @@ be changed to "1.33E+20" in the display bar AND THE SAVED FILE VALUE! You can
 prevent this by prefixing with either single-quote (') or underscore (_).
 However, it is then necessary to assess each REAL for "Excel-safety", or prefix
 all REALs. Alternatively, you can use the import wizard and set all columns to
-text EVERY TIME you edit a *.tsv file, but that seems like a major hassle to
-me.
+text EVERY TIME you edit a *.tsv file, but that's a lot of work.
 
 Remarkably, the only .csv/.tsv file editor that I could find that doesn't do
 this (and is currently being maintained for Windows 10) is Ron's Editor:
@@ -112,4 +111,4 @@ Units (optional row):
 	in replacement dictionaries specified in Global.unit_multipliers or
 	Global.unit_functions. Units can be prefixed by "10^### " where ### is a
 	valid integer.
-	
+

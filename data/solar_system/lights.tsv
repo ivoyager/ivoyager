@@ -1,6 +1,6 @@
 name	omni_range
-# OmniLight properties for individual stars like our sun.	
 Type	REAL
 Default	
-Units	au
+Unit	au
 LIGHT_SUN	120
+# OmniLight properties for individual stars like our sun.	

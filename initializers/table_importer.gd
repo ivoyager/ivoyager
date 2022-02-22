@@ -124,10 +124,9 @@ func _import_wiki_titles(path: String) -> void:
 					fields[field] = n_columns
 					n_columns += 1
 				reading_fields = false
-				assert(n_columns == fields.size(), "Duplicate field (%s columns, %s unique fields) in %s" \
+				assert(n_columns == fields.size(),
+						"Duplicate field (%s columns, %s unique fields) in %s" \
 						% [n_columns, fields.size(), path])
-			elif line_array[0] == "Type": # REMOVE after conversion
-				pass
 			else:
 				reading_header = false
 		if reading_header:
@@ -201,7 +200,7 @@ func _import_table(table_name: String, path: String) -> void:
 					if type == "REAL":
 						_table_precisions[table_name][field] = {}
 				has_type = true
-			elif line_array[0] == "Units":
+			elif line_array[0] == "Unit":
 				units = line_array.duplicate()
 				units[0] = ""
 				units.resize(n_columns) # truncate Comment column
