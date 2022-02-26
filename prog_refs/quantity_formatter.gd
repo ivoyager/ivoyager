@@ -54,6 +54,8 @@ enum { # option_type for number_option()
 	MASS_G_KG, # g if < 1.0 kg
 	MASS_G_KG_T, # g if < 1.0 kg; t if x >= 1000.0 kg 
 	MASS_G_KG_PREFIXED_T, # g, kg, t, kt, Mt, Gt, Tt, Pt etc.
+	# mass rate
+	MASS_RATE_G_KG_PREFIXED_T_PER_D # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
 	# time
 	TIME_D_Y, # d if < 1000 d, else y
 	# velocity
@@ -281,6 +283,12 @@ func number_option(x: float, option_type: int, unit := "", precision := -1, num_
 			elif x < units.TONNE:
 				return number_unit(x, "kg", precision, num_type, long_form, case_type)
 			return number_prefixed_unit(x, "t", precision, num_type, long_form, case_type)
+		MASS_RATE_G_KG_PREFIXED_T_PER_D: # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
+			if x < units.KG / units.DAY:
+				return number_unit(x, "g/d", precision, num_type, long_form, case_type)
+			elif x < units.TONNE / units.DAY:
+				return number_unit(x, "kg/d", precision, num_type, long_form, case_type)
+			return number_prefixed_unit(x, "t/d", precision, num_type, long_form, case_type)
 		TIME_D_Y:
 			if x <= 1000.0 * units.DAY:
 				return number_unit(x, "d", precision, num_type, long_form, case_type)

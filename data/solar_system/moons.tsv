@@ -1,13 +1,7 @@
 name	file_prefix	en.wikipedia	symbol	parent	class_type	model_type	force_navigator	hydrostatic_equilibrium	epoch_txt	epoch	a	e	i	Om	w	M0	n	P	Pw	Pnode	ref_plane	orbit_RA	orbit_dec	tidally_locked	axis_locked	tumbles_chaotically	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo	surf_t	min_t	max_t	atmosphere	trace_atmosphere	surf_pres	trace_pres	trace_pres_low	trace_pres_high	one_bar_t	half_bar_t	tenth_bar_t	atmosphere_composition	trace_atmosphere_composition
-# https://ssd.jpl.nasa.gov/?sat_elem																																																
-# Pw for the Moon from above source (5.997) is in conflict with other sources (eg, Wiki: 8.85). WTH?																																																
-# Pw, Pnode are apsidal and nodal precession, = period of rotation of w and Om.																																																
-# Apsidal precession is in the direction of orbit; nodal precession is in the opposite direction!																																																
-# Sort each planet's moons by semi_major axis (a) for proper GUI selection order.																																																
-#					all default				TODO: implement!										apsidal precession	nodal precession		Rq Laplace	Rq Laplace		~0 axial tilt to orbit			Ignored if axis_locked					V0 or R		mean													
 Type	STRING	STRING	STRING	STRING	TABLE_ROW	TABLE_ROW	X	ConfidenceType	STRING	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	REAL	REAL	BOOL	BOOL	BOOL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	X	X	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	STRING
 Default			\u25CC		CLASS_NATURAL_SATELLITE	MODEL_SMALL_C_TYPE		NO		0														TRUE	TRUE	FALSE				0	0	0	0	0														
-Units										d	km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg				d	deg	deg	km^3/s^2	km	g/cm^3			K	K	K			Pa	Pa	Pa	Pa	K	K	K		
+Unit										d	km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg				d	deg	deg	km^3/s^2	km	g/cm^3			K	K	K			Pa	Pa	Pa	Pa	K	K	K		
 MOON_MOON	Moon	Moon	\u263E	PLANET_EARTH		MODEL_ROCKY_WORLD		YES	2000 Jan. 1.50 TT		384400	0.0554	5.16	125.08	318.15	135.27	13.176358	27.322	5.997	18.613	Ecliptic				FALSE			270	66.54	4902.801	1737.5	3.344	-12.74	0.12	250	100	390		x			1e-10	1e-7					Helium, Argon, Neon, Sodium, Potassium, Hydrogen, Radon
 MOON_PHOBOS	Phobos	Phobos (moon)	I	PLANET_MARS			x		1950 Jan. 1.00 TT		9376	0.0151	1.075	207.784	150.057	91.059	1128.844757	0.3189	1.1316	2.2617	Laplace	317.671	52.893							0.0007112	11.1	1.872	11.4	0.071	233													
 MOON_DEIMOS	Deimos	Deimos (moon)	II	PLANET_MARS			x		1950 Jan. 1.00 TT		23458	0.0002	1.788	24.525	260.729	325.329	285.161879	1.2624	27.3703	54.5367	Laplace	316.657	53.529							0.0000985	6.2	1.471	12.45	0.068	233													
@@ -185,3 +179,9 @@ MOON_STYX	Styx	Styx (moon)	V	PLANET_PLUTO					PLU046		42393	0.0006	0.08	26.956	3
 MOON_NIX	Nix	Nix (moon)	II	PLANET_PLUTO					PLU043		48671	0	0	203.4	324.463	284.405	14.4841304	24.85	0	0	Equatorial									0.0013	23	2.1	23.4	0.35														
 MOON_KERBEROS	Kerberos	Kerberos (moon)	IV	PLANET_PLUTO					PLU045		57729	0	0.426	305.871	160.629	161.061	11.1913026	32.17	0	9.27	Equatorial									0.0011	14	1.4	26.1	0.35														
 MOON_HYDRA	Hydra	Hydra (moon)	III	PLANET_PLUTO					PLU044		64698	0.0056	0.304	113.173	153.307	326.678	9.4235386	38.2	7.19	14.35	Equatorial									0.0065	30.5	0.8	22.9	0.35														
+#																																																
+# https://ssd.jpl.nasa.gov/?sat_elem																																																
+# Pw for the Moon from above source (5.997) is in conflict with other sources (eg, Wiki: 8.85). WTH?																																																
+# Pw, Pnode are apsidal and nodal precession, = period of rotation of w and Om.																																																
+# Apsidal precession is in the direction of orbit; nodal precession is in the opposite direction!																																																
+# Sort each planet's moons by semi_major axis (a) for proper GUI selection order.																																																

@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220220
+const IVOYAGER_VERSION_YMD := 20220226
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -102,7 +102,7 @@ var program := {} # all objects instantiated by IVProjectBuilder
 var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # IVSettingsManager
-var tables := {} # IVTableImporter; indexed [table_name][field][row_name or int]
+var tables := {} # IVTableImporter; indexed [table_name][field][row_name or row_int]
 var table_rows := {} # IVTableImporter; row int for all row names
 var table_types := {} # IVTableImporter; indexed [table_name][field]
 var table_precisions := {} # IVTableImporter; indexed as tables but only REAL fields
