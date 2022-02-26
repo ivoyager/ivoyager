@@ -20,16 +20,17 @@
 class_name IVTableImporter
 
 # Reads external data tables (.tsv files) and adds processed results to
-# IVGlobal dictionaries. These dictionaries are indexed as follows:
+# IVGlobal dictionaries. Data can be accessed using IVTableReader API or by
+# direct table indexing. Each table is structured as a dictionary of column
+# arrays containing typed (and unit-coverted for REAL) values. Data can be
+# accessed directly by indexing:
 #
-#    tables[table_name][column_field][row_name or row_int] -> typed_value
+#    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    table_rows[row_name] -> row_int (row_name's are globally unique)
+#    table_rows[row_name] -> row_int (every row_name is globally unique!)
 #    table_types[table_name][column_field] -> Type string in table
 #    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
-#
-# IVTableReader provides protected access and constructor methods.
 #
 # See data/solar_system/README.txt for table construction. In short:
 #
@@ -47,7 +48,7 @@ const utils := preload("res://ivoyager/static/utils.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 const DPRINT := false
-const DATA_TYPES := ["REAL", "BOOL", "X", "INT", "STRING", "TABLE_ROW"] # & enum names
+const TYPE_TEST := ["REAL", "BOOL", "X", "INT", "STRING", "TABLE_ROW"] # & enum names
 
 # source files
 var _table_import: Dictionary = IVGlobal.table_import
@@ -93,6 +94,7 @@ func _import() -> void:
 	for table_name in _table_import:
 		var path: String = _table_import[table_name]
 		_import_table(table_name, path)
+	
 	_postprocess()
 	if !_enable_wiki:
 		return
@@ -180,7 +182,7 @@ func _import_table(table_name: String, path: String) -> void:
 					if field == "Comments":
 						break
 					if field != "nil":
-						_tables[table_name][field] = {}
+						_tables[table_name][field] = []
 					fields[field] = n_columns
 					n_columns += 1
 				reading_fields = false
@@ -191,14 +193,14 @@ func _import_table(table_name: String, path: String) -> void:
 				types = line_array.duplicate()
 				types[0] = "STRING" # always name field (or nil)
 				types.resize(n_columns) # truncate Comment column
-#				assert(_data_types_test())
-				# REAL values have parallel dict w/ precisions
 				for field in fields:
 					var column: int = fields[field]
 					var type: String = types[column]
+					assert(TYPE_TEST.has(type) or type in _enums)
 					_table_types[table_name][field] = type
 					if type == "REAL":
-						_table_precisions[table_name][field] = {}
+						# REAL values have parallel dict w/ precisions
+						_table_precisions[table_name][field] = []
 				has_type = true
 			elif line_array[0] == "Unit":
 				units = line_array.duplicate()
@@ -219,7 +221,6 @@ func _import_table(table_name: String, path: String) -> void:
 				if !defaults:
 					for _i in range(n_columns):
 						defaults.append("")
-#				assert(_table_test(n_columns))
 				reading_header = false
 		# data line
 		if !reading_header:
@@ -238,25 +239,23 @@ func _read_line(table_name: String, row: int, line_array: Array, fields: Diction
 		assert(row_name, "name cell is blank!")
 		assert(!_table_rows.has(row_name))
 		_table_rows[row_name] = row
-
 	for field in fields:
 		if field == "nil":
 			continue
 		_count_cells += 1
-		
 		var column: int = fields[field]
 		var raw_value: String = line_array[column]
 		if !raw_value: # blank cell; set to default (which may be blank)
 			raw_value = defaults[column]
 		var type: String = types[column]
 		var unit: String = units[column]
-		_set_preprocessed(table_name, field, row, row_name, raw_value, type, unit)
+		_append_preprocessed(table_name, field, row_name, raw_value, type, unit)
 
 
-func _set_preprocessed(table_name: String, field: String, row: int, row_name: String,
+func _append_preprocessed(table_name: String, field: String, row_name: String,
 			raw_value: String, type: String, unit: String):
 	# Convert BOOL, X, REAL, INT and enums, and process STRING; we'll convert
-	# TABLE_ROW in postprocess()
+	# TABLE_ROW to int in _postprocess()
 	if raw_value.begins_with("\"") and raw_value.ends_with("\""):
 		raw_value = raw_value.lstrip("\"").rstrip("\"")
 	raw_value = raw_value.lstrip("'")
@@ -264,7 +263,7 @@ func _set_preprocessed(table_name: String, field: String, row: int, row_name: St
 	var value # untyped
 	match type:
 		"X":
-			assert(!raw_value or raw_value == "x")
+			assert(raw_value == "" or raw_value == "x")
 			value = raw_value == "x"
 		"BOOL":
 			assert(raw_value.matchn("false") or raw_value.matchn("true"))
@@ -291,40 +290,44 @@ func _set_preprocessed(table_name: String, field: String, row: int, row_name: St
 					real = units.convert_quantity(real, unit, true, true,
 							_unit_multipliers, _unit_functions)
 				value = float(real)
-			_table_precisions[table_name][field][row] = precision
-			if row_name:
-				_table_precisions[table_name][field][row_name] = precision
+			_table_precisions[table_name][field].append(precision)
 		"INT":
 			value = int(raw_value) if raw_value else -1
-		"TABLE_ROW": # we'll get int in _postprocess()
+		"TABLE_ROW": # we'll convert to int in _postprocess()
 			value = raw_value
-		_: # must be blank or a valid enum name
+		_: # must be a valid enum name
 			if !raw_value:
 				value = -1
 			else:
-				var enum_dict: Dictionary = _enums[type]
+				var enum_dict: Dictionary = _enums.get(type)
 				value = enum_dict[raw_value]
 	# set value
-	_tables[table_name][field][row] = value
-	if row_name:
-		_tables[table_name][field][row_name] = value
+	_tables[table_name][field].append(value)
 	if _enable_wiki and field == _wiki:
 		_wiki_titles[row_name] = value
 
 
+
 func _postprocess() -> void:
-	# convert type TABLE_ROW to ints after all tables imported
+	# Converts Type "X" to "BOOL" (values are already internally bool).
+	# Converts values of type TABLE_ROW to int (after all tables imported!).
 	for table_name in _tables:
 		if table_name.begins_with("n_"):
 			continue
 		for field in _tables[table_name]:
 			var type: String = _table_types[table_name][field]
+			if type == "X":
+				_table_types[table_name][field] = "BOOL"
+				continue
 			if type != "TABLE_ROW":
 				continue
-			for row_key in _tables[table_name][field]:
-				var raw_value: String = _tables[table_name][field][row_key]
+			var column_array: Array = _tables[table_name][field]
+			var row: int = column_array.size()
+			while row > 0:
+				row -= 1
+				var raw_value: String = column_array[row]
 				if raw_value:
-					_tables[table_name][field][row_key] = _table_rows[raw_value]
+					column_array[row] = _table_rows[raw_value]
 				else:
-					_tables[table_name][field][row_key] = -1
+					column_array[row] = -1
 

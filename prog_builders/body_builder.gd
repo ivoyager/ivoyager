@@ -145,7 +145,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 
 func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
-	var flags := _table_reader.build_flags(0, flag_fields, _table_name, _row)
+	var flags := _table_reader.get_flags(flag_fields, _table_name, _row)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # must be in IVBodyRegistry.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
