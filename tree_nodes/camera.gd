@@ -256,9 +256,10 @@ func move_to_view(view: IVView, is_instant_move := false) -> void:
 		assert(to_selection)
 	move_to_selection(to_selection, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
+	view.set_huds_visible()
 
 
-func create_view(use_current_selection := true) -> IVView:
+func create_view(use_current_selection := true, has_hud_states := true) -> IVView:
 	# IVView object is useful for cache or save persistence
 	var view: IVView = _View_.new()
 	if use_current_selection:
@@ -271,6 +272,8 @@ func create_view(use_current_selection := true) -> IVView:
 			continue
 		VIEW_BUMPED_ROTATED:
 			view.view_rotations = view_rotations
+	if has_hud_states:
+		view.store_huds_visible()
 	return view
 
 

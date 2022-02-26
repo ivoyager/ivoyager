@@ -13,9 +13,10 @@ Developed using Godot 3.4.2.stable.
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
 ### Changes
-* Redesigned the core selection object (now 'IVSelection') to be dynamically generated and more easily extensible. IVSelection is wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
+* Redesigned the core selection object (now 'IVSelection') to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
 * Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
 * Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
+* IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
 
 ### API-breaking changes
 * Replaced class IVSelectionItem with IVSelection.
@@ -23,6 +24,9 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * Old persist const 'PERSIST_AS_PROCEDURAL_OBJECT: bool' replaced with 'PERSIST_MODE' with enum values (see above).
 * Removed Type 'BODY' from table import system.
 * Various changes to IVTableReader API.
+
+### Removed
+* Removed IVViewCacher from core (added to Planetarium project where it is used)
 
 ### Bug fixes
 * Widgets fixed to work when GUI is added after solar system build.

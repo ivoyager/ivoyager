@@ -22,7 +22,7 @@ class_name IVTableImporter
 # Reads external data tables (.tsv files) and adds processed results to
 # IVGlobal dictionaries. Data can be accessed using IVTableReader API or by
 # direct table indexing. Each table is structured as a dictionary of column
-# arrays containing typed (and unit-coverted for REAL) values. Data can be
+# arrays containing typed (and unit-converted for REAL) values. Data can be
 # accessed directly by indexing:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
