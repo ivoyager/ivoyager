@@ -53,7 +53,7 @@ const NEVER_SLEEP := BodyFlags.NEVER_SLEEP
 const IS_SERVER = IVEnums.NetworkState.IS_SERVER
 const MIN_SYSTEM_M_RADIUS_MULTIPLIER := 15.0
 
-const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 const PERSIST_PROPERTIES := [
 	"name",
 	"body_id",
