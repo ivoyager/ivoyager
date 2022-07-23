@@ -83,9 +83,9 @@ const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
 	"name",
 	"is_camera_lock",
-	"selection",
 	"view_type",
 	"track_type",
+	"selection",
 	"view_position",
 	"view_rotations",
 	"focal_length",
@@ -98,11 +98,11 @@ const PERSIST_PROPERTIES := [
 
 # public - read only except project init
 var is_camera_lock := true
-
-# public - read only! (these are "to" during body-to-body transfer)
-var selection: IVSelection
 var view_type := VIEW_ZOOM
 var track_type := TRACK_GROUND
+
+# public - read only! (use move methods to set; these are "to" during transfer)
+var selection: IVSelection
 var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
 var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
 var focal_length: float
