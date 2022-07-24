@@ -22,7 +22,7 @@ class_name IVTableImporter
 # Reads external data tables (.tsv files) and adds processed results to
 # IVGlobal dictionaries. Data can be accessed using IVTableReader API or by
 # direct table indexing. Each table is structured as a dictionary of column
-# arrays containing typed (and unit-coverted for REAL) values. Data can be
+# arrays containing typed (and unit-converted for REAL) values. Data can be
 # accessed directly by indexing:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
@@ -71,7 +71,6 @@ var _unit_functions: Dictionary = IVGlobal.unit_functions
 var _count_rows := 0
 var _count_cells := 0
 var _count_non_null := 0
-var _unique_register := {}
 
 
 func _init():
@@ -82,8 +81,8 @@ func _on_init() -> void:
 	var start_time := OS.get_system_time_msecs()
 	_import()
 	var time := OS.get_system_time_msecs() - start_time
-	print("Imported tables in %s msec; %s rows; %s cells (%s non-null; %s unique)" \
-			% [time, _count_rows, _count_cells, _count_non_null, _unique_register.size()])
+	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
+			% [time, _count_rows, _count_cells, _count_non_null])
 
 
 func _project_init() -> void:
@@ -136,8 +135,10 @@ func _import_wiki_titles(path: String) -> void:
 			continue
 		var row_name: String = line_array[0]
 		assert(row_name, "name cell is blank!")
+		_count_rows += 1
 		for field in fields:
 			if _enable_wiki and field == _wiki:
+				_count_non_null += 1
 				_count_cells += 1
 				var column: int = fields[field]
 				var value: String = line_array[column]
@@ -224,6 +225,7 @@ func _import_table(table_name: String, path: String) -> void:
 				reading_header = false
 		# data line
 		if !reading_header:
+			_count_rows += 1
 			_read_line(table_name, row, line_array, fields, types, units, defaults, has_row_names)
 			row += 1
 		line = file.get_line()
@@ -247,6 +249,8 @@ func _read_line(table_name: String, row: int, line_array: Array, fields: Diction
 		var raw_value: String = line_array[column]
 		if !raw_value: # blank cell; set to default (which may be blank)
 			raw_value = defaults[column]
+		else:
+			_count_non_null += 1
 		var type: String = types[column]
 		var unit: String = units[column]
 		_append_preprocessed(table_name, field, row_name, raw_value, type, unit)

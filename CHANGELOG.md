@@ -8,24 +8,30 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.13] - Unreleased
 
-Developed using Godot 3.4.2.stable.
+Currently under development using Godot 3.4.4.stable and 3.5-rc7.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Changes
-* Redesigned the core selection object (now 'IVSelection') to be dynamically generated and more easily extensible. IVSelection is wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
+### Changed
+* Redesigned the core selection object (now 'IVSelection') to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
 * Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
 * Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
+* IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
 
-### API-breaking changes
+### Changed - API-breaking!
 * Replaced class IVSelectionItem with IVSelection.
 * Changed function names in IVBodyRegistry for selection related actions.
 * Old persist const 'PERSIST_AS_PROCEDURAL_OBJECT: bool' replaced with 'PERSIST_MODE' with enum values (see above).
 * Removed Type 'BODY' from table import system.
 * Various changes to IVTableReader API.
 
-### Bug fixes
+### Removed
+* Removed IVViewCacher from core (added to Planetarium project where it is used).
+
+### Fixed
 * Widgets fixed to work when GUI is added after solar system build.
+* Fixed IVTableImporter to print correct cell counts during data table reading. 
+
 
 ## [v0.0.12] - 2022-01-20
 
@@ -36,10 +42,10 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 ### Added
 * Can start with cached time (including speed & time reversal). Used by Planetarium.
 
-### API-breaking changes
+### Changed - API-breaking!
 * Renamed imported tables (*.tsv) data type from 'DATA' to 'TABLE_ROW'. Also changed some related function names in IVTableReader.
 
-### Bug fixes
+### Fixed
 * Fixed bug where start body wasn't updated in GUI when using IVViewCacher.
 
 ## [v0.0.11] - 2022-01-19
@@ -52,13 +58,13 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * New [STYLE_GUIDE.md](https://github.com/ivoyager/ivoyager/blob/master/STYLE_GUIDE.md) documents the (very few) departures from Godot's GDScript style guide.
 * New IVWindowManager handles fullscreen toggle and optionally adds main menu button.
 
-### Project integration changes
+### Changed - Project Integration
 * Prefixed all 'ivoyager' classes and global names with 'IV'. This is to prevent name collisions with embedding projects. Unchanged: file names, node names (except 2 singletons), and container indexes (e.g., it's now 'IVGlobal.program.StateManager', not 'IVGlobal.program.IVStateManager')
 * Submodule now depends on external static class SIBaseUnits with SI base units (previously in universe.gd). We keep this file external to 'ivoyager' so projects can change the scale const METER.
 * universe.tscn & universe.gd were external (project-level outside of 'ivoyager') but have been moved internally to ivoyager/tree_nodes/. They act as default simulator root and main scene (as set by Project Template; this can be changed).
 * Removed gui_example directory from the submodule. Moved externally to Project Template.
 
-### API-breaking changes
+### Changed - API-breaking!
 * Renamed IVUnits.conv() to convert_quantity() and changed function signature.
 * Removed IVInputHandler. All input now handled by target classes.
 * IVSelectionManager changed from Reference to Node. ProjectGUI needs to add it as child now.
@@ -67,7 +73,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 	* Signature change in 'show_hide_gui_requested'
 	* Removed 'toggle_show_hide_gui_requested'
 
-### Changes
+### Changed
 * Improved integration with SceneTree.paused (we no longer have our own separate pause).
 * Camera now re-levels itself and re-centers the target on object selection.
 
@@ -77,7 +83,7 @@ Developed using Godot 3.4.2.stable.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
-### Bug Fixes
+### Fixed
 * Images are now imported with `repeat` on (required for mipmaps to work).
 * Set vertex compression off to fix broken models on HTML export in Godot 3.4.1 & 3.4.2.
 

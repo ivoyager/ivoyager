@@ -24,7 +24,7 @@ var _stop_sim: bool
 
 
 func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
-		args := [], stop_sim := true):
+		args := [], stop_sim := true, window_txt := "", ok_txt := "", cancel_txt := ""):
 	connect("confirmed", on_confirm_object, on_confirm_method, args, CONNECT_ONESHOT)
 	connect("popup_hide", self, "_on_hide")
 	dialog_text = text
@@ -35,6 +35,16 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 		IVGlobal.emit_signal("sim_stop_required", self)
 	IVGlobal.program.Universe.add_child(self)
 	theme = IVGlobal.themes.main
+	if window_txt:
+		window_title = window_txt
+	if ok_txt:
+		var ok_button := get_ok()
+		ok_button.text = ok_txt
+	if cancel_txt:
+		var cancel_button := get_cancel()
+		cancel_button.text = cancel_txt
+	var label := get_label()
+	label.align = Label.ALIGN_CENTER
 	popup_centered()
 
 

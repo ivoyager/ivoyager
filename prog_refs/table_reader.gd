@@ -22,7 +22,7 @@ class_name IVTableReader
 # API here provides constructor methods and table access with protections for
 # missing table fields and values. Alternatively, you can access data directly
 # from IVGlobal dictionaries. Each table is structured as a dictionary of
-# column arrays containing typed (and unit-coverted for REAL) values. Data can
+# column arrays containing typed (and unit-converted for REAL) values. Data can
 # be accessed directly by indexing:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
@@ -41,7 +41,6 @@ var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or r
 var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table row names
 var _table_types: Dictionary = IVGlobal.table_types # indexed [table][field]
 var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
-var _enums: Script = IVGlobal.enums
 
 
 # *****************************************************************************
