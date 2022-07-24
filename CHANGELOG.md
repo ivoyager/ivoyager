@@ -8,7 +8,7 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.13] - Unreleased
 
-Developed using Godot 3.4.2.stable.
+Currently under development using Godot 3.4.4.stable and 3.5-rc7.
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
@@ -26,10 +26,12 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * Various changes to IVTableReader API.
 
 ### Removed
-* Removed IVViewCacher from core (added to Planetarium project where it is used)
+* Removed IVViewCacher from core (added to Planetarium project where it is used).
 
 ### Bug fixes
 * Widgets fixed to work when GUI is added after solar system build.
+* Fixed IVTableImporter to print correct cell counts during data table reading. 
+
 
 ## [v0.0.12] - 2022-01-20
 
