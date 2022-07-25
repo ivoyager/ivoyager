@@ -116,6 +116,7 @@ func _on_ready() -> void:
 	IVGlobal.connect("sim_run_allowed", self, "allow_run")
 	IVGlobal.connect("quit_requested", self, "quit")
 	IVGlobal.connect("exit_requested", self, "exit")
+	_tree.paused = true
 	require_stop(self, -1, true)
 
 

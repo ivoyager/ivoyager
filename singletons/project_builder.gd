@@ -19,17 +19,19 @@
 # *****************************************************************************
 extends Node
 
-# Singleton "IVProjectBuilder"
+# Singleton "IVProjectBuilder".
 #
 # This node builds the program (not the solar system!) and makes program
-# nodes, references and classes availible in IVGlobal dictionaries. All
-# dictionaries here (except procedural_classes) define "small-s singletons".
-# A single instance of each class is instantiated and added to IVGlobal.program.
+# nodes, references, and classes availible in IVGlobal dictionaries. All
+# dictionaries here (except procedural_classes) define "small-s singletons";
+# a single instance of each class is instantiated and added to IVGlobal.program.
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
-# See https://www.ivoyager.dev/forum for extension instructions and best
-# practices.
+# See example extension files for our Planetarium and Project Template (the 1st
+# involves more substantial changes) here:
+# https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
+# https://github.com/ivoyager/project_template/blob/master/replace_me/replace_me.gd
 #
 # To modify and extend I, Voyager:
 # 1. Create an extension init file with path "res://<name>/<name>.gd" where
@@ -40,41 +42,59 @@ extends Node
 #     b. modify this node's dictionaries to extend (i.e., subclass) or replace
 #        existing classes, remove classes, or add new classes.
 #     (Above happens before anything else is instantiated!)
-# 3. Hook up to IVGlobal "project_objects_instantiated" signal to modify
+# 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
 #    init values of instantiated nodes (before they are added to tree) or
 #    instantiated references (before they are used). Nodes and references can
 #    be accessed after instantiation in the IVGlobal.program dictionary.
 #
-# See comments in ivoyager/gui_example/example_game_gui.gd for project GUI
-# construction and how to use I, Voyager GUI widgets.
+# Init sequence here expects (but does not provide) a parent GUI node. This
+# must be set in dictionary below ('gui_nodes._ProjectGUI_') by your extension
+# file. (Or erase the '_ProjectGUI_' element to avoid an error.)
+# The various optional GUI widgets found in ivoyager/gui_widgets/ directory
+# expect to find a non-null 'selection_manager' property somewhere up thier
+# Control ancestry tree, which can be in the parent GUI node if not elsewhere.
+# See example parent GUI ("GameGUI") for our Project Template here:
+# https://github.com/ivoyager/project_template/blob/master/replace_me/gui_example/game_gui.gd
 
-signal init_step_finished() # for internal use only
+
+signal init_step_finished() # for internal IVProjectBuilder use only
 
 const files := preload("res://ivoyager/static/files.gd")
 
 
 # ******************** PROJECT VARS - EXTEND HERE !!! *************************
 
-# init_sequence could be changed by singleton or by an extension created at the
-# first step of the sequence.
+var allow_program_build := true # blockable by another autoload singleton
+
+# init_sequence can be modified (even after started) by singleton or by an
+# extension instantiated at the first step of this sequence.
 var init_sequence := [
 	# [object, method, wait_for_signal]
 	[self, "init_extensions", false],
-	[self, "instantiate_and_index", false],
-	[self, "init_project", true],
-	[self, "add_project_nodes", true],
-	[self, "signal_finished", false]
+	[self, "set_simulator_root_node", false],
+	[self, "instantiate_and_index_program_objects", false],
+	[self, "init_program_objects", true],
+	[self, "add_program_nodes", true],
+	[self, "finish", false]
 ]
 
-# Replace classes below with a subclass of the original unless comment
-# indicates otherwise. E.g., "Spatial ok", replace with a class that extends
-# Spatial.
+# Extension can assign a Spatial to var 'universe' to set simulator root node.
+# Otherwise, init code here will attempt to find a node with name 'Universe'.
+# Other than this search, root node name does not matter; ivoyager always
+# obtains this and other "program nodes" from dictionary IVGlobal.program.
+var universe: Spatial
+
+# Replace classes in dictionaries below with a subclass of the original unless
+# comment indicates otherwise. E.g., "Spatial ok": replace with a class that
+# extends Spatial. In some cases, elements can be erased for unneeded systems.
+# For example, our Planetarium erases the save/load system and associated GUI:
+# https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
 #
-# Key formatting "_ClassName_" below is meant to be a reminder that the keyed
+# Key formatting '_ClassName_' below is meant to be a reminder that the keyed
 # item at runtime might be a project-specific subclass (or in some cases
 # replacement) for the original class. For objects instanced by IVProjectBuilder,
 # edge underscores are removed to form keys in the IVGlobal.program dictionary
-# and the "name" property of nodes.
+# and the 'name' property in the case of nodes.
 
 var initializers := {
 	# Reference classes. IVProjectBuilder instances these first. They may erase
@@ -84,7 +104,6 @@ var initializers := {
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableImporter_ = IVTableImporter,
-#	_TableImporter2_ = IVTableImporter2,
 }
 
 var prog_builders := {
@@ -178,12 +197,6 @@ var procedural_classes := {
 	# _BodyList_ = IVBodyList, # WIP
 }
 
-# Extension can assign another Spatial to var 'universe' here. Code will
-# assign this value to IVGlobal.program.Universe. I, Voyager always uses the
-# IVGlobal.program dictionary to find Universe and other program nodes, so node
-# names and tree locations don't matter.
-onready var universe: Spatial = get_node_or_null("/root/Universe")
-
 
 # ***************************** PRIVATE VARS **********************************
 
@@ -192,7 +205,32 @@ var _program: Dictionary = IVGlobal.program
 var _script_classes: Dictionary = IVGlobal.script_classes
 
 
-# **************************** INIT SEQUENCE **********************************
+# ****************************** PROJECT BUILD ********************************
+
+func _ready() -> void:
+	call_deferred("build_deferred") # after all other singletons _ready()
+
+
+func build_deferred() -> void:
+	if allow_program_build:
+		build_project()
+
+
+func build_project() -> void:
+	# Build loop is designed so that init_sequence array can be modified even
+	# during loop execution -- in particular, by an extention instantiated in
+	# the first step. Otherwise, it could be modified by an autoload singleton.
+	var init_index := 0
+	while init_index < init_sequence.size():
+		var init_array: Array = init_sequence[init_index]
+		var object: Object = init_array[0]
+		var method: String = init_array[1]
+		var wait_for_signal: bool = init_array[2]
+		object.call(method)
+		if wait_for_signal:
+			yield(self, "init_step_finished")
+		init_index += 1
+
 
 func init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
@@ -228,7 +266,16 @@ func init_extensions() -> void:
 	IVGlobal.verbose_signal("extentions_inited")
 
 
-func instantiate_and_index() -> void:
+func set_simulator_root_node() -> void:
+	# Does nothing if an extension has already set property 'universe'.
+	if universe:
+		return
+	var scenetree_root := get_tree().get_root()
+	universe = scenetree_root.find_node("Universe", true, false)
+	assert(universe)
+
+
+func instantiate_and_index_program_objects() -> void:
 	_program.Global = IVGlobal
 	_program.Universe = universe
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
@@ -247,7 +294,7 @@ func instantiate_and_index() -> void:
 	IVGlobal.verbose_signal("project_objects_instantiated")
 
 
-func init_project() -> void:
+func init_program_objects() -> void:
 	for key in initializers:
 		var object_key: String = key.rstrip("_").lstrip("_")
 		if _program.has(object_key): # might have removed themselves already
@@ -265,7 +312,7 @@ func init_project() -> void:
 	emit_signal("init_step_finished")
 
 
-func add_project_nodes() -> void:
+func add_program_nodes() -> void:
 	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
@@ -277,25 +324,5 @@ func add_project_nodes() -> void:
 	emit_signal("init_step_finished")
 
 
-func signal_finished() -> void:
+func finish() -> void:
 	IVGlobal.verbose_signal("project_builder_finished")
-
-
-# ****************************** PROJECT BUILD ********************************
-
-func _ready() -> void:
-	get_tree().paused = true
-	call_deferred("_build_deferred")
-
-
-func _build_deferred() -> void:
-	var init_index := 0
-	while init_index < init_sequence.size():
-		var init_array: Array = init_sequence[init_index]
-		var object: Object = init_array[0]
-		var method: String = init_array[1]
-		var wait_for_signal: bool = init_array[2]
-		object.call(method)
-		if wait_for_signal:
-			yield(self, "init_step_finished")
-		init_index += 1
