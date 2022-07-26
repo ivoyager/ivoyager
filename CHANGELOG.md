@@ -8,25 +8,22 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.13] - Unreleased
 
-Currently under development using Godot 3.4.4.stable and 3.5-rc7.
+Currently under development using Godot 3.5-rc7. We're waiting for 3.5.stable for our next release!
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
 ### Changed
-* Redesigned the core selection object (now 'IVSelection') to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
-* Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
-* Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
+* [API Breaking!] Renamed the core selection object ('IVSelectionItem' to 'IVSelection') and redesigned to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
+* [API Breaking!] Changed function names in IVBodyRegistry for selection related actions.
+* [API Breaking!] Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
+* [API Breaking!] Various changes to IVTableReader API. Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
+* [API Breaking!] Removed Type 'BODY' from data tables and table import system.
 * IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
-
-### Changed - API-breaking!
-* Replaced class IVSelectionItem with IVSelection.
-* Changed function names in IVBodyRegistry for selection related actions.
-* Old persist const 'PERSIST_AS_PROCEDURAL_OBJECT: bool' replaced with 'PERSIST_MODE' with enum values (see above).
-* Removed Type 'BODY' from table import system.
-* Various changes to IVTableReader API.
+* Changes to IVProjectBuilder to improve extensibility.
+* Updated and improved extension comments in project_builder.gd and elsewhere. 
 
 ### Removed
-* Removed IVViewCacher from core (added to Planetarium project where it is used).
+* [API Breaking!] Removed IVViewCacher from 'ivoyager' submodule (moved to Planetarium project where it is used).
 
 ### Fixed
 * Widgets fixed to work when GUI is added after solar system build.
