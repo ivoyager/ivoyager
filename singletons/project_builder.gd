@@ -62,9 +62,9 @@ signal init_step_finished() # for internal IVProjectBuilder use only
 const files := preload("res://ivoyager/static/files.gd")
 
 
-# ******************** PROJECT VARS - EXTEND HERE !!! *************************
+# *************** PROJECT VARS - MODIFY THESE TO EXTEND !!!! ******************
 
-var allow_program_build := true # blockable by another autoload singleton
+var allow_project_build := true # blockable by another autoload singleton
 
 # init_sequence can be modified (even after started) by singleton or by an
 # extension instantiated at the first step of this sequence.
@@ -162,9 +162,11 @@ var gui_nodes := {
 	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
 	# processing. To reorder, either: 1) clear and rebuild this dictionary on
 	# project init, or 2) reorder children of Universe after project build.
+	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
+	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_ProjectionSurface_ = IVProjectionSurface, # Control ok
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
-	_SplashScreen_ = null, # Project MUST set unless IVGlobal.skip_splash_screen
+	_SplashScreen_ = null, # Can erase if IVGlobal.skip_splash_screen = true
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
@@ -200,7 +202,7 @@ var procedural_classes := {
 
 # ***************************** PRIVATE VARS **********************************
 
-var _project_extensions := [] # keep reference so they don't self-free
+var _project_extensions := [] # we keep reference so they don't self-free
 var _program: Dictionary = IVGlobal.program
 var _script_classes: Dictionary = IVGlobal.script_classes
 
@@ -208,16 +210,16 @@ var _script_classes: Dictionary = IVGlobal.script_classes
 # ****************************** PROJECT BUILD ********************************
 
 func _ready() -> void:
-	call_deferred("build_deferred") # after all other singletons _ready()
+	call_deferred("build_deferred")
 
 
-func build_deferred() -> void:
-	if allow_program_build:
+func build_deferred() -> void: # after all other singletons _ready()
+	if allow_project_build:
 		build_project()
 
 
 func build_project() -> void:
-	# Build loop is designed so that init_sequence array can be modified even
+	# Build loop is designed so that array 'init_sequence' can be modified even
 	# during loop execution -- in particular, by an extention instantiated in
 	# the first step. Otherwise, it could be modified by an autoload singleton.
 	var init_index := 0
@@ -231,6 +233,8 @@ func build_project() -> void:
 			yield(self, "init_step_finished")
 		init_index += 1
 
+
+# ************************ 'init_sequence' FUNCTIONS **************************
 
 func init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
