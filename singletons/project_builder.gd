@@ -122,7 +122,7 @@ var prog_builders := {
 	_MinorBodiesBuilder_ = IVMinorBodiesBuilder,
 	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
-	_CompositionBuilder_ = IVCompositionBuilder,
+	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 }
 
 var prog_refs := {
@@ -183,7 +183,7 @@ var procedural_classes := {
 	# have underscores). 
 	# tree_nodes
 	_Body_ = IVBody,
-	_Camera_ = IVCamera, # possible to replace, but look for dependencies
+	_Camera_ = IVCamera, # replaceable, but look for dependencies
 	_LPoint_ = IVLPoint,
 	_HUDLabel_ = IVHUDLabel,
 	_HUDOrbit_ = IVHUDOrbit,
@@ -195,7 +195,7 @@ var procedural_classes := {
 	_Selection_ = IVSelection,
 	_View_ = IVView,
 	_AsteroidGroup_ = IVAsteroidGroup,
-	_Composition_ = IVComposition,
+	_Composition_ = IVComposition, # replaceable, but look for dependencies
 	# _BodyList_ = IVBodyList, # WIP
 }
 
