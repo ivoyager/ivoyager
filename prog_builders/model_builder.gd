@@ -44,8 +44,8 @@ var _table_reader: IVTableReader
 var _io_manager: IVIOManager
 var _globe_mesh: SphereMesh
 var _fallback_albedo_map: Texture
-var _map_files := {}
-var _model_files := {}
+var _map_paths := {}
+var _model_paths := {}
 var _lazy_tracker := {}
 var _n_lazy := 0
 var _recycled_placeholders := [] # unmodified, un-treed Spatials
@@ -86,14 +86,14 @@ func _preregister_files() -> void:
 		while row < n_rows:
 			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
 			assert(file_prefix)
-			var model_file := files.find_resource_file(models_search, file_prefix)
-			if model_file:
-				_model_files[file_prefix] = model_file
+			var path := files.find_resource_file(models_search, file_prefix)
+			if path:
+				_model_paths[file_prefix] = path
 			for suffix in map_search_suffixes:
 				var file_match := file_prefix + (suffix as String)
-				var map_file := files.find_resource_file(maps_search, file_match)
-				if map_file:
-					_map_files[file_match] = map_file
+				path = files.find_resource_file(maps_search, file_match)
+				if path:
+					_map_paths[file_match] = path
 			row += 1
 
 
@@ -129,9 +129,9 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[2]
 	var model_basis: Basis = array[4]
 	var model: Spatial
-	var model_file: String = _model_files.get(file_prefix, "")
-	if model_file:
-		var packed_scene: PackedScene = load(model_file)
+	var path: String = _model_paths.get(file_prefix, "")
+	if path:
+		var packed_scene: PackedScene = load(path)
 		model = packed_scene.instance()
 		model.transform.basis = model_basis
 		model.hide()
@@ -141,13 +141,13 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	# TODO: We need a fallback asteroid-like model for non-ellipsoid
 	# fallthrough to constructed ellipsoid model
 	var emission_map: Texture
-	var map_file: String = _map_files.get(file_prefix + ".emission", "")
-	if map_file:
-		emission_map = load(map_file)
+	path = _map_paths.get(file_prefix + ".emission", "")
+	if path:
+		emission_map = load(path)
 	var albedo_map: Texture
-	map_file = _map_files.get(file_prefix + ".albedo", "")
-	if map_file:
-		albedo_map = load(map_file)
+	path = _map_paths.get(file_prefix + ".albedo", "")
+	if path:
+		albedo_map = load(path)
 	if !albedo_map and !emission_map:
 		albedo_map = _fallback_albedo_map
 	model = MeshInstance.new()
@@ -233,19 +233,14 @@ func _record_lazy_event(model: Spatial) -> void: # Main thread
 func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> Basis:
 	# radii used only for ellipsoid
 	var basis := Basis()
-	var model_file: String = _model_files.get(file_prefix, "")
-	if model_file:
-		var model_scale := NAN
-		var asset_row := _table_reader.get_row(model_file.get_file())
-#		prints(file_prefix, asset_row, model_file)
+	var path: String = _model_paths.get(file_prefix, "")
+	if path: # has model file
+		var model_scale := 1.0
+		var asset_row := _table_reader.get_row(path.get_file())
 		if asset_row != -1:
 			model_scale = _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
-#			prints(file_prefix, model_scale)
-		if !is_nan(model_scale):
+		if model_scale != 1.0:
 			basis = basis.scaled(model_scale * Vector3.ONE)
-#			prints(file_prefix, basis.scaled(1e12 * Vector3.ONE))
-		else:
-			basis = basis.scaled(METER * Vector3.ONE)
 	else: # constructed ellipsoid model
 		assert(!is_nan(m_radius) and !is_inf(m_radius))
 		if !is_nan(e_radius) and !is_inf(e_radius):
@@ -254,9 +249,9 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		else:
 			basis = basis.scaled(m_radius * Vector3.ONE)
 		# map rotation - we only look for *.albedo file
-		var map_file: String = _map_files.get(file_prefix + ".albedo", "")
-		if map_file:
-			var asset_row := _table_reader.get_row(map_file.get_file())
+		path = _map_paths.get(file_prefix + ".albedo", "")
+		if path:
+			var asset_row := _table_reader.get_row(path.get_file())
 			if asset_row != -1:
 				var longitude_offset := _table_reader.get_real("asset_adjustments",
 						"longitude_offset", asset_row)

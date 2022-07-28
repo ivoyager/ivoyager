@@ -2,5 +2,6 @@ name	file_prefix	en.wikipedia	symbol	class_type	model_type	light_type	hydrostati
 Type	STRING	STRING	STRING	TABLE_ROW	TABLE_ROW	TABLE_ROW	ConfidenceType	INT	INT	INT	INT	INT	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING
 Default							YES																																
 Unit													deg	deg	ly	km	yr	km/s	km/s	km/s	d	deg	deg	km	km	kg	g/cm^3	km/s	m^3/s^2			W			yr	K	K	K	
-STAR_SUN	Sun	Sun	\u2609	CLASS_G_STAR	MODEL_G_STAR	LIGHT_SUN		8	5	796354	4143	575	0	0	0	2.7e17	2.3e8	220	370	20	25.05	286.13	63.87	696342	696339	1.9885e30	1.408	617.7	1.32712440018e20	G2V	4.83	3.828e26	0.63	0.0122	4.6e9	1.57e7	5777	~5e6	73.46% Hydrogen, 24.85% Helium, 0.77% Oxygen, 0.29% Carbon, 0.16% Iron, 0.12% Neon, 0.09% Nitrogen, 0.07% Silicon, 0.05% Magnesium, 0.04% Sulphur
+Prefix/STAR_				CLASS_	MODEL_	LIGHT_																																	
+SUN	Sun	Sun	\u2609	G_STAR	G_STAR	SUN		8	5	796354	4143	575	0	0	0	2.7e17	2.3e8	220	370	20	25.05	286.13	63.87	696342	696339	1.9885e30	1.408	617.7	1.32712440018e20	G2V	4.83	3.828e26	0.63	0.0122	4.6e9	1.57e7	5777	~5e6	73.46% Hydrogen, 24.85% Helium, 0.77% Oxygen, 0.29% Carbon, 0.16% Iron, 0.12% Neon, 0.09% Nitrogen, 0.07% Silicon, 0.05% Magnesium, 0.04% Sulphur
 #																																							

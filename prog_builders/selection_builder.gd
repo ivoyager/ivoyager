@@ -86,7 +86,7 @@ func set_view_parameters_from_body(selection: IVSelection, body: IVBody) -> void
 		use_ground_latitude_offset = ground_latitude_offset
 		use_orbit_latitude_offset = orbit_latitude_offset
 		if _home_view_from_user_time_zone and body.name == "PLANET_EARTH":
-			var time_zone_info := OS.get_time_zone_info()
+			var time_zone_info := Time.get_time_zone_from_system()
 			use_ground_longitude_offset = fposmod(time_zone_info.bias * TAU / 1440.0, TAU)
 			prints("time zone offset:", use_ground_longitude_offset)
 	else: # moons or moon satellites

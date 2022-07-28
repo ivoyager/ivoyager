@@ -8,9 +8,12 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.13] - Unreleased
 
-Currently under development using Godot 3.5-rc7. We're waiting for 3.5.stable for our next release!
+Currently under development using Godot 3.5-rc7. Requres 3.5 for new Time API! We're waiting for 3.5.stable for our next release!
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
+
+### Added
+* Optional 'Prefix' header row in .tsv table import. Allows reduction of 'PLANET_MERCURY', 'PLANET_VENUS', 'PLANET_EARTH' to 'MERCURY', 'VENUS', 'EARTH'.
 
 ### Changed
 * [API Breaking!] Renamed the core selection object ('IVSelectionItem' to 'IVSelection') and redesigned to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
@@ -20,7 +23,8 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * [API Breaking!] Removed Type 'BODY' from data tables and table import system.
 * IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
 * Changes to IVProjectBuilder to improve extensibility.
-* Updated and improved extension comments in project_builder.gd and elsewhere. 
+* Updated and improved extension comments in project_builder.gd and elsewhere.
+* Some time related code updated from OS to Time (OS methods depreciated). [Requres Godot 3.5!]
 
 ### Removed
 * [API Breaking!] Removed IVViewCacher from 'ivoyager' submodule (moved to Planetarium project where it is used).

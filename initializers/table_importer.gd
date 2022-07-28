@@ -19,11 +19,10 @@
 # *****************************************************************************
 class_name IVTableImporter
 
-# Reads external data tables (.tsv files) and adds processed results to
-# IVGlobal dictionaries. Data can be accessed using IVTableReader API or by
-# direct table indexing. Each table is structured as a dictionary of column
-# arrays containing typed (and unit-converted for REAL) values. Data can be
-# accessed directly by indexing:
+# Reads external data tables (.tsv files) and adds typed and processed (e.g.,
+# unit-converted for REAL) results to IVGlobal dictionaries. Data can be
+# accessed directly or using IVTableReader API. IVGlobal dictionaries are
+# structured as follows:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
@@ -36,9 +35,11 @@ class_name IVTableImporter
 #
 #  Type (required!): X, BOOL, INT, FLOAT, STRING, TABLE_ROW or enum name.
 #    An enum must be present in static file referenced in IVGlobal.enums. 'X'
-#    type is really just BOOL where 'x' is true and blank cell is false.
+#    type is imported as BOOL where 'x' is true and blank cell is false.
+#  Prefix (optional; STRING or TABLE_ROW): Add prefix to non-blank cells.
+#    Use 'Prefix/PLANET_' to prefix name column (eg, in 'planets' table).
 #  Default (optional; not expected for X): Use this value if blank cell.
-#  Units (optional; REAL only!): Reals will be converted from provided units
+#  Units (optional; REAL only): Reals will be converted from provided units
 #    symbol. The symbol must be present in IVUnits.MULTIPLIERS or FUNCTIONS or
 #    replacement dicts specified in IVGlobal.unit_multipliers, .unit_functions.
 
@@ -78,9 +79,9 @@ func _init():
 
 
 func _on_init() -> void:
-	var start_time := OS.get_system_time_msecs()
+	var start_time := Time.get_ticks_msec()
 	_import()
-	var time := OS.get_system_time_msecs() - start_time
+	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
 			% [time, _count_rows, _count_cells, _count_non_null])
 
@@ -119,8 +120,7 @@ func _import_wiki_titles(path: String) -> void:
 		var line_array := line.split("\t") as Array
 		if reading_header:
 			if reading_fields: # always 1st line!
-				var cell00: String = line_array[0]
-				assert(cell00 == "name", "1st field must be 'name'")
+				assert(line_array[0] == "name", "1st field must be 'name'")
 				for field in line_array:
 					fields[field] = n_columns
 					n_columns += 1
@@ -158,9 +158,10 @@ func _import_table(table_name: String, path: String) -> void:
 	_table_types[table_name] = {}
 	_table_precisions[table_name] = {}
 	var fields := {}
-	var types: Array
-	var units: Array
-	var defaults: Array
+	var types := []
+	var units := []
+	var defaults := []
+	var prefixes := []
 	var reading_header := true
 	var reading_fields := true
 	var n_columns := 0
@@ -174,10 +175,10 @@ func _import_table(table_name: String, path: String) -> void:
 			continue
 		var line_array := line.split("\t") as Array
 		if reading_header:
+			var cell_0: String = line_array[0]
 			if reading_fields: # always 1st line!
-				var cell00: String = line_array[0]
-				assert(cell00 == "name" or cell00 == "nil", "1st field must be 'name' or 'nil'")
-				has_row_names = cell00 == "name"
+				assert(cell_0 == "name" or cell_0 == "nil", "1st field must be 'name' or 'nil'")
+				has_row_names = cell_0 == "name"
 				for field in line_array:
 					assert(field != "n_rows", "Disallowed field name")
 					if field == "Comments":
@@ -190,7 +191,7 @@ func _import_table(table_name: String, path: String) -> void:
 				assert(n_columns == fields.size(), "Duplicate field (%s columns, %s unique fields) in %s" \
 						% [n_columns, fields.size(), path])
 			# Type, Units & Default; only Type is required and must be before Default
-			elif line_array[0] == "Type":
+			elif cell_0 == "Type":
 				types = line_array.duplicate()
 				types[0] = "STRING" # always name field (or nil)
 				types.resize(n_columns) # truncate Comment column
@@ -203,16 +204,29 @@ func _import_table(table_name: String, path: String) -> void:
 						# REAL values have parallel dict w/ precisions
 						_table_precisions[table_name][field] = []
 				has_type = true
-			elif line_array[0] == "Unit":
+			elif cell_0 == "Unit":
 				units = line_array.duplicate()
 				units[0] = ""
 				units.resize(n_columns) # truncate Comment column
 #				assert(_units_test())
-			elif line_array[0] == "Default":
+			elif cell_0 == "Default":
 				assert(has_type)
 				defaults = line_array.duplicate()
 				defaults[0] = ""
 				defaults.resize(n_columns) # truncate Comment column
+			elif cell_0.begins_with("Prefix"):
+				# Prefix for the name column may be appended after "/":
+				# e.g., "Prefix/PLANET_"
+				assert(has_type)
+				prefixes = line_array.duplicate()
+				prefixes.resize(n_columns) # truncate Comment column
+				if cell_0.begins_with("Prefix/"):
+					prefixes[0] = cell_0.lstrip("Prefix").lstrip("/")
+					# Godot 3.5 bug?
+					# lstrip("Prefix/") strips leading char after /
+				else:
+					assert(cell_0 == "Prefix")
+					prefixes[0] = ""
 			else:
 				# We are done reading header; must be at first data line.
 				assert(types) # required
@@ -222,11 +236,16 @@ func _import_table(table_name: String, path: String) -> void:
 				if !defaults:
 					for _i in range(n_columns):
 						defaults.append("")
+				if !prefixes:
+					for _i in range(n_columns):
+						prefixes.append("")
 				reading_header = false
+		
 		# data line
 		if !reading_header:
 			_count_rows += 1
-			_read_line(table_name, row, line_array, fields, types, units, defaults, has_row_names)
+			_read_line(table_name, row, line_array, fields, types, units, defaults, prefixes,
+					has_row_names)
 			row += 1
 		line = file.get_line()
 	
@@ -234,10 +253,14 @@ func _import_table(table_name: String, path: String) -> void:
 
 
 func _read_line(table_name: String, row: int, line_array: Array, fields: Dictionary,
-		types: Array, units: Array, defaults: Array, has_row_names: bool) -> void:
+		types: Array, units: Array, defaults: Array, prefixes: Array,
+		has_row_names: bool) -> void:
 	var row_name := ""
 	if has_row_names:
-		row_name = line_array[0]
+		if prefixes[0]:
+			row_name = prefixes[0] + line_array[0]
+		else:
+			row_name = line_array[0]
 		assert(row_name, "name cell is blank!")
 		assert(!_table_rows.has(row_name))
 		_table_rows[row_name] = row
@@ -253,11 +276,12 @@ func _read_line(table_name: String, row: int, line_array: Array, fields: Diction
 			_count_non_null += 1
 		var type: String = types[column]
 		var unit: String = units[column]
-		_append_preprocessed(table_name, field, row_name, raw_value, type, unit)
+		var prefix: String = prefixes[column]
+		_append_preprocessed(table_name, field, row_name, raw_value, type, unit, prefix)
 
 
 func _append_preprocessed(table_name: String, field: String, row_name: String,
-			raw_value: String, type: String, unit: String):
+			raw_value: String, type: String, unit: String, prefix: String):
 	# Convert BOOL, X, REAL, INT and enums, and process STRING; we'll convert
 	# TABLE_ROW to int in _postprocess()
 	if raw_value.begins_with("\"") and raw_value.ends_with("\""):
@@ -275,6 +299,8 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 		"STRING":
 			value = raw_value.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
 			value = utils.c_unescape_patch(value) # handles "\uXXXX"
+			if value and prefix:
+				value = prefix + value
 		"REAL":
 			# we determine precision here
 			var precision := -1
@@ -299,6 +325,8 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 			value = int(raw_value) if raw_value else -1
 		"TABLE_ROW": # we'll convert to int in _postprocess()
 			value = raw_value
+			if value and prefix:
+				value = prefix + value
 		_: # must be a valid enum name
 			if !raw_value:
 				value = -1
@@ -309,7 +337,6 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 	_tables[table_name][field].append(value)
 	if _enable_wiki and field == _wiki:
 		_wiki_titles[row_name] = value
-
 
 
 func _postprocess() -> void:
@@ -329,9 +356,6 @@ func _postprocess() -> void:
 			var row: int = column_array.size()
 			while row > 0:
 				row -= 1
-				var raw_value: String = column_array[row]
-				if raw_value:
-					column_array[row] = _table_rows[raw_value]
-				else:
-					column_array[row] = -1
+				var row_name: String = column_array[row]
+				column_array[row] = _table_rows[row_name] if row_name else -1
 

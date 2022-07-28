@@ -41,7 +41,7 @@ func add_world_environment() -> void:
 
 
 func _io_callback(array: Array) -> void: # I/O thread!
-	var start_time := OS.get_system_time_msecs()
+	var start_time := Time.get_ticks_msec()
 	var world_environment := WorldEnvironment.new()
 	world_environment.name = "WorldEnvironment"
 	world_environment.environment = _get_environment()
@@ -53,7 +53,7 @@ func _io_finish(array: Array) -> void: # Main thread
 	var world_environment: WorldEnvironment = array[0]
 	var start_time: int = array[1]
 	IVGlobal.program.Universe.add_child(world_environment) # this hangs a while!
-	var time := OS.get_system_time_msecs() - start_time
+	var time := Time.get_ticks_msec() - start_time
 	print("Added WorldEnvironment in ", time, " msec")
 	IVGlobal.verbose_signal("world_environment_added")
 

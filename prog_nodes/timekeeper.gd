@@ -347,7 +347,7 @@ func get_jdn_for_solar_day(solar_day_: float) -> int:
 
 
 func get_real_world_time() -> float:
-	var sys_msec := OS.get_system_time_msecs() # is this ok for all systems?
+	var sys_msec := OS.get_system_time_msecs() # no Time method; ok for all systems?
 	var j2000sec := (sys_msec - 946728000000) * 0.001
 	return j2000sec * SECOND
 

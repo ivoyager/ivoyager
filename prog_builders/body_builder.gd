@@ -105,7 +105,7 @@ func _project_init() -> void:
 	_light_builder = IVGlobal.program.LightBuilder
 	_huds_builder = IVGlobal.program.HUDsBuilder
 	_orbit_builder = IVGlobal.program.OrbitBuilder
-	_composition_builder = IVGlobal.program.CompositionBuilder
+	_composition_builder = IVGlobal.program.get("CompositionBuilder")
 	_io_manager = IVGlobal.program.IOManager
 	_table_reader = IVGlobal.program.TableReader
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
@@ -135,7 +135,8 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
 	body.m_radius = body.characteristics.m_radius
-	_set_compositions_from_table(body)
+	if _composition_builder:
+		_composition_builder.add_compositions_from_table(body, table_name, row)
 	_register(body, parent)
 	if keep_real_precisions:
 		body.characteristics.real_precisions = _real_precisions
@@ -252,22 +253,6 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 
 
-func _set_compositions_from_table(body: IVBody) -> void:
-	var components := body.components
-	var atmosphere_composition_str := _table_reader.get_string(_table_name, "atmosphere_composition", _row)
-	if atmosphere_composition_str:
-		var atmosphere_composition := _composition_builder.make_from_string(atmosphere_composition_str)
-		components.atmosphere = atmosphere_composition
-	var trace_atmosphere_composition_str := _table_reader.get_string(_table_name, "trace_atmosphere_composition", _row)
-	if trace_atmosphere_composition_str:
-		var trace_atmosphere_composition := _composition_builder.make_from_string(trace_atmosphere_composition_str)
-		components.trace_atmosphere = trace_atmosphere_composition
-	var photosphere_composition_str := _table_reader.get_string(_table_name, "photosphere_composition", _row)
-	if photosphere_composition_str:
-		var photosphere_composition := _composition_builder.make_from_string(photosphere_composition_str)
-		components.photosphere = photosphere_composition
-
-
 func _register(body: IVBody, parent: IVBody) -> void:
 	if !parent:
 		_body_registry.register_top_body(body)
@@ -345,12 +330,12 @@ func _io_finish(array: Array) -> void: # Main thread
 
 
 func _start_system_build_msec(_array: Array) -> void: # I/O thread
-	_system_build_start_msec = OS.get_system_time_msecs()
+	_system_build_start_msec = Time.get_ticks_msec()
 
 
 func _finish_system_build() -> void: # Main thread
 		_is_building_system = false
-		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
+		var msec :=  Time.get_ticks_msec() - _system_build_start_msec
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
 		var is_new_game: bool = !IVGlobal.state.is_loaded_game
 		IVGlobal.verbose_signal("system_tree_ready", is_new_game)

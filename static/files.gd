@@ -137,7 +137,7 @@ static func get_dir_files(dir_path: String) -> Array:
 
 static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
-	# followed by dot. Returns resource file if it exists. We expect to
+	# followed by dot. Returns resource path if it exists. We expect to
 	# find file with .import extension (this is the ONLY file in an exported
 	# project!), but ".import" must be removed from end to load it.
 	file_prefix = file_prefix + "."
