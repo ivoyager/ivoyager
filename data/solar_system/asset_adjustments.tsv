@@ -8,7 +8,3 @@ Hyperion.4000_1_1000.glb		1000
 Phobos.4000_1_1000.glb		1000
 Vesta.4000_1_1000.glb		1000
 #		
-# Maps are assumed to have prime meridian at center & longitude 180 at edge,		
-# as is typical for Earth maps; if different use longitude_offset.		
-# Model scale is assumed to be in meters (1 meter), unless included here.		
-# Defaults are hard-coded since we don't want to include all assets here.		
