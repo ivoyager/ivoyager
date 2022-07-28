@@ -330,12 +330,12 @@ func _io_finish(array: Array) -> void: # Main thread
 
 
 func _start_system_build_msec(_array: Array) -> void: # I/O thread
-	_system_build_start_msec = OS.get_system_time_msecs()
+	_system_build_start_msec = Time.get_ticks_msec()
 
 
 func _finish_system_build() -> void: # Main thread
 		_is_building_system = false
-		var msec :=  OS.get_system_time_msecs() - _system_build_start_msec
+		var msec :=  Time.get_ticks_msec() - _system_build_start_msec
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
 		var is_new_game: bool = !IVGlobal.state.is_loaded_game
 		IVGlobal.verbose_signal("system_tree_ready", is_new_game)

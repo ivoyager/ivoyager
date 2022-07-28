@@ -79,9 +79,9 @@ func _init():
 
 
 func _on_init() -> void:
-	var start_time := OS.get_system_time_msecs()
+	var start_time := Time.get_ticks_msec()
 	_import()
-	var time := OS.get_system_time_msecs() - start_time
+	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
 			% [time, _count_rows, _count_cells, _count_non_null])
 
