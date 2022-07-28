@@ -21,7 +21,7 @@ class_name IVTableImporter
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for REAL) results to IVGlobal dictionaries. Data can be
-# accessed direct or using IVTableReader API. IVGlobal dictionaries are
+# accessed directly or using IVTableReader API. IVGlobal dictionaries are
 # structured as follows:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
@@ -240,10 +240,7 @@ func _import_table(table_name: String, path: String) -> void:
 					for _i in range(n_columns):
 						prefixes.append("")
 				reading_header = false
-				
-				print(table_name)
-				print(prefixes)
-				
+		
 		# data line
 		if !reading_header:
 			_count_rows += 1

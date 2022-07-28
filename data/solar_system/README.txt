@@ -34,8 +34,9 @@ File rules:
 *	Row name must be globally unique among all data tables listed and imported
 	from Global.table_import. Tables listed in Global.wiki_titles_import can have
 	duplicate row names (duplicates will overwrite existing values).
-*	After header row there must be a "Type" row. See details below.
-*	Two more rows are optional: "Default" and "Units". See details below.
+*	After header row there must be a "Type" row with values for all fields. See
+	details below.
+*	Three more rows are optional: "Default", "Units" and "Prefix". See below.
 
 Cell rules:
 
@@ -55,7 +56,7 @@ added to Global.wikipedia_locales. For an internal wiki (a la "Civiliopedia")
 add new column "wiki" and set Global.use_internal_wiki = true. For more info,
 see comments and API in prog_refs/wiki_manager.gd.
 
-Type (required row):
+Type (required row; required for all fields):
 
 	STRING
 		Normal Godot escaping applies for \n, \t, etc. We have also patched
@@ -111,6 +112,13 @@ Unit (optional row):
 	in replacement dictionaries specified in Global.unit_multipliers or
 	Global.unit_functions. Units can be prefixed by "10^### " where ### is a
 	valid integer.
+
+Prefix (optional row):
+
+	Prefix is valid for Type = STRING (including 'name' field) and TABLE_ROW.
+	Prefixes non-blank cells with value. To prefix the 0 column ('name' field),
+	use 'Prefix/<value>'. E.g., 'Prefix/PLANET_' is used in planets.tsv to
+	prefix all row names with 'PLANET_'.
 
 
 
