@@ -8,7 +8,7 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.13] - Unreleased
 
-Currently under development using Godot 3.5-rc7. We're waiting for 3.5.stable for our next release!
+Currently under development using Godot 3.5-rc7. Requres 3.5 for new Time API! We're waiting for 3.5.stable for our next release!
 
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
@@ -24,6 +24,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
 * Changes to IVProjectBuilder to improve extensibility.
 * Updated and improved extension comments in project_builder.gd and elsewhere.
+* Some time related code updated from OS to Time (OS methods depreciated). [Requres Godot 3.5!]
 
 ### Removed
 * [API Breaking!] Removed IVViewCacher from 'ivoyager' submodule (moved to Planetarium project where it is used).
