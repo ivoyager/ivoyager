@@ -85,34 +85,45 @@ enum ConfidenceType {
 }
 
 enum BodyFlags {
-	# identity (2 bytes reserved)
-	IS_BARYCENTER = 0b0000_0001,
-	IS_STAR = 0b0000_0010,
-	IS_TRUE_PLANET = 0b0000_0100,
-	IS_DWARF_PLANET = 0b0000_1000,
-	IS_MOON = 0b0001_0000,
-	IS_ASTEROID = 0b0010_0000,
-	IS_COMET = 0b0100_0000,
-	IS_SPACECRAFT = 0b1000_0000,
-	# properties (3 bytes reserved)
 	
-	NEVER_SLEEP = 0b0000_0001 * 0x10000, # won't work correctly if ancestor node sleeps
-	IS_TOP = 0b0000_0010 * 0x10000, # is in Registar.top_bodies
-	PROXY_STAR_SYSTEM = 0b0000_0100 * 0x10000, # top star or barycenter of system
-	IS_PRIMARY_STAR = 0b0000_1000 * 0x10000,
-	IS_STAR_ORBITING = 0b0001_0000 * 0x10000,
-	IS_TIDALLY_LOCKED = 0b0010_0000 * 0x10000,
-	IS_AXIS_LOCKED = 0b0100_0000 * 0x10000,
-	TUMBLES_CHAOTICALLY = 0b1000_0000 * 0x10000,
+	# reserved 1 << 0,
+	IS_BARYCENTER = 1 << 1, # not implemented yet
+	IS_STAR = 1 << 2,
+	IS_TRUE_PLANET = 1 << 3,
+	IS_DWARF_PLANET = 1 << 4,
+	IS_MOON = 1 << 5,
+	IS_ASTEROID = 1 << 6,
+	IS_COMET = 1 << 7,
+	IS_SPACECRAFT = 1 << 8,
 	
-	IS_NAVIGATOR_MOON = 0b0000_0001 * 0x1000000, # show in system navigator
-	LIKELY_HYDROSTATIC_EQUILIBRIUM = 0b0000_0010 * 0x1000000, # for moon orbit color
-	DISPLAY_M_RADIUS = 0b0000_0100 * 0x1000000,
-	HAS_ATMOSPHERE = 0b0000_1000 * 0x1000000,
-#	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km" (TODO)
-#	APPROX_GM = 0b100 * 0x1000000,
-	# First 5 bytes reserved: 0b1 to 0b10000000 * 0x100000000
-	# It's *probably* safe for extension to use bytes 6 to 8:
-	#     0b1 * 0x10000000000 to 0b10000000 * 0x100000000000000
-	# But more safe to extend IVBody and add your own flags_ext property!
+	# combos
+	IS_PLANET = 1 << 3 | 1 << 4, # 'true' or dwarf planet
+	IS_PLANET_OR_MOON = 1 << 3 | 1 << 4 | 1 << 5,
+
+	# reserved 1 << 9,
+	# reserved 1 << 10,
+	
+	NEVER_SLEEP = 1 << 11, # won't work correctly if ancestor node sleeps
+	IS_TOP = 1 << 12, # is in Registar.top_bodies
+	PROXY_STAR_SYSTEM = 1 << 13, # top star or barycenter of system
+	IS_PRIMARY_STAR = 1 << 14,
+	IS_STAR_ORBITING = 1 << 15,
+	IS_TIDALLY_LOCKED = 1 << 16,
+	IS_AXIS_LOCKED = 1 << 17,
+	TUMBLES_CHAOTICALLY = 1 << 18,
+	
+	IS_NAVIGATOR_MOON = 1 << 20, # show in system navigator
+	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 21, # for moon orbit color
+	DISPLAY_M_RADIUS = 1 << 22,
+	HAS_ATMOSPHERE = 1 << 23,
+#	APPROX_RADIUS = 1 << 24, # e.g., display as "~1 km" (TODO)
+#	APPROX_GM = 1 << 25,
+#
+#   reserved to 1 << 39,
+#
+#	Higher bits safe for extension project.
+#	Max bit shift is 1 << 63.
 }
+
+
+
