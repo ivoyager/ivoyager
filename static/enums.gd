@@ -86,20 +86,22 @@ enum ConfidenceType {
 
 enum BodyFlags {
 	
-	IS_BARYCENTER = 1,
-	IS_STAR = 1 << 1,
-	IS_TRUE_PLANET = 1 << 2,
-	IS_DWARF_PLANET = 1 << 3,
-	IS_MOON = 1 << 4,
-	IS_ASTEROID = 1 << 5,
-	IS_COMET = 1 << 6,
-	IS_SPACECRAFT = 1 << 7,
+	# reserved 1 << 0,
+	IS_BARYCENTER = 1 << 1, # not implemented yet
+	IS_STAR = 1 << 2,
+	IS_TRUE_PLANET = 1 << 3,
+	IS_DWARF_PLANET = 1 << 4,
+	IS_MOON = 1 << 5,
+	IS_ASTEROID = 1 << 6,
+	IS_COMET = 1 << 7,
+	IS_SPACECRAFT = 1 << 8,
 	
 	# combos
-	IS_PLANET = 1 << 2 | 1 << 3,
-	IS_PLANET_OR_MOON = 1 << 2 | 1 << 3 | 1 << 4,
+	IS_PLANET = 1 << 3 | 1 << 4, # 'true' or dwarf planet
+	IS_PLANET_OR_MOON = 1 << 3 | 1 << 4 | 1 << 5,
 
-	# 3 bytes reserved
+	# reserved 1 << 9,
+	# reserved 1 << 10,
 	
 	NEVER_SLEEP = 1 << 11, # won't work correctly if ancestor node sleeps
 	IS_TOP = 1 << 12, # is in Registar.top_bodies
@@ -114,11 +116,13 @@ enum BodyFlags {
 	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 21, # for moon orbit color
 	DISPLAY_M_RADIUS = 1 << 22,
 	HAS_ATMOSPHERE = 1 << 23,
-#	APPROX_RADIUS = 0b10 * 0x1000000, # e.g., display as "~1 km" (TODO)
-#	APPROX_GM = 0b100 * 0x1000000,
+#	APPROX_RADIUS = 1 << 24, # e.g., display as "~1 km" (TODO)
+#	APPROX_GM = 1 << 25,
 #
-#	Max bit shift is 1 << 63. We researve up to 39 for I, Voayger. 40+ should
-#	be safe for extention project use.
+#   reserved to 1 << 39,
+#
+#	Higher bits safe for extension project.
+#	Max bit shift is 1 << 63.
 }
 
 

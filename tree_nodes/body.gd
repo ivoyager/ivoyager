@@ -75,6 +75,7 @@ var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 
 # public - read-only except builder classes
+var parent: Spatial # another Body or 'Universe'
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
 var model_controller: IVModelController
@@ -126,14 +127,15 @@ func _enter_tree() -> void:
 
 
 func _on_enter_tree() -> void:
-	if !_state.is_loaded_game or _state.is_system_built:
+	parent = get_parent()
+	if _state.is_loaded_game and !_state.is_system_built:
+		# loading game inits
+		m_radius = characteristics.m_radius
+		orbit = components.get("orbit")
+		if orbit:
+			orbit.reset_elements_and_interval_update()
+			orbit.connect("changed", self, "_on_orbit_changed")
 		return
-	# loading game inits
-	m_radius = characteristics.m_radius
-	orbit = components.get("orbit")
-	if orbit:
-		orbit.reset_elements_and_interval_update()
-		orbit.connect("changed", self, "_on_orbit_changed")
 
 
 func _ready() -> void:
@@ -311,14 +313,15 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 
 func get_north_pole(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates. This is messy because
-	# IAU defines "north" only for true planets and their satellites equal to
-	# the pole pointing above invariable plane. Other bodies should use
-	# positive pole:
+	# IAU defines "north" only for true planets and their satellites (defined
+	# as the pole pointing above invariable plane). Other bodies should use
+	# "positive pole":
 	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
 	# However, it is common usage to assign "north" to Pluto and Charon's
-	# positive poles, even though this is south by above definition. We attempt
-	# to sort this out in our data tables and IVBodyBuilder assigning
-	# model_controller.rotation_vector to a sensible "north" as follows:
+	# positive poles (which is reversed from above if Pluto were a planet,
+	# which it is not of course). We attempt to sort this out in our data
+	# tables and system build by assigning model_controller.rotation_vector to
+	# a sensible "north" as follows:
 	#  * Star - same as true planet below.
 	#  * True planets and their satellites - use pole pointing in positive z-
 	#    axis direction in ecliptic (our sim reference coordinates). This is
@@ -472,8 +475,9 @@ func reset_orientation_and_rotation() -> void:
 	# https://zenodo.org/record/1259023.
 	# TODO: We still need rotation precession for Bodies with axial tilt.
 	# TODO: Some special mechanic for tumblers like Hyperion.
-	if !model_controller:
+	if !model_controller or flags & IS_TOP:
 		return
+	
 	# rotation_rate
 	var rotation_rate: float
 	if flags & IS_TIDALLY_LOCKED:
@@ -506,10 +510,7 @@ func reset_orientation_and_rotation() -> void:
 			rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
-	var parent_flags := 0
-	var parent := get_parent_spatial()
-	if parent.name != "Universe":
-		parent_flags = parent.flags
+	var parent_flags: int = parent.flags
 	if flags & IS_STAR or flags & IS_TRUE_PLANET or parent_flags & IS_TRUE_PLANET:
 		if ECLIPTIC_Z.dot(rotation_vector) < 0.0:
 			reverse_polarity = true
@@ -517,14 +518,25 @@ func reset_orientation_and_rotation() -> void:
 		var positive_pole := get_positive_pole()
 		if positive_pole.dot(rotation_vector) < 0.0:
 			reverse_polarity = true
-	else:
+			
+		if name == "PLANET_PLUTO":
+			prints(name, positive_pole)
+			
+	else: # moons of not-true-planet star-orbiters
 		var parent_positive_pole: Vector3 = parent.get_positive_pole()
 		if parent_positive_pole.dot(rotation_vector) < 0.0:
 			reverse_polarity = true
+		
+		if name == "MOON_CHARON":
+			prints(name, parent_positive_pole)
+			
 	if reverse_polarity:
 		rotation_rate *= -1.0
 		rotation_vector *= -1.0
 		rotation_at_epoch *= -1.0
+	
+#	prints(name, reverse_polarity, rotation_vector, rotation_rate)
+	
 	model_controller.set_body_parameters(rotation_vector, rotation_rate, rotation_at_epoch)
 	model_controller.emit_signal("changed")
 
