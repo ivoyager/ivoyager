@@ -20,7 +20,7 @@
 class_name IVBody
 extends Spatial
 
-# Base class for spatial nodes that have an orbit or can be orbited. The system
+# Base class for Spatial nodes that have an orbit or can be orbited. The system
 # tree (under Universe) is composed of IVBody instances from top to bottom.
 # Other spatial nodes (e.g., visuals) are parented by these IVBodies.
 #
@@ -135,7 +135,6 @@ func _on_enter_tree() -> void:
 		if orbit:
 			orbit.reset_elements_and_interval_update()
 			orbit.connect("changed", self, "_on_orbit_changed")
-		return
 
 
 func _ready() -> void:
@@ -314,23 +313,27 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 func get_north_pole(_time := NAN) -> Vector3:
 	# Returns this body's north in ecliptic coordinates. This is messy because
 	# IAU defines "north" only for true planets and their satellites (defined
-	# as the pole pointing above invariable plane). Other bodies should use
-	# "positive pole":
+	# as the pole pointing above invariable plane). Other bodies technically
+	# don't have "north" and are supposed to use "positive pole".
 	#    https://en.wikipedia.org/wiki/Poles_of_astronomical_bodies
-	# However, it is common usage to assign "north" to Pluto and Charon's
-	# positive poles (which is reversed from above if Pluto were a planet,
-	# which it is not of course). We attempt to sort this out in our data
-	# tables and system build by assigning model_controller.rotation_vector to
-	# a sensible "north" as follows:
-	#  * Star - same as true planet below.
-	#  * True planets and their satellites - use pole pointing in positive z-
+	# However, we want a "north" for all bodies for camera orientation. Also,
+	# it is common usage to assign "north" to Pluto and Charon's positive
+	# poles, which is reversed from above if Pluto were a planet (which it is
+	# not, of course!). We attempt to sort this out as follows:
+	#
+	#  * Star - Same as true planet.
+	#  * True planets and their satellites - Use pole pointing in positive z-
 	#    axis direction in ecliptic (our sim reference coordinates). This is
-	#    per IAU except the use of ecliptic rather than invarient plane (the
-	#    difference is ~ 1 degree and will affect very few if any objects).
-	#  * Other star-orbiting bodies - use positive pole, following Pluto.
-	#  * All others - use pole in same hemisphere as parent positive pole; so,
-	#    hypothetically, a retrograde moon of Pluto would have north aligned
-	#    with Pluto's.
+	#    per IAU except the use of ecliptic rather than invarient plane; the
+	#    difference is ~ 1 degree and will affect very few if any objects.
+	#  * Other star-orbiting bodies - Use positive pole, following Pluto.
+	#  * All others (e.g., satellites of dwarf planets) - Use pole in same
+	#    hemisphere as parent positive pole.
+	#
+	# Note that rotation_vector (and rotation_rate) will be flipped if needed
+	# during system build (following above rules) so that rotation_vector is
+	# always "north".
+	#
 	# TODO: North precession; will require time.
 	if !model_controller:
 		return ECLIPTIC_Z
@@ -338,7 +341,7 @@ func get_north_pole(_time := NAN) -> Vector3:
 
 
 func get_positive_pole(_time := NAN) -> Vector3:
-	# Right-hand-rule.
+	# Right-hand-rule! This is exactly defined, unlike "north".
 	if !model_controller:
 		return ECLIPTIC_Z
 	if model_controller.rotation_rate < 0.0:
@@ -475,6 +478,7 @@ func reset_orientation_and_rotation() -> void:
 	# https://zenodo.org/record/1259023.
 	# TODO: We still need rotation precession for Bodies with axial tilt.
 	# TODO: Some special mechanic for tumblers like Hyperion.
+	
 	if !model_controller or flags & IS_TOP:
 		return
 	
@@ -508,6 +512,7 @@ func reset_orientation_and_rotation() -> void:
 			rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
 		else:
 			rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
+	
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
 	var parent_flags: int = parent.flags
@@ -515,27 +520,16 @@ func reset_orientation_and_rotation() -> void:
 		if ECLIPTIC_Z.dot(rotation_vector) < 0.0:
 			reverse_polarity = true
 	elif parent_flags & IS_STAR: # dwarf planets and other star-orbiters
-		var positive_pole := get_positive_pole()
-		if positive_pole.dot(rotation_vector) < 0.0:
+		if rotation_rate < 0.0:
 			reverse_polarity = true
-			
-		if name == "PLANET_PLUTO":
-			prints(name, positive_pole)
-			
 	else: # moons of not-true-planet star-orbiters
 		var parent_positive_pole: Vector3 = parent.get_positive_pole()
 		if parent_positive_pole.dot(rotation_vector) < 0.0:
 			reverse_polarity = true
-		
-		if name == "MOON_CHARON":
-			prints(name, parent_positive_pole)
-			
 	if reverse_polarity:
-		rotation_rate *= -1.0
-		rotation_vector *= -1.0
-		rotation_at_epoch *= -1.0
-	
-#	prints(name, reverse_polarity, rotation_vector, rotation_rate)
+		rotation_rate = -rotation_rate
+		rotation_vector = -rotation_vector # this defines "north"!
+		rotation_at_epoch = -rotation_at_epoch
 	
 	model_controller.set_body_parameters(rotation_vector, rotation_rate, rotation_at_epoch)
 	model_controller.emit_signal("changed")

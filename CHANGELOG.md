@@ -31,7 +31,8 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 
 ### Fixed
 * Widgets fixed to work when GUI is added after solar system build.
-* Fixed IVTableImporter to print correct cell counts during data table reading. 
+* Fixed IVTableImporter to print correct cell counts during data table reading.
+* Fixed bug causing Pluto "north" flippage under some circumstances (happened in Project Template but not Planetarium).
 
 
 ## [v0.0.12] - 2022-01-20
