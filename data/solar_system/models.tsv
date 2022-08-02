@@ -1,7 +1,6 @@
 name	ellipsoid	starlight	metallic	roughness	rim_enabled	rim	rim_tint
 Type	BOOL	BOOL	REAL	REAL	BOOL	REAL	REAL
 Default	TRUE	FALSE	0	0.6	TRUE	0.003	0.5
-Unit							
 Prefix/MODEL_							
 G_STAR		TRUE					
 ROCKY_WORLD							

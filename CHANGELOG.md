@@ -13,14 +13,16 @@ Currently under development using Godot 3.5-rc7. Requres 3.5 for new Time API! W
 Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
 
 ### Added
-* Optional 'Prefix' header row in .tsv table import. Allows reduction of 'PLANET_MERCURY', 'PLANET_VENUS', 'PLANET_EARTH' to 'MERCURY', 'VENUS', 'EARTH'.
+* Optional 'Prefix' header row in table.tsv import. Allows reduction of 'PLANET_MERCURY', 'PLANET_VENUS', 'PLANET_EARTH' to 'MERCURY', 'VENUS', 'EARTH'.
+* Data table.tsv import ignores columns for fields prepended with '#' (e.g., '#comment', '#whateveryoulike').
 
 ### Changed
 * [API Breaking!] Renamed the core selection object ('IVSelectionItem' to 'IVSelection') and redesigned to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select Body instances.)
 * [API Breaking!] Changed function names in IVBodyRegistry for selection related actions.
 * [API Breaking!] Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
 * [API Breaking!] Various changes to IVTableReader API. Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
-* [API Breaking!] Removed Type 'BODY' from data tables and table import system.
+* [Breaks data tables!] Removed Type 'BODY' from data tables and table import system.
+* [Breaks data tables!] Data table column field 'Comment' disallowed. Use '#comment' (see Added).
 * IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).
 * Changes to IVProjectBuilder to improve extensibility.
 * Updated and improved extension comments in project_builder.gd and elsewhere.

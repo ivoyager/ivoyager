@@ -113,8 +113,7 @@ func _import_wiki_titles(path: String) -> void:
 	var n_columns := 0
 	var line := file.get_line()
 	while !file.eof_reached():
-		var comment_test := line.find("#")
-		if comment_test != -1 and comment_test < 4: # skip comment line
+		if line.begins_with("#"):
 			line = file.get_line()
 			continue
 		var line_array := line.split("\t") as Array
@@ -166,11 +165,10 @@ func _import_table(table_name: String, path: String) -> void:
 	var reading_fields := true
 	var n_columns := 0
 	var line := file.get_line()
-	var has_type := false
+	var has_types := false
 	var has_row_names: bool
 	while !file.eof_reached():
-		var comment_test := line.find("#")
-		if comment_test != -1 and comment_test < 4: # skip comment line
+		if line.begins_with("#"):
 			line = file.get_line()
 			continue
 		var line_array := line.split("\t") as Array
@@ -180,46 +178,40 @@ func _import_table(table_name: String, path: String) -> void:
 				assert(cell_0 == "name" or cell_0 == "nil", "1st field must be 'name' or 'nil'")
 				has_row_names = cell_0 == "name"
 				for field in line_array:
-					assert(field != "n_rows", "Disallowed field name")
-					if field == "Comments":
-						break
-					if field != "nil":
+					if field != "nil" and !field.begins_with("#"):
+						assert(!fields.has(field), "Duplicated field '" + field + "'")
+						fields[field] = n_columns
 						_tables[table_name][field] = []
-					fields[field] = n_columns
 					n_columns += 1
 				reading_fields = false
-				assert(n_columns == fields.size(), "Duplicate field (%s columns, %s unique fields) in %s" \
-						% [n_columns, fields.size(), path])
-			# Type, Units & Default; only Type is required and must be before Default
+			
+			# Type, Units, Default, Prefix; Type required and must be 1st
 			elif cell_0 == "Type":
-				types = line_array.duplicate()
+				types = line_array
 				types[0] = "STRING" # always name field (or nil)
-				types.resize(n_columns) # truncate Comment column
 				for field in fields:
 					var column: int = fields[field]
 					var type: String = types[column]
-					assert(TYPE_TEST.has(type) or type in _enums)
+					assert(TYPE_TEST.has(type) or type in _enums,
+							"Missing or unknown type '" + type + "'")
 					_table_types[table_name][field] = type
 					if type == "REAL":
 						# REAL values have parallel dict w/ precisions
 						_table_precisions[table_name][field] = []
-				has_type = true
+				has_types = true
 			elif cell_0 == "Unit":
-				units = line_array.duplicate()
+				assert(has_types)
+				units = line_array
 				units[0] = ""
-				units.resize(n_columns) # truncate Comment column
-#				assert(_units_test())
 			elif cell_0 == "Default":
-				assert(has_type)
-				defaults = line_array.duplicate()
+				assert(has_types)
+				defaults = line_array
 				defaults[0] = ""
-				defaults.resize(n_columns) # truncate Comment column
 			elif cell_0.begins_with("Prefix"):
 				# Prefix for the name column may be appended after "/":
 				# e.g., "Prefix/PLANET_"
-				assert(has_type)
-				prefixes = line_array.duplicate()
-				prefixes.resize(n_columns) # truncate Comment column
+				assert(has_types)
+				prefixes = line_array
 				if cell_0.begins_with("Prefix/"):
 					prefixes[0] = cell_0.lstrip("Prefix").lstrip("/")
 					# Godot 3.5 bug?
@@ -227,9 +219,8 @@ func _import_table(table_name: String, path: String) -> void:
 				else:
 					assert(cell_0 == "Prefix")
 					prefixes[0] = ""
-			else:
-				# We are done reading header; must be at first data line.
-				assert(types) # required
+			else: # finish header processing
+				assert(has_types) # required
 				if !units:
 					for _i in range(n_columns):
 						units.append("")

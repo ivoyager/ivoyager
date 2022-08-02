@@ -1,4 +1,4 @@
-name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	Comments
+name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	#comments
 Type	TABLE_ROW	REAL	STRING	STRING	REAL	REAL	REAL	REAL	
 Default									
 Unit					au	au	au	au	
