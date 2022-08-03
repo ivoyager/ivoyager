@@ -26,10 +26,11 @@ class_name IVTableImporter
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    table_rows[row_name] -> row_int (every row_name is globally unique!)
 #    table_types[table_name][column_field] -> Type string in table
 #    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
+#    enumerations[row_name] -> row_int (globally unique!)
+#       -this dictionary also enumerates enums listed in 'data_table_enums'
 #
 # See data/solar_system/README.txt for table construction. In short:
 #
@@ -51,19 +52,24 @@ const math := preload("res://ivoyager/static/math.gd")
 const DPRINT := false
 const TYPE_TEST := ["REAL", "BOOL", "X", "INT", "STRING", "TABLE_ROW"] # & enum names
 
+
+var data_table_enums := [
+	IVEnums.Confidence,
+]
+
 # source files
 var _table_import: Dictionary = IVGlobal.table_import
 var _wiki_titles_import: Array = IVGlobal.wiki_titles_import
 # imported data
 var _tables: Dictionary = IVGlobal.tables
-var _table_rows: Dictionary = IVGlobal.table_rows # IVGlobal shared
+var _enumerations: Dictionary = IVGlobal.enumerations # IVGlobal shared
 var _table_types: Dictionary = IVGlobal.table_types # indexed [table_name][field]
 var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles # IVGlobal shared
 
 # localization
 var _enable_wiki: bool = IVGlobal.enable_wiki
-var _enums: Script = IVGlobal.enums
+var _enums: Script = IVGlobal.static_enums_class
 var _wiki: String = IVGlobal.wiki # wiki column header
 var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
 var _unit_functions: Dictionary = IVGlobal.unit_functions
@@ -80,6 +86,7 @@ func _init():
 
 func _on_init() -> void:
 	var start_time := Time.get_ticks_msec()
+	_add_data_table_enums()
 	_import()
 	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
@@ -88,6 +95,13 @@ func _on_init() -> void:
 
 func _project_init() -> void:
 	IVGlobal.program.erase("TableImporter2") # frees self
+
+
+func _add_data_table_enums() -> void:
+	for enum_ in data_table_enums:
+		for key in enum_:
+			assert(!_enumerations.has(key))
+			_enumerations[key] = enum_[key]
 
 
 func _import() -> void:
@@ -253,8 +267,8 @@ func _read_line(table_name: String, row: int, line_array: Array, fields: Diction
 		else:
 			row_name = line_array[0]
 		assert(row_name, "name cell is blank!")
-		assert(!_table_rows.has(row_name))
-		_table_rows[row_name] = row
+		assert(!_enumerations.has(row_name))
+		_enumerations[row_name] = row
 	for field in fields:
 		if field == "nil":
 			continue
@@ -285,8 +299,14 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 			assert(raw_value == "" or raw_value == "x")
 			value = raw_value == "x"
 		"BOOL":
-			assert(raw_value.matchn("false") or raw_value.matchn("true"))
-			value = raw_value.matchn("true")
+			if raw_value == "x" or raw_value.matchn("true"):
+				value = true
+			else:
+				assert(raw_value == "" or raw_value.matchn("false"))
+				value = false
+			
+#			assert(raw_value.matchn("false") or raw_value.matchn("true"))
+#			value = raw_value.matchn("true")
 		"STRING":
 			value = raw_value.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
 			value = utils.c_unescape_patch(value) # handles "\uXXXX"
@@ -313,17 +333,36 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 				value = float(real)
 			_table_precisions[table_name][field].append(precision)
 		"INT":
-			value = int(raw_value) if raw_value else -1
+			if !raw_value:
+				value = -1
+			elif raw_value.is_valid_integer():
+				value = raw_value.to_int()
+			else:
+				# Must be an enumeration (table row or listed enum). We'll
+				# save string and convert to int in _postprocess() after all
+				# tables loaded.
+				if prefix:
+					value = prefix + raw_value
+				else:
+					value = raw_value
+#			value = int(raw_value) if raw_value else -1
+
+		# DEPRECIATE
 		"TABLE_ROW": # we'll convert to int in _postprocess()
-			value = raw_value
-			if value and prefix:
-				value = prefix + value
+			if !raw_value:
+				value = -1
+			else:
+				value = raw_value
+				if value and prefix:
+					value = prefix + value
+		
+		# DEPRECIATE
 		_: # must be a valid enum name
 			if !raw_value:
 				value = -1
 			else:
 				var enum_dict: Dictionary = _enums.get(type)
-				value = enum_dict[raw_value]
+				value = enum_dict[prefix + raw_value]
 	# set value
 	_tables[table_name][field].append(value)
 	if _enable_wiki and field == _wiki:
@@ -338,15 +377,20 @@ func _postprocess() -> void:
 			continue
 		for field in _tables[table_name]:
 			var type: String = _table_types[table_name][field]
+			
 			if type == "X":
 				_table_types[table_name][field] = "BOOL"
 				continue
-			if type != "TABLE_ROW":
+			
+			if type != "TABLE_ROW" and type != "INT":
 				continue
+				
 			var column_array: Array = _tables[table_name][field]
 			var row: int = column_array.size()
 			while row > 0:
 				row -= 1
-				var row_name: String = column_array[row]
-				column_array[row] = _table_rows[row_name] if row_name else -1
+				if typeof(column_array[row]) == TYPE_STRING:
+					var enumeration: String = column_array[row]
+					assert(_enumerations.has(enumeration), "Unknown enumeration '" + enumeration + "'")
+					column_array[row] = _enumerations[enumeration]
 
