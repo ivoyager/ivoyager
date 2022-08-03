@@ -76,12 +76,12 @@ enum StarmapSize {
 	STARMAP_16K,
 }
 
-enum ConfidenceType {
-	NO,
-	DOUBTFUL,
-	UNKNOWN,
-	PROBABLY,
-	YES,
+enum Confidence {
+	CONFIDENCE_NO,
+	CONFIDENCE_DOUBTFUL,
+	CONFIDENCE_UNKNOWN,
+	CONFIDENCE_PROBABLY,
+	CONFIDENCE_YES,
 }
 
 enum BodyFlags {
@@ -124,6 +124,5 @@ enum BodyFlags {
 #	Higher bits safe for extension project.
 #	Max bit shift is 1 << 63.
 }
-
 
 

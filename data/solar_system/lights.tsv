@@ -1,6 +1,6 @@
 name	omni_range
 Type	REAL
-Default	
 Unit	au
-LIGHT_SUN	120
+Prefix/LIGHT_	
+SUN	120
 #	

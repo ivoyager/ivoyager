@@ -109,7 +109,7 @@ var section_data := [ # one array element per header
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
-				ENUM, "ConfidenceType"],
+				ENUM, "Confidence"],
 		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
@@ -186,7 +186,7 @@ var special_processing := {
 }
 
 var _state: Dictionary = IVGlobal.state
-var _enums: Script = IVGlobal.enums
+var _enums: Script = IVGlobal.static_enums_class
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _wiki_locale: String = IVGlobal.wiki
 var _header_buttons := []

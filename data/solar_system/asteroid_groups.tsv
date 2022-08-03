@@ -1,5 +1,5 @@
-name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	Comments
-Type	TABLE_ROW	REAL	STRING	STRING	REAL	REAL	REAL	REAL	
+name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	#comments
+Type	INT	REAL	STRING	STRING	REAL	REAL	REAL	REAL	
 Default									
 Unit					au	au	au	au	
 Prefix/ASTEROID_GROUP_	STAR_								

@@ -27,10 +27,11 @@ class_name IVTableReader
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    table_rows[row_name] -> row_int (every row_name is globally unique!)
 #    table_types[table_name][column_field] -> Type string in table
 #    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
+#    enumerations[row_name] -> row_int (globally unique!)
+#       -this dictionary also enumerates enums listed in 'data_table_enums'
 
 
 const units := preload("res://ivoyager/static/units.gd")
@@ -38,7 +39,7 @@ const utils := preload("res://ivoyager/static/utils.gd")
 const math := preload("res://ivoyager/static/math.gd")
 
 var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or row_int]
-var _table_rows: Dictionary = IVGlobal.table_rows # indexed by ALL table row names
+var _enumerations: Dictionary = IVGlobal.enumerations # indexed by ALL table row names
 var _table_types: Dictionary = IVGlobal.table_types # indexed [table][field]
 var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
 
@@ -66,7 +67,7 @@ func get_row_name(table: String, row: int) -> String:
 
 func get_row(row_name: String) -> int:
 	# Returns -1 if missing. All row_name's are globally unique.
-	return _table_rows.get(row_name, -1)
+	return _enumerations.get(row_name, -1)
 
 
 func get_names_dict(table: String) -> Dictionary:
@@ -74,7 +75,7 @@ func get_names_dict(table: String) -> Dictionary:
 	var dict := {}
 	for key in _tables[table]["name"]:
 		if typeof(key) == TYPE_STRING:
-			dict[key] = _table_rows[key]
+			dict[key] = _enumerations[key]
 	return dict
 
 
@@ -118,30 +119,29 @@ func get_true_rows(table: String, field: String) -> Array:
 
 
 func has_row_name(table: String, row_name: String) -> bool:
-	return _table_rows.has(row_name) \
+	return _enumerations.has(row_name) \
 			and _tables[table].has("name") \
 			and _tables[table]["name"].has(row_name)
 
 
 func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	# Evaluates true if table has field and does not contain type-specific
-	# 'null' value: i.e., "" for STRING, NAN for REAL, or -1 for INT, TABLE_ROW
-	# or enum name.
-	# Always true for Type BOOL and X if field exists.
+	# 'null' value: i.e., "", NAN or -1 for STRING, REAL or INT, respectively.
+	# Always true for Type BOOL.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	var type: String = _table_types[table][field]
 	if type == "REAL":
 		return !is_nan(_tables[table][field][row])
 	elif type == "STRING":
 		return _tables[table][field][row] != ""
-	elif type == "BOOL": # Type "X" was converted to "BOOL" at import
-		return true
-	else: # INT, TABLE_ROW or enum name
+	elif type == "INT":
 		return _tables[table][field][row] != -1
+	else: # BOOL
+		return true
 
 
 func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
@@ -149,7 +149,7 @@ func has_real_value(table: String, field: String, row := -1, row_name := "") -> 
 	if !_tables[table].has(field):
 		return false
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return !is_nan(_tables[table][field][row])
 
 
@@ -159,27 +159,27 @@ func get_string(table: String, field: String, row := -1, row_name := "") -> Stri
 	if !_tables[table].has(field):
 		return ""
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return _tables[table][field][row]
 
 
 func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
-	# Use for table Type 'BOOL' or 'X'; returns false if missing
+	# Use for table Type 'BOOL'; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return _tables[table][field][row]
 
 
 func get_int(table: String, field: String, row := -1, row_name := "") -> int:
-	# Use for table Type 'INT', 'TABLE_ROW', or enum name; returns -1 if missing
+	# Use for table Type 'INT'; returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return -1
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return _tables[table][field][row]
 
 
@@ -189,7 +189,7 @@ func get_real(table: String, field: String, row := -1, row_name := "") -> float:
 	if !_tables[table].has(field):
 		return NAN
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return _tables[table][field][row]
 
 
@@ -199,7 +199,7 @@ func get_real_precision(table: String, field: String, row := -1, row_name := "")
 	if !_table_precisions[table].has(field):
 		return -1
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	return _table_precisions[table][field][row]
 
 
@@ -207,7 +207,7 @@ func get_least_real_precision(table: String, fields: Array, row := -1, row_name 
 	# All fields must be type REAL
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if row_name:
-		row = _table_rows[row_name]
+		row = _enumerations[row_name]
 	var min_precision := 9999
 	for field in fields:
 		var precission: int = _table_precisions[table][field][row]
