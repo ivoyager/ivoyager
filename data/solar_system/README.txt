@@ -45,9 +45,8 @@ Data cell rules:
 *	Double-quotes (") will be removed if they enclose the cell on both ends.
 *	A prefix single-quote (') or underscore (_) will be removed.
 *	Blank cells are allowed for any Type and (if no Default specified) are
-	interpreted as missing or n/a values. These values will not be set in
-	TableReader build_ functions. However, get_int(), get_real(), etc., will
-	return type-specific "null" values (e.g., -1, NAN, etc.).
+	interpreted as missing or n/a values. These are assigned type-specific
+	"null" values (e.g., -1, NAN, etc.).
 
 Item hyperlinks to Wikipedia or internal wiki:
 
@@ -58,7 +57,7 @@ added to Global.wikipedia_locales. For an internal wiki (a la "Civiliopedia")
 add new column "wiki" and set Global.use_internal_wiki = true. For more info,
 see comments and API in prog_refs/wiki_manager.gd.
 
-Type (required row; required for all fields):
+Type (required row; required for all fields except #comment fields):
 
 	STRING
 		Normal Godot escaping applies for \n, \t, etc. We have also patched
@@ -66,13 +65,13 @@ Type (required row; required for all fields):
 		Godot; see issue https://github.com/godotengine/godot/issues/38716).
 		However, \UXXXXXXXX for advanced unicode does not currently work. 
 	BOOL
-		Case-insensitive "True" or "False". Note that blank cell (without
-		specified Default) is interpreted as False.
-	X
-		Must be "x" or blank, which are interpreted as true or false,
-		respectively. After import, these are identical to BOOL.
+		Case-insensitive "True" or "False". "x" is interpreted as True. A blank
+		cell will be imputed with Default value (if exists) or False.
 	INT
-		Any valid integer. Blank without default in imputed as -1.
+		A valid integer, or text string that is a data table row name or an
+		enum listed in IVTableImporter.data_table_enums.  E.g., CLASS_GAS_GIANT
+		resolves to 2 because it is row 2 in classes.tsv. A blank cell without
+		Default will be imputed as -1.
 	REAL
 		See WARNING about Excel above. If you must use it, then prefix all REAL
 		values with ' or _ to prevent number modification.
@@ -94,28 +93,20 @@ Type (required row; required for all fields):
 			1.0010 - 5 significant digits
 			0.0010 - 2 significant digits
 		(Set IVBodyBuilder.keep_real_precisions = false to disable precisions.)
-	TABLE_ROW
-		Expected to be a valid data table row name, e.g., "CLASS_GAS_GIANT".
-	< enum name >
-		An enum name can be specified for Type. The enum must exist in a
-		static Reference class specified in IVGlobal.enums. If you need to add
-		enums, extend the existing ivoyager/static/enums.gd class file and set
-		IVGlobal.enums to your new class.
 
 Default (optional row):
 
 	Default values must be blank or follow Type rules above. If non-blank, this
 	value is used for any blank cells in the column.
 
-Unit (optional row):
+Unit (optional row; REAL fields only):
 
-	Units are valid only for Type = REAL. The Units string must be a key in one
-	of the dictionaires in static/unit_defs.gd (MULTIPLIERS or FUNCTIONS), or
-	in replacement dictionaries specified in Global.unit_multipliers or
-	Global.unit_functions. Units can be prefixed by "10^x " where x is a
-	valid integer.
+	The Units string must be a key in one of the dictionaires in
+	static/unit_defs.gd (MULTIPLIERS or FUNCTIONS), or in replacement
+	dictionaries specified in Global.unit_multipliers or Global.unit_functions.
+	Units can be prefixed by "10^x " where x is a valid integer.
 
-Prefix (optional row):
+Prefix (optional row; STRING and INT fields only):
 
 	Prefix is valid for Type = STRING (including 'name' field) and TABLE_ROW.
 	Prefixes non-blank cells with value. To prefix the 0 column ('name' field),

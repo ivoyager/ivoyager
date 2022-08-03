@@ -126,9 +126,8 @@ func has_row_name(table: String, row_name: String) -> bool:
 
 func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	# Evaluates true if table has field and does not contain type-specific
-	# 'null' value: i.e., "" for STRING, NAN for REAL, or -1 for INT, TABLE_ROW
-	# or enum name.
-	# Always true for Type BOOL and X if field exists.
+	# 'null' value: i.e., "", NAN or -1 for STRING, REAL or INT, respectively.
+	# Always true for Type BOOL.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
@@ -139,10 +138,10 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 		return !is_nan(_tables[table][field][row])
 	elif type == "STRING":
 		return _tables[table][field][row] != ""
-	elif type == "BOOL": # Type "X" was converted to "BOOL" at import
-		return true
-	else: # INT, TABLE_ROW or enum name
+	elif type == "INT":
 		return _tables[table][field][row] != -1
+	else: # BOOL
+		return true
 
 
 func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
@@ -165,7 +164,7 @@ func get_string(table: String, field: String, row := -1, row_name := "") -> Stri
 
 
 func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
-	# Use for table Type 'BOOL' or 'X'; returns false if missing
+	# Use for table Type 'BOOL'; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return false
@@ -175,7 +174,7 @@ func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
 
 
 func get_int(table: String, field: String, row := -1, row_name := "") -> int:
-	# Use for table Type 'INT', 'TABLE_ROW', or enum name; returns -1 if missing
+	# Use for table Type 'INT'; returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if !_tables[table].has(field):
 		return -1
