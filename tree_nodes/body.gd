@@ -128,8 +128,7 @@ func _enter_tree() -> void:
 
 func _on_enter_tree() -> void:
 	parent = get_parent()
-	if _state.is_loaded_game and !_state.is_system_built:
-		# loading game inits
+	if _state.is_game_loading:
 		m_radius = characteristics.m_radius
 		orbit = components.get("orbit")
 		if orbit:

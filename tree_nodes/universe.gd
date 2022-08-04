@@ -28,7 +28,7 @@ extends Spatial
 # *****************************************************************************
 #
 # 'Universe' is the main scene and simulator root node in our Planetarium and
-# Project Template "shell" projects (https://github.com/ivoyager). To change
+# Project Template extension projects (https://github.com/ivoyager). To change
 # this, see notes in ivoyager/singletons/project_builder.gd.
 #
 # We use origin shifting to prevent float "imprecision shakes" caused by
