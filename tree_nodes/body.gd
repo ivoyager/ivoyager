@@ -56,7 +56,6 @@ const MIN_SYSTEM_M_RADIUS_MULTIPLIER := 15.0
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 const PERSIST_PROPERTIES := [
 	"name",
-	"body_id",
 	"flags",
 	"characteristics",
 	"components",
@@ -66,7 +65,6 @@ const PERSIST_PROPERTIES := [
 
 
 # persisted
-var body_id := -1
 var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)

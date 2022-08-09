@@ -43,9 +43,7 @@ var top_bodies := []
 # private
 var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections := {} # indexed by IVBody.name (e.g., "MOON_EUROPA")
-var _bodies: Array = IVGlobal.bodies # indexed by body_id
 var _bodies_by_name: Dictionary = IVGlobal.bodies_by_name # indexed by name
-var _removed_body_ids := []
 
 
 func _ready():
@@ -56,15 +54,8 @@ func _ready():
 func _clear() -> void:
 	top_bodies.clear()
 	_selections.clear()
-	_bodies.clear()
 	_bodies_by_name.clear()
-	_removed_body_ids.clear()
 
-
-func get_body(body_id: int) -> IVBody:
-	if body_id >= _bodies.size():
-		return null
-	return _bodies[body_id]
 
 
 func get_body_by_name(body_name: String) -> IVBody:
@@ -140,16 +131,6 @@ func register_top_body(body: IVBody) -> void:
 func register_body(body: IVBody) -> void:
 	var name_ := body.name
 	assert(!_bodies_by_name.has(name_))
-	assert(body.body_id == -1)
-	var body_id: int
-	if _removed_body_ids:
-		body_id = _removed_body_ids.pop_back()
-		body.body_id = body_id
-		_bodies[body_id] = body
-	else:
-		body_id = _bodies.size()
-		body.body_id = body_id
-		_bodies.append(body)
 	_bodies_by_name[name_] = body
 
 
@@ -157,9 +138,6 @@ func remove_body(body: IVBody) -> void:
 	var name_ := body.name
 	assert(_bodies_by_name.has(name_))
 	_bodies_by_name.erase(name_)
-	var body_id: int = body.body_id
-	_bodies[body_id] = null
-	_removed_body_ids.append(body_id)
 
 
 func register_selection(selection: IVSelection) -> void:
@@ -177,20 +155,9 @@ func remove_selection(selection: IVSelection) -> void:
 func _index_bodies() -> void:
 	for body in top_bodies:
 		_index_body_recursive(body)
-	var n_bodies := _bodies.size()
-	var index := 0
-	while index < n_bodies:
-		var body: IVBody = _bodies[index]
-		if !body:
-			_removed_body_ids.append(index)
-		index += 1
 
 
 func _index_body_recursive(body: IVBody) -> void:
-	var body_id := body.body_id
-	if _bodies.size() <= body_id + 1:
-		_bodies.resize(body_id + 1)
-	_bodies[body_id] = body
 	_bodies_by_name[body.name] = body
 	for child in body.get_children():
 		if child is IVBody:

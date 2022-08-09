@@ -109,7 +109,6 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var enumerations := {} # IVTableImporter; row names and listed enums (globally unique)
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
-var bodies := [] # IVBodyRegistry; indexed by body_id
 var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
 var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
