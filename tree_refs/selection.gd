@@ -88,6 +88,12 @@ func _clear() -> void:
 	body = null
 
 
+func get_body_name() -> String:
+	if !is_body:
+		return ""
+	return body.name
+
+
 func get_real_precision(path: String) -> int:
 	if !is_body:
 		return -1
