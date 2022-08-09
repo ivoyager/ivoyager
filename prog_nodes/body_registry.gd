@@ -22,6 +22,12 @@ extends Node
 
 # Indexes IVBody and IVSelection instances. Also holds IVSelectionItems so
 # they aren't freed (they are References that need at least one reference).
+#
+# TODO: Move Selection API to IVSelectionManager. Add IVGlobal.selections
+# dict for common container.
+#
+# TODO: Consider depreciating body_id. Used by I, Voyager? (extensions can add)
+
 
 const BodyFlags := IVEnums.BodyFlags
 const IS_STAR := BodyFlags.IS_STAR
@@ -63,6 +69,10 @@ func get_body(body_id: int) -> IVBody:
 
 func get_body_by_name(body_name: String) -> IVBody:
 	return _bodies_by_name.get(body_name)
+
+
+func add_selection(selection: IVSelection) -> void:
+	_selections[selection.name] = selection
 
 
 func get_selection(selection_name: String) -> IVSelection:
