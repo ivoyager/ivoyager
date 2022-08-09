@@ -38,6 +38,7 @@ const VECTOR2_ZERO := Vector2.ZERO
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
 	"name",
+	"gui_name",
 	"is_body",
 	"up_selection_name",
 	"view_rotate_when_close",
@@ -48,9 +49,10 @@ const PERSIST_PROPERTIES := [
 	"spatial",
 	"body",
 ]
-	
+
 # persisted - read only
 var name: String
+var gui_name: String # overrides name for GUI display
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var view_rotate_when_close := false
@@ -88,10 +90,16 @@ func _clear() -> void:
 	body = null
 
 
+func get_name() -> String:
+	return name
+
+
+func get_gui_name() -> String:
+	return gui_name if gui_name else name
+
+
 func get_body_name() -> String:
-	if !is_body:
-		return ""
-	return body.name
+	return body.name if is_body else ""
 
 
 func get_real_precision(path: String) -> int:

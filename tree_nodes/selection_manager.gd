@@ -165,21 +165,23 @@ func select_by_name(selection_name: String) -> void:
 
 
 func get_name() -> String:
-	if selection:
-		return selection.name
-	return ""
+	return selection.get_name() if selection else ""
 
+
+func get_gui_name() -> String:
+	return selection.get_gui_name() if selection else ""
+
+
+func get_body_name() -> String:
+	return selection.get_body_name() if selection else ""
+	
 
 func get_texture_2d() -> Texture:
-	if selection:
-		return selection.texture_2d
-	return null
+	return selection.texture_2d if selection else null
 
 
 func get_body() -> IVBody:
-	if selection:
-		return selection.body
-	return null
+	return selection.body if selection else null
 
 
 func is_body() -> bool:
