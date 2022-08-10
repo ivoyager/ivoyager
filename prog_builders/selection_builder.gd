@@ -49,7 +49,6 @@ var system_radius_multiplier_top := 2.5
 
 # private
 var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zone
-#var _body_registry: IVBodyRegistry
 var _Selection_: Script
 
 

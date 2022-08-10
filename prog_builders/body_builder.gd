@@ -72,7 +72,6 @@ var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _settings: Dictionary = IVGlobal.settings
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _times: Array = IVGlobal.times
-var _body_registry: IVBodyRegistry
 var _model_builder: IVModelBuilder
 var _rings_builder: IVRingsBuilder
 var _light_builder: IVLightBuilder
@@ -99,7 +98,6 @@ var _real_precisions := {}
 func _project_init() -> void:
 	IVGlobal.connect("game_load_started", self, "init_system_build")
 	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
-	_body_registry = IVGlobal.program.BodyRegistry
 	_model_builder = IVGlobal.program.ModelBuilder
 	_rings_builder = IVGlobal.program.RingsBuilder
 	_light_builder = IVGlobal.program.LightBuilder
@@ -137,7 +135,6 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	body.m_radius = body.characteristics.m_radius
 	if _composition_builder:
 		_composition_builder.add_compositions_from_table(body, table_name, row)
-	_register(body, parent)
 	if keep_real_precisions:
 		body.characteristics.real_precisions = _real_precisions
 		_real_precisions = {}
@@ -148,7 +145,7 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
 	var flags := _table_reader.get_flags(flag_fields, _table_name, _row)
 	if !parent:
-		flags |= BodyFlags.IS_TOP # must be in IVBodyRegistry.top_bodies
+		flags |= BodyFlags.IS_TOP # will add self to IVGlobal.top_bodies
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	var hydrostatic_equilibrium: int = _table_reader.get_int(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= IVEnums.Confidence.CONFIDENCE_PROBABLY:
@@ -252,11 +249,6 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 					if keep_real_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 
-
-func _register(body: IVBody, parent: IVBody) -> void:
-	if !parent:
-		_body_registry.register_top_body(body)
-	_body_registry.register_body(body)
 
 # *****************************************************************************
 

@@ -134,7 +134,6 @@ var is_moving := false # body to body move in progress
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
-var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
@@ -163,6 +162,8 @@ var _last_dist := 0.0
 var _lat_long := Vector2(-INF, -INF)
 
 var _universe: Spatial = IVGlobal.program.Universe
+
+var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
 var _View_: Script = IVGlobal.script_classes._View_
 
 # settings
@@ -204,7 +205,8 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_to_spatial = parent
 	_from_spatial = parent
 	if !selection:
-		selection = _body_registry.get_body_selection(parent)
+		selection = _SelectionManager_.get_or_make_selection(parent.name)
+		assert(selection)
 	_from_selection = selection
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
@@ -252,7 +254,7 @@ func add_rotate_action(rotate_action: Vector3) -> void:
 func move_to_view(view: IVView, is_instant_move := false) -> void:
 	var to_selection: IVSelection
 	if view.selection_name:
-		to_selection = _body_registry.get_selection(view.selection_name)
+		to_selection = _SelectionManager_.get_or_make_selection(view.selection_name)
 		assert(to_selection)
 	move_to_selection(to_selection, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
@@ -281,7 +283,7 @@ func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTO
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection := _body_registry.get_body_selection(to_body)
+	var to_selection: IVSelection = _SelectionManager_.get_or_make_selection(to_body.name)
 	move_to_selection(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 

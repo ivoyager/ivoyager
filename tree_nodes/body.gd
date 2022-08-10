@@ -56,7 +56,6 @@ const MIN_SYSTEM_M_RADIUS_MULTIPLIER := 15.0
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 const PERSIST_PROPERTIES := [
 	"name",
-	"body_id",
 	"flags",
 	"characteristics",
 	"components",
@@ -66,7 +65,6 @@ const PERSIST_PROPERTIES := [
 
 
 # persisted
-var body_id := -1
 var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
@@ -128,8 +126,7 @@ func _enter_tree() -> void:
 
 func _on_enter_tree() -> void:
 	parent = get_parent()
-	if _state.is_loaded_game and !_state.is_system_built:
-		# loading game inits
+	if _state.is_game_loading:
 		m_radius = characteristics.m_radius
 		orbit = components.get("orbit")
 		if orbit:
@@ -148,6 +145,20 @@ func _on_ready() -> void:
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
+	assert(!IVGlobal.bodies.has(name))
+	IVGlobal.bodies[name] = self
+	if flags & BodyFlags.IS_TOP:
+		IVGlobal.top_bodies.append(self)
+
+
+func _exit_tree() -> void:
+	_on_exit_tree()
+
+
+func _on_exit_tree() -> void:
+	IVGlobal.bodies.erase(name)
+	if flags & BodyFlags.IS_TOP:
+		IVGlobal.top_bodies.erase(self)
 
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:

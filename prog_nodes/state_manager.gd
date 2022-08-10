@@ -30,7 +30,8 @@ extends Node
 #   is_system_ready: bool
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
 #   is_quitting: bool
-#   is_loaded_game: bool - this node & IVSaveManager
+#   is_game_loading: bool - this node & IVSaveManager (true while loading)
+#   is_loaded_game: bool - this node & IVSaveManager (stays true after load)
 #   last_save_path: String - this node & IVSaveManager
 #   network_state: IVEnums.NetworkState - if exists, NetworkLobby also writes
 #
@@ -96,6 +97,7 @@ func _on_init() -> void:
 	_state.is_system_ready = false
 	_state.is_running = false # SceneTree.pause set in IVProjectBuilder
 	_state.is_quitting = false
+	_state.is_game_loading = false
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
 	_state.network_state = NO_NETWORK
@@ -133,6 +135,7 @@ func _on_about_to_build_system_tree() -> void:
 
 func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 	_state.is_system_built = true
+	_state.is_game_loading = false
 
 
 func _on_system_tree_ready(is_new_game: bool) -> void:

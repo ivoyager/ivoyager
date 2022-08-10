@@ -34,7 +34,6 @@ var _selection: IVSelection
 var _is_built := false
 
 onready var _texture_rect: TextureRect = $TextureRect
-onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 
 
 func _ready():
@@ -60,8 +59,8 @@ func _build(_dummy := false) -> void:
 	if !_selection_manager:
 		return
 	_is_built = true
-	var sun: IVBody = _body_registry.top_bodies[0]
-	_selection = _body_registry.get_body_selection(sun)
+	var sun: IVBody = IVGlobal.top_bodies[0]
+	_selection = _selection_manager.get_or_make_selection(sun.name)
 	_selection_manager.connect("selection_changed", self, "_update_selection")
 	_selection_manager.connect("selection_reselected", self, "_update_selection")
 	flat = true

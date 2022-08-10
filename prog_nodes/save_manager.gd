@@ -167,6 +167,7 @@ func load_game(path := "", network_gamesave := []) -> void:
 	_state.is_system_built = false
 	_state_manager.require_stop(_state_manager, NetworkStopSync.LOAD, true)
 	yield(_state_manager, "threads_finished")
+	_state.is_game_loading = true
 	_state.is_loaded_game = true
 	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
 	IVGlobal.verbose_signal("game_load_started")

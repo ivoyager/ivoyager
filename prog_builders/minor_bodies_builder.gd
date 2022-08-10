@@ -33,7 +33,6 @@ var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
 var _minor_bodies_manager: IVMinorBodiesManager
 var _points_manager: IVPointsManager
-var _body_registry: IVBodyRegistry
 var _AsteroidGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
@@ -46,7 +45,6 @@ func _project_init() -> void:
 	_l_point_builder = IVGlobal.program.LagrangePointBuilder
 	_minor_bodies_manager = IVGlobal.program.MinorBodiesManager
 	_points_manager = IVGlobal.program.PointsManager
-	_body_registry = IVGlobal.program.BodyRegistry
 	_AsteroidGroup_ = IVGlobal.script_classes._AsteroidGroup_
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
@@ -63,7 +61,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 func build() -> void:
 	if IVGlobal.skip_asteroids:
 		return
-	var star: IVBody = _body_registry.top_bodies[0] # TODO: multistar
+	var star: IVBody = IVGlobal.top_bodies[0] # TODO: multistar
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("minor_bodies_added")
@@ -88,7 +86,7 @@ func _load_binaries(star: IVBody) -> void:
 		var trojan_of: IVBody
 		var trojan_of_name := _table_reader.get_string("asteroid_groups", "trojan_of", row)
 		if trojan_of_name:
-			trojan_of = _body_registry.get_body_by_name(trojan_of_name)
+			trojan_of = IVGlobal.bodies[trojan_of_name]
 		if !trojan_of:
 			_load_group_binaries(star, group, row)
 		else: # trojans!

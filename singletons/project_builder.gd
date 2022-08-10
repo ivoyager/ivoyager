@@ -148,7 +148,6 @@ var prog_nodes := {
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_Timekeeper_ = IVTimekeeper,
 	_Scheduler_ = IVScheduler,
-	_BodyRegistry_ = IVBodyRegistry,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
 	_HUDsManager_ = IVHUDsManager,
 	_PointsManager_ = IVPointsManager,

@@ -43,7 +43,6 @@ var _currently_selected: Button
 var _resize_control_multipliers := {}
 var _is_built := false
 
-onready var _body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
 onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
 
 
@@ -67,7 +66,7 @@ func _build(_dummy := false) -> void:
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("custom_constants/separation", column_separation)
 	# calculate star "slice" relative size
-	var star: IVBody = _body_registry.top_bodies[0]
+	var star: IVBody = IVGlobal.top_bodies[0]
 	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
 	var size := 0.0
@@ -137,7 +136,7 @@ func _clear() -> void:
 
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
-	var selection := _body_registry.get_body_selection(body)
+	var selection := _selection_manager.get_or_make_selection(body.name)
 	var button := NavButton.new(selection, _selection_manager, image_size)
 	button.connect("selected", self, "_on_nav_button_selected", [button])
 	button.size_flags_horizontal = SIZE_FILL
