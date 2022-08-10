@@ -52,13 +52,6 @@ enum {
 }
 
 const BodyFlags := IVEnums.BodyFlags
-const IS_STAR := BodyFlags.IS_STAR
-const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
-const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
-const IS_MOON := BodyFlags.IS_MOON
-const IS_NAVIGATOR_MOON := BodyFlags.IS_NAVIGATOR_MOON
-const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
-const IS_PLANET := BodyFlags.IS_TRUE_PLANET | BodyFlags.IS_DWARF_PLANET
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
@@ -167,53 +160,17 @@ static func get_body_above_selection(selection_: IVSelection) -> IVBody:
 	return IVGlobal.top_bodies[0]
 
 
-
-# TODO: general func with flags
-static func get_selection_star(selection_: IVSelection) -> IVBody:
-	# at or above selection
-	if selection_.get_flags() & IS_STAR:
+static func get_body_at_above_selection_w_flags(selection_: IVSelection, flags: int) -> IVBody:
+	if selection_.get_flags() & flags:
 		return selection_.body
 	while selection_.up_selection_name:
 		selection_ = get_or_make_selection(selection_.up_selection_name)
-		if selection_.get_flags() & IS_STAR:
-			return selection_.body
-	return IVGlobal.top_bodies[0] # in case selection_ is Solar System; needs fix for multistar
-
-
-static func get_selection_planet(selection_: IVSelection) -> IVBody:
-	# at or above selection
-	if selection_.get_flags() & IS_PLANET:
-		return selection_.body
-	while selection_.up_selection_name:
-		selection_ = get_or_make_selection(selection_.up_selection_name)
-		if !selection_:
-			return null
-		if selection_.get_flags() & IS_PLANET:
-			return selection_.body
-	return null
-
-
-static func get_selection_moon(selection_: IVSelection) -> IVBody:
-	# at or above selection
-	if selection_.get_flags() & IS_MOON:
-		return selection_.body
-	while selection_.up_selection_name:
-		selection_ = get_or_make_selection(selection_.up_selection_name)
-		if !selection_:
-			return null
-		if selection_.get_flags() & IS_MOON:
+		if selection_.get_flags() & flags:
 			return selection_.body
 	return null
 
 
 # Non-static methods for this manager's selection or history
-
-func has_selection() -> bool:
-	return selection != null
-
-
-func get_selection() -> IVSelection:
-	return selection
 
 
 func select(selection_: IVSelection) -> void:
@@ -235,6 +192,14 @@ func select_by_name(selection_name: String) -> void:
 	var selection_ := get_or_make_selection(selection_name)
 	if selection_:
 		select(selection_)
+
+
+func has_selection() -> bool:
+	return selection != null
+
+
+func get_selection() -> IVSelection:
+	return selection
 
 
 func get_name() -> String:
@@ -327,21 +292,21 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			select_body(sun)
 			return
 		SELECTION_PLANET:
-			var star := get_selection_star(selection)
+			var star := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_STAR)
 			if !star:
 				return
 			iteration_array = star.satellites
-			var planet := get_selection_planet(selection)
+			var planet := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
 			if planet:
 				index = iteration_array.find(planet)
 				if planet != current_body and incr == 1:
 					index -= 1
 		SELECTION_NAVIGATOR_MOON, SELECTION_MOON:
-			var planet := get_selection_planet(selection)
+			var planet := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
 			if !planet:
 				return
 			iteration_array = planet.satellites
-			var moon := get_selection_moon(selection)
+			var moon := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_MOON)
 			if moon:
 				index = iteration_array.find(moon)
 				if moon != current_body and incr == 1:
@@ -368,15 +333,15 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			-1:
 				select = true
 			SELECTION_STAR:
-				select = bool(body.flags & IS_STAR)
+				select = bool(body.flags & BodyFlags.IS_STAR)
 			SELECTION_PLANET:
-				select = bool(body.flags & IS_PLANET)
+				select = bool(body.flags & BodyFlags.IS_PLANET)
 			SELECTION_NAVIGATOR_MOON:
-				select = bool(body.flags & IS_NAVIGATOR_MOON)
+				select = bool(body.flags & BodyFlags.IS_NAVIGATOR_MOON)
 			SELECTION_MOON:
-				select = bool(body.flags & IS_MOON)
+				select = bool(body.flags & BodyFlags.IS_MOON)
 			SELECTION_SPACECRAFT:
-				select = bool(body.flags & IS_SPACECRAFT)
+				select = bool(body.flags & BodyFlags.IS_SPACECRAFT)
 		if select:
 			select_body(body)
 			return

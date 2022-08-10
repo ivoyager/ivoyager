@@ -97,7 +97,7 @@ enum BodyFlags {
 	IS_SPACECRAFT = 1 << 8,
 	
 	# combos
-	IS_PLANET = 1 << 3 | 1 << 4, # 'true' or dwarf planet
+	IS_PLANET = 1 << 3 | 1 << 4, # true or dwarf planet
 	IS_PLANET_OR_MOON = 1 << 3 | 1 << 4 | 1 << 5,
 
 	# reserved 1 << 9,
