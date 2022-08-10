@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220803
+const IVOYAGER_VERSION_YMD := 20220810
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -93,8 +93,8 @@ signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, bbcode_text)
 signal open_wiki_requested(wiki_title)
 
-# containers - write authority indicated; safe to keep container reference
-var state := {} # see comments in IVStateManager; is_inited, is_running, etc.
+# containers - write authority indicated; safe to localize container reference
+var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
 var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
@@ -109,7 +109,9 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var enumerations := {} # IVTableImporter; row names and listed enums (globally unique)
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
-var bodies_by_name := {} # IVBodyRegistry; indexed by name (e.g., MOON_EUROPA)
+var bodies := {} # IVBody instances add/remove themselves; indexed by name
+var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
+var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"

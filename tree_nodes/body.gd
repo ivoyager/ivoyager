@@ -145,6 +145,20 @@ func _on_ready() -> void:
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
+	assert(!IVGlobal.bodies.has(name))
+	IVGlobal.bodies[name] = self
+	if flags & BodyFlags.IS_TOP:
+		IVGlobal.top_bodies.append(self)
+
+
+func _exit_tree() -> void:
+	_on_exit_tree()
+
+
+func _on_exit_tree() -> void:
+	IVGlobal.bodies.erase(name)
+	if flags & BodyFlags.IS_TOP:
+		IVGlobal.top_bodies.erase(self)
 
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:

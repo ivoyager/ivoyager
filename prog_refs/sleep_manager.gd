@@ -39,8 +39,7 @@ func _project_init() -> void:
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	var body_registry: IVBodyRegistry = IVGlobal.program.BodyRegistry
-	for body in body_registry.top_bodies:
+	for body in IVGlobal.top_bodies:
 		_change_satellite_sleep_recursive(body, true)
 
 

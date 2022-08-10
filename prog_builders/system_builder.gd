@@ -26,14 +26,12 @@ var add_camera := true
 
 # private
 var _table_reader: IVTableReader
-var _body_registry: IVBodyRegistry
 var _body_builder: IVBodyBuilder
 
 
 func _project_init():
 	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	_table_reader = IVGlobal.program.TableReader
-	_body_registry = IVGlobal.program.BodyRegistry
 	_body_builder = IVGlobal.program.BodyBuilder
 
 
@@ -66,7 +64,7 @@ func _add_bodies(table_name: String) -> void:
 		var parent: IVBody
 		var parent_name := _table_reader.get_string(table_name, "parent", row) # "" top
 		if parent_name:
-			parent = _body_registry.get_body_by_name(parent_name)
+			parent = IVGlobal.bodies[parent_name]
 		var body := _body_builder.build_from_table(table_name, row, parent)
 		body.hide() # Bodies set their own visibility as needed
 		if parent:
@@ -82,5 +80,5 @@ func _add_camera() -> void:
 	var camera_script: Script = IVGlobal.script_classes._Camera_
 	var camera: Camera = camera_script.new()
 	var start_body_name: String = IVGlobal.start_body_name
-	var start_body: IVBody = IVGlobal.bodies_by_name[start_body_name]
+	var start_body: IVBody = IVGlobal.bodies[start_body_name]
 	start_body.add_child(camera)

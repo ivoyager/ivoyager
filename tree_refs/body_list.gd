@@ -35,14 +35,14 @@ const PERSIST_PROPERTIES := [
 	"list_name",
 	"body_names",
 	"_sort_type",
-	"bodies_by_name",
+	"bodies",
 	"_instance_builder",
 ]
 
 # persisted
 var list_name: String
 var body_names: Array
-var bodies_by_name := {}
+var bodies := {}
 var _instance_builder: Object
 var _sort_type: int
 #var _asteroid_integers: Dictionary
@@ -70,9 +70,9 @@ var _sort_type: int
 #	body_names = []
 #	for body in bodies:
 #		var name: String = body.name
-#		assert(!bodies_by_name.has(name))
+#		assert(!bodies.has(name))
 #		body_names.append(name)
-#		bodies_by_name[name] = body
+#		bodies[name] = body
 #	match sort_type:
 #		SORT_DEFAULT:
 #			body_names.sort()
@@ -100,8 +100,8 @@ var _sort_type: int
 #func select(body_name: String, selection_manager: IVSelectionManager) -> void:
 ## warning-ignore:unused_variable
 #	var body: IVBody
-#	if bodies_by_name.has(body_name):
-#		body = bodies_by_name[body_name]
+#	if bodies.has(body_name):
+#		body = bodies[body_name]
 #	else:
 #		prints(body_name, "selected!")
 #		return
