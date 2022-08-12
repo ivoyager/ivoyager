@@ -19,8 +19,8 @@
 # *****************************************************************************
 class_name IVQuantityFormatter
 
-# Helper for formatting numbers and quanties for GUI. All functions assume
-# caller wants conversion to or from internal units defined in IVUnits.
+# Helper for formatting numbers and quanties for GUI. All unit conversions are
+# as defined in IVUnits.
 
 const units := preload("res://ivoyager/static/units.gd")
 const math := preload("res://ivoyager/static/math.gd")
@@ -32,10 +32,9 @@ enum { # case_type
 }
 
 enum { # num_type
-	NUM_DYNAMIC, # "0.0100" to "99999" as non-scientific, otherwise scientific
+	NUM_DYNAMIC, # 0.01 to 99999 as non-scientific, otherwise scientific
 	NUM_SCIENTIFIC, # pure scientific
-#	NUM_NO_OVERPRECISION, # e.g., "555555" -> "556000" if precision = 3
-#	NUM_DYN_NO_OVERPRECISION, # DYNAMIC but "55555" -> "55600" if precision = 3
+	NUM_PRECISION, # eg, precision = 3 -> "12300", "1.23", "0.0000123"
 	NUM_DECIMAL_PL, # treat precision as number of decimal places
 }
 
@@ -222,7 +221,7 @@ func _project_init():
 		long_forms[unit] = " " + tr(long_forms[unit])
 
 
-func number_option(x: float, option_type: int, unit := "", precision := -1, num_type := NUM_DYNAMIC,
+func number_option(x: float, option_type: int, unit := "", precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# wrapper for functions below
 	match option_type:
@@ -347,44 +346,54 @@ func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_
 	return (num_str + suffix).lstrip("-")
 
 
-func number(x: float, precision := -1, num_type := NUM_DYNAMIC) -> String:
-	# precision = -1 displays "as is" from internal representation. This will
-	# show inappropriately large precision if there have been conversions from
-	# table value (e.g., conversion from degrees -> radians -> degrees).
+func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
+	# precision <= 0 displays "as is" regardless of num_type. This will often
+	# show inappropriately large precision if there have been unit conversions.
 	# see NUM_ enums for num_type.
 	
+	if precision <= 0:
+		return (String(x))
+		
 	# specified decimal places
 	if num_type == NUM_DECIMAL_PL:
 		return ("%.*f" % [precision, x])
 	
+	# All below use significant digits, not decimal places!
 	# handle 0.0 case
 	if x == 0.0: # don't do '0.00e0' even if NUM_SCIENTIFIC
 		return "%.*f" % [precision - 1, 0.0] # e.g., '0.00' for precision 3
-	
-	# handel 0.01 - 99999 for dynamic display
+		
 	var abs_x := abs(x)
-	if abs_x < 100000 and abs_x > 0.01 and num_type != NUM_SCIENTIFIC:
-		if precision == -1:
-			return (String(x))
-		var exp10 := floor(log(abs(x)) / LOG_OF_10)
-		var decimal_pl := precision - int(exp10) - 1
-		if decimal_pl < 1:
-			return "%.f" % x # whole number
-		else:
+	var pow10 := floor(log(abs_x) / LOG_OF_10)
+	
+	if num_type == NUM_PRECISION:
+		var decimal_pl := precision - int(pow10) - 1
+		if decimal_pl > 0:
 			return "%.*f" % [decimal_pl, x] # e.g., '0.0555'
+		if decimal_pl == 0:
+			return "%.f" % x # whole number, '555'
+		else: # remove over-precision
+			var divisor := pow(10.0, -decimal_pl)
+			x = round(x / divisor)
+			return String(x * divisor) # '555000'
+	
+	# handle 0.01 - 99999 for NUM_DYNAMIC
+	if num_type == NUM_DYNAMIC and abs_x < 99999.5 and abs_x > 0.01:
+		var decimal_pl := precision - int(pow10) - 1
+		if decimal_pl > 0:
+			return "%.*f" % [decimal_pl, x] # e.g., '0.0555'
+		else:
+			return "%.f" % x # whole number, allow over-precision
 	
 	# scientific
-	var exp10 := 0.0 if x == 0.0 else floor(log(abs_x) / LOG_OF_10)
-	var divisor := pow(10.0, exp10)
+	var divisor := pow(10.0, pow10)
 	x = x / divisor if !is_zero_approx(divisor) else 1.0
-	if precision == -1:
-		return String(x) + exp_str + String(exp10)
 	var exp_precision := pow(10.0, precision - 1)
 	var precision_rounded := round(x * exp_precision) / exp_precision
 	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
 		x /= 10.0
-		exp10 += 1
-	return "%.*f%s%s" % [precision - 1, x, exp_str, exp10] # e.g., '5.55e5'
+		pow10 += 1
+	return "%.*f%s%s" % [precision - 1, x, exp_str, pow10] # e.g., '5.55e5'
 
 
 func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
@@ -407,7 +416,7 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
 
 
-func number_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMIC,
+func number_unit(x: float, unit: String, precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# unit must be in multipliers or functions dicts (by default these are
 	# MULTIPLIERS and FUNCTIONS in ivoyager/static/units.gd)
