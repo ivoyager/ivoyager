@@ -70,12 +70,11 @@ func get_row(row_name: String) -> int:
 	return _enumerations.get(row_name, -1)
 
 
-func get_names_dict(table: String) -> Dictionary:
+func get_names_enumeration(table: String) -> Dictionary:
 	# Returns an enum-like dict of row numbers keyed by row names.
 	var dict := {}
-	for key in _tables[table]["name"]:
-		if typeof(key) == TYPE_STRING:
-			dict[key] = _enumerations[key]
+	for row_name in _tables[table]["name"]:
+		dict[row_name] = _enumerations[row_name]
 	return dict
 
 
