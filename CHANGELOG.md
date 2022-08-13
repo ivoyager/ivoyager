@@ -20,6 +20,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * [Breaks API!] Removed IVBodyRegistry. Selection related functions moved to IVSelectionManager. Containers 'top_bodies' and 'selections' moved to IVGlobal.
 * [Breaks API!] Save/load system made more intuitive with new object persist const 'PERSIST_MODE' with values NO_PERSIST, PERSIST_PROPERTIES_ONLY and PERSIST_PROCEDURAL.
 * [Breaks API!] Various changes to IVTableReader API. Overhauled table import system to allow quick, direct access of typed table data via IVGlobal dictionaries.
+* [Breaks API!] Removed IVGlobal.table_types and renamed IVGlobal.table_precisions -> IVGlobal.precisions
 * [Breaks data tables!] Data table column field 'Comment' disallowed. You can now make any column a comment column by prepending the field name with # (e.g., '#comment').
 * [Breaks data tables!] Data tables were simplified with only four types now: Type = 'BOOL', 'STRING', 'REAL' and 'INT'. The 'INT' type handles enumerations including data table row names (e.g., 'PLANET_EARTH' resolves to 2 because it is row 2 in planets.tsv) and enums listed in IVTableImporter.data_table_enums.
 * IVView object now includes HUDs visibility states (orbits, names, icons, and asteroid points).

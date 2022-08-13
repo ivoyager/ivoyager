@@ -27,14 +27,14 @@ class_name IVTableImporter
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
 #    table_types[table_name][column_field] -> Type string in table
-#    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
+#    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
 #       -this dictionary also enumerates enums listed in 'data_table_enums'
 #
 # See data/solar_system/README.txt for table construction. In short:
 #
-#  Type (required!): BOOL, STRING, REAL or INT.
+#  Type (required unless enumeration only): BOOL, STRING, REAL or INT.
 #    For BOOL, 'true' (case-insensitive) or 'x' = True; 'false' (case-
 #    insensitive) or blank is False.
 #    For INT, blank = -1. Data table row names or listed enums
@@ -45,6 +45,9 @@ class_name IVTableImporter
 #  Units (optional; REAL only): Reals will be converted from provided units
 #    symbol. The symbol must be present in IVUnits.MULTIPLIERS or FUNCTIONS or
 #    replacement dicts specified in IVGlobal.unit_multipliers, .unit_functions.
+#
+# A table with 'name' column only (not counting #comment columns) is an
+# "enumeration". These do not require a 'Type' header.
 
 
 const units := preload("res://ivoyager/static/units.gd")
@@ -65,8 +68,7 @@ var _wiki_titles_import: Array = IVGlobal.wiki_titles_import
 
 # global dicts
 var _tables: Dictionary = IVGlobal.tables
-var _table_types: Dictionary = IVGlobal.table_types # indexed [table_name][field]
-var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
+var _table_precisions: Dictionary = IVGlobal.precisions # as _tables for REAL fields
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles # IVGlobal shared
 var _enumerations: Dictionary = IVGlobal.enumerations # IVGlobal shared
 
@@ -76,6 +78,9 @@ var _enums: Script = IVGlobal.static_enums_class
 var _wiki: String = IVGlobal.wiki # wiki column header
 var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
 var _unit_functions: Dictionary = IVGlobal.unit_functions
+
+# processing
+var _int_columns := [] # for postprocess conversion of enumerations
 
 # data counting
 var _count_rows := 0
@@ -111,7 +116,7 @@ func _import() -> void:
 	for table_name in _table_import:
 		var path: String = _table_import[table_name]
 		_import_table(table_name, path)
-	_postprocess()
+	_postprocess_int_enumerations()
 	if !_enable_wiki:
 		return
 	for path in _wiki_titles_import:
@@ -126,7 +131,6 @@ func _import_table(table_name: String, path: String) -> void:
 		assert(false, "Could not open file: " +  path)
 	var row := 0
 	_tables[table_name] = {}
-	_table_types[table_name] = {}
 	_table_precisions[table_name] = {}
 	var fields := {}
 	var types := []
@@ -156,8 +160,14 @@ func _import_table(table_name: String, path: String) -> void:
 						_tables[table_name][field] = []
 					n_columns += 1
 				reading_fields = false
+				var data_columns := fields.size() # including 'name' column
+				assert(data_columns > 0)
+				if data_columns == 1:
+					# enumeration-only can skip Type header
+					types = ["STRING"]
+					has_types = true
 			
-			# Type, Units, Default, Prefix; Type required and must be 1st
+			# Type, Units, Default, Prefix; Type required (before others) unless enumeration only
 			elif cell_0 == "Type":
 				types = line_array
 				types[0] = "STRING" # always name field (or nil)
@@ -165,10 +175,12 @@ func _import_table(table_name: String, path: String) -> void:
 					var column: int = fields[field]
 					var type: String = types[column]
 					assert(TYPE_TEST.has(type), "Missing or unknown type '" + type + "'")
-					_table_types[table_name][field] = type
 					if type == "REAL":
 						# REAL values have parallel dict w/ precisions
 						_table_precisions[table_name][field] = []
+					elif type == "INT":
+						# keep column array for _postprocess_ints() convert enumerations
+						_int_columns.append(_tables[table_name][field])
 				has_types = true
 			elif cell_0 == "Unit":
 				assert(has_types)
@@ -287,7 +299,7 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 				value = int(raw_value)
 			else:
 				# Must be an enumeration (table row or listed enum). We'll
-				# save string and convert to int in _postprocess() after all
+				# save string and convert to int in _postprocess_ints() after all
 				# tables loaded.
 				if prefix:
 					value = prefix + raw_value
@@ -302,24 +314,21 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 		_wiki_titles[row_name] = value
 
 
-func _postprocess() -> void:
-	# Convert text to enumerations in INT fields (after all tables imported!).
-	for table_name in _tables:
-		if table_name.begins_with("n_"):
-			continue
-		for field in _tables[table_name]:
-			var type: String = _table_types[table_name][field]
-			if type != "INT":
-				continue
-			var column_array: Array = _tables[table_name][field]
-			var row: int = column_array.size()
-			while row > 0:
-				row -= 1
-				if typeof(column_array[row]) == TYPE_STRING:
-					var enumeration: String = column_array[row]
-					assert(_enumerations.has(enumeration),
-							"Unknown enumeration '" + enumeration + "'")
-					column_array[row] = _enumerations[enumeration]
+func _postprocess_int_enumerations() -> void:
+	# convert INT strings to enumerations after all tables imported
+	# TODO 4.0: Remember table/fields so we can type the column array
+	var i := _int_columns.size()
+	while i > 0:
+		i -= 1
+		var int_column: Array = _int_columns[i]
+		var j := int_column.size()
+		while j > 0:
+			j -= 1
+			if typeof(int_column[j]) == TYPE_STRING:
+				var enumeration: String = int_column[j]
+				assert(_enumerations.has(enumeration),
+						"Unknown table enumeration '%s'" % enumeration)
+				int_column[j] = _enumerations[enumeration]
 
 
 func _import_wiki_titles(path: String) -> void:
