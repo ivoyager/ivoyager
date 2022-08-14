@@ -34,6 +34,8 @@ var _clock: Array = IVGlobal.clock
 var _show_clock := false
 var _show_seconds := false
 var _is_reversed := false
+var _ymd: Array = [0, 0, 0]
+var _hms := [0, 0, 0]
 var _hm := [0, 0]
 
 onready var _tree := get_tree()
@@ -49,10 +51,16 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var new_text := date_format % _date
+	_ymd[0] = _date[0]
+	_ymd[1] = _date[1]
+	_ymd[2] = _date[2]
+	var new_text: String = date_format % _ymd
 	if _show_clock:
 		if _show_seconds:
-			new_text += clock_hms_format % _clock
+			_hms[0] = _clock[0]
+			_hms[1] = _clock[1]
+			_hms[2] = _clock[2]
+			new_text += clock_hms_format % _hms
 		else:
 			_hm[0] = _clock[0]
 			_hm[1] = _clock[1]
