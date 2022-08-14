@@ -304,7 +304,7 @@ static func set_gregorian_date_array(jdn: int, date_array: Array,
 	date_array[2] = ((h % 153) / 5) + 1 # day
 	if date_format_ == DATE_FORMAT_Y_M_D:
 		return
-	var q := (m - 1) / 4 + 1
+	var q := (m - 1) / 3 + 1
 	date_array[3] = q
 	if date_format_ == DATE_FORMAT_Y_M_D_Q:
 		return
@@ -346,7 +346,7 @@ func get_gregorian_date(sim_time := NAN) -> Array:
 
 
 func get_gregorian_date_time(sim_time := NAN) -> Array:
-	# returns [[Y, M, D], [h, m, s]]  (or larger date; see DATE_FORMAT_ enum)
+	# returns [[Y, M, D], [h, m, s]], or larger [date]; see DATE_FORMAT_ enum
 	if is_nan(sim_time):
 		sim_time = time
 	var solar_day_ := get_solar_day(sim_time)
@@ -385,7 +385,7 @@ func get_real_world_time() -> float:
 
 
 func get_current_date_for_file() -> String:
-	return date_format_for_file % date
+	return date_format_for_file % date.slice(0, 2)
 
 
 func set_real_world() -> void:
