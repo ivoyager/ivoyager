@@ -109,7 +109,7 @@ var section_data := [ # one array element per header
 		["LABEL_POLAR_RADIUS", "body/characteristics/p_radius", NO_ARGS,
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
 		["LABEL_HYDROSTATIC_EQUILIBRIUM", "body/characteristics/hydrostatic_equilibrium", NO_ARGS,
-				ENUM, "Confidence"],
+				ENUM, IVEnums.Confidence],
 		["LABEL_MASS", "body/characteristics/mass", NO_ARGS,
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.MASS_G_KG]],
 		["LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NO_ARGS,
@@ -186,7 +186,6 @@ var special_processing := {
 }
 
 var _state: Dictionary = IVGlobal.state
-var _enums: Script = IVGlobal.static_enums_class
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _wiki_locale: String = IVGlobal.wiki
 var _header_buttons := []
@@ -385,8 +384,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				if test_wiki_values and _wiki_titles.has(key):
 					value_wiki_key = key
 			elif data_type == ENUM:
-				var enum_name: String = line_data[4]
-				var enum_dict: Dictionary = _enums.get(enum_name)
+				var enum_dict: Dictionary = line_data[4]
 				var enum_keys: Array = enum_dict.keys()
 				key = enum_keys[value]
 				value_txt = tr(key)

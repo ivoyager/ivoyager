@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220810
+const IVOYAGER_VERSION_YMD := 20220815
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -102,11 +102,10 @@ var program := {} # all objects instantiated by IVProjectBuilder
 var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
 var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
 var settings := {} # IVSettingsManager
-var tables := {} # IVTableImporter; indexed [table_name][field][row_name or row_int]
-var table_types := {} # IVTableImporter; indexed [table_name][field]
-var table_precisions := {} # IVTableImporter; indexed as tables but only REAL fields
+var tables := {} # IVTableImporter; indexed [table_name][field][row_int]
+var enumerations := {} # IVTableImporter; all row names and listed enums (globally unique)
+var precisions := {} # IVTableImporter; indexed as tables but only REAL fields
 var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
-var enumerations := {} # IVTableImporter; row names and listed enums (globally unique)
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
@@ -126,7 +125,6 @@ var is_modded := false # this is aspirational
 var enable_save_load := true
 var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
-var static_enums_class: Script = IVEnums # replace w/ extended static class
 var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false

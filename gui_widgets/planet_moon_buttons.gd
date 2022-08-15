@@ -136,8 +136,7 @@ func _clear() -> void:
 
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
-	var selection := _selection_manager.get_or_make_selection(body.name)
-	var button := NavButton.new(selection, _selection_manager, image_size)
+	var button := NavButton.new(body, image_size, _selection_manager)
 	button.connect("selected", self, "_on_nav_button_selected", [button])
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
@@ -201,17 +200,16 @@ class NavButton extends Button:
 	
 	signal selected()
 	
-	var _has_mouse := false
-	var _selection: IVSelection
 	var _selection_manager: IVSelectionManager
+	var _body: IVBody # this button
+	var _has_mouse := false
 	
 	
-	func _init(selection: IVSelection, selection_manager: IVSelectionManager,
-			image_size: float) -> void:
-		_selection = selection
+	func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManager) -> void:
+		_body = body
 		_selection_manager = selection_manager
 		toggle_mode = true
-		hint_tooltip = selection.name
+		hint_tooltip = body.name
 		set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
 		rect_min_size = Vector2(image_size, image_size)
 		flat = true
@@ -220,7 +218,7 @@ class NavButton extends Button:
 		texture_box.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 		texture_box.expand = true
 		texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		texture_box.texture = selection.texture_2d
+		texture_box.texture = body.texture_2d
 		texture_box.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(texture_box)
 		connect("mouse_entered", self, "_on_mouse_entered")
@@ -236,11 +234,11 @@ class NavButton extends Button:
 
 
 	func _pressed() -> void:
-		_selection_manager.select(_selection)
+		_selection_manager.select_body(_body)
 
 
 	func _update_selection() -> void:
-		var is_selected := _selection_manager.selection == _selection
+		var is_selected := _selection_manager.get_body() == _body
 		pressed = is_selected
 		if is_selected:
 			emit_signal("selected")

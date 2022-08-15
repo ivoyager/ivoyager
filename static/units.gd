@@ -214,7 +214,7 @@ static func convert_quantity(x: float, unit: String, to_internal := true,
 	# Valid examples: "1/Cy", "10^24 kg", "1/(10^3 yr)".
 	if preprocess: # mainly for table import
 		if unit.begins_with("1/"):
-			unit = unit.lstrip("1/")
+			unit = unit.trim_prefix("1/")
 			if unit.begins_with("(") and unit.ends_with(")"):
 				unit = unit.lstrip("(").rstrip(")")
 			to_internal = !to_internal
@@ -251,7 +251,7 @@ static func is_valid_unit(unit: String, preprocess := false,
 	# Valid examples: "1/Cy", "10^24 kg", "1/(10^3 yr)".
 	if preprocess: # mainly for table import
 		if unit.begins_with("1/"):
-			unit = unit.lstrip("1/")
+			unit = unit.trim_prefix("1/")
 			if unit.begins_with("(") and unit.ends_with(")"):
 				unit = unit.lstrip("(").rstrip(")")
 		if unit.begins_with("10^"):

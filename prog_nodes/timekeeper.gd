@@ -39,10 +39,20 @@ extends Node
 # For calendar calculations see:
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
+#
+# Note: there is some old rpc (remote player call) code here that is not
+# currently maintained. This will be maintained again with Godot 4.0.
 
 signal speed_changed()
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
+
+enum { # date_format
+	DATE_FORMAT_Y_M_D, # Year, Month (1 to 12), Day (1 to 31)
+	DATE_FORMAT_Y_M_D_Q, # Quarter (1 to 4)
+	DATE_FORMAT_Y_M_D_Q_YQ, # YQ = Y * 4 + (Q - 1), always increases
+	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM = Y * 12 + (M - 1), always increases
+}
 
 const SECOND := IVUnits.SECOND # sim_time conversion
 const MINUTE := IVUnits.MINUTE
@@ -62,7 +72,8 @@ const PERSIST_PROPERTIES := [
 ]
 
 # project vars
-var sync_tolerance := 0.2 # engine time (seconds)
+var sync_tolerance := 0.2 # engine time; NOT MAINTAINED! (waiting for Gotot 4.0)
+var date_format := DATE_FORMAT_Y_M_D
 var start_real_world_time := false # true overrides other start settings
 var speeds := [ # sim_units / delta
 		IVUnits.SECOND, # real-time if IVUnits.SECOND = 1.0
@@ -108,8 +119,8 @@ var show_clock := false
 var show_seconds := false
 var speed_name: String
 var speed_symbol: String
-var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1
-var date: Array = IVGlobal.date # Gregorian [0] year [1] month [2] day (ints)
+var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
+var date: Array = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
 var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
@@ -131,8 +142,16 @@ onready var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
 
 func _project_init() -> void:
 	times.resize(3)
-	date.resize(3)
 	clock.resize(3)
+	match date_format:
+		DATE_FORMAT_Y_M_D:
+			date.resize(3)
+		DATE_FORMAT_Y_M_D_Q:
+			date.resize(4)
+		DATE_FORMAT_Y_M_D_Q_YQ:
+			date.resize(5)
+		DATE_FORMAT_Y_M_D_Q_YQ_YM:
+			date.resize(6)
 	_set_init_state()
 
 
@@ -191,7 +210,7 @@ func _on_process(delta: float) -> void: # subclass can override
 	var whole_solar_day := floor(solar_day)
 	if _prev_whole_solar_day != whole_solar_day:
 		var jdn := get_jdn_for_solar_day(solar_day)
-		set_gregorian_date_array(jdn, date)
+		set_gregorian_date_array(jdn, date, date_format)
 		is_date_change = true
 		_prev_whole_solar_day = whole_solar_day
 	set_clock_array(solar_day - whole_solar_day, clock)
@@ -226,7 +245,7 @@ func _unhandled_key_input(event: InputEventKey):
 static func get_sim_time(Y: int, M: int, D: int, h := 12, m := 0, s := 0) -> float:
 	# Simulator "time" is seconds since J2000 epoch; see details above.
 	# Return not exact depending on input type (UT1, UTC, etc.) but very close.
-	# Does not test for valid input! Use is_valid_gregorian_date().
+	# Assumes valid input! To test valid date, use is_valid_gregorian_date().
 	var jdn := gregorian2jdn(Y, M, D)
 	var j2000days := float(jdn - J2000_JDN)
 	var sim_time := (j2000days - 0.5) * DAY
@@ -241,6 +260,7 @@ static func is_valid_gregorian_date(Y: int, M: int, D: int) -> bool:
 		return false
 	if D < 29:
 		return true
+	# day 30 & 31 may or may not be valid
 	var jdn := gregorian2jdn(Y, M, D)
 	var test_date := [0, 0, 0]
 	set_gregorian_date_array(jdn, test_date)
@@ -262,8 +282,9 @@ static func gregorian2jdn(Y: int, M: int, D: int) -> int:
 	return jdn
 
 
-static func set_gregorian_date_array(jdn: int, date_array: Array) -> void:
-	# Expects date_array of size 3
+static func set_gregorian_date_array(jdn: int, date_array: Array,
+		date_format_ := DATE_FORMAT_Y_M_D) -> void:
+	# Expects date_array to be correct size for date_format_
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
@@ -275,11 +296,22 @@ static func set_gregorian_date_array(jdn: int, date_array: Array) -> void:
 	var m := (((h / 153) + 2) % 12) + 1
 	# warning-ignore:integer_division
 	# warning-ignore:integer_division
-	date_array[0] = (e / 1461) - 4716 + ((14 - m) / 12) # year
+	var y := (e / 1461) - 4716 + ((14 - m) / 12)
+	date_array[0] = y
 	# warning-ignore:integer_division
 	date_array[1] = m # month
 	# warning-ignore:integer_division
 	date_array[2] = ((h % 153) / 5) + 1 # day
+	if date_format_ == DATE_FORMAT_Y_M_D:
+		return
+	var q := (m - 1) / 3 + 1
+	date_array[3] = q
+	if date_format_ == DATE_FORMAT_Y_M_D_Q:
+		return
+	date_array[4] = y * 4 + (q - 1) # yq, always increasing
+	if date_format_ == DATE_FORMAT_Y_M_D_Q_YQ:
+		return
+	date_array[5] = y * 12 + (m - 1) # ym, always increasing
 
 
 static func get_clock_elements(fractional_day: float) -> Array:
@@ -303,24 +335,24 @@ static func set_clock_array(fractional_day: float, clock_array: Array) -> void:
 
 
 func get_gregorian_date(sim_time := NAN) -> Array:
-	# returns [Y, M, D]
+	# returns [Y, M, D] (or more; see DATE_FORMAT_ enum)
 	if is_nan(sim_time):
 		sim_time = time
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	set_gregorian_date_array(jdn, date_array)
+	set_gregorian_date_array(jdn, date_array, date_format)
 	return date_array
 
 
 func get_gregorian_date_time(sim_time := NAN) -> Array:
-	# returns [[Y, M, D], [h, m, s]]
+	# returns [[Y, M, D], [h, m, s]], or larger [date]; see DATE_FORMAT_ enum
 	if is_nan(sim_time):
 		sim_time = time
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	set_gregorian_date_array(jdn, date_array)
+	set_gregorian_date_array(jdn, date_array, date_format)
 	var fractional_day := fposmod(solar_day_, 1.0)
 	var clock_array := get_clock_elements(fractional_day)
 	return [date_array, clock_array]
@@ -353,7 +385,7 @@ func get_real_world_time() -> float:
 
 
 func get_current_date_for_file() -> String:
-	return date_format_for_file % date
+	return date_format_for_file % date.slice(0, 2)
 
 
 func set_real_world() -> void:
@@ -430,7 +462,7 @@ func _reset_time() -> void:
 	times[0] = time
 	times[2] = solar_day
 	var jdn := get_jdn_for_solar_day(solar_day)
-	set_gregorian_date_array(jdn, date)
+	set_gregorian_date_array(jdn, date, date_format)
 	set_clock_array(fposmod(solar_day, 1.0), clock)
 
 

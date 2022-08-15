@@ -57,7 +57,11 @@ added to Global.wikipedia_locales. For an internal wiki (a la "Civiliopedia")
 add new column "wiki" and set Global.use_internal_wiki = true. For more info,
 see comments and API in prog_refs/wiki_manager.gd.
 
-Type (required row; required for all fields except #comment fields):
+Tables can have the following header rows. 'Type' is required for any table
+that has data columns other than 'name'. A table with only 'name' column is an
+enumeration (like an enum, but not hard-coded).
+
+Type (required unless enumeration only; all fields except #comments):
 
 	STRING
 		Normal Godot escaping applies for \n, \t, etc. We have also patched
@@ -94,22 +98,22 @@ Type (required row; required for all fields except #comment fields):
 			0.0010 - 2 significant digits
 		(Set IVBodyBuilder.keep_real_precisions = false to disable precisions.)
 
-Default (optional row):
+Default (optional):
 
 	Default values must be blank or follow Type rules above. If non-blank, this
 	value is used for any blank cells in the column.
 
-Unit (optional row; REAL fields only):
+Unit (optional; REAL fields only):
 
 	The Units string must be a key in one of the dictionaires in
 	static/unit_defs.gd (MULTIPLIERS or FUNCTIONS), or in replacement
 	dictionaries specified in Global.unit_multipliers or Global.unit_functions.
 	Units can be prefixed by "10^x " where x is a valid integer.
 
-Prefix (optional row; STRING and INT fields only):
+Prefix (optional; STRING and INT fields only):
 
-	Prefix is valid for Type = STRING (including 'name' field) and TABLE_ROW.
-	Prefixes non-blank cells with value. To prefix the 0 column ('name' field),
+	Prefix is valid for Type = STRING (including 'name' field) and INT.
+	Prefixes non-blank cells with value. To prefix the column 0 'name' field,
 	use 'Prefix/<value>'. E.g., 'Prefix/PLANET_' is used in planets.tsv to
 	prefix all row names with 'PLANET_'.
 

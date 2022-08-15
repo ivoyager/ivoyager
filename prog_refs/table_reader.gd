@@ -28,7 +28,7 @@ class_name IVTableReader
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
 #    table_types[table_name][column_field] -> Type string in table
-#    table_precisions[][][] indexed as tables w/ REAL fields only -> sig digits
+#    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
 #       -this dictionary also enumerates enums listed in 'data_table_enums'
@@ -40,8 +40,7 @@ const math := preload("res://ivoyager/static/math.gd")
 
 var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or row_int]
 var _enumerations: Dictionary = IVGlobal.enumerations # indexed by ALL table row names
-var _table_types: Dictionary = IVGlobal.table_types # indexed [table][field]
-var _table_precisions: Dictionary = IVGlobal.table_precisions # as _tables for REAL fields
+var _table_precisions: Dictionary = IVGlobal.precisions # as _tables for REAL fields
 
 
 # *****************************************************************************
@@ -70,12 +69,11 @@ func get_row(row_name: String) -> int:
 	return _enumerations.get(row_name, -1)
 
 
-func get_names_dict(table: String) -> Dictionary:
+func get_names_enumeration(table: String) -> Dictionary:
 	# Returns an enum-like dict of row numbers keyed by row names.
 	var dict := {}
-	for key in _tables[table]["name"]:
-		if typeof(key) == TYPE_STRING:
-			dict[key] = _enumerations[key]
+	for row_name in _tables[table]["name"]:
+		dict[row_name] = _enumerations[row_name]
 	return dict
 
 
@@ -133,15 +131,15 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 		return false
 	if row_name:
 		row = _enumerations[row_name]
-	var type: String = _table_types[table][field]
-	if type == "REAL":
-		return !is_nan(_tables[table][field][row])
-	elif type == "STRING":
-		return _tables[table][field][row] != ""
-	elif type == "INT":
-		return _tables[table][field][row] != -1
-	else: # BOOL
-		return true
+	var value = _tables[table][field][row]
+	var type := typeof(value)
+	if type == TYPE_REAL:
+		return !is_nan(value)
+	if type == TYPE_INT:
+		return value != -1
+	if type == TYPE_STRING:
+		return value != ""
+	return true # BOOL
 
 
 func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
@@ -218,15 +216,14 @@ func get_least_real_precision(table: String, fields: Array, row := -1, row_name 
 
 func get_real_precisions(fields: Array, table: String, row: int) -> Array:
 	# Missing or non-REAL values will have precision -1.
+	var this_table_precisions: Dictionary = _table_precisions[table]
 	var n_fields := fields.size()
 	var result := utils.init_array(n_fields, -1)
 	var i := 0
 	while i < n_fields:
 		var field: String = fields[i]
-		if _table_types[table].has(field):
-			var type: String = _table_types[table][field]
-			if type == "REAL":
-				result[i] = _table_precisions[table][field][row]
+		if this_table_precisions.has(field):
+			result[i] = this_table_precisions[field][row]
 		i += 1
 	return result
 
