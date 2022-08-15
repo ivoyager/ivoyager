@@ -29,13 +29,14 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 * Some time related code updated from OS to Time (OS methods depreciated). [Requres Godot 3.5!]
 
 ### Removed
-* [Breaks API!] Removed IVViewCacher from 'ivoyager' submodule (moved to Planetarium project where it is used).
+* [Breaks API!] Removed IVViewCacher from 'ivoyager' submodule. (Added to Planetarium project.)
 * [Breaks API!] Removed IVBody.body_id.
+* [Breaks API!] Removed IVGlobal.static_enums_class.
 
 ### Fixed
-* Widgets fixed to work when GUI is added after solar system build.
+* Widgets fixed to work if GUI is added after solar system build.
 * Fixed IVTableImporter to print correct cell counts during data table reading.
-* Fixed bug causing Pluto "north" flippage under some init circumstances (happened in Project Template but not Planetarium).
+* Fixed bug causing Pluto "north" flippage under some init circumstances.
 
 
 ## [v0.0.12] - 2022-01-20

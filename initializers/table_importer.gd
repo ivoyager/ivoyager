@@ -74,7 +74,6 @@ var _enumerations: Dictionary = IVGlobal.enumerations # IVGlobal shared
 
 # localization
 var _enable_wiki: bool = IVGlobal.enable_wiki
-var _enums: Script = IVGlobal.static_enums_class
 var _wiki: String = IVGlobal.wiki # wiki column header
 var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
 var _unit_functions: Dictionary = IVGlobal.unit_functions
