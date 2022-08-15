@@ -195,9 +195,7 @@ func _import_table(table_name: String, path: String) -> void:
 				assert(has_types)
 				prefixes = line_array
 				if cell_0.begins_with("Prefix/"):
-					prefixes[0] = cell_0.lstrip("Prefix").lstrip("/")
-					# Godot 3.5 bug?
-					# lstrip("Prefix/") strips leading char after /
+					prefixes[0] = cell_0.trim_prefix("Prefix/")
 				else:
 					assert(cell_0 == "Prefix")
 					prefixes[0] = ""
