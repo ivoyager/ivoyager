@@ -26,7 +26,7 @@ class_name IVTableImporter
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    table_types[table_name][column_field] -> Type string in table
+#    tables["prefix_" + table_name] -> value of Prefix for the 'name' column
 #    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
@@ -115,7 +115,7 @@ func _import() -> void:
 	for table_name in _table_import:
 		var path: String = _table_import[table_name]
 		_import_table(table_name, path)
-	_postprocess_int_enumerations()
+	_postprocess_enumerations()
 	if !_enable_wiki:
 		return
 	for path in _wiki_titles_import:
@@ -221,6 +221,8 @@ func _import_table(table_name: String, path: String) -> void:
 		line = file.get_line()
 	
 	_tables["n_" + table_name] = row
+	if prefixes[0]:
+		_tables["prefix_" + table_name] = prefixes[0]
 
 
 func _read_line(table_name: String, row: int, line_array: Array, fields: Dictionary,
@@ -311,7 +313,7 @@ func _append_preprocessed(table_name: String, field: String, row_name: String,
 		_wiki_titles[row_name] = value
 
 
-func _postprocess_int_enumerations() -> void:
+func _postprocess_enumerations() -> void:
 	# convert INT strings to enumerations after all tables imported
 	# TODO 4.0: Remember table/fields so we can type the column array
 	var i := _int_columns.size()
