@@ -98,10 +98,11 @@ func _on_init() -> void:
 	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
 			% [time, _count_rows, _count_cells, _count_non_null])
+	IVGlobal.verbose_signal("data_tables_imported")
 
 
 func _project_init() -> void:
-	IVGlobal.program.erase("TableImporter2") # frees self
+	IVGlobal.program.erase("TableImporter") # frees self
 
 
 func _add_data_table_enums() -> void:
