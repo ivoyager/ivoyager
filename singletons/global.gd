@@ -175,14 +175,16 @@ var table_import := {
 	stars = "res://ivoyager/data/solar_system/stars.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
-	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
-	classes = "res://ivoyager/data/solar_system/classes.tsv",
-	models = "res://ivoyager/data/solar_system/models.tsv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
+	models = "res://ivoyager/data/solar_system/models.tsv",
+	lights = "res://ivoyager/data/solar_system/lights.tsv",
 }
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
+
+var body_tables := ["stars", "planets", "moons"] # table names; order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelBuilder first looks for an existing

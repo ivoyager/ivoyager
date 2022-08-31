@@ -257,15 +257,15 @@ func get_symbol() -> String:
 	return characteristics.get("symbol", "\u25CC") # default is dashed circle
 
 
-func get_class_type() -> int: # "classes" table row
-	return characteristics.get("class_type", -1)
+func get_body_class() -> int: # body_classes.tsv
+	return characteristics.get("body_class", -1)
 
 
-func get_model_type() -> int: # "models" table row
+func get_model_type() -> int: # models.tsv
 	return characteristics.get("model_type", -1)
 
 
-func get_light_type() -> int: # "lights" table row
+func get_light_type() -> int: # lights.tsv
 	return characteristics.get("light_type", -1)
 
 

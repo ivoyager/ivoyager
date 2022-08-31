@@ -47,9 +47,8 @@ func build_system_tree() -> void:
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
 	IVGlobal.verbose_signal("about_to_build_system_tree")
 	_body_builder.init_system_build()
-	_add_bodies("stars")
-	_add_bodies("planets")
-	_add_bodies("moons")
+	for table_name in IVGlobal.body_tables:
+		_add_bodies(table_name)
 	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
 	minor_bodies_builder.build()
 	if add_camera:
@@ -70,7 +69,7 @@ func _add_bodies(table_name: String) -> void:
 		if parent:
 			parent.add_child(body)
 			parent.satellites.append(body)
-		else:
+		else: # top body
 			var universe: Spatial = IVGlobal.program.Universe
 			universe.add_child(body)
 		row += 1

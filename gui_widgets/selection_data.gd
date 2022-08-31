@@ -99,8 +99,8 @@ var section_data := [ # one array element per header
 		["LABEL_KN_QUASI_SATELLITES", "body/characteristics/n_kn_quasi_satellites", NO_ARGS, AS_IS],
 	],
 	[ # Physical Characteristics
-		["LABEL_CLASSIFICATION", "body/characteristics/class_type", NO_ARGS,
-				TABLE_ROW, "classes"],
+		["LABEL_CLASSIFICATION", "body/characteristics/body_class", NO_ARGS,
+				TABLE_ROW, "body_classes"],
 		["LABEL_STELLAR_CLASSIFICATION", "body/characteristics/stellar_classification", NO_ARGS, AS_IS],
 		["LABEL_MEAN_RADIUS", "body/m_radius", NO_ARGS,
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "km"]],
