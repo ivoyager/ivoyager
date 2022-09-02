@@ -58,11 +58,19 @@ var characteristics_fields := [
 	"luminosity", "color_b_v", "metallicity", "age"
 ]
 var flag_fields := {
-	BodyFlags.IS_DWARF_PLANET : "dwarf",
+	BodyFlags.IS_STAR : "star",
+	BodyFlags.IS_PLANET : "planet",
+	BodyFlags.IS_TRUE_PLANET : "true_planet",
+	BodyFlags.IS_DWARF_PLANET : "dwarf_planet",
+	BodyFlags.IS_MOON : "moon",
 	BodyFlags.IS_TIDALLY_LOCKED : "tidally_locked",
 	BodyFlags.IS_AXIS_LOCKED : "axis_locked",
 	BodyFlags.TUMBLES_CHAOTICALLY : "tumbles_chaotically",
 	BodyFlags.HAS_ATMOSPHERE : "atmosphere",
+	BodyFlags.IS_GAS_GIANT : "gas_giant",
+	BodyFlags.IS_ASTEROID : "asteroid",
+	BodyFlags.IS_COMET : "comet",
+	BodyFlags.IS_SPACECRAFT : "spacecraft",
 }
 # read-only
 var progress := 0 # for external progress bar
@@ -146,26 +154,20 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	var flags := _table_reader.get_flags(flag_fields, _table_name, _row)
 	if !parent:
 		flags |= BodyFlags.IS_TOP # will add self to IVGlobal.top_bodies
+		flags |= BodyFlags.IS_PRIMARY_STAR
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
+	if flags & BodyFlags.IS_STAR:
+		flags |= BodyFlags.NEVER_SLEEP
+	if flags & BodyFlags.IS_PLANET:
+		flags |= BodyFlags.IS_STAR_ORBITING
+		flags |= BodyFlags.NEVER_SLEEP
 	var hydrostatic_equilibrium: int = _table_reader.get_int(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= IVEnums.Confidence.CONFIDENCE_PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
-	match _table_name:
-		"stars":
-			flags |= BodyFlags.IS_STAR
-			if flags & BodyFlags.IS_TOP:
-				flags |= BodyFlags.IS_PRIMARY_STAR
-			flags |= BodyFlags.NEVER_SLEEP
-		"planets":
-			flags |= BodyFlags.IS_STAR_ORBITING
-			if not flags & BodyFlags.IS_DWARF_PLANET:
-				flags |= BodyFlags.IS_TRUE_PLANET
-			flags |= BodyFlags.NEVER_SLEEP
-		"moons":
-			flags |= BodyFlags.IS_MOON
-			if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
-					or _table_reader.get_bool(_table_name, "force_navigator", _row):
-				flags |= BodyFlags.IS_NAVIGATOR_MOON
+	if flags & BodyFlags.IS_MOON:
+		if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
+				or _table_reader.get_bool(_table_name, "force_navigator", _row):
+			flags |= BodyFlags.IS_NAVIGATOR_MOON
 	body.flags = flags
 
 

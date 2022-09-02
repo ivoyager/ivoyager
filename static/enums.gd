@@ -86,9 +86,9 @@ enum Confidence {
 
 enum BodyFlags {
 	
-	# reserved 1 << 0,
-	IS_BARYCENTER = 1 << 1, # not implemented yet
-	IS_STAR = 1 << 2,
+	IS_BARYCENTER = 1 << 0, # not implemented yet
+	IS_STAR = 1 << 1,
+	IS_PLANET = 1 << 2,
 	IS_TRUE_PLANET = 1 << 3,
 	IS_DWARF_PLANET = 1 << 4,
 	IS_MOON = 1 << 5,
@@ -97,8 +97,7 @@ enum BodyFlags {
 	IS_SPACECRAFT = 1 << 8,
 	
 	# combos
-	IS_PLANET = 1 << 3 | 1 << 4, # true or dwarf planet
-	IS_PLANET_OR_MOON = 1 << 3 | 1 << 4 | 1 << 5,
+	IS_PLANET_OR_MOON = 1 << 2 | 1 << 5,
 
 	# reserved 1 << 9,
 	# reserved 1 << 10,
@@ -111,11 +110,13 @@ enum BodyFlags {
 	IS_TIDALLY_LOCKED = 1 << 16,
 	IS_AXIS_LOCKED = 1 << 17,
 	TUMBLES_CHAOTICALLY = 1 << 18,
-	
-	IS_NAVIGATOR_MOON = 1 << 20, # show in system navigator
-	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 21, # for moon orbit color
-	DISPLAY_M_RADIUS = 1 << 22,
-	HAS_ATMOSPHERE = 1 << 23,
+	IS_NAVIGATOR_MOON = 1 << 19, # show in system navigator
+	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 20, # for moon orbit color
+	DISPLAY_M_RADIUS = 1 << 21,
+	HAS_ATMOSPHERE = 1 << 22,
+	IS_GAS_GIANT = 1 << 23,
+	NO_ORBIT = 1 << 24, # Hill Sphere is smaller than body radius
+	NO_STABLE_ORBIT = 1 << 25, # Hill Sphere / 3 is smaller than body radius
 #	APPROX_RADIUS = 1 << 24, # e.g., display as "~1 km" (TODO)
 #	APPROX_GM = 1 << 25,
 #

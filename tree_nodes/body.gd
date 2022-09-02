@@ -170,6 +170,12 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 		if system_radius < a:
 			system_radius = a
 	characteristics.system_radius = system_radius
+	# non-table flags
+	var hill_sphere := get_hill_sphere()
+	if hill_sphere < m_radius:
+		flags |= BodyFlags.NO_ORBIT
+	if hill_sphere / 3.0 < m_radius:
+		flags |= BodyFlags.NO_STABLE_ORBIT
 
 
 func _prepare_to_free() -> void:
@@ -283,6 +289,10 @@ func get_rings_file_prefix() -> String:
 
 func get_rings_radius() -> float:
 	return characteristics.get("rings_radius", 0.0)
+
+
+func get_mass() -> float:
+	return characteristics.get("mass", 0.0)
 
 
 func get_std_gravitational_parameter() -> float:
@@ -430,6 +440,19 @@ func get_orbit_ref_basis(time := NAN) -> Basis:
 	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
 	var z_axis := x_axis.cross(y_axis)
 	return Basis(x_axis, y_axis, z_axis)
+
+
+func get_hill_sphere(eccentricity := 0.0) -> float:
+	# returns INF if this is a top body in simulation
+	# see: https://en.wikipedia.org/wiki/Hill_sphere
+	if flags & BodyFlags.IS_TOP:
+		return INF
+	var a := get_orbit_semi_major_axis()
+	var mass := get_mass()
+	var parent_mass: float = parent.get_mass()
+	if !a or !mass or !parent_mass:
+		return 0.0
+	return a * (1.0 - eccentricity) * pow(mass / (3.0 * parent_mass), 0.33333333)
 
 
 # ivoyager mechanics below
