@@ -52,7 +52,7 @@ const PERSIST_PROPERTIES := [
 
 # persisted - read only
 var name: String
-var gui_name: String # overrides name for GUI display
+var gui_name: String # name for GUI display (already translated)
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 var view_rotate_when_close := false
@@ -95,7 +95,8 @@ func get_name() -> String:
 
 
 func get_gui_name() -> String:
-	return gui_name if gui_name else name
+	# return is already translated
+	return gui_name
 
 
 func get_body_name() -> String:
