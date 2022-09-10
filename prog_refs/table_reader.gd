@@ -27,7 +27,8 @@ class_name IVTableReader
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    tables["prefix_" + table_name] -> value of Prefix for the 'name' column
+#    tables["prefix_" + table_name] -> 'name' column Prefix, if exists
+#    tables[<PREFIX_>] -> table_name; eg, tables["PLANET_"] = "planets"
 #    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)

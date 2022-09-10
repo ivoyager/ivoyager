@@ -26,7 +26,8 @@ class_name IVTableImporter
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    tables["prefix_" + table_name] -> value of Prefix for the 'name' column
+#    tables["prefix_" + table_name] -> 'name' column Prefix, if exists
+#    tables[<PREFIX_>] -> table_name; eg, tables["PLANET_"] = "planets"
 #    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
@@ -221,9 +222,14 @@ func _import_table(table_name: String, path: String) -> void:
 			row += 1
 		line = file.get_line()
 	
+	# table info accessible via constructed indexes
+	assert(!_tables.has("n_" + table_name))
 	_tables["n_" + table_name] = row
-	if prefixes[0]:
+	if prefixes[0]: # e.g., 'PLANET_' in table 'planets'
+		assert(!_tables.has("prefix_" + table_name))
 		_tables["prefix_" + table_name] = prefixes[0]
+		assert(!_tables.has(prefixes[0]))
+		_tables[prefixes[0]] = table_name
 
 
 func _read_line(table_name: String, row: int, line_array: Array, fields: Dictionary,

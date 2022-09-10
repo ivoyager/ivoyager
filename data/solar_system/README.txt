@@ -16,20 +16,21 @@ well for me so far and I recommend it.
 Overview:
 
 TableImporter reads *.tsv files specified in IVGlobal.table_import and
-IVGlobal.wiki_titles_import, processes cells and converts to Type, and stores
-in dictionaries in IVGlobal. Default can be specified for blank cells. For
-REAL, value is converted based on Units. Precision (significant digits) is
-determined from the table number string and saved. You can access data directly
-from IVGlobal dictionaries or use IVTableReader API for protected access and
-constructor methods.
+IVGlobal.wiki_titles_import, processes cells and converts to 'Type', and stores
+all data in dictionaries accessible in IVGlobal. 'Default' can be specified for
+blank cells. For REAL, value is converted to 'Unit', if specified, and
+precision (significant digits) is determined from the table text and saved.
+
+Access data directly from IVGlobal dictionaries or use IVTableReader API for
+protected access and object constructor methods. See comments in
+prog_refs/table_reader.gd.
 
 File rules:
 
 *	Any line starting with # is skipped.
-*   End file with a # line. (Not always needed, but can prevent eof issues.)
+*   End data with a # line. (Not always needed, but can prevent eof issues.)
 *	The first non-comment row must have column headers (fields).
-*	Fields prepended with # will be skipped. (Use for cell comments or pre-
-    staging a new column.)
+*	Fields prepended with # will be skipped. (Use for comments or unused data.)
 *	The first column header must be "name" or "nil". If nil, there will be no
     row_name access.
 *	Row name must be globally unique among all data tables. Exception: tables
@@ -59,7 +60,7 @@ see comments and API in prog_refs/wiki_manager.gd.
 
 Tables can have the following header rows. 'Type' is required for any table
 that has data columns other than 'name'. A table with only 'name' column is an
-enumeration (like an enum, but not hard-coded).
+"enumeration" (like an enum, but not hard-coded).
 
 Type (required unless enumeration only; all fields except #comments):
 
@@ -80,10 +81,10 @@ Type (required unless enumeration only; all fields except #comments):
 		See WARNING about Excel above. If you must use it, then prefix all REAL
 		values with ' or _ to prevent number modification.
 		"E" or "e" are ok.
-		"?" means unknown. It is converted to INF by TableReader.get_float()
-		and "build_" functions, which is displayed as "?" by GUI.
-		Blank value means n/a. It produces NAN in TableReader.get_float(), is
-		not set in "build_" functions, and is not displayed by GUI.
+		"?" means unknown. It is converted to INF, which is displayed as "?" by
+		most I, Voyager GUI.
+		Blank value without Default means n/a. It is converted to NAN, and
+        skipped in most cases by I, Voyager GUI.
 		Any number prefixed with "~" will be interpreted as a "zero-precision"
 		number, displayed as (for example) "~1 x 10^-10".
 		For numbers not preceded by "~", precision is interpreted for GUI
