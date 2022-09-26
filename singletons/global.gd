@@ -182,6 +182,8 @@ var table_import := {
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	lights = "res://ivoyager/data/solar_system/lights.tsv",
 }
+var table_import_mods := {} # add columns or rows or modify cells in table_import tables
+
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
 
