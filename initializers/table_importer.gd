@@ -83,6 +83,7 @@ var _unit_functions: Dictionary = IVGlobal.unit_functions
 var _field_infos := {} # [table_name][field] = [type, prefix, unit, default] 
 var _field_map := [] # cleared for each table import; [column] = field
 var _column_map := {} # cleared for each table import; [field] = column
+var _add_fields := [] # cleared for each table import
 
 # data counting
 var _count_rows := 0
@@ -142,6 +143,7 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 	var field_info: Dictionary = _field_infos[table_name]
 	_field_map.clear()
 	_column_map.clear()
+	_add_fields.clear()
 	var n_columns := 0
 	var reading_header := true
 	var reading_fields := true
@@ -163,12 +165,14 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 				assert(has_row_names or is_new)
 				for field in line_array:
 					if field != "nil" and !field.begins_with("#"):
-						assert(!_column_map.has(field), "Duplicated field '%s'" % field)
+						assert(!is_new or !_column_map.has(field), "Duplicated field '%s'" % field)
 						_column_map[field] = n_columns
-						field_info[field] = ["", "", "", ""] # type, prefix, unit, default
-						if is_new or !table.has(field):
-							table[field] = []
 						_field_map.append(field)
+						if is_new or !table.has(field):
+							field_info[field] = ["", "", "", ""] # type, prefix, unit, default
+							table[field] = []
+							if !is_new: # mod table has added a new field
+								_add_fields.append(field)
 					else:
 						_field_map.append("")
 					n_columns += 1
@@ -225,11 +229,32 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 					var field: String = _field_map[column]
 					if !field:
 						continue
-					field_info[field][3] = line_array[column]
+					field_info[field][3] = line_array[column] # process after header
 			
 			else: # finish header processing
 				assert(has_types) # required
 				reading_header = false
+				
+				# process defaults
+				for column in range(1, n_columns): # 0 column never has Default
+					var field: String = _field_map[column]
+					if !field:
+						continue
+					var type: String = field_info[field][0]
+					var prefix: String = field_info[field][1]
+					var unit: String = field_info[field][2]
+					var default: String = field_info[field][3]
+					field_info[field][3] = _get_processed_value(default, type, prefix, unit)
+				
+				# impute data for new fields (mod table only)
+				if _add_fields:
+					var n_rows: int = _tables["n_" + table_name] # base table
+					while _add_fields:
+						var field: String = _add_fields.pop_front()
+						var default = field_info[field][3] # untyped
+						var table_column: Array = table[field]
+						table_column.resize(n_rows)
+						table_column.fill(default) # mod table will overwrite
 		
 		# data line
 		if !reading_header:
@@ -252,11 +277,9 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 
 func _read_line(table_name: String, row: int, line_array: Array, has_row_names: bool,
 		is_new: bool) -> void:
-	
 	var table: Dictionary = _tables[table_name]
 	var precisions: Dictionary = _table_precisions[table_name]
 	var field_info: Dictionary = _field_infos[table_name]
-
 	var row_name := ""
 	if has_row_names:
 		var name_prefix: String = field_info.name[1]
@@ -274,74 +297,89 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			row = table.name.size()
 			_enumerations[row_name] = row
 			_tables["n_" + table_name] += 1
-
+	
 	for field in _column_map:
-
 		_count_cells += 1
 		var column: int = _column_map[field]
 		var raw_value: String = line_array[column]
-		if !raw_value: # blank "" cell
-			raw_value = field_info[field][3] # default (possibly "")
+		var value # untyped
+		var type: String = field_info[field][0]
+		if !raw_value: # blank cell
+			value = field_info[field][3] # default (already processed)
+			if type == "REAL":
+				precisions[field].append(1) # assume "0"; not meant to work
 		else:
 			_count_non_null += 1
-		var type: String = field_info[field][0]
-		var prefix: String = field_info[field][1]
-		var unit: String = field_info[field][2]
-		
-		# pre-process and set table value
-		if raw_value.begins_with("\"") and raw_value.ends_with("\""):
-			raw_value = raw_value.lstrip("\"").rstrip("\"")
-		raw_value = raw_value.lstrip("'")
-		raw_value = raw_value.lstrip("_")
-		var value # untyped
-		match type:
-			"BOOL":
-				if raw_value == "x" or raw_value.matchn("true"):
-					value = true
-				else:
-					assert(raw_value == "" or raw_value.matchn("false"))
-					value = false
-			"STRING":
-				value = raw_value.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
-				value = utils.c_unescape_patch(value) # handles "\uXXXX"
-				if value and prefix:
-					value = prefix + value
-			"REAL":
-				# determine and save precision here
-				var precision := -1
-				if !raw_value:
-					value = NAN
-				elif raw_value == "?":
-					value = INF
-				else:
-					raw_value = raw_value.replace("E", "e")
-					if raw_value.begins_with("~"):
-						precision = 1
-						raw_value = raw_value.lstrip("~")
-					else:
-						precision = utils.get_real_str_precision(raw_value)
-					value = float(raw_value)
-					if unit:
-						value = ivunits.convert_quantity(value, unit, true, true,
-								_unit_multipliers, _unit_functions)
-				precisions[field].append(precision)
-			"INT":
-				# keep as string for now; we'll convert in _postprocess_ints()
-				if raw_value and prefix:
-					value = prefix + raw_value
-				else:
-					value = raw_value
-			_:
-				assert(false)
-		
+			var prefix: String = field_info[field][1]
+			var unit: String = field_info[field][2]
+			value = _get_processed_value(raw_value, type, prefix, unit, true) # untyped
+			if type == "REAL":
+				var precision: int = value[1]
+				value = value[0]
+				precisions[field].append(precision) # FIXME: mod row
+
 		# set value
 		var table_column: Array = table[field]
-		if table_column.size() == row:
+		if table_column.size() == row: # FIXME: mod row
 			table_column.resize(row + 1)
 		table_column[row] = value
 		if _enable_wiki and field == _wiki:
 			assert(row_name)
 			_wiki_titles[row_name] = value
+
+
+func _get_processed_value(raw_value: String, type: String, prefix: String, unit: String,
+		include_precision := false):
+	# return is appropriate type, excpet INT converted in _postprocess_ints()
+	# if include_precision and type == 'REAL', returns [float_value, precision]
+	if raw_value.begins_with("\"") and raw_value.ends_with("\""):
+		raw_value = raw_value.lstrip("\"").rstrip("\"")
+	raw_value = raw_value.lstrip("'")
+	raw_value = raw_value.lstrip("_")
+	match type:
+		"BOOL":
+			if raw_value == "x" or raw_value.matchn("true"):
+				return true
+			else:
+				assert(raw_value == "" or raw_value.matchn("false"))
+				return false
+		"STRING":
+			if !raw_value:
+				return ""
+			raw_value = raw_value.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
+			raw_value = utils.c_unescape_patch(raw_value) # handles "\uXXXX"
+			if prefix:
+				return prefix + raw_value
+			return raw_value
+		"REAL":
+			var value: float
+			var precision := -1
+			if !raw_value:
+				value = NAN
+			elif raw_value == "?":
+				value = INF
+			else:
+				raw_value = raw_value.replace("E", "e")
+				if raw_value.begins_with("~"):
+					precision = 1
+					raw_value = raw_value.lstrip("~")
+				elif include_precision:
+					precision = utils.get_real_str_precision(raw_value)
+				value = float(raw_value)
+				if unit:
+					value = ivunits.convert_quantity(value, unit, true, true,
+							_unit_multipliers, _unit_functions)
+			if include_precision:
+				return [value, precision]
+			return value
+		"INT":
+			# keep as string for now; we'll convert in _postprocess_ints()
+			if raw_value and prefix: # mainly for enumeration
+				return prefix + raw_value # e.g., 'PLANET_' + 'EARTH'
+			else:
+				return raw_value
+	
+	assert(false, 'Missing or unknown type "%s"' % type)
 
 
 func _postprocess_ints() -> void:
