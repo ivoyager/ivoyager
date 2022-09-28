@@ -49,13 +49,15 @@ class_name IVTableImporter
 #
 # A table with 'name' column only (not counting #comment columns) is an
 # "enumeration". These do not require a 'Type' header.
+#
+# Tables imported via IVGlobal.table_import_mods are 'mod tables'. These modify
+# existing tables and can add columns or rows or overwrite existing values.
 
 
 const ivunits := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
 const DPRINT := false
-const TYPE_TEST := ["REAL", "BOOL", "INT", "STRING"]
 
 
 var data_table_enums := [
@@ -119,7 +121,10 @@ func _add_data_table_enums() -> void:
 func _import() -> void:
 	for table_name in _table_import:
 		var path: String = _table_import[table_name]
-		_import_table(table_name, path)
+		_import_table(table_name, path, false)
+	for table_name in _table_import_mods:
+		var path: String = _table_import_mods[table_name]
+		_import_table(table_name, path, true)
 	_postprocess_ints()
 	if !_enable_wiki:
 		return
@@ -127,14 +132,16 @@ func _import() -> void:
 		_import_wiki_titles(path)
 
 
-func _import_table(table_name: String, path: String, is_new := true) -> void:
+func _import_table(table_name: String, path: String, is_mod := false) -> void:
+	# is_mod == true means we are importing a 'mod table'; these modify an
+	# existing table and can add columns or rows or overwrite existing values.
 	assert(table_name and path)
 	assert(DPRINT and prints("Reading", path) or true)
 	var file := File.new()
 	if file.open(path, file.READ) != OK:
-		assert(false, "Could not open file: " +  path)
-	var row := 0
-	if is_new:
+		assert(false, "Could not open file: " + path)
+	if !is_mod:
+		assert(!_tables.has(table_name))
 		_tables[table_name] = {}
 		_table_precisions[table_name] = {}
 		_field_infos[table_name] = {}
@@ -144,6 +151,7 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 	_field_map.clear()
 	_column_map.clear()
 	_add_fields.clear()
+	var row := 0
 	var n_columns := 0
 	var reading_header := true
 	var reading_fields := true
@@ -157,48 +165,57 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 		var line_array := line.split("\t") as Array
 		
 		if reading_header:
+			# we're processing header until we don't recognize cell_0 as header item
 			var cell_0: String = line_array[0]
 			
 			if reading_fields: # always 1st line!
 				assert(cell_0 == "name" or cell_0 == "nil", "1st field must be 'name' or 'nil'")
 				has_row_names = cell_0 == "name"
-				assert(has_row_names or is_new)
+				assert(has_row_names or !is_mod)
 				for field in line_array:
 					if field != "nil" and !field.begins_with("#"):
-						assert(!is_new or !_column_map.has(field), "Duplicated field '%s'" % field)
+						assert(is_mod or !_column_map.has(field), "Duplicated field '%s'" % field)
 						_column_map[field] = n_columns
 						_field_map.append(field)
-						if is_new or !table.has(field):
-							field_info[field] = ["", "", "", ""] # type, prefix, unit, default
+						if !is_mod:
+							field_info[field] = [-1, "", "", ""] # type, prefix, unit, default
 							table[field] = []
-							if !is_new: # mod table has added a new field
-								_add_fields.append(field)
+						elif !table.has(field): # mod table has added a new field!
+							field_info[field] = [-1, "", "", ""]
+							_add_fields.append(field)
 					else:
 						_field_map.append("")
 					n_columns += 1
 				var data_columns := _column_map.size() # does not include 'nil' or #comments
 				assert(data_columns > 0)
 				if data_columns == 1: # enumeration-only table is allowed to skip Type header
-					field_info.name[0] = "STRING"
+					field_info.name[0] = TYPE_STRING
 					has_types = true
 				reading_fields = false
 			
 			# Type header required unless enumeration only
 			elif cell_0 == "Type":
 				for column in n_columns:
-					var type := ""
 					var field: String = _field_map[column]
 					if !field:
 						continue
+					var raw_type: String = line_array[column]
+					var type := -1
 					if column == 0:
-						type = "STRING" # always name field (or nil)
+						type = TYPE_STRING # always name field (or nil)
+					elif raw_type == "REAL":
+						type = TYPE_REAL
+						if !is_mod:
+							precisions[field] = []
+					elif raw_type == "BOOL":
+						type = TYPE_BOOL
+					elif raw_type == "INT":
+						type = TYPE_INT
+					elif raw_type == "STRING":
+						type = TYPE_STRING
 					else:
-						type = line_array[column]
+						assert(false, 'Missing or unknown table Type "%s"' % raw_type)
 					field_info[field][0] = type
-					assert(TYPE_TEST.has(type), 'Missing or unknown type "%s"' % type)
-					if type == "REAL":
-						# REAL values have parallel dict w/ precisions
-						precisions[field] = []
 				has_types = true
 			
 			elif cell_0.begins_with("Prefix"):
@@ -218,14 +235,14 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 					field_info[field][1] = prefix
 			
 			elif cell_0 == "Unit":
-				for column in range(1, n_columns): # 0 column never has Unit
+				for column in range(1, n_columns): # column 0 never has Unit
 					var field: String = _field_map[column]
 					if !field:
 						continue
 					field_info[field][2] = line_array[column]
 			
 			elif cell_0 == "Default":
-				for column in range(1, n_columns): # 0 column never has Default
+				for column in range(1, n_columns): # column 0 never has Default
 					var field: String = _field_map[column]
 					if !field:
 						continue
@@ -236,35 +253,43 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 				reading_header = false
 				
 				# process defaults
-				for column in range(1, n_columns): # 0 column never has Default
+				for column in range(1, n_columns): # column 0 never has Default
 					var field: String = _field_map[column]
 					if !field:
 						continue
-					var type: String = field_info[field][0]
+					var type: int = field_info[field][0]
 					var prefix: String = field_info[field][1]
 					var unit: String = field_info[field][2]
-					var default: String = field_info[field][3]
+					var default: String = field_info[field][3] # preprocessed
 					field_info[field][3] = _get_processed_value(default, type, prefix, unit)
 				
 				# impute data for new fields (mod table only)
 				if _add_fields:
 					var n_rows: int = _tables["n_" + table_name] # base table
 					while _add_fields:
-						var field: String = _add_fields.pop_front()
+						var field: String = _add_fields.pop_back()
 						var default = field_info[field][3] # untyped
-						var table_column: Array = table[field]
+						var table_column := []
 						table_column.resize(n_rows)
 						table_column.fill(default) # mod table will overwrite
+						table[field] = table_column
+						var type: int = field_info[field][0]
+						if type != TYPE_REAL:
+							continue
+						var precisions_column := []
+						precisions_column.resize(n_rows)
+						precisions_column.fill(1) # ad hoc default
+						precisions[field] = precisions_column
 		
 		# data line
 		if !reading_header:
 			_count_rows += 1
-			_read_line(table_name, row, line_array, has_row_names, is_new)
+			_read_line(table_name, row, line_array, has_row_names, is_mod)
 			row += 1
 		line = file.get_line()
 	
 	# We add constructed indexes to IVGlobal.tables with useful table info
-	if is_new:
+	if !is_mod:
 		assert(!_tables.has("n_" + table_name))
 		_tables["n_" + table_name] = row # eg, tables.n_planets is number of rows in planets.tsv
 		if has_row_names and field_info.name[1]: # e.g., 'PLANET_' in table 'planets'
@@ -276,74 +301,87 @@ func _import_table(table_name: String, path: String, is_new := true) -> void:
 
 
 func _read_line(table_name: String, row: int, line_array: Array, has_row_names: bool,
-		is_new: bool) -> void:
+		is_mod: bool) -> void:
 	var table: Dictionary = _tables[table_name]
 	var precisions: Dictionary = _table_precisions[table_name]
 	var field_info: Dictionary = _field_infos[table_name]
 	var row_name := ""
-	if has_row_names:
+	if has_row_names: # always if is_mod
 		var name_prefix: String = field_info.name[1]
 		if name_prefix:
 			row_name = name_prefix + line_array[0]
 		else:
 			row_name = line_array[0]
 		assert(row_name, "Name cell is blank!")
-		if is_new:
+		if !is_mod:
 			assert(!_enumerations.has(row_name))
 			_enumerations[row_name] = row
-		elif _enumerations.has(row_name): # modifying existing item
+		elif _enumerations.has(row_name): # modifying existing table item
 			row = _enumerations[row_name]
-		else: # adding row to existing table
+		else: # adding row to existing table!
 			row = table.name.size()
 			_enumerations[row_name] = row
 			_tables["n_" + table_name] += 1
+			# assign row_name and impute defaults (table values will overwrite)
+			table.name.append(row_name)
+			for field in field_info: # all fields! (not just mod table)
+				if field == "name":
+					continue
+				var default = field_info[field][3] # untyped
+				table[field].append(default)
+				var type: int = field_info[field][0]
+				if type == TYPE_REAL:
+					precisions[field].append(1) # ad hoc default
 	
 	for field in _column_map:
 		_count_cells += 1
 		var column: int = _column_map[field]
 		var raw_value: String = line_array[column]
+		var type: int = field_info[field][0]
 		var value # untyped
-		var type: String = field_info[field][0]
-		if !raw_value: # blank cell
-			value = field_info[field][3] # default (already processed)
-			if type == "REAL":
-				precisions[field].append(1) # assume "0"; not meant to work
-		else:
+		var precision := 1
+		if raw_value:
 			_count_non_null += 1
 			var prefix: String = field_info[field][1]
 			var unit: String = field_info[field][2]
 			value = _get_processed_value(raw_value, type, prefix, unit, true) # untyped
-			if type == "REAL":
-				var precision: int = value[1]
+			if type == TYPE_REAL: # function return is array [value, precision]
+				precision = value[1]
 				value = value[0]
-				precisions[field].append(precision) # FIXME: mod row
-
-		# set value
-		var table_column: Array = table[field]
-		if table_column.size() == row: # FIXME: mod row
-			table_column.resize(row + 1)
-		table_column[row] = value
+		else: # blank cell
+			value = field_info[field][3] # default (already processed)
+		
+		# set table value, precision & wiki
+		if is_mod:
+			table[field][row] = value
+		else:
+			table[field].append(value)
+		if type == TYPE_REAL:
+			if is_mod:
+				precisions[field][row] = precision
+			else:
+				precisions[field].append(precision)
 		if _enable_wiki and field == _wiki:
 			assert(row_name)
 			_wiki_titles[row_name] = value
 
 
-func _get_processed_value(raw_value: String, type: String, prefix: String, unit: String,
+func _get_processed_value(raw_value: String, type: int, prefix: String, unit: String,
 		include_precision := false):
 	# return is appropriate type, excpet INT converted in _postprocess_ints()
-	# if include_precision and type == 'REAL', returns [float_value, precision]
+	# if include_precision and type == TYPE_REAL, returns [float_value, precision]
 	if raw_value.begins_with("\"") and raw_value.ends_with("\""):
 		raw_value = raw_value.lstrip("\"").rstrip("\"")
 	raw_value = raw_value.lstrip("'")
 	raw_value = raw_value.lstrip("_")
 	match type:
-		"BOOL":
+		TYPE_BOOL:
 			if raw_value == "x" or raw_value.matchn("true"):
 				return true
 			else:
 				assert(raw_value == "" or raw_value.matchn("false"))
 				return false
-		"STRING":
+		TYPE_STRING:
 			if !raw_value:
 				return ""
 			raw_value = raw_value.c_unescape() # does not work for "\uXXXX"; Godot issue #38716
@@ -351,7 +389,7 @@ func _get_processed_value(raw_value: String, type: String, prefix: String, unit:
 			if prefix:
 				return prefix + raw_value
 			return raw_value
-		"REAL":
+		TYPE_REAL:
 			var value: float
 			var precision := -1
 			if !raw_value:
@@ -372,7 +410,7 @@ func _get_processed_value(raw_value: String, type: String, prefix: String, unit:
 			if include_precision:
 				return [value, precision]
 			return value
-		"INT":
+		TYPE_INT:
 			# keep as string for now; we'll convert in _postprocess_ints()
 			if raw_value and prefix: # mainly for enumeration
 				return prefix + raw_value # e.g., 'PLANET_' + 'EARTH'
@@ -388,7 +426,7 @@ func _postprocess_ints() -> void:
 		var field_info: Dictionary = _field_infos[table_name]
 		var table: Dictionary = _tables[table_name]
 		for field in field_info:
-			if field_info[field][0] != "INT": # Type
+			if field_info[field][0] != TYPE_INT: # type
 				continue
 			var preprocess_column: Array = table[field]
 			var size := preprocess_column.size()
