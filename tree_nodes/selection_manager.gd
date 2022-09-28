@@ -207,6 +207,7 @@ func get_name() -> String:
 
 
 func get_gui_name() -> String:
+	# return is already translated
 	return selection.get_gui_name() if selection else ""
 
 

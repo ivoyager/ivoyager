@@ -41,17 +41,17 @@ extends Node
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 #
 # Note: there is some old rpc (remote player call) code here that is not
-# currently maintained. This will be maintained again with Godot 4.0.
+# currently maintained. This will be fixed and maintained again with Godot 4.0.
 
 signal speed_changed()
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
 
-enum { # date_format
-	DATE_FORMAT_Y_M_D, # Year, Month (1 to 12), Day (1 to 31)
-	DATE_FORMAT_Y_M_D_Q, # Quarter (1 to 4)
-	DATE_FORMAT_Y_M_D_Q_YQ, # YQ = Y * 4 + (Q - 1), always increases
-	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM = Y * 12 + (M - 1), always increases
+enum { # date_format; first three are alwyas Year, Month, Day
+	DATE_FORMAT_Y_M_D, # Year (2000...), Month (1 to 12), Day (1 to 31)
+	DATE_FORMAT_Y_M_D_Q, # Q, Quarter (1 to 4)
+	DATE_FORMAT_Y_M_D_Q_YQ, # YQ, increasing quarter ticker = Y * 4 + (Q - 1)
+	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM, increasing month ticker = Y * 12 + (M - 1)
 }
 
 const SECOND := IVUnits.SECOND # sim_time conversion

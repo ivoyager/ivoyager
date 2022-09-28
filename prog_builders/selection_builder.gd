@@ -63,6 +63,7 @@ func build_body_selection(body: IVBody) -> IVSelection:
 	selection.spatial = body
 	selection.body = body
 	selection.name = body.name
+	selection.gui_name = tr(body.name)
 	selection.texture_2d = body.texture_2d
 	selection.texture_slice_2d = body.texture_slice_2d
 	set_view_parameters_from_body(selection, body)

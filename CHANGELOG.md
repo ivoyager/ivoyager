@@ -14,6 +14,7 @@ Requires non-Git-tracked **ivoyager_assets-0.0.10**; find in [ivoyager releases]
 
 ### Added
 * Optional 'Prefix' header row in table.tsv import. Allows reduction of 'PLANET_MERCURY', 'PLANET_VENUS', 'PLANET_EARTH' to 'MERCURY', 'VENUS', 'EARTH' by setting Prefix to 'PLANET_'.
+* Data tables imported via IVGlobal.table_import_mods are 'mod tables'. These modify existing tables and can add columns or rows or overwrite existing values.
 
 ### Changed
 * [Breaks API!] Renamed the core selection object ('IVSelectionItem' to 'IVSelection') and redesigned to be dynamically generated and more easily extensible. IVSelection is a wrapper object that can be extended to hold anything; IVSelectionManager keeps history of previous selections. (In core ivoyager we only select IVBody instances.)

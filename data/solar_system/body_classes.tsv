@@ -1,6 +1,6 @@
 name	en.wikipedia
 Type	STRING
-Prefix/CLASS_	
+Prefix/BODY_CLASS_	
 G_STAR	G-type_main-sequence_star
 TERRESTRIAL_PLANET	Terrestrial_planet
 GAS_GIANT	Gas_giant
@@ -11,4 +11,5 @@ C_ASTEROID	C-type_asteroid
 S_ASTEROID	S-type_asteroid
 M_ASTEROID	M-type_asteroid
 COMET	Comet
+SPACECRAFT	Spacecraft
 #	

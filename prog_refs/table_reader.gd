@@ -27,7 +27,8 @@ class_name IVTableReader
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
-#    table_types[table_name][column_field] -> Type string in table
+#    tables["prefix_" + table_name] -> 'name' column Prefix, if exists
+#    tables[<PREFIX_>] -> table_name; eg, tables["PLANET_"] = "planets"
 #    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
@@ -58,6 +59,12 @@ func _project_init() -> void:
 
 func get_n_rows(table: String) -> int:
 	return _tables["n_" + table]
+
+
+func get_names_prefix(table: String) -> int:
+	# E.g., 'PLANET_' in planets.tsv.
+	# Prefix must be specified for the table's 'name' column.
+	return _tables["prefix_" + table]
 
 
 func get_row_name(table: String, row: int) -> String:

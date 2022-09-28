@@ -31,9 +31,10 @@ extends Spatial
 # Project Template extension projects (https://github.com/ivoyager). To change
 # this, see notes in ivoyager/singletons/project_builder.gd.
 #
-# We use origin shifting to prevent float "imprecision shakes" caused by
-# solar system scale (e.g., when way out at Pluto). To do this, the camera
-# shifts this node's (or substitute root node's) translation every frame.
+# We use origin shifting to prevent 'imprecision shakes' caused by vast scale
+# differences, e.g, when viewing a small body at 1e9 km from the sun. To do
+# this, the camera adjusts the translation of this node (or substitute root
+# node) each frame.
 #
 # 'persist' dictionary is not used by ivoyager code but is available for
 # game save persistence in extension projects. It can hold Godot built-ins,

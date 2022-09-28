@@ -28,12 +28,13 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.13-DEV"
-const IVOYAGER_VERSION_YMD := 20220815
+const IVOYAGER_VERSION_YMD := 20220928
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
 signal translations_imported() # IVTranslationImporter; useful for boot screen
+signal data_tables_imported() # IVTableImporter
 signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
 signal project_inited() # IVProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added
@@ -175,14 +176,18 @@ var table_import := {
 	stars = "res://ivoyager/data/solar_system/stars.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
-	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
-	classes = "res://ivoyager/data/solar_system/classes.tsv",
-	models = "res://ivoyager/data/solar_system/models.tsv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
+	models = "res://ivoyager/data/solar_system/models.tsv",
+	lights = "res://ivoyager/data/solar_system/lights.tsv",
 }
+var table_import_mods := {} # add columns or rows or modify cells in table_import tables
+
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
+
+var body_tables := ["stars", "planets", "moons"] # table names; order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelBuilder first looks for an existing

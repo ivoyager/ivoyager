@@ -19,17 +19,14 @@
 # *****************************************************************************
 class_name IVUnits
 
-# Godot issue #37529 prevents localization of global class_name to const. Use:
-# const units := preload("res://ivoyager/static/units.gd")
+# This class defines derived units from base SI units in si_base_units.gd. You
+# should need it only when converting to and from simulator values: i.e., data
+# import, GUI display, and specifying quantities in code.
 #
-# This class defines units from base SI units in universe.gd. You should need
-# it only when converting to and from simulator values: e.g., data import,
-# specifying quantities in class headers (e.g., a mass or radius cutoff),
-# and GUI display (see program_refs/qty_txt_converter.gd for generating
-# quantity strings).
-# WE SHOULD NEVER NEED TO CONVERT IN OUR INTERNAL PROCESSING!
+# WE SHOULD NEVER NEED TO CONVERT UNITS IN OUR INTERNAL PROCESSING!
 #
-# See additional comments in universe.gd.
+# See prog_refs/quantity_formatter.gd for generating quantity strings
+
 
 # SI base units - all sim units derived from these!
 const SECOND := SIBaseUnits.SECOND
@@ -191,11 +188,21 @@ const MULTIPLIERS := {
 	# gravitational constant
 	"m^3/(kg s^2)" : METER * METER * METER / (KG * SECOND * SECOND),
 	"km^3/(kg s^2)" : KM * KM * KM / (KG * SECOND * SECOND),
+	# information (base 10; KiB, MiB, etc. would take some coding...)
+	"bit" : 1.0,
+	"b" : 1.0,
+	"kb" : 1e3,
+	"Mb" : 1e6,
+	"Gb" : 1e9,
+	"Tb" : 1e12,
+	"Byte" : 8.0,
+	"B" : 8.0,
+	"kB" : 8e3,
+	"MB" : 8e6,
+	"GB" : 8e9,
+	"TB" : 8e12,
 	# misc
 	"deg/Cy^2" : DEG / (CENTURY * CENTURY),
-	"flops" : 1.0 / SECOND,
-	"FLOPS" : 1.0 / SECOND,
-	"bits" : 1.0,
 }
 
 const FUNCTIONS := {
