@@ -26,6 +26,9 @@ class_name IVModelBuilder
 # visible at a give time (however, a small value helps on low end systems).
 
 const files := preload("res://ivoyager/static/files.gd")
+
+const DPRINT := false
+
 const METER := IVUnits.METER
 
 var max_lazy := 20
@@ -78,6 +81,7 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 
 
 func _preregister_files() -> void:
+	assert(DPRINT and print("ModelBuilder searching for model files...") or true)
 	var models_search := IVGlobal.models_search
 	var maps_search := IVGlobal.maps_search
 	for table in model_tables:
@@ -89,6 +93,7 @@ func _preregister_files() -> void:
 			var path := files.find_resource_file(models_search, file_prefix)
 			if path:
 				_model_paths[file_prefix] = path
+			assert(DPRINT and prints(file_prefix, path if path else "(NOT FOUND)") or true)
 			for suffix in map_search_suffixes:
 				var file_match := file_prefix + (suffix as String)
 				path = files.find_resource_file(maps_search, file_match)
@@ -235,12 +240,12 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 	var basis := Basis()
 	var path: String = _model_paths.get(file_prefix, "")
 	if path: # has model file
-		var model_scale := 1.0
+		var model_scale := METER
 		var asset_row := _table_reader.get_row(path.get_file())
 		if asset_row != -1:
 			model_scale = _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
-		if model_scale != 1.0:
-			basis = basis.scaled(model_scale * Vector3.ONE)
+			model_scale *= METER
+		basis = basis.scaled(model_scale * Vector3.ONE)
 	else: # constructed ellipsoid model
 		assert(!is_nan(m_radius) and !is_inf(m_radius))
 		if !is_nan(e_radius) and !is_inf(e_radius):

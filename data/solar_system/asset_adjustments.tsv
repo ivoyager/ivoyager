@@ -1,8 +1,19 @@
 name	longitude_offset	model_scale
 Type	REAL	REAL
-Unit	deg	m
+Unit	deg	
 # hard-coded defaults:	0	1
 Mars.albedo.noaa.CWreprocessed.4096.jpg	180	
+Arrokoth.glb		1
+Bennu.1_1.glb		1
+Deimos.1_1000.glb		1000
+Eros.1_10.glb		10
+Hyperion.1_1000.glb		1000
+ISS.glb		1
+Itokawa.1_1.glb		1
+Mimas.1_1000.glb		1000
+Phobos.1_1000.glb		1000
+Vesta.1_100.glb		100
+# DEPRECIATE 0.0.10 assets below		
 Deimos.4000_1_1000.glb		1000
 Eros.1500_1_100.glb		100
 Hyperion.4000_1_1000.glb		1000
