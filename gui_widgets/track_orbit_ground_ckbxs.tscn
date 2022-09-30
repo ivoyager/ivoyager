@@ -9,27 +9,24 @@ mouse_filter = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="TrackLabel" type="Label" parent="."]
 margin_top = 13.0
-margin_right = 138.0
+margin_right = 197.0
 margin_bottom = 27.0
-text = "LABEL_TRACK_COLON"
+text = "LABEL_CAMERA_TRACK_COLON"
 
 [node name="Ground" type="CheckBox" parent="."]
-margin_left = 142.0
-margin_right = 289.0
+margin_left = 201.0
+margin_right = 348.0
 margin_bottom = 40.0
 hint_tooltip = "HINT_TRACK_GROUND"
 action_mode = 0
 text = "BUTTON_GROUND"
 
 [node name="Orbit" type="CheckBox" parent="."]
-margin_left = 293.0
-margin_right = 421.0
+margin_left = 352.0
+margin_right = 480.0
 margin_bottom = 40.0
 hint_tooltip = "HINT_TRACK_ORBIT"
 action_mode = 0

@@ -134,10 +134,11 @@ var section_data := [ # one array element per header
 				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "K"]],
 		["LABEL_ABSOLUTE_MAGNITUDE", "body/characteristics/absolute_magnitude", NO_ARGS, AS_IS],
 		["LABEL_LUMINOSITY", "body/characteristics/luminosity", NO_ARGS,
-				QTY_TXT, [IVQuantityFormatter.UNIT, "W"]],
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "W"]],
 		["LABEL_COLOR_B_V", "body/characteristics/color_b_v", NO_ARGS, AS_IS],
 		["LABEL_METALLICITY", "body/characteristics/metallicity", NO_ARGS, AS_IS],
-		["LABEL_AGE", "body/characteristics/age", NO_ARGS, QTY_TXT, [IVQuantityFormatter.UNIT, "yr"]],
+		["LABEL_AGE", "body/characteristics/age", NO_ARGS,
+				QTY_TXT_W_PRECISION, [IVQuantityFormatter.UNIT, "yr"]],
 		
 		
 		
