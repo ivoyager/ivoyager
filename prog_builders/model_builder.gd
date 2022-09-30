@@ -33,7 +33,7 @@ const METER := IVUnits.METER
 
 var max_lazy := 20
 var model_too_far_radius_multiplier := 1e3
-var model_tables := ["stars", "planets", "moons"]
+var model_tables := ["stars", "planets", "moons", "spacecrafts"]
 var map_search_suffixes := [".albedo", ".emission"]
 var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6

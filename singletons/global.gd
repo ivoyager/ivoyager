@@ -27,8 +27,8 @@ extends Node
 # Containers (arrays and dictionaries) are never replaced, so it is safe and
 # good practice to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.13"
-const IVOYAGER_VERSION_YMD := 20220928
+const IVOYAGER_VERSION := "0.0.14-DEV"
+const IVOYAGER_VERSION_YMD := 20220930
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -173,21 +173,22 @@ var shared_resources := {
 
 # Data table import
 var table_import := {
-	stars = "res://ivoyager/data/solar_system/stars.tsv",
-	planets = "res://ivoyager/data/solar_system/planets.tsv",
-	moons = "res://ivoyager/data/solar_system/moons.tsv",
-	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
-	models = "res://ivoyager/data/solar_system/models.tsv",
+	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
+	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	models = "res://ivoyager/data/solar_system/models.tsv",
+	moons = "res://ivoyager/data/solar_system/moons.tsv",
+	planets = "res://ivoyager/data/solar_system/planets.tsv",
+	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
+	stars = "res://ivoyager/data/solar_system/stars.tsv",
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
 
-var body_tables := ["stars", "planets", "moons"] # table names; order matters!
+var body_tables := ["stars", "planets", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelBuilder first looks for an existing
