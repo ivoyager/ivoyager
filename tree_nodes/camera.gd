@@ -37,7 +37,7 @@ extends Camera
 signal move_started(to_body, is_camera_lock)
 signal parent_changed(new_body)
 signal range_changed(new_range)
-signal latitude_longitude_changed(lat_long, is_ecliptic)
+signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
@@ -438,7 +438,7 @@ func _process_move_in_progress(delta: float) -> void:
 		_lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
 		_lat_long = selection.get_latitude_longitude(gui_translation)
-	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic)
+	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic, selection)
 
 
 func _do_camera_handoff() -> void:
@@ -531,7 +531,7 @@ func _process_at_target(delta: float) -> void:
 		lat_long = selection.get_latitude_longitude(_transform.origin)
 	if _lat_long != lat_long:
 		_lat_long = lat_long
-		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
+		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
 
 
 func _process_move_action(delta: float) -> void:
@@ -715,7 +715,7 @@ func _send_gui_refresh() -> void:
 		lat_long = math.get_latitude_longitude(global_transform.origin)
 	else:
 		lat_long = selection.get_latitude_longitude(translation)
-	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic)
+	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
 
 
 func _settings_listener(setting: String, value) -> void:

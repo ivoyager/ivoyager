@@ -27,8 +27,8 @@ const math := preload("res://ivoyager/static/math.gd")
 
 enum { # case_type
 	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 Kilohertz", "1.00 Megahertz"
-	CASE_LOWER, # does not modify exp_str or unit symbol
-	CASE_UPPER, # does not modify exp_str or unit symbol
+	CASE_LOWER, # does not modify exp_str, unit symbols, N, S, E, W (maybe others)
+	CASE_UPPER, # does not modify exp_str or unit symbols (maybe others)
 }
 
 enum { # num_type
@@ -63,6 +63,12 @@ enum { # option_type for number_option()
 	# misc
 	LATITUDE,
 	LONGITUDE,
+}
+
+enum { # lat_long_type
+	N_S_E_W,
+	LAT_LONG,
+	PITCH_YAW,
 }
 
 const LOG_OF_10 := log(10.0)
@@ -312,38 +318,58 @@ func number_option(x: float, option_type: int, unit := "", precision := 3, num_t
 	return String(x)
 
 
-func latitude_longitude(lat_long: Vector2, decimal_pl := 0, long_form := false,
+func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
+		long_form := false, case_type := CASE_MIXED) -> String:
+	return latitude(lat_long[0], decimal_pl, lat_long_type, long_form, case_type) + " " \
+			+ longitude(lat_long[1], decimal_pl, lat_long_type, long_form, case_type)
+
+
+func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	return latitude(lat_long[0], decimal_pl, long_form, case_type) + " " \
-			+ longitude(lat_long[1], decimal_pl, long_form, case_type)
-
-
-func latitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+	x = rad2deg(x)
+	x = wrapf(x, -180.0, 180.0)
 	var suffix: String
-	if x > -0.0001:
-		suffix = tr("TXT_NORTH") if long_form else tr("TXT_NORTH_SHORT")
-	else:
-		suffix = tr("TXT_SOUTH") if long_form else tr("TXT_SOUTH_SHORT")
-	if case_type == CASE_LOWER:
-		suffix = suffix.to_lower()
-	elif case_type == CASE_UPPER:
-		suffix = suffix.to_upper()
-	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
-	return (num_str + suffix).lstrip("-")
+	if lat_long_type == N_S_E_W:
+		if x > -0.0001: # prefer N if nearly 0 after conversion
+			suffix = tr("TXT_NORTH") if long_form else tr("TXT_NORTH_SHORT")
+		else:
+			suffix = tr("TXT_SOUTH") if long_form else tr("TXT_SOUTH_SHORT")
+		x = abs(x)
+	elif lat_long_type == LAT_LONG:
+		suffix = tr("TXT_LATITUDE") if long_form else tr("TXT_LATITUDE_SHORT")
+	else: # PITCH_YAW
+		suffix = tr("TXT_PITCH")
+	if lat_long_type != N_S_E_W or long_form: # don't lower case N, S
+		if case_type == CASE_LOWER:
+			suffix = suffix.to_lower()
+		elif case_type == CASE_UPPER:
+			suffix = suffix.to_upper()
+	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
 
 
-func longitude(x: float, decimal_pl := 0, long_form := false, case_type := CASE_MIXED) -> String:
+func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	x = rad2deg(x)
 	var suffix: String
-	if x > -0.0001 and x < PI - 0.0001: # nearly 0 is E; nearly PI is W
-		suffix = tr("TXT_EAST") if long_form else tr("TXT_EAST_SHORT")
-	else:
-		suffix = tr("TXT_WEST") if long_form else tr("TXT_WEST_SHORT")
-	if case_type == CASE_LOWER:
-		suffix = suffix.to_lower()
-	elif case_type == CASE_UPPER:
-		suffix = suffix.to_upper()
-	var num_str := number_unit(x, "deg", decimal_pl, NUM_DECIMAL_PL, long_form, case_type)
-	return (num_str + suffix).lstrip("-")
+	if lat_long_type == N_S_E_W:
+		x = wrapf(x, -180.0, 180.0)
+		if x > -0.0001 and x < 179.9999: # nearly 0 is E; nearly 180 is W
+			suffix = tr("TXT_EAST") if long_form else tr("TXT_EAST_SHORT")
+		else:
+			suffix = tr("TXT_WEST") if long_form else tr("TXT_WEST_SHORT")
+		x = abs(x)
+	elif lat_long_type == LAT_LONG:
+		x = wrapf(x, 0.0, 360.0)
+		suffix = tr("TXT_LONGITUDE") if long_form else tr("TXT_LONGITUDE_SHORT")
+	else: # PITCH_YAW
+		x = wrapf(x, -180.0, 180.0)
+		suffix = tr("TXT_YAW")
+	if lat_long_type != N_S_E_W or long_form: # don't lower case E, W
+		if case_type == CASE_LOWER:
+			suffix = suffix.to_lower()
+		elif case_type == CASE_UPPER:
+			suffix = suffix.to_upper()
+	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
 
 
 func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:

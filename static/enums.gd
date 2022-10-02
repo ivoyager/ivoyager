@@ -117,9 +117,9 @@ enum BodyFlags {
 	IS_GAS_GIANT = 1 << 23,
 	NO_ORBIT = 1 << 24, # Hill Sphere is smaller than body radius
 	NO_STABLE_ORBIT = 1 << 25, # Hill Sphere / 3 is smaller than body radius
-#	APPROX_RADIUS = 1 << 24, # e.g., display as "~1 km" (TODO)
-#	APPROX_GM = 1 << 25,
-#
+	USE_CARDINAL_DIRECTIONS = 1 << 26,
+	USE_PITCH_YAW = 1 << 27,
+	
 #   reserved to 1 << 39,
 #
 #	Higher bits safe for extension project.

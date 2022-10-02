@@ -23,9 +23,18 @@ extends Label
 #     "latitude_longitude_changed"
 #     "camera_lock_changed"
 
+
+const CASE_LOWER := IVQuantityFormatter.CASE_LOWER
+const N_S_E_W := IVQuantityFormatter.N_S_E_W
+const LAT_LONG := IVQuantityFormatter.LAT_LONG
+const PITCH_YAW := IVQuantityFormatter.PITCH_YAW
+const USE_CARDINAL_DIRECTIONS := IVEnums.BodyFlags.USE_CARDINAL_DIRECTIONS
+const USE_PITCH_YAW := IVEnums.BodyFlags.USE_PITCH_YAW
+
+
 var _camera: Camera
 
-onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+onready var _qf: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 
 
 func _ready():
@@ -48,8 +57,18 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 
-func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool) -> void:
-	var new_text := _quantity_formatter.latitude_longitude(lat_long, 1)
+func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool,
+		selection: IVSelection) -> void:
+	var lat_long_type := N_S_E_W
+	if !is_ecliptic:
+		var flags := selection.get_flags()
+		if flags & USE_CARDINAL_DIRECTIONS:
+			lat_long_type = N_S_E_W
+		elif flags & USE_PITCH_YAW:
+			lat_long_type = PITCH_YAW
+		else:
+			lat_long_type = LAT_LONG
+	var new_text := _qf.latitude_longitude(lat_long, 1, lat_long_type) # , false, CASE_LOWER)
 	if is_ecliptic:
 		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
 	text = new_text

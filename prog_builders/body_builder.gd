@@ -158,9 +158,11 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 		flags |= BodyFlags.PROXY_STAR_SYSTEM
 	if flags & BodyFlags.IS_STAR:
 		flags |= BodyFlags.NEVER_SLEEP
+		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
 	if flags & BodyFlags.IS_PLANET:
 		flags |= BodyFlags.IS_STAR_ORBITING
 		flags |= BodyFlags.NEVER_SLEEP
+		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
 	var hydrostatic_equilibrium: int = _table_reader.get_int(_table_name, "hydrostatic_equilibrium", _row)
 	if hydrostatic_equilibrium >= IVEnums.Confidence.CONFIDENCE_PROBABLY:
 		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
@@ -168,6 +170,9 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 		if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
 				or _table_reader.get_bool(_table_name, "force_navigator", _row):
 			flags |= BodyFlags.IS_NAVIGATOR_MOON
+		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
+	if flags & BodyFlags.IS_SPACECRAFT:
+		flags |= BodyFlags.USE_PITCH_YAW
 	body.flags = flags
 
 
