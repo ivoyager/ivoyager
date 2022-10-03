@@ -31,7 +31,7 @@ var _settings: Dictionary = IVGlobal.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _huds_manager: IVHUDsManager
-var _projection_surface: Control
+var _world_controller: Control
 var _orbit_ellipse_shader: Shader
 var _orbit_mesh_arrays := []
 
@@ -40,7 +40,7 @@ func _project_init() -> void:
 	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
 	_huds_manager = IVGlobal.program.HUDsManager
-	_projection_surface = IVGlobal.program.ProjectionSurface
+	_world_controller = IVGlobal.program.WorldController
 	_orbit_ellipse_shader = IVGlobal.shared_resources.orbit_ellipse_shader
 	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
 
@@ -51,7 +51,7 @@ func add_label(body: IVBody) -> void:
 	hud_label.set_body_symbol(body.get_symbol())
 	hud_label.hide()
 	body.hud_label = hud_label
-	_projection_surface.add_child(hud_label)
+	_world_controller.add_child(hud_label)
 
 
 func add_orbit(body: IVBody) -> void:

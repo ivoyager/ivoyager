@@ -71,7 +71,7 @@ var _mwheel_turning := 0.0
 var _move_pressed := VECTOR3_ZERO
 var _rotate_pressed := VECTOR3_ZERO
 
-onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
+onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
@@ -89,9 +89,9 @@ func _ready():
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
-	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
-	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
+	_world_controller.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
+	_world_controller.connect("mouse_dragged", self, "_on_mouse_dragged")
+	_world_controller.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:

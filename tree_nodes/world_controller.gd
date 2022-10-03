@@ -1,4 +1,4 @@
-# projection_surface.gd
+# world_controller.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,17 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVProjectionSurface
+class_name IVWorldController
 extends Control
 
-# Receives mouse events in the 3D world area, sets cursor shape, and
-# interprets mouse drags, clicks and wheel turn.
+# Receives mouse events in the 3D world area, sets cursor shape and interprets
+# mouse drags, clicks and wheel turn.
 # Parent control for HUD labels or similar 2D projections of 3D objects.
 # All children are freed on exit or game load.
 #
-# IVGlobal.world_targeting has elements:
-#  [0] mouse_position: Vector2
-#  [1] veiwport_height: float
+# Inits IVGlobal.world_targeting, which has elements:
+#  [0] mouse_position: Vector2 (this object sets)
+#  [1] veiwport_height: float (this object sets)
 #  [2] camera: Camera (camera sets)
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves)
@@ -59,6 +59,11 @@ func _ready() -> void:
 
 
 func _clear() -> void:
+	_world_targeting[2] = null
+	_world_targeting[4] = null
+	_world_targeting[5] = INF
+	_drag_start = Vector2.ZERO
+	_drag_segment_start = Vector2.ZERO
 	for child in get_children():
 		child.queue_free()
 
