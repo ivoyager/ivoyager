@@ -224,9 +224,7 @@ func _on_process(_delta: float) -> void:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
 	var hud_label_visible := _show_label and hud_dist_ok and hud_label and position_2d != VECTOR2_NULL
-	if hud_label_visible:
-		# position 2D Label before 3D translation!
-		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
+
 	var time: float = _times[0]
 	if orbit:
 		translation = orbit.get_position(time)
@@ -507,9 +505,6 @@ func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 		if hud_orbit: # not a child of this node!
 			_hud_orbit_visible = false
 			hud_orbit.visible = false
-		if hud_label: # not a child of this node!
-			_hud_label_visible = false
-			hud_label.visible = false
 	else:
 		is_asleep = false
 		set_process(true) # will show on next _process()

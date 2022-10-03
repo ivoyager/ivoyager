@@ -22,15 +22,12 @@ extends Control
 
 # Receives mouse events in the 3D world area, sets cursor shape and interprets
 # mouse drags, clicks and wheel turn.
-# Parent control for HUD labels or similar 2D projections of 3D objects.
-# All children are freed on exit or game load.
-#
 # Inits IVGlobal.world_targeting, which has elements:
 #  [0] mouse_position: Vector2 (this object sets)
 #  [1] veiwport_height: float (this object sets)
 #  [2] camera: Camera (camera sets)
 #  [3] camera_fov: float (camera sets)
-#  [4] mouse_target: Object (potential targets set/unset themselves)
+#  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
@@ -64,8 +61,6 @@ func _clear() -> void:
 	_world_targeting[5] = INF
 	_drag_start = Vector2.ZERO
 	_drag_segment_start = Vector2.ZERO
-	for child in get_children():
-		child.queue_free()
 
 
 func _process(_delta: float) -> void:

@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-extends Label
+extends Label3D
 class_name IVHUDLabel
 
 # IVBody sets its own IVHUDLabel visibility during _process().
@@ -34,8 +34,11 @@ func _ready() -> void:
 	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	_name_font = IVGlobal.fonts.hud_names
 	_symbol_font = IVGlobal.fonts.hud_symbols
-	align = ALIGN_CENTER
-	valign = VALIGN_CENTER
+	horizontal_alignment = ALIGN_CENTER
+	vertical_alignment = VALIGN_CENTER
+	billboard = SpatialMaterial.BILLBOARD_ENABLED
+	fixed_size = true
+	pixel_size = 0.0006
 
 
 func set_body_name(body_name: String) -> void:
@@ -49,7 +52,7 @@ func set_body_symbol(body_symbol: String) -> void:
 func _on_show_huds_changed() -> void:
 	if _huds_manager.show_names:
 		text = _body_name
-		set("custom_fonts/font", _name_font)
+		font = _name_font
 	elif _huds_manager.show_symbols:
 		text = _body_symbol
-		set("custom_fonts/font", _symbol_font)
+		font = _symbol_font

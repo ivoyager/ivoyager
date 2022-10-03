@@ -51,7 +51,7 @@ func add_label(body: IVBody) -> void:
 	hud_label.set_body_symbol(body.get_symbol())
 	hud_label.hide()
 	body.hud_label = hud_label
-	_world_controller.add_child(hud_label)
+	body.add_child(hud_label)
 
 
 func add_orbit(body: IVBody) -> void:
