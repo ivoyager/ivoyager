@@ -20,28 +20,42 @@
 class_name IVProjectionSurface
 extends Control
 
-# Receives mouse events in the 3D window area, sets cursor shape, and
-# interprets/signals mouse drags, clicks and wheel turn.
+# Receives mouse events in the 3D world area, sets cursor shape, and
+# interprets mouse drags, clicks and wheel turn.
 # Parent control for HUD labels or similar 2D projections of 3D objects.
 # All children are freed on exit or game load.
+#
+# IVGlobal.world_targeting has elements:
+#  [0] mouse_position: Vector2
+#  [1] veiwport_height: float
+#  [2] camera: Camera (camera sets)
+#  [3] camera_fov: float (camera sets)
+#  [4] mouse_target: Object (potential targets set/unset themselves)
+#  [5] mouse_target_dist: float (potential targets set)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
-var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+
+var _world_targeting: Array = IVGlobal.world_targeting
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 
 
 func _project_init() -> void:
-	pass
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
+	var viewport := get_viewport()
+	viewport.connect("size_changed", self, "_on_viewport_size_changed")
+	_world_targeting.resize(6)
+	_world_targeting[0] = Vector2.ZERO
+	_world_targeting[1] = viewport.size.y
+	_world_targeting[5] = INF
 
 
 func _clear() -> void:
@@ -52,7 +66,7 @@ func _clear() -> void:
 func _process(_delta: float) -> void:
 	if _drag_start:
 		set_default_cursor_shape(CURSOR_MOVE)
-	elif _visuals_helper.mouse_target: # there is a target object under the mouse!
+	elif _world_targeting[4]: # there is a target object under the mouse!
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 	else:
 		set_default_cursor_shape(CURSOR_ARROW)
@@ -79,16 +93,15 @@ func _gui_input(input_event: InputEvent) -> void:
 				_drag_segment_start = _drag_start
 			else: # end of drag or button-up after click selection
 				if _drag_start == event.position: # was a mouse click!
-					var target := _visuals_helper.mouse_target
-					if target:
-						emit_signal("mouse_target_clicked", target, event.button_mask,
-								_get_key_modifier_mask(event))
+					if _world_targeting[4]: # mouse_target
+						emit_signal("mouse_target_clicked", _world_targeting[4],
+								event.button_mask, _get_key_modifier_mask(event))
 				_drag_start = Vector2.ZERO
 				_drag_segment_start = Vector2.ZERO
 	
 	elif event is InputEventMouseMotion:
 		var mouse_pos: Vector2 = event.position
-		_visuals_helper.mouse_position = mouse_pos
+		_world_targeting[0] = mouse_pos
 		if _drag_segment_start: # accumulated mouse drag motion
 			var drag_vector := mouse_pos - _drag_segment_start
 			_drag_segment_start = mouse_pos
@@ -109,3 +122,8 @@ func _get_key_modifier_mask(event: InputEventMouse) -> int:
 	if event.command:
 		mask |= KEY_MASK_CMD
 	return mask
+
+
+func _on_viewport_size_changed() -> void:
+	_world_targeting[1] = get_viewport().size.y
+

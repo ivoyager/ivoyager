@@ -124,7 +124,7 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 func get_global_origin() -> Vector3:
 	if !spatial:
 		return Vector3.ZERO
-	return spatial.global_transform.origin
+	return spatial.global_translation
 
 
 func get_flags() -> int:

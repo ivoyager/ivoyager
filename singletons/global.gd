@@ -110,6 +110,7 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
+var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
 var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity

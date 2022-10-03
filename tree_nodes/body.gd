@@ -97,7 +97,6 @@ var is_asleep := false
 var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
 var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
 var _show_orbit := true
 var _show_label := true
@@ -107,6 +106,7 @@ var _hud_orbit_visible := false
 var _hud_label_visible := false
 var _is_visible := false
 
+var _world_targeting: Array = IVGlobal.world_targeting
 onready var _tree := get_tree()
 
 
@@ -189,25 +189,37 @@ func _process(delta: float) -> void:
 
 
 func _on_process(_delta: float) -> void:
-	var is_mouse_target := false
-	var global_translation := global_transform.origin
-	var camera_dist := _visuals_helper.get_distance_to_camera(global_translation)
-	var position_2d := _visuals_helper.unproject_position_in_front(global_translation)
-	if position_2d != VECTOR2_NULL: # not behind
-		var mouse_dist := position_2d.distance_to(_visuals_helper.mouse_position)
+	# Determine if this body is mouse target.
+	# _world_targeting:
+	#  [0] mouse_position: Vector2
+	#  [1] veiwport_height: float
+	#  [2] camera: Camera
+	#  [3] camera_fov: float
+	#  [4] mouse_target: Object
+	#  [5] mouse_target_dist: float
+	var is_in_mouse_click_radius := false
+	var camera: Camera = _world_targeting[2]
+	var camera_dist := global_translation.distance_to(camera.global_translation)
+	var position_2d := VECTOR2_NULL
+	if !camera.is_position_behind(global_translation):
+		position_2d = camera.unproject_position(global_translation)
+		var mouse_dist := position_2d.distance_to(_world_targeting[0])
 		var click_radius := min_click_radius
-		var divisor: float = _visuals_helper.camera_fov * camera_dist # fov * dist
+		var divisor: float = _world_targeting[3] * camera_dist # fov * dist
 		if divisor > 0.0:
-			var screen_radius: float = 55.0 * m_radius * _visuals_helper.veiwport_height / divisor
+			var screen_radius: float = 55.0 * m_radius * _world_targeting[1] / divisor
 			if click_radius < screen_radius:
 				click_radius = screen_radius
 		if mouse_dist < click_radius:
-			is_mouse_target = true
-	if is_mouse_target:
-		_visuals_helper.set_mouse_target(self, camera_dist)
-	else:
-		_visuals_helper.remove_mouse_target(self)
-	var hud_dist_ok := camera_dist > min_hud_dist
+			is_in_mouse_click_radius = true
+	if is_in_mouse_click_radius:
+		if camera_dist < _world_targeting[5]: # make self the mouse target
+			_world_targeting[4] = self
+			_world_targeting[5] = camera_dist
+	elif _world_targeting[4] == self: # remove self as mouse target
+		_world_targeting[4] = null
+		_world_targeting[5] = INF
+	var hud_dist_ok := camera_dist > min_hud_dist # not too close
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
@@ -489,7 +501,9 @@ func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 		set_process(false)
 		_is_visible = false
 		visible = false
-		_visuals_helper.remove_mouse_target(self)
+		if _world_targeting[4] == self: # remove self as mouse target
+			_world_targeting[4] = null
+			_world_targeting[5] = INF
 		if hud_orbit: # not a child of this node!
 			_hud_orbit_visible = false
 			hud_orbit.visible = false

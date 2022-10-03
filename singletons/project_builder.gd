@@ -137,7 +137,6 @@ var prog_refs := {
 	_TableReader_ = IVTableReader,
 	_MainMenuManager_ = IVMainMenuManager,
 	_SleepManager_ = IVSleepManager,
-	_VisualsHelper_ = IVVisualsHelper,
 	_WikiManager_ = IVWikiManager,
 }
 
@@ -165,7 +164,7 @@ var gui_nodes := {
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_ProjectionSurface_ = IVProjectionSurface, # Control ok
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
-	_SplashScreen_ = null, # Can erase if IVGlobal.skip_splash_screen = true
+	_SplashScreen_ = null, # Needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove

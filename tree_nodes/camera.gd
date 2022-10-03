@@ -133,7 +133,7 @@ var is_moving := false # body to body move in progress
 # private
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
-var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := 0.1 # changed on move for parent body
 var _track_dist: float
@@ -195,8 +195,8 @@ func _ready() -> void:
 	_use_local_up_dist = use_local_up / fov
 	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
-	_visuals_helper.camera = self
-	_visuals_helper.camera_fov = fov
+	_world_targeting[2] = self
+	_world_targeting[3] = fov
 	IVGlobal.verbose_signal("camera_ready", self)
 
 
@@ -234,9 +234,9 @@ func _process(delta: float) -> void:
 	if UNIVERSE_SHIFTING:
 		# Camera parent will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
-		# of parent.global_transform.origin, so we are removing old shift at
+		# of parent.global_translation, so we are removing old shift at
 		# the same time we add our new shift.
-		_universe.translation -= parent.global_transform.origin
+		_universe.translation -= parent.global_translation
 	transform = _transform
 
 
@@ -389,7 +389,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection.view_min_distance * 50.0 / fov
-	_visuals_helper.camera_fov = fov
+	_world_targeting[3] = fov
 	if !suppress_move:
 		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
@@ -427,7 +427,7 @@ func _process_move_in_progress(delta: float) -> void:
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
 	if parent != _to_spatial: # GUI is already showing _to_spatial
-		gui_translation = global_transform.origin - _to_spatial.global_transform.origin
+		gui_translation = global_translation - _to_spatial.global_translation
 		dist = gui_translation.length()
 	emit_signal("range_changed", dist)
 	var is_ecliptic := dist > _track_dist
@@ -435,7 +435,7 @@ func _process_move_in_progress(delta: float) -> void:
 		_is_ecliptic = is_ecliptic
 		emit_signal("tracking_changed", track_type, is_ecliptic)
 	if is_ecliptic:
-		_lat_long = math.get_latitude_longitude(global_transform.origin)
+		_lat_long = math.get_latitude_longitude(global_translation)
 	else:
 		_lat_long = selection.get_latitude_longitude(gui_translation)
 	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic, selection)
@@ -454,8 +454,8 @@ func _interpolate_cartesian_path(progress: float) -> void:
 			_from_view_rotations, _from_track_type)
 	var to_transform := _get_view_transform(selection, view_position,
 			view_rotations, track_type)
-	var from_global_origin := _from_spatial.global_transform.origin
-	var to_global_origin := _to_spatial.global_transform.origin
+	var from_global_origin := _from_spatial.global_translation
+	var to_global_origin := _to_spatial.global_translation
 	from_transform.origin += from_global_origin
 	to_transform.origin += to_global_origin
 	_transform = from_transform.interpolate_with(to_transform, progress)
@@ -472,9 +472,9 @@ func _interpolate_spherical_path(progress: float) -> void:
 			_from_view_rotations, _from_track_type)
 	var to_transform := _get_view_transform(selection, view_position,
 			view_rotations, track_type)
-	var from_global_origin := _from_spatial.global_transform.origin
-	var to_global_origin := _to_spatial.global_transform.origin
-	var ref_origin := _transfer_ref_spatial.global_transform.origin
+	var from_global_origin := _from_spatial.global_translation
+	var to_global_origin := _to_spatial.global_translation
+	var ref_origin := _transfer_ref_spatial.global_translation
 	var from_ref_origin := from_transform.origin + from_global_origin - ref_origin
 	var to_ref_origin := to_transform.origin + to_global_origin - ref_origin
 	var from_ref_spherical := math.get_rotated_spherical3(from_ref_origin, _transfer_ref_basis)
@@ -526,7 +526,7 @@ func _process_at_target(delta: float) -> void:
 		emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
-		lat_long = math.get_latitude_longitude(global_transform.origin)
+		lat_long = math.get_latitude_longitude(global_translation)
 	else:
 		lat_long = selection.get_latitude_longitude(_transform.origin)
 	if _lat_long != lat_long:
@@ -712,7 +712,7 @@ func _send_gui_refresh() -> void:
 	emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
-		lat_long = math.get_latitude_longitude(global_transform.origin)
+		lat_long = math.get_latitude_longitude(global_translation)
 	else:
 		lat_long = selection.get_latitude_longitude(translation)
 	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
