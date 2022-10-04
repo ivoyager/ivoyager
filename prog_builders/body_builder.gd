@@ -42,7 +42,7 @@ var max_hud_dist_orbit_radius_multiplier := 100.0
 var min_hud_dist_radius_multiplier := 500.0
 var min_hud_dist_star_multiplier := 20.0 # combines w/ above
 var characteristics_fields := [
-	"symbol", "body_class", "model_type", "light_type", "file_prefix",
+	"symbol", "hud_name", "body_class", "model_type", "light_type", "file_prefix",
 	"rings_file_prefix", "rings_radius",
 	"n_kn_planets", "n_kn_dwf_planets", "n_kn_minor_planets", "n_kn_comets",
 	"n_nat_satellites", "n_kn_nat_satellites", "n_kn_quasi_satellites",

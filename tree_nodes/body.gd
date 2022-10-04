@@ -269,6 +269,10 @@ func get_system_radius() -> float:
 	return characteristics.system_radius
 
 
+func get_hud_name() -> String:
+	return characteristics.get("hud_name", name)
+
+
 func get_symbol() -> String:
 	return characteristics.get("symbol", "\u25CC") # default is dashed circle
 
