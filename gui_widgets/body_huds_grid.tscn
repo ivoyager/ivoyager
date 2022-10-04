@@ -1,0 +1,217 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/body_huds_grid.gd" type="Script" id=1]
+
+[node name="BodyHUDsGrid" type="GridContainer"]
+margin_right = 40.0
+margin_bottom = 40.0
+custom_constants/vseparation = -2
+custom_constants/hseparation = 10
+columns = 4
+script = ExtResource( 1 )
+
+[node name="Blank" type="Control" parent="."]
+margin_right = 188.0
+margin_bottom = 14.0
+mouse_filter = 2
+
+[node name="OrbitsHeader" type="Label" parent="."]
+margin_left = 198.0
+margin_right = 290.0
+margin_bottom = 14.0
+text = "LABEL_ORBITS"
+align = 1
+
+[node name="NamesHeader" type="Label" parent="."]
+margin_left = 300.0
+margin_right = 390.0
+margin_bottom = 14.0
+text = "LABEL_NAMES"
+align = 1
+
+[node name="SymbolsHeader" type="Label" parent="."]
+margin_left = 400.0
+margin_right = 505.0
+margin_bottom = 14.0
+text = "LABEL_SYMBOLS"
+align = 1
+
+[node name="AllLabel" type="Label" parent="."]
+margin_top = 17.0
+margin_right = 188.0
+margin_bottom = 31.0
+text = "LABEL_ALL"
+
+[node name="AllOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 12.0
+margin_right = 256.0
+margin_bottom = 36.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="AllNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 12.0
+margin_right = 357.0
+margin_bottom = 36.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="AllSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 12.0
+margin_right = 464.0
+margin_bottom = 36.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SunAndPlanetsLabel" type="Label" parent="."]
+margin_top = 39.0
+margin_right = 188.0
+margin_bottom = 53.0
+text = "LABEL_SUN_AND_PLANETS"
+
+[node name="SunAndPlanetsOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 34.0
+margin_right = 256.0
+margin_bottom = 58.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SunAndPlanetsNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 34.0
+margin_right = 357.0
+margin_bottom = 58.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SunAndPlanetsSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 34.0
+margin_right = 464.0
+margin_bottom = 58.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="DwarfPlanetsLabel" type="Label" parent="."]
+margin_top = 61.0
+margin_right = 188.0
+margin_bottom = 75.0
+text = "LABEL_DWARF_PLANETS"
+
+[node name="DwarfPlanetsOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 56.0
+margin_right = 256.0
+margin_bottom = 80.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="DwarfPlanetsNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 56.0
+margin_right = 357.0
+margin_bottom = 80.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="DwarfPlanetsSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 56.0
+margin_right = 464.0
+margin_bottom = 80.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="MoonsLabel" type="Label" parent="."]
+margin_top = 83.0
+margin_right = 188.0
+margin_bottom = 97.0
+text = "LABEL_MOONS"
+
+[node name="MoonsOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 78.0
+margin_right = 256.0
+margin_bottom = 102.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="MoonsNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 78.0
+margin_right = 357.0
+margin_bottom = 102.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="MoonsSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 78.0
+margin_right = 464.0
+margin_bottom = 102.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="AsteroidsLabel" type="Label" parent="."]
+margin_top = 105.0
+margin_right = 188.0
+margin_bottom = 119.0
+text = "LABEL_EXPLORED_ASTEROIDS"
+
+[node name="AsteroidsOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 100.0
+margin_right = 256.0
+margin_bottom = 124.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="AsteroidsNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 100.0
+margin_right = 357.0
+margin_bottom = 124.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="AsteroidsSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 100.0
+margin_right = 464.0
+margin_bottom = 124.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SpacecraftLabel" type="Label" parent="."]
+margin_top = 127.0
+margin_right = 188.0
+margin_bottom = 141.0
+text = "LABEL_SPACECRAFT"
+
+[node name="SpacecraftOrbits" type="CheckBox" parent="."]
+margin_left = 232.0
+margin_top = 122.0
+margin_right = 256.0
+margin_bottom = 146.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SpacecraftNames" type="CheckBox" parent="."]
+margin_left = 333.0
+margin_top = 122.0
+margin_right = 357.0
+margin_bottom = 146.0
+size_flags_horizontal = 4
+align = 1
+
+[node name="SpacecraftSymbols" type="CheckBox" parent="."]
+margin_left = 440.0
+margin_top = 122.0
+margin_right = 464.0
+margin_bottom = 146.0
+size_flags_horizontal = 4
+align = 1
