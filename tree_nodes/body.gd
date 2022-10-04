@@ -142,7 +142,7 @@ func _on_ready() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
+	_huds_manager.connect("visibility_changed", self, "_on_huds_visibility_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 	assert(!IVGlobal.bodies.has(name))
@@ -181,7 +181,7 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 func _prepare_to_free() -> void:
 	set_process(false)
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
-	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
+	_huds_manager.disconnect("visibility_changed", self, "_on_huds_visibility_changed")
 
 
 func _process(delta: float) -> void:
@@ -584,9 +584,12 @@ func reset_orientation_and_rotation() -> void:
 
 # private functions
 
-func _on_show_huds_changed() -> void:
-	_show_orbit = _huds_manager.show_orbits
-	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
+func _on_huds_visibility_changed() -> void:
+	_show_orbit = _huds_manager.is_orbit_visible(flags)
+	var is_name_visible := _huds_manager.is_name_visible(flags)
+	_show_label = is_name_visible or _huds_manager.is_symbol_visible(flags)
+	if hud_label:
+		hud_label.set_symbol_mode(!is_name_visible)
 
 
 func _on_orbit_changed(is_scheduled: bool) -> void:

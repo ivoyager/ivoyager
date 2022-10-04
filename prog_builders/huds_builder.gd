@@ -46,9 +46,7 @@ func _project_init() -> void:
 
 
 func add_label(body: IVBody) -> void:
-	var hud_label: IVHUDLabel = _HUDLabel_.new()
-	hud_label.set_body_name(body.get_hud_name())
-	hud_label.set_body_symbol(body.get_symbol())
+	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
 	hud_label.hide()
 	body.hud_label = hud_label
 	body.add_child(hud_label)

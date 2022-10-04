@@ -31,22 +31,22 @@ func _ready() -> void:
 	_orbits_button.connect("pressed", self, "_show_hide_orbits")
 	_names_button.connect("pressed", self, "_show_hide_names")
 	_symbols_button.connect("pressed", self, "_show_hide_symbols")
-	_huds_manager.connect("show_huds_changed", self, "_update_ckbxs")
+	_huds_manager.connect("visibility_changed", self, "_update_ckbxs")
 
 
 func _show_hide_orbits() -> void:
-	_huds_manager.set_show_orbits(_orbits_button.pressed)
+	_huds_manager.set_all_orbits_visibility(_orbits_button.pressed)
 
 
 func _show_hide_names() -> void:
-	_huds_manager.set_show_names(_names_button.pressed)
+	_huds_manager.set_all_names_visibility(_names_button.pressed)
 
 
 func _show_hide_symbols() -> void:
-	_huds_manager.set_show_symbols(_symbols_button.pressed)
+	_huds_manager.set_all_symbols_visibility(_symbols_button.pressed)
 
 
 func _update_ckbxs() -> void:
-	_orbits_button.pressed = _huds_manager.show_orbits
-	_names_button.pressed = _huds_manager.show_names
-	_symbols_button.pressed = _huds_manager.show_symbols
+	_orbits_button.pressed = _huds_manager.is_all_orbits_visible()
+	_names_button.pressed = _huds_manager.is_all_names_visible()
+	_symbols_button.pressed = _huds_manager.is_all_symbols_visible()
