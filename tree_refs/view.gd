@@ -41,7 +41,6 @@ const PERSIST_PROPERTIES := [
 	"name_visible_flags",
 	"symbol_visible_flags",
 	"point_groups_visible",
-	"point_categories_visible",
 ]
 
 # persisted
@@ -55,7 +54,6 @@ var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var point_groups_visible := {}
-var point_categories_visible := {}
 
 
 func set_huds_visible() -> void:
@@ -67,8 +65,6 @@ func set_huds_visible() -> void:
 	huds_manager.set_orbit_visible_flags(orbit_visible_flags)
 	huds_manager.set_name_visible_flags(name_visible_flags)
 	huds_manager.set_symbol_visible_flags(symbol_visible_flags)
-	for points_category in point_categories_visible:
-		points_manager.show_points(points_category, point_categories_visible[points_category])
 	for points_group in point_groups_visible:
 		points_manager.show_points(points_group, point_groups_visible[points_group])
 
@@ -82,5 +78,4 @@ func store_huds_visible() -> void:
 	name_visible_flags = huds_manager.name_visible_flags
 	symbol_visible_flags = huds_manager.symbol_visible_flags
 	point_groups_visible = points_manager.groups_visible.duplicate()
-	point_categories_visible = points_manager.categories_visible.duplicate()
 

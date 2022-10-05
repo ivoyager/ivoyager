@@ -72,7 +72,6 @@ func _init_hud_points(asteroid_group: IVAsteroidGroup, group_name: String) -> vo
 	hud_points.init(asteroid_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
 	_points_manager.register_points_group(hud_points, group_name)
-	_points_manager.register_points_group_in_category(group_name, "all_asteroids")
 	var star := asteroid_group.star
 	star.add_child(hud_points)
 
