@@ -21,65 +21,61 @@ extends GridContainer
 
 # GUI widget. 
 
-const IS_STAR_OR_TRUE_PLANET := IVEnums.BodyFlags.IS_STAR | IVEnums.BodyFlags.IS_TRUE_PLANET
-const IS_DWARF_PLANET := IVEnums.BodyFlags.IS_DWARF_PLANET
-const IS_MOON := IVEnums.BodyFlags.IS_MOON
-const IS_ASTEROID := IVEnums.BodyFlags.IS_ASTEROID
-const IS_SPACECRAFT := IVEnums.BodyFlags.IS_SPACECRAFT
+const BodyFlags: Dictionary = IVEnums.BodyFlags
+const IS_STAR_OR_TRUE_PLANET := BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
+const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
+const IS_MOON := BodyFlags.IS_MOON
+const IS_ASTEROID := BodyFlags.IS_ASTEROID
+const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
+
+var all_visible_flags: int = (BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
+		| BodyFlags.IS_DWARF_PLANET | BodyFlags.IS_MOON | BodyFlags.IS_ASTEROID
+		| BodyFlags.IS_SPACECRAFT)
+
+var chkbx_rows := [
+	["LABEL_ALL", all_visible_flags],
+	["LABEL_SUN_AND_PLANETS", BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET],
+	["LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET],
+	["LABEL_MOONS", BodyFlags.IS_MOON],
+	["LABEL_EXPLORED_ASTEROIDS", BodyFlags.IS_ASTEROID],
+	["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
+]
+
+var _orbits_chkbxs := []
+var _names_chkbxs := []
+var _symbols_chkbxs := []
 
 
 onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
-onready var _all_visible_flags := _huds_manager.all_visible_flags
-onready var _all_orbits: CheckBox = $AllOrbits
-onready var _all_names: CheckBox = $AllNames
-onready var _all_symbols: CheckBox = $AllSymbols
-onready var _sun_and_planets_orbits: CheckBox = $SunAndPlanetsOrbits
-onready var _sun_and_planets_names: CheckBox = $SunAndPlanetsNames
-onready var _sun_and_planets_symbols: CheckBox = $SunAndPlanetsSymbols
-onready var _dwarf_planets_orbits: CheckBox = $DwarfPlanetsOrbits
-onready var _dwarf_planets_names: CheckBox = $DwarfPlanetsNames
-onready var _dwarf_planets_symbols: CheckBox = $DwarfPlanetsSymbols
-onready var _moons_orbits: CheckBox = $MoonsOrbits
-onready var _moons_names: CheckBox = $MoonsNames
-onready var _moons_symbols: CheckBox = $MoonsSymbols
-onready var _asteroids_orbits: CheckBox = $AsteroidsOrbits
-onready var _asteroids_names: CheckBox = $AsteroidsNames
-onready var _asteroids_symbols: CheckBox = $AsteroidsSymbols
-onready var _spacecraft_orbits: CheckBox = $SpacecraftOrbits
-onready var _spacecraft_names: CheckBox = $SpacecraftNames
-onready var _spacecraft_symbols: CheckBox = $SpacecraftSymbols
+onready var _n_rows := chkbx_rows.size()
 
 
 func _ready() -> void:
 	_huds_manager.connect("visibility_changed", self, "_update_ckbxs")
-	_all_orbits.connect("pressed", self, "_show_hide_orbits",
-			[_all_orbits, _all_visible_flags])
-	_all_names.connect("pressed", self, "_show_hide_names",
-			[_all_names, _all_visible_flags])
-	_all_symbols.connect("pressed", self, "_show_hide_symbols",
-			[_all_symbols, _all_visible_flags])
-	_sun_and_planets_orbits.connect("pressed", self, "_show_hide_orbits",
-			[_sun_and_planets_orbits, IS_STAR_OR_TRUE_PLANET])
-	_sun_and_planets_names.connect("pressed", self, "_show_hide_names",
-			[_sun_and_planets_names, IS_STAR_OR_TRUE_PLANET])
-	_sun_and_planets_symbols.connect("pressed", self, "_show_hide_symbols",
-			[_sun_and_planets_symbols, IS_STAR_OR_TRUE_PLANET])
-	_dwarf_planets_orbits.connect("pressed", self, "_show_hide_orbits",
-			[_dwarf_planets_orbits, IS_DWARF_PLANET])
-	_dwarf_planets_names.connect("pressed", self, "_show_hide_names",
-			[_dwarf_planets_names, IS_DWARF_PLANET])
-	_dwarf_planets_symbols.connect("pressed", self, "_show_hide_symbols",
-			[_dwarf_planets_symbols, IS_DWARF_PLANET])
-	_moons_orbits.connect("pressed", self, "_show_hide_orbits", [_moons_orbits, IS_MOON])
-	_moons_names.connect("pressed", self, "_show_hide_names", [_moons_names, IS_MOON])
-	_moons_symbols.connect("pressed", self, "_show_hide_symbols", [_moons_symbols, IS_MOON])
-	_asteroids_orbits.connect("pressed", self, "_show_hide_orbits", [_asteroids_orbits, IS_ASTEROID])
-	_asteroids_names.connect("pressed", self, "_show_hide_names", [_asteroids_names, IS_ASTEROID])
-	_asteroids_symbols.connect("pressed", self, "_show_hide_symbols", [_asteroids_symbols, IS_ASTEROID])
-	_spacecraft_orbits.connect("pressed", self, "_show_hide_orbits", [_spacecraft_orbits, IS_SPACECRAFT])
-	_spacecraft_names.connect("pressed", self, "_show_hide_names", [_spacecraft_names, IS_SPACECRAFT])
-	_spacecraft_symbols.connect("pressed", self, "_show_hide_symbols", [_spacecraft_symbols, IS_SPACECRAFT])
-
+	for i in _n_rows:
+		var label_text: String = chkbx_rows[i][0]
+		var flags: int = chkbx_rows[i][1]
+		var label := Label.new()
+		label.text = label_text
+		add_child(label)
+		var chkbx := CheckBox.new()
+		chkbx.connect("pressed", self, "_show_hide_orbits", [chkbx, flags])
+		chkbx.align = Button.ALIGN_CENTER
+		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_orbits_chkbxs.append(chkbx)
+		add_child(chkbx)
+		chkbx = CheckBox.new()
+		chkbx.connect("pressed", self, "_show_hide_names", [chkbx, flags])
+		chkbx.align = Button.ALIGN_CENTER
+		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_names_chkbxs.append(chkbx)
+		add_child(chkbx)
+		chkbx = CheckBox.new()
+		chkbx.connect("pressed", self, "_show_hide_symbols", [chkbx, flags])
+		chkbx.align = Button.ALIGN_CENTER
+		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_symbols_chkbxs.append(chkbx)
+		add_child(chkbx)
 
 
 func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
@@ -95,22 +91,9 @@ func _show_hide_symbols(ckbx: CheckBox, flags: int) -> void:
 
 
 func _update_ckbxs() -> void:
-	_all_orbits.pressed = _huds_manager.is_orbit_visible(_all_visible_flags, true)
-	_all_names.pressed = _huds_manager.is_name_visible(_all_visible_flags, true)
-	_all_symbols.pressed = _huds_manager.is_symbol_visible(_all_visible_flags, true)
-	_sun_and_planets_orbits.pressed = _huds_manager.is_orbit_visible(IS_STAR_OR_TRUE_PLANET, true)
-	_sun_and_planets_names.pressed = _huds_manager.is_name_visible(IS_STAR_OR_TRUE_PLANET, true)
-	_sun_and_planets_symbols.pressed = _huds_manager.is_symbol_visible(IS_STAR_OR_TRUE_PLANET, true)
-	_dwarf_planets_orbits.pressed = _huds_manager.is_orbit_visible(IS_DWARF_PLANET)
-	_dwarf_planets_names.pressed = _huds_manager.is_name_visible(IS_DWARF_PLANET)
-	_dwarf_planets_symbols.pressed = _huds_manager.is_symbol_visible(IS_DWARF_PLANET)
-	_moons_orbits.pressed = _huds_manager.is_orbit_visible(IS_MOON)
-	_moons_names.pressed = _huds_manager.is_name_visible(IS_MOON)
-	_moons_symbols.pressed = _huds_manager.is_symbol_visible(IS_MOON)
-	_asteroids_orbits.pressed = _huds_manager.is_orbit_visible(IS_ASTEROID)
-	_asteroids_names.pressed = _huds_manager.is_name_visible(IS_ASTEROID)
-	_asteroids_symbols.pressed = _huds_manager.is_symbol_visible(IS_ASTEROID)
-	_spacecraft_orbits.pressed = _huds_manager.is_orbit_visible(IS_SPACECRAFT)
-	_spacecraft_names.pressed = _huds_manager.is_name_visible(IS_SPACECRAFT)
-	_spacecraft_symbols.pressed = _huds_manager.is_symbol_visible(IS_SPACECRAFT)
+	for i in _n_rows:
+		var flags: int = chkbx_rows[i][1]
+		_orbits_chkbxs[i].pressed = _huds_manager.is_orbit_visible(flags, true)
+		_names_chkbxs[i].pressed = _huds_manager.is_name_visible(flags, true)
+		_symbols_chkbxs[i].pressed = _huds_manager.is_symbol_visible(flags, true)
 
