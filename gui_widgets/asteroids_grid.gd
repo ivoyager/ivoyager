@@ -1,4 +1,4 @@
-# sssbs_ckbxs.gd
+# asteroids_grid.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,32 +17,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-extends VBoxContainer
+extends GridContainer
 
-# GUI widget. Small Solar System Bodies.
-#
-# Comets check box is present but hidden (until they are implemented). 
+# GUI widget.
 
+var spacer_size := 18
 
-onready var chkbxs := [
-	[$HBox1/AllAsteroids, ["NE", "MC", "MB", "JT4", "JT5", "CE", "TN"]],
-	[$HBox2/NE, ["NE"]],
-	[$HBox3/MC, ["MC"]],
-	[$HBox2/MB, ["MB"]],
-	[$HBox3/JT, ["JT4", "JT5"]],
-	[$HBox2/CE, ["CE"]],
-	[$HBox3/TN, ["TN"]],
+var chkbx_rows := [
+	["LABEL_ALL_ASTEROIDS", ["NE", "MC", "MB", "JT4", "JT5", "CE", "TN"]],
+	[" " + tr("LABEL_NEAR_EARTH"), ["NE"]],
+	[" " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
+	[" " + tr("LABEL_MAIN_BELT"), ["MB"]],
+	[" " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
+	[" " + tr("LABEL_CENTAURS"), ["CE"]],
+	[" " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
 ]
 
+var _points_chkbxs := []
+
 onready var _points_manager: IVPointsManager = IVGlobal.program.PointsManager
+onready var _n_rows := chkbx_rows.size()
 
 
 func _ready() -> void:
+	var spacer_text := ""
+	for i in spacer_size:
+		spacer_text += "\u2000" # EN QUAD
+	$Spacer.text = spacer_text
 	_points_manager.connect("visibility_changed", self, "_update_ckbxs")
-	for i in chkbxs.size():
-		var chkbx: CheckBox = chkbxs[i][0]
-		var groups: Array = chkbxs[i][1]
+	for i in _n_rows:
+		var label_text: String = chkbx_rows[i][0]
+		var groups: Array = chkbx_rows[i][1]
+		var label := Label.new()
+		label.text = label_text
+		add_child(label)
+		var chkbx := CheckBox.new()
 		chkbx.connect("pressed", self, "_show_hide_points", [chkbx, groups])
+		chkbx.align = Button.ALIGN_CENTER
+		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_points_chkbxs.append(chkbx)
+		add_child(chkbx)
 
 
 func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
@@ -52,13 +66,12 @@ func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
 
 
 func _update_ckbxs() -> void:
-	for i in chkbxs.size():
-		var chkbx: CheckBox = chkbxs[i][0]
-		var groups: Array = chkbxs[i][1]
+	for i in _n_rows:
+		var groups: Array = chkbx_rows[i][1]
 		var is_visible := true
 		for group in groups:
 			if !_points_manager.is_visible(group):
 				is_visible = false
 				break
-		chkbx.pressed = is_visible
+		_points_chkbxs[i].pressed = is_visible
 

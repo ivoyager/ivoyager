@@ -6,31 +6,30 @@
 margin_right = 40.0
 margin_bottom = 40.0
 custom_constants/vseparation = -2
-custom_constants/hseparation = 10
+custom_constants/hseparation = 15
 columns = 4
 script = ExtResource( 1 )
 
-[node name="Blank" type="Control" parent="."]
+[node name="Spacer" type="Label" parent="."]
 margin_bottom = 14.0
-mouse_filter = 2
 
 [node name="OrbitsHeader" type="Label" parent="."]
-margin_left = 10.0
-margin_right = 95.0
+margin_left = 15.0
+margin_right = 107.0
 margin_bottom = 14.0
-text = "LABEL_ORBIT"
+text = "LABEL_ORBITS"
 align = 1
 
 [node name="NamesHeader" type="Label" parent="."]
-margin_left = 105.0
-margin_right = 188.0
+margin_left = 122.0
+margin_right = 212.0
 margin_bottom = 14.0
-text = "LABEL_NAME"
+text = "LABEL_NAMES"
 align = 1
 
 [node name="SymbolsHeader" type="Label" parent="."]
-margin_left = 198.0
-margin_right = 296.0
+margin_left = 227.0
+margin_right = 332.0
 margin_bottom = 14.0
-text = "LABEL_SYMBOL"
+text = "LABEL_SYMBOLS"
 align = 1

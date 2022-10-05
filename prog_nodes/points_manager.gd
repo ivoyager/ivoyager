@@ -23,18 +23,19 @@ extends Node
 
 const DPRINT := false
 
-signal show_points_changed(group_or_category, is_show)
+signal visibility_changed()
+signal show_points_changed(group_or_category, is_show) # DEPRECIATE
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := ["groups_visible", "categories_visible"]
 
 # persisted
 var groups_visible := {}
-var categories_visible := {}
+var categories_visible := {} # DEPRECIATE
 
 # unpersisted
 var _points_groups := {} # holds IVHUDPoints instances
-var _points_categories := {} # holds arrays of group names
+var _points_categories := {} # holds arrays of group names # DEPRECIATE
 
 
 func _ready():
@@ -49,6 +50,10 @@ func _restore_init_state() -> void:
 	_points_categories.clear()
 
 
+func is_visible(group: String) -> bool:
+	return groups_visible.get(group, false)
+
+
 func show_points(group_or_category: String, is_show: bool) -> void:
 	# does not error if missing for skip_asteroids = true
 	assert(DPRINT and prints("show_points", group_or_category, is_show) or true)
@@ -61,6 +66,7 @@ func show_points(group_or_category: String, is_show: bool) -> void:
 			hud_points.visible = is_show
 			groups_visible[group] = is_show
 			emit_signal("show_points_changed", group, is_show)
+			emit_signal("visibility_changed")
 	elif _points_groups.has(group_or_category): # group
 		if groups_visible[group_or_category] == is_show:
 			return
@@ -68,6 +74,7 @@ func show_points(group_or_category: String, is_show: bool) -> void:
 		hud_points.visible = is_show
 		groups_visible[group_or_category] = is_show
 		emit_signal("show_points_changed", group_or_category, is_show)
+		emit_signal("visibility_changed")
 
 
 func register_points_group(hud_points: IVHUDPoints, group: String) -> void:
@@ -82,7 +89,7 @@ func forget_points_group(group: String) -> void: # not needed for load
 	groups_visible.erase(group)
 	_points_groups.erase(group)
 
-
+# DEPRECIATE
 func register_points_group_in_category(group: String, category: String) -> void:
 	if !categories_visible.has(category):
 		categories_visible[category] = false
@@ -90,7 +97,7 @@ func register_points_group_in_category(group: String, category: String) -> void:
 		_points_categories[category] = []
 	_points_categories[category].append(group)
 
-
+# DEPRECIATE
 func forget_points_category(category: String) -> void: # not needed for load
 	categories_visible.erase(category)
 	_points_categories.erase(category)
@@ -99,5 +106,7 @@ func forget_points_category(category: String) -> void: # not needed for load
 func _refresh_gui() -> void:
 	for group in groups_visible:
 		emit_signal("show_points_changed", group, groups_visible[group])
+		emit_signal("visibility_changed")
 	for category in categories_visible:
 		emit_signal("show_points_changed", category, categories_visible[category])
+		emit_signal("visibility_changed")
