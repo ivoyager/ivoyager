@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20221005
+const IVOYAGER_VERSION_YMD := 20221006
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -176,6 +176,7 @@ var shared_resources := {
 var table_import := {
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
+	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	lights = "res://ivoyager/data/solar_system/lights.tsv",
 	models = "res://ivoyager/data/solar_system/models.tsv",
@@ -189,7 +190,7 @@ var table_import_mods := {} # add columns or rows or modify cells in table_impor
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
 
-var body_tables := ["stars", "planets", "moons", "spacecrafts"] # order matters!
+var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelBuilder first looks for an existing

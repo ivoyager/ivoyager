@@ -1,0 +1,12 @@
+name	asteroid	file_prefix	en.wikipedia	hud_name	symbol	parent	body_class	model_type	#tp	epoch	a	e	i	Om	w	M0	n	P	Pw	Pnode	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo	#B-V	#U-B	#I-R	#tholen_spectral_type	#smassii_spectral_type
+Type	BOOL	STRING	STRING	STRING	STRING	STRING	INT	INT	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	STRING
+Default	TRUE				\u25CC	SUN	C_ASTEROID	SMALL_C_BODY		0						0								0	0	0	0	0					
+Unit										d	au		deg	deg	deg	deg	deg/d	d	a	a	h	deg	deg	km^3/s^2	km	g/cm^3							
+Prefix/ASTEROID_						STAR_	BODY_CLASS_	MODEL_																									
+4_VESTA		Vesta	4_Vesta		4		V_ASTEROID	SMALL_S_BODY	2459575.123305		2.36198720	0.088401894	7.140783	103.800810	151.257780		0.271511209				5.34212766	309.03	42.23	17.288245	262.7	3.456	3.20	0.4228	0.782	0.492		V	V
+101955_BENNU		Bennu	101955_Bennu		101955		C_ASTEROID		2455439.1419409		1.126391026	0.2037450762	6.03494377	2.0608662	66.2230608		0.824461350				4.296061	85.4522	-60.3678	4.8904e-9	0.242	1.194	20.21	0.044	0.64	0.16	-0.33		B
+# explored/mapped only																																	
+# https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html																																	
+# FIXME: #tp is time of perihelion passage (in																																	
+# JD?); use to calculate epoch or M0																																	
+# Color indexes (B-V, U-B) & spectra not imported yet																																	

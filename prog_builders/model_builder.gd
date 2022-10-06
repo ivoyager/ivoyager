@@ -33,7 +33,6 @@ const METER := IVUnits.METER
 
 var max_lazy := 20
 var model_too_far_radius_multiplier := 1e3
-var model_tables := ["stars", "planets", "moons", "spacecrafts"]
 var map_search_suffixes := [".albedo", ".emission"]
 var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6
@@ -84,7 +83,7 @@ func _preregister_files() -> void:
 	assert(DPRINT and print("ModelBuilder searching for model files...") or true)
 	var models_search := IVGlobal.models_search
 	var maps_search := IVGlobal.maps_search
-	for table in model_tables:
+	for table in IVGlobal.body_tables:
 		var n_rows := _table_reader.get_n_rows(table)
 		var row := 0
 		while row < n_rows:

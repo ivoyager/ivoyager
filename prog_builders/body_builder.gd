@@ -171,6 +171,9 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 				or _table_reader.get_bool(_table_name, "force_navigator", _row):
 			flags |= BodyFlags.IS_NAVIGATOR_MOON
 		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
+	if flags & BodyFlags.IS_ASTEROID:
+		flags |= BodyFlags.IS_STAR_ORBITING
+		flags |= BodyFlags.NEVER_SLEEP
 	if flags & BodyFlags.IS_SPACECRAFT:
 		flags |= BodyFlags.USE_PITCH_YAW
 	body.flags = flags

@@ -1,19 +1,19 @@
 name	ellipsoid	starlight	metallic	roughness	rim_enabled	rim	rim_tint
 Type	BOOL	BOOL	REAL	REAL	BOOL	REAL	REAL
-Default	TRUE	FALSE	0	0.6	TRUE	0.003	0.5
+Default	TRUE		0	0.6	TRUE	0.003	0.5
 Prefix/MODEL_							
-G_STAR		TRUE					
-ROCKY_WORLD							
-DESERT_WORLD							
-CONTINENTAL_WORLD							
-THICK_ATM_WORLD							
-ICE_WORLD							
-VOLCANO_WORLD							
-GAS_GIANT							
-ICE_GIANT							
-SMALL_C_TYPE	FALSE						
-SMALL_S_TYPE	FALSE						
-SMALL_M_TYPE	FALSE						
-COMET	FALSE						
-SPACECRAFT	FALSE						
+G_STAR	x	x					
+ROCKY_WORLD	x						
+DESERT_WORLD	x						
+CONTINENTAL_WORLD	x						
+THICK_ATM_WORLD	x						
+ICE_WORLD	x						
+VOLCANO_WORLD	x						
+GAS_GIANT	x						
+ICE_GIANT	x						
+SMALL_C_BODY							
+SMALL_S_BODY							
+SMALL_M_BODY							
+COMET							
+SPACECRAFT							
 #							

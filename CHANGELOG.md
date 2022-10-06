@@ -13,11 +13,11 @@ Under development using Godot 3.5.1.stable.
 New assets for 0.0.14! - WIP
 
 ### Added
-* International Space Station.
+* International Space Station!
+* Explored asteroids: Vesta, Bennu.
 
 ### Changed
 * [Breaks API!] Renamed IVHUDsManager signal 'show_huds_changed' -> 'visibility_changed'.
-
 
 ## [v0.0.13] - 2022-09-28
 
