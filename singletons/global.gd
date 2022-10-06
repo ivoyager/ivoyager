@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20221004
+const IVOYAGER_VERSION_YMD := 20221005
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts

@@ -30,6 +30,7 @@ var _has_mouse := false
 
 
 func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManager) -> void:
+	assert(body and selection_manager)
 	_body = body
 	_selection_manager = selection_manager
 	hint_tooltip = body.name
