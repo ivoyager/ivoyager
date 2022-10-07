@@ -40,7 +40,7 @@ var chkbx_rows := [
 	[" " + tr("LABEL_SUN_AND_PLANETS"), BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET],
 	[" " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
 	[" " + tr("LABEL_MOONS"), BodyFlags.IS_MOON],
-	[" " + tr("LABEL_EXPLORED_ASTEROIDS"), BodyFlags.IS_ASTEROID],
+	[" " + tr("LABEL_ASTEROIDS_VISITED"), BodyFlags.IS_ASTEROID],
 	[" " + tr("LABEL_SPACECRAFT"), BodyFlags.IS_SPACECRAFT],
 ]
 

@@ -13,11 +13,12 @@ Under development using Godot 3.5.1.stable.
 New assets for 0.0.14! - WIP
 
 ### Added
-* International Space Station!
-* Explored asteroids: Vesta, Bennu.
+* Spacecraft: International Space Station, Hubble and Juno (orbit only; model is broken)
+* Explored asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
 
 ### Changed
 * [Breaks API!] Renamed IVHUDsManager signal 'show_huds_changed' -> 'visibility_changed'.
+* OrbitBuilder imports 'epoch_jd' column. (But our ISS & Hubble orbits are not correct yet...)
 
 ## [v0.0.13] - 2022-09-28
 

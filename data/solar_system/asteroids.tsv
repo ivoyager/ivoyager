@@ -1,12 +1,18 @@
-name	asteroid	file_prefix	en.wikipedia	hud_name	symbol	parent	body_class	model_type	#tp	epoch	a	e	i	Om	w	M0	n	P	Pw	Pnode	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo	#B-V	#U-B	#I-R	#tholen_spectral_type	#smassii_spectral_type
-Type	BOOL	STRING	STRING	STRING	STRING	STRING	INT	INT	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	STRING
-Default	TRUE				\u25CC	SUN	C_ASTEROID	SMALL_C_BODY		0						0								0	0	0	0	0					
-Unit										d	au		deg	deg	deg	deg	deg/d	d	a	a	h	deg	deg	km^3/s^2	km	g/cm^3							
+name	asteroid	file_prefix	en.wikipedia	hud_name	symbol	parent	body_class	model_type	#epoch_text	epoch_jd	a	e	i	Om	w	M0	n	P	Pw	Pnode	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo	#B-V	#U-B	#I-R	#tholen_spectral_type	#smassii_spectral_type
+Type	BOOL	STRING	STRING	STRING	STRING	STRING	INT	INT		REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	STRING
+Default	TRUE				\u25CC	SUN	C_ASTEROID	SMALL_C_BODY		2451545.0						0								0	0	0	0	0					
+Unit											au		deg	deg	deg	deg	deg/d	d	a	a	h	deg	deg	km^3/s^2	km	g/cm^3							
 Prefix/ASTEROID_						STAR_	BODY_CLASS_	MODEL_																									
-4_VESTA		Vesta	4_Vesta		4		V_ASTEROID	SMALL_S_BODY	2459575.123305		2.36198720	0.088401894	7.140783	103.800810	151.257780		0.271511209				5.34212766	309.03	42.23	17.288245	262.7	3.456	3.20	0.4228	0.782	0.492		V	V
-101955_BENNU		Bennu	101955_Bennu		101955		C_ASTEROID		2455439.1419409		1.126391026	0.2037450762	6.03494377	2.0608662	66.2230608		0.824461350				4.296061	85.4522	-60.3678	4.8904e-9	0.242	1.194	20.21	0.044	0.64	0.16	-0.33		B
-# explored/mapped only																																	
+101955_BENNU		Bennu	101955_Bennu		101955		C_ASTEROID	SMALL_C_BODY	2011-Jan-01.0	2455562.5	1.1264	0.20375	6.035	2.061	66.223	101.704	0.824461350				4.296061	85.4522	-60.3678	4.8904e-9	0.242	1.194	20.21	0.044	0.64	0.16	-0.33		B
+25143_ITOKAWA		Itokawa	25143_Itokawa		25143		S_ASTEROID	SMALL_S_BODY	2022-Aug-09.0	2459800.5	1.3241	0.28011	1.621	69.076	162.789	345.132	0.64684450				12.132	90.53	-66.30	2.1e-9	0.17	1.9	19.26						S(IV)
+433_EROS		Eros	433_Eros		433		S_ASTEROID	SMALL_S_BODY	2022-Aug-09.0	2459800.5	1.4582	0.22273	10.828	304.291	178.933	358.821	0.5597582808				5.27	0.0	0.0	4.463e-04	8.42	2.67	10.31	0.25	0.921	0.531		S	S
+4_VESTA		Vesta	4_Vesta		4		V_ASTEROID	SMALL_S_BODY	2022-Aug-09.0	2459800.5	2.3620	0.088402	7.141	103.801	151.258	61.192	0.271511209				5.34212766	309.03	42.23	17.288245	262.7	3.456	3.20	0.4228	0.782	0.492		V	V
+486958_ARROKOTH		Arrokoth	486958_Arrokoth		486958		ASTEROID	SMALL_C_BODY	2022-Aug-09.0	2459800.5	44.505	0.052391	2.444	159.202	186.731	309.679	0.0033196				15.918	317.5	-24.89		9.2	0.235	11.06						
+# We're including visited asteroids for I, Voyager:																																	
+# https://en.wikipedia.org/wiki/List_of_minor_planets_and_comets_visited_by_spacecraft																																	
+# We need more open source models!																																	
+# Orbit data:																																	
 # https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html																																	
-# FIXME: #tp is time of perihelion passage (in																																	
-# JD?); use to calculate epoch or M0																																	
+# FIXME: Calculate M0 from #tp (time of perihelion passage)																																	
+# FIXME: No RA, dec for 433 Eros (not in SB database or Wikipedia)																																	
 # Color indexes (B-V, U-B) & spectra not imported yet																																	

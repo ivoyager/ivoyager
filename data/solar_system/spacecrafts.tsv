@@ -1,8 +1,11 @@
-name	spacecraft	file_prefix	en.wikipedia	hud_name	symbol	parent	body_class	model_type	epoch	a	e	i	Om	w	M0	n	P	Pw	Pnode	ref_plane	orbit_RA	orbit_dec	tidally_locked	axis_locked	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo
-Type	BOOL	STRING	STRING	STRING	STRING	STRING	INT	INT	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	REAL	REAL	BOOL	BOOL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL
-Default	TRUE				\u25CC		SPACECRAFT	SPACECRAFT	0														TRUE	TRUE				0	0	0	0	0
-Unit									d	km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg			d	deg	deg	km^3/s^2	m	g/cm^3		
-Prefix/SPACECRAFT_				SPACECRAFT_			BODY_CLASS_	MODEL_																								
-INTERNATIONAL_SPACE_STATION		ISS	International_Space_Station	INTERNATIONAL_SPACE_STATION_HUD		PLANET_EARTH				6786.5	0.0003279	51.6453	323.0932	182.5211	317.8761	5579.9691768				Equatorial								0.0000001	30			
-# https://www.heavens-above.com/																																
-# FIXME: epoch, Om & w																																
+name	spacecraft	file_prefix	en.wikipedia	hud_name	symbol	parent	body_class	model_type	#epoch_text	epoch_jd	a	e	i	Om	w	M0	n	P	Pw	Pnode	ref_plane	orbit_RA	orbit_dec	tidally_locked	axis_locked	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo
+Type	BOOL	STRING	STRING	STRING	STRING	STRING	INT	INT		REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	REAL	REAL	BOOL	BOOL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL
+Default	TRUE				\u25CC		SPACECRAFT	SPACECRAFT		2451545.0																	0	0	0	0	0	0	0
+Unit											km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg			d	deg	deg	km^3/s^2	m	g/cm^3		
+Prefix/SPACECRAFT_				SPACECRAFT_			BODY_CLASS_	MODEL_																									
+INTERNATIONAL_SPACE_STATION		ISS	International_Space_Station	INTERNATIONAL_SPACE_STATION_HUD		PLANET_EARTH			2022-Nov-06 00:00:00.0000 TDB	2459889.5	6788.3	0.0015164	51.609	353.726	69.013	187.104	5.5881e3				Equatorial					-365.256363				30			
+HUBBLE_SPACE_TELESCOPE		Hubble	Hubble_Space_Telescope	HUBBLE_SPACE_TELESCOPE_HUD		PLANET_EARTH			2022-Nov-06 00:00:00.0000 TDB	2459889.5	6914.9	0.0016184	28.374	310.402	117.409	20.487	5.4353e3				Equatorial					-365.256363				10			
+JUNO_SPACECRAFT		Juno	Juno_(spacecraft)	JUNO_SPACECRAFT_HUD		PLANET_JUPITER			2022-Nov-06 00:00:00.0000 TDB	2459889.5	3.2743e6	0.97775	103.0134	279.5030	117.2533	351.5101	9.4044				Equatorial					-4332.59				5			
+# https://ssd.jpl.nasa.gov/horizons																																	
+# https://www.heavens-above.com/																																	
+# FIXME: Calculate epoch																																	
