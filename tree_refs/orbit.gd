@@ -245,13 +245,13 @@ func get_true_anomaly(time := NAN) -> float:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # nu
 
 
 func get_mean_longitude(time := NAN) -> float:
@@ -276,13 +276,13 @@ func get_true_longitude(time := NAN) -> float:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # nu
 	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
 
 
@@ -336,14 +336,14 @@ static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # true anomaly
-	var r := a * (1.0 - e * cos(E))
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # true anomaly
+	var r := a * (1.0 - e * cos(EA))
 	var cos_i := cos(i)
 	var sin_i := sin(i)
 	var sin_Om := sin(Om)
@@ -367,14 +367,14 @@ static func get_vectors_from_elements(elements: Array, time: float) -> Array:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # true anomaly
-	var r := a * (1.0 - e * cos(E))
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # true anomaly
+	var r := a * (1.0 - e * cos(EA))
 	var cos_i := cos(i)
 	var sin_i := sin(i)
 	var sin_Om := sin(Om)
@@ -428,8 +428,8 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 		else:
 			w = 0.0
 	var n := sqrt(mu / a / a / a)
-	var E := 2.0 * atan(sqrt((1.0 - e) / (1.0 + e)) * tan(nu / 2.0))
-	var M0 := E - e * sin(E) - n * time
+	var EA := 2.0 * atan(sqrt((1.0 - e) / (1.0 + e)) * tan(nu / 2.0))
+	var M0 := EA - e * sin(EA) - n * time
 	return [a, e, i, Om, w, M0, n]
 
 

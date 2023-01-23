@@ -29,39 +29,39 @@ uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 void vertex() {
 	// orbital elements
-	float a = NORMAL.x;
-	float e = NORMAL.y;
-	float i = NORMAL.z;
-	float Om = COLOR.x;
-	float w = COLOR.y;
-	float M0 = COLOR.z;
-	float n = COLOR.w;
+	float a = NORMAL.x; // semi-major axis
+	float e = NORMAL.y; // eccentricity
+	float i = NORMAL.z; // inclination
+	float Om = COLOR.x; // longitude of the ascending node
+	float w = COLOR.y; // argument of periapsis
+	float M0 = COLOR.z; // mean anomaly at epoch
+	float n = COLOR.w; // mean motion
 	
-	float M = M0 + n * time;
+	float M = M0 + n * time; // mean anomaly
 	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI
 	
-	float E = M + e * sin(M);
-	float dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-	E -= dE;
+	float EA = M + e * sin(M); // eccentric anomaly
+	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+	EA -= dEA;
 	// A while loop here breaks WebGL1 export. 5 steps is enough.
-	if (abs(dE) > 1e-5){
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-		E -= dE;
-		if (abs(dE) > 1e-5){
-			dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-			E -= dE;
-			if (abs(dE) > 1e-5){
-				dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-				E -= dE;
-				if (abs(dE) > 1e-5){
-					dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-					E -= dE;
+	if (abs(dEA) > 1e-5){
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+		EA -= dEA;
+		if (abs(dEA) > 1e-5){
+			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+			EA -= dEA;
+			if (abs(dEA) > 1e-5){
+				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+				EA -= dEA;
+				if (abs(dEA) > 1e-5){
+					dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+					EA -= dEA;
 				}
 			}
 		}
 	}
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0));
-	float r = a * (1.0 - e * cos(E));
+	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
+	float r = a * (1.0 - e * cos(EA));
 	float cos_i = cos(i);
 	float sin_Om = sin(Om);
 	float cos_Om = cos(Om);

@@ -33,14 +33,14 @@ void vertex() {
 	float lagrange_L = frame_data.z;
 	
 	// orbital elements modified for lagrangian
-	float d = NORMAL.x;
-	float e = NORMAL.y;
-	float i = NORMAL.z;
-	float Om = COLOR.x;
-	float w = COLOR.y;
-	float D = COLOR.z;
-	float f = COLOR.w;
-	float th0 = UV2.x;
+	float d = NORMAL.x; // 
+	float e = NORMAL.y; // eccentricity
+	float i = NORMAL.z; // inclination
+	float Om = COLOR.x; // longitude of the ascending node
+	float w = COLOR.y; // argument of periapsis
+	float D = COLOR.z; // 
+	float f = COLOR.w; // 
+	float th0 = UV2.x; // 
 	
 	// Libration of a & M
 	float th = th0 + f * time;
@@ -50,28 +50,28 @@ void vertex() {
 	
 	// Same as orbit_points.shader from here down
 	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI
-	float E = M + e * sin(M);
-	float dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-	E -= dE;
+	float EA = M + e * sin(M);
+	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+	EA -= dEA;
 	// A while loop here breaks WebGL1 export. 5 steps is enough.
-	if (abs(dE) > 1e-5){
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-		E -= dE;
-		if (abs(dE) > 1e-5){
-			dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-			E -= dE;
-			if (abs(dE) > 1e-5){
-				dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-				E -= dE;
-				if (abs(dE) > 1e-5){
-					dE = (E - M - e * sin(E)) / (1.0 - e * cos(E));
-					E -= dE;
+	if (abs(dEA) > 1e-5){
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+		EA -= dEA;
+		if (abs(dEA) > 1e-5){
+			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+			EA -= dEA;
+			if (abs(dEA) > 1e-5){
+				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+				EA -= dEA;
+				if (abs(dEA) > 1e-5){
+					dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+					EA -= dEA;
 				}
 			}
 		}
 	}
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0));
-	float r = a * (1.0 - e * cos(E));
+	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
+	float r = a * (1.0 - e * cos(EA));
 	float cos_i = cos(i);
 	float sin_Om = sin(Om);
 	float cos_Om = cos(Om);

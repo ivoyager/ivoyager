@@ -94,7 +94,7 @@ func _build_orbit_mesh_arrays(n_vertecies: int) -> void:
 	while i < n_vertecies:
 		var angle: float = i * angle_increment
 		verteces[i] = Vector3(sin(angle), cos(angle), 0.0) # circle if shader doesn't work
-		normals[i] = Vector3(angle, angle, 0.0) # E, nu, e in orbit_ellipse.shader
+		normals[i] = Vector3(angle, angle, 0.0) # EA, nu, e in orbit_ellipse.shader
 		i += 1
 	_orbit_mesh_arrays.resize(ArrayMesh.ARRAY_MAX)
 	_orbit_mesh_arrays[ArrayMesh.ARRAY_VERTEX] = verteces
