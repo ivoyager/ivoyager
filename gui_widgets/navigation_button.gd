@@ -20,7 +20,7 @@
 extends Button
 class_name IVNavigationButton
 
-# This widget must be instantiated and added by code.
+# This widget must be instantiated and added by code. See planet_moon_buttons.gd.
 
 signal selected()
 

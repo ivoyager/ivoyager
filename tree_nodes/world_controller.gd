@@ -29,15 +29,18 @@ extends Control
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
+#  [6] point_picker_coord: Vector 2 (this object sets; mouse_position w/ flipped y)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
+const NULL_MOUSE_COORD := Vector2(-100.0, -100.0)
 
 var _world_targeting: Array = IVGlobal.world_targeting
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
+var _has_mouse := true
 
 
 func _project_init() -> void:
@@ -45,14 +48,17 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
+	connect("mouse_entered", self, "_on_mouse_entered")
+	connect("mouse_exited", self, "_on_mouse_exited")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 	var viewport := get_viewport()
 	viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting.resize(6)
+	_world_targeting.resize(7)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = viewport.size.y
 	_world_targeting[5] = INF
+	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord in shaders
 
 
 func _clear() -> void:
@@ -69,6 +75,14 @@ func _process(_delta: float) -> void:
 	elif _world_targeting[4]: # there is a target object under the mouse!
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 	else:
+		# no object target under mouse, but there could be a shader point
+		if _has_mouse:
+			_world_targeting[6].x = _world_targeting[0].x
+			_world_targeting[6].y = _world_targeting[1] - _world_targeting[0].y
+		else:
+			_world_targeting[6] = NULL_MOUSE_COORD
+		
+		# TODO: set pointing hand if shader point in range
 		set_default_cursor_shape(CURSOR_ARROW)
 
 
@@ -126,4 +140,12 @@ func _get_key_modifier_mask(event: InputEventMouse) -> int:
 
 func _on_viewport_size_changed() -> void:
 	_world_targeting[1] = get_viewport().size.y
+
+
+func _on_mouse_entered() -> void:
+	_has_mouse = true
+
+
+func _on_mouse_exited() -> void:
+	_has_mouse = false
 

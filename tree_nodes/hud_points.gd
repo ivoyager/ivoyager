@@ -32,6 +32,7 @@ var group: IVAsteroidGroup
 var color: Color # read only
 
 var _times: Array = IVGlobal.times
+var _world_targeting: Array = IVGlobal.world_targeting
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
@@ -90,6 +91,7 @@ func _process(_delta: float) -> void:
 		_orbit_points.set_shader_param("frame_data", Vector3(time, lagrange_a, lagrange_L))
 	else:
 		_orbit_points.set_shader_param("time", time)
+		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
 
 
 func _settings_listener(setting: String, value) -> void:
