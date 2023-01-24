@@ -42,6 +42,7 @@ var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
 
+onready var _viewport := get_viewport()
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
@@ -52,11 +53,10 @@ func _ready() -> void:
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
-	var viewport := get_viewport()
-	viewport.connect("size_changed", self, "_on_viewport_size_changed")
+	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
 	_world_targeting.resize(7)
 	_world_targeting[0] = Vector2.ZERO
-	_world_targeting[1] = viewport.size.y
+	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
 	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord in shaders
 
@@ -77,8 +77,20 @@ func _process(_delta: float) -> void:
 	else:
 		# no object target under mouse, but there could be a shader point
 		if _has_mouse:
-			_world_targeting[6].x = _world_targeting[0].x
-			_world_targeting[6].y = _world_targeting[1] - _world_targeting[0].y
+			var x: float = _world_targeting[0].x
+			var y: float = _world_targeting[0].y
+			_world_targeting[6].x = x
+			_world_targeting[6].y = _world_targeting[1] - y
+			
+			# WIP - ViewportTexture is a reference, however, image is a copy.
+			# This is insanely inefficient to get pixel color.
+#			var viewport_texture: ViewportTexture = _viewport.get_texture()
+#			var image: Image = viewport_texture.get_data()
+#			image.lock()
+#
+#			print(image.get_pixel(x, y))
+			
+			
 		else:
 			_world_targeting[6] = NULL_MOUSE_COORD
 		

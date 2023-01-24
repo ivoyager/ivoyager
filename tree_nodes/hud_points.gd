@@ -25,8 +25,8 @@ extends MeshInstance
 
 const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR
-const TROJAN_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
-		& VisualServer.ARRAY_FORMAT_COLOR
+const TROJAN_ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
+		& VisualServer.ARRAY_FORMAT_COLOR & VisualServer.ARRAY_FORMAT_TEX_UV2
 
 var group: IVAsteroidGroup
 var color: Color # read only
@@ -60,17 +60,31 @@ func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
 	var arrays := []
 	arrays.resize(ArrayMesh.ARRAY_MAX)
-	arrays[ArrayMesh.ARRAY_VERTEX] = group.dummy_translations
+	
 	if !group.is_trojans:
+		
+		# WIP - set identifiers for mouse point picker
+		var test_identifiers := PoolVector3Array()
+		test_identifiers.resize(group.dummy_translations.size())
+		test_identifiers.fill(Vector3(0.5, 0.5, 0.5))
+		
+		arrays[ArrayMesh.ARRAY_VERTEX] = test_identifiers
+		
+		
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g
+		
+
+
+		
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ORBIT_FLAGS)
 	else: # trojans
+		arrays[ArrayMesh.ARRAY_VERTEX] = group.dummy_translations
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.d_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_D_f
 		arrays[ArrayMesh.ARRAY_TEX_UV2] = group.th0
-		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_FLAGS)
+		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ORBIT_FLAGS)
 	var half_aabb = group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh

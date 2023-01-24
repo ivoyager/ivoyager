@@ -22,7 +22,7 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-uniform float mouse_range = 10.0;
+uniform float mouse_range = 30.0;
 uniform float time = 0.0;
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
@@ -73,7 +73,7 @@ void vertex() {
 	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
 	float z = r * sin(i) * sin_w_nu;
 	
-	// we skip VERTEX, but this is how we got from x,y,z to POSITION...
+	// we skip VERTEX, but this is how we to VERTEX and then POSITION...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
 	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
 	
@@ -84,9 +84,10 @@ void vertex() {
 }
 
 void fragment() {
-	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range) && (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
+	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range)
+			&& (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
 		// special color if under mouse
-		ALBEDO = vec3(1.0, 1.0, 1.0);
+		ALBEDO = VERTEX;
 	} else {
 		ALBEDO = color
 	}

@@ -66,7 +66,7 @@ var max_apoapsis := 0.0
 var names := PoolStringArray()
 var iau_numbers := PoolIntArray() # -1 for unnumbered
 var magnitudes := PoolRealArray()
-var dummy_translations := PoolVector3Array() # all 0's (until we can extract values from GPU)
+var dummy_translations := PoolVector3Array() # all 0's
 
 # non-Trojans - arrays optimized for MeshArray construction
 var a_e_i := PoolVector3Array()
