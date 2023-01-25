@@ -89,7 +89,7 @@ func draw_points() -> void:
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit_points.set_shader_param("point_size", 3.0)
+	_orbit_points.set_shader_param("point_size", 10.0)
 
 
 func _process(_delta: float) -> void:

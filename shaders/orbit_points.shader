@@ -87,7 +87,8 @@ void fragment() {
 	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range)
 			&& (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
 		// special color if under mouse
-		ALBEDO = VERTEX;
+//		ALBEDO = VERTEX;
+		ALBEDO = vec3(0.5, 0.5, 0.5)
 	} else {
 		ALBEDO = color
 	}
