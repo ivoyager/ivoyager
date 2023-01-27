@@ -61,7 +61,7 @@ func _on_init():
 		moon_orbit_color = Color(0.3,0.3,0.9),
 		minor_moon_orbit_color = Color(0.35,0.1,0.35),
 		default_orbit_color = Color(0.4,0.4,0.8),
-		asteroid_point_color = Color("008800"),
+		asteroid_point_color = Color(0.0,0.6,0.0), # Color("008800"),
 		
 		# graphics/performance
 		starmap = IVEnums.StarmapSize.STARMAP_16K,

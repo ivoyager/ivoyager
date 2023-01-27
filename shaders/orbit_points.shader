@@ -20,13 +20,16 @@
 // Duplicates orbital math in system_refs/orbit.gd.
 
 shader_type spatial;
-render_mode unshaded, cull_disabled, skip_vertex_transform;
+render_mode cull_disabled, skip_vertex_transform;
 
-uniform float mouse_range = 30.0;
+uniform float mouse_range = 10.0;
 uniform float time = 0.0;
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
+uniform vec3 target_color = vec3(0.5);
+uniform float calibrator = 0.0;
+
 //varying flat vec3 test_color;
 
 void vertex() {
@@ -87,9 +90,15 @@ void fragment() {
 	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range)
 			&& (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
 		// special color if under mouse
-//		ALBEDO = VERTEX;
-		ALBEDO = vec3(0.5, 0.5, 0.5)
+		
+//		vec3 screen_color = texture(viewport_texture, SCREEN_UV).rgb;
+		
+		
+		EMISSION = vec3(calibrator);
+
+		ALBEDO = vec3(0.0);
 	} else {
-		ALBEDO = color
+		ALBEDO = vec3(0.0);
+		EMISSION = color;
 	}
 }

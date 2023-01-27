@@ -30,6 +30,7 @@ extends Control
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
 #  [6] point_picker_coord: Vector 2 (this object sets; mouse_position w/ flipped y)
+#  [7] picker_color: Color (PointPicker sets)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
@@ -54,11 +55,12 @@ func _ready() -> void:
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting.resize(7)
+	_world_targeting.resize(8)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
 	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord in shaders
+	_world_targeting[7] = Vector3.ZERO # PointPicker
 
 
 func _clear() -> void:

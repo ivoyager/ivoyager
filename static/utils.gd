@@ -25,6 +25,11 @@ class_name IVUtils
 # For now, use:
 # const utils := preload("res://ivoyager/static/utils.gd")
 
+
+const PICKER_CALIBRATION := [0.0, 0.25, 0.375, 0.5, 0.625, 0.75, 0.734375]
+
+
+
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:

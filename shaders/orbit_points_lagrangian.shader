@@ -21,7 +21,7 @@
 // with a and M of the influencing orbital body.
 
 shader_type spatial;
-render_mode unshaded, cull_disabled, skip_vertex_transform;
+render_mode cull_disabled, skip_vertex_transform;
 
 uniform vec3 frame_data = vec3(0.0, 1.0, 0.0); // sim_time, lagrange a, lagrange M
 uniform float point_size = 3.0;
@@ -85,5 +85,5 @@ void vertex() {
 }
 
 void fragment() {
-    ALBEDO = color;
+    EMISSION = color;
 }

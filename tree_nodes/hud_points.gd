@@ -27,6 +27,7 @@ const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT
 		& VisualServer.ARRAY_FORMAT_COLOR
 const TROJAN_ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR & VisualServer.ARRAY_FORMAT_TEX_UV2
+const PICKER_CALIBRATION := IVUtils.PICKER_CALIBRATION
 
 var group: IVAsteroidGroup
 var color: Color # read only
@@ -35,6 +36,11 @@ var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
+
+
+var _calibrator := 0.0
+
+var _calibration_step := 0
 
 
 func _init():
@@ -90,6 +96,8 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_orbit_points.set_shader_param("point_size", 10.0)
+#	if !group.is_trojans:
+#		_orbit_points.set_shader_param("viewport_texture", IVGlobal.get_tree().root.get_texture())
 
 
 func _process(_delta: float) -> void:
@@ -106,9 +114,15 @@ func _process(_delta: float) -> void:
 	else:
 		_orbit_points.set_shader_param("time", time)
 		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
+		_orbit_points.set_shader_param("calibrator", PICKER_CALIBRATION[_calibration_step])
+	
+	_calibration_step += 1
+	if _calibration_step >= PICKER_CALIBRATION.size():
+		_calibration_step = 0
 
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == "asteroid_point_color":
 		color = value
+		color.a = 1.0
 		_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
