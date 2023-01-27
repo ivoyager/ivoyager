@@ -55,12 +55,11 @@ func _ready() -> void:
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting.resize(8)
+	_world_targeting.resize(7)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
 	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord in shaders
-	_world_targeting[7] = Vector3.ZERO # PointPicker
 
 
 func _clear() -> void:

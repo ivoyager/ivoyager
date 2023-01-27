@@ -27,7 +27,7 @@ const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT
 		& VisualServer.ARRAY_FORMAT_COLOR
 const TROJAN_ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR & VisualServer.ARRAY_FORMAT_TEX_UV2
-const PICKER_CALIBRATION := IVUtils.PICKER_CALIBRATION
+const CALIBRATION := IVPointPicker.CALIBRATION
 
 var group: IVAsteroidGroup
 var color: Color # read only
@@ -38,9 +38,9 @@ var _orbit_points := ShaderMaterial.new()
 var _last_update_time := -INF
 
 
-var _calibrator := 0.0
-
-var _calibration_step := 0
+var _cycle_step := -1
+var _calibration_size := CALIBRATION.size()
+var _n_cycle_steps := _calibration_size + 3
 
 
 func _init():
@@ -105,6 +105,15 @@ func _process(_delta: float) -> void:
 	if !visible or time == _last_update_time:
 		return
 	_last_update_time = time
+	_cycle_step += 1
+	if _cycle_step == _n_cycle_steps:
+		_cycle_step = 0
+	var cycle_value: float
+	if _cycle_step < _calibration_size:
+		cycle_value = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
+	else:
+		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
+	
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
@@ -114,11 +123,7 @@ func _process(_delta: float) -> void:
 	else:
 		_orbit_points.set_shader_param("time", time)
 		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
-		_orbit_points.set_shader_param("calibrator", PICKER_CALIBRATION[_calibration_step])
-	
-	_calibration_step += 1
-	if _calibration_step >= PICKER_CALIBRATION.size():
-		_calibration_step = 0
+		_orbit_points.set_shader_param("cycle_value", cycle_value)
 
 
 func _settings_listener(setting: String, value) -> void:

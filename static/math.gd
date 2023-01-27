@@ -270,3 +270,63 @@ static func linear2srgb(x: float) -> float:
 		return x * 12.92
 	else:
 		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
+
+
+# Curve fitting
+static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
+	# returns [a, b, c] where y = ax^2 + bx + c is least squares fit
+	var n := x_array.size()
+	var sum_x := 0.0
+	var sum_x2 := 0.0
+	var sum_x3 := 0.0
+	var sum_x4 := 0.0
+	var sum_y := 0.0
+	var sum_xy := 0.0
+	var sum_x2y := 0.0
+	for i in n:
+		var x: float = x_array[i]
+		var x2 := x * x
+		var x3 := x * x2
+		var x4 := x * x3
+		var y: float = y_array[i]
+		var xy := x * y
+		var x2y := x2 * y
+		sum_x += x
+		sum_x2 += x2
+		sum_x3 += x3
+		sum_x4 += x4
+		sum_y += y
+		sum_xy += xy
+		sum_x2y += x2y
+	var mean_x := sum_x / n
+	var mean_x2 := sum_x2 / n
+	var mean_y := sum_y / n
+	var S11 := sum_x2 - (sum_x * mean_x)
+	var S12 := sum_x3 - (sum_x * mean_x2)
+	var S22 := sum_x4 - (sum_x2 * mean_x2)
+	var Sy1 := sum_xy - (sum_y * mean_x)
+	var Sy2 := sum_x2y - (sum_y * mean_x2)
+	var divisor := S22 * S11 - S12 * S12
+	var b := (Sy1 * S22 - Sy2 * S12) / divisor
+	var a := (Sy2 * S11 - Sy1 * S12) / divisor
+	var c := mean_y - b * mean_x - a * mean_x2
+	return [a, b, c]
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

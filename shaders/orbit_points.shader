@@ -27,10 +27,9 @@ uniform float time = 0.0;
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
-uniform vec3 target_color = vec3(0.5);
-uniform float calibrator = 0.0;
+uniform float cycle_value = 0.0;
+uniform int test_id = 0;
 
-//varying flat vec3 test_color;
 
 void vertex() {
 	// orbital elements
@@ -90,11 +89,24 @@ void fragment() {
 	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range)
 			&& (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
 		// special color if under mouse
+		if (cycle_value < 1.0) {
+			EMISSION = vec3(cycle_value); // calibration color
+		} else {
+			// Ouch! GLES2 doesn't allow bit operators!
+			int shift_id = test_id;
+			if (cycle_value > 1.0) {
+				if (cycle_value == 2.0) {
+				shift_id /= 4096; // << 12
+				} else {
+					shift_id /= 16777216; // << 24
+				}
+			}
+//			float r1 = float(shift_id & 15) / 32.0 + 0.25;
+			
+			EMISSION = vec3(0.5); // encode id
+		}
 		
-//		vec3 screen_color = texture(viewport_texture, SCREEN_UV).rgb;
 		
-		
-		EMISSION = vec3(calibrator);
 
 		ALBEDO = vec3(0.0);
 	} else {
