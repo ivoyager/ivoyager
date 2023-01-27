@@ -28,7 +28,7 @@ uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float cycle_value = 0.0;
-uniform int test_id = 0;
+uniform int id = 0;
 
 
 void vertex() {
@@ -93,21 +93,30 @@ void fragment() {
 			EMISSION = vec3(cycle_value); // calibration color
 		} else {
 			// Ouch! GLES2 doesn't allow bit operators!
-			int shift_id = test_id;
-			if (cycle_value > 1.0) {
-				if (cycle_value == 2.0) {
-				shift_id /= 4096; // << 12
+			// TODO 4.0: recode w/ bit operators!
+			int shift_id;
+			int bits3 = id / 16777216; // << 24
+			if (cycle_value == 3.0){
+				shift_id = bits3;
+			} else {
+				int bits2 = (id - (bits3 * 16777216)) / 4096;
+				if (cycle_value == 2.0){
+					shift_id = bits2;
 				} else {
-					shift_id /= 16777216; // << 24
+					shift_id = id - bits2 * 4096 - bits3 * 16777216;
 				}
 			}
-//			float r1 = float(shift_id & 15) / 32.0 + 0.25;
+			int bbits = shift_id / 256;
+			int gbits = (shift_id - bbits * 256) / 16;
+			int rbits = shift_id - gbits * 16 - bbits * 256;
 			
-			EMISSION = vec3(0.5); // encode id
+			float r = float(rbits) / 32.0 + 0.25;
+			float g = float(gbits) / 32.0 + 0.25;
+			float b = float(bbits) / 32.0 + 0.25;
+			
+			EMISSION = vec3(r, g, b); // encode id
 		}
 		
-		
-
 		ALBEDO = vec3(0.0);
 	} else {
 		ALBEDO = vec3(0.0);

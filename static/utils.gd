@@ -26,10 +26,6 @@ class_name IVUtils
 # const utils := preload("res://ivoyager/static/utils.gd")
 
 
-const PICKER_CALIBRATION := [0.0, 0.25, 0.375, 0.5, 0.625, 0.75, 0.734375]
-
-
-
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:
@@ -43,6 +39,19 @@ static func free_procedural_nodes(node: Node) -> void:
 
 
 # Strings
+
+static func binary_str(flags: int) -> String:
+	# returns 64 bit string
+	var result := ""
+	var index := 0
+	while index < 64:
+		if index % 8 == 0 and index != 0:
+			result = "_" + result
+		result = "1" + result if flags & 1 else "0" + result
+		flags >>= 1
+		index += 1
+	return result
+
 
 static func get_real_str_precision(real_str: String) -> int:
 	# See table REAL format rules in solar_system/planets.tsv.

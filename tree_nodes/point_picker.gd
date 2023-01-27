@@ -89,10 +89,13 @@ func _on_frame_post_draw() -> void:
 #	picker_image.srgb_to_linear()
 	var color := picker_image.get_pixel(point_range, point_range)
 	var id := _detect_id_signal(color)
-	if id != -1:
-		if id > -2 or id != _last_id:
-			print(id)
-			_last_id = id
+#	if id != -1:
+#		if id >= 0:
+##			prints(IVUtils.binary_str(id), id)
+#			print(id)
+#		elif id != _last_id:
+#			print(id)
+#		_last_id = id
 	
 	
 #	prints(color, id)
@@ -142,7 +145,12 @@ func _detect_id_signal(color: Color) -> int:
 	
 	# end of cycle, calibrate & decode
 	_cycle_step = 0
-	var id := decode(get_calibrated_data(_calibration_colors, _value_colors))
+	var data := get_calibrated_data(_calibration_colors, _value_colors)
+	print("")
+	print(_calibration_colors[0])
+	print(_value_colors)
+	print(data)
+	var id := decode(data)
 	
 	return id # FIXME: use below after testing
 #	return -2 if id < 0 else id # negative id possible if 1/2 step out of range
@@ -212,9 +220,13 @@ func get_calibrated_data(calibration_colors: Array, value_colors: Array) -> Arra
 		yr.append(color.r)
 		yg.append(color.g)
 		yb.append(color.b)
-	var r_fit := IVMath.quadratic_fit(CALIBRATION, yr)
-	var g_fit := IVMath.quadratic_fit(CALIBRATION, yg)
-	var b_fit := IVMath.quadratic_fit(CALIBRATION, yb)
+	var r_fit := IVMath.quadratic_fit(yr, CALIBRATION)
+	var g_fit := IVMath.quadratic_fit(yg, CALIBRATION)
+	var b_fit := IVMath.quadratic_fit(yb, CALIBRATION)
+	
+	# FIXME: xy flip????
+	
+	
 	var ar: float = r_fit[0]
 	var br: float = r_fit[1]
 	var cr: float = r_fit[2]
