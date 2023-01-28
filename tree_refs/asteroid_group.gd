@@ -136,7 +136,7 @@ func finish_binary_import() -> void:
 	vec3ids.resize(size)
 	var i := 0
 	while i < size:
-		var id := point_picker.init_get_point_id(names[i])
+		var id := point_picker.get_new_point_id(names[i])
 		var vec3id := utils.id2vec(id)
 		vec3ids[i] = vec3id
 		i += 1

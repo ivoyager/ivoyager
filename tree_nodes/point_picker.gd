@@ -84,20 +84,35 @@ func _ready() -> void:
 #	var x := [1.0, 3.0, 5.0, 7.0, 9.0]
 #	var y := [32.5, 37.3, 36.4, 32.4, 28.5]
 #	print(IVMath.quadratic_fit(x, y)) # [-0.366071, 3.015714, 30.421786]
+	
+#	prints(2, 2 >> 12, utils.id2vec(2))
+	
+#	print(utils.vec2id(utils.id2vec(1)))
+#
+#
+#	print(utils.vec2id(utils.id2vec(999)))
+#	print(utils.vec2id(utils.id2vec(68_719_476_735)))
 
 	
 	
 
-var counter := 0
+#var _id := 0
 
-func init_get_point_id(name_str: String) -> int:
+func get_new_point_id(name_str: String) -> int:
 	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
 	# Assumes we won't exceed ~30 billion points.
 	if ids.has(name_str):
 		print("WARNING! Duplicated point name: ", name_str)
+	
+	
 	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
 	while names.has(id):
 		id = (randi() << 4) | (randi() & 15)
+	
+	# debug
+#	var id := _id
+#	_id += 1
+	
 	names[id] = name_str
 	ids[name_str] = id
 	
@@ -179,11 +194,11 @@ func _on_frame_post_draw() -> void:
 	var color := picker_image.get_pixel(point_range, point_range)
 	var id := _detect_id_signal(color)
 	if id != -1:
-		if id >= 0:
-#			prints(IVUtils.binary_str(id), id)
-			print(ids[id])
-		elif id != _last_id:
-			print(id)
+#		if id >= 0:
+##			prints(IVUtils.binary_str(id), id)
+#			print(names[id])
+#		elif id != _last_id:
+#			print(id)
 		_last_id = id
 	
 	
@@ -239,8 +254,8 @@ func _detect_id_signal(color: Color) -> int:
 	# end of cycle; calibrate, decode and return if valid id
 	_cycle_step = 0
 	var id := decode(_get_calibrated_floats(_calibration_colors, _value_colors))
-	prints("raw", id)
-	return id if ids.has(id) else -2 # filter spurious ids
+	prints(id, "  ", names.get(id, ""))
+	return id if names.has(id) else -2 # filter spurious ids
 
 
 func _get_calibrated_floats(calibration_colors: Array, value_colors: Array) -> Array:

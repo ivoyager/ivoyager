@@ -23,8 +23,8 @@ extends MeshInstance
 # This node constitutes many (up to 100000s of) display points as shaders that
 # maintain their own orbit.
 
-const ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
-		& VisualServer.ARRAY_FORMAT_COLOR
+const ORBIT_FLAGS = (ArrayMesh.ARRAY_FORMAT_VERTEX
+		| ArrayMesh.ARRAY_FORMAT_NORMAL | ArrayMesh.ARRAY_FORMAT_COLOR)
 const TROJAN_ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
 		& VisualServer.ARRAY_FORMAT_COLOR & VisualServer.ARRAY_FORMAT_TEX_UV2
 const CALIBRATION := IVPointPicker.CALIBRATION
@@ -69,6 +69,7 @@ func draw_points() -> void:
 	
 	if !group.is_trojans:
 		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
+#		arrays[ArrayMesh.ARRAY_TANGENT] = group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g

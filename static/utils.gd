@@ -86,18 +86,18 @@ static func init_array(size: int, init_value = null) -> Array:
 # Conversions
 
 static func id2vec(id: int) -> Vector3:
-	# converts 36 bit integer to Vector3 (12 bit / float)
+	# converts 36 bit integer to Vector3 (12 bit / element)
 	assert(id >= 0 and id < (1 << 36)) # up to 68_719_476_735
 	var int1 := id & 4095 # (1 << 12) - 1
-	id >> 12
+	id >>= 12
 	var int2 := id & 4095
-	id >> 12
+	id >>= 12
 	var int3 := id & 4095
 	return Vector3(float(int1), float(int2), float(int3))
 
 
 static func vec2id(vector: Vector3) -> int:
-	# converts Vector3 (12 bit / float) to 36 bit integer 
+	# converts Vector3 (12 bit / element) to 36 bit integer 
 	var int1 := int(vector.x)
 	var int2 := int(vector.y)
 	var int3 := int(vector.z)
@@ -185,10 +185,6 @@ static func get_real_str_precision(real_str: String) -> int:
 
 # Misc
 
-static func randi36() -> int:
-	# random 36 bit integer, instead of the built in 32
-	
-	return randi() | (randi() << 4)
 
 
 # Patches
