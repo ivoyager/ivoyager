@@ -311,8 +311,14 @@ static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
 	var a := (Sy2 * S11 - Sy1 * S12) / divisor
 	var c := mean_y - b * mean_x - a * mean_x2
 	return [a, b, c]
-	
-	
+
+
+static func quadratic(x: float, coefficients: Array) -> float:
+	var a: float = coefficients[0]
+	var b: float = coefficients[1]
+	var c: float = coefficients[2]
+	return a * x * x + b * x + c
+
 	
 
 

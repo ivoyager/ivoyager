@@ -28,7 +28,7 @@ uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float cycle_value = 0.0;
-uniform int id = 0;
+uniform int id = 9999;
 
 
 void vertex() {

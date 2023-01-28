@@ -22,6 +22,7 @@ extends Viewport
 
 # Decodes shader object points (e.g., asteroids) for selection.
 
+const math := preload("res://ivoyager/static/math.gd")
 const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(1.0/32.0, 1.0/32.0, 1.0/32.0, 0.0)
 
@@ -64,7 +65,7 @@ func _ready() -> void:
 	_value_colors.resize(3)
 	
 #	# test encode/decode
-#	var test := [0, 1000, 12345678, 99999999, 68719476735]
+#	var test := [0, 1000, 12345678, 99999999, 68_719_476_735]
 #	for i in test.size():
 #		print(decode(encode(test[i])))
 
@@ -72,6 +73,8 @@ func _ready() -> void:
 #	var x := [1.0, 3.0, 5.0, 7.0, 9.0]
 #	var y := [32.5, 37.3, 36.4, 32.4, 28.5]
 #	print(IVMath.quadratic_fit(x, y)) # [-0.366071, 3.015714, 30.421786]
+	
+	print(vector2id(id2vector(68_719_476_735)))
 
 
 func _on_node2d_draw() -> void:
@@ -89,13 +92,13 @@ func _on_frame_post_draw() -> void:
 #	picker_image.srgb_to_linear()
 	var color := picker_image.get_pixel(point_range, point_range)
 	var id := _detect_id_signal(color)
-#	if id != -1:
-#		if id >= 0:
-##			prints(IVUtils.binary_str(id), id)
-#			print(id)
-#		elif id != _last_id:
-#			print(id)
-#		_last_id = id
+	if id != -1:
+		if id >= 0:
+#			prints(IVUtils.binary_str(id), id)
+			print(id)
+		elif id != _last_id:
+			print(id)
+		_last_id = id
 	
 	
 #	prints(color, id)
@@ -146,15 +149,8 @@ func _detect_id_signal(color: Color) -> int:
 	# end of cycle, calibrate & decode
 	_cycle_step = 0
 	var data := get_calibrated_data(_calibration_colors, _value_colors)
-	print("")
-	print(_calibration_colors[0])
-	print(_value_colors)
-	print(data)
 	var id := decode(data)
-	
-	return id # FIXME: use below after testing
-#	return -2 if id < 0 else id # negative id possible if 1/2 step out of range
-
+	return id if id >= 0 else -2 # spurious negatives are possible
 
 
 static func encode(id: int) -> Array:
@@ -207,62 +203,59 @@ static func decode(array: Array) -> int:
 
 
 func get_calibrated_data(calibration_colors: Array, value_colors: Array) -> Array:
-	# TODO: Use _quatratic_fit() w/ _pre_quadratic_fit()
 	# generate calibration coefficients
 	var n := CALIBRATION.size()
 	assert(calibration_colors.size() == n)
 	assert(value_colors.size() == 3)
-	var yr := []
-	var yg := []
-	var yb := []
+	var calibration_r := []
+	var calibration_g := []
+	var calibration_b := []
 	for i in n:
 		var color: Color = calibration_colors[i]
-		yr.append(color.r)
-		yg.append(color.g)
-		yb.append(color.b)
-	var r_fit := IVMath.quadratic_fit(yr, CALIBRATION)
-	var g_fit := IVMath.quadratic_fit(yg, CALIBRATION)
-	var b_fit := IVMath.quadratic_fit(yb, CALIBRATION)
+		calibration_r.append(color.r)
+		calibration_g.append(color.g)
+		calibration_b.append(color.b)
+	var r_coeffs := math.quadratic_fit(calibration_r, CALIBRATION)
+	var g_coeffs := math.quadratic_fit(calibration_g, CALIBRATION)
+	var b_coeffs := math.quadratic_fit(calibration_b, CALIBRATION)
 	
-	# FIXME: xy flip????
-	
-	
-	var ar: float = r_fit[0]
-	var br: float = r_fit[1]
-	var cr: float = r_fit[2]
-	var ag: float = g_fit[0]
-	var bg: float = g_fit[1]
-	var cg: float = g_fit[2]
-	var ab: float = b_fit[0]
-	var bb: float = b_fit[1]
-	var cb: float = b_fit[2]
 	# calibrate values
 	var color1: Color = value_colors[0]
 	var color2: Color = value_colors[1]
 	var color3: Color = value_colors[2]
-	var x1r := color1.r
-	var x1g := color1.g
-	var x1b := color1.b
-	var x2r := color2.r
-	var x2g := color2.g
-	var x2b := color2.b
-	var x3r := color3.r
-	var x3g := color3.g
-	var x3b := color3.b
-	
-	var r1 := ar * x1r * x1r + br * x1r + cr
-	var r2 := ar * x2r * x2r + br * x2r + cr
-	var r3 := ar * x3r * x3r + br * x3r + cr
-	var g1 := ag * x1g * x1g + bg * x1g + cg
-	var g2 := ag * x2g * x2g + bg * x2g + cg
-	var g3 := ag * x3g * x3g + bg * x3g + cg
-	var b1 := ab * x1b * x1b + bb * x1b + cb
-	var b2 := ab * x2b * x2b + bb * x2b + cb
-	var b3 := ab * x3b * x3b + bb * x3b + cb
+	var r1 := math.quadratic(color1.r, r_coeffs)
+	var r2 := math.quadratic(color2.r, r_coeffs)
+	var r3 := math.quadratic(color3.r, r_coeffs)
+	var g1 := math.quadratic(color1.g, g_coeffs)
+	var g2 := math.quadratic(color2.g, g_coeffs)
+	var g3 := math.quadratic(color3.g, g_coeffs)
+	var b1 := math.quadratic(color1.b, b_coeffs)
+	var b2 := math.quadratic(color2.b, b_coeffs)
+	var b3 := math.quadratic(color3.b, b_coeffs)
 	
 	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
 
 
+static func id2vector(id: int) -> Vector3:
+	# sutable for GUI shader floats
+	assert(id >= 0 and id < (1 << 36)) # up to 68_719_476_735
+	var int1 := id & 4095 # 1 << 12 - 1
+	id >> 12
+	var int2 := id & 4095
+	id >> 12
+	var int3 := id & 4095
+	return Vector3(float(int1), float(int2), float(int3))
+
+
+static func vector2id(vector: Vector3) -> int:
+	# 12 bits per elements, for 36 bits
+	var int1 := int(vector.x)
+	var int2 := int(vector.y)
+	var int3 := int(vector.z)
+	assert(int1 >= 0 and int1 < 1 << 12)
+	assert(int2 >= 0 and int2 < 1 << 12)
+	assert(int3 >= 0 and int3 < 1 << 12)
+	return int1 | int2 << 12 | int3 << 24
 
 
 
