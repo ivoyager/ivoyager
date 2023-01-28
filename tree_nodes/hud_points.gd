@@ -68,22 +68,10 @@ func draw_points() -> void:
 	arrays.resize(ArrayMesh.ARRAY_MAX)
 	
 	if !group.is_trojans:
-		
-		# WIP - set identifiers for mouse point picker
-		var test_identifiers := PoolVector3Array()
-		test_identifiers.resize(group.dummy_translations.size())
-		test_identifiers.fill(Vector3(0.5, 0.5, 0.5))
-		
-		arrays[ArrayMesh.ARRAY_VERTEX] = test_identifiers
-		
-		
+		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g
-		
-
-
-		
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ORBIT_FLAGS)
 	else: # trojans
 		arrays[ArrayMesh.ARRAY_VERTEX] = group.dummy_translations
@@ -96,8 +84,9 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_orbit_points.set_shader_param("point_size", 10.0)
-#	if !group.is_trojans:
-#		_orbit_points.set_shader_param("viewport_texture", IVGlobal.get_tree().root.get_texture())
+
+
+
 
 
 func _process(_delta: float) -> void:

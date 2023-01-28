@@ -248,34 +248,13 @@ static func get_fov_scaling_factor(fov: float) -> float:
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
 
 
-# Conversions (use IVUnits for most conversions!)
-static func srgb2linear(color: Color) -> Color:
-	if color.r <= 0.04045:
-		color.r /= 12.92
-	else:
-		color.r = pow((color.r + 0.055) / 1.055, 2.4)
-	if color.g <= 0.04045:
-		color.g /= 12.92
-	else:
-		color.g = pow((color.g + 0.055) / 1.055, 2.4)
-	if color.b <= 0.04045:
-		color.b /= 12.92
-	else:
-		color.b = pow((color.b + 0.055) / 1.055, 2.4)
-	return color
+# Quadratic fit and transformation
 
-
-static func linear2srgb(x: float) -> float:
-	if x <= 0.0031308:
-		return x * 12.92
-	else:
-		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
-
-
-# Curve fitting
 static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
-	# returns [a, b, c] where y = ax^2 + bx + c is least squares fit
+	# Returns [a, b, c] where y = ax^2 + bx + c is least-squares fit,
+	# or [0.0, 0.0, 0.0] if indeterminant or nearly indeterminant.
 	var n := x_array.size()
+	assert(n == y_array.size())
 	var sum_x := 0.0
 	var sum_x2 := 0.0
 	var sum_x3 := 0.0
@@ -286,8 +265,8 @@ static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
 	for i in n:
 		var x: float = x_array[i]
 		var x2 := x * x
-		var x3 := x * x2
-		var x4 := x * x3
+		var x3 := x2 * x
+		var x4 := x3 * x
 		var y: float = y_array[i]
 		var xy := x * y
 		var x2y := x2 * y
@@ -301,12 +280,14 @@ static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
 	var mean_x := sum_x / n
 	var mean_x2 := sum_x2 / n
 	var mean_y := sum_y / n
-	var S11 := sum_x2 - (sum_x * mean_x)
-	var S12 := sum_x3 - (sum_x * mean_x2)
-	var S22 := sum_x4 - (sum_x2 * mean_x2)
-	var Sy1 := sum_xy - (sum_y * mean_x)
-	var Sy2 := sum_x2y - (sum_y * mean_x2)
+	var S11 := sum_x2 - sum_x * mean_x
+	var S12 := sum_x3 - sum_x * mean_x2
+	var S22 := sum_x4 - sum_x2 * mean_x2
+	var Sy1 := sum_xy - sum_y * mean_x
+	var Sy2 := sum_x2y - sum_y * mean_x2
 	var divisor := S22 * S11 - S12 * S12
+	if is_zero_approx(divisor):
+		return [0.0, 0.0, 0.0]
 	var b := (Sy1 * S22 - Sy2 * S12) / divisor
 	var a := (Sy2 * S11 - Sy1 * S12) / divisor
 	var c := mean_y - b * mean_x - a * mean_x2

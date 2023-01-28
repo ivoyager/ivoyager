@@ -38,7 +38,99 @@ static func free_procedural_nodes(node: Node) -> void:
 				free_procedural_nodes(child)
 
 
-# Strings
+static func get_deep(target, path: String): # untyped return
+	# searches property/element path starting from target
+	if !path:
+		return target
+	var path_stack := Array(path.split("/", false))
+	path_stack.invert()
+	while path_stack:
+		var item_name: String = path_stack.pop_back()
+		target = target.get(item_name)
+		if target == null:
+			return null
+	return target
+
+
+static func get_path_result(target, path: String, args := []): # untyped return
+	# as above but path could include methods
+	if !path:
+		return target
+	var path_stack := Array(path.split("/", false))
+	path_stack.invert()
+	while path_stack:
+		var item_name: String = path_stack.pop_back()
+		if target is Object and target.has_method(item_name):
+			target = target.callv(item_name, args)
+		else:
+			target = target.get(item_name)
+		if target == null:
+			return null
+	return target
+
+
+# Arrays
+
+static func init_array(size: int, init_value = null) -> Array:
+	var array := []
+	array.resize(size)
+	if init_value == null:
+		return array
+	var i := 0
+	while i < size:
+		array[i] = init_value
+		i += 1
+	return array
+
+
+# Conversions
+
+static func id2vec(id: int) -> Vector3:
+	# converts 36 bit integer to Vector3 (12 bit / float)
+	assert(id >= 0 and id < (1 << 36)) # up to 68_719_476_735
+	var int1 := id & 4095 # (1 << 12) - 1
+	id >> 12
+	var int2 := id & 4095
+	id >> 12
+	var int3 := id & 4095
+	return Vector3(float(int1), float(int2), float(int3))
+
+
+static func vec2id(vector: Vector3) -> int:
+	# converts Vector3 (12 bit / float) to 36 bit integer 
+	var int1 := int(vector.x)
+	var int2 := int(vector.y)
+	var int3 := int(vector.z)
+	assert(int1 >= 0 and int1 < 4096) # 1 << 12
+	assert(int2 >= 0 and int2 < 4096)
+	assert(int3 >= 0 and int3 < 4096)
+	return int1 | int2 << 12 | int3 << 24
+
+
+static func srgb2linear(color: Color) -> Color:
+	if color.r <= 0.04045:
+		color.r /= 12.92
+	else:
+		color.r = pow((color.r + 0.055) / 1.055, 2.4)
+	if color.g <= 0.04045:
+		color.g /= 12.92
+	else:
+		color.g = pow((color.g + 0.055) / 1.055, 2.4)
+	if color.b <= 0.04045:
+		color.b /= 12.92
+	else:
+		color.b = pow((color.b + 0.055) / 1.055, 2.4)
+	return color
+
+
+static func linear2srgb(x: float) -> float:
+	if x <= 0.0031308:
+		return x * 12.92
+	else:
+		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
+
+
+# Number strings
 
 static func binary_str(flags: int) -> String:
 	# returns 64 bit string
@@ -91,53 +183,16 @@ static func get_real_str_precision(real_str: String) -> int:
 	return n_digits
 
 
-# Untyped tree/property searches
+# Misc
 
-static func get_deep(target, path: String): # untyped return
-	if !path:
-		return target
-	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
-	while path_stack:
-		var item_name: String = path_stack.pop_back()
-		target = target.get(item_name)
-		if target == null:
-			return null
-	return target
+static func randi36() -> int:
+	# random 36 bit integer, instead of the built in 32
+	
+	return randi() | (randi() << 4)
 
 
-static func get_path_result(target, path: String, args := []): # untyped return
-	# as above but path could include methods
-	if !path:
-		return target
-	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
-	while path_stack:
-		var item_name: String = path_stack.pop_back()
-		if target is Object and target.has_method(item_name):
-			target = target.callv(item_name, args)
-		else:
-			target = target.get(item_name)
-		if target == null:
-			return null
-	return target
+# Patches
 
-
-# Arrays
-
-static func init_array(size: int, init_value = null) -> Array:
-	var array := []
-	array.resize(size)
-	if init_value == null:
-		return array
-	var i := 0
-	while i < size:
-		array[i] = init_value
-		i += 1
-	return array
-
-
-# patch
 static func c_unescape_patch(text: String) -> String:
 	# Use as patch until c_unescape() is fixed (Godot issue #38716).
 	# Implement escapes as needed here. It appears that large unicodes are not

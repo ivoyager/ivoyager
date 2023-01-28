@@ -31,6 +31,7 @@ class_name IVAsteroidGroup
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 const units := preload("res://ivoyager/static/units.gd")
+const utils := preload("res://ivoyager/static/utils.gd")
 
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
@@ -42,6 +43,7 @@ const PERSIST_PROPERTIES := [
 	"lagrange_point",
 	"group_name",
 	"max_apoapsis",
+	"vec3ids",
 	"names",
 	"iau_number",
 	"magnitudes",
@@ -63,9 +65,12 @@ var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
 
 var max_apoapsis := 0.0
+var vec3ids := PoolVector3Array() # encodes 36-bit point_id from PointPicker
+# below is binary import data
 var names := PoolStringArray()
-var iau_numbers := PoolIntArray() # -1 for unnumbered
+var iau_numbers := PoolIntArray() # -1 for unnumbered (FIXME: 32-bit isn't enough!)
 var magnitudes := PoolRealArray()
+
 var dummy_translations := PoolVector3Array() # all 0's
 
 # non-Trojans - arrays optimized for MeshArray construction
@@ -78,7 +83,6 @@ var Om_w_D_f := PoolColorArray()
 var th0 := PoolVector2Array()
 
 var _index := 0
-
 
 # *****************************************************************************
 
@@ -120,10 +124,24 @@ func read_binary(binary: File) -> void:
 
 
 func finish_binary_import() -> void:
+	# convert binary data to internal units, etc.
 	if !is_trojans:
 		_fix_binary_keplerian_elements()
 	else:
 		_fix_binary_trojan_elements()
+	
+	# set ids for PointPicker selection
+	var point_picker: IVPointPicker = IVGlobal.program.PointPicker
+	var size := names.size()
+	vec3ids.resize(size)
+	var i := 0
+	while i < size:
+		var id := point_picker.init_get_point_id(names[i])
+		var vec3id := utils.id2vec(id)
+		vec3ids[i] = vec3id
+		i += 1
+	
+	# feedback
 	assert(DPRINT and _debug_print() or true)
 	assert(VPRINT and _verbose_print() or true)
 

@@ -163,7 +163,7 @@ var gui_nodes := {
 	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_WorldController_ = IVWorldController, # Control ok
-	_PointPicker_ = IVPointPicker,
+	_PointPicker_ = IVPointPicker, # Some dependencies
 	_ProjectGUI_ = null, # Project MUST supply its own top Control!
 	_SplashScreen_ = null, # Needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove

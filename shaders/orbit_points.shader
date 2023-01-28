@@ -75,9 +75,11 @@ void vertex() {
 	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
 	float z = r * sin(i) * sin_w_nu;
 	
-	// we skip VERTEX, but this is how we to VERTEX and then POSITION...
+	// We skip VERTEX which is used to encode point_id.
+	// But this is how we would get VERTEX and then POSITION...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
 	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
+	// 
 	
 	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
 
@@ -95,17 +97,28 @@ void fragment() {
 			// Ouch! GLES2 doesn't allow bit operators!
 			// TODO 4.0: recode w/ bit operators!
 			int shift_id;
-			int bits3 = id / 16777216; // << 24
-			if (cycle_value == 3.0){
-				shift_id = bits3;
+//			int bits3 = id / 16777216; // << 24
+//			if (cycle_value == 3.0){
+//				shift_id = bits3;
+//			} else {
+//				int bits2 = (id - (bits3 * 16777216)) / 4096;
+//				if (cycle_value == 2.0){
+//					shift_id = bits2;
+//				} else {
+//					shift_id = id - bits2 * 4096 - bits3 * 16777216;
+//				}
+//			}
+			if (cycle_value == 1.0){
+				shift_id = int(VERTEX.r);
 			} else {
-				int bits2 = (id - (bits3 * 16777216)) / 4096;
 				if (cycle_value == 2.0){
-					shift_id = bits2;
+					shift_id = int(VERTEX.g);
 				} else {
-					shift_id = id - bits2 * 4096 - bits3 * 16777216;
+					shift_id = int(VERTEX.b);
 				}
 			}
+			
+			
 			int bbits = shift_id / 256;
 			int gbits = (shift_id - bbits * 256) / 16;
 			int rbits = shift_id - gbits * 16 - bbits * 256;
