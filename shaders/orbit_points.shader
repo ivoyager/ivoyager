@@ -28,7 +28,9 @@ uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float cycle_value = 0.0;
-uniform int id = 9999;
+
+
+varying flat vec3 vec3id;
 
 
 void vertex() {
@@ -85,6 +87,8 @@ void vertex() {
 
 	POINT_SIZE = point_size;
 	
+	vec3id = VERTEX;
+	
 }
 
 void fragment() {
@@ -109,15 +113,14 @@ void fragment() {
 //				}
 //			}
 			if (cycle_value == 1.0){
-				shift_id = int(VERTEX.r);
+				shift_id = int(vec3id.x);
 			} else {
 				if (cycle_value == 2.0){
-					shift_id = int(VERTEX.g);
+					shift_id = int(vec3id.y);
 				} else {
-					shift_id = int(VERTEX.b);
+					shift_id = int(vec3id.z);
 				}
 			}
-			
 			
 			int bbits = shift_id / 256;
 			int gbits = (shift_id - bbits * 256) / 16;
@@ -127,7 +130,8 @@ void fragment() {
 			float g = float(gbits) / 32.0 + 0.25;
 			float b = float(bbits) / 32.0 + 0.25;
 			
-			EMISSION = vec3(r, g, b); // encode id
+			EMISSION = vec3(r, g, b); // encodes id
+
 		}
 		
 		ALBEDO = vec3(0.0);

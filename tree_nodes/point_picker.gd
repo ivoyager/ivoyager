@@ -24,8 +24,19 @@ extends Viewport
 
 const math := preload("res://ivoyager/static/math.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
-const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
-const COLOR_HALF_STEP := Color(1.0/32.0, 1.0/32.0, 1.0/32.0, 0.0)
+const CALIBRATION := [0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5675, 0.625, 0.6875, 0.75]
+#const CALIBRATION := [
+#	0.25, 0.28125,
+#	0.3125, 0.34375,
+#	0.375, 0.40625,
+#	0.4375, 0.46875,
+#	0.5, 0.53125,
+#	0.5675, 0.59375,
+#	0.625, 0.65625,
+#	0.6875, 0.71875,
+#	0.75
+#	]
+const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := ["ids", "names"]
@@ -45,14 +56,13 @@ var _delta60 := 0.0
 var _calibration_size := CALIBRATION.size()
 var _cycle_step := 0
 var _calibration_colors := []
-var _value_colors := []
-var _last_id := -1
 var _calibration_r := []
 var _calibration_g := []
 var _calibration_b := []
+var _value_colors := []
+var _adj_values := []
+var _last_id := -1
 
-
-#onready var _viewport := get_tree().root
 onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
 onready var _src_offset = Vector2.ONE * point_range
 onready var _src_length = point_range * 2.0 + 1.0
@@ -74,7 +84,9 @@ func _ready() -> void:
 	_calibration_r.resize(_calibration_size)
 	_calibration_g.resize(_calibration_size)
 	_calibration_b.resize(_calibration_size)
+	_adj_values.resize(9)
 	
+
 #	# test encode/decode
 #	var test := [0, 1000, 12345678, 99999999, 68_719_476_735]
 #	for i in test.size():
@@ -174,6 +186,21 @@ static func decode(array: Array) -> int:
 	return c
 
 
+static func debug_decode_residuals(array: Array) -> void:
+	
+	prints(
+		(array[0] - 0.25) * 32.0,
+		(array[1] - 0.25) * 32.0,
+		(array[2] - 0.25) * 32.0,
+		(array[3] - 0.25) * 32.0,
+		(array[4] - 0.25) * 32.0,
+		(array[5] - 0.25) * 32.0,
+		(array[6] - 0.25) * 32.0,
+		(array[7] - 0.25) * 32.0,
+		(array[8] - 0.25) * 32.0
+	)
+
+
 # private
 
 func _on_node2d_draw() -> void:
@@ -194,16 +221,11 @@ func _on_frame_post_draw() -> void:
 	var color := picker_image.get_pixel(point_range, point_range)
 	var id := _detect_id_signal(color)
 	if id != -1:
-#		if id >= 0:
-##			prints(IVUtils.binary_str(id), id)
-#			print(names[id])
-#		elif id != _last_id:
-#			print(id)
+		if id >= 0:
+			print(names[id])
+		elif id != _last_id:
+			print(id)
 		_last_id = id
-	
-	
-#	prints(color, id)
-	
 	_node2d.update() # force a draw signal
 
 
@@ -251,41 +273,74 @@ func _detect_id_signal(color: Color) -> int:
 	if _cycle_step < _calibration_size + 3:
 		return -1 # processing
 	
-	# end of cycle; calibrate, decode and return if valid id
+	# complete signal cycle!
 	_cycle_step = 0
-	var id := decode(_get_calibrated_floats(_calibration_colors, _value_colors))
-	prints(id, "  ", names.get(id, ""))
+	
+	# calibrate
+	for i in _calibration_size:
+		var calibration_color: Color = _calibration_colors[i]
+		_calibration_r[i] = calibration_color.r
+		_calibration_g[i] = calibration_color.g
+		_calibration_b[i] = calibration_color.b
+	for i in 3:
+		var value_color: Color = _value_colors[i]
+		var r := value_color.r
+		var g := value_color.g
+		var b := value_color.b
+		
+		var index := _calibration_r.bsearch(r) - 1
+		if index == -1:
+			index = 0
+		elif index == _calibration_size - 1:
+			index = _calibration_size - 2
+		var weight := inverse_lerp(_calibration_r[index], _calibration_r[index + 1], r)
+		_adj_values[i * 3] = lerp(CALIBRATION[index], CALIBRATION[index + 1], weight)
+		
+		index = _calibration_g.bsearch(g) - 1
+		if index == -1:
+			index = 0
+		elif index == _calibration_size - 1:
+			index = _calibration_size - 2
+		weight = inverse_lerp(_calibration_g[index], _calibration_g[index + 1], g)
+		_adj_values[i * 3 + 1] = lerp(CALIBRATION[index], CALIBRATION[index + 1], weight)
+		
+		index = _calibration_b.bsearch(b) - 1
+		if index == -1:
+			index = 0
+		elif index == _calibration_size - 1:
+			index = _calibration_size - 2
+		weight = inverse_lerp(_calibration_b[index], _calibration_b[index + 1], b)
+		_adj_values[i * 3 + 2] = lerp(CALIBRATION[index], CALIBRATION[index + 1], weight)
+	
+	var id := decode(_adj_values)
+
+#	prints(id, "  ", names.get(id, "-"))
+	
 	return id if names.has(id) else -2 # filter spurious ids
 
 
-func _get_calibrated_floats(calibration_colors: Array, value_colors: Array) -> Array:
-	# generate calibration coefficients
-	for i in _calibration_size:
-		var color: Color = calibration_colors[i]
-		_calibration_r[i] = color.r
-		_calibration_g[i] = color.g
-		_calibration_b[i] = color.b
-	
-	# TODO: Try faster optimized fit using Basis matrix math
-	
-	var r_coeffs := math.quadratic_fit(_calibration_r, CALIBRATION)
-	var g_coeffs := math.quadratic_fit(_calibration_g, CALIBRATION)
-	var b_coeffs := math.quadratic_fit(_calibration_b, CALIBRATION)
-	
-	# calibrate values
-	var color1: Color = value_colors[0]
-	var color2: Color = value_colors[1]
-	var color3: Color = value_colors[2]
-	var r1 := math.quadratic(color1.r, r_coeffs)
-	var r2 := math.quadratic(color2.r, r_coeffs)
-	var r3 := math.quadratic(color3.r, r_coeffs)
-	var g1 := math.quadratic(color1.g, g_coeffs)
-	var g2 := math.quadratic(color2.g, g_coeffs)
-	var g3 := math.quadratic(color3.g, g_coeffs)
-	var b1 := math.quadratic(color1.b, b_coeffs)
-	var b2 := math.quadratic(color2.b, b_coeffs)
-	var b3 := math.quadratic(color3.b, b_coeffs)
-	
-	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
+#func _get_calibrated_floats(calibration_colors: Array, value_colors: Array) -> Array:
+#	# generate calibration coefficients
+#
+#
+#	var r_coeffs := math.quadratic_fit(_calibration_r, CALIBRATION)
+#	var g_coeffs := math.quadratic_fit(_calibration_g, CALIBRATION)
+#	var b_coeffs := math.quadratic_fit(_calibration_b, CALIBRATION)
+#
+#	# calibrate values
+#	var color1: Color = value_colors[0]
+#	var color2: Color = value_colors[1]
+#	var color3: Color = value_colors[2]
+#	var r1 := math.quadratic(color1.r, r_coeffs)
+#	var r2 := math.quadratic(color2.r, r_coeffs)
+#	var r3 := math.quadratic(color3.r, r_coeffs)
+#	var g1 := math.quadratic(color1.g, g_coeffs)
+#	var g2 := math.quadratic(color2.g, g_coeffs)
+#	var g3 := math.quadratic(color3.g, g_coeffs)
+#	var b1 := math.quadratic(color1.b, b_coeffs)
+#	var b2 := math.quadratic(color2.b, b_coeffs)
+#	var b3 := math.quadratic(color3.b, b_coeffs)
+#
+#	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
 
 
