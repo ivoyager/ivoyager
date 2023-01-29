@@ -69,7 +69,6 @@ func draw_points() -> void:
 	
 	if !group.is_trojans:
 		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
-#		arrays[ArrayMesh.ARRAY_TANGENT] = group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g
@@ -84,10 +83,7 @@ func draw_points() -> void:
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit_points.set_shader_param("point_size", 10.0)
-
-
-
+	_orbit_points.set_shader_param("point_size", 3.0) # WIP: will use settings
 
 
 func _process(_delta: float) -> void:

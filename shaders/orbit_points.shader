@@ -22,7 +22,7 @@
 shader_type spatial;
 render_mode cull_disabled, skip_vertex_transform;
 
-uniform float mouse_range = 10.0;
+uniform float mouse_range = 1.0;
 uniform float time = 0.0;
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord = vec2(0.0, 0.0);
@@ -87,55 +87,72 @@ void vertex() {
 
 	POINT_SIZE = point_size;
 	
-	vec3id = VERTEX;
+	vec3id = VERTEX; // yeah, that's crazy!
 	
 }
 
+
+bool is_id_signaling_pixel(vec2 offset){
+	// Follows grid pattern near mouse described in PointPicker. You can modify
+	// to return true in full area (eg, 13 x 13), but that causes PointPicker
+	// to do a worse job identifying valid ids in a crowded field of points.
+	//
+	// Note that FRAGCOORD is always offset +vec(0.5) from pixel coordinate.
+	// If that changes it will break this function.
+	 
+	offset -= vec2(0.5);
+	offset = abs(offset);
+	
+	if (offset.x > 6.0) {
+		return false;
+	}
+	if (offset.y > 6.0) {
+		return false;
+	}
+	if (offset.x != 0.0 && offset.x != 3.0 && offset.x != 6.0) {
+		return false;
+	}
+	if (offset.y != 0.0 && offset.y != 3.0 && offset.y != 6.0) {
+		return false;
+	}
+	
+	return true;
+}
+
+
 void fragment() {
-	if ((abs(mouse_coord.x - FRAGCOORD.x) < mouse_range)
-			&& (abs(mouse_coord.y - FRAGCOORD.y) < mouse_range)){
-		// special color if under mouse
+	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
+		// broadcast callibration or id color
 		if (cycle_value < 1.0) {
 			EMISSION = vec3(cycle_value); // calibration color
 		} else {
 			// Ouch! GLES2 doesn't allow bit operators!
 			// TODO 4.0: recode w/ bit operators!
-			int shift_id;
-//			int bits3 = id / 16777216; // << 24
-//			if (cycle_value == 3.0){
-//				shift_id = bits3;
-//			} else {
-//				int bits2 = (id - (bits3 * 16777216)) / 4096;
-//				if (cycle_value == 2.0){
-//					shift_id = bits2;
-//				} else {
-//					shift_id = id - bits2 * 4096 - bits3 * 16777216;
-//				}
-//			}
+			int id_element;
 			if (cycle_value == 1.0){
-				shift_id = int(vec3id.x);
+				id_element = int(vec3id.x);
 			} else {
 				if (cycle_value == 2.0){
-					shift_id = int(vec3id.y);
+					id_element = int(vec3id.y);
 				} else {
-					shift_id = int(vec3id.z);
+					id_element = int(vec3id.z);
 				}
 			}
 			
-			int bbits = shift_id / 256;
-			int gbits = (shift_id - bbits * 256) / 16;
-			int rbits = shift_id - gbits * 16 - bbits * 256;
+			int bbits = id_element / 256;
+			int gbits = (id_element - bbits * 256) / 16;
+			int rbits = id_element - gbits * 16 - bbits * 256;
 			
 			float r = float(rbits) / 32.0 + 0.25;
 			float g = float(gbits) / 32.0 + 0.25;
 			float b = float(bbits) / 32.0 + 0.25;
 			
 			EMISSION = vec3(r, g, b); // encodes id
-
 		}
-		
 		ALBEDO = vec3(0.0);
+		
 	} else {
+		// color for this point group
 		ALBEDO = vec3(0.0);
 		EMISSION = color;
 	}
