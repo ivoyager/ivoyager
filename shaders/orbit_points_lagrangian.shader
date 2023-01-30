@@ -119,6 +119,7 @@ bool is_id_signaling_pixel(vec2 offset){
 	if (mod(offset, 3.0) != vec2(0.0)) {
 		return false;
 	}
+	
 	return true;
 }
 

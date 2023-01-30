@@ -33,6 +33,7 @@ var format_overrides := {
 	camera_transfer_time = {max_value = 10.0},
 	viewport_names_size = {min_value = 4.0, max_value = 50.0},
 	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
+	point_size = {min_value = 3, max_value = 20},
 }
 
 var _settings: Dictionary = IVGlobal.settings
@@ -77,6 +78,7 @@ func _on_init():
 				gui_size = "LABEL_GUI_SIZE",
 				viewport_names_size = "LABEL_NAMES_SIZE",
 				viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
+				point_size = "LABEL_POINT_SIZE",
 				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
 			},
 			{

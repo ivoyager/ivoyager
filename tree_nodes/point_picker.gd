@@ -29,7 +29,8 @@ signal target_point_changed(id) # -1 if target lost; use 'names' dict for name
 const math := preload("res://ivoyager/static/math.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const CALIBRATION := [0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5675, 0.625, 0.6875, 0.75]
+#const CALIBRATION := [0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5675, 0.625, 0.6875, 0.75]
+const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 
@@ -41,14 +42,10 @@ const PERSIST_PROPERTIES := ["ids", "names"]
 var ids := {} # 36-bit id integers indexed by name string
 var names := {} # name strings indexed by 36-bit id integer
 
-# project vars - these tune the pointy finger dropout
-var drop_frames := 60
-var drop_mouse_movement := 20.0
-
-# pixel read pattern (changes will require shader rewrite!)
-var point_range := 6
-var pxlx := [0, -3, 0, 3, 0, -3, 3, -3, 3, -6, 0, 6, 0, -6, -6, -3, 3, 6, 6, -3, 3, -6, 6, -6, 6]
-var pxly := [0, 0, 3, 0, -3, 3, -3, -3, 3, 0, 6, 0, -6, -3, 3, 6, 6, -3, 3, -6, -6, 6, -6, -6, 6]
+# project vars
+var drop_frames := 40 # tunes the loss of 'current' id
+var drop_mouse_movement := 20.0 # tunes the loss of 'current' id
+var point_picker_range := 9.0 # multiple of 3! Going big is very expensive!
 
 # private
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -59,6 +56,7 @@ var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
 # per pixel arrays
+var _pxl_offsets := []
 var _cycle_steps := []
 var _calibration_colors := [] # array of arrays
 var _value_colors := [] # array of arrays
@@ -69,24 +67,31 @@ var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
 
-onready var _n_pxls := pxlx.size()
 onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
-onready var _src_offset = Vector2.ONE * point_range
-onready var _src_length = point_range * 2.0 + 1.0
-onready var _src_rect = Rect2(0.0, 0.0, _src_length, _src_length)
 onready var _picker_texture: ViewportTexture = get_texture()
-onready var _picker_rect = _src_rect
+onready var _side_length := point_picker_range * 2.0 + 1.0
+onready var _picker_rect = Rect2(0.0, 0.0, _side_length, _side_length)
+onready var _src_rect = _picker_rect # will follow mouse
+onready var _src_offset = Vector2.ONE * point_picker_range
+onready var _n_pxls := int(pow((_side_length + 2.0) / 3.0, 2.0))
 
 
 
 func _ready() -> void:
-	assert(pxlx.size() == pxly.size())
+	assert(fmod(point_picker_range, 3.0) == 0.0)
 	usage = USAGE_2D
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
 	add_child(_node2d)
 	_node2d.connect("draw", self, "_on_node2d_draw")
 	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
+	_pxl_offsets.resize(_n_pxls)
+	var i := 0
+	for x in range(int(-point_picker_range), int(point_picker_range) + 1, 3):
+		for y in range(int(-point_picker_range), int(point_picker_range) + 1, 3):
+			_pxl_offsets[i] = [x, y]
+			i += 1
+	_pxl_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize mouse proximity
 	_cycle_steps.resize(_n_pxls)
 	_cycle_steps.fill(0)
 	_calibration_colors.resize(_n_pxls)
@@ -101,6 +106,7 @@ func _ready() -> void:
 	_calibration_g.resize(_n_calibration_steps)
 	_calibration_b.resize(_n_calibration_steps)
 	_adj_values.resize(9)
+	_world_targeting[7] = point_picker_range
 
 
 func get_new_point_id(name_str: String) -> int:
@@ -217,7 +223,7 @@ func _on_frame_post_draw() -> void:
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
-		if id == -1: # keep 1st
+		if id == -1: # keep first id != -1, if there is one
 			id = _current_ids[pxl]
 	var is_object_mouse_target: bool = _world_targeting[4] != null # give this priority
 	if is_object_mouse_target:
@@ -238,14 +244,14 @@ func _on_frame_post_draw() -> void:
 			emit_signal("target_point_changed", -1)
 
 
-
 func _process_pixel(pxl: int):
 	# We're looking for a point shader (e.g., asteroid) signalling its id.
 	# Signals start with a monotonic calibration series, followed by 3 colors
 	# that encode id. If a valid id is read at end of cycle, it is registered
-	# in _current_ids array. Broken signals are reset to -1.
+	# in _current_ids array. Interupted signals are reset to -1.
 	
-	var color := _picker_image.get_pixel(point_range + pxlx[pxl], point_range + pxly[pxl])
+	var color := _picker_image.get_pixel(int(point_picker_range) + _pxl_offsets[pxl][0],
+			int(point_picker_range) + _pxl_offsets[pxl][1])
 	
 	 # black pixel always interupts (common in open space)
 	if !color:
@@ -341,5 +347,9 @@ func _process_pixel(pxl: int):
 	# success!
 	_cycle_steps[pxl] = 0
 	_current_ids[pxl] = id
+
+
+func _sort_pxl_offsets(a: Array, b: Array) -> bool:
+	return a[0] * a[0] + a[1] * a[1] < b[0] * b[0] + b[1] * b[1]
 
 

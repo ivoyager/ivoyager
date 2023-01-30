@@ -35,7 +35,7 @@ render_mode cull_disabled, skip_vertex_transform;
 uniform vec4 global_data; // time, cycle_value, mouse_x, mouse_y
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float point_size = 3.0;
-uniform float point_picker_range = 6.0;
+uniform float point_picker_range = 6.0; // = PointPicker.point_picker_range
 
 
 void vertex() {
@@ -113,6 +113,7 @@ bool is_id_signaling_pixel(vec2 offset){
 	if (mod(offset, 3.0) != vec2(0.0)) {
 		return false;
 	}
+
 	return true;
 }
 

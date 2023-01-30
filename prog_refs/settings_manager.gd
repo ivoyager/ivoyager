@@ -53,6 +53,7 @@ func _on_init():
 		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
 		viewport_symbols_size = 25,
+		point_size = 3,
 		hide_hud_when_close = true, # restart or load required
 	
 		# colors

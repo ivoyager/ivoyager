@@ -90,7 +90,9 @@ func draw_points() -> void:
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit_points.set_shader_param("point_size", 3.0) # WIP: will use settings
+	_orbit_points.set_shader_param("point_size", float(IVGlobal.settings.point_size))
+	_orbit_points.set_shader_param("point_picker_range", _world_targeting[7])
+	
 
 
 func _process(_delta: float) -> void:
@@ -124,3 +126,7 @@ func _settings_listener(setting: String, value) -> void:
 		color = value
 		color.a = 1.0
 		_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	elif setting == "point_size":
+		_orbit_points.set_shader_param("point_size", float(value))
+	
+	
