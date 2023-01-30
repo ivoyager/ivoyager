@@ -45,7 +45,7 @@ var names := {} # name strings indexed by 36-bit id integer
 var drop_frames := 60
 var drop_mouse_movement := 20.0
 
-# pixel read pattern - change will need a shaders rewrite!
+# pixel read pattern (changes will require shader rewrite!)
 var point_range := 6
 var pxlx := [0, -3, 0, 3, 0, -3, 3, -3, 3, -6, 0, 6, 0, -6, -6, -3, 3, 6, 6, -3, 3, -6, 6, -6, 6]
 var pxly := [0, 0, 3, 0, -3, 3, -3, -3, 3, 0, 6, 0, -6, -3, 3, 6, 6, -3, 3, -6, -6, 6, -6, -6, 6]
@@ -172,20 +172,30 @@ static func decode(array: Array) -> int:
 	return c
 
 
-static func debug_decode_residuals(array: Array) -> void:
-	# Should print nearly whole number values
-	prints(
-		(array[0] - 0.25) * 32.0,
-		(array[1] - 0.25) * 32.0,
-		(array[2] - 0.25) * 32.0,
-		(array[3] - 0.25) * 32.0,
-		(array[4] - 0.25) * 32.0,
-		(array[5] - 0.25) * 32.0,
-		(array[6] - 0.25) * 32.0,
-		(array[7] - 0.25) * 32.0,
-		(array[8] - 0.25) * 32.0
-	)
-
+static func debug_residuals(array: Array, print_all := false) -> float:
+	# debug _adj_values residuals (input to decode after calibration)
+	if print_all:
+		# Should print nearly whole number values.
+		prints(
+			(array[0] - 0.25) * 32.0,
+			(array[1] - 0.25) * 32.0,
+			(array[2] - 0.25) * 32.0,
+			(array[3] - 0.25) * 32.0,
+			(array[4] - 0.25) * 32.0,
+			(array[5] - 0.25) * 32.0,
+			(array[6] - 0.25) * 32.0,
+			(array[7] - 0.25) * 32.0,
+			(array[8] - 0.25) * 32.0
+		)
+		
+	var max_resid := 0.0
+	for i in 9:
+		var value: float = (array[i] - 0.25) * 32.0
+		var resid := abs(value - round(value))
+		if max_resid < resid:
+			max_resid = resid
+	
+	return max_resid
 
 # private
 

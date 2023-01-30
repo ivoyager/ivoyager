@@ -18,6 +18,16 @@
 // limitations under the License.
 // *****************************************************************************
 // Duplicates orbital math in system_refs/orbit.gd.
+//
+// There is much hackery here, some of which can be improved in Godot 4.0.
+// We are presently using VERTEX for id (that's weird!) and NORMAL, COLOR,
+// etc. for orbital elements. 
+//
+// TODO 4.0: Use array chanels CUSTOM1, 2, 3, 4 instead of VERTEX, NORMAL,
+// COLOR, etc.
+//
+// TODO 4.0: Use global uniforms for time and mouse_coordinates.
+
 
 shader_type spatial;
 render_mode cull_disabled, skip_vertex_transform;
@@ -25,8 +35,6 @@ render_mode cull_disabled, skip_vertex_transform;
 uniform vec4 frame_data; // time, cycle_value, mouse_x, mouse_y
 uniform float point_size = 3.0;
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
-
-varying flat vec3 identifier;
 
 
 void vertex() {
@@ -81,14 +89,13 @@ void vertex() {
 	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
 
 	POINT_SIZE = point_size;
-	
-	identifier = VERTEX; // yeah, that's crazy!
 }
 
 
 bool is_id_signaling_pixel(vec2 offset){
-	// Follows grid pattern near mouse described in PointPicker. You can modify
-	// to return true in full area (eg, 13 x 13), but that causes PointPicker
+	// Follows grid pattern near mouse described in PointPicker, which will
+	// capture any point in 13x13 area with POINT_SIZE >= 3. You can modify
+	// to return true in the full 13x13 area, but that causes PointPicker
 	// to do a worse job identifying valid ids in a crowded field of points.
 	//
 	// Note that FRAGCOORD is always offset +vec2(0.5) from pixel coordinate.
@@ -102,6 +109,7 @@ bool is_id_signaling_pixel(vec2 offset){
 	if (offset.y > 6.0) {
 		return false;
 	}
+	
 	if (offset.x != 0.0 && offset.x != 3.0 && offset.x != 6.0) {
 		return false;
 	}
@@ -121,19 +129,22 @@ void fragment() {
 		if (cycle_value < 1.0) {
 			EMISSION = vec3(cycle_value); // calibration color
 		} else {
-			// Ouch! GLES2 doesn't allow bit operators!
-			// TODO 4.0: recode w/ bit operators!
 			int id_element;
+			// Note: There is *some* interpolation of VERTEX even though we are
+			// at the vertex point - hence VERTEX elements are no longer whole
+			// numbers. The +0.5 below fixes small interpolation bumps.
 			if (cycle_value == 1.0){
-				id_element = int(identifier.x);
+				id_element = int(VERTEX.x + 0.5);
 			} else {
 				if (cycle_value == 2.0){
-					id_element = int(identifier.y);
+					id_element = int(VERTEX.y + 0.5);
 				} else {
-					id_element = int(identifier.z);
+					id_element = int(VERTEX.z + 0.5);
 				}
 			}
 			
+			// Ouch! GLES2 doesn't allow bit operators! Can't use '<<' or '&'.
+			// TODO 4.0: recode w/ bit operators!
 			int bbits = id_element / 256;
 			int gbits = (id_element - bbits * 256) / 16;
 			int rbits = id_element - gbits * 16 - bbits * 256;
