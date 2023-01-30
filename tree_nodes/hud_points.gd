@@ -83,7 +83,7 @@ func draw_points() -> void:
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit_points.set_shader_param("point_size", 3.0) # WIP: will use settings
+	_orbit_points.set_shader_param("point_size", 4.0) # WIP: will use settings
 
 
 func _process(_delta: float) -> void:
@@ -99,7 +99,8 @@ func _process(_delta: float) -> void:
 		cycle_value = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
-	
+	var mouse_x: float = _world_targeting[6].x
+	var mouse_y: float = _world_targeting[6].y
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
@@ -107,9 +108,11 @@ func _process(_delta: float) -> void:
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
 		_orbit_points.set_shader_param("frame_data", Vector3(time, lagrange_a, lagrange_L))
 	else:
-		_orbit_points.set_shader_param("time", time)
-		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
-		_orbit_points.set_shader_param("cycle_value", cycle_value)
+		var frame_data := Color(time, cycle_value, mouse_x, mouse_y)
+		_orbit_points.set_shader_param("frame_data", frame_data)
+#		_orbit_points.set_shader_param("time", time)
+#		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
+#		_orbit_points.set_shader_param("cycle_value", cycle_value)
 
 
 func _settings_listener(setting: String, value) -> void:

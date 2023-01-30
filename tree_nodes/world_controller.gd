@@ -30,7 +30,6 @@ extends Control
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
 #  [6] point_picker_coord: Vector 2 (this object sets; mouse_position w/ flipped y)
-#  [7] picker_color: Color (PointPicker sets)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)

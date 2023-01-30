@@ -204,26 +204,26 @@ func _on_frame_post_draw() -> void:
 	_picker_image = _picker_texture.get_data() # expensive!
 	_picker_image.lock()
 	_node2d.update() # force a draw signal
-	
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
 		if id == -1: # keep 1st
 			id = _current_ids[pxl]
+	var is_object_mouse_target: bool = _world_targeting[4] != null # give this priority
+	if is_object_mouse_target:
+		id = -1
 	if id != -1:
 		if _current_id != id: # gained or changed valid id
-			print(id)
 			_current_id = id
-		emit_signal("target_point_changed", id)
+			emit_signal("target_point_changed", id)
 		_drop_frame_counter = 0
 		_drop_mouse_coord = _world_targeting[6]
 	elif _current_id != -1:
-		if (_drop_frame_counter < drop_frames
+		if (!is_object_mouse_target and _drop_frame_counter < drop_frames
 				and _drop_mouse_coord.distance_to(_world_targeting[6]) < drop_mouse_movement):
 			# We've lost id signal, but don't reset _current_id yet
 			_drop_frame_counter += 1
 		else:
-			print(-1)
 			_current_id = -1
 			emit_signal("target_point_changed", -1)
 

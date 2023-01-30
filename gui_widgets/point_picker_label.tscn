@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/point_picker_label.gd" type="Script" id=1]
+
+[node name="PointPickerLabel" type="Label"]
+margin_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource( 1 )
