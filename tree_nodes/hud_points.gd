@@ -23,10 +23,17 @@ extends MeshInstance
 # This node constitutes many (up to 100000s of) display points as shaders that
 # maintain their own orbit.
 
-const ORBIT_FLAGS = (ArrayMesh.ARRAY_FORMAT_VERTEX
-		| ArrayMesh.ARRAY_FORMAT_NORMAL | ArrayMesh.ARRAY_FORMAT_COLOR)
-const TROJAN_ORBIT_FLAGS = VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL \
-		& VisualServer.ARRAY_FORMAT_COLOR & VisualServer.ARRAY_FORMAT_TEX_UV2
+const ORBIT_FLAGS = (
+		ArrayMesh.ARRAY_FORMAT_VERTEX
+		| ArrayMesh.ARRAY_FORMAT_NORMAL
+		| ArrayMesh.ARRAY_FORMAT_COLOR
+)
+const TROJAN_ORBIT_FLAGS = (
+		ArrayMesh.ARRAY_FORMAT_VERTEX
+		| ArrayMesh.ARRAY_FORMAT_NORMAL
+		| ArrayMesh.ARRAY_FORMAT_COLOR
+		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
+)
 const CALIBRATION := IVPointPicker.CALIBRATION
 
 var group: IVAsteroidGroup
@@ -74,7 +81,7 @@ func draw_points() -> void:
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ORBIT_FLAGS)
 	else: # trojans
-		arrays[ArrayMesh.ARRAY_VERTEX] = group.dummy_translations
+		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.d_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_D_f
 		arrays[ArrayMesh.ARRAY_TEX_UV2] = group.th0
@@ -101,18 +108,15 @@ func _process(_delta: float) -> void:
 		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
 	var mouse_x: float = _world_targeting[6].x
 	var mouse_y: float = _world_targeting[6].y
+	var global_data := Color(time, cycle_value, mouse_x, mouse_y)
+	_orbit_points.set_shader_param("global_data", global_data)
+	# TODO 4.0: Implement global uniforms!
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
 		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * time
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
-		_orbit_points.set_shader_param("frame_data", Vector3(time, lagrange_a, lagrange_L))
-	else:
-		var frame_data := Color(time, cycle_value, mouse_x, mouse_y)
-		_orbit_points.set_shader_param("frame_data", frame_data)
-#		_orbit_points.set_shader_param("time", time)
-#		_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
-#		_orbit_points.set_shader_param("cycle_value", cycle_value)
+		_orbit_points.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
 
 
 func _settings_listener(setting: String, value) -> void:

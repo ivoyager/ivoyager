@@ -26,20 +26,21 @@
 // TODO 4.0: Use array chanels CUSTOM1, 2, 3, 4 instead of VERTEX, NORMAL,
 // COLOR, etc.
 //
-// TODO 4.0: Use global uniforms for time and mouse_coordinates.
+// TODO 4.0: Use global uniform for 'global_data'.
 
 
 shader_type spatial;
 render_mode cull_disabled, skip_vertex_transform;
 
-uniform vec4 frame_data; // time, cycle_value, mouse_x, mouse_y
-uniform float point_size = 3.0;
+uniform vec4 global_data; // time, cycle_value, mouse_x, mouse_y
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
+uniform float point_size = 3.0;
+uniform float point_picker_range = 6.0;
 
 
 void vertex() {
 	// orbital elements
-	float time = frame_data.x;
+	float time = global_data.x;
 	float a = NORMAL.x; // semi-major axis
 	float e = NORMAL.y; // eccentricity
 	float i = NORMAL.z; // inclination
@@ -94,38 +95,33 @@ void vertex() {
 
 bool is_id_signaling_pixel(vec2 offset){
 	// Follows grid pattern near mouse described in PointPicker, which will
-	// capture any point in 13x13 area with POINT_SIZE >= 3. You can modify
-	// to return true in the full 13x13 area, but that causes PointPicker
+	// capture any point in range area with POINT_SIZE >= 3. You can modify
+	// to return true in the full range area, but that causes PointPicker
 	// to do a worse job identifying valid ids in a crowded field of points.
-	//
-	// Note that FRAGCOORD is always offset +vec2(0.5) from pixel coordinate.
-	// If that changes it will break this function.
+	
+	// Note that FRAGCOORD is always offset +0.5 from pixel coordinate in both
+	// x and y. If that changes, the following line will need to be changed.
 	offset -= vec2(0.5);
+	
 	offset = abs(offset);
-	
-	if (offset.x > 6.0) {
+	if (offset.x > point_picker_range) {
 		return false;
 	}
-	if (offset.y > 6.0) {
+	if (offset.y > point_picker_range) {
 		return false;
 	}
-	
-	if (offset.x != 0.0 && offset.x != 3.0 && offset.x != 6.0) {
+	if (mod(offset, 3.0) != vec2(0.0)) {
 		return false;
 	}
-	if (offset.y != 0.0 && offset.y != 3.0 && offset.y != 6.0) {
-		return false;
-	}
-	
 	return true;
 }
 
 
 void fragment() {
-	vec2 mouse_coord = frame_data.zw;
+	vec2 mouse_coord = global_data.zw;
 	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
 		// Broadcast callibration or id color. See tree_noes/point_picker.gd.
-		float cycle_value = frame_data.y;
+		float cycle_value = global_data.y;
 		if (cycle_value < 1.0) {
 			EMISSION = vec3(cycle_value); // calibration color
 		} else {
