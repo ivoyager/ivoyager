@@ -129,14 +129,13 @@ func finish_binary_import() -> void:
 		_fix_binary_keplerian_elements()
 	else:
 		_fix_binary_trojan_elements()
-	
-	# set ids for PointPicker selection
-	var point_picker: IVPointPicker = IVGlobal.program.PointPicker
+	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
 	var size := names.size()
 	vec3ids.resize(size)
 	var i := 0
 	while i < size:
-		var id := point_picker.get_new_point_id(names[i])
+		var info := [names[i]]
+		var id := small_bodies_manager.get_new_id(info)
 		var vec3id := utils.id2vec(id)
 		vec3ids[i] = vec3id
 		i += 1

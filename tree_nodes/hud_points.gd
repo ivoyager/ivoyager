@@ -91,8 +91,7 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_orbit_points.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	_orbit_points.set_shader_param("point_picker_range", _world_targeting[7])
-	
+	_orbit_points.set_shader_param("point_picker_range", float(_world_targeting[7]))
 
 
 func _process(_delta: float) -> void:

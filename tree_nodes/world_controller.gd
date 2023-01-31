@@ -59,7 +59,7 @@ func _ready() -> void:
 	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
 	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for PointPicker & shaders
-	_world_targeting[7] = 6.0 # point_picker_range (PointPicker may change)
+	_world_targeting[7] = 9 # point_picker_range (PointPicker may change)
 
 
 func _clear() -> void:

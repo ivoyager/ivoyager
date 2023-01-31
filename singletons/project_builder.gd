@@ -148,10 +148,13 @@ var prog_nodes := {
 	_Timekeeper_ = IVTimekeeper,
 	_Scheduler_ = IVScheduler,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
+	_SmallBodiesManager_ = IVSmallBodiesManager,
+	_WindowManager_ = IVWindowManager,
+	
+	# DEPRECIATE?
 	_HUDsManager_ = IVHUDsManager,
 	_PointsManager_ = IVPointsManager,
 	_MinorBodiesManager_ = IVMinorBodiesManager,
-	_WindowManager_ = IVWindowManager,
 }
 
 var gui_nodes := {

@@ -23,75 +23,68 @@ extends Viewport
 # Decodes ids from shader points (e.g., asteroids) for selection. This viewport
 # is tiny so the texture.get_data() read from GPU is as cheap as possible.
 
-signal target_point_changed(id) # -1 if target lost; use 'names' dict for name
+signal target_point_changed(id) # -1 on target loss; ids in IVSmallBodiesManager
 
 
-const math := preload("res://ivoyager/static/math.gd")
-const utils := preload("res://ivoyager/static/utils.gd")
-
-#const CALIBRATION := [0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5675, 0.625, 0.6875, 0.75]
 const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 
-const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["ids", "names"]
-
-
-# persisted; read-only!
-var ids := {} # 36-bit id integers indexed by name string
-var names := {} # name strings indexed by 36-bit id integer
-
 # project vars
 var drop_frames := 40 # tunes the loss of 'current' id
 var drop_mouse_movement := 20.0 # tunes the loss of 'current' id
-var point_picker_range := 9.0 # multiple of 3! Going big is very expensive!
+var point_picker_range := 9 # multiple of 3! Going big is very expensive!
+
 
 # private
-var _world_targeting: Array = IVGlobal.world_targeting
 var _node2d := Node2D.new()
+var _world_targeting: Array = IVGlobal.world_targeting
+var _small_bodies_infos: Dictionary
 var _n_calibration_steps := CALIBRATION.size()
+var _n_pxls: int
+var _picker_rect: Rect2
+var _src_rect: Rect2 # will follow mouse
+var _src_offset: Vector2
 var _picker_image: Image
 var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
 # per pixel arrays
-var _pxl_offsets := []
+var _pxl_offsets := [] # array of offsets, ordered by center proximity
 var _cycle_steps := []
 var _calibration_colors := [] # array of arrays
 var _value_colors := [] # array of arrays
-var _current_ids := [] # ordered by mouse proximity
+var _current_ids := []
 # common buffers
 var _calibration_r := []
 var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
 
+
 onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
 onready var _picker_texture: ViewportTexture = get_texture()
-onready var _side_length := point_picker_range * 2.0 + 1.0
-onready var _picker_rect = Rect2(0.0, 0.0, _side_length, _side_length)
-onready var _src_rect = _picker_rect # will follow mouse
-onready var _src_offset = Vector2.ONE * point_picker_range
-onready var _n_pxls := int(pow((_side_length + 2.0) / 3.0, 2.0))
 
 
 
 func _ready() -> void:
-	assert(fmod(point_picker_range, 3.0) == 0.0)
-	usage = USAGE_2D
-	render_target_update_mode = UPDATE_ALWAYS
-	size = _picker_rect.size
-	add_child(_node2d)
-	_node2d.connect("draw", self, "_on_node2d_draw")
-	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
+	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
+	_small_bodies_infos = small_bodies_manager.infos
+	assert(point_picker_range % 3 == 0)
+	var side_length := point_picker_range * 2.0 + 1.0
+	_picker_rect = Rect2(0.0, 0.0, side_length, side_length) # sets THIS viewport size
+	_src_rect = _picker_rect # will follow mouse
+	_src_offset = Vector2.ONE * point_picker_range
+	# warning-ignore:integer_division
+	var n_pxls_per_side := (point_picker_range * 2) / 3 + 1
+	_n_pxls = n_pxls_per_side * n_pxls_per_side
 	_pxl_offsets.resize(_n_pxls)
 	var i := 0
-	for x in range(int(-point_picker_range), int(point_picker_range) + 1, 3):
-		for y in range(int(-point_picker_range), int(point_picker_range) + 1, 3):
+	for x in range(-point_picker_range, point_picker_range + 1, 3):
+		for y in range(-point_picker_range, point_picker_range + 1, 3):
 			_pxl_offsets[i] = [x, y]
 			i += 1
-	_pxl_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize mouse proximity
+	_pxl_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize center
 	_cycle_steps.resize(_n_pxls)
 	_cycle_steps.fill(0)
 	_calibration_colors.resize(_n_pxls)
@@ -107,108 +100,20 @@ func _ready() -> void:
 	_calibration_b.resize(_n_calibration_steps)
 	_adj_values.resize(9)
 	_world_targeting[7] = point_picker_range
+	usage = USAGE_2D
+	render_target_update_mode = UPDATE_ALWAYS
+	size = _picker_rect.size
+	add_child(_node2d)
+	_node2d.connect("draw", self, "_on_node2d_draw")
+	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
 
 
-func get_new_point_id(name_str: String) -> int:
-	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
-	# We assume that there will be less than billions of points, so spurious
-	# ids from _process_pixel() will almost always be filtered.
-	if ids.has(name_str):
-		print("WARNING! Duplicated point name: ", name_str)
-	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
-	while names.has(id):
-		id = (randi() << 4) | (randi() & 15)
-	names[id] = name_str
-	ids[name_str] = id
-	return id
+func _sort_pxl_offsets(a: Array, b: Array) -> bool:
+	return a[0] * a[0] + a[1] * a[1] < b[0] * b[0] + b[1] * b[1]
 
-
-func remove_point_id(name_str: String) -> void:
-	var id: int = ids[name_str]
-	ids.erase(id)
-	ids.erase(name_str)
-
-
-static func encode(id: int) -> Array:
-	# Here for reference; this is the id encode logic used by point shaders.
-	# We only use 4 bits of info per 8-bit color channel. All colors are
-	# generated in the range 0.25-0.75 (losing 1 bit) and we ignore the least
-	# significant 3 bits. So we read 1/16 color steps from the midrange after
-	# calibration. Three colors encode giving valid ids from 0 to 2^36-1.
-	assert(id >= 0 and id < (1 << 36))
-	var r1 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var g1 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var b1 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var r2 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var g2 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var b2 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var r3 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var g3 := (id & 15) / 32.0 + 0.25
-	id >>= 4
-	var b3 := (id & 15) / 32.0 + 0.25
-	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
-
-
-static func decode(array: Array) -> int:
-	# Reverse encode.
-	var c := int(round((array[8] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[7] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[6] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[5] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[4] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[3] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[2] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[1] - 0.25) * 32.0))
-	c <<= 4
-	c |= int(round((array[0] - 0.25) * 32.0))
-	return c
-
-
-static func debug_residuals(array: Array, print_all := false) -> float:
-	# debug _adj_values residuals (input to decode after calibration)
-	if print_all:
-		# Should print nearly whole number values.
-		prints(
-			(array[0] - 0.25) * 32.0,
-			(array[1] - 0.25) * 32.0,
-			(array[2] - 0.25) * 32.0,
-			(array[3] - 0.25) * 32.0,
-			(array[4] - 0.25) * 32.0,
-			(array[5] - 0.25) * 32.0,
-			(array[6] - 0.25) * 32.0,
-			(array[7] - 0.25) * 32.0,
-			(array[8] - 0.25) * 32.0
-		)
-		
-	var max_resid := 0.0
-	for i in 9:
-		var value: float = (array[i] - 0.25) * 32.0
-		var resid := abs(value - round(value))
-		if max_resid < resid:
-			max_resid = resid
-	
-	return max_resid
-
-# private
 
 func _on_node2d_draw() -> void:
 	# Copy a small rect of root viewport texture to this viewport.
-	if _world_targeting[6].x < 0.0: # mouse_coord
-		return
 	_src_rect.position = _world_targeting[6] - _src_offset
 	_node2d.draw_texture_rect_region(_root_texture, _picker_rect, _src_rect)
 
@@ -250,8 +155,8 @@ func _process_pixel(pxl: int):
 	# that encode id. If a valid id is read at end of cycle, it is registered
 	# in _current_ids array. Interupted signals are reset to -1.
 	
-	var color := _picker_image.get_pixel(int(point_picker_range) + _pxl_offsets[pxl][0],
-			int(point_picker_range) + _pxl_offsets[pxl][1])
+	var color := _picker_image.get_pixel(point_picker_range + _pxl_offsets[pxl][0],
+			point_picker_range + _pxl_offsets[pxl][1])
 	
 	 # black pixel always interupts (common in open space)
 	if !color:
@@ -337,8 +242,8 @@ func _process_pixel(pxl: int):
 		_adj_values[i * 3 + 2] = lerp(CALIBRATION[interval], CALIBRATION[interval + 1], scaler)
 	
 	# decode (interupt/restart if spurious id)
-	var id := decode(_adj_values)
-	if !names.has(id):
+	var id := _decode(_adj_values)
+	if !_small_bodies_infos.has(id):
 		_calibration_colors[pxl][0] = color
 		_cycle_steps[pxl] = 1
 		_current_ids[pxl] = -1 # reset
@@ -349,7 +254,75 @@ func _process_pixel(pxl: int):
 	_current_ids[pxl] = id
 
 
-func _sort_pxl_offsets(a: Array, b: Array) -> bool:
-	return a[0] * a[0] + a[1] * a[1] < b[0] * b[0] + b[1] * b[1]
+static func _encode(id: int) -> Array:
+	# Here for reference; this is the id encode logic used by point shaders.
+	# We only use 4 bits of info per 8-bit color channel. All colors are
+	# generated in the range 0.25-0.75 (losing 1 bit) and we ignore the least
+	# significant 3 bits. So we read 1/16 color steps from the midrange after
+	# calibration. Three colors encode giving valid ids from 0 to 2^36-1.
+	assert(id >= 0 and id < (1 << 36))
+	var r1 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var g1 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var b1 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var r2 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var g2 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var b2 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var r3 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var g3 := (id & 15) / 32.0 + 0.25
+	id >>= 4
+	var b3 := (id & 15) / 32.0 + 0.25
+	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
 
+
+static func _decode(array: Array) -> int:
+	# Reverses encode(id).
+	var id := int(round((array[8] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[7] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[6] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[5] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[4] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[3] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[2] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[1] - 0.25) * 32.0))
+	id <<= 4
+	id |= int(round((array[0] - 0.25) * 32.0))
+	return id
+
+
+func debug_residuals(print_all := false) -> float:
+	# Debug method to analyze _adj_values residuals.
+	if print_all:
+		# Should print nearly whole number values.
+		prints(
+			(_adj_values[0] - 0.25) * 32.0,
+			(_adj_values[1] - 0.25) * 32.0,
+			(_adj_values[2] - 0.25) * 32.0,
+			(_adj_values[3] - 0.25) * 32.0,
+			(_adj_values[4] - 0.25) * 32.0,
+			(_adj_values[5] - 0.25) * 32.0,
+			(_adj_values[6] - 0.25) * 32.0,
+			(_adj_values[7] - 0.25) * 32.0,
+			(_adj_values[8] - 0.25) * 32.0
+		)
+	var max_resid := 0.0
+	for i in 9:
+		var value: float = (_adj_values[i] - 0.25) * 32.0
+		var resid := abs(value - round(value))
+		if max_resid < resid:
+			max_resid = resid
+	return max_resid
 

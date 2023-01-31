@@ -1,4 +1,4 @@
-# point_picker_label.gd
+# small_bodies_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,18 +19,20 @@
 # *****************************************************************************
 extends Label
 
-# Requires IVPointPicker. Add as child to GUI top Control.
+# Requires IVPointPicker and IVSmallBodiesManager. Add as child to GUI top
+# Control.
 
-var offset := Vector2(0.0, -10.0) # need some negative y offset to not interfere w/ shader id
+var offset := Vector2(0.0, -7.0) # negative y offset to not interfere w/ PointPicker
 
 var _world_targeting: Array = IVGlobal.world_targeting
-var _names: Dictionary
+var _small_bodies_infos: Dictionary
 
 
 func _ready() -> void:
 	var point_picker: IVPointPicker = IVGlobal.program.PointPicker
 	point_picker.connect("target_point_changed", self, "_on_target_point_changed")
-	_names = point_picker.names
+	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
+	_small_bodies_infos = small_bodies_manager.infos
 	hide()
 
 
@@ -39,9 +41,8 @@ func _on_target_point_changed(id: int) -> void:
 		hide()
 		return
 	show()
-	text = _names[id]
+	text = _small_bodies_infos[id][0]
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
 	yield(get_tree(), "idle_frame")
 	rect_size.x = 0.0
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
-
