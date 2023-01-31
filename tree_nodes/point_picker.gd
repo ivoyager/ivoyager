@@ -20,8 +20,18 @@
 class_name IVPointPicker
 extends Viewport
 
-# Decodes ids from shader points (e.g., asteroids) for selection. This viewport
-# is tiny so the texture.get_data() read from GPU is as cheap as possible.
+# Decodes ids from shader points (e.g., asteroids) displayed on the root
+# viewport for selection. We capture a tiny square around the mouse to send to
+# this (tiny) viewport so the texture.get_data() read from GPU is as cheap as
+# possible.
+#
+# Shaders broadcast and this node reads every 3rd pixel in a grid pattern
+# bounded by point_picker_range. This works with minimum point size = 3.
+#
+# This system is moot if we could send id from GPU shaders to CPU in a more
+# sensible way. Godot 4.0 will allow custom GLSL "compute" shaders that could
+# do that. However, we need ids from vertex shaders. We'll see if that can be
+# done. In any case, this works.
 
 signal target_point_changed(id) # -1 on target loss; ids in IVSmallBodiesManager
 
@@ -31,9 +41,9 @@ const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 
 # project vars
-var drop_frames := 40 # tunes the loss of 'current' id
-var drop_mouse_movement := 20.0 # tunes the loss of 'current' id
-var point_picker_range := 9 # multiple of 3! Going big is very expensive!
+var drop_id_frames := 40 # tunes the loss of 'current' id by time
+var drop_id_mouse_movement := 20.0 # tunes the loss of 'current' id by mouse movement
+var point_picker_range := 9 # multiple of 3! Going big is expensive!
 
 
 # private
@@ -50,17 +60,17 @@ var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
 # per pixel arrays
-var _pxl_offsets := [] # array of offsets, ordered by center proximity
+var _pxl_x_offsets := []
+var _pxl_y_offsets := []
 var _cycle_steps := []
-var _calibration_colors := [] # array of arrays
-var _value_colors := [] # array of arrays
-var _current_ids := []
+var _calibration_colors := [] # array of calibration color arrays
+var _value_colors := [] # array of value color arrays
+var _current_ids := [] # -1 or valid id
 # common buffers
 var _calibration_r := []
 var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
-
 
 onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
 onready var _picker_texture: ViewportTexture = get_texture()
@@ -71,20 +81,22 @@ func _ready() -> void:
 	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
 	_small_bodies_infos = small_bodies_manager.infos
 	assert(point_picker_range % 3 == 0)
-	var side_length := point_picker_range * 2.0 + 1.0
+	var side_length := point_picker_range * 2 + 1
 	_picker_rect = Rect2(0.0, 0.0, side_length, side_length) # sets THIS viewport size
 	_src_rect = _picker_rect # will follow mouse
 	_src_offset = Vector2.ONE * point_picker_range
-	# warning-ignore:integer_division
-	var n_pxls_per_side := (point_picker_range * 2) / 3 + 1
-	_n_pxls = n_pxls_per_side * n_pxls_per_side
-	_pxl_offsets.resize(_n_pxls)
-	var i := 0
-	for x in range(-point_picker_range, point_picker_range + 1, 3):
-		for y in range(-point_picker_range, point_picker_range + 1, 3):
-			_pxl_offsets[i] = [x, y]
-			i += 1
-	_pxl_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize center
+	var pxl_center_offsets := range(-point_picker_range, point_picker_range + 1, 3)
+	var pxl_center_xy_offsets := []
+	for x in pxl_center_offsets:
+		for y in pxl_center_offsets:
+			pxl_center_xy_offsets.append([x, y])
+	pxl_center_xy_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize center
+	_n_pxls = pxl_center_xy_offsets.size()
+	_pxl_x_offsets.resize(_n_pxls)
+	_pxl_y_offsets.resize(_n_pxls)
+	for pxl in _n_pxls:
+		_pxl_x_offsets[pxl] = point_picker_range + pxl_center_xy_offsets[pxl][0]
+		_pxl_y_offsets[pxl] = point_picker_range + pxl_center_xy_offsets[pxl][1]
 	_cycle_steps.resize(_n_pxls)
 	_cycle_steps.fill(0)
 	_calibration_colors.resize(_n_pxls)
@@ -130,8 +142,8 @@ func _on_frame_post_draw() -> void:
 		_process_pixel(pxl) # process all, don't break!
 		if id == -1: # keep first id != -1, if there is one
 			id = _current_ids[pxl]
-	var is_object_mouse_target: bool = _world_targeting[4] != null # give this priority
-	if is_object_mouse_target:
+	var is_other_target: bool = _world_targeting[5] < INF # anything else (eg, Body) has priority
+	if is_other_target:
 		id = -1
 	if id != -1:
 		if _current_id != id: # gained or changed valid id
@@ -140,8 +152,8 @@ func _on_frame_post_draw() -> void:
 		_drop_frame_counter = 0
 		_drop_mouse_coord = _world_targeting[6]
 	elif _current_id != -1:
-		if (!is_object_mouse_target and _drop_frame_counter < drop_frames
-				and _drop_mouse_coord.distance_to(_world_targeting[6]) < drop_mouse_movement):
+		if (!is_other_target and _drop_frame_counter < drop_id_frames
+				and _drop_mouse_coord.distance_to(_world_targeting[6]) < drop_id_mouse_movement):
 			# We've lost id signal, but don't reset _current_id yet
 			_drop_frame_counter += 1
 		else:
@@ -152,11 +164,10 @@ func _on_frame_post_draw() -> void:
 func _process_pixel(pxl: int):
 	# We're looking for a point shader (e.g., asteroid) signalling its id.
 	# Signals start with a monotonic calibration series, followed by 3 colors
-	# that encode id. If a valid id is read at end of cycle, it is registered
-	# in _current_ids array. Interupted signals are reset to -1.
+	# that encode id. If a valid id is read at cycle end, it is registered in
+	# _current_ids array. Interupted signals are reset to -1.
 	
-	var color := _picker_image.get_pixel(point_picker_range + _pxl_offsets[pxl][0],
-			point_picker_range + _pxl_offsets[pxl][1])
+	var color := _picker_image.get_pixel(_pxl_x_offsets[pxl], _pxl_y_offsets[pxl])
 	
 	 # black pixel always interupts (common in open space)
 	if !color:
@@ -180,6 +191,9 @@ func _process_pixel(pxl: int):
 			_cycle_steps[pxl] += 1
 			return # processing
 		else:
+			# The vast majority of non-black pixels interupt here. This could
+			# be the start of a new calibration signal so we keep the color and
+			# restart cycle at step 1.
 			_calibration_colors[pxl][0] = color
 			_cycle_steps[pxl] = 1
 			_current_ids[pxl] = -1 # reset
@@ -217,7 +231,7 @@ func _process_pixel(pxl: int):
 		var g := value_color.g
 		var b := value_color.b
 		
-		var interval := _calibration_r.bsearch(r) - 1 # always ordered
+		var interval := _calibration_r.bsearch(r) - 1 # calibration arrays always ordered
 		if interval == -1:
 			interval = 0
 		elif interval == _n_calibration_steps - 1:
@@ -282,7 +296,7 @@ static func _encode(id: int) -> Array:
 
 
 static func _decode(array: Array) -> int:
-	# Reverses encode(id).
+	# Reverses _encode(id).
 	var id := int(round((array[8] - 0.25) * 32.0))
 	id <<= 4
 	id |= int(round((array[7] - 0.25) * 32.0))
