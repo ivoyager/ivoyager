@@ -25,7 +25,8 @@
 shader_type spatial;
 render_mode cull_disabled, skip_vertex_transform;
 
-uniform vec4 global_data; // time, cycle_value, mouse_x, mouse_y
+uniform vec2 time_cycle;
+uniform vec2 mouse_coord;
 uniform vec2 lagrange_data; // lagrange a, lagrange L
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float point_size = 3.0;
@@ -33,7 +34,7 @@ uniform float point_picker_range = 6.0;
 
 
 void vertex() {
-	float time = global_data.x;
+	float time = time_cycle[0];
 	float lagrange_a = lagrange_data.x;
 	float lagrange_L = lagrange_data.y;
 	
@@ -125,10 +126,9 @@ bool is_id_signaling_pixel(vec2 offset){
 
 
 void fragment() {
-	vec2 mouse_coord = global_data.zw;
 	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
 		// Broadcast callibration or id color. See tree_noes/point_picker.gd.
-		float cycle_value = global_data.y;
+		float cycle_value = time_cycle[1];
 		if (cycle_value < 1.0) {
 			EMISSION = vec3(cycle_value); // calibration color
 		} else {

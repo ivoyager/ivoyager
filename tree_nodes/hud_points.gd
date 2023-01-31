@@ -108,11 +108,9 @@ func _process(_delta: float) -> void:
 		cycle_value = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
-	var mouse_x: float = _world_targeting[6].x
-	var mouse_y: float = _world_targeting[6].y
-	var global_data := Color(time, cycle_value, mouse_x, mouse_y)
-	_orbit_points.set_shader_param("global_data", global_data)
-	# TODO 4.0: Implement global uniforms!
+	_orbit_points.set_shader_param("time_cycle", Vector2(time, cycle_value))
+	_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
+	# TODO 4.0: Set above data as global uniforms!
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
