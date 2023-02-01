@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVThemeManager
+extends Reference
 
 # Maintains IVGlobal.themes dictionary. All controls are expected to set their
 # own theme from this dictionary.

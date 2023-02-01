@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMath
+extends Object
 
 # Call directly using IVMath, or better, localize in your class header area.
 # Issue #37529 prevents localization of global class_name to const. Use:

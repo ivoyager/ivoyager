@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVMouseOnlyGUINav
 extends CheckBox
 
 # GUI widget. This exist due to current Godot Engine hard-coding of GUI

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVOrbitsNamesSymbolsCkbxs
 extends HBoxContainer
 
 # GUI widget. 

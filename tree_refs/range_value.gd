@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVRangeValue
+extends Reference
 
 # WIP - NOT IMPLEMENTED YET!
 # Holds and creates display string for value that may have min, mean, max.

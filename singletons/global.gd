@@ -17,9 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVGlobalSingleton
 extends Node
 
-# Singleton "IVGlobal"
+# Instance global "IVGlobal"
 #
 # Project init values should be modified by extension in _extension_init() and
 # treated as immutable thereafter.
@@ -28,7 +29,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20231030
+const IVOYAGER_VERSION_YMD := 20230201
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts

@@ -17,10 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVBodyHScroll
 extends ScrollContainer
 
 # GUI widget. Parent GUI should add bodies by calling add methods.
-
 
 var _selection_manager: IVSelectionManager
 var _currently_selected: Button

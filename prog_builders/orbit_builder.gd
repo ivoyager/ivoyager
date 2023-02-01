@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbitBuilder
+extends Reference
 
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed

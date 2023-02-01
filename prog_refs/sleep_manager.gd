@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSleepManager
+extends Reference
 
 # This manager is optional. If present, it will reduce process load by putting
 # to sleep IVBody instances that we don't need to process. For now, we're mainly

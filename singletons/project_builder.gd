@@ -17,9 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVProjectBuilderSingleton
 extends Node
 
-# Singleton "IVProjectBuilder".
+# Instance global "IVProjectBuilder".
 #
 # This node builds the program (not the solar system!) and makes program
 # nodes, references, and classes availible in IVGlobal dictionaries. All

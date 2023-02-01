@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVView
+extends Reference
 
 # Specifies (optionally) target identity, where and how camera tracks its
 # target object, and HUDs visible states. Passing a null-equivalent value 

@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuManager
+extends Reference
 
 
 signal buttons_changed()

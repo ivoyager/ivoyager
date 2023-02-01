@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-extends Button
 class_name IVNavigationButton
+extends Button
 
 # This widget must be instantiated and added by code. See planet_moon_buttons.gd.
 

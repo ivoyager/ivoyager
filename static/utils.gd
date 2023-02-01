@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVUtils
+extends Object
 
 # Miscellaneous utility static functions. There are no references to 'ivoyager'
 # classes here.

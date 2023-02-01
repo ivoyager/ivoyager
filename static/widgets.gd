@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVWidgets
+extends Object
 
 # Utility static functions for widgets.
 

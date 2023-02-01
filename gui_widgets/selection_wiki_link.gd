@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSelectionWikiLink
 extends RichTextLabel
 
 # Note: RichTextLabel seems unable to set its own size. You have to set this

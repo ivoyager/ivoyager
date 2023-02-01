@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVEnums
+extends Object
 
 # We keep enums here that are broadly needed by the program.
 #

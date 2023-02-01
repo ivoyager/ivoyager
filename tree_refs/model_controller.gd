@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVModelController
+extends Reference
 
 # Handles rotation (TODO: and rotation precession). For star, handles dynamic
 # emission and scaling (to maintain effects & visibility at great distance)

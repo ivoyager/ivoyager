@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSmallBodiesGroup
+extends Reference
 
 # Keeps compact data for large numbers of small bodies that we don't want to
 # instantiate as a full set - e.g., 10,000s of asteroids.

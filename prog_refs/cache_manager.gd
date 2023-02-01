@@ -18,6 +18,8 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCacheManager
+extends Reference
+
 
 # Abstract base class for managing user cached items. Subclasses include
 # IVSettingsManager & IVInputMapManager.

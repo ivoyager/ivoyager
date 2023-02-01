@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelection
+extends Reference
 
 # Wrapper for whatever you want selected, which could be anything or just a
 # text string. We wrap selection so all API expects the same type.

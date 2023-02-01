@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVLockVisibleCkbx
 extends CheckBox
 
 # This is a PanelContainer mod and (by default) a GUI widget. PanelContainer

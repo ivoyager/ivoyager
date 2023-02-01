@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVLightBuilder
+extends Reference
 
 # Only a star's OmniLight for now.
 

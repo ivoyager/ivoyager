@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSmallBodiesBuilder
+extends Reference
 
 
 signal small_bodies_added()

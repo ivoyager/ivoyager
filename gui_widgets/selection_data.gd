@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSelectionData
 extends VBoxContainer
 
 # GUI widget. Requires Control ancestor with member "selection_manager".

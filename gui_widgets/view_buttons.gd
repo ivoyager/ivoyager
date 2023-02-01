@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVViewButtons
 extends HBoxContainer
 
 # GUI widget. Expects the camera to have "view_type_changed" signal and to use

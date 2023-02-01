@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVVersionLabel
 extends Label
 
 # GUI widget. Use set_version_label to display an extension version. Otherwise,

@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFontManager
+extends Reference
 
 # Maintains IVGlobal.fonts.
 

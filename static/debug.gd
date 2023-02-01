@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVDebug
+extends Object
 
 # Static debug print functions. Wrap all calls in assert(). E.g.,
 #     assert(IVDebug.dlog("something")).

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVPresentTimeCkbx
 extends CheckBox
 
 # UI widget. Used in Planetarium to select real-world present time.

@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelectionBuilder
+extends Reference
 
 
 const BodyFlags := IVEnums.BodyFlags

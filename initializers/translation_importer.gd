@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTranslationImporter
+extends Reference
 
 # We report key duplicates and process text under the following conditions:
 #

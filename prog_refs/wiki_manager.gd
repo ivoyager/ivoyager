@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVWikiManager
+extends Reference
 
 # For internal wiki, set IVGlobal.enable_wiki and IVGlobal.use_internal_wiki. You
 # can then either 1) extend this class and override _open_internal_wiki(), or

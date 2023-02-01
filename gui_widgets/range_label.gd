@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVRangeLabel
 extends Label
 
 # GUI widget. Visible when camera "locked". Expects camera signals

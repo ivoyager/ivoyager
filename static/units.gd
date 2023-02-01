@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVUnits
+extends Object
 
 # This class defines derived units from base SI units in si_base_units.gd. You
 # should need it only when converting to and from simulator values: i.e., data

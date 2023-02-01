@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVTimeSetter
 extends HBoxContainer
 
 # GUI widget. For usage in a setter popup, see gui_widgets/time_set_popup.tscn.

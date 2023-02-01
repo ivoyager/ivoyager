@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVIOManager
+extends Reference
 
 # Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,

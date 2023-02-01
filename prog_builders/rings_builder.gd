@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVRingsBuilder
+extends Reference
 
 # TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 # What we have now is a QuadMesh & Texture.

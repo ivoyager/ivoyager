@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSaveBuilder
+extends Reference
 
 # IVSaveBuilder can persist specified data (which may include nested objects)
 # and rebuild procedurally generated node trees and references on load. It can

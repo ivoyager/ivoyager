@@ -17,10 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSmallBodiesLabel
 extends Label
 
-# Requires IVPointPicker and IVSmallBodiesManager. Add as child to GUI top
-# Control.
+# Requires IVPointPicker and IVSmallBodiesManager. Operates in screen position
+# so add as child to Universe or a full screen Control.
+
 
 var offset := Vector2(0.0, -7.0) # negative y offset to not interfere w/ PointPicker
 

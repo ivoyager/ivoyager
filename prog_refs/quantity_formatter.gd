@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVQuantityFormatter
+extends Reference
 
 # Helper for formatting numbers and quanties for GUI. All unit conversions are
 # as defined in IVUnits.

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVFocalLengthButtons
 extends HBoxContainer
 
 # GUI widget. Expects the camera to have signal "focal_length_changed", member

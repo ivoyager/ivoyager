@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFiles
+extends Object
 
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:

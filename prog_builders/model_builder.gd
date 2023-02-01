@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVModelBuilder
+extends Reference
 
 # We have a lazy_init option and culling system to keep model number low at any
 # given time. We cull based on staleness of last visibility change. Use it for

@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVLagrangePointBuilder
+extends Reference
 
 
 var _LPoint_: Script

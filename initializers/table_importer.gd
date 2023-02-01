@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableImporter
+extends Reference
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for REAL) results to IVGlobal dictionaries. Data can be

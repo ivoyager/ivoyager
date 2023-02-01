@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyBuilder
+extends Reference
 
 # TODO: We need API to assist building IVBody not from table data.
 #

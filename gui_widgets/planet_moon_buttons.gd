@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVPlanetMoonButtons
 extends HBoxContainer
 
 # GUI widget. Builds itself from an existing solar system!

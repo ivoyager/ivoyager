@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbit
+extends Reference
 
 # Orbit info is kept in standardized arrays of fixed size. reference_normal is
 # normal to the reference plane (ecliptic, equatorial or specified Laplace

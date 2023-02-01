@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSystemBuilder
+extends Reference
 
 # Builds the star system(s) from data tables & binaries.
 

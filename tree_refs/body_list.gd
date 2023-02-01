@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyList
+extends Reference
 
 # WIP - not implemented!
 # Manages lists of instanced and "virtual" bodies. Virtual bodies are simply

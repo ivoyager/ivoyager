@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableReader
+extends Reference
 
 # API here provides constructor methods and table access with protections for
 # missing table fields and values. Alternatively, you can access data directly

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVMainMenu
 extends VBoxContainer
 
 # GUI widget. Parent control should modify is_splash_config, if appropriate.
