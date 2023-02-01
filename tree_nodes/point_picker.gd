@@ -21,22 +21,21 @@ class_name IVPointPicker
 extends Viewport
 
 # Decodes ids from shader points (e.g., asteroids) displayed on the root
-# viewport for selection. We capture a tiny square around the mouse to send to
-# this (tiny) viewport so the texture.get_data() read from GPU is as cheap as
-# possible.
+# viewport for selection. We capture a tiny square around the mouse so the
+# texture.get_data() read from GPU is as cheap as possible.
 #
-# Shaders broadcast and this node reads every 3rd pixel in a grid pattern
-# bounded by point_picker_range. This works with minimum point size = 3.
+# Shaders broadcast (and this node reads) every 3rd pixel in a grid pattern
+# bounded by point_picker_range. This works with minimum point_size = 3.
 #
 # This system is moot if we could send id from GPU shaders to CPU in a more
 # sensible way. Godot 4.0 will allow custom GLSL "compute" shaders that could
 # do that. However, we need ids from vertex shaders. We'll see if that can be
-# done. In any case, this works.
+# done. In any case, this works...
 
 signal target_point_changed(id) # -1 on target loss; ids in IVSmallBodiesManager
 
 
-const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
+const CALIBRATION := IVHUDPoints.CALIBRATION
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 
@@ -59,6 +58,8 @@ var _picker_image: Image
 var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
+var _is_points_visible := false
+var _has_drawn := false
 # per pixel arrays
 var _pxl_x_offsets := []
 var _pxl_y_offsets := []
@@ -72,6 +73,7 @@ var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
 
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
 onready var _picker_texture: ViewportTexture = get_texture()
 
@@ -107,6 +109,7 @@ func _ready() -> void:
 		_value_colors[pxl] = []
 		_value_colors[pxl].resize(3)
 	_current_ids.resize(_n_pxls)
+	_current_ids.fill(-1)
 	_calibration_r.resize(_n_calibration_steps)
 	_calibration_g.resize(_n_calibration_steps)
 	_calibration_b.resize(_n_calibration_steps)
@@ -116,6 +119,8 @@ func _ready() -> void:
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
 	add_child(_node2d)
+	_huds_visibility.connect("point_groups_visibility_changed", self,
+			"_on_point_groups_visibility_changed")
 	_node2d.connect("draw", self, "_on_node2d_draw")
 	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
 
@@ -124,19 +129,28 @@ func _sort_pxl_offsets(a: Array, b: Array) -> bool:
 	return a[0] * a[0] + a[1] * a[1] < b[0] * b[0] + b[1] * b[1]
 
 
+func _on_point_groups_visibility_changed() -> void:
+	_is_points_visible = _huds_visibility.is_any_point_group_visible()
+
+
 func _on_node2d_draw() -> void:
 	# Copy a small rect of root viewport texture to this viewport.
 	_src_rect.position = _world_targeting[6] - _src_offset
 	_node2d.draw_texture_rect_region(_root_texture, _picker_rect, _src_rect)
+	_has_drawn = true
 
 
 func _on_frame_post_draw() -> void:
 	# Grab image from this viewport; scan pixels for shaders signaling id.
-	if _world_targeting[6].x < 0.0:
+	if !_is_points_visible or _world_targeting[6].x < 0.0:
+		_has_drawn = false
 		return
+	_node2d.update() # force a draw signal
+	if !_has_drawn:
+		return
+	_has_drawn = false
 	_picker_image = _picker_texture.get_data() # expensive!
 	_picker_image.lock()
-	_node2d.update() # force a draw signal
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
@@ -268,7 +282,7 @@ func _process_pixel(pxl: int):
 	_current_ids[pxl] = id
 
 
-static func _encode(id: int) -> Array:
+func _encode(id: int) -> Array:
 	# Here for reference; this is the id encode logic used by point shaders.
 	# We only use 4 bits of info per 8-bit color channel. All colors are
 	# generated in the range 0.25-0.75 (losing 1 bit) and we ignore the least
@@ -295,7 +309,7 @@ static func _encode(id: int) -> Array:
 	return [r1, g1, b1, r2, g2, b2, r3, g3, b3]
 
 
-static func _decode(array: Array) -> int:
+func _decode(array: Array) -> int:
 	# Reverses _encode(id).
 	var id := int(round((array[8] - 0.25) * 32.0))
 	id <<= 4
@@ -317,7 +331,7 @@ static func _decode(array: Array) -> int:
 	return id
 
 
-func debug_residuals(print_all := false) -> float:
+func _debug_residuals(print_all := false) -> float:
 	# Debug method to analyze _adj_values residuals.
 	if print_all:
 		# Should print nearly whole number values.

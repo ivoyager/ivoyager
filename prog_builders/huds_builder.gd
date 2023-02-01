@@ -31,7 +31,6 @@ const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY
 var _settings: Dictionary = IVGlobal.settings
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
-var _huds_manager: IVHUDsManager
 var _world_controller: Control
 var _orbit_shader: Shader
 var _orbit_mesh_arrays := []
@@ -40,7 +39,6 @@ var _orbit_mesh_arrays := []
 func _project_init() -> void:
 	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
-	_huds_manager = IVGlobal.program.HUDsManager
 	_world_controller = IVGlobal.program.WorldController
 	_orbit_shader = IVGlobal.shared_resources.orbit_shader
 	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)

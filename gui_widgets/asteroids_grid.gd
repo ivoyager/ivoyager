@@ -36,7 +36,7 @@ var chkbx_rows := [
 
 var _points_chkbxs := []
 
-onready var _points_manager: IVPointsManager = IVGlobal.program.PointsManager
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _n_rows := chkbx_rows.size()
 
 
@@ -45,7 +45,7 @@ func _ready() -> void:
 	for i in spacer_size:
 		spacer_text += "\u2000" # EN QUAD
 	$Spacer.text = spacer_text
-	_points_manager.connect("visibility_changed", self, "_update_ckbxs")
+	_huds_visibility.connect("point_groups_visibility_changed", self, "_update_ckbxs")
 	for i in _n_rows:
 		var label_text: String = chkbx_rows[i][0]
 		var groups: Array = chkbx_rows[i][1]
@@ -63,7 +63,7 @@ func _ready() -> void:
 func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
 	var pressed := ckbx.pressed
 	for group in groups:
-		_points_manager.show_points(group, pressed)
+		_huds_visibility.change_point_group_visibility(group, pressed)
 
 
 func _update_ckbxs() -> void:
@@ -71,7 +71,7 @@ func _update_ckbxs() -> void:
 		var groups: Array = chkbx_rows[i][1]
 		var is_visible := true
 		for group in groups:
-			if !_points_manager.is_visible(group):
+			if !_huds_visibility.is_point_group_visible(group):
 				is_visible = false
 				break
 		_points_chkbxs[i].pressed = is_visible

@@ -22,7 +22,7 @@ extends HBoxContainer
 
 # GUI widget. 
 
-onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _orbits_button: CheckBox = $Orbits
 onready var _names_button: CheckBox = $Names
 onready var _symbols_button: CheckBox = $Symbols
@@ -32,22 +32,22 @@ func _ready() -> void:
 	_orbits_button.connect("pressed", self, "_show_hide_orbits")
 	_names_button.connect("pressed", self, "_show_hide_names")
 	_symbols_button.connect("pressed", self, "_show_hide_symbols")
-	_huds_manager.connect("visibility_changed", self, "_update_ckbxs")
+	_huds_visibility.connect("body_huds_visibility_changed", self, "_update_ckbxs")
 
 
 func _show_hide_orbits() -> void:
-	_huds_manager.set_all_orbits_visibility(_orbits_button.pressed)
+	_huds_visibility.set_all_orbits_visibility(_orbits_button.pressed)
 
 
 func _show_hide_names() -> void:
-	_huds_manager.set_all_names_visibility(_names_button.pressed)
+	_huds_visibility.set_all_names_visibility(_names_button.pressed)
 
 
 func _show_hide_symbols() -> void:
-	_huds_manager.set_all_symbols_visibility(_symbols_button.pressed)
+	_huds_visibility.set_all_symbols_visibility(_symbols_button.pressed)
 
 
 func _update_ckbxs() -> void:
-	_orbits_button.pressed = _huds_manager.is_all_orbits_visible()
-	_names_button.pressed = _huds_manager.is_all_names_visible()
-	_symbols_button.pressed = _huds_manager.is_all_symbols_visible()
+	_orbits_button.pressed = _huds_visibility.is_all_orbits_visible()
+	_names_button.pressed = _huds_visibility.is_all_names_visible()
+	_symbols_button.pressed = _huds_visibility.is_all_symbols_visible()

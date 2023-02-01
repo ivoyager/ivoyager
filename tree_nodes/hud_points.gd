@@ -34,7 +34,7 @@ const TROJAN_ORBIT_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_COLOR
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
-const CALIBRATION := IVPointPicker.CALIBRATION
+const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 
 var group: IVSmallBodiesGroup
 var color: Color # read only
@@ -49,12 +49,15 @@ var _cycle_step := -1
 var _calibration_size := CALIBRATION.size()
 var _n_cycle_steps := _calibration_size + 3
 
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+
 
 func _init():
 	hide()
 
 
 func _ready() -> void:
+	_huds_visibility.connect("point_groups_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
 
@@ -116,6 +119,10 @@ func _process(_delta: float) -> void:
 		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * time
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
 		_points_shader.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
+
+
+func _on_visibility_changed() -> void:
+	visible = _huds_visibility.is_point_group_visible(group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:

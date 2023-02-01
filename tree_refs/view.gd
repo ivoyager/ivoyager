@@ -41,7 +41,7 @@ const PERSIST_PROPERTIES := [
 	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
-	"point_groups_visible",
+	"point_group_visibility",
 ]
 
 # persisted
@@ -54,29 +54,27 @@ var has_hud_states := false
 var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-var point_groups_visible := {}
+var point_group_visibility := {}
 
 
 func set_huds_visible() -> void:
 	if !has_hud_states:
 		return
 	var program: Dictionary = IVGlobal.program
-	var huds_manager: IVHUDsManager = program.HUDsManager
-	var points_manager: IVPointsManager = program.PointsManager
-	huds_manager.set_orbit_visible_flags(orbit_visible_flags)
-	huds_manager.set_name_visible_flags(name_visible_flags)
-	huds_manager.set_symbol_visible_flags(symbol_visible_flags)
-	for points_group in point_groups_visible:
-		points_manager.show_points(points_group, point_groups_visible[points_group])
+	var huds_visibility: IVHUDsVisibility = program.HUDsVisibility
+	huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
+	huds_visibility.set_name_visible_flags(name_visible_flags)
+	huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
+	for points_group in point_group_visibility:
+		huds_visibility.change_point_group_visibility(points_group, point_group_visibility[points_group])
 
 
 func store_huds_visible() -> void:
 	has_hud_states = true
 	var program: Dictionary = IVGlobal.program
-	var huds_manager: IVHUDsManager = program.HUDsManager
-	var points_manager: IVPointsManager = program.PointsManager
-	orbit_visible_flags = huds_manager.orbit_visible_flags
-	name_visible_flags = huds_manager.name_visible_flags
-	symbol_visible_flags = huds_manager.symbol_visible_flags
-	point_groups_visible = points_manager.groups_visible.duplicate()
+	var huds_visibility: IVHUDsVisibility = program.HUDsVisibility
+	orbit_visible_flags = huds_visibility.orbit_visible_flags
+	name_visible_flags = huds_visibility.name_visible_flags
+	symbol_visible_flags = huds_visibility.symbol_visible_flags
+	point_group_visibility = huds_visibility.point_group_visibility.duplicate()
 

@@ -23,6 +23,7 @@ extends Reference
 
 signal small_bodies_added()
 
+
 const DPRINT = false
 const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 	"14.0", "14.5", "15.0", "15.5", "16.0", "16.5", "17.0", "17.5", "18.0",
@@ -33,7 +34,6 @@ var _settings: Dictionary = IVGlobal.settings
 var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
 var _small_bodies_manager: IVSmallBodiesManager
-var _points_manager: IVPointsManager
 var _SmallBodiesGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
@@ -45,7 +45,6 @@ func _project_init() -> void:
 	_table_reader = IVGlobal.program.TableReader
 	_l_point_builder = IVGlobal.program.LagrangePointBuilder
 	_small_bodies_manager = IVGlobal.program.SmallBodiesManager
-	_points_manager = IVGlobal.program.PointsManager
 	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
@@ -56,7 +55,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 	for group_name in groups_by_name:
 		var small_bodies_group := groups_by_name[group_name] as IVSmallBodiesGroup
 		if small_bodies_group:
-			_init_hud_points(small_bodies_group, group_name)
+			_init_hud_points(small_bodies_group)
 
 
 func build() -> void:
@@ -68,11 +67,10 @@ func build() -> void:
 	emit_signal("small_bodies_added")
 
 
-func _init_hud_points(small_bodies_group: IVSmallBodiesGroup, group_name: String) -> void:
+func _init_hud_points(small_bodies_group: IVSmallBodiesGroup) -> void:
 	var hud_points: IVHUDPoints = _HUDPoints_.new()
 	hud_points.init(small_bodies_group, _settings.asteroid_point_color)
 	hud_points.draw_points()
-	_points_manager.register_points_group(hud_points, group_name)
 	var star := small_bodies_group.star
 	star.add_child(hud_points)
 

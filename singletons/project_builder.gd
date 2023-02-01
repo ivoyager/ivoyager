@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVProjectBuilderSingleton
 extends Node
 
 # Instance global "IVProjectBuilder".
@@ -29,8 +28,8 @@ extends Node
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
-# See example extension files for our Planetarium and Project Template (the 1st
-# involves more substantial changes) here:
+#
+# See example extension files for our Planetarium and Project Template:
 # https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
 # https://github.com/ivoyager/project_template/blob/master/replace_me/replace_me.gd
 #
@@ -44,8 +43,8 @@ extends Node
 #        existing classes, remove classes, or add new classes.
 #     (Above happens before anything else is instantiated!)
 # 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
-#    init values of instantiated nodes (before they are added to tree) or
-#    instantiated references (before they are used). Nodes and references can
+#    init values of instantiated Nodes (before they are added to tree) or
+#    instantiated References (before they are used). Nodes and References can
 #    be accessed after instantiation in the IVGlobal.program dictionary.
 #
 # Init sequence here expects (but does not provide) a parent GUI node. This
@@ -149,12 +148,9 @@ var prog_nodes := {
 	_Timekeeper_ = IVTimekeeper,
 	_Scheduler_ = IVScheduler,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
+	_HUDsVisibility_ = IVHUDsVisibility,
 	_SmallBodiesManager_ = IVSmallBodiesManager,
 	_WindowManager_ = IVWindowManager,
-	
-	# DEPRECIATE?
-	_HUDsManager_ = IVHUDsManager,
-	_PointsManager_ = IVPointsManager,
 }
 
 var gui_nodes := {

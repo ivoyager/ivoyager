@@ -1,4 +1,4 @@
-# huds_manager.gd
+# huds_visibility.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,22 +17,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDsManager
+class_name IVHUDsVisibility
 extends Node
 
-# Manages visibility of HUD elements.
+# Maintains visibility state for HUD elements. HUD Nodes (or thier visibility
+# managers) must connect and set visibility on changed signals.
 
-signal visibility_changed()
+
+signal body_huds_visibility_changed()
+signal point_groups_visibility_changed()
 
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
-
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
 	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
+	"point_group_visibility",
 ]
 
 # not persisted - modify at project init if new types to manage
@@ -44,12 +47,20 @@ var all_visible_flags: int = (BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
 var orbit_visible_flags := all_visible_flags
 var name_visible_flags := all_visible_flags # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
+var point_group_visibility := {} # indexed by group_name
+
 
 onready var _tree := get_tree()
 
 
-func _ready():
-	IVGlobal.connect("update_gui_requested", self, "emit_signal", ["visibility_changed"])
+
+func _ready() -> void:
+	IVGlobal.connect("update_gui_requested", self, "_on_update_gui_requested")
+
+
+func _on_update_gui_requested() -> void:
+	emit_signal("body_huds_visibility_changed")
+	emit_signal("point_groups_visibility_changed")
 
 
 func _unhandled_key_input(event: InputEventKey):
@@ -103,12 +114,12 @@ func set_orbit_visibility(body_flags: int, is_show: bool) -> void:
 		if orbit_visible_flags & body_flags == body_flags:
 			return
 		orbit_visible_flags |= body_flags
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 	else:
 		if orbit_visible_flags & body_flags == 0:
 			return
 		orbit_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 
 
 func set_name_visibility(body_flags: int, is_show: bool) -> void:
@@ -118,12 +129,12 @@ func set_name_visibility(body_flags: int, is_show: bool) -> void:
 			return
 		name_visible_flags |= body_flags
 		symbol_visible_flags &= ~body_flags # exclusive
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 	else:
 		if name_visible_flags & body_flags == 0:
 			return
 		name_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 
 
 func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
@@ -133,12 +144,12 @@ func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
 			return
 		symbol_visible_flags |= body_flags
 		name_visible_flags &= ~body_flags # exclusive
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 	else:
 		if symbol_visible_flags & body_flags == 0:
 			return
 		symbol_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
+		emit_signal("body_huds_visibility_changed")
 
 
 func set_all_orbits_visibility(is_show: bool) -> void:
@@ -150,7 +161,7 @@ func set_all_orbits_visibility(is_show: bool) -> void:
 		if orbit_visible_flags == 0:
 			return
 		orbit_visible_flags = 0
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
 
 
 func set_all_names_visibility(is_show: bool) -> void:
@@ -163,7 +174,7 @@ func set_all_names_visibility(is_show: bool) -> void:
 		if name_visible_flags == 0:
 			return
 		name_visible_flags = 0
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
 
 
 func set_all_symbols_visibility(is_show: bool) -> void:
@@ -176,14 +187,14 @@ func set_all_symbols_visibility(is_show: bool) -> void:
 		if symbol_visible_flags == 0:
 			return
 		symbol_visible_flags = 0
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
 
 
 func set_orbit_visible_flags(orbit_visible_flags_: int) -> void:
 	if orbit_visible_flags == orbit_visible_flags_:
 		return
 	orbit_visible_flags = orbit_visible_flags_
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
 
 
 func set_name_visible_flags(name_visible_flags_: int) -> void:
@@ -191,7 +202,7 @@ func set_name_visible_flags(name_visible_flags_: int) -> void:
 		return
 	name_visible_flags = name_visible_flags_
 	symbol_visible_flags &= ~name_visible_flags_ # exclusive
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
 
 
 func set_symbol_visible_flags(symbol_visible_flags_: int) -> void:
@@ -199,5 +210,22 @@ func set_symbol_visible_flags(symbol_visible_flags_: int) -> void:
 		return
 	symbol_visible_flags = symbol_visible_flags_
 	name_visible_flags &= ~symbol_visible_flags_ # exclusive
-	emit_signal("visibility_changed")
+	emit_signal("body_huds_visibility_changed")
+
+
+func is_point_group_visible(group: String) -> bool:
+	return point_group_visibility.get(group, false)
+
+
+func is_any_point_group_visible() -> bool:
+	for group in point_group_visibility:
+		if point_group_visibility[group]:
+			return true
+	return false
+
+
+func change_point_group_visibility(group: String, is_show: bool) -> void:
+	point_group_visibility[group] = is_show
+	emit_signal("point_groups_visibility_changed")
+
 

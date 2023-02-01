@@ -17,15 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-extends Node
 class_name IVSmallBodiesManager
+extends Node
 
-# Handles asteroids, comets or other sets of large-number items that we don't
-# want instantiated (in full) as Nodes. Small body ids are randomly generated
-# from the range 0 to 68_719_476_735 (36 bits). This helps IVPointPicker to not
-# generate spurious ids. We assume that there will be less than billions of
-# small bodies.
+# Registers asteroids, comets or other sets of large-number items that we don't
+# want instantiated (in full) as Nodes. Also manages IVSmallBodiesGroup and
+# IVHUDPoints instances, which contain these small bodies or their shader
+# representations.
+#
+# Small body ids are randomly generated from the range 0 to 68_719_476_735
+# (36 bits). This helps IVPointPicker to not generate spurious ids. We assume
+# that there will be less than billions of small bodies.
 
+signal visibility_changed()
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
@@ -33,7 +37,7 @@ const PERSIST_PROPERTIES := [
 	"ids",
 	"infos",
 	"groups_by_name",
-	"lagrange_body2s",
+	"lagrange_points",
 ]
 
 
@@ -65,4 +69,5 @@ func remove_id(id: int) -> void:
 	var name_str: String = infos[id][0]
 	infos.erase(id)
 	ids.erase(name_str)
+
 

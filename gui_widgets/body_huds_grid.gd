@@ -50,7 +50,7 @@ var _names_chkbxs := []
 var _symbols_chkbxs := []
 
 
-onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _n_rows := chkbx_rows.size()
 
 
@@ -59,7 +59,7 @@ func _ready() -> void:
 	for i in spacer_size:
 		spacer_text += "\u2000" # EN QUAD
 	$Spacer.text = spacer_text
-	_huds_manager.connect("visibility_changed", self, "_update_ckbxs")
+	_huds_visibility.connect("body_huds_visibility_changed", self, "_update_ckbxs")
 	for i in _n_rows:
 		var label_text: String = chkbx_rows[i][0]
 		var flags: int = chkbx_rows[i][1]
@@ -87,21 +87,21 @@ func _ready() -> void:
 
 
 func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
-	_huds_manager.set_orbit_visibility(flags, ckbx.pressed)
+	_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_names(ckbx: CheckBox, flags: int) -> void:
-	_huds_manager.set_name_visibility(flags, ckbx.pressed)
+	_huds_visibility.set_name_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_symbols(ckbx: CheckBox, flags: int) -> void:
-	_huds_manager.set_symbol_visibility(flags, ckbx.pressed)
+	_huds_visibility.set_symbol_visibility(flags, ckbx.pressed)
 
 
 func _update_ckbxs() -> void:
 	for i in _n_rows:
 		var flags: int = chkbx_rows[i][1]
-		_orbits_chkbxs[i].pressed = _huds_manager.is_orbit_visible(flags, true)
-		_names_chkbxs[i].pressed = _huds_manager.is_name_visible(flags, true)
-		_symbols_chkbxs[i].pressed = _huds_manager.is_symbol_visible(flags, true)
+		_orbits_chkbxs[i].pressed = _huds_visibility.is_orbit_visible(flags, true)
+		_names_chkbxs[i].pressed = _huds_visibility.is_name_visible(flags, true)
+		_symbols_chkbxs[i].pressed = _huds_visibility.is_symbol_visible(flags, true)
 
