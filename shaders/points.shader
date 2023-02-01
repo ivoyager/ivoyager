@@ -1,4 +1,4 @@
-// orbit_points.shader
+// points.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************

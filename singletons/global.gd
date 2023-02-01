@@ -166,9 +166,9 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 var shared_resources := {
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
-	orbit_ellipse_shader = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
-	orbit_points_shader = preload("res://ivoyager/shaders/orbit_points.shader"),
-	orbit_points_lagrangian_shader = preload("res://ivoyager/shaders/orbit_points_lagrangian.shader"),
+	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
+	points_shader = preload("res://ivoyager/shaders/points.shader"),
+	points_lagrangian_shader = preload("res://ivoyager/shaders/points_lagrangian.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 }
 

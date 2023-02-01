@@ -29,13 +29,23 @@ class_name IVSmallBodiesManager
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["ids", "infos"]
+const PERSIST_PROPERTIES := [
+	"ids",
+	"infos",
+	"groups_by_name",
+	"lagrange_body2s",
+]
 
 
 # persisted; read-only!
 var ids := {} # 36-bit id integers indexed by name string
 var infos := {} # info arrays indexed by 36-bit id integer; [0] always name
+var groups_by_name := {}
+var lagrange_points := {} # indexed by group name
 
+
+#func _ready():
+#	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 
 
 func get_new_id(info: Array) -> int:

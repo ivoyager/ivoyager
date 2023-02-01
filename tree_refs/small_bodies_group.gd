@@ -1,4 +1,4 @@
-# asteroid_group.gd
+# small_bodies_group.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,19 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVAsteroidGroup
+class_name IVSmallBodiesGroup
 
-# Keeps compact data for an asteroid group, which could include >100,000
-# asteroids (Main Belt). Pool*Arrays are used to constitute ArrayMesh's in
-# IVHUDPoints, and act as source data for Asteroid instances. We can't easily
-# separate contruction here because we would have to pass-by-value very large
-# pool arrays.
+# Keeps compact data for large numbers of small bodies that we don't want to
+# instantiate as a full set - e.g., 10,000s of asteroids.
 #
-# TODO: This should be a Node (parented by Sun in our solar system). We should
-# merge this with IVHUDPoints. Builder stuff currently in both classes should go
-# to a builder class.
+# Packed arrays are used to constitute ArrayMesh's in IVHUDPoints, and act as
+# small body source data (e.g., when a small body needs to be instantiated).
+# Packed arrays are also very fast to read/write in the game save file.
+#
+# TODO 4.0: Reorganize for new shader CUSTOM channels:
+#  - CUSTOM0: a, e, M0, n
+#  - CUSTOM1: i, Om, w
+#  - CUSTOM2: s, g
+#  - CUSTOM3: d, D, f, th0 (lagrange only)
+#
 
-const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
@@ -54,10 +58,10 @@ const PERSIST_PROPERTIES := [
 	"d_e_i",
 	"Om_w_D_f",
 	"th0",
-	"_index",
 ]
 	
-# ************************** PERSISTED VARS ***********************************
+# *****************************************************************************
+# persisted
 
 var is_trojans := false
 var star: IVBody
@@ -65,7 +69,8 @@ var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
 
 var max_apoapsis := 0.0
-var vec3ids := PoolVector3Array() # encodes 36-bit point_id from PointPicker
+var vec3ids := PoolVector3Array() # encodes 36-bit point_id for PointPicker
+
 # below is binary import data
 var names := PoolStringArray()
 var iau_numbers := PoolIntArray() # -1 for unnumbered (FIXME: 32-bit isn't enough!)
@@ -82,16 +87,16 @@ var d_e_i := PoolVector3Array()
 var Om_w_D_f := PoolColorArray()
 var th0 := PoolVector2Array()
 
-var _index := 0
 
 # *****************************************************************************
 
+var _index := 0
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
 var _load_count := 0
 
 
-# ************************** PUBLIC FUNCTIONS *********************************
+# *****************************************************************************
 
 func init(star_: IVBody, group_name_: String) -> void:
 	star = star_
@@ -146,10 +151,11 @@ func finish_binary_import() -> void:
 
 
 func get_number() -> int:
-	return _index
+	return names.size()
 
 
-# ***************** PUBLIC FUNCTIONS FOR AsteroidImporter **********************
+# *****************************************************************************
+# Methods for AsteroidImporter
 
 func expand_arrays(n: int) -> void:
 	names.resize(n + names.size())
@@ -208,15 +214,16 @@ func clear_for_import() -> void:
 	_index = 0
 
 
-# ************************** PRIVATE FUNCTIONS ********************************
+# *****************************************************************************
 
 func _fix_binary_keplerian_elements() -> void:
 	var au := units.AU
 	var year := units.YEAR
 	var mu := star.get_std_gravitational_parameter()
 	assert(mu)
+	var size := names.size()
 	var index := 0
-	while index < _index:
+	while index < size:
 		var a: float = a_e_i[index][0] * au # from au
 		a_e_i[index][0] = a
 		var n: float = Om_w_M0_n[index][3]
@@ -250,8 +257,9 @@ func _fix_binary_trojan_elements() -> void:
 	var au := units.AU
 	var year := units.YEAR
 	var lagrange_a: float = lagrange_point.dynamic_elements[0]
+	var size := names.size()
 	var index := 0
-	while index < _index:
+	while index < size:
 		var d: float = d_e_i[index][0] * au # from au
 		d_e_i[index][0] = d
 		Om_w_D_f[index][3] /= year # f; from rad/year
@@ -304,24 +312,24 @@ func _verbose_print() -> void:
 	var au := units.AU
 	var deg := units.DEG
 	var year := units.YEAR
-	print("%s group %s asteroids loaded from binaries (min/max)" % [_load_count, group_name])
+	print("%s group %s asteroids loaded from binaries (min - max)" % [_load_count, group_name])
 	if !is_trojans:
-		print(" a  : %s / %s (AU)" % [_mins[0] / au, _maxes[0] / au])
-		print(" e  : %s / %s" % [_mins[1], _maxes[1]])
-		print(" i  : %s / %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
-		print(" Om : %s / %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
-		print(" w  : %s / %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
-		print(" M0 : %s / %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
-		print(" n  : %s / %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
+		print(" a  : %s - %s (AU)" % [_mins[0] / au, _maxes[0] / au])
+		print(" e  : %s - %s" % [_mins[1], _maxes[1]])
+		print(" i  : %s - %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
+		print(" Om : %s - %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
+		print(" w  : %s - %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
+		print(" M0 : %s - %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
+		print(" n  : %s - %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
 	else:
-		print(" d,  min/max: %s / %s (AU)" % [_mins[0] / au, _maxes[0] / au])
-		print(" e  : %s / %s" % [_mins[1], _maxes[1]])
-		print(" i  : %s / %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
-		print(" Om : %s / %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
-		print(" w  : %s / %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
-		print(" D  : %s / %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
-		print(" f  : %s / %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
-		print(" th0: %s / %s (deg)" % [_mins[7] / deg, _maxes[7] / deg])
+		print(" d  : %s - %s (AU)" % [_mins[0] / au, _maxes[0] / au])
+		print(" e  : %s - %s" % [_mins[1], _maxes[1]])
+		print(" i  : %s - %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
+		print(" Om : %s - %s (deg)" % [_mins[3] / deg, _maxes[3] / deg])
+		print(" w  : %s - %s (deg)" % [_mins[4] / deg, _maxes[4] / deg])
+		print(" D  : %s - %s (deg)" % [_mins[5] / deg, _maxes[5] / deg])
+		print(" f  : %s - %s (deg/y)" % [_mins[6] / deg * year, _maxes[6] / deg * year])
+		print(" th0: %s - %s (deg)" % [_mins[7] / deg, _maxes[7] / deg])
 
 
 func _debug_print():

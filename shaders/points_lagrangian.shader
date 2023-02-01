@@ -1,4 +1,4 @@
-// orbit_points_lagrangian.shader
+// points_lagrangian.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************

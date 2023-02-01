@@ -36,12 +36,12 @@ const TROJAN_ORBIT_FLAGS = (
 )
 const CALIBRATION := IVPointPicker.CALIBRATION
 
-var group: IVAsteroidGroup
+var group: IVSmallBodiesGroup
 var color: Color # read only
 
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
-var _orbit_points := ShaderMaterial.new()
+var _points_shader := ShaderMaterial.new()
 var _last_update_time := -INF
 
 
@@ -58,15 +58,15 @@ func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 
 
-func init(group_: IVAsteroidGroup, color_: Color) -> void:
+func init(group_: IVSmallBodiesGroup, color_: Color) -> void:
 	group = group_
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_shader
+		_points_shader.shader = IVGlobal.shared_resources.points_shader
 	else:
-		_orbit_points.shader = IVGlobal.shared_resources.orbit_points_lagrangian_shader
-	material_override = _orbit_points
+		_points_shader.shader = IVGlobal.shared_resources.points_lagrangian_shader
+	material_override = _points_shader
 
 
 func draw_points() -> void:
@@ -89,9 +89,9 @@ func draw_points() -> void:
 	var half_aabb = group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
-	_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_orbit_points.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	_orbit_points.set_shader_param("point_picker_range", float(_world_targeting[7]))
+	_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	_points_shader.set_shader_param("point_size", float(IVGlobal.settings.point_size))
+	_points_shader.set_shader_param("point_picker_range", float(_world_targeting[7]))
 
 
 func _process(_delta: float) -> void:
@@ -107,23 +107,23 @@ func _process(_delta: float) -> void:
 		cycle_value = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
-	_orbit_points.set_shader_param("time_cycle", Vector2(time, cycle_value))
-	_orbit_points.set_shader_param("mouse_coord", _world_targeting[6])
+	_points_shader.set_shader_param("time_cycle", Vector2(time, cycle_value))
+	_points_shader.set_shader_param("mouse_coord", _world_targeting[6])
 	# TODO 4.0: Set above data as global uniforms!
 	if group.lagrange_point:
 		var langrange_elements: Array = group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
 		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * time
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
-		_orbit_points.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
+		_points_shader.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
 
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == "asteroid_point_color":
 		color = value
 		color.a = 1.0
-		_orbit_points.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	elif setting == "point_size":
-		_orbit_points.set_shader_param("point_size", float(value))
+		_points_shader.set_shader_param("point_size", float(value))
 	
 	

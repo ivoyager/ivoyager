@@ -49,8 +49,8 @@ func build_system_tree() -> void:
 	_body_builder.init_system_build()
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
-	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
-	minor_bodies_builder.build()
+	var small_bodies_builder: IVSmallBodiesBuilder = IVGlobal.program.SmallBodiesBuilder
+	small_bodies_builder.build()
 	if add_camera:
 		_add_camera()
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)

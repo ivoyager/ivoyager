@@ -119,7 +119,7 @@ var prog_builders := {
 	_RingsBuilder_ = IVRingsBuilder,
 	_LightBuilder_ = IVLightBuilder,
 	_HUDsBuilder_ = IVHUDsBuilder,
-	_MinorBodiesBuilder_ = IVMinorBodiesBuilder,
+	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
@@ -154,7 +154,6 @@ var prog_nodes := {
 	# DEPRECIATE?
 	_HUDsManager_ = IVHUDsManager,
 	_PointsManager_ = IVPointsManager,
-	_MinorBodiesManager_ = IVMinorBodiesManager,
 }
 
 var gui_nodes := {
@@ -192,11 +191,11 @@ var procedural_classes := {
 	_HUDPoints_ = IVHUDPoints,
 	_SelectionManager_ = IVSelectionManager,
 	# tree_refs
+	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 	_Orbit_ = IVOrbit,
 	_ModelController_ = IVModelController,
 	_Selection_ = IVSelection,
 	_View_ = IVView,
-	_AsteroidGroup_ = IVAsteroidGroup,
 	_Composition_ = IVComposition, # replaceable, but look for dependencies
 	# _BodyList_ = IVBodyList, # WIP
 }

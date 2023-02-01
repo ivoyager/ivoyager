@@ -1,4 +1,4 @@
-// orbit_ellipse.shader
+// orbit.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************

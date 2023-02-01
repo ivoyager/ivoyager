@@ -32,7 +32,7 @@ var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _huds_manager: IVHUDsManager
 var _world_controller: Control
-var _orbit_ellipse_shader: Shader
+var _orbit_shader: Shader
 var _orbit_mesh_arrays := []
 
 
@@ -41,7 +41,7 @@ func _project_init() -> void:
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
 	_huds_manager = IVGlobal.program.HUDsManager
 	_world_controller = IVGlobal.program.WorldController
-	_orbit_ellipse_shader = IVGlobal.shared_resources.orbit_ellipse_shader
+	_orbit_shader = IVGlobal.shared_resources.orbit_shader
 	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
 
 
@@ -70,7 +70,7 @@ func add_orbit(body: IVBody) -> void:
 		color = _settings.default_orbit_color
 	hud_orbit.orbit = body.orbit
 	hud_orbit.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-	hud_orbit.shader_material.shader = _orbit_ellipse_shader
+	hud_orbit.shader_material.shader = _orbit_shader
 	hud_orbit.material_override = hud_orbit.shader_material
 	hud_orbit.orbit_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP,
 			_orbit_mesh_arrays, [], ORBIT_ARRAY_FLAGS)
