@@ -76,7 +76,6 @@ func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
 	var arrays := []
 	arrays.resize(ArrayMesh.ARRAY_MAX)
-	
 	if !group.is_trojans:
 		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i

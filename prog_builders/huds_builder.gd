@@ -22,33 +22,27 @@ extends Reference
 
 
 const BodyFlags := IVEnums.BodyFlags
-const IS_TRUE_PLANET := BodyFlags.IS_TRUE_PLANET
-const IS_DWARF_PLANET := BodyFlags.IS_DWARF_PLANET
-const IS_MOON := BodyFlags.IS_MOON
-const LIKELY_HYDROSTATIC_EQUILIBRIUM := BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
-const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX & VisualServer.ARRAY_FORMAT_NORMAL
+const ORBIT_ARRAY_FLAGS := VisualServer.ARRAY_FORMAT_VERTEX | VisualServer.ARRAY_FORMAT_NORMAL
 
 var _settings: Dictionary = IVGlobal.settings
-var _HUDLabel_: Script
+#var _HUDLabel_: Script
 var _HUDOrbit_: Script
-var _world_controller: Control
 var _orbit_shader: Shader
 var _orbit_mesh_arrays := []
 
 
 func _project_init() -> void:
-	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
+#	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
-	_world_controller = IVGlobal.program.WorldController
 	_orbit_shader = IVGlobal.shared_resources.orbit_shader
 	_build_orbit_mesh_arrays(IVGlobal.vertecies_per_orbit)
 
 
-func add_label(body: IVBody) -> void:
-	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
-	hud_label.hide()
-	body.hud_label = hud_label
-	body.add_child(hud_label)
+#func add_label(body: IVBody) -> void:
+#	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
+#	hud_label.hide()
+#	body.hud_label = hud_label
+#	body.add_child(hud_label)
 
 
 func add_orbit(body: IVBody) -> void:
@@ -57,13 +51,13 @@ func add_orbit(body: IVBody) -> void:
 	var hud_orbit: IVHUDOrbit = _HUDOrbit_.new()
 	var color: Color
 	var flags := body.flags
-	if flags & IS_MOON and flags & LIKELY_HYDROSTATIC_EQUILIBRIUM:
+	if flags & BodyFlags.IS_MOON and flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
 		color = _settings.moon_orbit_color
-	elif flags & IS_MOON:
+	elif flags & BodyFlags.IS_MOON:
 		color = _settings.minor_moon_orbit_color
-	elif flags & IS_TRUE_PLANET:
+	elif flags & BodyFlags.IS_TRUE_PLANET:
 		color = _settings.planet_orbit_color
-	elif flags & IS_DWARF_PLANET:
+	elif flags & BodyFlags.IS_DWARF_PLANET:
 		color = _settings.dwarf_planet_orbit_color
 	else:
 		color = _settings.default_orbit_color

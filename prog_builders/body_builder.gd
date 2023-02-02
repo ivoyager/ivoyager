@@ -92,6 +92,8 @@ var _table_reader: IVTableReader
 var _main_prog_bar: IVMainProgBar
 var _Body_: Script
 var _ModelController_: Script
+var _HUDLabel_: Script
+var _HUDOrbit_: Script
 var _fallback_body_2d: Texture
 # system build in progress
 var _is_building_system := false
@@ -118,6 +120,8 @@ func _project_init() -> void:
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 	_Body_ = IVGlobal.script_classes._Body_
 	_ModelController_ = IVGlobal.script_classes._ModelController_
+	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
+	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
 	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
 
 
@@ -291,9 +295,27 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		_rings_builder.add_rings(body)
 	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 	if body.orbit:
 		_huds_builder.add_orbit(body)
-	_huds_builder.add_label(body)
+		
+	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
+	hud_label.hide()
+	body.hud_label = hud_label
+	body.add_child(hud_label)
+		
+#	_huds_builder.add_label(body)
 	body.set_hide_hud_when_close(_settings.hide_hud_when_close)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
