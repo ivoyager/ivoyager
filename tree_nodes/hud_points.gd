@@ -66,9 +66,9 @@ func init(group_: IVSmallBodiesGroup, color_: Color) -> void:
 	color = color_
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
-		_points_shader.shader = IVGlobal.shared_resources.points_shader
+		_points_shader.shader = IVGlobal.shared.points_shader
 	else:
-		_points_shader.shader = IVGlobal.shared_resources.points_lagrangian_shader
+		_points_shader.shader = IVGlobal.shared.points_lagrangian_shader
 	material_override = _points_shader
 
 

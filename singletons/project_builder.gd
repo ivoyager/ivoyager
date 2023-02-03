@@ -101,6 +101,7 @@ var initializers := {
 	# themselves from IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
+	_SharedInitializer_ = SharedInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableImporter_ = IVTableImporter,
@@ -118,7 +119,6 @@ var prog_builders := {
 	_ModelBuilder_ = IVModelBuilder,
 	_RingsBuilder_ = IVRingsBuilder,
 	_LightBuilder_ = IVLightBuilder,
-	_HUDsBuilder_ = IVHUDsBuilder,
 	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
@@ -133,11 +133,11 @@ var prog_refs := {
 	_IOManager_ = IVIOManager,
 	_FontManager_ = IVFontManager, # ok to replace
 	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
-	_QuantityFormatter_ = IVQuantityFormatter,
 	_TableReader_ = IVTableReader,
 	_MainMenuManager_ = IVMainMenuManager,
 	_SleepManager_ = IVSleepManager,
 	_WikiManager_ = IVWikiManager,
+	_QuantityFormatter_ = IVQuantityFormatter,
 }
 
 var prog_nodes := {

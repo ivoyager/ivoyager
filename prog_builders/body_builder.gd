@@ -84,7 +84,6 @@ var _times: Array = IVGlobal.times
 var _model_builder: IVModelBuilder
 var _rings_builder: IVRingsBuilder
 var _light_builder: IVLightBuilder
-var _huds_builder: IVHUDsBuilder
 var _orbit_builder: IVOrbitBuilder
 var _composition_builder: IVCompositionBuilder
 var _io_manager: IVIOManager
@@ -112,7 +111,6 @@ func _project_init() -> void:
 	_model_builder = IVGlobal.program.ModelBuilder
 	_rings_builder = IVGlobal.program.RingsBuilder
 	_light_builder = IVGlobal.program.LightBuilder
-	_huds_builder = IVGlobal.program.HUDsBuilder
 	_orbit_builder = IVGlobal.program.OrbitBuilder
 	_composition_builder = IVGlobal.program.get("CompositionBuilder")
 	_io_manager = IVGlobal.program.IOManager
@@ -295,27 +293,13 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		_rings_builder.add_rings(body)
 	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	if body.orbit:
-		_huds_builder.add_orbit(body)
-		
+		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body.orbit, body.flags)
+		body.hud_orbit = hud_orbit
+		body.get_parent().add_child(hud_orbit)
 	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
-	hud_label.hide()
 	body.hud_label = hud_label
 	body.add_child(hud_label)
-		
-#	_huds_builder.add_label(body)
 	body.set_hide_hud_when_close(_settings.hide_hud_when_close)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)

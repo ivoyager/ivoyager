@@ -59,7 +59,7 @@ func _project_init() -> void:
 	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
 	_table_reader = IVGlobal.program.TableReader
 	_io_manager = IVGlobal.program.IOManager
-	_globe_mesh = IVGlobal.shared_resources.globe_mesh
+	_globe_mesh = IVGlobal.shared.globe_mesh
 	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
 	_preregister_files()
 

@@ -74,16 +74,16 @@ var vec3ids := PoolVector3Array() # encodes 36-bit point_id for PointPicker
 
 # below is binary import data
 var names := PoolStringArray()
-var iau_numbers := PoolIntArray() # -1 for unnumbered (FIXME: 32-bit isn't enough!)
+var iau_numbers := PoolIntArray() # -1 for unnumbered (is 32 bit enough?)
 var magnitudes := PoolRealArray()
 
 var dummy_translations := PoolVector3Array() # all 0's
 
-# non-Trojans - arrays optimized for MeshArray construction
+# non-Trojans - arrays pre-structured for MeshArray construction
 var a_e_i := PoolVector3Array()
 var Om_w_M0_n := PoolColorArray()
 var s_g := PoolVector2Array() # TODO: implement these orbit precessions
-# Trojans - arrays optimized for MeshArray construction
+# Trojans - arrays pre-structured for MeshArray construction
 var d_e_i := PoolVector3Array()
 var Om_w_D_f := PoolColorArray()
 var th0 := PoolVector2Array()

@@ -616,17 +616,5 @@ func _on_time_altered(_previous_time: float) -> void:
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
-		"planet_orbit_color":
-			if flags & BodyFlags.IS_TRUE_PLANET and hud_orbit:
-				hud_orbit.change_color(value)
-		"dwarf_planet_orbit_color":
-			if flags & BodyFlags.IS_DWARF_PLANET and hud_orbit:
-				hud_orbit.change_color(value)
-		"moon_orbit_color":
-			if flags & BodyFlags.IS_MOON and flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
-				hud_orbit.change_color(value)
-		"minor_moon_orbit_color":
-			if flags & BodyFlags.IS_MOON and not flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
-				hud_orbit.change_color(value)
 		"hide_hud_when_close":
 			set_hide_hud_when_close(value)

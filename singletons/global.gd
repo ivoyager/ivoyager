@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20230201
+const IVOYAGER_VERSION_YMD := 20230202
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -160,13 +160,12 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
 	good = Color.green,
 	warning = Color.yellow,
-	danger = Color(1.0, 0.5, 0.5), # "red" is hard to see
+	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared_resources := {
+var shared := { # More items are added by initializers/shared_initializer.gd
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
-	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	points_shader = preload("res://ivoyager/shaders/points.shader"),
 	points_lagrangian_shader = preload("res://ivoyager/shaders/points_lagrangian.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings

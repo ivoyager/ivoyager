@@ -49,6 +49,7 @@ func _ready() -> void:
 	else:
 		text = _body_name
 		font = _name_font
+	hide()
 
 
 func set_symbol_mode(is_symbol_visible: bool) -> void:
