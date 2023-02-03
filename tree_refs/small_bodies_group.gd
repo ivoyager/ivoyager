@@ -143,6 +143,7 @@ func init(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void
 	small_bodies_group_indexing.group_ids[group_name] = group_id
 
 
+# TODO: Move binary build stuff to SmallBodiesBuilder
 func read_binary(binary: File) -> void:
 	var binary_data: Array = binary.get_var()
 	names.append_array(binary_data[0])
@@ -177,6 +178,8 @@ func finish_binary_import() -> void:
 	# feedback
 	assert(DPRINT and _debug_print() or true)
 	assert(VPRINT and _verbose_print() or true)
+	
+	
 
 
 # *****************************************************************************

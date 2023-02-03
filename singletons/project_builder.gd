@@ -138,6 +138,7 @@ var prog_refs := {
 	_SleepManager_ = IVSleepManager,
 	_WikiManager_ = IVWikiManager,
 	_BodyFinisher_ = IVBodyFinisher,
+	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
 	_QuantityFormatter_ = IVQuantityFormatter,
 }
 

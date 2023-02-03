@@ -20,6 +20,10 @@
 class_name IVSmallBodiesBuilder
 extends Reference
 
+# Builds SmallBodiesGroup instances from binary data.
+#
+# TODO: Code needs generalization. It is currently specific for asteroids
+# orbiting the 'top' body.
 
 signal small_bodies_added()
 
@@ -29,24 +33,19 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 	"14.0", "14.5", "15.0", "15.5", "16.0", "16.5", "17.0", "17.5", "18.0",
 	"18.5", "99.9"]
 
+var _SmallBodiesGroup_: Script
 var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
-var _settings: Dictionary = IVGlobal.settings
 var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
 var _small_bodies_group_indexing: IVSmallBodiesGroupIndexing
-var _SmallBodiesGroup_: Script
-var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
 var _running_count := 0
 
 
 func _project_init() -> void:
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
 	_table_reader = IVGlobal.program.TableReader
 	_l_point_builder = IVGlobal.program.LagrangePointBuilder
-	_small_bodies_group_indexing = IVGlobal.program.SmallBodiesGroupIndexing
-	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
-	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 
@@ -113,24 +112,3 @@ func _load_binary(group: IVSmallBodiesGroup, group_name: String,
 	group.read_binary(binary)
 	binary.close()
 
-
-# TODO: Move below to 'Finisher' object
-func _init_unpersisted(_is_new_game: bool) -> void:
-	for group in _small_bodies_group_indexing.groups:
-		_init_hud_points(group)
-		_init_hud_orbits(group)
-
-
-func _init_hud_points(group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new()
-	hud_points.init(group, _settings.asteroid_point_color)
-	hud_points.draw_points()
-	var star := group.star
-	star.add_child(hud_points)
-
-
-func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
-	if group.is_trojans:
-		return
-	# WIP
-	pass
