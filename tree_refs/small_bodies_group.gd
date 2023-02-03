@@ -98,6 +98,31 @@ var _load_count := 0
 
 
 # *****************************************************************************
+# public API
+
+func get_number() -> int:
+	return names.size()
+
+
+func get_orbit_elements(index: int) -> Array:
+	# [a, e, i, Om, w, M0, n]
+	# Does not work for Trojans (yet)
+	assert(!is_trojans)
+	var a_e_i_item := a_e_i[index]
+	var Om_w_M0_n_item := Om_w_M0_n[index]
+	return [
+		a_e_i_item[0],
+		a_e_i_item[1],
+		a_e_i_item[2],
+		Om_w_M0_n_item[0],
+		Om_w_M0_n_item[1],
+		Om_w_M0_n_item[2],
+		Om_w_M0_n_item[3],
+	]
+
+
+# *****************************************************************************
+# ivoyager internal methods
 
 func init(star_: IVBody, group_name_: String) -> void:
 	star = star_
@@ -149,10 +174,6 @@ func finish_binary_import() -> void:
 	# feedback
 	assert(DPRINT and _debug_print() or true)
 	assert(VPRINT and _verbose_print() or true)
-
-
-func get_number() -> int:
-	return names.size()
 
 
 # *****************************************************************************

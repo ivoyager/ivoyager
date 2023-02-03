@@ -50,14 +50,6 @@ func _project_init() -> void:
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 
-func _init_unpersisted(_is_new_game: bool) -> void:
-	var groups_by_name := _small_bodies_manager.groups_by_name
-	for group_name in groups_by_name:
-		var small_bodies_group := groups_by_name[group_name] as IVSmallBodiesGroup
-		if small_bodies_group:
-			_init_hud_points(small_bodies_group)
-
-
 func build() -> void:
 	if IVGlobal.skip_asteroids:
 		return
@@ -65,14 +57,6 @@ func build() -> void:
 	_load_binaries(star)
 	print("Added orbital data for ", _running_count, " asteroids")
 	emit_signal("small_bodies_added")
-
-
-func _init_hud_points(small_bodies_group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new()
-	hud_points.init(small_bodies_group, _settings.asteroid_point_color)
-	hud_points.draw_points()
-	var star := small_bodies_group.star
-	star.add_child(hud_points)
 
 
 func _load_binaries(star: IVBody) -> void:
@@ -134,3 +118,26 @@ func _load_binary(small_bodies_group: IVSmallBodiesGroup, group: String, mag_str
 	assert(DPRINT and print("Reading binary %s" % path) or true)
 	small_bodies_group.read_binary(binary)
 	binary.close()
+
+
+func _init_unpersisted(_is_new_game: bool) -> void:
+	var groups_by_name := _small_bodies_manager.groups_by_name
+	for group_name in groups_by_name:
+		var small_bodies_group := groups_by_name[group_name] as IVSmallBodiesGroup
+		if small_bodies_group:
+			_init_hud_points(small_bodies_group)
+			_init_hud_orbits(small_bodies_group)
+
+
+func _init_hud_points(small_bodies_group: IVSmallBodiesGroup) -> void:
+	var hud_points: IVHUDPoints = _HUDPoints_.new()
+	hud_points.init(small_bodies_group, _settings.asteroid_point_color)
+	hud_points.draw_points()
+	var star := small_bodies_group.star
+	star.add_child(hud_points)
+
+
+func _init_hud_orbits(small_bodies_group: IVSmallBodiesGroup) -> void:
+	if small_bodies_group.is_trojans:
+		return
+	pass
