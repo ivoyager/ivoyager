@@ -47,7 +47,6 @@ func build_system_tree() -> void:
 	var state_manager: IVStateManager = IVGlobal.program.StateManager
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
 	IVGlobal.verbose_signal("about_to_build_system_tree")
-	_body_builder.init_system_build()
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
 	var small_bodies_builder: IVSmallBodiesBuilder = IVGlobal.program.SmallBodiesBuilder
