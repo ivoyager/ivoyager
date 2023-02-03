@@ -34,20 +34,19 @@ const TROJAN_ORBIT_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_COLOR
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
-const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 
 var group: IVSmallBodiesGroup
 var color: Color # read only
 
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
+var _calibration := IVGlobal.fragment_calibration
+var _calibration_size := _calibration.size()
+var _n_cycle_steps := _calibration_size + 3
 var _points_shader := ShaderMaterial.new()
 var _last_update_time := -INF
 
-
 var _cycle_step := -1
-var _calibration_size := CALIBRATION.size()
-var _n_cycle_steps := _calibration_size + 3
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
@@ -93,7 +92,7 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_points_shader.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	_points_shader.set_shader_param("point_picker_range", float(_world_targeting[7]))
+	_points_shader.set_shader_param("fragment_range", float(_world_targeting[7]))
 
 
 func _process(_delta: float) -> void:
@@ -106,7 +105,7 @@ func _process(_delta: float) -> void:
 		_cycle_step = 0
 	var cycle_value: float
 	if _cycle_step < _calibration_size:
-		cycle_value = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
+		cycle_value = _calibration[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
 	_points_shader.set_shader_param("time_cycle", Vector2(time, cycle_value))

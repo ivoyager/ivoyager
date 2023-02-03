@@ -1,4 +1,4 @@
-# small_bodies_label.gd
+# fragment_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,24 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSmallBodiesLabel
+class_name IVFragmentLabel
 extends Label
 
-# Requires IVPointPicker and IVSmallBodiesManager. Operates in screen position
-# so add as child to Universe or a full screen Control.
+# Requires IVFragmentIdentifier. Operates in screen position so add as child to
+# Universe or a full screen Control.
 
 
-var offset := Vector2(0.0, -7.0) # negative y offset to not interfere w/ PointPicker
+var offset := Vector2(0.0, -7.0) # negative y offset to not interfere w/ FragmentIdentifier
 
 var _world_targeting: Array = IVGlobal.world_targeting
-var _small_bodies_infos: Dictionary
+var _infos: Dictionary
 
 
 func _ready() -> void:
-	var point_picker: IVPointPicker = IVGlobal.program.PointPicker
-	point_picker.connect("target_point_changed", self, "_on_target_point_changed")
-	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
-	_small_bodies_infos = small_bodies_manager.infos
+	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.FragmentIdentifier
+	fragment_identifier.connect("fragment_changed", self, "_on_target_point_changed")
+	_infos = fragment_identifier.infos
 	hide()
 
 
@@ -43,8 +42,8 @@ func _on_target_point_changed(id: int) -> void:
 		hide()
 		return
 	show()
-	text = _small_bodies_infos[id][0]
+	text = _infos[id][0] # [0] index is always name_str
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
 	yield(get_tree(), "idle_frame")
-	rect_size.x = 0.0
+	rect_size.x = 0.0 # needed to center when text shrinks
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)

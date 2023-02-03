@@ -24,20 +24,20 @@ extends Reference
 
 
 func _init() -> void:
-	_on_init()
-
-
-func _on_init() -> void:
-	make_circle_mesh()
+	_make_shared_resources()
 
 
 func _project_init() -> void:
 	IVGlobal.program.erase("SharedInitializer") # frees self
 
 
-func make_circle_mesh() -> void:
-	# All orbits (e < 1.0) are this circle mesh with modified basis.
-	var n_vertecies: int = IVGlobal.vertecies_per_orbit
+func _make_shared_resources() -> void:
+	IVGlobal.shared.circle_mesh = _make_circle_mesh(IVGlobal.vertecies_per_orbit)
+	IVGlobal.shared.circle_mesh_low_res = _make_circle_mesh(IVGlobal.vertecies_per_orbit_low_res)
+
+
+func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
+	# All orbits (e < 1.0) are shared circle mesh with modified basis.
 	var verteces := PoolVector3Array()
 	verteces.resize(n_vertecies)
 	var angle_increment := TAU / n_vertecies
@@ -52,6 +52,6 @@ func make_circle_mesh() -> void:
 	var circle_mesh := ArrayMesh.new()
 	circle_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_LOOP, mesh_arrays, [],
 			ArrayMesh.ARRAY_FORMAT_VERTEX)
-	IVGlobal.shared.circle_mesh = circle_mesh
+	return circle_mesh
 
 

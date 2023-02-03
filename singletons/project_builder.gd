@@ -149,7 +149,7 @@ var prog_nodes := {
 	_Scheduler_ = IVScheduler,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
 	_HUDsVisibility_ = IVHUDsVisibility,
-	_SmallBodiesManager_ = IVSmallBodiesManager,
+	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_WindowManager_ = IVWindowManager,
 }
 
@@ -162,9 +162,9 @@ var gui_nodes := {
 	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_WorldController_ = IVWorldController, # Control ok
-	_PointPicker_ = IVPointPicker, # Some dependencies
-	_ProjectGUI_ = null, # Project MUST supply its own top Control!
-	_SplashScreen_ = null, # Needed if IVGlobal.skip_splash_screen == false
+	_FragmentIdentifier_ = IVFragmentIdentifier, # look for dependencies
+	_ProjectGUI_ = null, # project MUST supply its own top Control!
+	_SplashScreen_ = null, # needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove

@@ -33,7 +33,7 @@ var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 var _settings: Dictionary = IVGlobal.settings
 var _table_reader: IVTableReader
 var _l_point_builder: IVLagrangePointBuilder
-var _small_bodies_manager: IVSmallBodiesManager
+var _small_bodies_group_indexing: IVSmallBodiesGroupIndexing
 var _SmallBodiesGroup_: Script
 var _HUDPoints_: Script
 var _asteroid_binaries_dir: String
@@ -44,7 +44,7 @@ func _project_init() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
 	_table_reader = IVGlobal.program.TableReader
 	_l_point_builder = IVGlobal.program.LagrangePointBuilder
-	_small_bodies_manager = IVGlobal.program.SmallBodiesManager
+	_small_bodies_group_indexing = IVGlobal.program.SmallBodiesGroupIndexing
 	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
@@ -64,33 +64,30 @@ func _load_binaries(star: IVBody) -> void:
 	var n_groups := _table_reader.get_n_rows("asteroid_groups")
 	var row := 0
 	while row < n_groups:
-		var group := _table_reader.get_string("asteroid_groups", "group", row)
+		var group_name := _table_reader.get_string("asteroid_groups", "group", row)
 		var trojan_of: IVBody
 		var trojan_of_name := _table_reader.get_string("asteroid_groups", "trojan_of", row)
 		if trojan_of_name:
 			trojan_of = IVGlobal.bodies[trojan_of_name]
 		if !trojan_of:
-			_load_group_binaries(star, group, row)
+			_load_group_binaries(star, group_name, row)
 		else: # trojans!
 			for l_point in [4, 5]: # split data table JT i!JT4 & JT5
-				var l_group: String = group + str(l_point)
+				var l_group: String = group_name + str(l_point)
 				_load_group_binaries(star, l_group, row, l_point, trojan_of)
 		row += 1
 
 
-func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point := -1,
+func _load_group_binaries(star: IVBody, group_name: String, table_row: int, l_point := -1,
 		trojan_of: IVBody = null) -> void:
 	assert(l_point == -1 or l_point == 4 or l_point == 5)
 	var is_trojans := l_point != -1
 	var lagrange_point: IVLPoint
-	# make the IVSmallBodiesGroup
-	var small_bodies_group: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
-	if !is_trojans:
-		small_bodies_group.init(star, group)
-	else:
+	if is_trojans:
 		lagrange_point = _l_point_builder.get_or_make_lagrange_point(trojan_of, l_point)
 		assert(lagrange_point)
-		small_bodies_group.init_trojans(star, group, lagrange_point)
+	var group: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
+	group.init(star, group_name, lagrange_point)
 	var mag_cutoff := 100.0
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override
@@ -98,46 +95,42 @@ func _load_group_binaries(star: IVBody, group: String, table_row: int, l_point :
 		mag_cutoff = _table_reader.get_real("asteroid_groups", "mag_cutoff", table_row)
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:
-			_load_binary(small_bodies_group, group, mag_str)
+			_load_binary(group, group_name, mag_str)
 		else:
 			break
-	small_bodies_group.finish_binary_import()
-	_running_count += small_bodies_group.get_number()
-	# register in IVSmallBodiesManager
-	if is_trojans:
-		_small_bodies_manager.lagrange_points[group] = lagrange_point
-	_small_bodies_manager.groups_by_name[group] = small_bodies_group
+	group.finish_binary_import()
+	_running_count += group.get_number()
 
 
-func _load_binary(small_bodies_group: IVSmallBodiesGroup, group: String, mag_str: String) -> void:
-	var binary_name := group + "." + mag_str + ".vbinary"
+func _load_binary(group: IVSmallBodiesGroup, group_name: String,
+		mag_str: String) -> void:
+	var binary_name := group_name + "." + mag_str + ".vbinary"
 	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
 	var binary := File.new()
 	if binary.open(path, File.READ) != OK: # skip if file doesn't exist
 		return
 	assert(DPRINT and print("Reading binary %s" % path) or true)
-	small_bodies_group.read_binary(binary)
+	group.read_binary(binary)
 	binary.close()
 
 
+# TODO: Move below to 'Finisher' object
 func _init_unpersisted(_is_new_game: bool) -> void:
-	var groups_by_name := _small_bodies_manager.groups_by_name
-	for group_name in groups_by_name:
-		var small_bodies_group := groups_by_name[group_name] as IVSmallBodiesGroup
-		if small_bodies_group:
-			_init_hud_points(small_bodies_group)
-			_init_hud_orbits(small_bodies_group)
+	for group in _small_bodies_group_indexing.groups:
+		_init_hud_points(group)
+		_init_hud_orbits(group)
 
 
-func _init_hud_points(small_bodies_group: IVSmallBodiesGroup) -> void:
+func _init_hud_points(group: IVSmallBodiesGroup) -> void:
 	var hud_points: IVHUDPoints = _HUDPoints_.new()
-	hud_points.init(small_bodies_group, _settings.asteroid_point_color)
+	hud_points.init(group, _settings.asteroid_point_color)
 	hud_points.draw_points()
-	var star := small_bodies_group.star
+	var star := group.star
 	star.add_child(hud_points)
 
 
-func _init_hud_orbits(small_bodies_group: IVSmallBodiesGroup) -> void:
-	if small_bodies_group.is_trojans:
+func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
+	if group.is_trojans:
 		return
+	# WIP
 	pass

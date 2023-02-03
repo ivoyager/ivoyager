@@ -86,28 +86,6 @@ static func init_array(size: int, init_value = null) -> Array:
 
 # Conversions
 
-static func id2vec(id: int) -> Vector3:
-	# converts 36 bit integer to Vector3 (12 bit / element)
-	assert(id >= 0 and id < (1 << 36)) # up to 68_719_476_735
-	var int1 := id & 4095 # (1 << 12) - 1
-	id >>= 12
-	var int2 := id & 4095
-	id >>= 12
-	var int3 := id & 4095
-	return Vector3(float(int1), float(int2), float(int3))
-
-
-static func vec2id(vector: Vector3) -> int:
-	# converts Vector3 (12 bit / element) to 36 bit integer 
-	var int1 := int(vector.x)
-	var int2 := int(vector.y)
-	var int3 := int(vector.z)
-	assert(int1 >= 0 and int1 < 4096) # 1 << 12
-	assert(int2 >= 0 and int2 < 4096)
-	assert(int3 >= 0 and int3 < 4096)
-	return int1 | int2 << 12 | int3 << 24
-
-
 static func srgb2linear(color: Color) -> Color:
 	if color.r <= 0.04045:
 		color.r /= 12.92

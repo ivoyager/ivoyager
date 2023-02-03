@@ -29,7 +29,8 @@ extends Control
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
-#  [6] point_picker_coord: Vector 2 (this object sets; mouse_position w/ flipped y)
+#  [6] mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
+#  [7] fragment_range: int (inited here but FragmentIdentifier sets)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
@@ -58,8 +59,8 @@ func _ready() -> void:
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
-	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for PointPicker & shaders
-	_world_targeting[7] = 9 # point_picker_range (PointPicker may change)
+	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for FragmentIdentifier & shaders
+	_world_targeting[7] = 9 # fragment_range; FragmentIdentifier will override
 
 
 func _clear() -> void:

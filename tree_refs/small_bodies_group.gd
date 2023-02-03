@@ -47,6 +47,7 @@ const PERSIST_PROPERTIES := [
 	"star",
 	"lagrange_point",
 	"group_name",
+	"group_id",
 	"max_apoapsis",
 	"vec3ids",
 	"names",
@@ -68,9 +69,10 @@ var is_trojans := false
 var star: IVBody
 var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
+var group_id: int
 
 var max_apoapsis := 0.0
-var vec3ids := PoolVector3Array() # encodes 36-bit point_id for PointPicker
+var vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
 
 # below is binary import data
 var names := PoolStringArray()
@@ -91,6 +93,7 @@ var th0 := PoolVector2Array()
 
 # *****************************************************************************
 
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.FragmentIdentifier
 var _index := 0
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
@@ -124,18 +127,20 @@ func get_orbit_elements(index: int) -> Array:
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(star_: IVBody, group_name_: String) -> void:
+func init(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void:
+	# lagrange_point_ must be null unless this is is a Trojan set!
+	if lagrange_point_:
+		is_trojans = true
+		lagrange_point = lagrange_point_
 	star = star_
 	group_name = group_name_
 	assert(VPRINT and _verbose_reset_mins_maxes() or true)
-
-
-func init_trojans(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void:
-	star = star_
-	group_name = group_name_
-	is_trojans = true
-	lagrange_point = lagrange_point_
-	assert(VPRINT and _verbose_reset_mins_maxes() or true)
+	# self register in SmallBodiesGroupIndexing for persistence
+	var small_bodies_group_indexing: IVSmallBodiesGroupIndexing \
+			= IVGlobal.program.SmallBodiesGroupIndexing
+	group_id = small_bodies_group_indexing.groups.size()
+	small_bodies_group_indexing.groups.append(self)
+	small_bodies_group_indexing.group_ids[group_name] = group_id
 
 
 func read_binary(binary: File) -> void:
@@ -160,14 +165,12 @@ func finish_binary_import() -> void:
 		_fix_binary_keplerian_elements()
 	else:
 		_fix_binary_trojan_elements()
-	var small_bodies_manager: IVSmallBodiesManager = IVGlobal.program.SmallBodiesManager
 	var size := names.size()
 	vec3ids.resize(size)
 	var i := 0
 	while i < size:
-		var info := [names[i]]
-		var id := small_bodies_manager.get_new_id(info)
-		var vec3id := utils.id2vec(id)
+		var info := [names[i], group_id, i]
+		var vec3id := _fragment_identifier.get_new_id_as_vec3(info)
 		vec3ids[i] = vec3id
 		i += 1
 	

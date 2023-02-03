@@ -30,7 +30,7 @@ uniform vec2 mouse_coord;
 uniform vec2 lagrange_data; // lagrange a, lagrange L
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 uniform float point_size = 3.0;
-uniform float point_picker_range = 6.0;
+uniform float fragment_range = 9.0;
 
 
 void vertex() {
@@ -101,20 +101,21 @@ void vertex() {
 
 
 bool is_id_signaling_pixel(vec2 offset){
-	// Follows grid pattern near mouse described in PointPicker, which will
-	// capture any point in range area with POINT_SIZE >= 3. You can modify
-	// to return true in the full range area, but that causes PointPicker
-	// to do a worse job identifying valid ids in a crowded field of points.
+	// Follows grid pattern near mouse described in FragmentIdentifier, which
+	// will capture any point in range area with POINT_SIZE >= 3. You can
+	// modify to return true in the full range area for debugging, but that
+	// causes FragmentIdentifier to do a worse job identifying valid ids in a
+	// crowded field of points.
 	
 	// Note that FRAGCOORD is always offset +0.5 from pixel coordinate in both
 	// x and y. If that changes, the following line will need to be changed.
 	offset -= vec2(0.5);
 	
 	offset = abs(offset);
-	if (offset.x > point_picker_range) {
+	if (offset.x > fragment_range) {
 		return false;
 	}
-	if (offset.y > point_picker_range) {
+	if (offset.y > fragment_range) {
 		return false;
 	}
 	if (mod(offset, 3.0) != vec2(0.0)) {
@@ -127,7 +128,7 @@ bool is_id_signaling_pixel(vec2 offset){
 
 void fragment() {
 	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
-		// Broadcast callibration or id color. See tree_noes/point_picker.gd.
+		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
 		float cycle_value = time_cycle[1];
 		if (cycle_value < 1.0) {
 			EMISSION = vec3(cycle_value); // calibration color
