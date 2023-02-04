@@ -20,19 +20,20 @@
 class_name IVHUDOrbits
 extends MultiMeshInstance
 
-# Visual orbits for SmallBodiesGroup.
+# Visual orbits for a SmallBodiesGroup instance.
 
 const math := preload("res://ivoyager/static/math.gd")
 
-var group: IVSmallBodiesGroup
-var color: Color # read only
+
+var _group: IVSmallBodiesGroup
+var _color_setting: String
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
-func _init(group_: IVSmallBodiesGroup, color_: Color) -> void:
-	group = group_
-	color = color_
+func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
+	_group = group
+	_color_setting = color_setting
 
 
 func _ready() -> void:
@@ -44,18 +45,18 @@ func _ready() -> void:
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	material_override = SpatialMaterial.new()
 	material_override.flags_unshaded = true
-	material_override.albedo_color = color
+	material_override.albedo_color = IVGlobal.settings[_color_setting]
 	_set_transforms_from_orbits()
 	hide()
 
 
 func _set_transforms_from_orbits() -> void:
-	var n := group.get_number()
+	var n := _group.get_number()
 	multimesh.instance_count = n
 	var index := 0
 	while index < n:
 		# currently assumes ecliptic reference
-		var elements := group.get_orbit_elements(index)
+		var elements := _group.get_orbit_elements(index)
 		var a: float = elements[0]
 		var e: float = elements[1]
 		var b: = sqrt(a * a * (1.0 - e * e)) # simi-minor axis
@@ -67,13 +68,10 @@ func _set_transforms_from_orbits() -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_sbg_orbits_visible(group.group_name)
+	visible = _huds_visibility.is_sbg_orbits_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:
-	if setting == "asteroid_orbit_color": # FIXME: implement this setting
-		color = value
-		color.a = 1.0
-		material_override.albedo_color = color
-
+	if setting == _color_setting:
+		material_override.albedo_color = value
 

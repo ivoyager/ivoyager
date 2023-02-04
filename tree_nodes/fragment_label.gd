@@ -24,7 +24,7 @@ extends Label
 # Universe or a full screen Control.
 
 
-var offset := Vector2(0.0, -7.0) # negative y offset to not interfere w/ FragmentIdentifier
+var offset := Vector2(0.0, -7.0) # offset to not interfere w/ FragmentIdentifier
 
 var _world_targeting: Array = IVGlobal.world_targeting
 var _infos: Dictionary
@@ -34,6 +34,10 @@ func _ready() -> void:
 	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.FragmentIdentifier
 	fragment_identifier.connect("fragment_changed", self, "_on_target_point_changed")
 	_infos = fragment_identifier.infos
+	set("custom_fonts/font", IVGlobal.fonts.hud_names)
+	align = ALIGN_CENTER
+	grow_horizontal = GROW_DIRECTION_BOTH
+	size_flags_horizontal = SIZE_SHRINK_CENTER
 	hide()
 
 
@@ -44,6 +48,4 @@ func _on_target_point_changed(id: int) -> void:
 	show()
 	text = _infos[id][0] # [0] index is always name_str
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
-	yield(get_tree(), "idle_frame")
-	rect_size.x = 0.0 # needed to center when text shrinks
-	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
+

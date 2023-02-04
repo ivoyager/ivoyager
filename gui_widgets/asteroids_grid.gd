@@ -20,7 +20,7 @@
 class_name IVAsteroidsGrid
 extends GridContainer
 
-# GUI widget. Trojans are currently not viewable as orbits.
+# GUI widget. Trojan orbits are currently not viewable so disabled.
 
 var spacer_size := 18
 

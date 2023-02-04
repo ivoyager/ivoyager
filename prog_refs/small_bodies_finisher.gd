@@ -20,6 +20,7 @@
 class_name IVSmallBodiesFinisher
 extends Reference
 
+# Adds HUDPoints and HUDOrbits for all SmallBodiesGroups at system tree built.
 
 var _HUDPoints_: Script
 var _HUDOrbits_: Script
@@ -41,7 +42,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 
 
 func _init_hud_points(group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new(group, _settings.asteroid_point_color)
+	var hud_points: IVHUDPoints = _HUDPoints_.new(group, "asteroid_point_color")
 	var star := group.star
 	star.add_child(hud_points)
 
@@ -49,7 +50,7 @@ func _init_hud_points(group: IVSmallBodiesGroup) -> void:
 func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
 	if group.is_trojans:
 		return
-	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group, Color.red)
+	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group, "asteroid_orbit_color")
 	var star := group.star
 	star.add_child(hud_orbits)
 

@@ -20,18 +20,33 @@
 class_name IVHUDOrbit
 extends MeshInstance
 
+# Visual orbit for a Body instance.
 
 const math := preload("res://ivoyager/static/math.gd")
-const BodyFlags := IVEnums.BodyFlags
+
 
 var _times: Array = IVGlobal.times
 var _orbit: IVOrbit
-var _body_flags: int # for color setting
+var _color_setting: String
 
 
 func _init(orbit: IVOrbit, body_flags: int) -> void:
 	_orbit = orbit
-	_body_flags = body_flags
+	var BodyFlags := IVEnums.BodyFlags
+	if body_flags & BodyFlags.IS_MOON and body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
+		_color_setting = "moon_orbit_color"
+	elif body_flags & BodyFlags.IS_MOON:
+		_color_setting = "minor_moon_orbit_color"
+	elif body_flags & BodyFlags.IS_TRUE_PLANET:
+		_color_setting = "planet_orbit_color"
+	elif body_flags & BodyFlags.IS_DWARF_PLANET:
+		_color_setting = "dwarf_planet_orbit_color"
+	elif body_flags & BodyFlags.IS_ASTEROID:
+		_color_setting = "asteroid_orbit_color"
+	elif body_flags & BodyFlags.IS_SPACECRAFT:
+		_color_setting = "spacecraft_orbit_color"
+	else:
+		_color_setting = "default_orbit_color"
 
 
 func _ready() -> void:
@@ -45,22 +60,12 @@ func _ready() -> void:
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	material_override = SpatialMaterial.new() # every HUDOrbit has its own
 	material_override.flags_unshaded = true
-	var settings: Dictionary = IVGlobal.settings
-	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
-		material_override.albedo_color = settings.moon_orbit_color
-	elif _body_flags & BodyFlags.IS_MOON:
-		material_override.albedo_color = settings.minor_moon_orbit_color
-	elif _body_flags & BodyFlags.IS_TRUE_PLANET:
-		material_override.albedo_color = settings.planet_orbit_color
-	elif _body_flags & BodyFlags.IS_DWARF_PLANET:
-		material_override.albedo_color = settings.dwarf_planet_orbit_color
-	else:
-		material_override.albedo_color = settings.default_orbit_color
+	material_override.albedo_color = IVGlobal.settings[_color_setting]
 	hide()
 
 
 func _set_transform_from_orbit(_dummy := false) -> void:
-	# Converts mesh circle to an orbit ellipse!
+	# Stretches, rotates and positions circle_mesh to make an orbit ellipse!
 	var reference_normal := _orbit.reference_normal
 	var elements := _orbit.get_elements(_times[0])
 	var a: float = elements[0]
@@ -74,18 +79,6 @@ func _set_transform_from_orbit(_dummy := false) -> void:
 
 
 func _settings_listener(setting: String, value) -> void:
-	match setting:
-		"planet_orbit_color":
-			if _body_flags & BodyFlags.IS_TRUE_PLANET:
-				material_override.albedo_color = value
-		"dwarf_planet_orbit_color":
-			if _body_flags & BodyFlags.IS_DWARF_PLANET:
-				material_override.albedo_color = value
-		"moon_orbit_color":
-			if _body_flags & BodyFlags.IS_MOON \
-					and _body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
-				material_override.albedo_color = value
-		"minor_moon_orbit_color":
-			if _body_flags & BodyFlags.IS_MOON \
-					and not _body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
-				material_override.albedo_color = value
+	if setting == _color_setting:
+		material_override.albedo_color = value
+

@@ -71,6 +71,8 @@ func _on_init():
 				dwarf_planet_orbit_color = "LABEL_DWARF_PLANET_ORBITS",
 				moon_orbit_color = "LABEL_MAJOR_MOON_ORBITS",
 				minor_moon_orbit_color = "LABEL_MINOR_MOON_ORBITS",
+				spacecraft_orbit_color = "LABEL_SPACECRAFT_ORBITS",
+				asteroid_orbit_color = "LABEL_ASTEROID_ORBITS",
 				asteroid_point_color = "LABEL_ASTEROID_POINTS",
 			},
 			{

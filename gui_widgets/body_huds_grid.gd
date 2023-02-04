@@ -45,9 +45,9 @@ var chkbx_rows := [
 	[" " + tr("LABEL_SPACECRAFT"), BodyFlags.IS_SPACECRAFT],
 ]
 
-var _orbits_chkbxs := []
 var _names_chkbxs := []
 var _symbols_chkbxs := []
+var _orbits_chkbxs := []
 
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
@@ -67,12 +67,6 @@ func _ready() -> void:
 		label.text = label_text
 		add_child(label)
 		var chkbx := CheckBox.new()
-		chkbx.connect("pressed", self, "_show_hide_orbits", [chkbx, flags])
-		chkbx.align = Button.ALIGN_CENTER
-		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
-		_orbits_chkbxs.append(chkbx)
-		add_child(chkbx)
-		chkbx = CheckBox.new()
 		chkbx.connect("pressed", self, "_show_hide_names", [chkbx, flags])
 		chkbx.align = Button.ALIGN_CENTER
 		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -84,10 +78,12 @@ func _ready() -> void:
 		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
 		_symbols_chkbxs.append(chkbx)
 		add_child(chkbx)
-
-
-func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
-	_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
+		chkbx = CheckBox.new()
+		chkbx.connect("pressed", self, "_show_hide_orbits", [chkbx, flags])
+		chkbx.align = Button.ALIGN_CENTER
+		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_orbits_chkbxs.append(chkbx)
+		add_child(chkbx)
 
 
 func _show_hide_names(ckbx: CheckBox, flags: int) -> void:
@@ -98,10 +94,14 @@ func _show_hide_symbols(ckbx: CheckBox, flags: int) -> void:
 	_huds_visibility.set_symbol_visibility(flags, ckbx.pressed)
 
 
+func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
+	_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
+
+
 func _update_ckbxs() -> void:
 	for i in _n_rows:
 		var flags: int = chkbx_rows[i][1]
-		_orbits_chkbxs[i].pressed = _huds_visibility.is_orbit_visible(flags, true)
 		_names_chkbxs[i].pressed = _huds_visibility.is_name_visible(flags, true)
 		_symbols_chkbxs[i].pressed = _huds_visibility.is_symbol_visible(flags, true)
+		_orbits_chkbxs[i].pressed = _huds_visibility.is_orbit_visible(flags, true)
 

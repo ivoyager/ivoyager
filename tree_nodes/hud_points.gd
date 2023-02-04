@@ -20,8 +20,9 @@
 class_name IVHUDPoints
 extends MeshInstance
 
-# This node constitutes many (up to 100000s of) display points as shaders that
-# maintain their own orbit.
+# Visual points for a SmallBodiesGroup instance. Uses points.shader or
+# points_lagrangian.shader which set vertex positions using their own orbital
+# math.
 
 const ORBIT_FLAGS = (
 		ArrayMesh.ARRAY_FORMAT_VERTEX
@@ -35,8 +36,8 @@ const TROJAN_ORBIT_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
 
-var group: IVSmallBodiesGroup
-var color: Color # read only
+var _group: IVSmallBodiesGroup
+var _color_setting: String
 
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -51,10 +52,10 @@ var _cycle_step := -1
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
-func _init(group_: IVSmallBodiesGroup, color_: Color) -> void:
-	group = group_
-	color = color_
-	if !group.is_trojans:
+func _init(group_: IVSmallBodiesGroup, color_setting: String) -> void:
+	_group = group_
+	_color_setting = color_setting
+	if !_group.is_trojans:
 		_points_shader.shader = IVGlobal.shared.points_shader
 	else:
 		_points_shader.shader = IVGlobal.shared.points_lagrangian_shader
@@ -73,21 +74,22 @@ func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
 	var arrays := []
 	arrays.resize(ArrayMesh.ARRAY_MAX)
-	if !group.is_trojans:
-		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
-		arrays[ArrayMesh.ARRAY_NORMAL] = group.a_e_i
-		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_M0_n
-	#	arrays[ArrayMesh.ARRAY_TEX_UV] = group.s_g
+	if !_group.is_trojans:
+		arrays[ArrayMesh.ARRAY_VERTEX] = _group.vec3ids
+		arrays[ArrayMesh.ARRAY_NORMAL] = _group.a_e_i
+		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_M0_n
+	#	arrays[ArrayMesh.ARRAY_TEX_UV] = _group.s_g
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ORBIT_FLAGS)
 	else: # trojans
-		arrays[ArrayMesh.ARRAY_VERTEX] = group.vec3ids
-		arrays[ArrayMesh.ARRAY_NORMAL] = group.d_e_i
-		arrays[ArrayMesh.ARRAY_COLOR] = group.Om_w_D_f
-		arrays[ArrayMesh.ARRAY_TEX_UV2] = group.th0
+		arrays[ArrayMesh.ARRAY_VERTEX] = _group.vec3ids
+		arrays[ArrayMesh.ARRAY_NORMAL] = _group.d_e_i
+		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_D_f
+		arrays[ArrayMesh.ARRAY_TEX_UV2] = _group.th0
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ORBIT_FLAGS)
-	var half_aabb = group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
+	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
+	var color: Color = IVGlobal.settings[_color_setting]
 	_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	_points_shader.set_shader_param("point_size", float(IVGlobal.settings.point_size))
 	_points_shader.set_shader_param("fragment_range", float(_world_targeting[7]))
@@ -109,8 +111,8 @@ func _process(_delta: float) -> void:
 	_points_shader.set_shader_param("time_cycle", Vector2(time, cycle_value))
 	_points_shader.set_shader_param("mouse_coord", _world_targeting[6])
 	# TODO 4.0: Set above data as global uniforms!
-	if group.lagrange_point:
-		var langrange_elements: Array = group.lagrange_point.dynamic_elements
+	if _group.lagrange_point:
+		var langrange_elements: Array = _group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
 		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * time
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
@@ -118,14 +120,12 @@ func _process(_delta: float) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_sbg_points_visible(group.group_name)
+	visible = _huds_visibility.is_sbg_points_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:
-	if setting == "asteroid_point_color":
-		color = value
-		color.a = 1.0
-		_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	if setting == _color_setting:
+		_points_shader.set_shader_param("color", Vector3(value.r, value.g, value.b))
 	elif setting == "point_size":
 		_points_shader.set_shader_param("point_size", float(value))
 	
