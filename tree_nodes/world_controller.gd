@@ -28,9 +28,11 @@ extends Control
 #  [2] camera: Camera (camera sets)
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
-#  [5] mouse_target_dist: float (potential targets set)
+#  [5] mouse_target_dist: float (as above)
 #  [6] fragment_mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
-#  [7] fragment_range: int (inited here but FragmentIdentifier sets)
+#  [7] fragment_range: int (inited here but FragmentIdentifier overrides)
+#
+# TODO: Recode using Godot's built-in mouse drag functionality.
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)

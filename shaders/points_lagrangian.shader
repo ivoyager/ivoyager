@@ -23,7 +23,7 @@
 // with a and M of the influencing orbital body.
 
 shader_type spatial;
-render_mode cull_disabled, skip_vertex_transform;
+render_mode unshaded, cull_disabled, skip_vertex_transform;
 
 uniform vec2 time_cycle;
 uniform vec2 mouse_coord;
@@ -131,7 +131,7 @@ void fragment() {
 		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
 		float cycle_value = time_cycle[1];
 		if (cycle_value < 1.0) {
-			EMISSION = vec3(cycle_value); // calibration color
+			ALBEDO = vec3(cycle_value); // calibration color
 		} else {
 			int id_element;
 			// Note: There is *some* interpolation of VERTEX even though we are
@@ -157,12 +157,10 @@ void fragment() {
 			float g = float(gbits) / 32.0 + 0.25;
 			float b = float(bbits) / 32.0 + 0.25;
 			
-			EMISSION = vec3(r, g, b); // encodes id
+			ALBEDO = vec3(r, g, b); // encodes id
 		}
 	
 	} else {
-		// color for this point group
-		EMISSION = color;
+		ALBEDO = color; // use this group's uniform
 	}
-	ALBEDO = vec3(0.0);
 }

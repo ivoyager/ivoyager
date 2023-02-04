@@ -24,12 +24,12 @@ extends MeshInstance
 # points_lagrangian.shader which set vertex positions using their own orbital
 # math.
 
-const ORBIT_FLAGS = (
+const ARRAY_FLAGS = (
 		ArrayMesh.ARRAY_FORMAT_VERTEX
 		| ArrayMesh.ARRAY_FORMAT_NORMAL
 		| ArrayMesh.ARRAY_FORMAT_COLOR
 )
-const TROJAN_ORBIT_FLAGS = (
+const TROJAN_ARRAY_FLAGS = (
 		ArrayMesh.ARRAY_FORMAT_VERTEX
 		| ArrayMesh.ARRAY_FORMAT_NORMAL
 		| ArrayMesh.ARRAY_FORMAT_COLOR
@@ -79,15 +79,16 @@ func draw_points() -> void:
 		arrays[ArrayMesh.ARRAY_NORMAL] = _group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = _group.s_g
-		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ORBIT_FLAGS)
+		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ARRAY_FLAGS)
 	else: # trojans
 		arrays[ArrayMesh.ARRAY_VERTEX] = _group.vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = _group.d_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_D_f
 		arrays[ArrayMesh.ARRAY_TEX_UV2] = _group.th0
-		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ORBIT_FLAGS)
-	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
-	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
+		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ARRAY_FLAGS)
+	# if we needed custom_aabb... (but we don't apparently)
+#	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
+#	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	var color: Color = IVGlobal.settings[_color_setting]
 	_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
