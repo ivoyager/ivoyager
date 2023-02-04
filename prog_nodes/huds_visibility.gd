@@ -20,12 +20,13 @@
 class_name IVHUDsVisibility
 extends Node
 
-# Maintains visibility state for HUD elements. HUD Nodes (or thier visibility
-# managers) must connect and set visibility on changed signals.
+# Maintains visibility state for Body and SmallBodiesGroup HUDs. HUD Nodes (or
+# thier visibility managers) must connect and set visibility on changed signals.
 
 
 signal body_huds_visibility_changed()
-signal point_groups_visibility_changed()
+signal sbg_points_visibility_changed()
+signal sbg_orbits_visibility_changed()
 
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
@@ -35,7 +36,8 @@ const PERSIST_PROPERTIES := [
 	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
-	"point_group_visibility",
+	"sbg_points_visibility",
+	"sbg_orbits_visibility",
 ]
 
 # not persisted - modify at project init if new types to manage
@@ -47,7 +49,8 @@ var all_visible_flags: int = (BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
 var orbit_visible_flags := all_visible_flags
 var name_visible_flags := all_visible_flags # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-var point_group_visibility := {} # indexed by group_name
+var sbg_points_visibility := {} # indexed by group_name
+var sbg_orbits_visibility := {} # indexed by group_name
 
 
 onready var _tree := get_tree()
@@ -60,10 +63,12 @@ func _ready() -> void:
 
 func _on_update_gui_requested() -> void:
 	emit_signal("body_huds_visibility_changed")
-	emit_signal("point_groups_visibility_changed")
+	emit_signal("sbg_points_visibility_changed")
+	emit_signal("sbg_orbits_visibility_changed")
 
 
 func _unhandled_key_input(event: InputEventKey):
+	# Only Body HUDs, for now...
 	if event.is_action_pressed("toggle_orbits"):
 		set_all_orbits_visibility(bool(orbit_visible_flags != all_visible_flags))
 	elif event.is_action_pressed("toggle_symbols"):
@@ -74,6 +79,8 @@ func _unhandled_key_input(event: InputEventKey):
 		return # input NOT handled!
 	_tree.set_input_as_handled()
 
+
+# Body HUDs
 
 func is_orbit_visible(body_flags: int, match_all := false) -> bool:
 	if match_all:
@@ -213,19 +220,25 @@ func set_symbol_visible_flags(symbol_visible_flags_: int) -> void:
 	emit_signal("body_huds_visibility_changed")
 
 
-func is_point_group_visible(group: String) -> bool:
-	return point_group_visibility.get(group, false)
+# SmallBodiesGroup HUDs
+
+func is_sbg_points_visible(group: String) -> bool:
+	return sbg_points_visibility.get(group, false)
 
 
-func is_any_point_group_visible() -> bool:
-	for group in point_group_visibility:
-		if point_group_visibility[group]:
-			return true
-	return false
+func change_sbg_points_visibility(group: String, is_show: bool) -> void:
+	sbg_points_visibility[group] = is_show
+	emit_signal("sbg_points_visibility_changed")
 
 
-func change_point_group_visibility(group: String, is_show: bool) -> void:
-	point_group_visibility[group] = is_show
-	emit_signal("point_groups_visibility_changed")
+func is_sbg_orbits_visible(group: String) -> bool:
+	return sbg_orbits_visibility.get(group, false)
+
+
+func change_sbg_orbits_visibility(group: String, is_show: bool) -> void:
+	sbg_orbits_visibility[group] = is_show
+	emit_signal("sbg_orbits_visibility_changed")
+
+
 
 

@@ -20,7 +20,7 @@
 class_name IVAsteroidsGrid
 extends GridContainer
 
-# GUI widget.
+# GUI widget. Trojans are currently not viewable as orbits.
 
 var spacer_size := 18
 
@@ -35,6 +35,9 @@ var chkbx_rows := [
 ]
 
 var _points_chkbxs := []
+var _orbits_chkbxs := []
+
+var _suppress_update := false
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _n_rows := chkbx_rows.size()
@@ -45,34 +48,80 @@ func _ready() -> void:
 	for i in spacer_size:
 		spacer_text += "\u2000" # EN QUAD
 	$Spacer.text = spacer_text
-	_huds_visibility.connect("point_groups_visibility_changed", self, "_update_ckbxs")
+	_huds_visibility.connect("sbg_points_visibility_changed", self, "_update_points_ckbxs")
+	_huds_visibility.connect("sbg_orbits_visibility_changed", self, "_update_orbits_ckbxs")
 	for i in _n_rows:
 		var label_text: String = chkbx_rows[i][0]
 		var groups: Array = chkbx_rows[i][1]
 		var label := Label.new()
 		label.text = label_text
 		add_child(label)
-		var chkbx := CheckBox.new()
-		chkbx.connect("pressed", self, "_show_hide_points", [chkbx, groups])
-		chkbx.align = Button.ALIGN_CENTER
-		chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
-		_points_chkbxs.append(chkbx)
-		add_child(chkbx)
+		var points_chkbx := CheckBox.new()
+		points_chkbx.connect("pressed", self, "_show_hide_points", [points_chkbx, groups])
+		points_chkbx.align = Button.ALIGN_CENTER
+		points_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_points_chkbxs.append(points_chkbx)
+		add_child(points_chkbx)
+		if groups == ["JT4", "JT5"]:
+			var spacer := Control.new()
+			_orbits_chkbxs.append(null)
+			add_child(spacer)
+		else:
+			var orbits_chkbx := CheckBox.new()
+			orbits_chkbx.connect("pressed", self, "_show_hide_orbits", [orbits_chkbx, groups])
+			orbits_chkbx.align = Button.ALIGN_CENTER
+			orbits_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+			_orbits_chkbxs.append(orbits_chkbx)
+			add_child(orbits_chkbx)
 
 
 func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
+	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		_huds_visibility.change_point_group_visibility(group, pressed)
+		_huds_visibility.change_sbg_points_visibility(group, pressed)
+	_suppress_update = false
+	_update_points_ckbxs()
 
 
-func _update_ckbxs() -> void:
+func _show_hide_orbits(ckbx: CheckBox, groups: Array) -> void:
+	_suppress_update = true
+	var pressed := ckbx.pressed
+	for group in groups:
+		if group == "JT4" or group == "JT5":
+			continue
+		_huds_visibility.change_sbg_orbits_visibility(group, pressed)
+	_suppress_update = false
+	_update_orbits_ckbxs()
+
+
+func _update_points_ckbxs() -> void:
+	if _suppress_update:
+		return
 	for i in _n_rows:
 		var groups: Array = chkbx_rows[i][1]
-		var is_visible := true
+		var is_points_visible := true
 		for group in groups:
-			if !_huds_visibility.is_point_group_visible(group):
-				is_visible = false
+			if !_huds_visibility.is_sbg_points_visible(group):
+				is_points_visible = false
 				break
-		_points_chkbxs[i].pressed = is_visible
+		_points_chkbxs[i].pressed = is_points_visible
+
+
+func _update_orbits_ckbxs() -> void:
+	if _suppress_update:
+		return
+	for i in _n_rows:
+		var groups: Array = chkbx_rows[i][1]
+		if groups == ["JT4", "JT5"]:
+			continue
+		var is_orbits_visible := true
+		for group in groups:
+			if group == "JT4" or group == "JT5":
+				continue
+			if !_huds_visibility.is_sbg_orbits_visible(group):
+				is_orbits_visible = false
+				break
+		_orbits_chkbxs[i].pressed = is_orbits_visible
+
 

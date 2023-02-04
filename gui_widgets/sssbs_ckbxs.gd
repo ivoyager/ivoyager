@@ -39,7 +39,7 @@ onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
 func _ready() -> void:
-	_huds_visibility.connect("point_groups_visibility_changed", self, "_update_ckbxs")
+	_huds_visibility.connect("sbg_points_visibility_changed", self, "_update_ckbxs")
 	for i in chkbxs.size():
 		var chkbx: CheckBox = chkbxs[i][0]
 		var groups: Array = chkbxs[i][1]
@@ -49,7 +49,7 @@ func _ready() -> void:
 func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
 	var pressed := ckbx.pressed
 	for group in groups:
-		_huds_visibility.change_point_group_visibility(group, pressed)
+		_huds_visibility.change_sbg_points_visibility(group, pressed)
 
 
 func _update_ckbxs() -> void:
@@ -58,7 +58,7 @@ func _update_ckbxs() -> void:
 		var groups: Array = chkbxs[i][1]
 		var is_visible := true
 		for group in groups:
-			if !_huds_visibility.is_point_group_visible(group):
+			if !_huds_visibility.is_sbg_points_visible(group):
 				is_visible = false
 				break
 		chkbx.pressed = is_visible

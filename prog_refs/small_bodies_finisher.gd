@@ -22,12 +22,14 @@ extends Reference
 
 
 var _HUDPoints_: Script
+var _HUDOrbits_: Script
 var _settings: Dictionary = IVGlobal.settings
 
 
 func _project_init() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
+	_HUDOrbits_ = IVGlobal.script_classes._HUDOrbits_
 
 
 func _init_unpersisted(_is_new_game: bool) -> void:
@@ -39,9 +41,7 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 
 
 func _init_hud_points(group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new()
-	hud_points.init(group, _settings.asteroid_point_color)
-	hud_points.draw_points()
+	var hud_points: IVHUDPoints = _HUDPoints_.new(group, _settings.asteroid_point_color)
 	var star := group.star
 	star.add_child(hud_points)
 
@@ -49,7 +49,8 @@ func _init_hud_points(group: IVSmallBodiesGroup) -> void:
 func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
 	if group.is_trojans:
 		return
-	# WIP
-	pass
+	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group, Color.red)
+	var star := group.star
+	star.add_child(hud_orbits)
 
 

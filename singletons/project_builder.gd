@@ -187,6 +187,7 @@ var procedural_classes := {
 	_LPoint_ = IVLPoint,
 	_HUDLabel_ = IVHUDLabel,
 	_HUDOrbit_ = IVHUDOrbit,
+	_HUDOrbits_ = IVHUDOrbits,
 	_HUDPoints_ = IVHUDPoints,
 	_SelectionManager_ = IVSelectionManager,
 	# tree_refs

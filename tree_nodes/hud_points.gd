@@ -51,24 +51,22 @@ var _cycle_step := -1
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
-func _init():
-	hide()
-
-
-func _ready() -> void:
-	_huds_visibility.connect("point_groups_visibility_changed", self, "_on_visibility_changed")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-
-
-func init(group_: IVSmallBodiesGroup, color_: Color) -> void:
+func _init(group_: IVSmallBodiesGroup, color_: Color) -> void:
 	group = group_
 	color = color_
-	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if !group.is_trojans:
 		_points_shader.shader = IVGlobal.shared.points_shader
 	else:
 		_points_shader.shader = IVGlobal.shared.points_lagrangian_shader
+
+
+func _ready() -> void:
+	_huds_visibility.connect("sbg_points_visibility_changed", self, "_on_visibility_changed")
+	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	material_override = _points_shader
+	draw_points()
+	hide()
 
 
 func draw_points() -> void:
@@ -120,7 +118,7 @@ func _process(_delta: float) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_point_group_visible(group.group_name)
+	visible = _huds_visibility.is_sbg_points_visible(group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:
