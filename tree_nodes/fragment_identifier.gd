@@ -22,8 +22,10 @@ extends Viewport
 
 # TODO: orbit lines.
 #
-# Decodes id from shader fragment displayed on the root viewport for selection
-# (e.g., asteroids). We capture a tiny square around the mouse so the
+# Remove from ProjectBuilder.gui_nodes if not used.
+#
+# Decodes id from shader fragment displayed on the root viewport (e.g.,
+# asteroid points). We capture a tiny square around the mouse so the
 # texture.get_data() read from GPU is as cheap as possible.
 #
 # Shader fragments broadcast (and this node reads) every 3rd pixel in a grid
@@ -249,8 +251,11 @@ func _on_node2d_draw() -> void:
 
 func _on_frame_post_draw() -> void:
 	# Grab image from this viewport; scan pixels for shaders signaling id.
-	if _world_targeting[6].x < 0.0:
+	if _world_targeting[6].x < 0.0: # ie, WorldController.NULL_MOUSE_COORD
 		_has_drawn = false
+		if _current_id != -1:
+			_current_id = -1
+			emit_signal("fragment_changed", -1)
 		return
 	_node2d.update() # force a draw signal
 	if !_has_drawn:
@@ -261,25 +266,24 @@ func _on_frame_post_draw() -> void:
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
-		if id == -1: # keep first id != -1, if there is one
+		if id == -1 and _current_ids[pxl] != -1: # keep first valid id, if there is one
 			id = _current_ids[pxl]
-	var is_other_target: bool = _world_targeting[5] < INF # anything else (eg, Body) has priority
-	if is_other_target:
-		id = -1
 	if id != -1:
 		if _current_id != id: # gained or changed valid id
 			_current_id = id
 			emit_signal("fragment_changed", id)
 		_drop_frame_counter = 0
 		_drop_mouse_coord = _world_targeting[6]
-	elif _current_id != -1:
-		if (!is_other_target and _drop_frame_counter < drop_id_frames
-				and _drop_mouse_coord.distance_to(_world_targeting[6]) < drop_id_mouse_movement):
-			# We've lost id signal, but don't reset _current_id yet
-			_drop_frame_counter += 1
-		else:
-			_current_id = -1
-			emit_signal("fragment_changed", -1)
+		return
+	if _current_id == -1:
+		return
+	if (_drop_frame_counter > drop_id_frames or
+			_drop_mouse_coord.distance_to(_world_targeting[6]) > drop_id_mouse_movement):
+		_current_id = -1
+		emit_signal("fragment_changed", -1)
+		return
+	# We've lost id signal, but don't reset _current_id yet
+	_drop_frame_counter += 1
 
 
 func _process_pixel(pxl: int):

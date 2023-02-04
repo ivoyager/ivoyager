@@ -164,7 +164,8 @@ var gui_nodes := {
 	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_WorldController_ = IVWorldController, # Control ok
-	_FragmentIdentifier_ = IVFragmentIdentifier, # look for dependencies
+	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to replace or remove
+	_FragmentLabel_ = IVFragmentLabel, # remove w/ above
 	_ProjectGUI_ = null, # project MUST supply its own top Control!
 	_SplashScreen_ = null, # needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove

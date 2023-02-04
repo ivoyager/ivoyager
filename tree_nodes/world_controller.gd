@@ -29,7 +29,7 @@ extends Control
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (potential targets set)
-#  [6] mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
+#  [6] fragment_mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
 #  [7] fragment_range: int (inited here but FragmentIdentifier sets)
 
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
@@ -44,6 +44,8 @@ var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
 
 onready var _viewport := get_viewport()
+onready var _is_fragment_identifier := IVGlobal.program.has("FragmentIdentifier")
+
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
@@ -73,30 +75,18 @@ func _clear() -> void:
 
 func _process(_delta: float) -> void:
 	if _drag_start:
+		_world_targeting[6] = NULL_MOUSE_COORD
 		set_default_cursor_shape(CURSOR_MOVE)
 	elif _world_targeting[4]: # there is a target object under the mouse!
+		_world_targeting[6] = NULL_MOUSE_COORD
 		set_default_cursor_shape(CURSOR_POINTING_HAND)
 	else:
 		# no object target under mouse, but there could be a shader point
-		if _has_mouse:
-			var x: float = _world_targeting[0].x
-			var y: float = _world_targeting[0].y
-			_world_targeting[6].x = x
-			_world_targeting[6].y = _world_targeting[1] - y
-			
-			# WIP - ViewportTexture is a reference, however, image is a copy.
-			# This is insanely inefficient to get pixel color.
-#			var viewport_texture: ViewportTexture = _viewport.get_texture()
-#			var image: Image = viewport_texture.get_data()
-#			image.lock()
-#
-#			print(image.get_pixel(x, y))
-			
-			
+		if _is_fragment_identifier and _has_mouse:
+			_world_targeting[6].x = _world_targeting[0].x
+			_world_targeting[6].y = _world_targeting[1] - _world_targeting[0].y # flipped
 		else:
 			_world_targeting[6] = NULL_MOUSE_COORD
-		
-		# TODO: set pointing hand if shader point in range
 		set_default_cursor_shape(CURSOR_ARROW)
 
 

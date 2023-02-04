@@ -93,7 +93,7 @@ var th0 := PoolVector2Array()
 
 # *****************************************************************************
 
-var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.FragmentIdentifier
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _index := 0
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
@@ -168,12 +168,13 @@ func finish_binary_import() -> void:
 		_fix_binary_trojan_elements()
 	var size := names.size()
 	vec3ids.resize(size)
-	var i := 0
-	while i < size:
-		var info := [names[i], group_id, i]
-		var vec3id := _fragment_identifier.get_new_id_as_vec3(info)
-		vec3ids[i] = vec3id
-		i += 1
+	if _fragment_identifier:
+		var i := 0
+		while i < size:
+			var info := [names[i], group_id, i]
+			var vec3id := _fragment_identifier.get_new_id_as_vec3(info)
+			vec3ids[i] = vec3id
+			i += 1
 	
 	# feedback
 	assert(DPRINT and _debug_print() or true)

@@ -42,6 +42,7 @@ const PERSIST_PROPERTIES := [
 	"name_visible_flags",
 	"symbol_visible_flags",
 	"sbg_points_visibility",
+	"sbg_orbits_visibility",
 ]
 
 # persisted
@@ -55,9 +56,10 @@ var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var sbg_points_visibility := {}
+var sbg_orbits_visibility := {}
 
 
-func set_huds_visible() -> void:
+func set_huds_visibility() -> void:
 	if !has_hud_states:
 		return
 	var program: Dictionary = IVGlobal.program
@@ -65,11 +67,13 @@ func set_huds_visible() -> void:
 	huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
 	huds_visibility.set_name_visible_flags(name_visible_flags)
 	huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
-	for points_group in sbg_points_visibility:
-		huds_visibility.change_sbg_points_visibility(points_group, sbg_points_visibility[points_group])
+	for group in sbg_points_visibility:
+		huds_visibility.change_sbg_points_visibility(group, sbg_points_visibility[group])
+	for group in sbg_orbits_visibility:
+		huds_visibility.change_sbg_orbits_visibility(group, sbg_orbits_visibility[group])
 
 
-func store_huds_visible() -> void:
+func remember_huds_visibility() -> void:
 	has_hud_states = true
 	var program: Dictionary = IVGlobal.program
 	var huds_visibility: IVHUDsVisibility = program.HUDsVisibility
@@ -77,4 +81,5 @@ func store_huds_visible() -> void:
 	name_visible_flags = huds_visibility.name_visible_flags
 	symbol_visible_flags = huds_visibility.symbol_visible_flags
 	sbg_points_visibility = huds_visibility.sbg_points_visibility.duplicate()
+	sbg_orbits_visibility = huds_visibility.sbg_orbits_visibility.duplicate()
 

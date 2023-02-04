@@ -22,16 +22,16 @@ extends GridContainer
 
 # GUI widget. Trojan orbits are currently not viewable so disabled.
 
-var spacer_size := 18
+var column0_en_width := 20
 
 var chkbx_rows := [
 	["LABEL_ALL_ASTEROIDS", ["NE", "MC", "MB", "JT4", "JT5", "CE", "TN"]],
-	[" " + tr("LABEL_NEAR_EARTH"), ["NE"]],
-	[" " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
-	[" " + tr("LABEL_MAIN_BELT"), ["MB"]],
-	[" " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
-	[" " + tr("LABEL_CENTAURS"), ["CE"]],
-	[" " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
+	["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
+	["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
+	["   " + tr("LABEL_MAIN_BELT"), ["MB"]],
+	["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
+	["   " + tr("LABEL_CENTAURS"), ["CE"]],
+	["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
 ]
 
 var _points_chkbxs := []
@@ -45,11 +45,17 @@ onready var _n_rows := chkbx_rows.size()
 
 func _ready() -> void:
 	var spacer_text := ""
-	for i in spacer_size:
+	for i in column0_en_width:
 		spacer_text += "\u2000" # EN QUAD
 	$Spacer.text = spacer_text
 	_huds_visibility.connect("sbg_points_visibility_changed", self, "_update_points_ckbxs")
 	_huds_visibility.connect("sbg_orbits_visibility_changed", self, "_update_orbits_ckbxs")
+	var extra_columns := columns - 3
+	while extra_columns > 0:
+		var spacer := Control.new()
+		spacer.size_flags_horizontal = SIZE_EXPAND_FILL
+		add_child(spacer)
+		extra_columns -= 1
 	for i in _n_rows:
 		var label_text: String = chkbx_rows[i][0]
 		var groups: Array = chkbx_rows[i][1]
@@ -73,6 +79,11 @@ func _ready() -> void:
 			orbits_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
 			_orbits_chkbxs.append(orbits_chkbx)
 			add_child(orbits_chkbx)
+		extra_columns = columns - 3
+		while extra_columns > 0:
+			var spacer := Control.new()
+			add_child(spacer)
+			extra_columns -= 1
 
 
 func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:

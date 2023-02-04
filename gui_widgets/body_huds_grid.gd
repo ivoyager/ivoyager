@@ -30,7 +30,7 @@ const IS_ASTEROID := BodyFlags.IS_ASTEROID
 const IS_SPACECRAFT := BodyFlags.IS_SPACECRAFT
 
 
-var spacer_size := 18
+var column0_en_width := 20
 
 var all_visible_flags: int = (BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
 		| BodyFlags.IS_DWARF_PLANET | BodyFlags.IS_MOON | BodyFlags.IS_ASTEROID
@@ -38,11 +38,11 @@ var all_visible_flags: int = (BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET
 
 var chkbx_rows := [
 	["LABEL_ALL", all_visible_flags],
-	[" " + tr("LABEL_SUN_AND_PLANETS"), BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET],
-	[" " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
-	[" " + tr("LABEL_MOONS"), BodyFlags.IS_MOON],
-	[" " + tr("LABEL_ASTEROIDS_VISITED"), BodyFlags.IS_ASTEROID],
-	[" " + tr("LABEL_SPACECRAFT"), BodyFlags.IS_SPACECRAFT],
+	["   " + tr("LABEL_SUN_AND_PLANETS"), BodyFlags.IS_STAR | BodyFlags.IS_TRUE_PLANET],
+	["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
+	["   " + tr("LABEL_MOONS"), BodyFlags.IS_MOON],
+	["   " + tr("LABEL_ASTEROIDS_VISITED"), BodyFlags.IS_ASTEROID],
+	["   " + tr("LABEL_SPACECRAFT"), BodyFlags.IS_SPACECRAFT],
 ]
 
 var _names_chkbxs := []
@@ -56,7 +56,7 @@ onready var _n_rows := chkbx_rows.size()
 
 func _ready() -> void:
 	var spacer_text := ""
-	for i in spacer_size:
+	for i in column0_en_width:
 		spacer_text += "\u2000" # EN QUAD
 	$Spacer.text = spacer_text
 	_huds_visibility.connect("body_huds_visibility_changed", self, "_update_ckbxs")

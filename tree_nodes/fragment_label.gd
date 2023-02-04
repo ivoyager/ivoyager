@@ -20,8 +20,8 @@
 class_name IVFragmentLabel
 extends Label
 
-# Requires IVFragmentIdentifier. Operates in screen position so add as child to
-# Universe or a full screen Control.
+# Requires IVFragmentIdentifier to work. Both are added in
+# ProjectBuilder.gui_nodes.
 
 
 var offset := Vector2(0.0, -7.0) # offset to not interfere w/ FragmentIdentifier
@@ -31,7 +31,11 @@ var _infos: Dictionary
 
 
 func _ready() -> void:
-	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.FragmentIdentifier
+	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+	if !fragment_identifier:
+		# should remove this label from ProjectBuilder too, but just in case...
+		hide()
+		return
 	fragment_identifier.connect("fragment_changed", self, "_on_target_point_changed")
 	_infos = fragment_identifier.infos
 	set("custom_fonts/font", IVGlobal.fonts.hud_names)
