@@ -118,7 +118,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
-		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body.orbit, body.flags)
+		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body.orbit, body.flags, body.name)
 		body.hud_orbit = hud_orbit
 		body.get_parent().add_child(hud_orbit)
 	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())

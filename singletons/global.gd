@@ -165,11 +165,12 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := { # More items are added by initializers/shared_initializer.gd
+var shared := { # more items added by initializers/shared_initializer.gd
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
 	points_shader = preload("res://ivoyager/shaders/points.shader"),
 	points_lagrangian_shader = preload("res://ivoyager/shaders/points_lagrangian.shader"),
+	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 }
 

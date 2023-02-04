@@ -24,13 +24,23 @@ extends MeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
-
 var _times: Array = IVGlobal.times
 var _orbit: IVOrbit
 var _color_setting: String
 
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _fragment_id: Vector3
+var _shader_material: ShaderMaterial # null unless we have FragmentIdentifier
 
-func _init(orbit: IVOrbit, body_flags: int) -> void:
+# Below will go away when we have shader global uniforms in 4.0
+var _world_targeting: Array = IVGlobal.world_targeting
+var _calibration := IVGlobal.fragment_calibration
+var _calibration_size := _calibration.size()
+var _n_cycle_steps := _calibration_size + 3
+var _cycle_step := -1
+
+
+func _init(orbit: IVOrbit, body_flags: int, body_name: String) -> void:
 	_orbit = orbit
 	var BodyFlags := IVEnums.BodyFlags
 	if body_flags & BodyFlags.IS_MOON and body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
@@ -47,6 +57,11 @@ func _init(orbit: IVOrbit, body_flags: int) -> void:
 		_color_setting = "spacecraft_orbit_color"
 	else:
 		_color_setting = "default_orbit_color"
+	if _fragment_identifier:
+		_shader_material = ShaderMaterial.new()
+		_shader_material.shader = IVGlobal.shared.orbit_shader
+		var fragment_info := [body_name, IVFragmentIdentifier.FRAGMENT_ORBIT]
+		_fragment_id = _fragment_identifier.get_new_id_as_vec3(fragment_info)
 
 
 func _ready() -> void:
@@ -58,10 +73,37 @@ func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	material_override = SpatialMaterial.new() # every HUDOrbit has its own
-	material_override.flags_unshaded = true
-	material_override.albedo_color = IVGlobal.settings[_color_setting]
+	var color: Color = IVGlobal.settings[_color_setting]
+	if _shader_material:
+		material_override = _shader_material
+		_shader_material.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		_shader_material.set_shader_param("fragment_id", _fragment_id)
+		_shader_material.set_shader_param("fragment_range",
+				float(_fragment_identifier.fragment_range)) # TODO4.0: global uniform
+	else:
+		material_override = SpatialMaterial.new()
+		material_override.flags_unshaded = true
+		material_override.albedo_color = color
+		set_process(false)
 	hide()
+
+
+func _process(_delta: float) -> void:
+	# Disabled unless we have FragmentIdentifier.
+	# TODO4.0: These are global uniforms, so we can do this globally!
+	if !visible:
+		return
+	_cycle_step += 1
+	if _cycle_step == _n_cycle_steps:
+		_cycle_step = 0
+	var cycle_value: float
+	if _cycle_step < _calibration_size:
+		cycle_value = _calibration[_cycle_step] # calibration values (0.25..0.75)
+	else:
+		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
+	_shader_material.set_shader_param("time_cycle", Vector2(0.0, cycle_value)) # only need cycle
+	_shader_material.set_shader_param("mouse_coord", _world_targeting[6])
+	
 
 
 func _set_transform_from_orbit(_dummy := false) -> void:
@@ -80,5 +122,8 @@ func _set_transform_from_orbit(_dummy := false) -> void:
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == _color_setting:
-		material_override.albedo_color = value
+		if _shader_material:
+			_shader_material.set_shader_param("color", Vector3(value.r, value.g, value.b))
+		else:
+			material_override.albedo_color = value
 

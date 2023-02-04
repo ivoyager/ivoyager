@@ -32,7 +32,6 @@ extends Reference
 #  - CUSTOM1: i, Om, w
 #  - CUSTOM2: s, g
 #  - CUSTOM3: d, D, f, th0 (lagrange only)
-#
 
 
 const units := preload("res://ivoyager/static/units.gd")
@@ -40,6 +39,8 @@ const utils := preload("res://ivoyager/static/utils.gd")
 
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
+
+const FRAGMENT_POINT := IVFragmentIdentifier.FRAGMENT_POINT
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
@@ -171,7 +172,7 @@ func finish_binary_import() -> void:
 	if _fragment_identifier:
 		var i := 0
 		while i < size:
-			var info := [names[i], group_id, i]
+			var info := [names[i], FRAGMENT_POINT, group_id, i]
 			var vec3id := _fragment_identifier.get_new_id_as_vec3(info)
 			vec3ids[i] = vec3id
 			i += 1

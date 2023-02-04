@@ -33,24 +33,24 @@ extends Viewport
 #
 # This system is moot if we could send id from GPU shaders to CPU in a more
 # sensible way. Godot 4.0 will allow custom GLSL "compute" shaders that could
-# do that. However, we need ids from vertex shaders. We'll see if that can be
+# do that. However, we need id from vertex shaders. We'll see if that can be
 # done. In any case, this works...
 
 signal fragment_changed(id) # -1 on target loss; get name from 'infos'
 
+enum { # fragment_type
+	FRAGMENT_POINT,
+	FRAGMENT_ORBIT,
+}
 
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := [
-	"ids",
-	"infos",
-]
+const PERSIST_PROPERTIES := ["infos"]
 
 
 # persisted; read-only!
-var ids := {} # 36-bit id integers indexed by name string
-var infos := {} # info arrays indexed by 36-bit id integer; [0] always name
+var infos := {} # arrays indexed by 36-bit id integer; [name, fragment_type, maybe more...]
 
 
 # project vars
@@ -108,13 +108,10 @@ func _ready() -> void:
 func get_new_id(info: Array) -> int:
 	# info[0] always name_str, which must be globally unique.
 	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
-	var name_str: String = info[0]
-	assert(!ids.has(name_str), "Duplicated small body name: " + name_str)
 	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
 	while infos.has(id):
 		id = (randi() << 4) | (randi() & 15)
 	infos[id] = info
-	ids[name_str] = id
 	return id
 
 
@@ -124,9 +121,7 @@ func get_new_id_as_vec3(info: Array) -> Vector3:
 
 
 func remove_id(id: int) -> void:
-	var name_str: String = infos[id][0]
 	infos.erase(id)
-	ids.erase(name_str)
 
 
 static func encode_color_channels(id: int) -> Array:
@@ -134,7 +129,7 @@ static func encode_color_channels(id: int) -> Array:
 	# We only use 4 bits of info per 8-bit color channel. All colors are
 	# generated in the range 0.25-0.75 (losing 1 bit) and we ignore the least
 	# significant 3 bits. So we read 1/16 color steps from the midrange after
-	# calibration. Three colors encode giving valid ids from 0 to 2^36-1.
+	# calibration. Three colors encode giving valid id from 0 to 2^36-1.
 	assert(id >= 0 and id < (1 << 36))
 	var r1 := (id & 15) / 32.0 + 0.25
 	id >>= 4

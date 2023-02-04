@@ -34,23 +34,6 @@ enum { # duplicated from IVSaveBuilder so we can remove the gamesave system
 	PERSIST_PROCEDURAL,
 }
 
-
-enum NetworkState {
-	NO_NETWORK,
-	IS_SERVER,
-	IS_CLIENT,
-}
-
-enum NetworkStopSync {
-	BUILD_SYSTEM,
-	SAVE,
-	LOAD,
-	NEW_PLAYER, # needs save to enter in-progress game
-	EXIT,
-	QUIT,
-	DONT_SYNC,
-}
-
 enum ViewType {
 	VIEW_ZOOM,
 	VIEW_45,
@@ -84,6 +67,23 @@ enum Confidence {
 	CONFIDENCE_PROBABLY,
 	CONFIDENCE_YES,
 }
+
+enum NetworkState {
+	NO_NETWORK,
+	IS_SERVER,
+	IS_CLIENT,
+}
+
+enum NetworkStopSync {
+	BUILD_SYSTEM,
+	SAVE,
+	LOAD,
+	NEW_PLAYER, # needs save to enter in-progress game
+	EXIT,
+	QUIT,
+	DONT_SYNC,
+}
+
 
 enum BodyFlags {
 	
