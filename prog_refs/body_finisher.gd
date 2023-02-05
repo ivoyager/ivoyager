@@ -46,9 +46,9 @@ var progress := 0 # for external progress bar
 var _ModelController_: Script
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
+var _Rings_: Script
 
 var _model_builder: IVModelBuilder
-var _rings_builder: IVRingsBuilder
 var _light_builder: IVLightBuilder
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture
@@ -69,13 +69,13 @@ func _project_init() -> void:
 	IVGlobal.connect("game_load_started", self, "init_system_build")
 	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
 	_model_builder = IVGlobal.program.ModelBuilder
-	_rings_builder = IVGlobal.program.RingsBuilder
 	_light_builder = IVGlobal.program.LightBuilder
 	_io_manager = IVGlobal.program.IOManager
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 	_ModelController_ = IVGlobal.script_classes._ModelController_
 	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
+	_Rings_ = IVGlobal.script_classes._Rings_
 	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
 
 
@@ -113,44 +113,56 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
 		body.reset_orientation_and_rotation()
-	if body.has_rings():
-		_rings_builder.add_rings(body)
 	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
-		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body)
+		var hud_orbit: Spatial = _HUDOrbit_.new(body)
 		body.get_parent().add_child(hud_orbit)
-	var hud_label: IVHUDLabel = _HUDLabel_.new(body)
+	var hud_label: Spatial = _HUDLabel_.new(body)
 	body.add_child(hud_label)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
+	var rings_file_prefix := body.get_rings_file_prefix()
 	if _is_building_system:
 		_system_build_count += 1
-	var array := [body, file_prefix, is_star]
+	var array := [body, file_prefix, is_star, rings_file_prefix]
 	_io_manager.callback(self, "_load_textures_on_io_thread", "_io_finish", array)
 
 
 func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
+	var rings_file_prefix: String = array[3]
 	var texture_2d: Texture = files.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !texture_2d:
 		texture_2d = _fallback_body_2d
-	array.append(texture_2d)
+	array.append(texture_2d) # [4]
+	var texture_slice_2d: Texture
 	if is_star:
 		var slice_name = file_prefix + "_slice"
-		var texture_slice_2d: Texture = files.find_and_load_resource(_bodies_2d_search, slice_name)
-		array.append(texture_slice_2d)
+		texture_slice_2d = files.find_and_load_resource(_bodies_2d_search, slice_name)
+	array.append(texture_slice_2d) # [5]
+	var rings_texture: Texture
+	if rings_file_prefix:
+		var rings_search: Array = IVGlobal.rings_search
+		rings_texture = files.find_and_load_resource(rings_search, rings_file_prefix)
+		assert(rings_texture, "Could not find rings texture (no fallback!)")
+	array.append(rings_texture) # [6]
 
 
 func _io_finish(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
 	var is_star: bool = array[2]
-	var texture_2d: Texture = array[3]
+	var rings_file_prefix: String = array[3]
+	var texture_2d: Texture = array[4]
 	body.texture_2d = texture_2d
 	if is_star:
-		var texture_slice_2d: Texture = array[4]
+		var texture_slice_2d: Texture = array[5]
 		body.texture_slice_2d = texture_slice_2d
+	if rings_file_prefix:
+		var rings_texture: Texture = array[6]
+		var rings: Spatial = _Rings_.new(body, rings_texture)
+		body.add_child(rings)
 	if _is_building_system:
 		_system_finished_count += 1
 		# warning-ignore:integer_division

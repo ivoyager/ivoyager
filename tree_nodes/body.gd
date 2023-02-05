@@ -86,7 +86,6 @@ var orbit: IVOrbit # persisted in components
 
 # WIP: invert dependency for some or all of these...
 var model_controller: IVModelController
-var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
 
 
@@ -98,7 +97,7 @@ var max_hud_dist_orbit_radius_multiplier: float
 var min_hud_dist_radius_multiplier: float
 var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
-var max_aux_graphic_dist := 0.0
+#var max_aux_graphic_dist := 0.0
 var is_asleep := false
 
 
@@ -237,11 +236,6 @@ func _on_process(_delta: float) -> void:
 		if _model_visible != model_visible:
 			_model_visible = model_visible
 			model_controller.change_visibility(model_visible)
-	if aux_graphic:
-		var aux_graphic_visible := camera_dist < max_aux_graphic_dist
-		if _aux_graphic_visible != aux_graphic_visible:
-			_aux_graphic_visible = aux_graphic_visible
-			aux_graphic.visible = aux_graphic_visible
 	
 	if huds_visible != hud_dist_ok:
 		huds_visible = hud_dist_ok
