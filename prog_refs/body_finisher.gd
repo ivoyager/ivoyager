@@ -118,13 +118,10 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	if body.get_light_type() != -1:
 		_light_builder.add_omni_light(body)
 	if body.orbit:
-		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body.orbit, body.flags, body.name)
-		body.hud_orbit = hud_orbit
+		var hud_orbit: IVHUDOrbit = _HUDOrbit_.new(body)
 		body.get_parent().add_child(hud_orbit)
-	var hud_label: IVHUDLabel = _HUDLabel_.new(body.get_hud_name(), body.get_symbol())
-	body.hud_label = hud_label
+	var hud_label: IVHUDLabel = _HUDLabel_.new(body)
 	body.add_child(hud_label)
-	body.set_hide_hud_when_close(_settings.hide_hud_when_close)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
 	if _is_building_system:

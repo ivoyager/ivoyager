@@ -20,46 +20,66 @@
 extends Label3D
 class_name IVHUDLabel
 
-# IVBody sets its own IVHUDLabel visibility during _process().
+# Visual text name or symbol for a Body.
 
+var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+var _body: IVBody
+var _body_flags: int
 var _body_name: String
 var _body_symbol: String
 var _name_font: Font
 var _symbol_font: Font
-var _is_symbol_mode: bool
+var _names_visible := false
+var _symbols_visible := false
+var _body_huds_visible := false # too close / too far
 
 
-func _init(body_name: String, body_symbol: String, is_symbol_mode := false) -> void:
-	_body_name = body_name
-	_body_symbol = body_symbol
-	_is_symbol_mode = is_symbol_mode
+func _init(body: IVBody) -> void:
+	_body = body
+	_body_flags = body.flags
+	_body_name = body.get_hud_name()
+	_body_symbol = body.get_symbol()
 	_name_font = IVGlobal.fonts.hud_names
 	_symbol_font = IVGlobal.fonts.hud_symbols
 
 
 func _ready() -> void:
+	_huds_visibility.connect("body_huds_visibility_changed", self, "_on_global_huds_changed")
+	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
 	horizontal_alignment = ALIGN_CENTER
 	vertical_alignment = VALIGN_CENTER
 	billboard = SpatialMaterial.BILLBOARD_ENABLED
+	
 	fixed_size = true
-	pixel_size = 0.0006
-	if _is_symbol_mode:
-		text = _body_symbol
-		font = _symbol_font
-	else:
-		text = _body_name
-		font = _name_font
-	hide()
+	pixel_size = 0.0006 # FIXME: Check this!
+	
+	_body_huds_visible = _body.huds_visible
+	_on_global_huds_changed()
 
 
-func set_symbol_mode(is_symbol_visible: bool) -> void:
-	if _is_symbol_mode == is_symbol_visible:
+func _on_global_huds_changed() -> void:
+	_names_visible = _huds_visibility.is_name_visible(_body_flags)
+	_symbols_visible = !_names_visible and _huds_visibility.is_symbol_visible(_body_flags)
+	_set_visual_state()
+
+
+func _on_body_huds_changed(is_visible: bool) -> void:
+	_body_huds_visible = is_visible
+	_set_visual_state()
+
+
+func _set_visual_state() -> void:
+	if !_body_huds_visible:
+		visible = false
 		return
-	_is_symbol_mode = is_symbol_visible
-	if is_symbol_visible:
-		text = _body_symbol
-		font = _symbol_font
-	else:
+	if _names_visible:
 		text = _body_name
 		font = _name_font
+		visible = true
+	elif _symbols_visible:
+		text = _body_symbol
+		font = _symbol_font
+		visible = true
+	else:
+		visible = false
 

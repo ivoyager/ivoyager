@@ -34,6 +34,9 @@ extends Spatial
 # TODO: Implement network sync! This will mainly involve synching IVOrbit
 # anytime it changes (e.g., impulse from a rocket engine).
 
+signal huds_visibility_changed(is_visible)
+
+
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const IDENTITY_BASIS := Basis.IDENTITY
@@ -72,15 +75,22 @@ var satellites := [] # IVBody instances
 var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 
+# public - read-only!
+var huds_visible := false # too far / too close toggle
+
 # public - read-only except builder classes
 var parent: Spatial # another Body or 'Universe'
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
+
+
+# WIP: invert dependency for some or all of these...
 var model_controller: IVModelController
 var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
 var omni_light: OmniLight # star only
-var hud_orbit: IVHUDOrbit
-var hud_label: IVHUDLabel
+
+
+
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var min_click_radius: float
@@ -89,7 +99,6 @@ var min_hud_dist_radius_multiplier: float
 var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
 var max_aux_graphic_dist := 0.0
-var min_hud_dist: float
 var is_asleep := false
 
 
@@ -97,14 +106,9 @@ var is_asleep := false
 var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
-var _show_orbit := true
-var _show_label := true
 var _model_visible := false
 var _aux_graphic_visible := false
-var _hud_orbit_visible := false
-var _hud_label_visible := false
-var _is_visible := false
+var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
 onready var _tree := get_tree()
@@ -142,13 +146,13 @@ func _on_ready() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_huds_visibility.connect("body_huds_visibility_changed", self, "_on_huds_visibility_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 	assert(!IVGlobal.bodies.has(name))
 	IVGlobal.bodies[name] = self
 	if flags & BodyFlags.IS_TOP:
 		IVGlobal.top_bodies.append(self)
+	_set_min_hud_dist()
 
 
 func _exit_tree() -> void:
@@ -181,7 +185,6 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 func _prepare_to_free() -> void:
 	set_process(false)
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
-	_huds_visibility.disconnect("body_huds_visibility_changed", self, "_on_huds_visibility_changed")
 
 
 func _process(delta: float) -> void:
@@ -219,11 +222,10 @@ func _on_process(_delta: float) -> void:
 	elif _world_targeting[4] == self: # remove self as mouse target
 		_world_targeting[4] = null
 		_world_targeting[5] = INF
-	var hud_dist_ok := camera_dist > min_hud_dist # not too close
+	var hud_dist_ok := camera_dist > _min_hud_dist # not too close
 	if hud_dist_ok:
 		var orbit_radius := translation.length() if orbit else INF
 		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
-	var hud_label_visible := _show_label and hud_dist_ok and hud_label and position_2d != VECTOR2_NULL
 
 	var time: float = _times[0]
 	if orbit:
@@ -240,18 +242,12 @@ func _on_process(_delta: float) -> void:
 		if _aux_graphic_visible != aux_graphic_visible:
 			_aux_graphic_visible = aux_graphic_visible
 			aux_graphic.visible = aux_graphic_visible
-	if hud_orbit:
-		var hud_orbit_visible := _show_orbit and hud_dist_ok
-		if _hud_orbit_visible != hud_orbit_visible:
-			_hud_orbit_visible = hud_orbit_visible
-			hud_orbit.visible = hud_orbit_visible
-	if hud_label:
-		if _hud_label_visible != hud_label_visible:
-			_hud_label_visible = hud_label_visible
-			hud_label.visible = hud_label_visible
-	if !_is_visible:
-		_is_visible = true
-		visible = true
+	
+	if huds_visible != hud_dist_ok:
+		huds_visible = hud_dist_ok
+		emit_signal("huds_visibility_changed", huds_visible)
+
+	visible = true
 
 
 # public functions
@@ -486,29 +482,17 @@ func set_orbit(orbit_: IVOrbit) -> void:
 		components.erase("orbit")
 
 
-func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
-	if hide_hud_when_close:
-		min_hud_dist = m_radius * min_hud_dist_radius_multiplier
-		if flags & IS_STAR:
-			min_hud_dist *= min_hud_dist_star_multiplier # just the label
-	else:
-		min_hud_dist = 0.0
-
-
 func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 	if flags & NEVER_SLEEP or sleep == is_asleep:
 		return
 	if sleep:
 		is_asleep = true
 		set_process(false)
-		_is_visible = false
 		visible = false
 		if _world_targeting[4] == self: # remove self as mouse target
 			_world_targeting[4] = null
 			_world_targeting[5] = INF
-		if hud_orbit: # not a child of this node!
-			_hud_orbit_visible = false
-			hud_orbit.visible = false
+
 	else:
 		is_asleep = false
 		set_process(true) # will show on next _process()
@@ -520,9 +504,9 @@ func reset_orientation_and_rotation() -> void:
 	# IVModelController. Otherwise, characteristics already holds table-loaded
 	# values (RA, dec, period) which we use to set IVModelController values.
 	# Note: Earth's Moon is the unusual case that is tidally locked but not
-	# axis locked (its axis is tilted to its orbit). Axis of other moons are
-	# not exactly orbit normal but stay within ~1 degree. E.g., see:
-	# https://zenodo.org/record/1259023.
+	# axis locked (its axis is tilted to its orbit). Axis of other tidally-
+	# locked moons are not exactly orbit normal but stay within ~1 degree.
+	# E.g., see: https://zenodo.org/record/1259023.
 	# TODO: We still need rotation precession for Bodies with axial tilt.
 	# TODO: Some special mechanic for tumblers like Hyperion.
 	
@@ -584,14 +568,6 @@ func reset_orientation_and_rotation() -> void:
 
 # private functions
 
-func _on_huds_visibility_changed() -> void:
-	_show_orbit = _huds_visibility.is_orbit_visible(flags)
-	var is_name_visible := _huds_visibility.is_name_visible(flags)
-	_show_label = is_name_visible or _huds_visibility.is_symbol_visible(flags)
-	if hud_label:
-		hud_label.set_symbol_mode(!is_name_visible)
-
-
 func _on_orbit_changed(is_scheduled: bool) -> void:
 	if flags & IS_TIDALLY_LOCKED or flags & IS_AXIS_LOCKED:
 		reset_orientation_and_rotation()
@@ -614,7 +590,15 @@ func _on_time_altered(_previous_time: float) -> void:
 	reset_orientation_and_rotation()
 
 
-func _settings_listener(setting: String, value) -> void:
-	match setting:
-		"hide_hud_when_close":
-			set_hide_hud_when_close(value)
+func _set_min_hud_dist() -> void:
+	if IVGlobal.settings.get("hide_hud_when_close", false):
+		_min_hud_dist = m_radius * min_hud_dist_radius_multiplier
+		if flags & IS_STAR:
+			_min_hud_dist *= min_hud_dist_star_multiplier # just the label
+	else:
+		_min_hud_dist = 0.0
+
+
+func _settings_listener(setting: String, _value) -> void:
+	if setting == "hide_hud_when_close":
+		_set_min_hud_dist()
