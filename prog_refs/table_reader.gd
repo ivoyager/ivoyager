@@ -281,6 +281,14 @@ func build_object(object: Object, fields: Array, table: String, row: int) -> voi
 		i += 1
 
 
+func build_object_all_fields(object: Object, table: String, row: int) -> void:
+	# Sets object property for each field that exactly matches a field in table.
+	# Missing value in table without default will not be set.
+	for field in _tables[table]:
+		if has_value(table, field, row):
+			object.set(field, _tables[table][field][row])
+
+
 func get_flags(flag_fields: Dictionary, table: String, row: int, flags := 0) -> int:
 	# Sets flag if table value exists and would evaluate true in get_bool(),
 	# i.e., is true or x. Does not unset.

@@ -78,17 +78,19 @@ var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 # public - read-only!
 var huds_visible := false # too far / too close toggle
 
+# WIP - Not implemented but coming soon...
+#var model_visible := false
+#var model_space: Spatial # rotation only, not scaled
+#var orbit_space: Spatial # rotates wih orbit; mainly for camera
+
+# WIP: depreciate below; Body will set model_space and model will be passive.
+var model_controller: IVModelController
+
+
 # public - read-only except builder classes
 var parent: Spatial # another Body or 'Universe'
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
-
-
-# WIP: invert dependency for some or all of these...
-var model_controller: IVModelController
-var omni_light: OmniLight # star only
-
-
 
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
@@ -275,8 +277,18 @@ func get_model_type() -> int: # models.tsv
 	return characteristics.get("model_type", -1)
 
 
-func get_light_type() -> int: # lights.tsv
-	return characteristics.get("light_type", -1)
+func has_omni_light() -> bool:
+	return characteristics.get("omni_light_type", -1) != -1
+
+
+func get_omni_light_type(gles2 := false) -> int:
+	# Result is always consistent w/ has_omni_light(), whether gles2 is set
+	# or not.
+	var type: int = characteristics.get("omni_light_type", -1)
+	if !gles2 or type == -1:
+		return type
+	var type_gles2: int = characteristics.get("omni_light_type_gles2", -1)
+	return type_gles2 if type_gles2 != -1 else type
 
 
 func get_file_prefix() -> String:

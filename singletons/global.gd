@@ -179,7 +179,11 @@ var table_import := {
 	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
 	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
+	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
+	
+	# DEPRECIATE
 	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",

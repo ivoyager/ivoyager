@@ -21,9 +21,8 @@ class_name IVBodyFinisher
 extends Reference
 
 # Decorates Body (and its parent) with Body-associated unpersisted elements,
-# such as ModelControler, various HUD elements, rings, light, etc. Everything
-# here happens whether we are building from table or loading from gamesave
-# file.
+# such as HUD elements, rings, omni light, etc. Everything here happens
+# whether we are building a new system or loading from gamesave file.
 #
 # Since I/O threaded resource loading is rate-limiting, this object evokes
 # the IVGlobal 'system_tree_ready' signal. We also hook up the progress bar
@@ -48,8 +47,8 @@ var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _Rings_: Script
 
+var _table_reader: IVTableReader
 var _model_builder: IVModelBuilder
-var _light_builder: IVLightBuilder
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture
 
@@ -68,8 +67,8 @@ func _project_init() -> void:
 	IVGlobal.connect("about_to_build_system_tree", self, "init_system_build")
 	IVGlobal.connect("game_load_started", self, "init_system_build")
 	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	_table_reader = IVGlobal.program.TableReader
 	_model_builder = IVGlobal.program.ModelBuilder
-	_light_builder = IVGlobal.program.LightBuilder
 	_io_manager = IVGlobal.program.IOManager
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 	_ModelController_ = IVGlobal.script_classes._ModelController_
@@ -113,8 +112,12 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_builder.add_model(body, lazy_init)
 		body.reset_orientation_and_rotation()
-	if body.get_light_type() != -1:
-		_light_builder.add_omni_light(body)
+	if body.has_omni_light():
+		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
+		var omni_light := OmniLight.new()
+		# set properties entirely from table
+		_table_reader.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
+		body.add_child(omni_light)
 	if body.orbit:
 		var hud_orbit: Spatial = _HUDOrbit_.new(body)
 		body.get_parent().add_child(hud_orbit)

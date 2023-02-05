@@ -181,7 +181,7 @@ func _finish_model(array: Array) -> void: # Main thread
 	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
 	model_controller.set_model(model, false)
-	if body.get_light_type() != -1: # is a star
+	if body.has_omni_light(): # is a star
 		body.max_model_dist = INF
 		if array.size() > 6: # has dynamic star surface
 			var surface: SpatialMaterial = array[6]

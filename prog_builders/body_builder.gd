@@ -37,6 +37,8 @@ var characteristics_fields := [ # only added if exists
 	"body_class",
 	"model_type",
 	"light_type",
+	"omni_light_type",
+	"omni_light_type_gles2",
 	"file_prefix",
 	"rings_file_prefix",
 	"rings_radius",

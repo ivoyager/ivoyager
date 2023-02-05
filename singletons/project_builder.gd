@@ -117,7 +117,6 @@ var prog_builders := {
 	_BodyBuilder_ = IVBodyBuilder,
 	_OrbitBuilder_ = IVOrbitBuilder,
 	_ModelBuilder_ = IVModelBuilder,
-	_LightBuilder_ = IVLightBuilder,
 	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
