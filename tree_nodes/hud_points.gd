@@ -41,10 +41,8 @@ var _color_setting: String
 
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
-var _calibration := IVGlobal.fragment_calibration
-var _calibration_size := _calibration.size()
-var _n_cycle_steps := _calibration_size + 3
-var _points_shader := ShaderMaterial.new()
+
+
 var _last_update_time := -INF
 
 var _cycle_step := -1
@@ -55,17 +53,17 @@ onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 func _init(group_: IVSmallBodiesGroup, color_setting: String) -> void:
 	_group = group_
 	_color_setting = color_setting
+	material_override = ShaderMaterial.new()
 	if !_group.is_trojans:
-		_points_shader.shader = IVGlobal.shared.points_shader
+		material_override.shader = IVGlobal.shared.points_shader
 	else:
-		_points_shader.shader = IVGlobal.shared.points_lagrangian_shader
+		material_override.shader = IVGlobal.shared.points_lagrangian_shader
 
 
 func _ready() -> void:
 	_huds_visibility.connect("sbg_points_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	material_override = _points_shader
 	draw_points()
 	hide()
 
@@ -91,33 +89,24 @@ func draw_points() -> void:
 #	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	var color: Color = IVGlobal.settings[_color_setting]
-	_points_shader.set_shader_param("color", Vector3(color.r, color.g, color.b))
-	_points_shader.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	_points_shader.set_shader_param("fragment_range", float(_world_targeting[7]))
+	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
+	material_override.set_shader_param("fragment_range", _world_targeting[7])
 
 
 func _process(_delta: float) -> void:
-	var time: float = _times[0]
-	if !visible or time == _last_update_time:
+	if !visible :
 		return
-	_last_update_time = time
-	_cycle_step += 1
-	if _cycle_step == _n_cycle_steps:
-		_cycle_step = 0
-	var cycle_value: float
-	if _cycle_step < _calibration_size:
-		cycle_value = _calibration[_cycle_step] # calibration values (0.25..0.75)
-	else:
-		cycle_value = float(_cycle_step - _calibration_size + 1) # 1.0, 2.0, 3.0
-	_points_shader.set_shader_param("time_cycle", Vector2(time, cycle_value))
-	_points_shader.set_shader_param("mouse_coord", _world_targeting[6])
-	# TODO 4.0: Set above data as global uniforms!
+	# TODO 4.0: global uniforms!
+	material_override.set_shader_param("time", _times[0])
+	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
+	material_override.set_shader_param("mouse_coord", _world_targeting[6])
 	if _group.lagrange_point:
 		var langrange_elements: Array = _group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
-		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * time
+		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * _times[0]
 		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
-		_points_shader.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
+		material_override.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
 
 
 func _on_visibility_changed() -> void:
@@ -126,8 +115,8 @@ func _on_visibility_changed() -> void:
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == _color_setting:
-		_points_shader.set_shader_param("color", Vector3(value.r, value.g, value.b))
+		material_override.set_shader_param("color", Vector3(value.r, value.g, value.b))
 	elif setting == "point_size":
-		_points_shader.set_shader_param("point_size", float(value))
+		material_override.set_shader_param("point_size", float(value))
 	
 	

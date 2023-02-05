@@ -43,6 +43,7 @@ enum { # fragment_type
 	FRAGMENT_ORBIT,
 }
 
+const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
@@ -62,8 +63,7 @@ var fragment_range := 9 # multiple of 3! Going big is expensive!
 # private
 var _node2d := Node2D.new()
 var _world_targeting: Array = IVGlobal.world_targeting
-var _calibration := IVGlobal.fragment_calibration
-var _n_calibration_steps := _calibration.size()
+var _n_calibration_steps := CALIBRATION.size()
 var _n_pxls: int
 var _picker_rect: Rect2
 var _src_rect: Rect2 # will follow mouse
@@ -73,6 +73,8 @@ var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
 var _has_drawn := false
+var _n_cycle_steps := _n_calibration_steps + 3
+var _cycle_step := -1
 # per pixel arrays
 var _pxl_x_offsets := []
 var _pxl_y_offsets := []
@@ -94,7 +96,7 @@ onready var _picker_texture: ViewportTexture = get_texture()
 func _ready() -> void:
 	assert(fragment_range % 3 == 0)
 	_init_rects_and_arrays()
-	_world_targeting[7] = fragment_range # set in shaders (but as float)
+	_world_targeting[7] = float(fragment_range) # set in shaders
 	usage = USAGE_2D
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
@@ -103,11 +105,25 @@ func _ready() -> void:
 	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
 
 
+func _process(_delta: float) -> void:
+	# 'fragment_cycler' drives the calibration/value cycle of fragment shaders
+	# TODO4.0: fragment_cycler will become a global uniform
+	_cycle_step += 1
+	if _cycle_step == _n_cycle_steps:
+		_cycle_step = 0
+	var fragment_cycler: float
+	if _cycle_step < _n_calibration_steps:
+		fragment_cycler = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
+	else:
+		fragment_cycler = float(_cycle_step - _n_calibration_steps + 1) # 1.0, 2.0, 3.0
+	_world_targeting[8] = fragment_cycler
+
+
 # public
 
 func get_new_id(info: Array) -> int:
-	# info[0] always name_str, which must be globally unique.
 	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
+	# info = [name, fragment_type, maybe more...]
 	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
 	while infos.has(id):
 		id = (randi() << 4) | (randi() & 15)
@@ -357,7 +373,7 @@ func _process_pixel(pxl: int):
 		elif interval == _n_calibration_steps - 1:
 			interval = _n_calibration_steps - 2
 		var scaler := inverse_lerp(_calibration_r[interval], _calibration_r[interval + 1], r)
-		_adj_values[i * 3] = lerp(_calibration[interval], _calibration[interval + 1], scaler)
+		_adj_values[i * 3] = lerp(CALIBRATION[interval], CALIBRATION[interval + 1], scaler)
 		
 		interval = _calibration_g.bsearch(g) - 1
 		if interval == -1:
@@ -365,7 +381,7 @@ func _process_pixel(pxl: int):
 		elif interval == _n_calibration_steps - 1:
 			interval = _n_calibration_steps - 2
 		scaler = inverse_lerp(_calibration_g[interval], _calibration_g[interval + 1], g)
-		_adj_values[i * 3 + 1] = lerp(_calibration[interval], _calibration[interval + 1], scaler)
+		_adj_values[i * 3 + 1] = lerp(CALIBRATION[interval], CALIBRATION[interval + 1], scaler)
 		
 		interval = _calibration_b.bsearch(b) - 1
 		if interval == -1:
@@ -373,7 +389,7 @@ func _process_pixel(pxl: int):
 		elif interval == _n_calibration_steps - 1:
 			interval = _n_calibration_steps - 2
 		scaler = inverse_lerp(_calibration_b[interval], _calibration_b[interval + 1], b)
-		_adj_values[i * 3 + 2] = lerp(_calibration[interval], _calibration[interval + 1], scaler)
+		_adj_values[i * 3 + 2] = lerp(CALIBRATION[interval], CALIBRATION[interval + 1], scaler)
 	
 	# decode (interupt/restart if spurious id)
 	var id := decode_color_channels(_adj_values)

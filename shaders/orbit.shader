@@ -25,12 +25,11 @@ render_mode unshaded, cull_disabled;
 // TODO4.0: Use array chanels CUSTOM1, 2, 3, 4.
 // TODO4.0: Use global uniforms where appropriate.
 
-
-uniform vec2 time_cycle; // only cycle used here
 uniform vec2 mouse_coord;
-uniform vec3 color = vec3(0.0, 0.0, 1.0);
+uniform float fragment_range = 9.0;
+uniform float fragment_cycler = 0.0;
 uniform vec3 fragment_id; // single orbit has one id
-uniform float fragment_range = 9.0; // from FragmentIdentifier.fragment_range
+uniform vec3 color = vec3(0.0, 0.0, 1.0);
 
 
 bool is_id_signaling_pixel(vec2 offset){
@@ -61,15 +60,14 @@ bool is_id_signaling_pixel(vec2 offset){
 void fragment() {
 	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
 		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
-		float cycle_value = time_cycle[1];
-		if (cycle_value < 1.0) {
-			ALBEDO = vec3(cycle_value); // calibration color
+		if (fragment_cycler < 1.0) {
+			ALBEDO = vec3(fragment_cycler); // calibration color
 		} else {
 			int id_element;
-			if (cycle_value == 1.0){
+			if (fragment_cycler == 1.0){
 				id_element = int(fragment_id.x);
 			} else {
-				if (cycle_value == 2.0){
+				if (fragment_cycler == 2.0){
 					id_element = int(fragment_id.y);
 				} else {
 					id_element = int(fragment_id.z);

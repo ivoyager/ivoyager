@@ -153,7 +153,6 @@ var vertecies_per_orbit_low_res: int = 100 # for small bodies like asteroids
 var max_camera_distance: float = 200.0 * IVUnits.AU
 var obliquity_of_the_ecliptic := 23.439 * IVUnits.DEG
 var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
-var fragment_calibration := [0.25, 0.375, 0.5, 0.625, 0.75]
 var unit_multipliers := IVUnits.MULTIPLIERS
 var unit_functions := IVUnits.FUNCTIONS
 var cache_dir := "user://cache"

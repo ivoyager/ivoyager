@@ -30,7 +30,8 @@ extends Control
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (as above)
 #  [6] fragment_mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
-#  [7] fragment_range: int (inited here but FragmentIdentifier overrides)
+#  [7] fragment_range: int (FragmentIdentifier overrides)
+#  [8] fragment_cycler: float (FragmentIdentifier overrides)
 #
 # TODO: Recode using Godot's built-in mouse drag functionality.
 
@@ -59,12 +60,13 @@ func _ready() -> void:
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting.resize(8)
+	_world_targeting.resize(9)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = _viewport.size.y
 	_world_targeting[5] = INF
 	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for FragmentIdentifier & shaders
-	_world_targeting[7] = 9 # fragment_range; FragmentIdentifier will override
+	_world_targeting[7] = 9.0 # fragment_range; FragmentIdentifier will override
+	_world_targeting[8] = 0.0 # fragment_cycler: FragmentIdentifier maintains
 
 
 func _clear() -> void:

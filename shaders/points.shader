@@ -30,16 +30,16 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-uniform vec2 time_cycle;
-uniform vec2 mouse_coord;
-uniform vec3 color = vec3(0.0, 1.0, 0.0);
+uniform float time;
 uniform float point_size = 3.0;
-uniform float fragment_range = 9.0; // from FragmentIdentifier.fragment_range
+uniform vec2 mouse_coord;
+uniform float fragment_range = 9.0;
+uniform float fragment_cycler = 0.0;
+uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 
 void vertex() {
 	// orbital elements
-	float time = time_cycle[0];
 	float a = NORMAL.x; // semi-major axis
 	float e = NORMAL.y; // eccentricity
 	float i = NORMAL.z; // inclination
@@ -121,18 +121,17 @@ bool is_id_signaling_pixel(vec2 offset){
 void fragment() {
 	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
 		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
-		float cycle_value = time_cycle[1];
-		if (cycle_value < 1.0) {
-			ALBEDO = vec3(cycle_value); // calibration color
+		if (fragment_cycler < 1.0) {
+			ALBEDO = vec3(fragment_cycler); // calibration color
 		} else {
 			int id_element;
 			// Note: There is *some* interpolation of VERTEX even though we are
 			// at the vertex point - hence VERTEX elements are no longer whole
 			// numbers. The +0.5 below fixes small interpolation bumps.
-			if (cycle_value == 1.0){
+			if (fragment_cycler == 1.0){
 				id_element = int(VERTEX.x + 0.5);
 			} else {
-				if (cycle_value == 2.0){
+				if (fragment_cycler == 2.0){
 					id_element = int(VERTEX.y + 0.5);
 				} else {
 					id_element = int(VERTEX.z + 0.5);
