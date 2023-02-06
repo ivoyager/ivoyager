@@ -20,15 +20,18 @@
 class_name IVHUDOrbits
 extends MultiMeshInstance
 
-# Visual orbits for a SmallBodiesGroup instance.
+# Visual orbits for a SmallBodiesGroup instance. If FragmentIdentifier exists,
+# then a shader is used to allow screen identification of the orbit loops.
 
 const math := preload("res://ivoyager/static/math.gd")
 
+var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _world_targeting: Array = IVGlobal.world_targeting
 
 var _group: IVSmallBodiesGroup
 var _color_setting: String
 
-onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
 func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
@@ -43,14 +46,32 @@ func _ready() -> void:
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = IVGlobal.shared.circle_mesh_low_res
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	material_override = SpatialMaterial.new()
-	material_override.flags_unshaded = true
-	material_override.albedo_color = IVGlobal.settings[_color_setting]
-	_set_transforms_from_orbits()
+	var color: Color = IVGlobal.settings[_color_setting]
+	if _fragment_identifier: # use self-identifying fragment shader
+		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
+		material_override = ShaderMaterial.new()
+		material_override.shader = IVGlobal.shared.orbits_shader
+		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		material_override.set_shader_param("fragment_range", _world_targeting[7]) # TODO4.0: global uniform
+	else:
+		material_override = SpatialMaterial.new()
+		material_override.flags_unshaded = true
+		material_override.albedo_color = color
+		set_process(false)
+	_set_transforms_and_ids()
 	hide()
 
 
-func _set_transforms_from_orbits() -> void:
+func _process(_delta: float) -> void:
+	# Disabled unless we have FragmentIdentifier.
+	if !visible:
+		return
+	# TODO4.0: These are global uniforms, so we can do this globally!
+	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
+	material_override.set_shader_param("mouse_coord", _world_targeting[6])
+
+
+func _set_transforms_and_ids() -> void:
 	var n := _group.get_number()
 	multimesh.instance_count = n
 	var index := 0
@@ -64,6 +85,9 @@ func _set_transforms_from_orbits() -> void:
 		orbit_basis = math.get_rotation_matrix(elements) * orbit_basis
 		var orbit_transform := Transform(orbit_basis, -e * orbit_basis.x)
 		multimesh.set_instance_transform(index, orbit_transform)
+		if _fragment_identifier:
+			var vec3id := _group.get_orbits_vec3id(index)
+			multimesh.set_instance_custom_data(index, Color(vec3id.x, vec3id.y, vec3id.z, 0.0))
 		index += 1
 
 
@@ -73,5 +97,7 @@ func _on_visibility_changed() -> void:
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == _color_setting:
-		material_override.albedo_color = value
-
+		if _fragment_identifier:
+			material_override.set_shader_param("color", Vector3(value.r, value.g, value.b))
+		else:
+			material_override.albedo_color = value

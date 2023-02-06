@@ -41,6 +41,7 @@ const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
 const FRAGMENT_POINT := IVFragmentIdentifier.FRAGMENT_POINT
+const FRAGMENT_ORBIT := IVFragmentIdentifier.FRAGMENT_ORBIT
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
@@ -50,7 +51,8 @@ const PERSIST_PROPERTIES := [
 	"group_name",
 	"group_id",
 	"max_apoapsis",
-	"vec3ids",
+	"points_vec3ids",
+	"orbits_vec3ids",
 	"names",
 	"iau_number",
 	"magnitudes",
@@ -73,7 +75,8 @@ var group_name: String
 var group_id: int
 
 var max_apoapsis := 0.0
-var vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
+var points_vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
+var orbits_vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
 
 # below is binary import data
 var names := PoolStringArray()
@@ -125,6 +128,10 @@ func get_orbit_elements(index: int) -> Array:
 	]
 
 
+func get_orbits_vec3id(index: int) -> Vector3:
+	return orbits_vec3ids[index]
+
+
 # *****************************************************************************
 # ivoyager internal methods
 
@@ -168,13 +175,15 @@ func finish_binary_import() -> void:
 	else:
 		_fix_binary_trojan_elements()
 	var size := names.size()
-	vec3ids.resize(size)
+	points_vec3ids.resize(size) # needs resize for ArrayMesh construction
 	if _fragment_identifier:
+		orbits_vec3ids.resize(size) # only used if FragmentIdentifier
 		var i := 0
 		while i < size:
 			var info := [names[i], FRAGMENT_POINT, group_id, i]
-			var vec3id := _fragment_identifier.get_new_id_as_vec3(info)
-			vec3ids[i] = vec3id
+			points_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(info)
+			info = [names[i], FRAGMENT_ORBIT, group_id, i]
+			orbits_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(info)
 			i += 1
 	
 	# feedback
