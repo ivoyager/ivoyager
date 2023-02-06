@@ -36,9 +36,7 @@ func _init(body: IVBody, texture: Texture) -> void:
 
 func _ready() -> void:
 	var radius: float = _body.get_rings_radius()
-	var north: Vector3 = _body.get_north_pole()
 	scale = Vector3(radius * 2.0, radius * 2.0, 1.0)
-	transform.basis = IVMath.rotate_basis_z(transform.basis, north)
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
 	mesh = QuadMesh.new()
 	var rings_material := SpatialMaterial.new()

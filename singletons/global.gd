@@ -199,7 +199,7 @@ var wikipedia_locales := ["en"] # add locales present in data tables
 var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
-# like "albedo". To build a model, IVModelBuilder first looks for an existing
+# like "albedo". To build a model, IVModelManager first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
 # a premade generic mesh (e.g., globe_mesh) and search for map textures in
 # maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will

@@ -49,6 +49,12 @@ enum CameraTrackType {
 	TRACK_GROUND,
 }
 
+enum LazyType { # WIP - for rebuild of body/model lazy init system
+	LAZY_NEVER, # default for stars and planets
+	LAZY_OUT_OF_SYSTEM, # default for dwarf planets & major moons
+	LAZY_MAX, # default for minor moons, instantiated asteroids & spacecraft
+}
+
 enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,

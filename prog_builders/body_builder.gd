@@ -131,7 +131,6 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
-	body.m_radius = body.characteristics.m_radius
 	if _composition_builder:
 		_composition_builder.add_compositions_from_table(body, table_name, row)
 	if keep_real_precisions:

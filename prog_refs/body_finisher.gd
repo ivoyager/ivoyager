@@ -42,13 +42,13 @@ var min_hud_dist_star_multiplier := 20.0 # combines w/ above
 var progress := 0 # for external progress bar
 
 # private
-var _ModelController_: Script
+#var _ModelController_: Script
 var _HUDLabel_: Script
 var _HUDOrbit_: Script
 var _Rings_: Script
 
 var _table_reader: IVTableReader
-var _model_builder: IVModelBuilder
+var _model_manager: IVModelManager
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture
 
@@ -68,10 +68,10 @@ func _project_init() -> void:
 	IVGlobal.connect("game_load_started", self, "init_system_build")
 	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
 	_table_reader = IVGlobal.program.TableReader
-	_model_builder = IVGlobal.program.ModelBuilder
+	_model_manager = IVGlobal.program.ModelManager
 	_io_manager = IVGlobal.program.IOManager
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
-	_ModelController_ = IVGlobal.script_classes._ModelController_
+#	_ModelController_ = IVGlobal.script_classes._ModelController_
 	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
 	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
 	_Rings_ = IVGlobal.script_classes._Rings_
@@ -107,11 +107,11 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
 	if body.get_model_type() != -1:
-		body.model_controller = _ModelController_.new()
+#		body.model_controller = _ModelController_.new()
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
-		_model_builder.add_model(body, lazy_init)
-		body.reset_orientation_and_rotation()
+		_model_manager.add_model(body, lazy_init)
+#		body.reset_orientation_and_rotation()
 	if body.has_omni_light():
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
 		var omni_light := OmniLight.new()
@@ -165,7 +165,7 @@ func _io_finish(array: Array) -> void: # Main thread
 	if rings_file_prefix:
 		var rings_texture: Texture = array[6]
 		var rings: Spatial = _Rings_.new(body, rings_texture)
-		body.add_child(rings)
+		body.add_child_to_model_space(rings)
 	if _is_building_system:
 		_system_finished_count += 1
 		# warning-ignore:integer_division

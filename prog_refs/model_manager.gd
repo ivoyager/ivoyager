@@ -1,4 +1,4 @@
-# model_builder.gd
+# model_manager.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,16 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVModelBuilder
+class_name IVModelManager
 extends Reference
-
-# DEPRECIATE: replaced by ModelManager.
 
 # We have a lazy_init option and culling system to keep model number low at any
 # given time. We cull based on staleness of last visibility change. Use it for
-# minor moons, visited asteroids, spacecraft, etc. Project var max_lazy should
-# be set to something larger than the max number of lazy models likely to be
-# visible at a give time (however, a small value helps on low end systems).
+# minor moons, visited asteroids, spacecraft, etc. Set project var 'max_lazy'
+# to something larger than the max number of lazy models likely to be visible
+# at a give time.
 
 const files := preload("res://ivoyager/static/files.gd")
 
@@ -35,7 +33,7 @@ const DPRINT := false
 const METER := IVUnits.METER
 
 var max_lazy := 20
-var model_too_far_radius_multiplier := 1e3
+var model_too_far_radius_multiplier := 3e3
 var map_search_suffixes := [".albedo", ".emission"]
 var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
 var star_grow_exponent := 0.6
@@ -67,20 +65,34 @@ func _project_init() -> void:
 
 
 func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
+	
+	# dev
+	lazy_init = false
+	
+	
 	var file_prefix := body.get_file_prefix()
-	var model_controller := body.model_controller
+#	var model_controller := body.model_controller
 	var m_radius := body.get_mean_radius()
 	var e_radius := body.get_equatorial_radius()
-	body.max_model_dist = m_radius * model_too_far_radius_multiplier
 	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
+	var max_dist: float
+	if body.has_omni_light():
+		max_dist = INF
+	else:
+		max_dist = m_radius * model_too_far_radius_multiplier
+		
+	body.set_model_parameters(model_basis, max_dist)
+	
+#	model_controller.set_model_reference_basis(model_basis) # DEPRECIATE
 	
 	
-	model_controller.set_model_reference_basis(model_basis)
 	if lazy_init:
-		_add_placeholder(body, model_controller)
+		_add_placeholder(body, null)
 		return
+	
+	
 	var model_type := body.get_model_type()
-	var array := [body, model_controller, file_prefix, model_type, model_basis]
+	var array := [body, null, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
 
@@ -128,9 +140,9 @@ func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void
 func _lazy_init(body: IVBody) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
-	var model_controller := body.model_controller
-	var model_basis: Basis = model_controller.model_reference_basis
-	var array := [body, model_controller, file_prefix, model_type, model_basis]
+#	var model_controller := body.model_controller
+	var model_basis := body.model_reference_basis
+	var array := [body, null, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
 
 
@@ -143,7 +155,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		var packed_scene: PackedScene = load(path)
 		model = packed_scene.instance()
 		model.transform.basis = model_basis
-		model.hide()
+#		model.hide()
 		array.append(model)
 		return
 	var model_type: int = array[3]
@@ -161,7 +173,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		albedo_map = _fallback_albedo_map
 	model = MeshInstance.new()
 	model.transform.basis = model_basis
-	model.hide()
+#	model.hide()
 	array.append(model)
 	model.mesh = _globe_mesh
 	var surface := SpatialMaterial.new()
@@ -182,16 +194,20 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 
 func _finish_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var model_controller: IVModelController = array[1]
+#	var model_controller: IVModelController = array[1]
 	var model: Spatial = array[5]
-	model_controller.set_model(model, false)
-	if body.has_omni_light(): # is a star
-		body.max_model_dist = INF
-		if array.size() > 6: # has dynamic star surface
-			var surface: SpatialMaterial = array[6]
-			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
-					star_energy_ref_dist, star_energy_near, star_energy_exponent)
-	body.add_child(model)
+	body.add_child_to_model_space(model)
+	body.connect("model_visibility_changed", model, "set_visible")
+	
+	
+#	model_controller.set_model(model, false)
+
+#	if body.has_omni_light(): # is a star
+#		if array.size() > 6: # has dynamic star surface
+#			var surface: SpatialMaterial = array[6]
+#			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
+#					star_energy_ref_dist, star_energy_near, star_energy_exponent)
+#	body.add_child(model)
 
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
@@ -230,8 +246,8 @@ func _lazy_uninit(model: Spatial) -> void: # Main thread
 	_lazy_tracker.erase(model)
 	_n_lazy -= 1
 	var body: IVBody = model.get_parent_spatial()
-	var model_controller := body.model_controller
-	_add_placeholder(body, model_controller)
+#	var model_controller := body.model_controller
+	_add_placeholder(body, null)
 	model.queue_free() # it's now up to the Engine what to cache!
 
 
