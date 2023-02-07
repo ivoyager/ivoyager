@@ -43,6 +43,7 @@ var star_energy_exponent := 1.9
 var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
 var _times: Array = IVGlobal.times
+var _GlobeModel_: Script
 var _table_reader: IVTableReader
 var _io_manager: IVIOManager
 var _globe_mesh: SphereMesh
@@ -57,6 +58,7 @@ var _recycled_placeholders := [] # unmodified, un-treed Spatials
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	IVGlobal.connect("about_to_stop_before_quit", self, "_clear")
+	_GlobeModel_ = IVGlobal.script_classes._GlobeModel_
 	_table_reader = IVGlobal.program.TableReader
 	_io_manager = IVGlobal.program.IOManager
 	_globe_mesh = IVGlobal.shared.globe_mesh
@@ -171,25 +173,8 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		albedo_map = load(path)
 	if !albedo_map and !emission_map:
 		albedo_map = _fallback_albedo_map
-	model = MeshInstance.new()
-	model.transform.basis = model_basis
-#	model.hide()
+	model = _GlobeModel_.new(model_type, model_basis, albedo_map, emission_map)
 	array.append(model)
-	model.mesh = _globe_mesh
-	var surface := SpatialMaterial.new()
-	model.set_surface_material(0, surface)
-	_table_reader.build_object(surface, material_fields, "models", model_type)
-	if albedo_map:
-		surface.albedo_texture = albedo_map
-	if emission_map:
-		surface.emission_enabled = true
-		surface.emission_texture = emission_map
-	if _table_reader.get_bool("models", "starlight", model_type):
-		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-		array.append(surface) # dynamic star surface
-	else:
-		model.cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
-		# FIXME! Should cast shadows, but it doesn't...!
 
 
 func _finish_model(array: Array) -> void: # Main thread

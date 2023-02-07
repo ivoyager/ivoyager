@@ -184,6 +184,7 @@ var procedural_classes := {
 	_Body_ = IVBody,
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
 	_LPoint_ = IVLPoint,
+	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
 	_HUDLabel_ = IVHUDLabel, # replace w/ Spatial
 	_HUDOrbit_ = IVHUDOrbit, # replace w/ Spatial
 	_HUDOrbits_ = IVHUDOrbits,
