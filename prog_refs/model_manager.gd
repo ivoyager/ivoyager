@@ -22,37 +22,31 @@ extends Reference
 
 # We have a lazy_init option and culling system to keep model number low at any
 # given time. We cull based on staleness of last visibility change. Use it for
-# minor moons, visited asteroids, spacecraft, etc. Set project var 'max_lazy'
-# to something larger than the max number of lazy models likely to be visible
-# at a give time.
+# minor moons, visited asteroids, spacecraft, etc. Set project var
+# 'max_lazy_models' to something larger than the max number of lazy models
+# likely to be visible at a give time.
 
 const files := preload("res://ivoyager/static/files.gd")
 
 const DPRINT := false
-
+const CULL_FRACTION := 0.3
 const METER := IVUnits.METER
 
-var max_lazy := 20
+var max_lazy_models := 40
 var model_too_far_radius_multiplier := 3e3
 var map_search_suffixes := [".albedo", ".emission"]
-var star_grow_dist := 2.0 * IVUnits.AU # grow to stay visible at greater range
-var star_grow_exponent := 0.6
-var star_energy_ref_dist := 3.8e6 * IVUnits.KM # ~4x radius works
-var star_energy_near := 10.0 # energy at _star_energy_ref_dist
-var star_energy_exponent := 1.9
-var material_fields := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 
 var _times: Array = IVGlobal.times
 var _GlobeModel_: Script
 var _table_reader: IVTableReader
 var _io_manager: IVIOManager
-var _globe_mesh: SphereMesh
 var _fallback_albedo_map: Texture
 var _map_paths := {}
 var _model_paths := {}
 var _lazy_tracker := {}
-var _n_lazy := 0
-var _recycled_placeholders := [] # unmodified, un-treed Spatials
+var _cull_times := []
+var _cull_models := []
+var _cull_size: int
 
 
 func _project_init() -> void:
@@ -61,19 +55,17 @@ func _project_init() -> void:
 	_GlobeModel_ = IVGlobal.script_classes._GlobeModel_
 	_table_reader = IVGlobal.program.TableReader
 	_io_manager = IVGlobal.program.IOManager
-	_globe_mesh = IVGlobal.shared.globe_mesh
 	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
+	_cull_size = int(max_lazy_models * CULL_FRACTION)
 	_preregister_files()
 
 
+func _clear() -> void:
+	_lazy_tracker.clear()
+
+
 func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
-	
-	# dev
-	lazy_init = false
-	
-	
 	var file_prefix := body.get_file_prefix()
-#	var model_controller := body.model_controller
 	var m_radius := body.get_mean_radius()
 	var e_radius := body.get_equatorial_radius()
 	var model_basis := _get_model_basis(file_prefix, m_radius, e_radius)
@@ -82,85 +74,50 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 		max_dist = INF
 	else:
 		max_dist = m_radius * model_too_far_radius_multiplier
-		
-	body.set_model_parameters(model_basis, max_dist)
-	
-#	model_controller.set_model_reference_basis(model_basis) # DEPRECIATE
-	
-	
+	body.set_model_parameters(model_basis, max_dist) # keep w/ Body for lazy init case
 	if lazy_init:
-		_add_placeholder(body, null)
+		assert(!body.model_visible) # Body hasn't processed yet, so has init false
+		body.connect("model_visibility_changed", self, "_add_lazy_model", [body], CONNECT_ONESHOT)
 		return
-	
-	
 	var model_type := body.get_model_type()
-	var array := [body, null, file_prefix, model_type, model_basis]
+	var array := [body, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
 
 
-func _preregister_files() -> void:
-	assert(DPRINT and print("ModelBuilder searching for model files...") or true)
-	var models_search := IVGlobal.models_search
-	var maps_search := IVGlobal.maps_search
-	for table in IVGlobal.body_tables:
-		var n_rows := _table_reader.get_n_rows(table)
-		var row := 0
-		while row < n_rows:
-			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
-			assert(file_prefix)
-			var path := files.find_resource_file(models_search, file_prefix)
-			if path:
-				_model_paths[file_prefix] = path
-			assert(DPRINT and prints(file_prefix, path if path else "(NOT FOUND)") or true)
-			for suffix in map_search_suffixes:
-				var file_match := file_prefix + (suffix as String)
-				path = files.find_resource_file(maps_search, file_match)
-				if path:
-					_map_paths[file_match] = path
-			row += 1
-
-
-func _clear() -> void:
-	while _recycled_placeholders:
-		_recycled_placeholders.pop_back().queue_free()
-	_lazy_tracker.clear()
-	_n_lazy = 0
-
-
-func _add_placeholder(body: IVBody, model_controller: IVModelController) -> void: # Main thread
-	var placeholder: Spatial
-	if _recycled_placeholders:
-		placeholder = _recycled_placeholders.pop_back()
-	else:
-		placeholder = Spatial.new()
-	placeholder.hide()
-	placeholder.connect("visibility_changed", self, "_lazy_init", [body], CONNECT_ONESHOT)
-	model_controller.set_model(placeholder, false)
-	body.add_child(placeholder)
-
-
-func _lazy_init(body: IVBody) -> void: # Main thread
+func _add_lazy_model(is_visible: bool, body: IVBody) -> void: # Main thread
+	assert(DPRINT and print("ADD lazy model ", tr(body.name)) or true)
+	assert(is_visible)
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
-#	var model_controller := body.model_controller
 	var model_basis := body.model_reference_basis
-	var array := [body, null, file_prefix, model_type, model_basis]
+	var array := [body, file_prefix, model_type, model_basis]
 	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
 
 
+func _remove_lazy_model(model: Spatial) -> void: # Main thread
+	var body: IVBody = model.get_parent().get_parent()
+	assert(DPRINT and print("REMOVE lazy model ", tr(body.name)) or true)
+	body.disconnect("model_visibility_changed", model, "set_visible")
+	body.disconnect("model_visibility_changed", self, "_record_visibility_event")
+	body.connect("model_visibility_changed", self, "_add_lazy_model", [body], CONNECT_ONESHOT)
+	body.remove_child_from_model_space(model)
+	model.queue_free() # it's now up to the Engine what to cache!
+	_lazy_tracker.erase(model)
+
+
 func _get_model_on_io_thread(array: Array) -> void: # I/O thread
-	var file_prefix: String = array[2]
-	var model_basis: Basis = array[4]
+	var file_prefix: String = array[1]
+	var model_basis: Basis = array[3]
 	var model: Spatial
 	var path: String = _model_paths.get(file_prefix, "")
 	if path:
+		# existing model overrides model_type table data
 		var packed_scene: PackedScene = load(path)
 		model = packed_scene.instance()
 		model.transform.basis = model_basis
-#		model.hide()
-		array.append(model)
+		array[1] = model
 		return
-	var model_type: int = array[3]
+	var model_type: int = array[2]
 	# TODO: We need a fallback asteroid-like model for non-ellipsoid
 	# fallthrough to constructed ellipsoid model
 	var emission_map: Texture
@@ -174,69 +131,50 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	if !albedo_map and !emission_map:
 		albedo_map = _fallback_albedo_map
 	model = _GlobeModel_.new(model_type, model_basis, albedo_map, emission_map)
-	array.append(model)
+	array[1] = model
 
 
 func _finish_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-#	var model_controller: IVModelController = array[1]
-	var model: Spatial = array[5]
+	var model: Spatial = array[1]
 	body.add_child_to_model_space(model)
+	model.visible = body.model_visible
 	body.connect("model_visibility_changed", model, "set_visible")
-	
-	
-#	model_controller.set_model(model, false)
-
-#	if body.has_omni_light(): # is a star
-#		if array.size() > 6: # has dynamic star surface
-#			var surface: SpatialMaterial = array[6]
-#			model_controller.set_dynamic_star(surface, star_grow_dist, star_grow_exponent,
-#					star_energy_ref_dist, star_energy_near, star_energy_exponent)
-#	body.add_child(model)
 
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var model_controller: IVModelController = array[1]
-	var model: Spatial = array[5]
-	var placeholder := model_controller.model
-	body.remove_child(placeholder)
-	_recycled_placeholders.append(placeholder)
-	model.connect("visibility_changed", self, "_record_lazy_event", [model])
-	model_controller.set_model(model, false)
-	body.add_child(model)
-	_n_lazy += 1
-	if _n_lazy > max_lazy:
-		_cull_lazy()
+	var model: Spatial = array[1]
+	body.add_child_to_model_space(model)
+	model.visible = body.model_visible
+	body.connect("model_visibility_changed", model, "set_visible")
+	body.connect("model_visibility_changed", self, "_record_visibility_event", [model])
+	if _lazy_tracker.size() > max_lazy_models:
+		_cull_lazy_models()
 	_lazy_tracker[model] = _times[1] # engine time
 
 
-func _cull_lazy() -> void: # Main thread
-	# Cull models w/ last view earlier than average (easier than median)
-	var time_cutoff := 0.0
-	var tracker_keys := _lazy_tracker.keys()
-	for model in tracker_keys:
-		time_cutoff += _lazy_tracker[model]
-	time_cutoff /= max_lazy
-	for model in tracker_keys:
-		if _lazy_tracker[model] < time_cutoff:
-			_lazy_uninit(model)
+func _cull_lazy_models() -> void: # Main thread
+	# Cull the most stale models up to '_cull_size'. Don't cull visible.
+	for model in _lazy_tracker:
+		if model.visible:
+			continue
+		var time: float = _lazy_tracker[model]
+		var index := _cull_times.bsearch(time, false)
+		if index < _cull_size:
+			_cull_times.insert(index, time)
+			_cull_models.insert(index, model)
+			if _cull_times.size() > _cull_size:
+				_cull_times.pop_back()
+				_cull_models.pop_back()
+	assert(DPRINT and print("CULL ", _cull_times) or true)
+	for model in _cull_models:
+		_remove_lazy_model(model)
+	_cull_times.clear()
+	_cull_models.clear()
 
 
-func _lazy_uninit(model: Spatial) -> void: # Main thread
-	if model.visible:
-		return
-	# swap back to a placeholder again
-	model.disconnect("visibility_changed", self, "_record_lazy_event")
-	_lazy_tracker.erase(model)
-	_n_lazy -= 1
-	var body: IVBody = model.get_parent_spatial()
-#	var model_controller := body.model_controller
-	_add_placeholder(body, null)
-	model.queue_free() # it's now up to the Engine what to cache!
-
-
-func _record_lazy_event(model: Spatial) -> void: # Main thread
+func _record_visibility_event(_is_visible: bool, model: Spatial) -> void: # Main thread
 	_lazy_tracker[model] = _times[1] # engine time
 
 
@@ -270,3 +208,27 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 	basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # adjust for centered prime meridian
 	basis = basis.rotated(Vector3(1.0, 0.0, 0.0), PI / 2.0) # z-up in astronomy!
 	return basis
+
+
+func _preregister_files() -> void:
+	# Do this work once at project init, since file tree won't change.
+	assert(DPRINT and print("ModelBuilder searching for model files...") or true)
+	var models_search := IVGlobal.models_search
+	var maps_search := IVGlobal.maps_search
+	for table in IVGlobal.body_tables:
+		var n_rows := _table_reader.get_n_rows(table)
+		var row := 0
+		while row < n_rows:
+			var file_prefix := _table_reader.get_string(table, "file_prefix", row)
+			assert(file_prefix)
+			var path := files.find_resource_file(models_search, file_prefix)
+			if path:
+				_model_paths[file_prefix] = path
+			assert(DPRINT and prints(file_prefix, path if path else "(NOT FOUND)") or true)
+			for suffix in map_search_suffixes:
+				var file_match := file_prefix + (suffix as String)
+				path = files.find_resource_file(maps_search, file_match)
+				if path:
+					_map_paths[file_match] = path
+			row += 1
+

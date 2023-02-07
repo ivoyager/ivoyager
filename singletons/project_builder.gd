@@ -194,7 +194,6 @@ var procedural_classes := {
 	# tree_refs
 	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 	_Orbit_ = IVOrbit,
-	_ModelController_ = IVModelController,
 	_Selection_ = IVSelection,
 	_View_ = IVView,
 	_Composition_ = IVComposition, # replaceable, but look for dependencies

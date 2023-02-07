@@ -107,11 +107,9 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	# processed in order, so the last callback at the end of this function will
 	# have the last "finish" callback.
 	if body.get_model_type() != -1:
-#		body.model_controller = _ModelController_.new()
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_manager.add_model(body, lazy_init)
-#		body.reset_orientation_and_rotation()
 	if body.has_omni_light():
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
 		var omni_light := OmniLight.new()

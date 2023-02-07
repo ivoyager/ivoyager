@@ -28,7 +28,7 @@ extends Object
 #  - IVTableImporter for interpretting enum names in external *.tsv files
 #  - GUI widget selection_data.gd for object info display 
 
-enum { # duplicated from IVSaveBuilder so we can remove the gamesave system
+enum { # duplicated in IVSaveBuilder
 	NO_PERSIST,
 	PERSIST_PROPERTIES_ONLY,
 	PERSIST_PROCEDURAL,
@@ -47,6 +47,14 @@ enum CameraTrackType {
 	TRACK_NONE,
 	TRACK_ORBIT,
 	TRACK_GROUND,
+}
+
+enum LagrangePoints {
+	L1,
+	L2,
+	L3,
+	L4,
+	L5,
 }
 
 enum LazyType { # WIP - for rebuild of body/model lazy init system

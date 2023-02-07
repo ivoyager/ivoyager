@@ -86,27 +86,15 @@ var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 # public - read-only!
 var huds_visible := false # too far / too close toggle
-
-
-
-# WIP ...
 var model_visible := false
 var model_space: Spatial # rotation only, not scaled (lazy init)
-var orbit_space: Spatial # rotates wih orbit, for camera & l-points (lazy init)
-var rotation_vector := ECLIPTIC_Z # TODO: rename 'north_vector'
+var orbit_space: Spatial # rotates wih orbit for camera & l-points (lazy init)
+var rotation_vector := ECLIPTIC_Z # synonymous with 'north'
 var rotation_rate := 0.0
 var rotation_at_epoch := 0.0
 var basis_at_epoch := IDENTITY_BASIS
-var model_reference_basis := IDENTITY_BASIS # externally managed
+var model_reference_basis := IDENTITY_BASIS
 
-
-
-
-# WIP: depreciate below; Body will set model_space and model will be passive.
-#var model_controller: IVModelController
-
-
-# public - read-only except builder classes
 var parent: Spatial # another Body or 'Universe'
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
@@ -118,7 +106,6 @@ var max_hud_dist_orbit_radius_multiplier: float
 var min_hud_dist_radius_multiplier: float
 var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
-#var max_aux_graphic_dist := 0.0
 var is_asleep := false
 
 
