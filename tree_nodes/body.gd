@@ -492,7 +492,8 @@ func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
 
 func add_child_to_model_space(spatial: Spatial) -> void:
 	if !model_space:
-		model_space = Spatial.new()
+		var _ModelSpace_: Script = IVGlobal.script_classes._ModelSpace_
+		model_space = _ModelSpace_.new()
 		add_child(model_space)
 	model_space.add_child(spatial)
 
@@ -506,7 +507,8 @@ func remove_child_from_model_space(spatial: Spatial) -> void:
 
 func add_child_to_orbit_space(spatial: Spatial) -> void:
 	if !orbit_space:
-		orbit_space = Spatial.new()
+		var _OrbitSpace_: Script = IVGlobal.script_classes._OrbitSpace_
+		orbit_space = _OrbitSpace_.new()
 		add_child(orbit_space)
 	orbit_space.add_child(spatial)
 

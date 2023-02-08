@@ -189,6 +189,8 @@ var procedural_classes := {
 	_HUDOrbit_ = IVHUDOrbit, # replace w/ Spatial
 	_HUDOrbits_ = IVHUDOrbits,
 	_HUDPoints_ = IVHUDPoints,
+	_ModelSpace_ = IVModelSpace,
+	_OrbitSpace_ = IVOrbitSpace,
 	_Rings_ = IVRings, # replace w/ Spatial
 	_SelectionManager_ = IVSelectionManager,
 	# tree_refs
