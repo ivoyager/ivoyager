@@ -102,6 +102,13 @@ func _process(_delta: float) -> void:
 	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
 	material_override.set_shader_param("mouse_coord", _world_targeting[6])
 	if _group.lagrange_point:
+		
+		# WIP
+		# replace lagrange_a w/ orbit_characteristic_length
+		# replace lagrange_L w/ secondary L +- PI / 3.0
+		
+		
+		
 		var langrange_elements: Array = _group.lagrange_point.dynamic_elements
 		var lagrange_a: float = langrange_elements[0]
 		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * _times[0]

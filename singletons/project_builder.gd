@@ -183,16 +183,18 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = IVBody,
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
-	_LPoint_ = IVLPoint,
 	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
 	_HUDLabel_ = IVHUDLabel, # replace w/ Spatial
 	_HUDOrbit_ = IVHUDOrbit, # replace w/ Spatial
 	_HUDOrbits_ = IVHUDOrbits,
 	_HUDPoints_ = IVHUDPoints,
+	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
+	_LPoint_ = IVLPoint, # DEPRECIATE!
 	_ModelSpace_ = IVModelSpace,
-	_OrbitSpace_ = IVOrbitSpace,
+	_OrbitSpace_ = IVOrbitSpace, # replace w/ Spatial
 	_Rings_ = IVRings, # replace w/ Spatial
-	_SelectionManager_ = IVSelectionManager,
+	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
+	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
 	# tree_refs
 	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 	_Orbit_ = IVOrbit,

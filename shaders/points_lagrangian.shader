@@ -24,6 +24,18 @@ render_mode unshaded, cull_disabled, skip_vertex_transform;
 //
 // For trojans, a & M are determined by trojan elements d, D, f & th0 together
 // with a and M of the influencing orbital body.
+//
+// FIXME: Trojan orbits!
+// Here is my 2023 interpretation/guess of parameters (raw -> internal units):
+// H: period of a ocillation (y -> s) (not imported! use 9.2y for ~middle of range)
+// da: extent of a ocillation (AU -> m)
+// D: extent of M ocillation relative to L-point (deg -> rad)
+// f: rate of M ocillation (deg/y -> rad/s); period = TAU / f
+// e, i, s, g: as expected
+//
+// a must be determined using e and Jupiter's 'characteristic length'.
+// A *very* rough approximation of the tadpole obit is to use two harmonic
+// ocillators for a and M (th1 & th2) with period D and TAU/f, respectively. 
 
 
 uniform float time;

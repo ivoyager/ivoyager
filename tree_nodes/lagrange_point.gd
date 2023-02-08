@@ -1,4 +1,4 @@
-# model_space.gd
+# lagrange_point.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,10 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVModelSpace
+class_name IVLagrangePoint
 extends Spatial
 
-# Maintained by IVBody instance only when needed. Child nodes may include the
-# body's model and rings and the camera when ground tracking.
+# Passive Spatial that exists in the RotatingSpace of a Body. Use Body API to
+# obtain. (Uses lazy init.)
+
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
+const PERSIST_PROPERTIES := ["lp_integer"]
+
+
+var lp_integer: int # 1, 2, 3, 4, 5
+
+
+func init(lp_integer_: int) -> void:
+	lp_integer = lp_integer_

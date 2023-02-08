@@ -88,7 +88,8 @@ var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 var huds_visible := false # too far / too close toggle
 var model_visible := false
 var model_space: Spatial # rotation only, not scaled (lazy init)
-var orbit_space: Spatial # rotates wih orbit for camera & l-points (lazy init)
+var orbit_space: Spatial # rotates wih orbit for camera orbit tracking (lazy init)
+var rotating_space: IVRotatingSpace # rotates & translates for L-points (lazy init)
 var rotation_vector := ECLIPTIC_Z # synonymous with 'north'
 var rotation_rate := 0.0
 var rotation_at_epoch := 0.0
@@ -232,14 +233,22 @@ func _on_process(_delta: float) -> void:
 		_world_targeting[4] = null
 		_world_targeting[5] = INF
 
-	# update translation, orbit_space and model_space
+	# update translation and reference frame 'spaces'
 	if orbit:
 		translation = orbit.get_position()
-		if orbit_space:
-			var x_axis := -translation.normalized()
-			var z_axis := orbit.get_normal(NAN, true)
+		if orbit_space or rotating_space:
+			var orbit_dist := translation.length()
+			var x_axis := -translation / orbit_dist
+			var z_axis := orbit.get_normal()
 			var y_axis := z_axis.cross(x_axis)
-			orbit_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+			if rotating_space:
+				rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+				rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+			if orbit_space:
+				if orbit.is_retrograde():
+					orbit_space.transform.basis = Basis(x_axis, -y_axis, -z_axis)
+				else:
+					orbit_space.transform.basis = Basis(x_axis, y_axis, z_axis)
 	if model_space:
 		var rotation_angle := wrapf(_times[0] * rotation_rate, 0.0, TAU)
 		model_space.transform.basis = basis_at_epoch.rotated(rotation_vector, rotation_angle)
@@ -566,7 +575,64 @@ func set_sleep(sleep: bool) -> void: # called by IVSleepManager
 		set_process(true) # will show on next _process()
 
 
-func reset_orientation_and_rotation() -> void:
+func get_lagrange_point_local_space(lp_integer: int) -> Vector3:
+	# Returns Vector3.ZERO if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return Vector3.ZERO
+	return rotating_space.get_lagrange_point_local_space(lp_integer)
+
+
+func get_lagrange_point_global_space(lp_integer: int) -> Vector3:
+	# Returns Vector3.ZERO if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return Vector3.ZERO
+	return rotating_space.get_lagrange_point_global_space(lp_integer)
+
+
+func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
+	# Returns null if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return null
+	return rotating_space.get_lagrange_point_node3d(lp_integer)
+
+
+# private functions
+
+func _add_rotating_space() -> void:
+	# bail out if we don't have requried parameters
+	if !orbit:
+		return
+	var m2: float = characteristics.get("mass", 0.0)
+	if !m2:
+		return
+	var m1: float = parent.characteristics.get("mass", 0.0)
+	if !m1:
+		return
+	var mass_ratio: float = m1 / m2
+	var characteristic_length := orbit.get_characteristic_length()
+	var characteristic_time := orbit.get_orbit_period()
+	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
+	rotating_space = _RotatingSpace_.new()
+	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
+	var translation_ := orbit.get_position()
+	var orbit_dist := translation_.length()
+	var x_axis := -translation_ / orbit_dist
+	var z_axis := orbit.get_normal()
+	var y_axis := z_axis.cross(x_axis)
+	rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+
+
+func _reset_orientation_and_rotation() -> void:
 	# Sets 'rotation_rate', 'rotation_vector' and 'rotation_at_epoch'. For
 	# planets, these are fixed values determined by table-loaded 'RA', 'dec'
 	# and 'period' in characteristics . If we have tidal and/or axis lock, then
@@ -642,19 +708,11 @@ func reset_orientation_and_rotation() -> void:
 
 	var basis := math.rotate_basis_z(Basis(), rotation_vector)
 	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch)
-	
 
-
-	# DEPRECIATE
-#	model_controller.set_body_parameters(rotation_vector, rotation_rate, rotation_at_epoch)
-#	model_controller.emit_signal("changed")
-
-
-# private functions
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
 	if flags & IS_TIDALLY_LOCKED or flags & IS_AXIS_LOCKED:
-		reset_orientation_and_rotation()
+		_reset_orientation_and_rotation()
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
@@ -671,7 +729,7 @@ remote func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
 func _on_time_altered(_previous_time: float) -> void:
 	if orbit:
 		orbit.reset_elements_and_interval_update()
-	reset_orientation_and_rotation()
+	_reset_orientation_and_rotation()
 
 
 func _set_min_hud_dist() -> void:

@@ -20,15 +20,17 @@
 class_name IVOrbitSpace
 extends Spatial
 
-# Maintained by IVBody instance only when needed (lazy init, destroyed when no
-# longer in use). Child nodes may include the body's lagrange points and camera
-# if in orbit-tracking mode.
+# Created and maintained by IVBody instance only when needed. The camera uses
+# this space when orbit tracking.
+#
+# OrbitSpace is similar to but different than RotatingSpace for non-zero orbit
+# eccentricity. In OrbitSpace, the secondary body (P2) is maintained at the
+# origin with the P1 body ocillating along the x-axis between minus apoapsis
+# and minus periapsis. Lagrange points are defined in RotatingSpace where the
+# P1 body is fixed at minus 'characteristic length'. Z-axis is normal to
+# orbit plane using 'north/up' for OrbitSpace and positive pole for
+# RotatingSpace.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 
-
-# lagrange parameters
-var mass_ratio: float
-var characteristic_length: float 
-var characteristic_time: float
 

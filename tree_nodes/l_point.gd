@@ -20,6 +20,10 @@
 class_name IVLPoint
 extends Spatial
 
+# DEPRECIATE !!!!
+# Use Body API to get IVLagrangePoint, if needed. This class will disappear soon.
+
+
 # This is a Spatial in case we want to update its translation in future
 # implementation for a graphic symbol (there is no translation update now). Its
 # real purpose is to provide dynamic_elements for use by objects at Lagrange

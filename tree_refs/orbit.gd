@@ -25,6 +25,15 @@ extends Reference
 # plane; many moons use the latter two); the "orbit normal" precesses around
 # the reference_normal.
 #
+# The standard orbital 'elements' array:
+#   [0] a, semi-major axis
+#   [1] e, eccentricity
+#   [2] i, inclination
+#   [3] Om, longitude of the ascending node
+#   [4] w, argument of periapsis
+#   [5] M0, mean anomaly at epoch
+#   [6] n, mean motion
+#
 # Position is determined by time, reference_normal and current_elements;
 # current_elements is determined by time, elements_at_epoch, element_rates
 # and m_modifiers (if exists). element_rates and m_modifiers represent
@@ -146,6 +155,35 @@ func get_mean_motion(time := NAN) -> float:
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
 	return elements[6]
+
+
+func get_orbit_period(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return TAU / elements[6]
+
+
+func get_semiminor_axis(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	var a: float = elements[0]
+	var e: float = elements[1]
+	return sqrt(a * a * (1.0 - e * e))
+
+
+func get_characteristic_length(time := NAN) -> float:
+	# For lagrange point calculation. I'm not 100% sure this is right.
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	var a: float = elements[0]
+	var e: float = elements[1]
+	return a * (1.0 - e)
 
 
 func get_inclination_to_ecliptic(time := NAN) -> float:
