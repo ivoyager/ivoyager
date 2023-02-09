@@ -168,7 +168,7 @@ var shared := { # more items added by initializers/shared_initializer.gd
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
 	points_shader = preload("res://ivoyager/shaders/points.shader"),
-	points_lagrangian_shader = preload("res://ivoyager/shaders/points_lagrangian.shader"),
+	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
 	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings

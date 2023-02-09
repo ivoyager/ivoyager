@@ -1,4 +1,4 @@
-// points_lagrangian.shader
+// points_l4_l5.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -20,26 +20,28 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-// See comments in orbit_points.shader.
+// See comments in points.shader.
 //
 // For trojans, a & M are determined by trojan elements d, D, f & th0 together
 // with a and M of the influencing orbital body.
 //
 // FIXME: Trojan orbits!
 // Here is my 2023 interpretation/guess of parameters (raw -> internal units):
-// H: period of a ocillation (y -> s) (not imported! use 9.2y for ~middle of range)
-// da: extent of a ocillation (AU -> m)
-// D: extent of M ocillation relative to L-point (deg -> rad)
-// f: rate of M ocillation (deg/y -> rad/s); period = TAU / f
+// H: short-period epicycle? (not currently imported)
+// da: amplitude of a ocillation (AU -> m)
+// D: amplitude of M ocillation relative to L-point (deg -> rad)
+// f: rate of long-period ocillation (deg/y -> rad/s); period = TAU / f
 // e, i, s, g: as expected
 //
-// a must be determined using e and Jupiter's 'characteristic length'.
-// A *very* rough approximation of the tadpole obit is to use two harmonic
-// ocillators for a and M (th1 & th2) with period D and TAU/f, respectively. 
+// We're using a harmonic ocillator as a *very* rough approximation. It's not
+// really a tadpole.
+// TODO: Hack a 'tadpole' ocillator. There is no closed-form solution so it's
+// gotta be a hack.
 
-
-uniform float time;
-uniform vec2 lagrange_data; // lagrange a, lagrange L
+uniform float time; // update per frame
+uniform float lp_mean_longitude; // update per frame
+uniform int lp_integer; // 4 or 5; not currently used but might be for better ocillators
+uniform float characteristic_length; // radius of circularized orbit
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord;
 uniform float fragment_range = 9.0;
@@ -47,31 +49,44 @@ uniform float fragment_cycler = 0.0;
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 
+
+float longitude_ocillator(float D, float th){
+	// th = 0 when trojan is at 'leading' extreme (max L relative to L-point)
+	return D * cos(th);
+}
+
+
+float axis_ocillator(float da, float th){
+	// clockwise; leading L4s are slowed and fall into lower orbit as they
+	// approach the secondary body
+	return da * sin(th);
+}
+
+
 void vertex() {
-	float lagrange_a = lagrange_data.x;
-	float lagrange_L = lagrange_data.y;
 	
 	// orbital elements modified for lagrangian
-	float d = NORMAL.x; // 
+	float da = NORMAL.x; // amplitude of 'a' ocillation
 	float e = NORMAL.y; // eccentricity
 	float i = NORMAL.z; // inclination
 	float Om = COLOR.x; // longitude of the ascending node
 	float w = COLOR.y; // argument of periapsis
-	float D = COLOR.z; // 
-	float f = COLOR.w; // 
-	float th0 = UV2.x; // 
+	float D = COLOR.z; // amplitude of 'M' ocillation relative to L-point
+	float f = COLOR.w; // long-period rate
+	float th0 = UV2.x; // long-period ocillator at epoch
+	
 	
 	// Libration of a & M
 	float th = th0 + f * time;
-	float a = lagrange_a + d * sin(th);
-	float L = lagrange_L + D * cos(th);
-	float M = L - w - Om;
-	
+	float M = lp_mean_longitude - Om - w + longitude_ocillator(D, th);
+	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI;
+	float a = characteristic_length / (1.0 - e) + axis_ocillator(da, th);
+
+
 // ****************************************************************************
-// Entire file below is an exact copy of orbit_points.shader!!!
+// Entire file below is an exact copy of points.shader!!!
 // ****************************************************************************
-	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI
-	
+
 	float EA = M + e * sin(M); // eccentric anomaly
 	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
 	EA -= dEA;

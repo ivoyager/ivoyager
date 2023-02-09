@@ -35,8 +35,8 @@ extends Spatial
 #
 # TODO: (Ongoing) Make this node "drag-and_drop" as much as possible.
 #
-# TODO?: Make IVLPoint into IVBody instances?
-# TODO: barycenters
+# TODO: Barycenters! They orbit and are orbited. Will make Pluto system
+# (especially) more accurate.
 #
 # TODO4.0: Implement network sync! This will mainly involve synching IVOrbit
 # anytime it changes in a 'non-schedualed' way (e.g., impulse from a rocket
@@ -72,7 +72,6 @@ const PERSIST_PROPERTIES := [
 	"characteristics",
 	"components",
 	"satellites",
-	"lagrange_points",
 ]
 
 
@@ -81,7 +80,6 @@ var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
 var satellites := [] # IVBody instances
-var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 
 # public - read-only!

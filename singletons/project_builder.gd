@@ -117,7 +117,6 @@ var prog_builders := {
 	_BodyBuilder_ = IVBodyBuilder,
 	_OrbitBuilder_ = IVOrbitBuilder,
 	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
-	_LagrangePointBuilder_ = IVLagrangePointBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 }
@@ -189,7 +188,6 @@ var procedural_classes := {
 	_HUDOrbits_ = IVHUDOrbits,
 	_HUDPoints_ = IVHUDPoints,
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-	_LPoint_ = IVLPoint, # DEPRECIATE!
 	_ModelSpace_ = IVModelSpace,
 	_OrbitSpace_ = IVOrbitSpace, # replace w/ Spatial
 	_Rings_ = IVRings, # replace w/ Spatial

@@ -21,7 +21,7 @@ class_name IVHUDPoints
 extends MeshInstance
 
 # Visual points for a SmallBodiesGroup instance. Uses points.shader or
-# points_lagrangian.shader which set vertex positions using their own orbital
+# points_l4_l5.shader, which set vertex positions using their own orbital
 # math.
 
 const ARRAY_FLAGS = (
@@ -35,6 +35,7 @@ const TROJAN_ARRAY_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_COLOR
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
+const PI_DIV_3 := PI / 3.0 # 60 degrees
 
 var _group: IVSmallBodiesGroup
 var _color_setting: String
@@ -42,6 +43,9 @@ var _color_setting: String
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 
+# Lagrange point
+var _lp_integer := -1
+var _secondary_orbit: IVOrbit
 
 var _last_update_time := -INF
 
@@ -53,11 +57,15 @@ onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 func _init(group_: IVSmallBodiesGroup, color_setting: String) -> void:
 	_group = group_
 	_color_setting = color_setting
+	_lp_integer = _group.lp_integer
 	material_override = ShaderMaterial.new()
-	if !_group.is_trojans:
+	if _lp_integer == -1: # not trojans
 		material_override.shader = IVGlobal.shared.points_shader
+	elif _lp_integer >= 4: # trojans
+		_secondary_orbit = _group.secondary_body.orbit
+		material_override.shader = IVGlobal.shared.points_l4_l5_shader
 	else:
-		material_override.shader = IVGlobal.shared.points_lagrangian_shader
+		assert(false)
 
 
 func _ready() -> void:
@@ -72,7 +80,7 @@ func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
 	var arrays := []
 	arrays.resize(ArrayMesh.ARRAY_MAX)
-	if !_group.is_trojans:
+	if _lp_integer == -1: # not trojans
 		arrays[ArrayMesh.ARRAY_VERTEX] = _group.points_vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = _group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_M0_n
@@ -92,6 +100,10 @@ func draw_points() -> void:
 	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
 	material_override.set_shader_param("fragment_range", _world_targeting[7])
+	if _lp_integer >= 4: # trojans
+		material_override.set_shader_param("lp_integer", _lp_integer)
+		var characteristic_length := _secondary_orbit.get_characteristic_length()
+		material_override.set_shader_param("characteristic_length", characteristic_length)
 
 
 func _process(_delta: float) -> void:
@@ -101,19 +113,12 @@ func _process(_delta: float) -> void:
 	material_override.set_shader_param("time", _times[0])
 	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
 	material_override.set_shader_param("mouse_coord", _world_targeting[6])
-	if _group.lagrange_point:
-		
-		# WIP
-		# replace lagrange_a w/ orbit_characteristic_length
-		# replace lagrange_L w/ secondary L +- PI / 3.0
-		
-		
-		
-		var langrange_elements: Array = _group.lagrange_point.dynamic_elements
-		var lagrange_a: float = langrange_elements[0]
-		var lagrange_M: float = langrange_elements[5] + langrange_elements[6] * _times[0]
-		var lagrange_L: float = lagrange_M + langrange_elements[4] + langrange_elements[3] # L = M + w + Om
-		material_override.set_shader_param("lagrange_data", Vector2(lagrange_a, lagrange_L))
+	if _lp_integer == 4:
+		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
+		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
+	elif _lp_integer == 5:
+		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
+		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
 
 
 func _on_visibility_changed() -> void:

@@ -36,7 +36,6 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 var _SmallBodiesGroup_: Script
 var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 var _table_reader: IVTableReader
-var _l_point_builder: IVLagrangePointBuilder
 var _small_bodies_group_indexing: IVSmallBodiesGroupIndexing
 var _asteroid_binaries_dir: String
 var _running_count := 0
@@ -45,7 +44,6 @@ var _running_count := 0
 func _project_init() -> void:
 	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
 	_table_reader = IVGlobal.program.TableReader
-	_l_point_builder = IVGlobal.program.LagrangePointBuilder
 	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 
@@ -71,22 +69,17 @@ func _load_binaries(star: IVBody) -> void:
 		if !trojan_of:
 			_load_group_binaries(star, group_name, row)
 		else: # trojans!
-			for l_point in [4, 5]: # split data table JT i!JT4 & JT5
-				var l_group: String = group_name + str(l_point)
-				_load_group_binaries(star, l_group, row, l_point, trojan_of)
+			for lp_integer in [4, 5]: # split data table JT i!JT4 & JT5
+				var l_group: String = group_name + str(lp_integer)
+				_load_group_binaries(star, l_group, row, lp_integer, trojan_of)
 		row += 1
 
 
-func _load_group_binaries(star: IVBody, group_name: String, table_row: int, l_point := -1,
+func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_integer := -1,
 		trojan_of: IVBody = null) -> void:
-	assert(l_point == -1 or l_point == 4 or l_point == 5)
-	var is_trojans := l_point != -1
-	var lagrange_point: IVLPoint
-	if is_trojans:
-		lagrange_point = _l_point_builder.get_or_make_lagrange_point(trojan_of, l_point)
-		assert(lagrange_point)
+	assert(lp_integer == -1 or lp_integer == 4 or lp_integer == 5)
 	var group: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
-	group.init(star, group_name, lagrange_point)
+	group.init(group_name, star, trojan_of, lp_integer)
 	var mag_cutoff := 100.0
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override

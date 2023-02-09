@@ -45,11 +45,11 @@ const FRAGMENT_ORBIT := IVFragmentIdentifier.FRAGMENT_ORBIT
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"is_trojans",
-	"star",
-	"lagrange_point",
 	"group_name",
 	"group_id",
+	"primary_body",
+	"secondary_body",
+	"lp_integer",
 	"max_apoapsis",
 	"points_vec3ids",
 	"orbits_vec3ids",
@@ -68,11 +68,11 @@ const PERSIST_PROPERTIES := [
 # *****************************************************************************
 # persisted
 
-var is_trojans := false
-var star: IVBody
-var lagrange_point: IVLPoint # null unless is_trojans
 var group_name: String
 var group_id: int
+var primary_body: IVBody
+var secondary_body: IVBody # null unless resonant group
+var lp_integer := -1 # -1, NA; 4 & 5 are currently supported
 
 var max_apoapsis := 0.0
 var points_vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
@@ -114,7 +114,7 @@ func get_number() -> int:
 func get_orbit_elements(index: int) -> Array:
 	# [a, e, i, Om, w, M0, n]
 	# Does not work for Trojans (yet)
-	assert(!is_trojans)
+	assert(lp_integer == -1) # for now
 	var a_e_i_item := a_e_i[index]
 	var Om_w_M0_n_item := Om_w_M0_n[index]
 	return [
@@ -135,13 +135,13 @@ func get_orbits_vec3id(index: int) -> Vector3:
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(star_: IVBody, group_name_: String, lagrange_point_: IVLPoint) -> void:
-	# lagrange_point_ must be null unless this is is a Trojan set!
-	if lagrange_point_:
-		is_trojans = true
-		lagrange_point = lagrange_point_
-	star = star_
+func init(group_name_: String, primary_body_: IVBody, secondary_body_: IVBody = null,
+		lp_integer_ := -1) -> void:
+	# Last 2 args only if these are Lagrange point objects.
 	group_name = group_name_
+	primary_body = primary_body_
+	secondary_body = secondary_body_
+	lp_integer = lp_integer_
 	assert(VPRINT and _verbose_reset_mins_maxes() or true)
 	# self register in SmallBodiesGroupIndexing for persistence
 	var small_bodies_group_indexing: IVSmallBodiesGroupIndexing \
@@ -158,7 +158,7 @@ func read_binary(binary: File) -> void:
 	iau_numbers.append_array(binary_data[1])
 	magnitudes.append_array(binary_data[2])
 	dummy_translations.append_array(binary_data[3])
-	if !is_trojans:
+	if lp_integer == -1:
 		a_e_i.append_array(binary_data[4])
 		Om_w_M0_n.append_array(binary_data[5])
 	else:
@@ -170,7 +170,7 @@ func read_binary(binary: File) -> void:
 
 func finish_binary_import() -> void:
 	# convert binary data to internal units, etc.
-	if !is_trojans:
+	if lp_integer == -1:
 		_fix_binary_keplerian_elements()
 	else:
 		_fix_binary_trojan_elements()
@@ -201,7 +201,7 @@ func expand_arrays(n: int) -> void:
 	iau_numbers.resize(n + iau_numbers.size())
 	magnitudes.resize(n + magnitudes.size())
 	dummy_translations.resize(n + dummy_translations.size())
-	if !is_trojans:
+	if lp_integer == -1:
 		a_e_i.resize(n + a_e_i.size())
 		Om_w_M0_n.resize(n + Om_w_M0_n.size())
 	else:
@@ -233,7 +233,7 @@ func set_trojan_data(name_: String, magnitude: float, keplerian_elements: Array,
 
 func write_binary(binary: File) -> void:
 	var binary_data: Array
-	if !is_trojans:
+	if lp_integer == -1:
 		binary_data = [names, iau_numbers, magnitudes, dummy_translations, a_e_i, Om_w_M0_n]
 	else:
 		binary_data = [names, iau_numbers, magnitudes, dummy_translations, d_e_i, Om_w_D_f, th0]
@@ -258,7 +258,7 @@ func clear_for_import() -> void:
 func _fix_binary_keplerian_elements() -> void:
 	var au := units.AU
 	var year := units.YEAR
-	var mu := star.get_std_gravitational_parameter()
+	var mu := primary_body.get_std_gravitational_parameter()
 	assert(mu)
 	var size := names.size()
 	var index := 0
@@ -295,23 +295,21 @@ func _fix_binary_keplerian_elements() -> void:
 func _fix_binary_trojan_elements() -> void:
 	var au := units.AU
 	var year := units.YEAR
-	var lagrange_a: float = lagrange_point.dynamic_elements[0]
+	var characteristic_length := secondary_body.orbit.get_characteristic_length()
 	var size := names.size()
 	var index := 0
 	while index < size:
 		var d: float = d_e_i[index][0] * au # from au
 		d_e_i[index][0] = d
 		Om_w_D_f[index][3] /= year # f; from rad/year
-		
-		# FIXME: We should be able to derived th0 from initial keplerian elements.
-		# Maybe someone smarter than me can figure out how.
-		# This isn't correct, but my guess is something like...
-		#	var th0 = atan2((a - l_point_a) / d, (M0 - l_point_M0) / D)
+		# Random th0. We can't determine where we are in cycle from proper
+		# elements alone. If we had current a & M (and epoch), we could
+		# probably back-calculate th0. 
 		var th0_ := rand_range(0.0, TAU)
 		th0[index][0] = th0_
 		# apoapsis
 		var e: float = d_e_i[index][1]
-		var apoapsis := (lagrange_a + d) * (1.0 + e) # more or less
+		var apoapsis := characteristic_length / (1.0 - e) + d
 		if max_apoapsis < apoapsis:
 			max_apoapsis = apoapsis
 		assert(VPRINT and _verbose_min_max_tally(d_e_i[index], Om_w_D_f[index], th0[index]) or true)
@@ -352,7 +350,7 @@ func _verbose_print() -> void:
 	var deg := units.DEG
 	var year := units.YEAR
 	print("%s group %s asteroids loaded from binaries (min - max)" % [_load_count, group_name])
-	if !is_trojans:
+	if lp_integer == -1:
 		print(" a  : %s - %s (AU)" % [_mins[0] / au, _maxes[0] / au])
 		print(" e  : %s - %s" % [_mins[1], _maxes[1]])
 		print(" i  : %s - %s (deg)" % [_mins[2] / deg, _maxes[2] / deg])
