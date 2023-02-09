@@ -94,7 +94,6 @@ var rotation_at_epoch := 0.0
 var basis_at_epoch := IDENTITY_BASIS
 var model_reference_basis := IDENTITY_BASIS
 
-var parent: Spatial # another Body or 'Universe'
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
 
@@ -135,7 +134,6 @@ func _enter_tree() -> void:
 
 
 func _on_enter_tree() -> void:
-	parent = get_parent()
 	m_radius = characteristics.m_radius # required
 	orbit = components.get("orbit") # no orbit for the top body (e.g., the Sun)
 	if orbit:
@@ -476,7 +474,7 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 		return INF
 	var a := get_orbit_semi_major_axis()
 	var mass := get_mass()
-	var parent_mass: float = parent.get_mass()
+	var parent_mass: float = get_parent_spatial().get_mass()
 	if !a or !mass or !parent_mass:
 		return 0.0
 	return a * (1.0 - eccentricity) * pow(mass / (3.0 * parent_mass), 0.33333333)
@@ -588,10 +586,10 @@ func _add_rotating_space() -> void:
 	# bail out if we don't have requried parameters
 	if !orbit:
 		return
-	var m2: float = characteristics.get("mass", 0.0)
+	var m2: float = get_mass()
 	if !m2:
 		return
-	var m1: float = parent.characteristics.get("mass", 0.0)
+	var m1: float = get_parent_spatial().get_mass()
 	if !m1:
 		return
 	var mass_ratio: float = m1 / m2
@@ -609,7 +607,7 @@ func _add_rotating_space() -> void:
 	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
 
 
-func _reset_orientation_and_rotation() -> void:
+func reset_orientation_and_rotation() -> void:
 	# Sets 'rotation_rate', 'rotation_vector' and 'rotation_at_epoch' and
 	# (possibly) associated values in 'characteristics'. For planets, these are
 	# fixed values determined by table-loaded 'characteristics.RA', '.dec' and
@@ -661,15 +659,15 @@ func _reset_orientation_and_rotation() -> void:
 	
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
-#	var parent_flags: int = parent.flags
-	if flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET or parent.flags & IS_TRUE_PLANET:
+	if (flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET
+			or get_parent_spatial().flags & IS_TRUE_PLANET):
 		if ECLIPTIC_Z.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
-	elif parent.flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
+	elif get_parent_spatial().flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
 		if new_rotation_rate < 0.0:
 			reverse_polarity = true
 	else: # moons of not-true-planet star-orbiters
-		var parent_positive_pole: Vector3 = parent.get_positive_pole()
+		var parent_positive_pole: Vector3 = get_parent_spatial().get_positive_pole()
 		if parent_positive_pole.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
 	if reverse_polarity:
@@ -687,7 +685,7 @@ func _reset_orientation_and_rotation() -> void:
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
 	if flags & IS_TIDALLY_LOCKED or flags & IS_AXIS_LOCKED:
-		_reset_orientation_and_rotation()
+		reset_orientation_and_rotation()
 	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
 		# scheduled changes happen on client so don't need sync
 		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
@@ -704,7 +702,7 @@ remote func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
 func _on_time_altered(_previous_time: float) -> void:
 	if orbit:
 		orbit.reset_elements_and_interval_update()
-	_reset_orientation_and_rotation()
+	reset_orientation_and_rotation()
 
 
 func _set_min_hud_dist() -> void:

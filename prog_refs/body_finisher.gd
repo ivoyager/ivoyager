@@ -98,6 +98,9 @@ func _on_node_added(node: Node) -> void:
 
 func _build_unpersisted(body: IVBody) -> void: # Main thread
 	# This is after IVBody._enter_tree(), but before IVBody._ready()
+	
+	body.reset_orientation_and_rotation() # here so children can obtain positive pole
+	
 	body.min_click_radius = min_click_radius
 	body.max_hud_dist_orbit_radius_multiplier = max_hud_dist_orbit_radius_multiplier
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
