@@ -105,7 +105,7 @@ var max_hud_dist_orbit_radius_multiplier: float
 var min_hud_dist_radius_multiplier: float
 var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
-var is_asleep := false
+var sleep := false
 
 
 # private
@@ -196,15 +196,10 @@ func _process(delta: float) -> void:
 	_on_process(delta)
 
 
-func _on_process(_delta: float) -> void:
-	# Determine if this body is mouse target.
-	# _world_targeting:
-	#  [0] mouse_position: Vector2
-	#  [1] veiwport_height: float
-	#  [2] camera: Camera
-	#  [3] camera_fov: float
-	#  [4] mouse_target: Object
-	#  [5] mouse_target_dist: float
+func _on_process(_delta: float) -> void: # subclass can override
+	# _process() is disabled while in sleep mode (sleep == true). When in sleep
+	# mode, API assumes that any properties updated here are stale and must be
+	# calculated in-function.
 	
 	# get camera distance and check mouse proximity
 	var camera: Camera = _world_targeting[2]
@@ -264,8 +259,9 @@ func _on_process(_delta: float) -> void:
 	if model_visible != (camera_dist < max_model_dist):
 		model_visible = !model_visible
 		emit_signal("model_visibility_changed", model_visible)
+	
+	show()
 
-	visible = true
 
 
 # public functions
@@ -488,9 +484,6 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 
 # ivoyager mechanics below
 
-
-# WIP
-
 func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
 	# TODO: Keep in ModelManager (should maintain its own lazy init data).
 	model_reference_basis = reference_basis
@@ -527,20 +520,6 @@ func remove_child_from_orbit_space(spatial: Spatial) -> void:
 		orbit_space = null
 
 
-func set_visited() -> void:
-	# Camera calls when about to visit
-	pass
-
-
-func release_visited() -> void:
-	# Camera calls when departing
-	pass
-
-
-# end WIP
-
-
-
 func set_orbit(orbit_: IVOrbit) -> void: # null ok
 	if orbit_:
 		components.orbit = orbit_
@@ -557,20 +536,20 @@ func set_orbit(orbit_: IVOrbit) -> void: # null ok
 		orbit_.connect("changed", self, "_on_orbit_changed")
 
 
-func set_sleep(sleep: bool) -> void: # called by IVSleepManager
-	if flags & NEVER_SLEEP or sleep == is_asleep:
+func set_sleep(sleep_: bool) -> void: # called by IVSleepManager
+	if flags & NEVER_SLEEP or sleep_ == sleep:
 		return
-	if sleep:
-		is_asleep = true
+	if sleep_:
+		sleep = true
+		hide()
 		set_process(false)
-		visible = false
 		if _world_targeting[4] == self: # remove self as mouse target
 			_world_targeting[4] = null
 			_world_targeting[5] = INF
-
 	else:
-		is_asleep = false
-		set_process(true) # will show on next _process()
+		sleep = false
+		_process(0.0) # update translation, etc., now; will show()
+		set_process(true)
 
 
 func get_lagrange_point_local_space(lp_integer: int) -> Vector3:
@@ -631,12 +610,13 @@ func _add_rotating_space() -> void:
 
 
 func _reset_orientation_and_rotation() -> void:
-	# Sets 'rotation_rate', 'rotation_vector' and 'rotation_at_epoch'. For
-	# planets, these are fixed values determined by table-loaded 'RA', 'dec'
-	# and 'period' in characteristics . If we have tidal and/or axis lock, then
-	# IVOrbit determines rotation and/or orientation. If so, we use IVOrbit to
-	# set the three IVBody properties and to back-calclulate 'RA', 'dec' and
-	# 'period' for characteristics.
+	# Sets 'rotation_rate', 'rotation_vector' and 'rotation_at_epoch' and
+	# (possibly) associated values in 'characteristics'. For planets, these are
+	# fixed values determined by table-loaded 'characteristics.RA', '.dec' and
+	# '.period'. If we have tidal and/or axis lock, then IVOrbit determines
+	# rotation and/or orientation. If so, we use IVOrbit to set the three
+	# IVBody properties and to back-calclulate 'characteristics.RA', '.dec' and
+	# '.period'.
 	#
 	# Note: Earth's Moon is the unique case that is tidally locked but has axis
 	# significantly tilted to orbit normal. Axis of other tidally-locked moons
@@ -646,10 +626,7 @@ func _reset_orientation_and_rotation() -> void:
 	#
 	# TODO: We still need rotation precession for Bodies with axial tilt.
 	# TODO: Some special mechanic for tumblers like Hyperion.
-	
-#	if !model_controller or flags & IS_TOP:
-#		return
-	
+
 	# rotation_rate
 	var new_rotation_rate: float
 	if flags & IS_TIDALLY_LOCKED:
