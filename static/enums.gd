@@ -44,7 +44,7 @@ enum ViewType {
 }
 
 enum CameraTrackType {
-	TRACK_NONE,
+	TRACK_ECLIPTIC,
 	TRACK_ORBIT,
 	TRACK_GROUND,
 }

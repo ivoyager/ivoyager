@@ -22,7 +22,7 @@ extends HBoxContainer
 
 # GUI Widget.
 
-const TRACK_NONE = IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ECLIPTIC = IVEnums.CameraTrackType.TRACK_ECLIPTIC
 const TRACK_ORBIT = IVEnums.CameraTrackType.TRACK_ORBIT
 const TRACK_GROUND = IVEnums.CameraTrackType.TRACK_GROUND
 
@@ -70,7 +70,7 @@ func _on_orbit_pressed() -> void:
 	if _orbit_checkbox.pressed:
 		_camera.change_track_type(TRACK_ORBIT)
 	else:
-		_camera.change_track_type(TRACK_NONE)
+		_camera.change_track_type(TRACK_ECLIPTIC)
 
 
 func _on_ground_pressed() -> void:
@@ -79,4 +79,4 @@ func _on_ground_pressed() -> void:
 	if _ground_checkbox.pressed:
 		_camera.change_track_type(TRACK_GROUND)
 	else:
-		_camera.change_track_type(TRACK_NONE)
+		_camera.change_track_type(TRACK_ECLIPTIC)

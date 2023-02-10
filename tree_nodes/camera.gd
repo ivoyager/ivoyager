@@ -20,6 +20,33 @@
 class_name IVCamera
 extends Camera
 
+
+# This camera works with the IVSelection object, which is a wrapper that can
+# hold IVBody or IVLagrangePoint instances (or could be extended to hold
+# anything). It uses IVCameraPath to determine path and interpolate between
+# target objects.
+
+
+# WIP Overhaul:
+# IVCamera can attach itself to any Spatial (called 'target').
+# There are some duck typing options for Target:
+#   get_ground_basis() - enables 'ground tracking'
+#   get_orbit_basis() - enables 'orbit tracking'
+#   (note: we always use target.global_transform to resolve ecliptic)
+#   get_view_position(view_type, track_type)
+#   get_mean_radius()
+#   get_system_radius()
+#   get_min_view_dist()
+
+#   m_radius - for camera dynamic range determination
+#   min_view_dist - otherwise, uses m_radius * FALLBACK_MIN_DIST_RADIUS_MULTIPLIER
+#
+# Overhaul steps:
+# 1. Redo camera controls ->  Camera Locks:  x Up  x Ground  _ Orbit
+# 2. Fix motions/rotations.
+# 3. Add CameraPath object
+
+
 # This camera is always locked to an IVBody and constantly orients itself based
 # on that IVBody's ground or orbit around its parent, depending on 'tracking'
 # selection.
@@ -58,7 +85,7 @@ const VIEW_TOP := IVEnums.ViewType.VIEW_TOP
 const VIEW_OUTWARD := IVEnums.ViewType.VIEW_OUTWARD
 const VIEW_BUMPED := IVEnums.ViewType.VIEW_BUMPED
 const VIEW_BUMPED_ROTATED := IVEnums.ViewType.VIEW_BUMPED_ROTATED
-const TRACK_NONE := IVEnums.CameraTrackType.TRACK_NONE
+const TRACK_ECLIPTIC := IVEnums.CameraTrackType.TRACK_ECLIPTIC
 const TRACK_ORBIT := IVEnums.CameraTrackType.TRACK_ORBIT
 const TRACK_GROUND := IVEnums.CameraTrackType.TRACK_GROUND
 const IDENTITY_BASIS := Basis.IDENTITY
@@ -131,6 +158,7 @@ var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
 # private
+var _camera_pathing: IVCameraPathing = IVGlobal.program.CameraPathing
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -141,12 +169,12 @@ var _use_local_up_dist: float
 var _use_ecliptic_up_dist: float
 var _max_compensated_dist: float
 
-# move/rotate actions - these are accumulators
-var _move_action := VECTOR3_ZERO
-var _rotate_action := VECTOR3_ZERO
+# motions / rotations
+var _motion_accumulator := VECTOR3_ZERO
+var _rotation_accumulator := VECTOR3_ZERO
 
 # body to body transfer
-var _move_progress: float
+var _move_time: float
 var _path_type := PATH_SPHERICAL # TODO: select at move()
 var _to_spatial: Spatial
 var _from_spatial: Spatial
@@ -243,12 +271,12 @@ func _process(delta: float) -> void:
 # public functions
 
 
-func add_move_action(move_action: Vector3) -> void:
-	_move_action += move_action
+func add_motion(motion_amount: Vector3) -> void:
+	_motion_accumulator += motion_amount
 
 
-func add_rotate_action(rotate_action: Vector3) -> void:
-	_rotate_action += rotate_action
+func add_rotation(rotation_amount: Vector3) -> void:
+	_rotation_accumulator += rotation_amount
 
 
 func move_to_view(view: IVView, is_instant_move := false) -> void:
@@ -345,16 +373,16 @@ func move_to_selection(to_selection: IVSelection, to_view_type := -1, to_view_po
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
 	if is_instant_move:
-		_move_progress = _transfer_time # finishes move on next frame
+		_move_time = _transfer_time # finishes move on next frame
 	elif !is_moving:
-		_move_progress = 0.0 # starts move on next frame
+		_move_time = 0.0 # starts move on next frame
 	else:
-		_move_progress = _transfer_time / 2.0 # move was in progress; user is in a hurry!
+		_move_time = _transfer_time / 2.0 # move was in progress; user is in a hurry!
 	_transfer_ref_spatial = _get_transfer_ref_spatial(_from_spatial, _to_spatial)
 	_transfer_ref_basis = _get_transfer_ref_basis(_from_selection, selection)
 	is_moving = true
-	_move_action = VECTOR3_ZERO
-	_rotate_action = VECTOR3_ZERO
+	_motion_accumulator = VECTOR3_ZERO
+	_rotation_accumulator = VECTOR3_ZERO
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
 
@@ -407,21 +435,42 @@ func change_camera_lock(new_lock: bool) -> void:
 # private functions
 
 func _process_move_in_progress(delta: float) -> void:
-	_move_progress += delta
-	if _move_progress >= _transfer_time: # end the move
+	_move_time += delta
+	if _move_time >= _transfer_time: # end the move
 		is_moving = false
 		if parent != _to_spatial:
 			_do_camera_handoff()
 		_process_at_target(delta)
 		return
-	var progress := ease(_move_progress / _transfer_time, -ease_exponent)
+	
+	
+	
+#	var progress := _move_time / _transfer_time
+	
+	var progress := ease(_move_time / _transfer_time, -ease_exponent)
+	
 	# Hand-off at halfway point avoids precision shakes at either end
 	if parent != _to_spatial and progress > 0.5:
 		_do_camera_handoff()
-	if _path_type == PATH_CARTESIAN:
-		_interpolate_cartesian_path(progress)
-	else: # PATH_SPHERICAL
-		_interpolate_spherical_path(progress)
+	
+	
+	# WIP
+	var from_transform := _get_view_transform(_from_selection, _from_view_position,
+			_from_view_rotations, _from_track_type)
+	var to_transform := _get_view_transform(selection, view_position,
+			view_rotations, track_type)
+	_transform = _camera_pathing.interpolate_spherical_path(from_transform, _from_spatial,
+			to_transform, _to_spatial, parent, progress)
+	
+	
+	
+	# DEPRECIATE
+#	if _path_type == PATH_CARTESIAN:
+#		_interpolate_cartesian_path(progress)
+#	else: # PATH_SPHERICAL
+#		_interpolate_spherical_path(progress)
+	
+	
 	var gui_translation := _transform.origin
 	var dist := gui_translation.length()
 	near = dist * NEAR_MULTIPLIER
@@ -442,6 +491,7 @@ func _process_move_in_progress(delta: float) -> void:
 
 
 func _do_camera_handoff() -> void:
+	prints("Camera handoff", tr(parent.name), tr(_to_spatial.name))
 	parent.remove_child(self)
 	_to_spatial.add_child(self)
 	parent = _to_spatial
@@ -501,11 +551,11 @@ func _process_at_target(delta: float) -> void:
 	# maintain present "position" based on track_type
 	_transform = _get_view_transform(selection, view_position, view_rotations, track_type)
 	# process accumulated user inputs
-	if _move_action:
-		_process_move_action(delta)
+	if _motion_accumulator:
+		_process_motion(delta)
 		is_camera_bump = true
-	if _rotate_action:
-		_process_rotate_action(delta)
+	if _rotation_accumulator:
+		_process_rotation(delta)
 		is_camera_bump = true
 	if is_camera_bump and view_type != VIEW_BUMPED_ROTATED:
 		if view_rotations:
@@ -534,26 +584,26 @@ func _process_at_target(delta: float) -> void:
 		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
 
 
-func _process_move_action(delta: float) -> void:
+func _process_motion(delta: float) -> void:
 	var action_proportion := action_immediacy * delta
 	if action_proportion > 1.0:
 		action_proportion = 1.0
-	var move_now := _move_action
+	var move_now := _motion_accumulator
 	if abs(move_now.x) > min_action:
 		move_now.x *= action_proportion
-		_move_action.x -= move_now.x
+		_motion_accumulator.x -= move_now.x
 	else:
-		_move_action.x = 0.0
+		_motion_accumulator.x = 0.0
 	if abs(move_now.y) > min_action:
 		move_now.y *= action_proportion
-		_move_action.y -= move_now.y
+		_motion_accumulator.y -= move_now.y
 	else:
-		_move_action.y = 0.0
+		_motion_accumulator.y = 0.0
 	if abs(move_now.z) > min_action:
 		move_now.z *= action_proportion
-		_move_action.z -= move_now.z
+		_motion_accumulator.z -= move_now.z
 	else:
-		_move_action.z = 0.0
+		_motion_accumulator.z = 0.0
 	# rotate for camera basis
 	var move_vector := _transform.basis.xform(move_now)
 	# get values for adjustments below
@@ -587,26 +637,26 @@ func _process_move_action(delta: float) -> void:
 	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 
 
-func _process_rotate_action(delta: float) -> void:
+func _process_rotation(delta: float) -> void:
 	var action_proportion := action_immediacy * delta
 	if action_proportion > 1.0:
 		action_proportion = 1.0
-	var rotate_now := _rotate_action
+	var rotate_now := _rotation_accumulator
 	if abs(rotate_now.x) > min_action:
 		rotate_now.x *= action_proportion
-		_rotate_action.x -= rotate_now.x
+		_rotation_accumulator.x -= rotate_now.x
 	else:
-		_rotate_action.x = 0.0
+		_rotation_accumulator.x = 0.0
 	if abs(rotate_now.y) > min_action:
 		rotate_now.y *= action_proportion
-		_rotate_action.y -= rotate_now.y
+		_rotation_accumulator.y -= rotate_now.y
 	else:
-		_rotate_action.y = 0.0
+		_rotation_accumulator.y = 0.0
 	if abs(rotate_now.z) > min_action:
 		rotate_now.z *= action_proportion
-		_rotate_action.z -= rotate_now.z
+		_rotation_accumulator.z -= rotate_now.z
 	else:
-		_rotate_action.z = 0.0
+		_rotation_accumulator.z = 0.0
 	var basis := Basis(view_rotations)
 	basis = basis.rotated(basis.x, rotate_now.x)
 	basis = basis.rotated(basis.y, rotate_now.y)
@@ -630,7 +680,7 @@ func _reset_view_position_and_rotations() -> void:
 	var up := _get_up(selection, dist, track_type)
 	var transform_looking_at := _transform.looking_at(-origin, up)
 	var basis_looking_at := transform_looking_at.basis
-	# From _process_rotate_action() we have...
+	# From _process_rotation() we have...
 	# basis_rotated = basis_looking_at * rotations_basis
 	# A = B * C
 	# C = B^-1 * A
@@ -652,7 +702,7 @@ func _get_view_transform(selection_: IVSelection, view_position_: Vector3,
 
 
 func _get_up(selection_: IVSelection, dist: float, track_type_: int) -> Vector3:
-	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_NONE:
+	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_ECLIPTIC:
 		return ECLIPTIC_Z
 	var local_up: Vector3
 	if track_type_ == TRACK_ORBIT:
@@ -673,9 +723,9 @@ func _get_tracking_basis(selection_: IVSelection, dist: float, track_type_: int)
 	if dist > _track_dist:
 		return IDENTITY_BASIS
 	if track_type_ == TRACK_ORBIT:
-		return selection_.get_orbit_ref_basis()
+		return selection_.get_orbit_basis()
 	if track_type_ == TRACK_GROUND:
-		return selection_.get_ground_ref_basis()
+		return selection_.get_ground_basis()
 	return IDENTITY_BASIS
 
 

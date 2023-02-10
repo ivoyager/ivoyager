@@ -105,15 +105,15 @@ func _process(delta: float) -> void:
 		match _drag_mode:
 			DRAG_MOVE:
 				_drag_vector *= delta * _mouse_move_rate
-				_camera.add_move_action(Vector3(-_drag_vector.x, _drag_vector.y, 0.0))
+				_camera.add_motion(Vector3(-_drag_vector.x, _drag_vector.y, 0.0))
 			DRAG_PITCH_YAW:
 				_drag_vector *= delta * _mouse_pitch_yaw_rate
-				_camera.add_rotate_action(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
+				_camera.add_rotation(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
 				var mouse_position: Vector2 = _world_targeting[0]
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				_drag_vector *= delta * _mouse_roll_rate
-				_camera.add_rotate_action(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
+				_camera.add_rotation(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
 			DRAG_PITCH_YAW_ROLL_HYBRID:
 				# one or a mix of two above based on mouse position
 				var mouse_position: Vector2 = _world_targeting[0]
@@ -125,15 +125,15 @@ func _process(delta: float) -> void:
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
-				_camera.add_rotate_action(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
+				_camera.add_rotation(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
 		_drag_vector = VECTOR2_ZERO
 	if _mwheel_turning:
-		_camera.add_move_action(Vector3(0.0, 0.0, _mwheel_turning * delta))
+		_camera.add_motion(Vector3(0.0, 0.0, _mwheel_turning * delta))
 		_mwheel_turning = 0.0
 	if _move_pressed:
-		_camera.add_move_action(_move_pressed * delta)
+		_camera.add_motion(_move_pressed * delta)
 	if _rotate_pressed:
-		_camera.add_rotate_action(_rotate_pressed * delta)
+		_camera.add_rotation(_rotate_pressed * delta)
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:

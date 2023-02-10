@@ -146,16 +146,16 @@ func get_up(time := NAN) -> Vector3:
 	return body.get_north_pole(time)
 
 
-func get_ground_ref_basis(time := NAN) -> Basis:
+func get_ground_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
-	return body.get_ground_ref_basis(time)
+	return body.get_ground_basis(time)
 
 
-func get_orbit_ref_basis(time := NAN) -> Basis:
+func get_orbit_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
-	return body.get_orbit_ref_basis(time)
+	return body.get_orbit_basis(time)
 
 
 func get_radius_for_camera() -> float:

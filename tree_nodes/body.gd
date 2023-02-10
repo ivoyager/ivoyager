@@ -354,7 +354,7 @@ func get_rotation_period() -> float:
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
-	var ground_basis := get_ground_ref_basis(time)
+	var ground_basis := get_ground_basis(time)
 	var spherical := math.get_rotated_spherical3(at_translation, ground_basis)
 	var latitude: float = spherical[1]
 	var longitude: float = wrapf(spherical[0], -PI, PI)
@@ -444,7 +444,7 @@ func get_axial_tilt_to_ecliptic(time := NAN) -> float:
 	return positive_pole.angle_to(ECLIPTIC_Z)
 
 
-func get_ground_ref_basis(time := NAN) -> Basis:
+func get_ground_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
 	if model_space and is_nan(time):
 		return model_space.transform.basis
@@ -455,7 +455,7 @@ func get_ground_ref_basis(time := NAN) -> Basis:
 		return basis_at_epoch.rotated(rotation_vector, rotation_angle)
 
 
-func get_orbit_ref_basis(time := NAN) -> Basis:
+func get_orbit_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to parent body
 	if !orbit:
 		return IDENTITY_BASIS
