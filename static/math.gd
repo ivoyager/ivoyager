@@ -37,6 +37,25 @@ const VECTOR3_ZERO := Vector3.ZERO
 const LOG_OF_10 := log(10.0)
 
 
+
+static func get_rotation_vector(basis: Basis) -> Vector3:
+	# Axis & angle can be obtained by vector.normalized() & vector.length().
+	# Identity basis will result in Vector3.ZERO.
+	var u := Vector3(
+		basis[1][2] - basis[2][1],
+		basis[2][0] - basis[0][2],
+		basis[0][1] - basis[1][0]
+	)
+	var trace := basis[0][0] + basis[1][1] + basis[2][2]
+	if !u:
+		if trace > 2.5: # 0.0 rotation
+			return VECTOR3_ZERO
+		else: # PI rotation
+			return(Vector3(PI, 0.0, 0.0)) # axis is arbitrary
+	var th := acos((trace - 1.0) / 2.0)
+	return u.normalized() * th
+
+
 static func rotate_vector_z(vector: Vector3, new_z: Vector3) -> Vector3:
 	# Uses Rodrigues Rotation Formula to rotate vector to a new basis defined
 	# by new_z; new_z must be a unit vector. Use for N Pole rotations.
