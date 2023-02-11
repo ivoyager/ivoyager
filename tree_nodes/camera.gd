@@ -212,7 +212,7 @@ func _ready() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free",
 			[], CONNECT_ONESHOT)
 	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
-	IVGlobal.connect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.connect("move_camera_requested", self, "move_to")
 	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
@@ -241,13 +241,13 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		assert(selection)
 	_from_selection = selection
 	_min_dist = selection.view_min_distance * 50.0 / fov
-	move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 
 
 func _prepare_to_free() -> void:
 	set_process(false)
 	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
-	IVGlobal.disconnect("move_camera_to_selection_requested", self, "move_to_selection")
+	IVGlobal.disconnect("move_camera_requested", self, "move_to")
 	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
 	selection = null
@@ -287,7 +287,7 @@ func move_to_view(view: IVView, is_instant_move := false) -> void:
 	if view.selection_name:
 		to_selection = _SelectionManager_.get_or_make_selection(view.selection_name)
 		assert(to_selection)
-	move_to_selection(to_selection, view.view_type, view.view_position, view.view_rotations,
+	move_to(to_selection, view.view_type, view.view_position, view.view_rotations,
 			view.track_type, is_instant_move)
 	view.set_huds_visibility()
 
@@ -315,23 +315,30 @@ func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTO
 	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
 	var to_selection: IVSelection = _SelectionManager_.get_or_make_selection(to_body.name)
-	move_to_selection(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
+	move_to(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
 			is_instant_move)
 
 
-func move_to_selection(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
+func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Most view_type values override all or some components of view_position &
+	# Some view_type values override all or some components of view_position &
 	# view_rotations.
-	assert(DPRINT and prints("move_to_selection", to_selection, to_view_type, to_view_position,
+	assert(DPRINT and prints("move_to", to_selection, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
+	# Don't move if *nothing* is changed.
+	if ((!to_selection or to_selection == selection)
+			and (to_view_type == -1 or to_view_type == view_type)
+			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
+			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
+			and (to_track_type == -1 or to_track_type == track_type)):
+		return
 	_from_selection = selection
-	_from_spatial = parent
 	_from_view_type = view_type
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
 	_from_track_type = track_type
+	_from_spatial = parent
 	if to_selection and to_selection.spatial:
 		selection = to_selection
 		_to_spatial = to_selection.spatial
@@ -423,7 +430,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
 	if !suppress_move:
-		move_to_selection(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+		move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
 	emit_signal("focal_length_changed", focal_length)
 
 
