@@ -46,7 +46,7 @@ func interpolate_cartesian_path(from_transform: Transform, from_spatial: Spatial
 	return Transform(basis, translation)
 
 
-func interpolate_spherical_path(from_transform: Transform, from_spatial: Spatial,
+func interpolate_path(from_transform: Transform, from_spatial: Spatial,
 		to_transform: Transform, to_spatial: Spatial, current_spatial: Spatial,
 		progress: float) -> Transform:
 	# Interpolate spherical coordinates around a reference Spatial. Reference

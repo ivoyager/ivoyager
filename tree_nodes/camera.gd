@@ -175,11 +175,15 @@ var _rotation_accumulator := VECTOR3_ZERO
 
 # body to body transfer
 var _move_time: float
+
+
+var _is_interupted_move := false
+var _interupted_transform: Transform
+
+
 var _path_type := PATH_SPHERICAL # TODO: select at move()
 var _to_spatial: Spatial
 var _from_spatial: Spatial
-var _transfer_ref_spatial: Spatial
-var _transfer_ref_basis: Basis
 var _from_selection: IVSelection
 var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
@@ -250,7 +254,6 @@ func _prepare_to_free() -> void:
 	parent = null
 	_to_spatial = null
 	_from_spatial = null
-	_transfer_ref_spatial = null
 
 
 func _process(delta: float) -> void:
@@ -377,9 +380,10 @@ func move_to_selection(to_selection: IVSelection, to_view_type := -1, to_view_po
 	elif !is_moving:
 		_move_time = 0.0 # starts move on next frame
 	else:
-		_move_time = _transfer_time / 2.0 # move was in progress; user is in a hurry!
-	_transfer_ref_spatial = _get_transfer_ref_spatial(_from_spatial, _to_spatial)
-	_transfer_ref_basis = _get_transfer_ref_basis(_from_selection, selection)
+		_is_interupted_move = true
+		_interupted_transform = transform
+		
+		_move_time = 0.0
 	is_moving = true
 	_motion_accumulator = VECTOR3_ZERO
 	_rotation_accumulator = VECTOR3_ZERO
@@ -436,41 +440,30 @@ func change_camera_lock(new_lock: bool) -> void:
 
 func _process_move_in_progress(delta: float) -> void:
 	_move_time += delta
+	if _is_interupted_move:
+		_move_time += delta # double-time; user is in a hurry!
 	if _move_time >= _transfer_time: # end the move
 		is_moving = false
+		_is_interupted_move = false
 		if parent != _to_spatial:
-			_do_camera_handoff()
+			_do_handoff()
 		_process_at_target(delta)
 		return
-	
-	
-	
-#	var progress := _move_time / _transfer_time
 	
 	var progress := ease(_move_time / _transfer_time, -ease_exponent)
 	
 	# Hand-off at halfway point avoids precision shakes at either end
-	if parent != _to_spatial and progress > 0.5:
-		_do_camera_handoff()
+	if progress > 0.5 and parent != _to_spatial:
+		_do_handoff()
 	
-	
-	# WIP
-	var from_transform := _get_view_transform(_from_selection, _from_view_position,
-			_from_view_rotations, _from_track_type)
-	var to_transform := _get_view_transform(selection, view_position,
-			view_rotations, track_type)
-	_transform = _camera_pathing.interpolate_spherical_path(from_transform, _from_spatial,
+	var from_transform := (_interupted_transform if _is_interupted_move
+			 else _get_view_transform(_from_selection, _from_view_position, _from_view_rotations,
+			_from_track_type))
+	var to_transform := _get_view_transform(selection, view_position, view_rotations, track_type)
+	_transform = _camera_pathing.interpolate_path(from_transform, _from_spatial,
 			to_transform, _to_spatial, parent, progress)
 	
-	
-	
-	# DEPRECIATE
-#	if _path_type == PATH_CARTESIAN:
-#		_interpolate_cartesian_path(progress)
-#	else: # PATH_SPHERICAL
-#		_interpolate_spherical_path(progress)
-	
-	
+
 	var gui_translation := _transform.origin
 	var dist := gui_translation.length()
 	near = dist * NEAR_MULTIPLIER
@@ -490,60 +483,13 @@ func _process_move_in_progress(delta: float) -> void:
 	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic, selection)
 
 
-func _do_camera_handoff() -> void:
-	prints("Camera handoff", tr(parent.name), tr(_to_spatial.name))
+func _do_handoff() -> void:
+	assert(DPRINT and prints("Camera handoff", tr(parent.name), tr(_to_spatial.name)) or true)
 	parent.remove_child(self)
 	_to_spatial.add_child(self)
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
 
-
-func _interpolate_cartesian_path(progress: float) -> void:
-	# interpolate global cartesian coordinates
-	var from_transform := _get_view_transform(_from_selection, _from_view_position,
-			_from_view_rotations, _from_track_type)
-	var to_transform := _get_view_transform(selection, view_position,
-			view_rotations, track_type)
-	var from_global_origin := _from_spatial.global_translation
-	var to_global_origin := _to_spatial.global_translation
-	from_transform.origin += from_global_origin
-	to_transform.origin += to_global_origin
-	_transform = from_transform.interpolate_with(to_transform, progress)
-	if parent == _from_spatial:
-		_transform.origin -= from_global_origin
-	else:
-		_transform.origin -= to_global_origin
-
-
-func _interpolate_spherical_path(progress: float) -> void:
-	# interpolate spherical coordinates relative to _transfer_ref_spatial and
-	# _transfer_ref_basis
-	var from_transform := _get_view_transform(_from_selection, _from_view_position,
-			_from_view_rotations, _from_track_type)
-	var to_transform := _get_view_transform(selection, view_position,
-			view_rotations, track_type)
-	var from_global_origin := _from_spatial.global_translation
-	var to_global_origin := _to_spatial.global_translation
-	var ref_origin := _transfer_ref_spatial.global_translation
-	var from_ref_origin := from_transform.origin + from_global_origin - ref_origin
-	var to_ref_origin := to_transform.origin + to_global_origin - ref_origin
-	var from_ref_spherical := math.get_rotated_spherical3(from_ref_origin, _transfer_ref_basis)
-	var to_ref_spherical := math.get_rotated_spherical3(to_ref_origin, _transfer_ref_basis)
-	# interpolate spherical coordinates & convert
-	var longitude_diff: float = to_ref_spherical[0] - from_ref_spherical[0]
-	if longitude_diff > PI:
-		from_ref_spherical[0] += TAU
-	if longitude_diff < -PI:
-		to_ref_spherical[0] += TAU
-	var spherical := from_ref_spherical.linear_interpolate(to_ref_spherical, progress)
-	_transform.origin = math.convert_rotated_spherical3(spherical, _transfer_ref_basis)
-	_transform.origin += ref_origin
-	if parent == _from_spatial:
-		_transform.origin -= from_global_origin
-	else:
-		_transform.origin -= to_global_origin
-	# interpolate basis
-	_transform.basis = from_transform.basis.slerp(to_transform.basis, progress)
 
 
 func _process_at_target(delta: float) -> void:
