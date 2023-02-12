@@ -26,6 +26,9 @@ const TRACK_ECLIPTIC = IVEnums.TrackType.TRACK_ECLIPTIC
 const TRACK_ORBIT = IVEnums.TrackType.TRACK_ORBIT
 const TRACK_GROUND = IVEnums.TrackType.TRACK_GROUND
 
+
+var hide_highest_track := true # deselect 'Ground' & 'Orbit' to get 'Ecliptic'
+
 var _camera: Camera
 
 onready var _orbit_checkbox: CheckBox = $Orbit
@@ -37,10 +40,6 @@ func _ready():
 	_connect_camera(get_viewport().get_camera())
 	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
 	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")
-
-
-func remove_track_label() -> void:
-	$TrackLabel.queue_free()
 
 
 func _connect_camera(camera: Camera) -> void:

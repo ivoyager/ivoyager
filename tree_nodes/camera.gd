@@ -75,6 +75,10 @@ signal up_lock_changed(is_locked)
 const math := preload("res://ivoyager/static/math.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
+const Flags := IVEnums.CameraFlags
+const DisabledFlags := IVEnums.CameraDisabledFlags
+
+# DEPRECIATE
 const VIEW_ZOOM := IVEnums.ViewType.VIEW_ZOOM
 const VIEW_45 := IVEnums.ViewType.VIEW_45
 const VIEW_TOP := IVEnums.ViewType.VIEW_TOP
@@ -91,7 +95,6 @@ const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
 const ECLIPTIC_Y := IDENTITY_BASIS.y
 const ECLIPTIC_Z := IDENTITY_BASIS.z # ecliptic north
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
-const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
@@ -110,9 +113,13 @@ const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
 	"name",
 	"is_camera_lock",
+	
+	"flags",
+	
 	"view_type",
 	"track_type",
 	"up_lock_type",
+	
 	"selection",
 	"view_position",
 	"view_rotations",
@@ -126,6 +133,9 @@ const PERSIST_PROPERTIES := [
 
 # public - read only except project init
 var is_camera_lock := true
+
+var flags: int = Flags.UP_LOCKED | Flags.VIEW_ZOOM | Flags.TRACK_ORBIT
+
 var view_type := VIEW_ZOOM
 var track_type := TRACK_ORBIT
 var up_lock_type := UP_LOCKED

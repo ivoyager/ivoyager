@@ -30,11 +30,18 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
+
+const CameraFlags := IVEnums.CameraFlags
+
+# DEPRECIATE
 const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
 const VIEW_45 = IVEnums.ViewType.VIEW_45
 const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
 const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
 const UP_LOCKED := IVEnums.UpLockType.UP_LOCKED
+
+
+
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
