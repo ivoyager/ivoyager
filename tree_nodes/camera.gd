@@ -67,16 +67,23 @@ signal range_changed(camera_range)
 signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
-signal view_type_changed(view_type)
-signal tracking_changed(track_type, is_ecliptic)
-signal up_lock_changed(is_locked)
+signal up_lock_changed(flags, disabled_flags)
+signal view_type_changed(flags, disabled_flags)
+signal tracking_changed(flags, disabled_flags)
 
 
 const math := preload("res://ivoyager/static/math.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
 const Flags := IVEnums.CameraFlags
+const ANY_UP_FLAGS := Flags.ANY_UP_FLAGS
+const ANY_TRACK_FLAGS := Flags.ANY_TRACK_FLAGS
+const ANY_VIEW_FLAGS := Flags.ANY_VIEW_FLAGS
 const DisabledFlags := IVEnums.CameraDisabledFlags
+
+
+
+const ViewType := IVEnums.ViewType
 
 # DEPRECIATE
 const VIEW_ZOOM := IVEnums.ViewType.VIEW_ZOOM
@@ -96,7 +103,6 @@ const ECLIPTIC_Y := IDENTITY_BASIS.y
 const ECLIPTIC_Z := IDENTITY_BASIS.z # ecliptic north
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 const VECTOR3_ZERO := Vector3.ZERO
-const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
@@ -112,33 +118,21 @@ const FAR_MULTIPLIER := 1e9 # see Note below
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
 	"name",
-	"is_camera_lock",
-	
 	"flags",
-	
-	"view_type",
-	"track_type",
-	"up_lock_type",
-	
+	"is_camera_lock",
 	"selection",
 	"view_position",
 	"view_rotations",
 	"focal_length",
 	"focal_length_index",
 	"_transform",
-	"_view_type_memory",
 ]
 
 # ******************************* PERSISTED ***********************************
 
 # public - read only except project init
-var is_camera_lock := true
-
 var flags: int = Flags.UP_LOCKED | Flags.VIEW_ZOOM | Flags.TRACK_ORBIT
-
-var view_type := VIEW_ZOOM
-var track_type := TRACK_ORBIT
-var up_lock_type := UP_LOCKED
+var is_camera_lock := true
 
 # public - read only! (use move methods to set; these are "to" during transfer)
 var selection: IVSelection
@@ -149,7 +143,6 @@ var focal_length_index: int # use init_focal_length_index below
 
 # private
 var _transform := Transform(Basis(), Vector3.ONE) # working value
-var _view_type_memory := view_type
 
 # *****************************************************************************
 
@@ -168,6 +161,7 @@ var size_ratio_exponent := 0.95 # 0.0, none; 1.0 moves to same visual size
 # public read-only
 var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
+var disabled_flags := 0 # IVEnums.CameraDisabledFlags
 
 # private
 var _times: Array = IVGlobal.times
@@ -193,11 +187,16 @@ var _interupted_transform: Transform
 var _to_spatial: Spatial
 var _from_spatial: Spatial
 var _from_selection: IVSelection
+
+var _from_flags := flags
+# DEPRECIATE
 var _from_view_type := VIEW_ZOOM
-var _from_view_position := Vector3.ONE # any non-zero dist ok
-var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
 var _from_up_lock_type := UP_LOCKED
+
+var _from_view_position := Vector3.ONE # any non-zero dist ok
+var _from_view_rotations := VECTOR3_ZERO
+
 var _is_ecliptic := false
 var _last_dist := 0.0
 var _lat_long := Vector2(-INF, -INF)
@@ -264,59 +263,95 @@ func add_rotation(rotation_amount: Vector3) -> void: # rotate in-place
 	_rotation_accumulator += rotation_amount
 
 
-func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, to_track_type := -1, to_up_lock_type := -1,
-		is_instant_move := false) -> void:
+func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTOR3_ZERO,
+		to_view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Some view_type values override other args.
-	assert(DPRINT and prints("move_to", to_selection, to_view_type, to_view_position,
-			to_view_rotations, to_track_type, up_lock_type, is_instant_move) or true)
-	# Don't move if *nothing* has changed and is_instant_move == false.
+	# Some parameters override others (see code at '# overrides').
+	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
+			to_view_rotations, is_instant_move) or true)
+
+	# overrides
+	if to_flags & ANY_VIEW_FLAGS:
+		to_flags |= Flags.UP_LOCKED # for all current views; this could change
+		to_flags &= ~Flags.UP_UNLOCKED
+		to_view_position = VECTOR3_ZERO
+		to_view_rotations = NULL_ROTATION
+	if to_flags & Flags.UP_LOCKED:
+		if to_view_rotations != NULL_ROTATION:
+			to_view_rotations.z = 0.0 # cancel roll, if any
+	if to_view_rotations != NULL_ROTATION and to_view_rotations.z: # roll unlocks 'up'
+		to_flags |= Flags.UP_UNLOCKED
+	
+	var to_up_flags := to_flags & ANY_UP_FLAGS
+	var to_track_flags := to_flags & ANY_TRACK_FLAGS
+	var to_view_flags := to_flags & ANY_VIEW_FLAGS
+	
+	assert(to_up_flags & (to_up_flags - 1) == 0, "only 1 or 0 bits allowed")
+	assert(to_track_flags & (to_track_flags - 1) == 0, "only 1 or 0 bits allowed")
+	assert(to_view_flags & (to_view_flags - 1) == 0, "only 1 or 0 bits allowed")
+
+	# don't move if *nothing* has changed and is_instant_move == false
 	if (
 			!is_instant_move
 			and (!to_selection or to_selection == selection)
-			and (to_view_type == -1 or to_view_type == view_type)
+			and (!to_up_flags or to_up_flags == flags & ANY_UP_FLAGS)
+			and (!to_track_flags or to_track_flags == flags & ANY_TRACK_FLAGS)
+			and (!to_view_flags or to_view_flags == flags & ANY_VIEW_FLAGS)
 			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
 			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
-			and (to_track_type == -1 or to_track_type == track_type)
-			and (to_up_lock_type == -1 or to_up_lock_type == up_lock_type)
 	):
 		return
+	
+	# remember where we came from
 	_from_selection = selection
-	_from_view_type = view_type
+	_from_flags = flags
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
-	_from_track_type = track_type
-	_from_up_lock_type = up_lock_type
 	_from_spatial = parent
+	
+	# change booleans
+	var is_up_change: bool = ((to_up_flags and to_up_flags != flags & ANY_UP_FLAGS)
+			or (to_view_rotations != NULL_ROTATION and to_view_rotations.z and flags & Flags.UP_LOCKED))
+	var is_track_change := to_track_flags and to_track_flags != flags & ANY_TRACK_FLAGS
+	var is_view_change: bool = ((to_view_flags and to_view_flags != flags & ANY_VIEW_FLAGS)
+			or (to_view_position != VECTOR3_ZERO and flags & ANY_VIEW_FLAGS)
+			or (to_view_rotations != NULL_ROTATION and flags & ANY_VIEW_FLAGS))
+	
+	prints(to_view_flags, to_view_position, to_view_rotations)
+	prints(is_up_change, is_track_change, is_view_change)
+	
+	
+	# set selection and flags
 	if to_selection and to_selection.spatial:
 		selection = to_selection
 		_to_spatial = to_selection.spatial
 		_min_dist = selection.view_min_distance * 50.0 / fov
-	if to_track_type != -1 and track_type != to_track_type:
-		track_type = to_track_type
-		emit_signal("tracking_changed", to_track_type, _is_ecliptic)
+	if is_up_change:
+		flags &= ~ANY_UP_FLAGS
+		flags |= to_up_flags
+	if is_track_change:
+		flags &= ~ANY_TRACK_FLAGS
+		flags |= to_track_flags
+	if is_view_change:
+		flags &= ~ANY_VIEW_FLAGS
+		flags |= to_view_flags
+	if to_view_position != VECTOR3_ZERO:
+		flags &= ~ANY_VIEW_FLAGS
+	if to_view_rotations != NULL_ROTATION:
+		flags &= ~ANY_VIEW_FLAGS
+		if to_view_rotations.z:
+			flags &= ~Flags.UP_LOCKED
+			flags |= Flags.UP_UNLOCKED
 	
-	if to_up_lock_type != -1 and up_lock_type != to_up_lock_type:
-		up_lock_type = to_up_lock_type
-		emit_signal("up_lock_changed", to_up_lock_type)
-	
-	if to_view_type != -1 and view_type != to_view_type:
-		view_type = to_view_type
-		if track_type == TRACK_GROUND:
-			view_position = selection.track_ground_positions[view_type]
-		elif track_type == TRACK_ORBIT:
-			view_position = selection.track_orbit_positions[view_type]
-		else:
-			view_position = selection.track_ecliptic_positions[view_type]
+	# set position & rotaion
+	if flags & ANY_VIEW_FLAGS:
+		view_position = selection.get_position_for_view_and_tracking(flags)
 		view_position[2] /= fov
-		if view_type == VIEW_OUTWARD:
-			view_rotations = OUTWARD_VIEW_ROTATION
+		if flags & Flags.VIEW_OUTWARD:
+			view_rotations = Vector3(0.0, PI, 0.0)
 		else:
 			view_rotations = VECTOR3_ZERO
-		emit_signal("view_type_changed", view_type)
-		
-	if view_type == -1:
+	else:
 		if to_view_position != VECTOR3_ZERO:
 			view_position = to_view_position
 		elif _from_selection != selection and view_position[2] < _max_compensated_dist:
@@ -326,10 +361,13 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 			var to_radius := selection.get_radius_for_camera()
 			var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
 			view_position[2] *= adj_ratio
-		
+	if flags & Flags.UP_LOCKED:
+		view_rotations.z = 0.0 # roll
 	var min_dist := selection.view_min_distance * sqrt(50.0 / fov)
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
+	
+	# initiate move
 	if is_instant_move:
 		_move_time = _transfer_time # finishes move on next frame
 	elif !is_moving:
@@ -337,24 +375,33 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 	else:
 		_is_interupted_move = true
 		_interupted_transform = transform
-		
 		_move_time = 0.0
 	is_moving = true
+	
+	# TODO?: Allow accumulators during move?
 	_motion_accumulator = VECTOR3_ZERO
 	_rotation_accumulator = VECTOR3_ZERO
+	
+	# signals
+	if is_up_change:
+		emit_signal("up_lock_changed", flags, disabled_flags)
+	if is_track_change:
+		emit_signal("tracking_changed", flags, disabled_flags)
+	if is_view_change:
+		emit_signal("view_type_changed", flags, disabled_flags)
 	emit_signal("move_started", _to_spatial, is_camera_lock)
-#	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
 
 
-func change_track_type(new_track_type: int) -> void:
-	# changes tracking without a "move"
-	if new_track_type == track_type:
+func set_up_lock(is_locked: bool) -> void:
+	# Invokes a move to set, but not to unset.
+	if is_locked == bool(flags & Flags.UP_LOCKED):
 		return
-	track_type = new_track_type
-	view_type = -1
-	_reset_view_position_and_rotations()
-	emit_signal("tracking_changed", track_type, _is_ecliptic)
-	emit_signal("view_type_changed", view_type)
+	if is_locked:
+		move_to(null, Flags.UP_LOCKED)
+	else:
+		flags &= ~Flags.UP_LOCKED
+		flags |= Flags.UP_UNLOCKED
+		emit_signal("up_lock_changed", flags, disabled_flags)
 
 
 func increment_focal_length(increment: int) -> void:
@@ -378,7 +425,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
 	if !suppress_move:
-		move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, -1, true)
+		move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
 
 
@@ -386,9 +433,6 @@ func change_camera_lock(new_lock: bool) -> void:
 	if is_camera_lock != new_lock:
 		is_camera_lock = new_lock
 		emit_signal("camera_lock_changed", new_lock)
-		if new_lock:
-			if view_type > VIEW_OUTWARD:
-				view_type = _view_type_memory
 
 
 # private functions
@@ -403,7 +447,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		assert(selection)
 	_from_selection = selection
 	_min_dist = selection.view_min_distance * 50.0 / fov
-	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, -1, true)
+	move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
 
 
 func _prepare_to_free() -> void:
@@ -438,9 +482,9 @@ func _process_move_in_progress(delta: float) -> void:
 		_do_handoff()
 	
 	var from_transform := (_interupted_transform if _is_interupted_move
-			 else _get_view_transform(_from_selection, _from_view_position, _from_view_rotations,
-			_from_track_type))
-	var to_transform := _get_view_transform(selection, view_position, view_rotations, track_type)
+			 else _get_view_transform(_from_selection, _from_flags, _from_view_position,
+			_from_view_rotations))
+	var to_transform := _get_view_transform(selection, flags, view_position, view_rotations)
 
 	_interpolate_path(from_transform, to_transform, progress)
 	
@@ -453,9 +497,9 @@ func _process_move_in_progress(delta: float) -> void:
 		dist = gui_translation.length()
 	emit_signal("range_changed", dist)
 	var is_ecliptic := dist > _track_dist
+	
 	if _is_ecliptic != is_ecliptic:
 		_is_ecliptic = is_ecliptic
-		emit_signal("tracking_changed", track_type, is_ecliptic)
 	if is_ecliptic:
 		_lat_long = math.get_latitude_longitude(global_translation)
 	else:
@@ -511,8 +555,8 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 
 func _process_at_target(delta: float) -> void:
 	var is_camera_bump := false
-	# maintain present "position" based on track_type
-	_transform = _get_view_transform(selection, view_position, view_rotations, track_type)
+	# maintain present position based on tracking
+	_transform = _get_view_transform(selection, flags, view_position, view_rotations)
 	# process accumulated user inputs
 	if _motion_accumulator:
 		_process_motion(delta)
@@ -520,9 +564,13 @@ func _process_at_target(delta: float) -> void:
 	if _rotation_accumulator:
 		_process_rotation(delta)
 		is_camera_bump = true
-	if is_camera_bump and view_type != -1:
-		view_type = -1
-		emit_signal("view_type_changed", view_type)
+	if is_camera_bump and flags & ANY_VIEW_FLAGS:
+		flags &= ~ANY_VIEW_FLAGS
+		emit_signal("view_type_changed", flags, disabled_flags)
+	if view_rotations.z and flags & Flags.UP_LOCKED: # allow this to happen?
+		flags &= ~Flags.UP_LOCKED
+		flags |= Flags.UP_UNLOCKED
+		emit_signal("up_lock_changed", flags, disabled_flags)
 	var dist := view_position[2]
 	if dist != _last_dist:
 		_last_dist = dist
@@ -532,7 +580,6 @@ func _process_at_target(delta: float) -> void:
 	var is_ecliptic := dist > _track_dist
 	if _is_ecliptic != is_ecliptic:
 		_is_ecliptic = is_ecliptic
-		emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_translation)
@@ -568,7 +615,7 @@ func _process_motion(delta: float) -> void:
 	# get values for adjustments below
 	var origin := _transform.origin
 	var dist: float = view_position[2]
-	var up := _get_up(selection, dist, track_type)
+	var up := _get_up(selection, flags)
 	var radial_movement := move_vector.dot(origin)
 	var normalized_origin := origin.normalized()
 	var longitude_vector := normalized_origin.cross(up).normalized()
@@ -592,7 +639,7 @@ func _process_motion(delta: float) -> void:
 	_transform = _transform.looking_at(-origin, up)
 	_transform.basis *= Basis(view_rotations)
 	# reset view_position
-	var tracking_basis := _get_tracking_basis(selection, new_dist, track_type)
+	var tracking_basis := _get_tracking_basis(selection, flags)
 	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 
 
@@ -621,8 +668,7 @@ func _process_rotation(delta: float) -> void:
 	basis = basis.rotated(basis.y, rotate_now.y)
 	basis = basis.rotated(basis.z, rotate_now.z)
 	view_rotations = basis.get_euler()
-	var dist := view_position[2]
-	var up := _get_up(selection, dist, track_type)
+	var up := _get_up(selection, flags)
 	_transform = _transform.looking_at(-_transform.origin, up)
 	_transform.basis *= Basis(view_rotations)
 
@@ -630,13 +676,12 @@ func _process_rotation(delta: float) -> void:
 func _reset_view_position_and_rotations() -> void:
 	# update for current _transform, selection & track_type
 	var origin := _transform.origin
-	var dist := origin.length()
 	# position
-	var tracking_basis := _get_tracking_basis(selection, dist, track_type)
+	var tracking_basis := _get_tracking_basis(selection, flags)
 	view_position = math.get_rotated_spherical3(origin, tracking_basis)
 	# rotations
 	var basis_rotated := _transform.basis
-	var up := _get_up(selection, dist, track_type)
+	var up := _get_up(selection, flags)
 	var transform_looking_at := _transform.looking_at(-origin, up)
 	var basis_looking_at := transform_looking_at.basis
 	# From _process_rotation() we have...
@@ -647,11 +692,10 @@ func _reset_view_position_and_rotations() -> void:
 	view_rotations = rotations_basis.get_euler()
 
 
-func _get_view_transform(selection_: IVSelection, view_position_: Vector3,
-		view_rotations_: Vector3, track_type_: int) -> Transform:
-	var dist := view_position_[2]
-	var up := _get_up(selection_, dist, track_type_)
-	var tracking_basis := _get_tracking_basis(selection_, dist, track_type_)
+func _get_view_transform(selection_: IVSelection, flags_: int, view_position_: Vector3,
+		view_rotations_: Vector3) -> Transform:
+	var up := _get_up(selection_, flags_)
+	var tracking_basis := _get_tracking_basis(selection_, flags_)
 	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
 	assert(view_translation)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
@@ -660,32 +704,18 @@ func _get_view_transform(selection_: IVSelection, view_position_: Vector3,
 	return view_transform
 
 
-func _get_up(selection_: IVSelection, dist: float, track_type_: int) -> Vector3:
-	if dist >= _use_ecliptic_up_dist or track_type_ == TRACK_ECLIPTIC:
-		return ECLIPTIC_Z
-	var local_up: Vector3
-	if track_type_ == TRACK_ORBIT:
-		local_up = selection_.get_orbit_normal(NAN, true)
-	else:
-		local_up = selection_.get_up()
-	if dist <= _use_local_up_dist:
-		return local_up
-	# interpolate along a log scale
-	var proportion := log(dist / _use_local_up_dist) / log(
-			_use_ecliptic_up_dist / _use_local_up_dist)
-	proportion = ease(proportion, -ease_exponent)
-	var diff_vector := local_up - ECLIPTIC_Z
-	return (local_up - diff_vector * proportion).normalized()
+static func _get_up(selection_: IVSelection, flags_: int) -> Vector3:
+	# WIP - If up unlocked, use self z
+	
+	return _get_tracking_basis(selection_, flags_).z
 
 
-func _get_tracking_basis(selection_: IVSelection, dist: float, track_type_: int) -> Basis:
-	if dist > _track_dist:
-		return IDENTITY_BASIS
-	if track_type_ == TRACK_ORBIT:
-		return selection_.get_orbit_basis()
-	if track_type_ == TRACK_GROUND:
+static func _get_tracking_basis(selection_: IVSelection, flags_: int) -> Basis:
+	if flags_ & Flags.TRACK_GROUND:
 		return selection_.get_ground_basis()
-	return IDENTITY_BASIS
+	if flags_ & Flags.TRACK_ORBIT:
+		return selection_.get_orbit_basis()
+	return selection_.get_ecliptic_basis() # identity basis for any IVBody
 
 
 func _send_gui_refresh() -> void:
@@ -693,10 +723,10 @@ func _send_gui_refresh() -> void:
 	emit_signal("parent_changed", parent)
 	emit_signal("range_changed", translation.length())
 	emit_signal("focal_length_changed", focal_length)
-#	emit_signal("camera_lock_changed", is_camera_lock) # triggers camera move
-	emit_signal("view_type_changed", view_type)
+	emit_signal("up_lock_changed", flags, disabled_flags)
+	emit_signal("tracking_changed", flags, disabled_flags)
+	emit_signal("view_type_changed", flags, disabled_flags)
 	var is_ecliptic := translation.length() > _track_dist
-	emit_signal("tracking_changed", track_type, is_ecliptic)
 	var lat_long: Vector2
 	if is_ecliptic:
 		lat_long = math.get_latitude_longitude(global_translation)

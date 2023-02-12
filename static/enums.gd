@@ -60,9 +60,9 @@ enum CameraFlags {
 	# bits 32-63 should be safe to use for any extension project
 	
 	# combo masks
-	ANY_UP_SETTING = 1 << 0 | 1 << 1,
-	ANY_TRACK_SETTING = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
-	ANY_VIEW_SETTING = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
+	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
+	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
+	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
 }
 
 enum CameraDisabledFlags {

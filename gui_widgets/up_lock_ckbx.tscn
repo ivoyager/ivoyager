@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/up_lock_ckbx.gd" type="Script" id=1]
+
+[node name="UpLockCkbx" type="CheckBox"]
+margin_right = 24.0
+margin_bottom = 24.0
+text = "BUTTON_UP"
+script = ExtResource( 1 )
