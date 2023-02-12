@@ -39,6 +39,19 @@ static func free_procedural_nodes(node: Node) -> void:
 				free_procedural_nodes(child)
 
 
+static func get_ancestor_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
+	# Returns parent spatial or common spatial ancestor. Assumes no non-Spatial
+	# nodes in the ancestor tree.
+	while spatial1:
+		var loop_spatial2 := spatial2
+		while loop_spatial2:
+			if spatial1 == loop_spatial2:
+				return loop_spatial2
+			loop_spatial2 = loop_spatial2.get_parent_spatial()
+		spatial1 = spatial1.get_parent_spatial()
+	return null
+
+
 static func get_deep(target, path: String): # untyped return
 	# searches property/element path starting from target
 	if !path:

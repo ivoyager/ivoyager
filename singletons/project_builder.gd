@@ -137,7 +137,6 @@ var prog_refs := {
 	_BodyFinisher_ = IVBodyFinisher,
 	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
 	_QuantityFormatter_ = IVQuantityFormatter,
-	_CameraPathing_ = IVCameraPathing,
 }
 
 var prog_nodes := {

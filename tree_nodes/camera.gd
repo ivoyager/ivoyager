@@ -71,7 +71,8 @@ signal view_type_changed(view_type)
 signal tracking_changed(track_type, is_ecliptic)
 
 
-const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
+const math := preload("res://ivoyager/static/math.gd")
+const utils := preload("res://ivoyager/static/utils.gd")
 
 const VIEW_ZOOM := IVEnums.ViewType.VIEW_ZOOM
 const VIEW_45 := IVEnums.ViewType.VIEW_45
@@ -99,6 +100,8 @@ const FAR_MULTIPLIER := 1e9 # see Note below
 # Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
 # It used to be that ~10 orders of magnitude was allowed between near and far,
 # but perhaps that is now only 7.
+# As of Godot 3.5.2.rc2, we can bump up FAR_MULTIPLIER without losing near
+# items, but it doesn't seem to extend our far vision.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
@@ -152,7 +155,6 @@ var parent: Spatial # actual Spatial parent at this time
 var is_moving := false # body to body move in progress
 
 # private
-var _camera_pathing: IVCameraPathing = IVGlobal.program.CameraPathing
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -253,12 +255,15 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 	# view_rotations.
 	assert(DPRINT and prints("move_to", to_selection, to_view_type, to_view_position,
 			to_view_rotations, to_track_type, is_instant_move) or true)
-	# Don't move if *nothing* is changed.
-	if ((!to_selection or to_selection == selection)
+	# Don't move if *nothing* has changed and is_instant_move == false.
+	if (
+			!is_instant_move
+			and (!to_selection or to_selection == selection)
 			and (to_view_type == -1 or to_view_type == view_type)
 			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
 			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
-			and (to_track_type == -1 or to_track_type == track_type)):
+			and (to_track_type == -1 or to_track_type == track_type)
+	):
 		return
 	_from_selection = selection
 	_from_view_type = view_type
@@ -386,6 +391,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 
 
 func _prepare_to_free() -> void:
+	# Some deconstruction needed to prevent old object signalling errors.
 	set_process(false)
 	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.disconnect("move_camera_requested", self, "move_to")
@@ -419,10 +425,9 @@ func _process_move_in_progress(delta: float) -> void:
 			 else _get_view_transform(_from_selection, _from_view_position, _from_view_rotations,
 			_from_track_type))
 	var to_transform := _get_view_transform(selection, view_position, view_rotations, track_type)
-	_transform = _camera_pathing.interpolate_path(from_transform, _from_spatial,
-			to_transform, _to_spatial, parent, progress)
-	
 
+	_interpolate_path(from_transform, to_transform, progress)
+	
 	var gui_translation := _transform.origin
 	var dist := gui_translation.length()
 	near = dist * NEAR_MULTIPLIER
@@ -448,6 +453,44 @@ func _do_handoff() -> void:
 	_to_spatial.add_child(self)
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
+
+
+func _interpolate_path(from_transform: Transform, to_transform: Transform, progress: float) -> void:
+	# Interpolate spherical coordinates around a reference Spatial. Reference
+	# is either the parent (if 'from' or 'to' is child of the other) or common
+	# ancestor. This is likely the dominant view object during transition, so
+	# we want to minimize orientation change relative to it.
+
+	var ref_spatial := utils.get_ancestor_spatial(_from_spatial, _to_spatial)
+	
+	# translation
+	var ref_global_translation := ref_spatial.global_translation
+	var from_global_translation := _from_spatial.global_translation + from_transform.origin
+	var to_global_translation := _to_spatial.global_translation + to_transform.origin
+	var from_ref_translation := from_global_translation - ref_global_translation
+	var to_ref_translation := to_global_translation - ref_global_translation
+	
+	# Godot 3.5.2 BUG? angle_to() seems to break with large vectors. Needs testing.
+	var from_direction := from_ref_translation.normalized()
+	var to_direction := to_ref_translation.normalized()
+	var rotation_axis := from_direction.cross(to_direction).normalized()
+	if !rotation_axis: # edge case
+		rotation_axis = Vector3(0.0, 0.0, 1.0)
+	var path_angle := from_direction.angle_to(to_direction) # < PI
+	var ref_translation := from_direction.rotated(rotation_axis, path_angle * progress)
+	ref_translation *= lerp(from_ref_translation.length(), to_ref_translation.length(), progress)
+	var translation_ := ref_translation + ref_global_translation - parent.global_translation
+
+	# Quat.slerp() for basis change
+	var from_global_basis := _from_spatial.global_transform.basis * from_transform.basis
+	var to_global_basis := _to_spatial.global_transform.basis * to_transform.basis
+	var from_global_quat := Quat(from_global_basis)
+	var to_global_quat := Quat(to_global_basis)
+	var global_quat := from_global_quat.slerp(to_global_quat, progress)
+	var global_basis := Basis(global_quat)
+	var basis := parent.global_transform.basis.inverse() * global_basis
+	
+	_transform = Transform(basis, translation_)
 
 
 func _process_at_target(delta: float) -> void:
