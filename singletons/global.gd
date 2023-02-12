@@ -75,10 +75,9 @@ signal load_requested(path, is_quick_load) # ["", false] will trigger dialog
 signal save_quit_requested()
 
 # requests for camera action
-signal move_camera_requested(selection, view_type, view_position,
-		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
-signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
-		track_type, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_requested(selection, view_type, view_position, view_rotations, track_type,
+		is_instant_move) # 1st arg can be null; all others optional or accept null-type
+
 
 # requests for GUI
 signal open_main_menu_requested()

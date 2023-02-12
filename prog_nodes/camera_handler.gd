@@ -98,6 +98,10 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
+	
+	
+	
+	
 
 
 func _process(delta: float) -> void:
@@ -248,14 +252,14 @@ func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_m
 	# We only handle IVBody as target object for now. This could change.
 	if !_camera:
 		return
-	var body := target as IVBody
-	if !body:
+	var selection := _selection_manager.get_or_make_selection(target.name)
+	if !selection:
 		return
 	if _camera.is_camera_lock: # move via selection
-		_selection_manager.select_body(body)
+		_selection_manager.select(selection)
 	else: # move camera directly
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_body(body, -1, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(selection, -1, Vector3.ZERO, Vector3.ZERO, -1)
 
 
 func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:

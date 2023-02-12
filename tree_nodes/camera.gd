@@ -61,21 +61,15 @@ extends Camera
 # depending on track_type. The second is rotation relative to looking at
 # target body w/ north up.
 
-signal move_started(to_body, is_camera_lock)
-signal parent_changed(new_body)
-signal range_changed(new_range)
+signal move_started(to_spatial, is_camera_lock) # to_spatial not parent yet
+signal parent_changed(spatial)
+signal range_changed(camera_range)
 signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
 signal tracking_changed(track_type, is_ecliptic)
 
-# TODO: Select path_type at move(). PATH_SPHERICAL is usually best. But in some
-# circumstances, PATH_CARTESION looks better.
-enum {
-	PATH_CARTESIAN,
-	PATH_SPHERICAL,
-}
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -100,7 +94,7 @@ const OUTWARD_VIEW_ROTATION := Vector3(0.0, PI, 0.0)
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
-const FAR_MULTIPLIER := 1e6 # see Note below
+const FAR_MULTIPLIER := 1e9 # see Note below
 
 # Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
 # It used to be that ~10 orders of magnitude was allowed between near and far,
@@ -151,7 +145,7 @@ var use_ecliptic_up: float = 5e10 * IVUnits.KM # must be > use_local_up
 var max_compensated_dist: float = 5e7 * IVUnits.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
-var size_ratio_exponent := 0.8 # 1.0 is full size compensation
+var size_ratio_exponent := 0.95 # 0.0, none; 1.0 moves to same visual size
 
 # public read-only
 var parent: Spatial # actual Spatial parent at this time
@@ -173,15 +167,12 @@ var _max_compensated_dist: float
 var _motion_accumulator := VECTOR3_ZERO
 var _rotation_accumulator := VECTOR3_ZERO
 
-# body to body transfer
+# move_to
 var _move_time: float
-
-
 var _is_interupted_move := false
 var _interupted_transform: Transform
 
 
-var _path_type := PATH_SPHERICAL # TODO: select at move()
 var _to_spatial: Spatial
 var _from_spatial: Spatial
 var _from_selection: IVSelection
@@ -195,8 +186,7 @@ var _lat_long := Vector2(-INF, -INF)
 
 var _universe: Spatial = IVGlobal.program.Universe
 
-var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
-var _View_: Script = IVGlobal.script_classes._View_
+
 
 # settings
 onready var _transfer_time: float = _settings.camera_transfer_time
@@ -213,7 +203,6 @@ func _ready() -> void:
 			[], CONNECT_ONESHOT)
 	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.connect("move_camera_requested", self, "move_to")
-	IVGlobal.connect("move_camera_to_body_requested", self, "move_to_body")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
 	var dist := _transform.origin.length()
@@ -232,32 +221,8 @@ func _ready() -> void:
 	IVGlobal.verbose_signal("camera_ready", self)
 
 
-func _on_system_tree_ready(_is_new_game: bool) -> void:
-	parent = get_parent()
-	_to_spatial = parent
-	_from_spatial = parent
-	if !selection:
-		selection = _SelectionManager_.get_or_make_selection(parent.name)
-		assert(selection)
-	_from_selection = selection
-	_min_dist = selection.view_min_distance * 50.0 / fov
-	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
-
-
-func _prepare_to_free() -> void:
-	set_process(false)
-	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
-	IVGlobal.disconnect("move_camera_requested", self, "move_to")
-	IVGlobal.disconnect("move_camera_to_body_requested", self, "move_to_body")
-	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
-	selection = null
-	parent = null
-	_to_spatial = null
-	_from_spatial = null
-
-
 func _process(delta: float) -> void:
-	# We process our working _transform, then update transform
+	# We process our working '_transform', then update here.
 	if is_moving:
 		_process_move_in_progress(delta)
 	else:
@@ -273,50 +238,12 @@ func _process(delta: float) -> void:
 
 # public functions
 
-
-func add_motion(motion_amount: Vector3) -> void:
+func add_motion(motion_amount: Vector3) -> void: # rotate around or move in/out from target
 	_motion_accumulator += motion_amount
 
 
-func add_rotation(rotation_amount: Vector3) -> void:
+func add_rotation(rotation_amount: Vector3) -> void: # rotate in-place
 	_rotation_accumulator += rotation_amount
-
-
-func move_to_view(view: IVView, is_instant_move := false) -> void:
-	var to_selection: IVSelection
-	if view.selection_name:
-		to_selection = _SelectionManager_.get_or_make_selection(view.selection_name)
-		assert(to_selection)
-	move_to(to_selection, view.view_type, view.view_position, view.view_rotations,
-			view.track_type, is_instant_move)
-	view.set_huds_visibility()
-
-
-func create_view(use_current_selection := true, has_hud_states := true) -> IVView:
-	# IVView object is useful for cache or save persistence
-	var view: IVView = _View_.new()
-	if use_current_selection:
-		view.selection_name = selection.name
-	view.track_type = track_type
-	view.view_type = view_type
-	match view_type:
-		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
-			view.view_position = view_position
-			continue
-		VIEW_BUMPED_ROTATED:
-			view.view_rotations = view_rotations
-	if has_hud_states:
-		view.remember_huds_visibility()
-	return view
-
-
-func move_to_body(to_body: IVBody, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
-	assert(DPRINT and prints("move_to_body", to_body, to_view_type, to_view_position,
-			to_view_rotations, to_track_type, is_instant_move) or true)
-	var to_selection: IVSelection = _SelectionManager_.get_or_make_selection(to_body.name)
-	move_to(to_selection, to_view_type, to_view_position, to_view_rotations, to_track_type,
-			is_instant_move)
 
 
 func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
@@ -445,6 +372,31 @@ func change_camera_lock(new_lock: bool) -> void:
 
 # private functions
 
+func _on_system_tree_ready(_is_new_game: bool) -> void:
+	parent = get_parent()
+	_to_spatial = parent
+	_from_spatial = parent
+	if !selection: # new game
+		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		selection = _SelectionManager_.get_or_make_selection(parent.name)
+		assert(selection)
+	_from_selection = selection
+	_min_dist = selection.view_min_distance * 50.0 / fov
+	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+
+
+func _prepare_to_free() -> void:
+	set_process(false)
+	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
+	IVGlobal.disconnect("move_camera_requested", self, "move_to")
+	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
+	selection = null
+	parent = null
+	_to_spatial = null
+	_from_spatial = null
+	_from_selection = null
+
+
 func _process_move_in_progress(delta: float) -> void:
 	_move_time += delta
 	if _is_interupted_move:
@@ -496,7 +448,6 @@ func _do_handoff() -> void:
 	_to_spatial.add_child(self)
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
-
 
 
 func _process_at_target(delta: float) -> void:
@@ -682,31 +633,9 @@ func _get_tracking_basis(selection_: IVSelection, dist: float, track_type_: int)
 	return IDENTITY_BASIS
 
 
-func _get_transfer_ref_basis(s1: IVSelection, s2: IVSelection) -> Basis:
-	var normal1 := s1.get_orbit_normal(NAN, true)
-	var normal2 := s2.get_orbit_normal(NAN, true)
-	var z_axis := (normal1 + normal2).normalized()
-	var y_axis := z_axis.cross(ECLIPTIC_X).normalized() # norm needed - imprecision?
-	var x_axis := y_axis.cross(z_axis)
-	return Basis(x_axis, y_axis, z_axis)
-
-
-func _get_transfer_ref_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
-	assert(spatial1 and spatial2)
-	while spatial1:
-		var test_spatial = spatial2
-		while test_spatial:
-			if spatial1 == test_spatial:
-				return spatial1
-			test_spatial = test_spatial.get_parent_spatial()
-		spatial1 = spatial1.get_parent_spatial()
-	assert(false)
-	return null
-
-
 func _send_gui_refresh() -> void:
-	if parent:
-		emit_signal("parent_changed", parent)
+	assert(parent)
+	emit_signal("parent_changed", parent)
 	emit_signal("range_changed", translation.length())
 	emit_signal("focal_length_changed", focal_length)
 #	emit_signal("camera_lock_changed", is_camera_lock) # triggers camera move
