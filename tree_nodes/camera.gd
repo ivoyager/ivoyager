@@ -69,6 +69,7 @@ signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal view_type_changed(view_type)
 signal tracking_changed(track_type, is_ecliptic)
+signal up_lock_changed(is_locked)
 
 
 const math := preload("res://ivoyager/static/math.gd")
@@ -78,11 +79,13 @@ const VIEW_ZOOM := IVEnums.ViewType.VIEW_ZOOM
 const VIEW_45 := IVEnums.ViewType.VIEW_45
 const VIEW_TOP := IVEnums.ViewType.VIEW_TOP
 const VIEW_OUTWARD := IVEnums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED := IVEnums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED := IVEnums.ViewType.VIEW_BUMPED_ROTATED
-const TRACK_ECLIPTIC := IVEnums.CameraTrackType.TRACK_ECLIPTIC
-const TRACK_ORBIT := IVEnums.CameraTrackType.TRACK_ORBIT
-const TRACK_GROUND := IVEnums.CameraTrackType.TRACK_GROUND
+const TRACK_ECLIPTIC := IVEnums.TrackType.TRACK_ECLIPTIC
+const TRACK_ORBIT := IVEnums.TrackType.TRACK_ORBIT
+const TRACK_GROUND := IVEnums.TrackType.TRACK_GROUND
+const UP_LOCKED := IVEnums.UpLockType.UP_LOCKED
+const UP_UNLOCKED := IVEnums.UpLockType.UP_UNLOCKED
+
+
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
 const ECLIPTIC_Y := IDENTITY_BASIS.y
@@ -109,6 +112,7 @@ const PERSIST_PROPERTIES := [
 	"is_camera_lock",
 	"view_type",
 	"track_type",
+	"up_lock_type",
 	"selection",
 	"view_position",
 	"view_rotations",
@@ -123,7 +127,8 @@ const PERSIST_PROPERTIES := [
 # public - read only except project init
 var is_camera_lock := true
 var view_type := VIEW_ZOOM
-var track_type := TRACK_GROUND
+var track_type := TRACK_ORBIT
+var up_lock_type := UP_LOCKED
 
 # public - read only! (use move methods to set; these are "to" during transfer)
 var selection: IVSelection
@@ -182,6 +187,7 @@ var _from_view_type := VIEW_ZOOM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 var _from_track_type := TRACK_GROUND
+var _from_up_lock_type := UP_LOCKED
 var _is_ecliptic := false
 var _last_dist := 0.0
 var _lat_long := Vector2(-INF, -INF)
@@ -249,12 +255,12 @@ func add_rotation(rotation_amount: Vector3) -> void: # rotate in-place
 
 
 func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, to_track_type := -1, is_instant_move := false) -> void:
+		to_view_rotations := NULL_ROTATION, to_track_type := -1, to_up_lock_type := -1,
+		is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Some view_type values override all or some components of view_position &
-	# view_rotations.
+	# Some view_type values override other args.
 	assert(DPRINT and prints("move_to", to_selection, to_view_type, to_view_position,
-			to_view_rotations, to_track_type, is_instant_move) or true)
+			to_view_rotations, to_track_type, up_lock_type, is_instant_move) or true)
 	# Don't move if *nothing* has changed and is_instant_move == false.
 	if (
 			!is_instant_move
@@ -263,6 +269,7 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
 			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
 			and (to_track_type == -1 or to_track_type == track_type)
+			and (to_up_lock_type == -1 or to_up_lock_type == up_lock_type)
 	):
 		return
 	_from_selection = selection
@@ -270,6 +277,7 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
 	_from_track_type = track_type
+	_from_up_lock_type = up_lock_type
 	_from_spatial = parent
 	if to_selection and to_selection.spatial:
 		selection = to_selection
@@ -278,39 +286,37 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 	if to_track_type != -1 and track_type != to_track_type:
 		track_type = to_track_type
 		emit_signal("tracking_changed", to_track_type, _is_ecliptic)
-	if to_view_type != -1:
+	
+	if to_up_lock_type != -1 and up_lock_type != to_up_lock_type:
+		up_lock_type = to_up_lock_type
+		emit_signal("up_lock_changed", to_up_lock_type)
+	
+	if to_view_type != -1 and view_type != to_view_type:
 		view_type = to_view_type
-	match view_type:
-		VIEW_ZOOM, VIEW_45, VIEW_TOP, VIEW_OUTWARD:
-			if track_type == TRACK_GROUND:
-				view_position = selection.track_ground_positions[view_type]
-			elif track_type == TRACK_ORBIT:
-				view_position = selection.track_orbit_positions[view_type]
-			else:
-				view_position = selection.track_ecliptic_positions[view_type]
-			view_position[2] /= fov
-			if view_type == VIEW_OUTWARD:
-				view_rotations = OUTWARD_VIEW_ROTATION
-			else:
-				view_rotations = VECTOR3_ZERO
-		VIEW_BUMPED, VIEW_BUMPED_ROTATED:
-			if to_view_position != VECTOR3_ZERO:
-				view_position = to_view_position
-			elif _from_selection != selection \
-					and view_position[2] < _max_compensated_dist:
-				# partial distance compensation
-				var from_radius := _from_selection.get_radius_for_camera()
-				var to_radius := selection.get_radius_for_camera()
-				var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
-				view_position[2] *= adj_ratio
-			continue
-		VIEW_BUMPED:
+		if track_type == TRACK_GROUND:
+			view_position = selection.track_ground_positions[view_type]
+		elif track_type == TRACK_ORBIT:
+			view_position = selection.track_orbit_positions[view_type]
+		else:
+			view_position = selection.track_ecliptic_positions[view_type]
+		view_position[2] /= fov
+		if view_type == VIEW_OUTWARD:
+			view_rotations = OUTWARD_VIEW_ROTATION
+		else:
 			view_rotations = VECTOR3_ZERO
-		VIEW_BUMPED_ROTATED:
-			if to_view_rotations != NULL_ROTATION:
-				view_rotations = to_view_rotations
-		_:
-			assert(false, "Unknown view_type %s" % view_type)
+		emit_signal("view_type_changed", view_type)
+		
+	if view_type == -1:
+		if to_view_position != VECTOR3_ZERO:
+			view_position = to_view_position
+		elif _from_selection != selection and view_position[2] < _max_compensated_dist:
+			# Keep our current view_position, but compensate distance component
+			# for size of target.
+			var from_radius := _from_selection.get_radius_for_camera()
+			var to_radius := selection.get_radius_for_camera()
+			var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
+			view_position[2] *= adj_ratio
+		
 	var min_dist := selection.view_min_distance * sqrt(50.0 / fov)
 	if view_position[2] < min_dist:
 		view_position[2] = min_dist
@@ -327,7 +333,7 @@ func move_to(to_selection: IVSelection, to_view_type := -1, to_view_position := 
 	_motion_accumulator = VECTOR3_ZERO
 	_rotation_accumulator = VECTOR3_ZERO
 	emit_signal("move_started", _to_spatial, is_camera_lock)
-	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
+#	emit_signal("view_type_changed", view_type) # FIXME: signal if it really happened
 
 
 func change_track_type(new_track_type: int) -> void:
@@ -335,7 +341,7 @@ func change_track_type(new_track_type: int) -> void:
 	if new_track_type == track_type:
 		return
 	track_type = new_track_type
-	view_type = VIEW_BUMPED_ROTATED
+	view_type = -1
 	_reset_view_position_and_rotations()
 	emit_signal("tracking_changed", track_type, _is_ecliptic)
 	emit_signal("view_type_changed", view_type)
@@ -362,7 +368,7 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
 	if !suppress_move:
-		move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+		move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, -1, true)
 	emit_signal("focal_length_changed", focal_length)
 
 
@@ -387,7 +393,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		assert(selection)
 	_from_selection = selection
 	_min_dist = selection.view_min_distance * 50.0 / fov
-	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, true)
+	move_to(null, -1, VECTOR3_ZERO, NULL_ROTATION, -1, -1, true)
 
 
 func _prepare_to_free() -> void:
@@ -504,13 +510,9 @@ func _process_at_target(delta: float) -> void:
 	if _rotation_accumulator:
 		_process_rotation(delta)
 		is_camera_bump = true
-	if is_camera_bump and view_type != VIEW_BUMPED_ROTATED:
-		if view_rotations:
-			view_type = VIEW_BUMPED_ROTATED
-			emit_signal("view_type_changed", view_type)
-		elif view_type != VIEW_BUMPED:
-			view_type = VIEW_BUMPED
-			emit_signal("view_type_changed", view_type)
+	if is_camera_bump and view_type != -1:
+		view_type = -1
+		emit_signal("view_type_changed", view_type)
 	var dist := view_position[2]
 	if dist != _last_dist:
 		_last_dist = dist

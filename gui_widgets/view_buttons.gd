@@ -24,6 +24,7 @@ extends HBoxContainer
 # VIEW_TYPE_ enums.
 
 const ViewType := IVEnums.ViewType
+const UP_LOCKED := IVEnums.UpLockType.UP_LOCKED
 
 var enable_outward := false # under dev for astronomy; it's pretty crappy now
 var use_small_txt := false
@@ -82,7 +83,7 @@ func _on_zoom_pressed() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move_to(null, ViewType.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, ViewType.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 	else:
 		_zoom_button.pressed = true
 
@@ -91,7 +92,7 @@ func _on_45_pressed() -> void:
 	if !_camera:
 		return
 	if _45_button.pressed:
-		_camera.move_to(null, ViewType.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, ViewType.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 	else:
 		_45_button.pressed = true
 
@@ -100,7 +101,7 @@ func _on_top_pressed() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move_to(null, ViewType.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, ViewType.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 	else:
 		_top_button.pressed = true
 
@@ -109,6 +110,6 @@ func _on_outward_pressed() -> void:
 	if !_camera:
 		return
 	if _outward_button.pressed:
-		_camera.move_to(null, ViewType.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, ViewType.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 	else:
 		_outward_button.pressed = true

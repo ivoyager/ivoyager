@@ -38,23 +38,18 @@ enum ViewType {
 	VIEW_ZOOM,
 	VIEW_45,
 	VIEW_TOP,
-	VIEW_OUTWARD,
-	VIEW_BUMPED, # unspecified view_position
-	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
+	VIEW_OUTWARD, # disabled now; needs some GUI to use reasonably
 }
 
-enum CameraTrackType {
+enum TrackType {
 	TRACK_ECLIPTIC,
 	TRACK_ORBIT,
 	TRACK_GROUND,
 }
 
-enum LagrangePoints {
-	L1,
-	L2,
-	L3,
-	L4,
-	L5,
+enum UpLockType {
+	UP_LOCKED,
+	UP_UNLOCKED,
 }
 
 enum LazyType { # WIP - for rebuild of body/model lazy init system

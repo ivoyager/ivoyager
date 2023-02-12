@@ -76,7 +76,7 @@ signal save_quit_requested()
 
 # requests for camera action
 signal move_camera_requested(selection, view_type, view_position, view_rotations, track_type,
-		is_instant_move) # 1st arg can be null; all others optional or accept null-type
+		up_lock_type, is_instant_move) # 1st arg can be null; all others optional
 
 
 # requests for GUI

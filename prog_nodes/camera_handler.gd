@@ -34,8 +34,7 @@ const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
 const VIEW_45 = IVEnums.ViewType.VIEW_45
 const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
 const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
+const UP_LOCKED := IVEnums.UpLockType.UP_LOCKED
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
@@ -145,13 +144,13 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		return
 	if event.is_pressed():
 		if event.is_action_pressed("camera_zoom_view"):
-			_camera.move_to(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 		elif event.is_action_pressed("camera_45_view"):
-			_camera.move_to(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 		elif event.is_action_pressed("camera_top_view"):
-			_camera.move_to(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 		elif event.is_action_pressed("recenter"):
-			_camera.move_to(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, -1, Vector3.ZERO, Vector3.ZERO, -1, UP_LOCKED)
 		elif event.is_action_pressed("camera_left"):
 			_move_pressed.x = -_key_move_rate
 		elif event.is_action_pressed("camera_right"):
@@ -232,20 +231,17 @@ func _disconnect_camera() -> void:
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO,
-				Vector3.ZERO, -1)
+		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO, Vector3.ZERO)
 
 func _on_selection_reselected() -> void:
 	if _camera and _camera.is_camera_lock:
 		# Cancel rotations, but keep relative position.
-		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO,
-				Vector3.ZERO, -1)
+		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO, Vector3.ZERO)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock:
-		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO,
-				NULL_ROTATION, -1)
+		_camera.move_to(_selection_manager.selection, -1, Vector3.ZERO, NULL_ROTATION)
 
 
 func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
@@ -259,7 +255,7 @@ func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_m
 		_selection_manager.select(selection)
 	else: # move camera directly
 		# Cancel rotations, but keep relative position.
-		_camera.move_to(selection, -1, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(selection, -1, Vector3.ZERO, Vector3.ZERO)
 
 
 func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:

@@ -1,4 +1,4 @@
-# track_orbit_ground_ckbxs.gd
+# track_ckbxs.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVTrackOrbitGroundCkbxs
+class_name IVTrackCkbxs
 extends HBoxContainer
 
 # GUI Widget.

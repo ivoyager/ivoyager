@@ -35,6 +35,7 @@ const PERSIST_PROPERTIES := [
 	"view_position",
 	"view_rotations",
 	"track_type",
+	"up_lock_type",
 	"has_huds_state",
 	"orbit_visible_flags",
 	"name_visible_flags",
@@ -49,7 +50,8 @@ var selection_name := ""
 var view_type := -1 # IVEnums.ViewType (may or may not specify var values below)
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
-var track_type := -1 # IVEnums.CameraTrackType
+var track_type := -1 # IVEnums.TrackType
+var up_lock_type := -1 # IVEnums.UpLockType
 var has_huds_state := false
 var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
@@ -65,6 +67,7 @@ func remember_camera_state(camera: IVCamera) -> void:
 	view_position = camera.view_position
 	view_rotations = camera.view_rotations
 	track_type = camera.track_type
+	up_lock_type = camera.up_lock_type
 
 
 func remember_huds_visibility() -> void:
@@ -83,7 +86,8 @@ func set_camera_state(camera: IVCamera, is_instant_move := true) -> void:
 	var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
 	var selection: IVSelection = _SelectionManager_.get_or_make_selection(selection_name)
 	assert(selection)
-	camera.move_to(selection, view_type, view_position, view_rotations, track_type, is_instant_move)
+	camera.move_to(selection, view_type, view_position, view_rotations, track_type, up_lock_type,
+			is_instant_move)
 
 
 func set_huds_visibility() -> void:
