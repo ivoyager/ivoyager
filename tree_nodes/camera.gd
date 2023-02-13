@@ -634,6 +634,9 @@ func _process_motion(delta: float) -> void:
 func _process_rotation(delta: float) -> void:
 	# Note: Although we follow z-up astronomy convention elsewhere, the camera
 	# uses y-up, z-forward, x-lateral.
+	var is_up_locked := bool(flags & Flags.UP_LOCKED)
+	
+	# take rotation from accumulator
 	var action_proportion := action_immediacy * delta
 	if action_proportion > 1.0:
 		action_proportion = 1.0
@@ -648,30 +651,36 @@ func _process_rotation(delta: float) -> void:
 		_rotation_accumulator.y -= rotate_now.y
 	else:
 		_rotation_accumulator.y = 0.0
-	if abs(rotate_now.z) > min_action:
-		rotate_now.z *= action_proportion
-		_rotation_accumulator.z -= rotate_now.z
-	else:
-		_rotation_accumulator.z = 0.0
-
-	var is_up_locked := bool(flags & Flags.UP_LOCKED)
-	if is_up_locked: # apply a pole limiter
-		var x_rotation = view_rotations.x + rotate_now.x
-		if x_rotation > POLE_LIMITER:
-			rotate_now.x = POLE_LIMITER - view_rotations.x
-		elif x_rotation < -POLE_LIMITER:
-			rotate_now.x = -POLE_LIMITER - view_rotations.x
-	
-	var basis := Basis(view_rotations)
-	basis = basis.rotated(basis.x, rotate_now.x) # pitch
-	basis = basis.rotated(basis.y, rotate_now.y) # yaw
-	if !is_up_locked:
-		basis = basis.rotated(basis.z, rotate_now.z) # roll
-	view_rotations = basis.get_euler()
 	if is_up_locked:
+		_rotation_accumulator.z = 0.0 # discard
+	else:
+		if abs(rotate_now.z) > min_action:
+			rotate_now.z *= action_proportion
+			_rotation_accumulator.z -= rotate_now.z
+		else:
+			_rotation_accumulator.z = 0.0
+	
+	# apply rotation to a view basis, then to _transform
+	var view_basis := Basis(view_rotations) # from Euler angles
+	if is_up_locked: # use a pole limiter for pitch, don't roll
+		var pitch = view_rotations.x + rotate_now.x
+		if pitch > POLE_LIMITER:
+			rotate_now.x = POLE_LIMITER - view_rotations.x
+		elif pitch < -POLE_LIMITER:
+			rotate_now.x = -POLE_LIMITER - view_rotations.x
+		view_basis = view_basis.rotated(view_basis.y, rotate_now.y) # yaw
+		view_basis = view_basis.rotated(view_basis.x, rotate_now.x) # pitch
+		view_rotations = view_basis.get_euler()
+		# remove small residual z rotation (precision error?)
+		view_basis = view_basis.rotated(view_basis.z, -view_rotations.z)
 		view_rotations.z = 0.0
+	else:
+		view_basis = view_basis.rotated(view_basis.y, rotate_now.y) # yaw
+		view_basis = view_basis.rotated(view_basis.x, rotate_now.x) # pitch
+		view_basis = view_basis.rotated(view_basis.z, rotate_now.z) # roll
+		view_rotations = view_basis.get_euler()
 	_transform = _transform.looking_at(-_transform.origin, _reference_basis.z)
-	_transform.basis *= Basis(view_rotations)
+	_transform.basis *= view_basis
 
 
 static func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
