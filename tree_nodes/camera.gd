@@ -135,9 +135,10 @@ var _transform := Transform(Basis(), Vector3.ONE) # working value
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var track_dist: float = 4e7 * IVUnits.KM # km after dividing by fov
-var use_local_up: float = 5e7 * IVUnits.KM # must be > track_dist
-var use_ecliptic_up: float = 5e10 * IVUnits.KM # must be > use_local_up
+var gui_ecliptic_coordinates_dist := 1e6 * IVUnits.KM
+
+
+
 var max_compensated_dist: float = 5e7 * IVUnits.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
@@ -149,14 +150,13 @@ var is_moving := false # body to body move in progress
 var disabled_flags := 0 # IVEnums.CameraDisabledFlags
 
 # private
+var _universe: Spatial = IVGlobal.program.Universe
 var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
-var _min_dist := 0.1 # changed on move for parent body
-var _track_dist: float
-var _use_local_up_dist: float
-var _use_ecliptic_up_dist: float
+var _min_dist := IVUnits.METER # changes on move for parent body size
+
 var _max_compensated_dist: float
 
 # motions / rotations
@@ -167,26 +167,18 @@ var _rotation_accumulator := VECTOR3_ZERO
 var _move_time: float
 var _is_interupted_move := false
 var _interupted_transform: Transform
-
 var _reference_basis: Basis
-
 var _to_spatial: Spatial
 var _trasfer_spatial: Spatial
-
 var _from_spatial: Spatial
 var _from_selection: IVSelection
-
 var _from_flags := flags
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 
-var _is_ecliptic := false
-var _last_dist := 0.0
-var _lat_long := Vector2(-INF, -INF)
-
-var _universe: Spatial = IVGlobal.program.Universe
-
-
+# gui signalling
+var _gui_range := NAN
+var _gui_latitude_longitude := Vector2(NAN, NAN)
 
 # settings
 onready var _transfer_time: float = _settings.camera_transfer_time
@@ -195,7 +187,6 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 # virtual functions
 
 func _ready() -> void:
-	assert(track_dist < use_local_up and use_local_up < use_ecliptic_up)
 	name = "Camera"
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready",
 			[], CONNECT_ONESHOT)
@@ -205,16 +196,9 @@ func _ready() -> void:
 	IVGlobal.connect("move_camera_requested", self, "move_to")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	transform = _transform
-	var dist := _transform.origin.length()
-	near = dist * NEAR_MULTIPLIER
-	far = dist * FAR_MULTIPLIER
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_track_dist = track_dist / fov
-	_is_ecliptic = dist > _track_dist
-	_use_local_up_dist = use_local_up / fov
-	_use_ecliptic_up_dist = use_ecliptic_up / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
@@ -229,12 +213,22 @@ func _process(delta: float) -> void:
 	else:
 		_process_motions_and_rotations(delta)
 	if UNIVERSE_SHIFTING:
-		# Camera parent will be at global translation (0,0,0) after this step.
+		# Camera will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
-		# of parent.global_translation, so we are removing old shift at
-		# the same time we add our new shift.
-		_universe.translation -= parent.global_translation
+		# of global_translation, so we are removing old shift at the same time
+		# we add our new shift.
+		_universe.translation -= global_translation
 	transform = _transform
+	_signal_range_latitude_longitude()
+	
+	# We set our visual range based on current parent range. Note that setting
+	# far too high breaks near, making small objects invisible. Unfortunately,
+	# limiting far causes distant objects (e.g., orbit lines) to disappear when
+	# zoomed in to small objects. The allowed orders of magnitude between near
+	# and far has changed over Godot development, so experimentation is good.
+	var dist := translation.length()
+	near = dist * NEAR_MULTIPLIER
+	far = dist * FAR_MULTIPLIER
 
 
 # public functions
@@ -336,13 +330,20 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	else:
 		if to_view_position != VECTOR3_ZERO:
 			view_position = to_view_position
-		elif _from_selection != selection and view_position[2] < _max_compensated_dist:
+		elif _from_selection != selection:
 			# Keep our current view_position, but compensate distance component
 			# for size of target.
+			var from_dist := view_position[2]
 			var from_radius := _from_selection.get_radius_for_camera()
 			var to_radius := selection.get_radius_for_camera()
-			var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
-			view_position[2] *= adj_ratio
+			
+			view_position[2] = utils.get_visual_radius_compensated_dist(from_dist, from_radius,
+					to_radius)
+			
+#			var from_radius := _from_selection.get_radius_for_camera()
+#			var to_radius := selection.get_radius_for_camera()
+#			var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
+#			view_position[2] *= adj_ratio
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # roll
 	var min_dist := selection.view_min_distance * sqrt(50.0 / fov)
@@ -400,9 +401,6 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_use_local_up_dist = use_local_up / fov
-	_use_ecliptic_up_dist = use_ecliptic_up / fov
-	_track_dist = track_dist / fov
 	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
@@ -433,7 +431,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 
 
 func _prepare_to_free() -> void:
-	# Some deconstruction needed to prevent old object signalling errors.
+	# Some deconstruction needed to prevent freeing object signalling errors.
 	set_process(false)
 	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.disconnect("move_camera_requested", self, "move_to")
@@ -477,23 +475,23 @@ func _process_move_to(delta: float) -> void:
 
 	_interpolate_path(from_transform, to_transform, progress)
 	
-	var gui_translation := _transform.origin
-	var dist := gui_translation.length()
-	near = dist * NEAR_MULTIPLIER
-	far = dist * FAR_MULTIPLIER
-	if parent != _to_spatial: # GUI is already showing _to_spatial
-		gui_translation = global_translation - _to_spatial.global_translation
-		dist = gui_translation.length()
-	emit_signal("range_changed", dist)
-	var is_ecliptic := dist > _track_dist
-	
-	if _is_ecliptic != is_ecliptic:
-		_is_ecliptic = is_ecliptic
-	if is_ecliptic:
-		_lat_long = math.get_latitude_longitude(global_translation)
-	else:
-		_lat_long = selection.get_latitude_longitude(gui_translation)
-	emit_signal("latitude_longitude_changed", _lat_long, is_ecliptic, selection)
+#	var gui_translation := _transform.origin
+#	var dist := gui_translation.length()
+#	near = dist * NEAR_MULTIPLIER
+#	far = dist * FAR_MULTIPLIER
+#	if parent != _to_spatial: # GUI is already showing _to_spatial
+#		gui_translation = global_translation - _to_spatial.global_translation
+#		dist = gui_translation.length()
+#	emit_signal("range_changed", dist)
+#	var is_ecliptic := dist > gui_ecliptic_coordinates_dist
+#	if is_ecliptic:
+#		_gui_latitude_longitude = math.get_latitude_longitude(global_translation)
+#	else:
+#		_gui_latitude_longitude = selection.get_latitude_longitude(gui_translation)
+#	emit_signal("latitude_longitude_changed", _gui_latitude_longitude, is_ecliptic, selection)
+
+
+
 
 
 func _do_handoff() -> void:
@@ -506,17 +504,21 @@ func _do_handoff() -> void:
 
 func _interpolate_path(from_transform: Transform, to_transform: Transform, progress: float) -> void:
 	# Interpolate spherical coordinates around a reference Spatial. Reference
-	# is either the parent (if 'from' or 'to' is child of the other) or common
-	# ancestor. This is likely the dominant view object during transition, so
-	# we want to minimize orientation change relative to it.
-
+	# 'xfer' is either the parent (if 'from' or 'to' is child of the other) or
+	# common ancestor. This is likely the dominant view object during
+	# transition, so we want to minimize orientation change relative to it.
+	# This also avoids going through a planet when moving among its moons.
+	#
+	# TODO: It's a little jarring when the shortest spherical path is way off
+	# the ecliptic plane (or 'xfer' equitorial). Wih some work we could
+	# suppress that.
+	
 	# translation
 	var xfer_global_translation := _trasfer_spatial.global_translation
 	var from_global_translation := _from_spatial.global_translation + from_transform.origin
 	var to_global_translation := _to_spatial.global_translation + to_transform.origin
 	var from_xfer_translation := from_global_translation - xfer_global_translation
 	var to_xfer_translation := to_global_translation - xfer_global_translation
-	
 	# Godot 3.5.2 BUG? angle_to() seems to break with large vectors. Needs testing.
 	# Workaroud here is to normalize before angle operations.
 	var from_xfer_direction := from_xfer_translation.normalized()
@@ -529,7 +531,7 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 	xfer_translation *= lerp(from_xfer_translation.length(), to_xfer_translation.length(), progress)
 	var translation_ := xfer_translation + xfer_global_translation - parent.global_translation
 
-	# Quat.slerp() for basis change
+	# basis
 	var from_global_basis := _from_spatial.global_transform.basis * from_transform.basis
 	var to_global_basis := _to_spatial.global_transform.basis * to_transform.basis
 	var from_global_quat := Quat(from_global_basis)
@@ -556,27 +558,6 @@ func _process_motions_and_rotations(delta: float) -> void:
 	if is_camera_bump and flags & ANY_VIEW_FLAGS:
 		flags &= ~ANY_VIEW_FLAGS
 		emit_signal("view_type_changed", flags, disabled_flags)
-	if view_rotations.z and flags & Flags.UP_LOCKED: # allow this to happen?
-		flags &= ~Flags.UP_LOCKED
-		flags |= Flags.UP_UNLOCKED
-		emit_signal("up_lock_changed", flags, disabled_flags)
-	var dist := view_position[2]
-	if dist != _last_dist:
-		_last_dist = dist
-		emit_signal("range_changed", dist)
-		near = dist * NEAR_MULTIPLIER
-		far = dist * FAR_MULTIPLIER
-	var is_ecliptic := dist > _track_dist
-	if _is_ecliptic != is_ecliptic:
-		_is_ecliptic = is_ecliptic
-	var lat_long: Vector2
-	if is_ecliptic:
-		lat_long = math.get_latitude_longitude(global_translation)
-	else:
-		lat_long = selection.get_latitude_longitude(_transform.origin)
-	if _lat_long != lat_long:
-		_lat_long = lat_long
-		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
 
 
 func _process_motion(delta: float) -> void:
@@ -700,21 +681,39 @@ static func _get_reference_basis(selection_: IVSelection, flags_: int) -> Basis:
 	return selection_.get_ecliptic_basis() # identity basis for any IVBody
 
 
+func _signal_range_latitude_longitude(is_refresh := false) -> void:
+	if is_refresh:
+		_gui_range = NAN
+		_gui_latitude_longitude = Vector2(NAN, NAN)
+	var gui_translation: Vector3
+	if _to_spatial == parent:
+		gui_translation = translation
+	else: # move in progress: GUI is showing _to_spatial, not current parent
+		gui_translation = global_translation - _to_spatial.global_translation
+	var dist := gui_translation.length()
+	if _gui_range != dist:
+		_gui_range = dist
+		emit_signal("range_changed", dist)
+	var is_ecliptic := dist > gui_ecliptic_coordinates_dist
+	var lat_long: Vector2
+	if is_ecliptic:
+		var ecliptic_translation = global_translation - _universe.translation
+		lat_long = math.get_latitude_longitude(ecliptic_translation)
+	else:
+		lat_long = selection.get_latitude_longitude(gui_translation)
+	if _gui_latitude_longitude != lat_long:
+		_gui_latitude_longitude = lat_long
+		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
+
+
 func _send_gui_refresh() -> void:
 	assert(parent)
 	emit_signal("parent_changed", parent)
-	emit_signal("range_changed", translation.length())
 	emit_signal("focal_length_changed", focal_length)
 	emit_signal("up_lock_changed", flags, disabled_flags)
 	emit_signal("tracking_changed", flags, disabled_flags)
 	emit_signal("view_type_changed", flags, disabled_flags)
-	var is_ecliptic := translation.length() > _track_dist
-	var lat_long: Vector2
-	if is_ecliptic:
-		lat_long = math.get_latitude_longitude(global_translation)
-	else:
-		lat_long = selection.get_latitude_longitude(translation)
-	emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
+	_signal_range_latitude_longitude(true)
 
 
 func _settings_listener(setting: String, value) -> void:
