@@ -81,22 +81,6 @@ const ANY_TRACK_FLAGS := Flags.ANY_TRACK_FLAGS
 const ANY_VIEW_FLAGS := Flags.ANY_VIEW_FLAGS
 const DisabledFlags := IVEnums.CameraDisabledFlags
 
-
-
-const ViewType := IVEnums.ViewType
-
-# DEPRECIATE
-const VIEW_ZOOM := IVEnums.ViewType.VIEW_ZOOM
-const VIEW_45 := IVEnums.ViewType.VIEW_45
-const VIEW_TOP := IVEnums.ViewType.VIEW_TOP
-const VIEW_OUTWARD := IVEnums.ViewType.VIEW_OUTWARD
-const TRACK_ECLIPTIC := IVEnums.TrackType.TRACK_ECLIPTIC
-const TRACK_ORBIT := IVEnums.TrackType.TRACK_ORBIT
-const TRACK_GROUND := IVEnums.TrackType.TRACK_GROUND
-const UP_LOCKED := IVEnums.UpLockType.UP_LOCKED
-const UP_UNLOCKED := IVEnums.UpLockType.UP_UNLOCKED
-
-
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
 const ECLIPTIC_Y := IDENTITY_BASIS.y
@@ -107,7 +91,8 @@ const VECTOR3_ZERO := Vector3.ZERO
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
-const FAR_MULTIPLIER := 1e9 # see Note below
+const FAR_MULTIPLIER := 1e6 # see Note below
+const POLE_LIMITER := PI / 2.1
 
 # Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
 # It used to be that ~10 orders of magnitude was allowed between near and far,
@@ -183,17 +168,15 @@ var _move_time: float
 var _is_interupted_move := false
 var _interupted_transform: Transform
 
+var _reference_basis: Basis
 
 var _to_spatial: Spatial
+var _trasfer_spatial: Spatial
+
 var _from_spatial: Spatial
 var _from_selection: IVSelection
 
 var _from_flags := flags
-# DEPRECIATE
-var _from_view_type := VIEW_ZOOM
-var _from_track_type := TRACK_GROUND
-var _from_up_lock_type := UP_LOCKED
-
 var _from_view_position := Vector3.ONE # any non-zero dist ok
 var _from_view_rotations := VECTOR3_ZERO
 
@@ -240,10 +223,11 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# We process our working '_transform', then update here.
+	_reference_basis = _get_reference_basis(selection, flags)
 	if is_moving:
-		_process_move_in_progress(delta)
+		_process_move_to(delta)
 	else:
-		_process_at_target(delta)
+		_process_motions_and_rotations(delta)
 	if UNIVERSE_SHIFTING:
 		# Camera parent will be at global translation (0,0,0) after this step.
 		# The -= operator works because current Universe translation is part
@@ -302,12 +286,14 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	):
 		return
 	
-	# remember where we came from
+	# data needed during the move
 	_from_selection = selection
 	_from_flags = flags
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
 	_from_spatial = parent
+	
+	_trasfer_spatial = utils.get_ancestor_spatial(_from_spatial, _to_spatial)
 	
 	# change booleans
 	var is_up_change: bool = ((to_up_flags and to_up_flags != flags & ANY_UP_FLAGS)
@@ -316,10 +302,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	var is_view_change: bool = ((to_view_flags and to_view_flags != flags & ANY_VIEW_FLAGS)
 			or (to_view_position != VECTOR3_ZERO and flags & ANY_VIEW_FLAGS)
 			or (to_view_rotations != NULL_ROTATION and flags & ANY_VIEW_FLAGS))
-	
-	prints(to_view_flags, to_view_position, to_view_rotations)
-	prints(is_up_change, is_track_change, is_view_change)
-	
 	
 	# set selection and flags
 	if to_selection and to_selection.spatial:
@@ -459,11 +441,12 @@ func _prepare_to_free() -> void:
 	selection = null
 	parent = null
 	_to_spatial = null
-	_from_spatial = null
+	_trasfer_spatial = null
 	_from_selection = null
+	_from_spatial = null
 
 
-func _process_move_in_progress(delta: float) -> void:
+func _process_move_to(delta: float) -> void:
 	_move_time += delta
 	if _is_interupted_move:
 		_move_time += delta # double-time; user is in a hurry!
@@ -472,7 +455,7 @@ func _process_move_in_progress(delta: float) -> void:
 		_is_interupted_move = false
 		if parent != _to_spatial:
 			_do_handoff()
-		_process_at_target(delta)
+		_process_motions_and_rotations(delta)
 		return
 	
 	var progress := ease(_move_time / _transfer_time, -ease_exponent)
@@ -481,10 +464,16 @@ func _process_move_in_progress(delta: float) -> void:
 	if progress > 0.5 and parent != _to_spatial:
 		_do_handoff()
 	
-	var from_transform := (_interupted_transform if _is_interupted_move
-			 else _get_view_transform(_from_selection, _from_flags, _from_view_position,
-			_from_view_rotations))
-	var to_transform := _get_view_transform(selection, flags, view_position, view_rotations)
+	var from_transform: Transform
+	if _is_interupted_move:
+		from_transform = _interupted_transform
+	else:
+		var from_reference_basis := _get_reference_basis(_from_selection, _from_flags)
+		from_transform = _get_view_transform(_from_view_position, _from_view_rotations,
+				from_reference_basis)
+	
+	
+	var to_transform := _get_view_transform(view_position, view_rotations, _reference_basis)
 
 	_interpolate_path(from_transform, to_transform, progress)
 	
@@ -521,25 +510,24 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 	# ancestor. This is likely the dominant view object during transition, so
 	# we want to minimize orientation change relative to it.
 
-	var ref_spatial := utils.get_ancestor_spatial(_from_spatial, _to_spatial)
-	
 	# translation
-	var ref_global_translation := ref_spatial.global_translation
+	var xfer_global_translation := _trasfer_spatial.global_translation
 	var from_global_translation := _from_spatial.global_translation + from_transform.origin
 	var to_global_translation := _to_spatial.global_translation + to_transform.origin
-	var from_ref_translation := from_global_translation - ref_global_translation
-	var to_ref_translation := to_global_translation - ref_global_translation
+	var from_xfer_translation := from_global_translation - xfer_global_translation
+	var to_xfer_translation := to_global_translation - xfer_global_translation
 	
 	# Godot 3.5.2 BUG? angle_to() seems to break with large vectors. Needs testing.
-	var from_direction := from_ref_translation.normalized()
-	var to_direction := to_ref_translation.normalized()
-	var rotation_axis := from_direction.cross(to_direction).normalized()
+	# Workaroud here is to normalize before angle operations.
+	var from_xfer_direction := from_xfer_translation.normalized()
+	var to_xfer_direction := to_xfer_translation.normalized()
+	var rotation_axis := from_xfer_direction.cross(to_xfer_direction).normalized()
 	if !rotation_axis: # edge case
 		rotation_axis = Vector3(0.0, 0.0, 1.0)
-	var path_angle := from_direction.angle_to(to_direction) # < PI
-	var ref_translation := from_direction.rotated(rotation_axis, path_angle * progress)
-	ref_translation *= lerp(from_ref_translation.length(), to_ref_translation.length(), progress)
-	var translation_ := ref_translation + ref_global_translation - parent.global_translation
+	var path_angle := from_xfer_direction.angle_to(to_xfer_direction) # < PI
+	var xfer_translation := from_xfer_direction.rotated(rotation_axis, path_angle * progress)
+	xfer_translation *= lerp(from_xfer_translation.length(), to_xfer_translation.length(), progress)
+	var translation_ := xfer_translation + xfer_global_translation - parent.global_translation
 
 	# Quat.slerp() for basis change
 	var from_global_basis := _from_spatial.global_transform.basis * from_transform.basis
@@ -550,13 +538,14 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 	var global_basis := Basis(global_quat)
 	var basis := parent.global_transform.basis.inverse() * global_basis
 	
+	# set the working transform
 	_transform = Transform(basis, translation_)
 
 
-func _process_at_target(delta: float) -> void:
+func _process_motions_and_rotations(delta: float) -> void:
 	var is_camera_bump := false
 	# maintain present position based on tracking
-	_transform = _get_view_transform(selection, flags, view_position, view_rotations)
+	_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
 	# process accumulated user inputs
 	if _motion_accumulator:
 		_process_motion(delta)
@@ -615,7 +604,7 @@ func _process_motion(delta: float) -> void:
 	# get values for adjustments below
 	var origin := _transform.origin
 	var dist: float = view_position[2]
-	var up := _get_up(selection, flags)
+	var up := _reference_basis.z
 	var radial_movement := move_vector.dot(origin)
 	var normalized_origin := origin.normalized()
 	var longitude_vector := normalized_origin.cross(up).normalized()
@@ -639,11 +628,12 @@ func _process_motion(delta: float) -> void:
 	_transform = _transform.looking_at(-origin, up)
 	_transform.basis *= Basis(view_rotations)
 	# reset view_position
-	var tracking_basis := _get_tracking_basis(selection, flags)
-	view_position = math.get_rotated_spherical3(origin, tracking_basis)
+	view_position = math.get_rotated_spherical3(origin, _reference_basis)
 
 
 func _process_rotation(delta: float) -> void:
+	# Note: Although we follow z-up astronomy convention elsewhere, the camera
+	# uses y-up, z-forward, x-lateral.
 	var action_proportion := action_immediacy * delta
 	if action_proportion > 1.0:
 		action_proportion = 1.0
@@ -663,54 +653,37 @@ func _process_rotation(delta: float) -> void:
 		_rotation_accumulator.z -= rotate_now.z
 	else:
 		_rotation_accumulator.z = 0.0
+
+	var is_up_locked := bool(flags & Flags.UP_LOCKED)
+	if is_up_locked: # apply a pole limiter
+		var x_rotation = view_rotations.x + rotate_now.x
+		if x_rotation > POLE_LIMITER:
+			rotate_now.x = POLE_LIMITER - view_rotations.x
+		elif x_rotation < -POLE_LIMITER:
+			rotate_now.x = -POLE_LIMITER - view_rotations.x
+	
 	var basis := Basis(view_rotations)
-	basis = basis.rotated(basis.x, rotate_now.x)
-	basis = basis.rotated(basis.y, rotate_now.y)
-	basis = basis.rotated(basis.z, rotate_now.z)
+	basis = basis.rotated(basis.x, rotate_now.x) # pitch
+	basis = basis.rotated(basis.y, rotate_now.y) # yaw
+	if !is_up_locked:
+		basis = basis.rotated(basis.z, rotate_now.z) # roll
 	view_rotations = basis.get_euler()
-	var up := _get_up(selection, flags)
-	_transform = _transform.looking_at(-_transform.origin, up)
+	if is_up_locked:
+		view_rotations.z = 0.0
+	_transform = _transform.looking_at(-_transform.origin, _reference_basis.z)
 	_transform.basis *= Basis(view_rotations)
 
 
-func _reset_view_position_and_rotations() -> void:
-	# update for current _transform, selection & track_type
-	var origin := _transform.origin
-	# position
-	var tracking_basis := _get_tracking_basis(selection, flags)
-	view_position = math.get_rotated_spherical3(origin, tracking_basis)
-	# rotations
-	var basis_rotated := _transform.basis
-	var up := _get_up(selection, flags)
-	var transform_looking_at := _transform.looking_at(-origin, up)
-	var basis_looking_at := transform_looking_at.basis
-	# From _process_rotation() we have...
-	# basis_rotated = basis_looking_at * rotations_basis
-	# A = B * C
-	# C = B^-1 * A
-	var rotations_basis := basis_looking_at.inverse() * basis_rotated
-	view_rotations = rotations_basis.get_euler()
-
-
-func _get_view_transform(selection_: IVSelection, flags_: int, view_position_: Vector3,
-		view_rotations_: Vector3) -> Transform:
-	var up := _get_up(selection_, flags_)
-	var tracking_basis := _get_tracking_basis(selection_, flags_)
-	var view_translation := math.convert_rotated_spherical3(view_position_, tracking_basis)
-	assert(view_translation)
+static func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
+		reference_basis: Basis) -> Transform:
+	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
-			-view_translation, up)
-	view_transform.basis *= Basis(view_rotations_) # TODO: The member should be the rotation basis
+			-view_translation, reference_basis.z)
+	view_transform.basis *= Basis(view_rotations_)
 	return view_transform
 
 
-static func _get_up(selection_: IVSelection, flags_: int) -> Vector3:
-	# WIP - If up unlocked, use self z
-	
-	return _get_tracking_basis(selection_, flags_).z
-
-
-static func _get_tracking_basis(selection_: IVSelection, flags_: int) -> Basis:
+static func _get_reference_basis(selection_: IVSelection, flags_: int) -> Basis:
 	if flags_ & Flags.TRACK_GROUND:
 		return selection_.get_ground_basis()
 	if flags_ & Flags.TRACK_ORBIT:
