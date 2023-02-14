@@ -233,11 +233,13 @@ func _process(delta: float) -> void:
 
 # public functions
 
-func add_motion(motion_amount: Vector3) -> void: # rotate around or move in/out from target
+func add_motion(motion_amount: Vector3) -> void:
+	# Rotate around target (x, y) or move in/out (z).
 	_motion_accumulator += motion_amount
 
 
-func add_rotation(rotation_amount: Vector3) -> void: # rotate in-place
+func add_rotation(rotation_amount: Vector3) -> void:
+	# Rotate in-place: x, pitch; y, yaw; z, roll.
 	_rotation_accumulator += rotation_amount
 
 
@@ -456,12 +458,9 @@ func _process_move_to(delta: float) -> void:
 		_process_motions_and_rotations(delta)
 		return
 	
-	var progress := ease(_move_time / _transfer_time, -ease_exponent)
-	
-	# Hand-off at halfway point avoids precision shakes at either end
-	if progress > 0.5 and parent != _to_spatial:
-		_do_handoff()
-	
+	# Interpolate from where we would be (if move hadn't happened) to where
+	# we are going. We continue to calculate were we would be so there isn't
+	# an abrupt velocity change (although that happens in an interupted move).
 	var from_transform: Transform
 	if _is_interupted_move:
 		from_transform = _interupted_transform
@@ -469,29 +468,13 @@ func _process_move_to(delta: float) -> void:
 		var from_reference_basis := _get_reference_basis(_from_selection, _from_flags)
 		from_transform = _get_view_transform(_from_view_position, _from_view_rotations,
 				from_reference_basis)
-	
-	
 	var to_transform := _get_view_transform(view_position, view_rotations, _reference_basis)
-
+	var progress := ease(_move_time / _transfer_time, -ease_exponent)
 	_interpolate_path(from_transform, to_transform, progress)
 	
-#	var gui_translation := _transform.origin
-#	var dist := gui_translation.length()
-#	near = dist * NEAR_MULTIPLIER
-#	far = dist * FAR_MULTIPLIER
-#	if parent != _to_spatial: # GUI is already showing _to_spatial
-#		gui_translation = global_translation - _to_spatial.global_translation
-#		dist = gui_translation.length()
-#	emit_signal("range_changed", dist)
-#	var is_ecliptic := dist > gui_ecliptic_coordinates_dist
-#	if is_ecliptic:
-#		_gui_latitude_longitude = math.get_latitude_longitude(global_translation)
-#	else:
-#		_gui_latitude_longitude = selection.get_latitude_longitude(gui_translation)
-#	emit_signal("latitude_longitude_changed", _gui_latitude_longitude, is_ecliptic, selection)
-
-
-
+	# Handoff at halfway point avoids precision shakes at either end.
+	if progress > 0.5 and parent != _to_spatial:
+		_do_handoff()
 
 
 func _do_handoff() -> void:
@@ -561,6 +544,8 @@ func _process_motions_and_rotations(delta: float) -> void:
 
 
 func _process_motion(delta: float) -> void:
+	
+	# take motion from accumulator
 	var action_proportion := action_immediacy * delta
 	if action_proportion > 1.0:
 		action_proportion = 1.0
@@ -580,36 +565,50 @@ func _process_motion(delta: float) -> void:
 		_motion_accumulator.z -= move_now.z
 	else:
 		_motion_accumulator.z = 0.0
-	# rotate for camera basis
-	var move_vector := _transform.basis.xform(move_now)
-	# get values for adjustments below
+	
+	# Apply x,y as rotation and z as scaler to our origin. Our current basis
+	# provides the correct rotation axes. Note: 'basis' uses camera y-up (not
+	# astronomical z-up).
 	var origin := _transform.origin
-	var dist: float = view_position[2]
-	var up := _reference_basis.z
-	var radial_movement := move_vector.dot(origin)
-	var normalized_origin := origin.normalized()
-	var longitude_vector := normalized_origin.cross(up).normalized()
-	# dampen "spin" movement as we near the poles
-	var longitudinal_move := longitude_vector * longitude_vector.dot(move_vector)
-	var spin_dampening := up.dot(normalized_origin)
-	spin_dampening *= spin_dampening # makes positive & reduces
-	spin_dampening *= spin_dampening # reduces more
-	move_vector -= longitudinal_move * spin_dampening
-	# add adjusted move vector scaled by distance to parent
-	origin += move_vector * dist
-	# test for pole traversal
-	if longitude_vector.dot(origin.cross(up)) <= 0.0: # before/after comparison
-		view_rotations.z = wrapf(view_rotations.z + PI, -PI, PI)
-	# fix our distance to ignore small tangental movements
-	var new_dist := dist + radial_movement
-	new_dist = clamp(new_dist, _min_dist, _max_dist)
-	origin = new_dist * origin.normalized()
-	# update _transform using new origin & existing view_rotations
-	_transform.origin = origin
-	_transform = _transform.looking_at(-origin, up)
-	_transform.basis *= Basis(view_rotations)
-	# reset view_position
+	var basis := _transform.basis
+	
+	var latitude = view_position.y + move_now.y # NOT reliable for pole traversal
+	var cos_lat := cos(latitude)
+	var spin_dampener := 1.0 - cos_lat
+	
+	print(spin_dampener)
+	
+#	if spin_dampener < 0.0:
+#		spin_dampener = 0.0
+	move_now.x *= (1.0 - spin_dampener)
+	
+	# WIP - If not up locked, we need to rotate on our own reference!
+	
+	if bool(flags & Flags.UP_LOCKED): # pole limiter prevents traversal
+		if latitude > POLE_LIMITER:
+			move_now.y = POLE_LIMITER - view_position.y
+		elif latitude < -POLE_LIMITER:
+			move_now.y = -POLE_LIMITER -view_position.y
+		origin = origin.rotated(basis.y, move_now.x)
+		origin = origin.rotated(basis.x, -move_now.y)
+	else: # may traverse the pole
+#		var latitude = view_position.y + move_now.y
+#		if latitude > PI / 2.0 or latitude < -PI / 2.0:
+#			is_pole_traversal = true
+#			print("POLE!")
+		origin = origin.rotated(basis.y, move_now.x)
+		origin = origin.rotated(basis.x, -move_now.y)
+	origin *= (1.0 + move_now.z)
+	var old_view_position := view_position
 	view_position = math.get_rotated_spherical3(origin, _reference_basis)
+	if abs(wrapf(view_position.x - old_view_position.x, -PI, PI)) > PI / 2.0:
+		# This is not perfect for pole traversal detection, but I can't think
+		# of any other. 'latitude' is not reliable at all.
+		view_rotations.z = wrapf(view_rotations.z + PI, -PI, PI)
+		view_rotations.x *= -1.0
+		view_rotations.y *= -1.0
+
+	_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
 
 
 func _process_rotation(delta: float) -> void:
