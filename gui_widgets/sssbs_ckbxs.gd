@@ -20,9 +20,13 @@
 class_name IVSSSBsCkbxs
 extends VBoxContainer
 
+# DEPRECIATE. We'll keep until we have something better in the Project
+# Template. After that this will be removed.
+#
 # GUI widget. Small Solar System Bodies.
 #
-# Comets check box is present but hidden (until they are implemented). 
+# Comets check box is present but hidden (until they are implemented).
+
 
 
 onready var chkbxs := [

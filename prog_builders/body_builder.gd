@@ -144,6 +144,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
 	var flags := _table_reader.get_flags(flag_fields, _table_name, _row)
+	# All below are constructed (non-table) flags.
 	if !parent:
 		flags |= BodyFlags.IS_TOP # will add self to IVGlobal.top_bodies
 		flags |= BodyFlags.IS_PRIMARY_STAR
@@ -158,6 +159,10 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	if flags & BodyFlags.IS_MOON:
 		if flags & BodyFlags.SHOW_IN_NAV_PANEL:
 			flags |= BodyFlags.IS_NAVIGATOR_MOON
+		if flags & BodyFlags.IS_PLANETARY_MASS_OBJECT:
+			flags |= BodyFlags.IS_PLANETARY_MASS_MOON
+		else:
+			flags |= BodyFlags.IS_NON_PLANETARY_MASS_MOON
 		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
 	if flags & BodyFlags.IS_ASTEROID:
 		flags |= BodyFlags.IS_STAR_ORBITING

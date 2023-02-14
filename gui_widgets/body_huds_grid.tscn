@@ -9,27 +9,3 @@ custom_constants/vseparation = -2
 custom_constants/hseparation = 15
 columns = 4
 script = ExtResource( 1 )
-
-[node name="Spacer" type="Label" parent="."]
-margin_bottom = 14.0
-
-[node name="NamesHeader" type="Label" parent="."]
-margin_left = 15.0
-margin_right = 105.0
-margin_bottom = 14.0
-text = "LABEL_NAMES"
-align = 1
-
-[node name="SymbolsHeader" type="Label" parent="."]
-margin_left = 120.0
-margin_right = 225.0
-margin_bottom = 14.0
-text = "LABEL_SYMBOLS"
-align = 1
-
-[node name="OrbitsHeader" type="Label" parent="."]
-margin_left = 240.0
-margin_right = 332.0
-margin_bottom = 14.0
-text = "LABEL_ORBITS"
-align = 1

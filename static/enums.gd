@@ -134,16 +134,18 @@ enum BodyFlags {
 	IS_AXIS_LOCKED = 1 << 17,
 	TUMBLES_CHAOTICALLY = 1 << 18,
 	IS_NAVIGATOR_MOON = 1 << 19, # IVSelectionManager uses for cycling
-	# reserved 1 << 20,
-	DISPLAY_M_RADIUS = 1 << 21,
-	HAS_ATMOSPHERE = 1 << 22,
-	IS_GAS_GIANT = 1 << 23,
-	NO_ORBIT = 1 << 24, # Hill Sphere is smaller than body radius
-	NO_STABLE_ORBIT = 1 << 25, # Hill Sphere / 3 is smaller than body radius
-	USE_CARDINAL_DIRECTIONS = 1 << 26,
-	USE_PITCH_YAW = 1 << 27,
+	IS_PLANETARY_MASS_MOON = 1 << 20,
+	IS_NON_PLANETARY_MASS_MOON = 1 << 21,
 	
-#   reserved to 1 << 39,
+	DISPLAY_M_RADIUS = 1 << 22,
+	HAS_ATMOSPHERE = 1 << 23,
+	IS_GAS_GIANT = 1 << 24,
+	NO_ORBIT = 1 << 25, # Hill Sphere is smaller than body radius
+	NO_STABLE_ORBIT = 1 << 26, # Hill Sphere / 3 is smaller than body radius
+	USE_CARDINAL_DIRECTIONS = 1 << 27,
+	USE_PITCH_YAW = 1 << 28,
+	
+#   Reserved to 1 << 39.
 #
 #	Higher bits safe for extension project.
 #	Max bit shift is 1 << 63.
