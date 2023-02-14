@@ -8,17 +8,33 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.14] - Not Released
 
-Under development using Godot 3.5.1.stable.
+Under development using Godot 3.5.2.rc2.
 
 New assets for 0.0.14! - WIP
 
 ### Added
-* Spacecraft: International Space Station, Hubble and Juno (orbit only; model is broken)
+* Spacecraft: International Space Station, Hubble and Juno. (For Juno, we only have its orbit and a fallback model; the open-source Juno model crashes in GLES2 operation so isn't included yet.)
 * Explored asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
+* Asteroid orbit lines can be shown by group (these are MultiMeshInstances), or all at once. Yes, all ~65,000 of them!
+* Visual screen points (i.e., asteroids) and orbit lines (of Bodies & *all* asteroids) are identified by name on mouse-over. This was crazy hard viewport and shader programing to do. See class [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd) for details. 
+* IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays orieted to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
+* IVAllHUDsGrid widget organizes HUD visibility checkboxes.
+
 
 ### Changed
-* [Breaks API!] Renamed IVHUDsManager signal 'show_huds_changed' -> 'visibility_changed'.
-* OrbitBuilder imports 'epoch_jd' column. (But our ISS & Hubble orbits are not correct yet...)
+* New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground' or 'orbit tracking' mode.
+* Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
+* [Breaks API!] Removed/replaced table columns. E.g., new 'show_in_nav_panel' needed for display by the navigation panel widgets. Some others may be API breaking.
+* [Breaks API!] Significantly changed API in classes: IVCamera (uses new CameraFlags system for move orders), IVView.
+* [Breaks API!] Replaced classes (different API): IVLPoint -> IVLagrangePoint.
+* [Breaks API!] Removed classes: IVModelController, several 'builder' classes.
+* [Breaks API!] Various changes to IVGlobal signals.
+* [Breaks API!] Various changes to IVEnums.
+* Improved code throughout (especially the pre-2019 classes like IVCamera).
+
+### Fixed
+* Somewhat less inacurate Trojan orbits. (Since there are no closed-form solutions, these will always be approximations.)
+
 
 ## [v0.0.13] - 2022-09-28
 
