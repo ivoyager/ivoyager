@@ -47,7 +47,7 @@ func _init(body: IVBody) -> void:
 	_orbit = body.orbit
 	_body_flags = body.flags
 	var BodyFlags := IVEnums.BodyFlags
-	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM:
+	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.IS_PLANETARY_MASS_OBJECT:
 		_color_setting = "moon_orbit_color"
 	elif _body_flags & BodyFlags.IS_MOON:
 		_color_setting = "minor_moon_orbit_color"

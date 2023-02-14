@@ -26,8 +26,11 @@ extends HBoxContainer
 # strech ratios: 1.0 (SunSliceButton) and 10.0 (this widget or container that
 # contains this widget).
 
-const IS_PLANET := IVEnums.BodyFlags.IS_TRUE_PLANET | IVEnums.BodyFlags.IS_DWARF_PLANET
-const IS_NAVIGATOR_MOON := IVEnums.BodyFlags.IS_NAVIGATOR_MOON
+const IS_PLANET := IVEnums.BodyFlags.IS_PLANET
+const IS_MOON := IVEnums.BodyFlags.IS_MOON
+
+const SHOW_IN_NAV_PANEL := IVEnums.BodyFlags.SHOW_IN_NAV_PANEL
+
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 const INIT_WIDTH := 560.0
 
@@ -101,7 +104,7 @@ func _build(_dummy := false) -> void:
 	# build the system button tree
 	var column := 0
 	for planet in star.satellites: # vertical box for each planet w/ its moons
-		if not planet.flags & IS_PLANET:
+		if not planet.flags & IS_PLANET or not planet.flags & SHOW_IN_NAV_PANEL:
 			continue
 		# For each planet column, column_widths[column] sets the top Spacer
 		# width (and therefore the column width) and planet_sizes[column] sets
@@ -118,7 +121,7 @@ func _build(_dummy := false) -> void:
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column])
 		for moon in planet.satellites:
-			if not moon.flags & IS_NAVIGATOR_MOON:
+			if not moon.flags & IS_MOON or not moon.flags & SHOW_IN_NAV_PANEL:
 				continue
 			size = round(pow(moon.get_mean_radius(), size_exponent) * scale)
 			if size < min_body_size:

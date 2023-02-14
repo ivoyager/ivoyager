@@ -102,6 +102,8 @@ var flag_fields := {
 	BodyFlags.IS_ASTEROID : "asteroid",
 	BodyFlags.IS_COMET : "comet",
 	BodyFlags.IS_SPACECRAFT : "spacecraft",
+	BodyFlags.IS_PLANETARY_MASS_OBJECT : "planetary_mass_object",
+	BodyFlags.SHOW_IN_NAV_PANEL : "show_in_nav_panel",
 }
 
 # private
@@ -153,12 +155,8 @@ func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 		flags |= BodyFlags.IS_STAR_ORBITING
 		flags |= BodyFlags.NEVER_SLEEP
 		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
-	var hydrostatic_equilibrium: int = _table_reader.get_int(_table_name, "hydrostatic_equilibrium", _row)
-	if hydrostatic_equilibrium >= IVEnums.Confidence.CONFIDENCE_PROBABLY:
-		flags |= BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM
 	if flags & BodyFlags.IS_MOON:
-		if flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM \
-				or _table_reader.get_bool(_table_name, "force_navigator", _row):
+		if flags & BodyFlags.SHOW_IN_NAV_PANEL:
 			flags |= BodyFlags.IS_NAVIGATOR_MOON
 		flags |= BodyFlags.USE_CARDINAL_DIRECTIONS
 	if flags & BodyFlags.IS_ASTEROID:

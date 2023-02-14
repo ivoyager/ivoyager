@@ -34,64 +34,6 @@ enum { # duplicated in IVSaveBuilder
 	PERSIST_PROCEDURAL,
 }
 
-enum ViewType {
-	VIEW_ZOOM,
-	VIEW_45,
-	VIEW_TOP,
-	VIEW_OUTWARD, # disabled now; needs some GUI to use reasonably
-}
-
-
-enum CameraFlags {
-	UP_LOCKED = 1 << 0,
-	UP_UNLOCKED = 1 << 1,
-	
-	TRACK_GROUND = 1 << 2,
-	TRACK_ORBIT = 1 << 3,
-	TRACK_ECLIPTIC = 1 << 4,
-	TRACK_GALACIC = 1 << 5, # not implemented yet
-	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
-	
-	VIEW_ZOOM = 1 << 7,
-	VIEW_45 = 1 << 8,
-	VIEW_TOP = 1 << 9,
-	VIEW_OUTWARD = 1 << 10, # disabled now; needs special GUI to use reasonably
-	
-	# bits 32-63 should be safe to use for any extension project
-	
-	# combo masks
-	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
-	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
-	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
-}
-
-enum CameraDisabledFlags {
-	DISABLED_TRACK_GROUND = 1 << 0,
-	DISABLED_TRACK_ORBIT = 1 << 1,
-	DISABLED_TRACK_ECLIPTIC = 1 << 2,
-	DISABLED_TRACK_GALACIC = 1 << 3, # not implemented yet
-	DISABLED_TRACK_SUPERGALACIC = 1 << 4, # not implemented yet
-}
-
-
-
-enum TrackType {
-	TRACK_ECLIPTIC,
-	TRACK_ORBIT,
-	TRACK_GROUND,
-}
-
-enum UpLockType {
-	UP_LOCKED,
-	UP_UNLOCKED,
-}
-
-enum LazyType { # WIP - for rebuild of body/model lazy init system
-	LAZY_NEVER, # default for stars and planets
-	LAZY_OUT_OF_SYSTEM, # default for dwarf planets & major moons
-	LAZY_MAX, # default for minor moons, instantiated asteroids & spacecraft
-}
-
 enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,
@@ -127,6 +69,43 @@ enum NetworkStopSync {
 	DONT_SYNC,
 }
 
+# WIP - Not used yet
+enum LazyType { # WIP - for rebuild of body/model lazy init system
+	LAZY_NEVER, # default for stars and planets
+	LAZY_OUT_OF_SYSTEM, # default for dwarf planets & major moons
+	LAZY_MAX, # default for minor moons, instantiated asteroids & spacecraft
+}
+
+enum CameraFlags {
+	UP_LOCKED = 1 << 0,
+	UP_UNLOCKED = 1 << 1,
+	
+	TRACK_GROUND = 1 << 2,
+	TRACK_ORBIT = 1 << 3,
+	TRACK_ECLIPTIC = 1 << 4,
+	TRACK_GALACIC = 1 << 5, # not implemented yet
+	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
+	
+	VIEW_ZOOM = 1 << 7,
+	VIEW_45 = 1 << 8,
+	VIEW_TOP = 1 << 9,
+	VIEW_OUTWARD = 1 << 10, # disabled now; needs special GUI to use reasonably
+	
+	# bits 32-63 should be safe to use for any extension project
+	
+	# combo masks
+	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
+	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
+	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
+}
+
+enum CameraDisabledFlags {
+	DISABLED_TRACK_GROUND = 1 << 0,
+	DISABLED_TRACK_ORBIT = 1 << 1,
+	DISABLED_TRACK_ECLIPTIC = 1 << 2,
+	DISABLED_TRACK_GALACIC = 1 << 3, # not implemented yet
+	DISABLED_TRACK_SUPERGALACIC = 1 << 4, # not implemented yet
+}
 
 enum BodyFlags {
 	
@@ -143,8 +122,8 @@ enum BodyFlags {
 	# combos
 	IS_PLANET_OR_MOON = 1 << 2 | 1 << 5,
 
-	# reserved 1 << 9,
-	# reserved 1 << 10,
+	IS_PLANETARY_MASS_OBJECT = 1 << 9,
+	SHOW_IN_NAV_PANEL = 1 << 10,
 	
 	NEVER_SLEEP = 1 << 11, # won't work correctly if ancestor node sleeps
 	IS_TOP = 1 << 12, # non-orbiting stars; is in IVGlobal.top_bodies
@@ -154,8 +133,8 @@ enum BodyFlags {
 	IS_TIDALLY_LOCKED = 1 << 16,
 	IS_AXIS_LOCKED = 1 << 17,
 	TUMBLES_CHAOTICALLY = 1 << 18,
-	IS_NAVIGATOR_MOON = 1 << 19, # show in system navigator
-	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 20, # for moon orbit color
+	IS_NAVIGATOR_MOON = 1 << 19, # IVSelectionManager uses for cycling
+	# reserved 1 << 20,
 	DISPLAY_M_RADIUS = 1 << 21,
 	HAS_ATMOSPHERE = 1 << 22,
 	IS_GAS_GIANT = 1 << 23,
