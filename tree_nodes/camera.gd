@@ -20,48 +20,15 @@
 class_name IVCamera
 extends Camera
 
-
 # This camera works with the IVSelection object, which is a wrapper that can
-# hold IVBody or IVLagrangePoint instances (or could be extended to hold
-# anything). It uses IVCameraPath to determine path and interpolate between
-# target objects.
-
-
-# WIP Overhaul:
-# IVCamera can attach itself to any Spatial (called 'target').
-# There are some duck typing options for Target:
-#   get_ground_basis() - enables 'ground tracking'
-#   get_orbit_basis() - enables 'orbit tracking'
-#   (note: we always use target.global_transform to resolve ecliptic)
-#   get_view_position(view_type, track_type)
-#   get_mean_radius()
-#   get_system_radius()
-#   get_min_view_dist()
-
-#   m_radius - for camera dynamic range determination
-#   min_view_dist - otherwise, uses m_radius * FALLBACK_MIN_DIST_RADIUS_MULTIPLIER
+# hold IVBody instances (WIP: or IVLagrangePoint instances), or can be extended
+# to hold anything. It recieves most of its control input from IVCameraHandler
+# (see ivoyager/prog_nodes/).
 #
-# Overhaul steps:
-# 1. Redo camera controls ->  Camera Locks:  x Up  x Ground  _ Orbit
-# 2. Fix motions/rotations.
-# 3. Add CameraPath object
+# Replacing this class should be possible but may be challenging. Very many
+# GUI widgets are built to use it.
 
-
-# This camera is always locked to an IVBody and constantly orients itself based
-# on that IVBody's ground or orbit around its parent, depending on 'tracking'
-# selection.
-#
-# You can replace this with another Camera class, but see:
-#    IVGlobal signals related to camera (singletons/global.gd)
-#    IVCameraHandler (prog_nodes/camera_handler.gd); replace this!
-#    Possibly other dependencies. You'll need to search.
-#
-# The camera stays "in place" by maintaining view_position & view_rotations.
-# The first is position relative to either target body's parent or ground
-# depending on track_type. The second is rotation relative to looking at
-# target body w/ north up.
-
-signal move_started(to_spatial, is_camera_lock) # to_spatial not parent yet
+signal move_started(to_spatial, is_camera_lock) # to_spatial is not parent yet
 signal parent_changed(spatial)
 signal range_changed(camera_range)
 signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
@@ -136,13 +103,9 @@ var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.
 var init_focal_length_index := 2
 var ease_exponent := 5.0
 var gui_ecliptic_coordinates_dist := 1e6 * IVUnits.KM
-
-
-
-var max_compensated_dist: float = 5e7 * IVUnits.KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
-var size_ratio_exponent := 0.95 # 0.0, none; 1.0 moves to same visual size
+var size_ratio_exponent := 0.9 # 0.0, none; 1.0 moves to same visual size
 
 # public read-only
 var parent: Spatial # actual Spatial parent at this time
@@ -156,8 +119,6 @@ var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
 var _min_dist := IVUnits.METER # changes on move for parent body size
-
-var _max_compensated_dist: float
 
 # motions / rotations
 var _motion_accumulator := VECTOR3_ZERO
@@ -199,7 +160,6 @@ func _ready() -> void:
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_max_compensated_dist = max_compensated_dist / fov
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
 	IVGlobal.verbose_signal("camera_ready", self)
@@ -338,19 +298,16 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			var from_dist := view_position[2]
 			var from_radius := _from_selection.get_radius_for_camera()
 			var to_radius := selection.get_radius_for_camera()
-			
 			view_position[2] = utils.get_visual_radius_compensated_dist(from_dist, from_radius,
-					to_radius)
-			
-#			var from_radius := _from_selection.get_radius_for_camera()
-#			var to_radius := selection.get_radius_for_camera()
-#			var adj_ratio := pow(to_radius / from_radius, size_ratio_exponent)
-#			view_position[2] *= adj_ratio
+					to_radius, size_ratio_exponent)
+
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # roll
-	var min_dist := selection.view_min_distance * sqrt(50.0 / fov)
-	if view_position[2] < min_dist:
-		view_position[2] = min_dist
+	
+	if view_position[2] > _max_dist:
+		view_position[2] = _max_dist
+	elif view_position[2] < _min_dist:
+		view_position[2] = _min_dist
 	
 	# initiate move
 	if is_instant_move:
@@ -403,7 +360,6 @@ func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_max_compensated_dist = max_compensated_dist / fov
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
 	if !suppress_move:
@@ -584,7 +540,8 @@ func _process_motion(delta: float) -> void:
 			move_now.y = -POLE_LIMITER -view_position.y
 		origin = origin.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
-		origin *= (1.0 + move_now.z)
+		origin *= 1.0 + move_now.z
+		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
 		
@@ -595,7 +552,8 @@ func _process_motion(delta: float) -> void:
 		basis = basis.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
 		basis = basis.rotated(basis.x, -move_now.y)
-		origin *= (1.0 + move_now.z)
+		origin *= 1.0 + move_now.z
+		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		_transform = Transform(basis, origin)
 		# back-calculate view_rotations
@@ -675,6 +633,15 @@ static func _get_reference_basis(selection_: IVSelection, flags_: int) -> Basis:
 	return selection_.get_ecliptic_basis() # identity basis for any IVBody
 
 
+func _clamp_origin_length(origin: Vector3) -> Vector3:
+	var dist := origin.length()
+	if dist > _max_dist:
+		origin *= _max_dist / dist
+	elif dist < _min_dist:
+		origin *= _min_dist / dist
+	return origin
+
+
 func _signal_range_latitude_longitude(is_refresh := false) -> void:
 	if is_refresh:
 		_gui_range = NAN
@@ -701,7 +668,6 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 
 
 func _send_gui_refresh() -> void:
-	assert(parent)
 	emit_signal("parent_changed", parent)
 	emit_signal("focal_length_changed", focal_length)
 	emit_signal("up_lock_changed", flags, disabled_flags)
