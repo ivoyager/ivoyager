@@ -566,49 +566,44 @@ func _process_motion(delta: float) -> void:
 	else:
 		_motion_accumulator.z = 0.0
 	
-	# Apply x,y as rotation and z as scaler to our origin. Our current basis
-	# provides the correct rotation axes. Note: 'basis' uses camera y-up (not
-	# astronomical z-up).
+	# Apply x,y as rotation and z as scaler to our origin. Basis is treated
+	# differently for the 'up locked' and 'unlocked' cases.
 	var origin := _transform.origin
 	var basis := _transform.basis
-	
-	var latitude = view_position.y + move_now.y # NOT reliable for pole traversal
-	var cos_lat := cos(latitude)
-	var spin_dampener := 1.0 - cos_lat
-	
-	print(spin_dampener)
-	
-#	if spin_dampener < 0.0:
-#		spin_dampener = 0.0
-	move_now.x *= (1.0 - spin_dampener)
-	
-	# WIP - If not up locked, we need to rotate on our own reference!
-	
-	if bool(flags & Flags.UP_LOCKED): # pole limiter prevents traversal
+
+	if bool(flags & Flags.UP_LOCKED):
+		# A pole limiter prevents pole traversal. A spin dampener suppresses
+		# high longitudinal rate when near pole. There is NO change in
+		# view_rotations.
+		var spin_dampener := cos(view_position.y)
+		move_now.x *= spin_dampener
+		var latitude = view_position.y + move_now.y
 		if latitude > POLE_LIMITER:
 			move_now.y = POLE_LIMITER - view_position.y
 		elif latitude < -POLE_LIMITER:
 			move_now.y = -POLE_LIMITER -view_position.y
 		origin = origin.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
-	else: # may traverse the pole
-#		var latitude = view_position.y + move_now.y
-#		if latitude > PI / 2.0 or latitude < -PI / 2.0:
-#			is_pole_traversal = true
-#			print("POLE!")
+		origin *= (1.0 + move_now.z)
+		view_position = math.get_rotated_spherical3(origin, _reference_basis)
+		_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
+		
+	else:
+		# 'Free' rotation of origin and basis around target. Allows pole
+		# traversal and camera roll. We need to back-calculate view_rotations.
 		origin = origin.rotated(basis.y, move_now.x)
+		basis = basis.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
-	origin *= (1.0 + move_now.z)
-	var old_view_position := view_position
-	view_position = math.get_rotated_spherical3(origin, _reference_basis)
-	if abs(wrapf(view_position.x - old_view_position.x, -PI, PI)) > PI / 2.0:
-		# This is not perfect for pole traversal detection, but I can't think
-		# of any other. 'latitude' is not reliable at all.
-		view_rotations.z = wrapf(view_rotations.z + PI, -PI, PI)
-		view_rotations.x *= -1.0
-		view_rotations.y *= -1.0
-
-	_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
+		basis = basis.rotated(basis.x, -move_now.y)
+		origin *= (1.0 + move_now.z)
+		view_position = math.get_rotated_spherical3(origin, _reference_basis)
+		_transform = Transform(basis, origin)
+		# back-calculate view_rotations
+		var unrotated_transform := Transform(IDENTITY_BASIS, origin).looking_at(
+			-origin, _reference_basis.z)
+		var unrotated_basis := unrotated_transform.basis
+		var rotations_basis := unrotated_basis.inverse() * basis
+		view_rotations = rotations_basis.get_euler()
 
 
 func _process_rotation(delta: float) -> void:
