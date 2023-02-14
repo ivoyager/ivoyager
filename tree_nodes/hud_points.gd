@@ -93,8 +93,8 @@ func draw_points() -> void:
 		arrays[ArrayMesh.ARRAY_TEX_UV2] = _group.th0
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ARRAY_FLAGS)
 	# if we needed custom_aabb... (but we don't apparently)
-#	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
-#	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
+	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
+	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	var color: Color = IVGlobal.settings[_color_setting]
 	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
