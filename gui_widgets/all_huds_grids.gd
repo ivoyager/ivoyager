@@ -64,7 +64,7 @@ func _on_child_entered_tree(control: Control) -> void:
 			_column_follower_grids.append(control)
 			control.has_headers = false
 			control.ckbx_rows = [
-				["LABEL_NON_PLANETARY_MASS_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
+				["LABEL_NON_PMO_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
 			]
 		"VisitedAsteroidsGrid":
 			_column_follower_grids.append(control)
