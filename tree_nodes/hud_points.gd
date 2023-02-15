@@ -37,25 +37,23 @@ const TROJAN_ARRAY_FLAGS = (
 )
 const PI_DIV_3 := PI / 3.0 # 60 degrees
 
-var _group: IVSmallBodiesGroup
-var _color_setting: String
-
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _group: IVSmallBodiesGroup
+var _color_setting: String
+var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
 
 # Lagrange point
 var _lp_integer := -1
 var _secondary_orbit: IVOrbit
 
-var _last_update_time := -INF
-
-var _cycle_step := -1
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
-func _init(group_: IVSmallBodiesGroup, color_setting: String) -> void:
-	_group = group_
+func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
+	_group = group
 	_color_setting = color_setting
 	_lp_integer = _group.lp_integer
 	material_override = ShaderMaterial.new()
@@ -66,6 +64,16 @@ func _init(group_: IVSmallBodiesGroup, color_setting: String) -> void:
 		material_override.shader = IVGlobal.shared.points_l4_l5_shader
 	else:
 		assert(false)
+	# fragment ids
+	var n := group.get_number()
+	_vec3ids.resize(n) # needs resize whether we use ids or not
+	if _fragment_identifier:
+		var fragment_type := _fragment_identifier.FRAGMENT_POINT
+		var i := 0
+		while i < n:
+			var data := group.get_fragment_data(i, fragment_type)
+			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
+			i += 1
 
 
 func _ready() -> void:
@@ -81,18 +89,17 @@ func draw_points() -> void:
 	var arrays := []
 	arrays.resize(ArrayMesh.ARRAY_MAX)
 	if _lp_integer == -1: # not trojans
-		arrays[ArrayMesh.ARRAY_VERTEX] = _group.points_vec3ids
+		arrays[ArrayMesh.ARRAY_VERTEX] = _vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = _group.a_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_M0_n
 	#	arrays[ArrayMesh.ARRAY_TEX_UV] = _group.s_g
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], ARRAY_FLAGS)
 	else: # trojans
-		arrays[ArrayMesh.ARRAY_VERTEX] = _group.points_vec3ids
+		arrays[ArrayMesh.ARRAY_VERTEX] = _vec3ids
 		arrays[ArrayMesh.ARRAY_NORMAL] = _group.d_e_i
 		arrays[ArrayMesh.ARRAY_COLOR] = _group.Om_w_D_f
 		arrays[ArrayMesh.ARRAY_TEX_UV2] = _group.th0
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], TROJAN_ARRAY_FLAGS)
-	# if we needed custom_aabb... (but we don't apparently)
 	var half_aabb = _group.max_apoapsis * Vector3(1.1, 1.1, 1.1)
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh

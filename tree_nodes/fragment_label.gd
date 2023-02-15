@@ -20,7 +20,7 @@
 class_name IVFragmentLabel
 extends Label
 
-# Requires IVFragmentIdentifier to work. Both added in ProjectBuilder.gui_nodes.
+# Requires IVFragmentIdentifier. Both added in ProjectBuilder.gui_nodes.
 
 const FRAGMENT_ORBIT := IVFragmentIdentifier.FRAGMENT_ORBIT
 
@@ -28,17 +28,16 @@ var offset := Vector2(0.0, -7.0) # offset to not interfere w/ FragmentIdentifier
 var text_append_orbit := " (%s)" % tr("LABEL_ORBIT")
 
 var _world_targeting: Array = IVGlobal.world_targeting
-var _infos: Dictionary
+var _fragment_data: Dictionary
 
 
 func _ready() -> void:
 	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 	if !fragment_identifier:
-		# should remove this label from ProjectBuilder too, but just in case...
 		hide()
 		return
 	fragment_identifier.connect("fragment_changed", self, "_on_target_point_changed")
-	_infos = fragment_identifier.infos
+	_fragment_data = fragment_identifier.fragment_data
 	set("custom_fonts/font", IVGlobal.fonts.hud_names)
 	align = ALIGN_CENTER
 	grow_horizontal = GROW_DIRECTION_BOTH
@@ -51,9 +50,9 @@ func _on_target_point_changed(id: int) -> void:
 		hide()
 		return
 	show()
-	var info: Array = _infos[id]
-	var name_str := tr(info[0])
-	if info[1] == FRAGMENT_ORBIT:
+	var data: Array = _fragment_data[id]
+	var name_str := tr(data[0])
+	if data[1] == FRAGMENT_ORBIT:
 		name_str += text_append_orbit
 	text = name_str
 	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)

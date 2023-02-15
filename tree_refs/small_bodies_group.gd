@@ -51,10 +51,8 @@ const PERSIST_PROPERTIES := [
 	"secondary_body",
 	"lp_integer",
 	"max_apoapsis",
-	"points_vec3ids",
-	"orbits_vec3ids",
 	"names",
-	"iau_number",
+	"iau_numbers",
 	"magnitudes",
 	"dummy_translations",
 	"a_e_i",
@@ -75,8 +73,6 @@ var secondary_body: IVBody # null unless resonant group
 var lp_integer := -1 # -1, NA; 4 & 5 are currently supported
 
 var max_apoapsis := 0.0
-var points_vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
-var orbits_vec3ids := PoolVector3Array() # encodes 36-bit id for FragmentIdentifier
 
 # below is binary import data
 var names := PoolStringArray()
@@ -97,7 +93,6 @@ var th0 := PoolVector2Array()
 
 # *****************************************************************************
 
-var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _index := 0
 var _maxes := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var _mins := [INF, INF, INF, INF, INF, INF, INF, INF, INF]
@@ -126,10 +121,6 @@ func get_orbit_elements(index: int) -> Array:
 		Om_w_M0_n_item[2],
 		Om_w_M0_n_item[3],
 	]
-
-
-func get_orbits_vec3id(index: int) -> Vector3:
-	return orbits_vec3ids[index]
 
 
 # *****************************************************************************
@@ -174,23 +165,15 @@ func finish_binary_import() -> void:
 		_fix_binary_keplerian_elements()
 	else:
 		_fix_binary_trojan_elements()
-	var size := names.size()
-	points_vec3ids.resize(size) # needs resize for ArrayMesh construction
-	if _fragment_identifier:
-		orbits_vec3ids.resize(size) # only used if FragmentIdentifier
-		var i := 0
-		while i < size:
-			var info := [names[i], FRAGMENT_POINT, group_id, i]
-			points_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(info)
-			info = [names[i], FRAGMENT_ORBIT, group_id, i]
-			orbits_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(info)
-			i += 1
 	
 	# feedback
 	assert(DPRINT and _debug_print() or true)
 	assert(VPRINT and _verbose_print() or true)
-	
-	
+
+
+func get_fragment_data(index: int, fragment_type: int) -> Array:
+	return [names[index], fragment_type, group_id, index]
+
 
 
 # *****************************************************************************

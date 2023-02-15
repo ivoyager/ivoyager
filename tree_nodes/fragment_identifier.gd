@@ -20,8 +20,6 @@
 class_name IVFragmentIdentifier
 extends Viewport
 
-# TODO: orbit lines.
-#
 # Remove from ProjectBuilder.gui_nodes if not used.
 #
 # Decodes id from shader fragment displayed on the root viewport (e.g.,
@@ -36,7 +34,7 @@ extends Viewport
 # do that. However, we need id from vertex shaders. We'll see if that can be
 # done. In any case, this works...
 
-signal fragment_changed(id) # -1 on target loss; get name from 'infos'
+signal fragment_changed(id) # -1 on target loss; get data from 'fragment_data'
 
 enum { # fragment_type
 	FRAGMENT_POINT,
@@ -46,12 +44,9 @@ enum { # fragment_type
 const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 
-const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["infos"]
 
-
-# persisted; read-only!
-var infos := {} # arrays indexed by 36-bit id integer; [name, fragment_type, maybe more...]
+# read-only!
+var fragment_data := {} # arrays indexed by 36-bit id integer; [name, fragment_type, maybe more...]
 
 
 # project vars
@@ -95,14 +90,15 @@ onready var _picker_texture: ViewportTexture = get_texture()
 
 func _ready() -> void:
 	assert(fragment_range % 3 == 0)
+	add_child(_node2d)
+	_node2d.connect("draw", self, "_on_node2d_draw")
+	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	_init_rects_and_arrays()
 	_world_targeting[7] = float(fragment_range) # set in shaders
 	usage = USAGE_2D
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
-	add_child(_node2d)
-	_node2d.connect("draw", self, "_on_node2d_draw")
-	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
 
 
 func _process(_delta: float) -> void:
@@ -125,9 +121,9 @@ func get_new_id(info: Array) -> int:
 	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
 	# info = [name, fragment_type, maybe more...]
 	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
-	while infos.has(id):
+	while fragment_data.has(id):
 		id = (randi() << 4) | (randi() & 15)
-	infos[id] = info
+	fragment_data[id] = info
 	return id
 
 
@@ -137,7 +133,7 @@ func get_new_id_as_vec3(info: Array) -> Vector3:
 
 
 func remove_id(id: int) -> void:
-	infos.erase(id)
+	fragment_data.erase(id)
 
 
 static func encode_color_channels(id: int) -> Array:
@@ -215,6 +211,10 @@ static func encode_vec3(id: int) -> Vector3:
 
 # private
 
+func _clear() -> void:
+	fragment_data.clear()
+
+
 func _init_rects_and_arrays() -> void:
 	var side_length := fragment_range * 2 + 1
 	_picker_rect = Rect2(0.0, 0.0, side_length, side_length) # sets THIS viewport size
@@ -250,11 +250,12 @@ func _init_rects_and_arrays() -> void:
 
 
 func _sort_pxl_offsets(a: Array, b: Array) -> bool:
+	# Sorts by distance to center.
 	return a[0] * a[0] + a[1] * a[1] < b[0] * b[0] + b[1] * b[1]
 
 
 func _on_node2d_draw() -> void:
-	# Copy a small rect of root viewport texture to this viewport.
+	# Copy a tiny square of root viewport texture to this viewport.
 	_src_rect.position = _world_targeting[6] - _src_offset
 	_node2d.draw_texture_rect_region(_root_texture, _picker_rect, _src_rect)
 	_has_drawn = true
@@ -268,9 +269,11 @@ func _on_frame_post_draw() -> void:
 			_current_id = -1
 			emit_signal("fragment_changed", -1)
 		return
+	
 	_node2d.update() # force a draw signal
 	if !_has_drawn:
 		return
+	
 	_has_drawn = false
 	_picker_image = _picker_texture.get_data() # expensive!
 	_picker_image.lock()
@@ -286,13 +289,16 @@ func _on_frame_post_draw() -> void:
 		_drop_frame_counter = 0
 		_drop_mouse_coord = _world_targeting[6]
 		return
+	
 	if _current_id == -1:
 		return
+	
 	if (_drop_frame_counter > drop_id_frames or
 			_drop_mouse_coord.distance_to(_world_targeting[6]) > drop_id_mouse_movement):
 		_current_id = -1
 		emit_signal("fragment_changed", -1)
 		return
+	
 	# We've lost id signal, but don't reset _current_id yet
 	_drop_frame_counter += 1
 
@@ -393,7 +399,7 @@ func _process_pixel(pxl: int):
 	
 	# decode (interupt/restart if spurious id)
 	var id := decode_color_channels(_adj_values)
-	if !infos.has(id):
+	if !fragment_data.has(id):
 		_calibration_colors[pxl][0] = color
 		_cycle_steps[pxl] = 1
 		_current_ids[pxl] = -1 # reset

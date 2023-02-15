@@ -31,12 +31,23 @@ var _world_targeting: Array = IVGlobal.world_targeting
 
 var _group: IVSmallBodiesGroup
 var _color_setting: String
+var _vec3ids := PoolVector3Array() # orbit ids for FragmentIdentifier
 
 
 
 func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
 	_group = group
 	_color_setting = color_setting
+	# fragment ids
+	if _fragment_identifier:
+		var n := group.get_number()
+		_vec3ids.resize(n)
+		var fragment_type := _fragment_identifier.FRAGMENT_ORBIT
+		var i := 0
+		while i < n:
+			var data := group.get_fragment_data(i, fragment_type)
+			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
+			i += 1
 
 
 func _ready() -> void:
@@ -74,21 +85,21 @@ func _process(_delta: float) -> void:
 func _set_transforms_and_ids() -> void:
 	var n := _group.get_number()
 	multimesh.instance_count = n
-	var index := 0
-	while index < n:
+	var i := 0
+	while i < n:
 		# currently assumes ecliptic reference
-		var elements := _group.get_orbit_elements(index)
+		var elements := _group.get_orbit_elements(i)
 		var a: float = elements[0]
 		var e: float = elements[1]
 		var b: = sqrt(a * a * (1.0 - e * e)) # simi-minor axis
 		var orbit_basis := Basis().scaled(Vector3(a, b, 1.0))
 		orbit_basis = math.get_rotation_matrix(elements) * orbit_basis
 		var orbit_transform := Transform(orbit_basis, -e * orbit_basis.x)
-		multimesh.set_instance_transform(index, orbit_transform)
+		multimesh.set_instance_transform(i, orbit_transform)
 		if _fragment_identifier:
-			var vec3id := _group.get_orbits_vec3id(index)
-			multimesh.set_instance_custom_data(index, Color(vec3id.x, vec3id.y, vec3id.z, 0.0))
-		index += 1
+			var vec3id := _vec3ids[i]
+			multimesh.set_instance_custom_data(i, Color(vec3id.x, vec3id.y, vec3id.z, 0.0))
+		i += 1
 
 
 func _on_visibility_changed() -> void:
