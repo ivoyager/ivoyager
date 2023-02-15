@@ -6,6 +6,36 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
+## [v0.0.14] - Not Released
+
+Under development using Godot 3.5.2.rc2.
+
+Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14**; download [here](https://github.com/ivoyager/non_release_assets/releases). Previous release assets should be ok but will not have ISS, Hubble, and several visited asteroids (will have fallback sphere grid instead).
+
+### Added
+* Spacecrafts! For now, just ISS and Hubble. (Juno has been added as an object, but it uses a fallback blank model because the open-source Juno model causes crashes in GLES2 operation.)
+* Visited asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
+* Asteroid orbit lines can be shown by group, or all at once. Yes, all ~65,000 of them!
+* Visual screen points (i.e., asteroids) and orbit lines are now identified by name on mouse-over. This involved some crazy shader/viewport hacking; for details see class [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd). 
+* IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays oriented to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
+* New IVAllHUDsGrid widget organizes HUD visibility checkboxes.
+
+
+### Changed
+* New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground-' or 'orbit-tracking' mode.
+* Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
+* [Breaks API!] Removed/replaced table columns. E.g., new 'show_in_nav_panel' needed for display by the navigation panel widgets. Some others may be API breaking.
+* [Breaks API!] Significantly changed API in classes: IVCamera, IVView.
+* [Breaks API!] Replaced classes: IVLPoint -> IVLagrangePoint.
+* [Breaks API!] Removed classes: IVModelController, several 'builder' classes.
+* [Breaks API!] Various changes to IVGlobal signals.
+* [Breaks API!] Various changes to IVEnums.
+* Improved code throughout (especially the pre-2019 classes like IVCamera).
+
+### Fixed
+* Somewhat less inacurate Trojan orbits. Ocillation of longitude and semi-major axis are now phased correctly. (There is still a lot of room for improvement in the tadpole orbit approximation, although it will always be a rough approximation because there are no closed-form solutions.)
+
+
 ## [v0.0.13] - 2022-09-28
 
 Developed using Godot 3.5.1.stable.
@@ -422,6 +452,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
+[v0.0.14]: https://github.com/ivoyager/ivoyager/compare/v0.0.13...HEAD
 [v0.0.13]: https://github.com/ivoyager/ivoyager/compare/v0.0.12...v0.0.13
 [v0.0.12]: https://github.com/ivoyager/ivoyager/compare/v0.0.11...v0.0.12
 [v0.0.11]: https://github.com/ivoyager/ivoyager/compare/v0.0.10...v0.0.11

@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCacheManager
+extends Reference
+
 
 # Abstract base class for managing user cached items. Subclasses include
 # IVSettingsManager & IVInputMapManager.
@@ -159,7 +161,7 @@ func _read_cache() -> void:
 	# it does block until completed.
 	var file := File.new()
 	if file.open(_file_path, File.READ) != OK:
-		prints("Missing", _file_path, "(ok if no changes yet)")
+		prints("Did not find cache file:", _file_path)
 		return
 	_cached = file.get_var()
 	for item_name in _cached:

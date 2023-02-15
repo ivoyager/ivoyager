@@ -2,11 +2,8 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/lat_long_label.gd" type="Script" id=1]
 
-
 [node name="LatLongLabel" type="Label"]
 margin_right = 40.0
 margin_bottom = 14.0
+text = "0.0 N 0.0 E"
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}

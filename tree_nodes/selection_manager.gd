@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +20,19 @@
 class_name IVSelectionManager
 extends Node
 
-# Has currently selected item and keeps selection history. In most applications
-# (e.g., Planetarium) you only need one SelectionManager, but any number are
-# possible. GUI widgets search up their ancestor tree and obtain from the first
-# Control node with non-null member 'selection_manager'.
+# Has currently selected item and keeps selection history. In many applications
+# you only need one SelectionManager, but any number are possible. GUI widgets
+# search up their ancestor tree and obtain from the first Control node with
+# non-null member 'selection_manager'.
 
 signal selection_changed()
 signal selection_reselected()
 
 enum {
-	# some implemented but many planned
+	# not all of these are implemented yet...
 	SELECTION_UNIVERSE,
 	SELECTION_GALAXY,
-	SELECTION_STAR_SYSTEM, # use as generic for Solar System (there isn't one!)
+	SELECTION_STAR_SYSTEM,
 	SELECTION_STAR,
 	SELECTION_TRUE_PLANET,
 	SELECTION_DWARF_PLANET,

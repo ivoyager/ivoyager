@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +20,31 @@
 class_name IVBody
 extends Spatial
 
-# Base class for Spatial nodes that have an orbit or can be orbited. The system
-# tree (under Universe) is composed of IVBody instances from top to bottom.
-# Other spatial nodes (e.g., visuals) are parented by these IVBodies.
+# Base class for objects that orbit or are orbited. The system tree under
+# Universe is composed of IVBody instances from top to bottom. Other kinds of
+# nodes (HUDs, camera, etc.) are added to this node or its 'model_space' or
+# 'orbit_space', depending on what is needed.
+#
+# IVBody nodes are NEVER scaled or rotated. Hence, distances and directions
+# (e.g., ecliptic "up") are always consistent at any level of the tree.
+#
+# See also IVSmallBodiesGroup for handling large sets of orbiting bodies
+# without individual instantiation (e.g., asteroids).
 #
 # Node name is table row name: "PLANET_EARTH", "MOON_EUROPA", etc.
 #
-# TODO?: Make IVLPoint into IVBody instances?
-# TODO: barycenters
+# TODO: (Ongoing) Make this node "drag-and_drop" as much as possible.
 #
-# TODO: Make this node "drag-and_drop" as much as possible.
+# TODO: Barycenters! They orbit and are orbited. Will make Pluto system
+# (especially) more accurate.
 #
-# TODO: Implement network sync! This will mainly involve synching IVOrbit
-# anytime it changes (e.g., impulse from a rocket engine).
+# TODO4.0: Implement network sync! This will mainly involve synching IVOrbit
+# anytime it changes in a 'non-schedualed' way (e.g., impulse from a rocket
+# engine).
+
+signal huds_visibility_changed(is_visible)
+signal model_visibility_changed(is_visible)
+
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
@@ -60,7 +72,6 @@ const PERSIST_PROPERTIES := [
 	"characteristics",
 	"components",
 	"satellites",
-	"lagrange_points",
 ]
 
 
@@ -69,18 +80,23 @@ var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
 var satellites := [] # IVBody instances
-var lagrange_points := [] # IVLPoint instances (lazy init as needed)
 
 
-# public - read-only except builder classes
-var parent: Spatial # another Body or 'Universe'
+# public - read-only!
+var huds_visible := false # too far / too close toggle
+var model_visible := false
+var model_space: Spatial # rotation only, not scaled (lazy init)
+var orbit_space: Spatial # rotates wih orbit for camera orbit tracking (lazy init)
+var rotating_space: IVRotatingSpace # rotates & translates for L-points (lazy init)
+var rotation_vector := ECLIPTIC_Z # synonymous with 'north'
+var rotation_rate := 0.0
+var rotation_at_epoch := 0.0
+var basis_at_epoch := IDENTITY_BASIS
+var model_reference_basis := IDENTITY_BASIS
+
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
-var model_controller: IVModelController
-var aux_graphic: Spatial # rings, commet tail, etc. (for visibility control)
-var omni_light: OmniLight # star only
-var hud_orbit: IVHUDOrbit
-var hud_label: IVHUDLabel
+
 var texture_2d: Texture
 var texture_slice_2d: Texture # GUI navigator graphic for sun only
 var min_click_radius: float
@@ -88,25 +104,18 @@ var max_hud_dist_orbit_radius_multiplier: float
 var min_hud_dist_radius_multiplier: float
 var min_hud_dist_star_multiplier: float
 var max_model_dist := 0.0
-var max_aux_graphic_dist := 0.0
-var min_hud_dist: float
-var is_asleep := false
+var sleep := false
 
 
 # private
 var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
-var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
-var _show_orbit := true
-var _show_label := true
 var _model_visible := false
 var _aux_graphic_visible := false
-var _hud_orbit_visible := false
-var _hud_label_visible := false
-var _is_visible := false
+var _min_hud_dist: float
 
+var _world_targeting: Array = IVGlobal.world_targeting
 onready var _tree := get_tree()
 
 
@@ -125,13 +134,11 @@ func _enter_tree() -> void:
 
 
 func _on_enter_tree() -> void:
-	parent = get_parent()
-	if _state.is_game_loading:
-		m_radius = characteristics.m_radius
-		orbit = components.get("orbit")
-		if orbit:
-			orbit.reset_elements_and_interval_update()
-			orbit.connect("changed", self, "_on_orbit_changed")
+	m_radius = characteristics.m_radius # required
+	orbit = components.get("orbit") # no orbit for the top body (e.g., the Sun)
+	if orbit:
+		orbit.reset_elements_and_interval_update()
+		orbit.connect("changed", self, "_on_orbit_changed")
 
 
 func _ready() -> void:
@@ -142,13 +149,13 @@ func _on_ready() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
 	assert(!IVGlobal.bodies.has(name))
 	IVGlobal.bodies[name] = self
 	if flags & BodyFlags.IS_TOP:
 		IVGlobal.top_bodies.append(self)
+	_set_min_hud_dist()
 
 
 func _exit_tree() -> void:
@@ -181,67 +188,78 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 func _prepare_to_free() -> void:
 	set_process(false)
 	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
-	_huds_manager.disconnect("show_huds_changed", self, "_on_show_huds_changed")
 
 
 func _process(delta: float) -> void:
 	_on_process(delta)
 
 
-func _on_process(_delta: float) -> void:
-	var is_mouse_target := false
-	var global_translation := global_transform.origin
-	var camera_dist := _visuals_helper.get_distance_to_camera(global_translation)
-	var position_2d := _visuals_helper.unproject_position_in_front(global_translation)
-	if position_2d != VECTOR2_NULL: # not behind
-		var mouse_dist := position_2d.distance_to(_visuals_helper.mouse_position)
+func _on_process(_delta: float) -> void: # subclass can override
+	# _process() is disabled while in sleep mode (sleep == true). When in sleep
+	# mode, API assumes that any properties updated here are stale and must be
+	# calculated in-function.
+	
+	# get camera distance and check mouse proximity
+	var camera: Camera = _world_targeting[2]
+	var camera_dist := global_translation.distance_to(camera.global_translation)
+	var is_in_mouse_click_radius := false
+	if !camera.is_position_behind(global_translation):
+		var pos2d := camera.unproject_position(global_translation)
+		var mouse_dist := pos2d.distance_to(_world_targeting[0])
 		var click_radius := min_click_radius
-		var divisor: float = _visuals_helper.camera_fov * camera_dist # fov * dist
+		var divisor: float = _world_targeting[3] * camera_dist # fov * dist
 		if divisor > 0.0:
-			var screen_radius: float = 55.0 * m_radius * _visuals_helper.veiwport_height / divisor
+			var screen_radius: float = 55.0 * m_radius * _world_targeting[1] / divisor
 			if click_radius < screen_radius:
 				click_radius = screen_radius
 		if mouse_dist < click_radius:
-			is_mouse_target = true
-	if is_mouse_target:
-		_visuals_helper.set_mouse_target(self, camera_dist)
-	else:
-		_visuals_helper.remove_mouse_target(self)
-	var hud_dist_ok := camera_dist > min_hud_dist
-	if hud_dist_ok:
-		var orbit_radius := translation.length() if orbit else INF
-		hud_dist_ok = camera_dist < orbit_radius * max_hud_dist_orbit_radius_multiplier
-	var hud_label_visible := _show_label and hud_dist_ok and hud_label and position_2d != VECTOR2_NULL
-	if hud_label_visible:
-		# position 2D Label before 3D translation!
-		hud_label.set_position(position_2d - hud_label.rect_size / 2.0)
-	var time: float = _times[0]
+			is_in_mouse_click_radius = true
+	
+	# set/unset this body as mouse target
+	if is_in_mouse_click_radius:
+		if camera_dist < _world_targeting[5]: # make self the mouse target
+			_world_targeting[4] = self
+			_world_targeting[5] = camera_dist
+	elif _world_targeting[4] == self: # remove self as mouse target
+		_world_targeting[4] = null
+		_world_targeting[5] = INF
+
+	# update translation and reference frame 'spaces'
 	if orbit:
-		translation = orbit.get_position(time)
-	if model_controller:
-		var model_visible := camera_dist < max_model_dist
-		if model_visible:
-			model_controller.process_visible(time, camera_dist)
-		if _model_visible != model_visible:
-			_model_visible = model_visible
-			model_controller.change_visibility(model_visible)
-	if aux_graphic:
-		var aux_graphic_visible := camera_dist < max_aux_graphic_dist
-		if _aux_graphic_visible != aux_graphic_visible:
-			_aux_graphic_visible = aux_graphic_visible
-			aux_graphic.visible = aux_graphic_visible
-	if hud_orbit:
-		var hud_orbit_visible := _show_orbit and hud_dist_ok
-		if _hud_orbit_visible != hud_orbit_visible:
-			_hud_orbit_visible = hud_orbit_visible
-			hud_orbit.visible = hud_orbit_visible
-	if hud_label:
-		if _hud_label_visible != hud_label_visible:
-			_hud_label_visible = hud_label_visible
-			hud_label.visible = hud_label_visible
-	if !_is_visible:
-		_is_visible = true
-		visible = true
+		translation = orbit.get_position()
+		if orbit_space or rotating_space:
+			var orbit_dist := translation.length()
+			var x_axis := -translation / orbit_dist
+			var z_axis := orbit.get_normal()
+			var y_axis := z_axis.cross(x_axis)
+			if rotating_space:
+				rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+				rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+			if orbit_space:
+				if orbit.is_retrograde():
+					orbit_space.transform.basis = Basis(x_axis, -y_axis, -z_axis)
+				else:
+					orbit_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+	if model_space:
+		var rotation_angle := wrapf(_times[0] * rotation_rate, 0.0, TAU)
+		model_space.transform.basis = basis_at_epoch.rotated(rotation_vector, rotation_angle)
+	
+	# check HUD and model visibility
+	var hud_dist_ok := _min_hud_dist < camera_dist # not too close to camera
+	if hud_dist_ok and orbit:
+		var orbit_radius := translation.length()
+		# is body too close to its parent for camera distance?
+		hud_dist_ok = orbit_radius * max_hud_dist_orbit_radius_multiplier > camera_dist
+	if huds_visible != hud_dist_ok:
+		huds_visible = hud_dist_ok
+		emit_signal("huds_visibility_changed", huds_visible)
+		
+	if model_visible != (camera_dist < max_model_dist):
+		model_visible = !model_visible
+		emit_signal("model_visibility_changed", model_visible)
+	
+	show()
+
 
 
 # public functions
@@ -259,6 +277,10 @@ func get_system_radius() -> float:
 	return characteristics.system_radius
 
 
+func get_hud_name() -> String:
+	return characteristics.get("hud_name", name)
+
+
 func get_symbol() -> String:
 	return characteristics.get("symbol", "\u25CC") # default is dashed circle
 
@@ -271,8 +293,18 @@ func get_model_type() -> int: # models.tsv
 	return characteristics.get("model_type", -1)
 
 
-func get_light_type() -> int: # lights.tsv
-	return characteristics.get("light_type", -1)
+func has_omni_light() -> bool:
+	return characteristics.get("omni_light_type", -1) != -1
+
+
+func get_omni_light_type(gles2 := false) -> int:
+	# Result is always consistent w/ has_omni_light(), whether gles2 is set
+	# or not.
+	var type: int = characteristics.get("omni_light_type", -1)
+	if !gles2 or type == -1:
+		return type
+	var type_gles2: int = characteristics.get("omni_light_type_gles2", -1)
+	return type_gles2 if type_gles2 != -1 else type
 
 
 func get_file_prefix() -> String:
@@ -322,9 +354,7 @@ func get_rotation_period() -> float:
 
 
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
-	if !model_controller:
-		return VECTOR2_ZERO
-	var ground_basis := model_controller.get_ground_ref_basis(time)
+	var ground_basis := get_ground_basis(time)
 	var spherical := math.get_rotated_spherical3(at_translation, ground_basis)
 	var latitude: float = spherical[1]
 	var longitude: float = wrapf(spherical[0], -PI, PI)
@@ -340,7 +370,7 @@ func get_north_pole(_time := NAN) -> Vector3:
 	# However, we want a "north" for all bodies for camera orientation. Also,
 	# it is common usage to assign "north" to Pluto and Charon's positive
 	# poles, which is reversed from above if Pluto were a planet (which it is
-	# not, of course!). We attempt to sort this out as follows:
+	# not, of course). We attempt to sort this out as follows:
 	#
 	#  * Star - Same as true planet.
 	#  * True planets and their satellites - Use pole pointing in positive z-
@@ -356,25 +386,19 @@ func get_north_pole(_time := NAN) -> Vector3:
 	# always "north".
 	#
 	# TODO: North precession; will require time.
-	if !model_controller:
-		return ECLIPTIC_Z
-	return model_controller.rotation_vector
+	return rotation_vector
+
+
+func get_up_pole(_time := NAN) -> Vector3:
+	# Synonymous with "north".
+	return rotation_vector
 
 
 func get_positive_pole(_time := NAN) -> Vector3:
 	# Right-hand-rule! This is exactly defined, unlike "north".
-	if !model_controller:
-		return ECLIPTIC_Z
-	if model_controller.rotation_rate < 0.0:
-		return -model_controller.rotation_vector
-	return model_controller.rotation_vector
-
-
-func get_up_pole(_time := NAN) -> Vector3:
-	# See comments in IVModelController.
-	if !model_controller:
-		return ECLIPTIC_Z
-	return model_controller.rotation_vector
+	if rotation_rate < 0.0:
+		return -rotation_vector
+	return rotation_vector
 
 
 func is_orbit_retrograde(time := NAN) -> bool:
@@ -404,13 +428,11 @@ func get_orbit_inclination_to_equator(time := NAN) -> float:
 
 
 func is_rotation_retrograde() -> bool:
-	if !model_controller:
-		return false
-	return model_controller.rotation_rate < 0.0
+	return rotation_rate < 0.0
 
 
 func get_axial_tilt_to_orbit(time := NAN) -> float:
-	if !model_controller or !orbit:
+	if !orbit:
 		return NAN
 	var positive_pole := get_positive_pole(time)
 	var orbit_normal := orbit.get_normal(time)
@@ -418,27 +440,30 @@ func get_axial_tilt_to_orbit(time := NAN) -> float:
 
 
 func get_axial_tilt_to_ecliptic(time := NAN) -> float:
-	if !model_controller:
-		return NAN
 	var positive_pole := get_positive_pole(time)
 	return positive_pole.angle_to(ECLIPTIC_Z)
 
 
-func get_ground_ref_basis(time := NAN) -> Basis:
+func get_ground_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to ground
-	if !model_controller:
-		return IDENTITY_BASIS
-	return model_controller.get_ground_ref_basis(time)
+	if model_space and is_nan(time):
+		return model_space.transform.basis
+	else:
+		if is_nan(time):
+			time = _times[0]
+		var rotation_angle := wrapf(time * rotation_rate, 0.0, TAU)
+		return basis_at_epoch.rotated(rotation_vector, rotation_angle)
 
 
-func get_orbit_ref_basis(time := NAN) -> Basis:
+func get_orbit_basis(time := NAN) -> Basis:
 	# returns rotation basis referenced to parent body
 	if !orbit:
 		return IDENTITY_BASIS
+	if orbit_space and is_nan(time):
+		return orbit_space.transform.basis
 	var x_axis := -orbit.get_position(time).normalized()
-	var up := orbit.get_normal(time, true)
-	var y_axis := up.cross(x_axis).normalized() # norm needed due to imprecision
-	var z_axis := x_axis.cross(y_axis)
+	var z_axis := orbit.get_normal(time, true)
+	var y_axis := z_axis.cross(x_axis)
 	return Basis(x_axis, y_axis, z_axis)
 
 
@@ -449,7 +474,7 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 		return INF
 	var a := get_orbit_semi_major_axis()
 	var mass := get_mass()
-	var parent_mass: float = parent.get_mass()
+	var parent_mass: float = get_parent_spatial().get_mass()
 	if !a or !mass or !parent_mass:
 		return 0.0
 	return a * (1.0 - eccentricity) * pow(mass / (3.0 * parent_mass), 0.33333333)
@@ -457,123 +482,205 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 
 # ivoyager mechanics below
 
-func set_orbit(orbit_: IVOrbit) -> void:
-	if orbit == orbit_:
+func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
+	# TODO: Keep in ModelManager (should maintain its own lazy init data).
+	model_reference_basis = reference_basis
+	max_model_dist = max_dist
+
+
+func add_child_to_model_space(spatial: Spatial) -> void:
+	if !model_space:
+		var _ModelSpace_: Script = IVGlobal.script_classes._ModelSpace_
+		model_space = _ModelSpace_.new()
+		add_child(model_space)
+	model_space.add_child(spatial)
+
+
+func remove_child_from_model_space(spatial: Spatial) -> void:
+	model_space.remove_child(spatial)
+	if model_space.get_child_count() == 0:
+		model_space.queue_free()
+		model_space = null
+
+
+func add_child_to_orbit_space(spatial: Spatial) -> void:
+	if !orbit_space:
+		var _OrbitSpace_: Script = IVGlobal.script_classes._OrbitSpace_
+		orbit_space = _OrbitSpace_.new()
+		add_child(orbit_space)
+	orbit_space.add_child(spatial)
+
+
+func remove_child_from_orbit_space(spatial: Spatial) -> void:
+	orbit_space.remove_child(spatial)
+	if orbit_space.get_child_count() == 0:
+		orbit_space.queue_free()
+		orbit_space = null
+
+
+func set_orbit(orbit_: IVOrbit) -> void: # null ok
+	if orbit_:
+		components.orbit = orbit_
+	else:
+		components.erase("orbit")
+	if !is_inside_tree():
 		return
 	if orbit:
 		orbit.disconnect_interval_update()
 		orbit.disconnect("changed", self, "_on_orbit_changed")
 	orbit = orbit_
 	if orbit_:
-		components.orbit = orbit_
 		orbit_.reset_elements_and_interval_update()
 		orbit_.connect("changed", self, "_on_orbit_changed")
-	else:
-		components.erase("orbit")
 
 
-func set_hide_hud_when_close(hide_hud_when_close: bool) -> void:
-	if hide_hud_when_close:
-		min_hud_dist = m_radius * min_hud_dist_radius_multiplier
-		if flags & IS_STAR:
-			min_hud_dist *= min_hud_dist_star_multiplier # just the label
-	else:
-		min_hud_dist = 0.0
-
-
-func set_sleep(sleep: bool) -> void: # called by IVSleepManager
-	if flags & NEVER_SLEEP or sleep == is_asleep:
+func set_sleep(sleep_: bool) -> void: # called by IVSleepManager
+	if flags & NEVER_SLEEP or sleep_ == sleep:
 		return
-	if sleep:
-		is_asleep = true
+	if sleep_:
+		sleep = true
+		hide()
 		set_process(false)
-		_is_visible = false
-		visible = false
-		_visuals_helper.remove_mouse_target(self)
-		if hud_orbit: # not a child of this node!
-			_hud_orbit_visible = false
-			hud_orbit.visible = false
-		if hud_label: # not a child of this node!
-			_hud_label_visible = false
-			hud_label.visible = false
+		if _world_targeting[4] == self: # remove self as mouse target
+			_world_targeting[4] = null
+			_world_targeting[5] = INF
 	else:
-		is_asleep = false
-		set_process(true) # will show on next _process()
+		sleep = false
+		_process(0.0) # update translation, etc., now; will show()
+		set_process(true)
+
+
+func get_lagrange_point_local_space(lp_integer: int) -> Vector3:
+	# Returns Vector3.ZERO if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return Vector3.ZERO
+	return rotating_space.get_lagrange_point_local_space(lp_integer)
+
+
+func get_lagrange_point_global_space(lp_integer: int) -> Vector3:
+	# Returns Vector3.ZERO if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return Vector3.ZERO
+	return rotating_space.get_lagrange_point_global_space(lp_integer)
+
+
+func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
+	# Returns null if we don't have parameters to calculate.
+	assert(lp_integer >=1 and lp_integer <= 5)
+	if !rotating_space:
+		_add_rotating_space()
+		if !rotating_space:
+			return null
+	return rotating_space.get_lagrange_point_node3d(lp_integer)
+
+
+# private functions
+
+func _add_rotating_space() -> void:
+	# bail out if we don't have requried parameters
+	if !orbit:
+		return
+	var m2: float = get_mass()
+	if !m2:
+		return
+	var m1: float = get_parent_spatial().get_mass()
+	if !m1:
+		return
+	var mass_ratio: float = m1 / m2
+	var characteristic_length := orbit.get_characteristic_length()
+	var characteristic_time := orbit.get_orbit_period()
+	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
+	rotating_space = _RotatingSpace_.new()
+	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
+	var translation_ := orbit.get_position()
+	var orbit_dist := translation_.length()
+	var x_axis := -translation_ / orbit_dist
+	var z_axis := orbit.get_normal()
+	var y_axis := z_axis.cross(x_axis)
+	rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
 
 
 func reset_orientation_and_rotation() -> void:
-	# If we have tidal and/or axis lock, then IVOrbit determines rotation and/or
-	# orientation. If so, we use IVOrbit to set values in characteristics and
-	# IVModelController. Otherwise, characteristics already holds table-loaded
-	# values (RA, dec, period) which we use to set IVModelController values.
-	# Note: Earth's Moon is the unusual case that is tidally locked but not
-	# axis locked (its axis is tilted to its orbit). Axis of other moons are
-	# not exactly orbit normal but stay within ~1 degree. E.g., see:
-	# https://zenodo.org/record/1259023.
+	# Sets 'rotation_rate', 'rotation_vector' and 'rotation_at_epoch' and
+	# (possibly) associated values in 'characteristics'. For planets, these are
+	# fixed values determined by table-loaded 'characteristics.RA', '.dec' and
+	# '.period'. If we have tidal and/or axis lock, then IVOrbit determines
+	# rotation and/or orientation. If so, we use IVOrbit to set the three
+	# IVBody properties and to back-calclulate 'characteristics.RA', '.dec' and
+	# '.period'.
+	#
+	# Note: Earth's Moon is the unique case that is tidally locked but has axis
+	# significantly tilted to orbit normal. Axis of other tidally-locked moons
+	# are not exactly orbit normal but stay within ~1 degree (see:
+	# https://zenodo.org/record/1259023) which we approximate as zero (i.e,
+	# 'axis-locked').
+	#
 	# TODO: We still need rotation precession for Bodies with axial tilt.
 	# TODO: Some special mechanic for tumblers like Hyperion.
-	
-	if !model_controller or flags & IS_TOP:
-		return
-	
+
 	# rotation_rate
-	var rotation_rate: float
+	var new_rotation_rate: float
 	if flags & IS_TIDALLY_LOCKED:
-		rotation_rate = orbit.get_mean_motion()
-		characteristics.rotation_period = TAU / rotation_rate
+		new_rotation_rate = orbit.get_mean_motion()
+		characteristics.rotation_period = TAU / new_rotation_rate
 	else:
 		var rotation_period: float = characteristics.rotation_period
-		rotation_rate = TAU / rotation_period
+		new_rotation_rate = TAU / rotation_period
 	# rotation_vector
-	var rotation_vector: Vector3
+	var new_rotation_vector: Vector3
 	if flags & IS_AXIS_LOCKED:
-		rotation_vector = orbit.get_normal()
-		var ra_dec := math.get_spherical2(rotation_vector)
+		new_rotation_vector = orbit.get_normal()
+		var ra_dec := math.get_spherical2(new_rotation_vector)
 		characteristics.right_ascension = ra_dec[0]
 		characteristics.declination = ra_dec[1]
 	elif flags & TUMBLES_CHAOTICALLY:
 		# TODO: something sensible for Hyperion
 		characteristics.right_ascension = 0.0
 		characteristics.declination = 0.0
-		rotation_vector = _ecliptic_rotation * math.convert_spherical2(0.0, 0.0)
+		new_rotation_vector = _ecliptic_rotation * math.convert_spherical2(0.0, 0.0)
 	else:
 		var ra: float = characteristics.right_ascension
 		var dec: float = characteristics.declination
-		rotation_vector = _ecliptic_rotation * math.convert_spherical2(ra, dec)
-	var rotation_at_epoch: float = characteristics.get("longitude_at_epoch", 0.0)
+		new_rotation_vector = _ecliptic_rotation * math.convert_spherical2(ra, dec)
+	var new_rotation_at_epoch: float = characteristics.get("longitude_at_epoch", 0.0)
+	
 	if orbit:
 		if flags & IS_TIDALLY_LOCKED:
-			rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
+			new_rotation_at_epoch += orbit.get_mean_longitude(0.0) - PI
 		else:
-			rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
+			new_rotation_at_epoch += orbit.get_true_longitude(0.0) - PI
 	
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
-	var parent_flags: int = parent.flags
-	if flags & IS_STAR or flags & IS_TRUE_PLANET or parent_flags & IS_TRUE_PLANET:
-		if ECLIPTIC_Z.dot(rotation_vector) < 0.0:
+	if (flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET
+			or get_parent_spatial().flags & IS_TRUE_PLANET):
+		if ECLIPTIC_Z.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
-	elif parent_flags & IS_STAR: # dwarf planets and other star-orbiters
-		if rotation_rate < 0.0:
+	elif get_parent_spatial().flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
+		if new_rotation_rate < 0.0:
 			reverse_polarity = true
 	else: # moons of not-true-planet star-orbiters
-		var parent_positive_pole: Vector3 = parent.get_positive_pole()
-		if parent_positive_pole.dot(rotation_vector) < 0.0:
+		var parent_positive_pole: Vector3 = get_parent_spatial().get_positive_pole()
+		if parent_positive_pole.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
 	if reverse_polarity:
-		rotation_rate = -rotation_rate
-		rotation_vector = -rotation_vector # this defines "north"!
-		rotation_at_epoch = -rotation_at_epoch
+		new_rotation_rate = -new_rotation_rate
+		new_rotation_vector = -new_rotation_vector # this defines "north"!
+		new_rotation_at_epoch = -new_rotation_at_epoch
 	
-	model_controller.set_body_parameters(rotation_vector, rotation_rate, rotation_at_epoch)
-	model_controller.emit_signal("changed")
+	rotation_rate = new_rotation_rate
+	rotation_vector = new_rotation_vector
+	rotation_at_epoch = new_rotation_at_epoch
 
-
-# private functions
-
-func _on_show_huds_changed() -> void:
-	_show_orbit = _huds_manager.show_orbits
-	_show_label = _huds_manager.show_names or _huds_manager.show_symbols
+	var basis := math.rotate_basis_z(Basis(), rotation_vector)
+	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch)
 
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
@@ -598,19 +705,15 @@ func _on_time_altered(_previous_time: float) -> void:
 	reset_orientation_and_rotation()
 
 
-func _settings_listener(setting: String, value) -> void:
-	match setting:
-		"planet_orbit_color":
-			if flags & BodyFlags.IS_TRUE_PLANET and hud_orbit:
-				hud_orbit.change_color(value)
-		"dwarf_planet_orbit_color":
-			if flags & BodyFlags.IS_DWARF_PLANET and hud_orbit:
-				hud_orbit.change_color(value)
-		"moon_orbit_color":
-			if flags & BodyFlags.IS_MOON and flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
-				hud_orbit.change_color(value)
-		"minor_moon_orbit_color":
-			if flags & BodyFlags.IS_MOON and not flags & BodyFlags.LIKELY_HYDROSTATIC_EQUILIBRIUM and hud_orbit:
-				hud_orbit.change_color(value)
-		"hide_hud_when_close":
-			set_hide_hud_when_close(value)
+func _set_min_hud_dist() -> void:
+	if IVGlobal.settings.get("hide_hud_when_close", false):
+		_min_hud_dist = m_radius * min_hud_dist_radius_multiplier
+		if flags & IS_STAR:
+			_min_hud_dist *= min_hud_dist_star_multiplier # just the label
+	else:
+		_min_hud_dist = 0.0
+
+
+func _settings_listener(setting: String, _value) -> void:
+	if setting == "hide_hud_when_close":
+		_set_min_hud_dist()

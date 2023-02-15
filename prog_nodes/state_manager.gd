@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ extends Node
 #   is_splash_screen: bool - this node & IVSaveManager
 #   is_system_built: bool - this node & IVSaveManager
 #   is_system_ready: bool
+#	is_started_or_about_to_start: bool
 #   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
 #   is_quitting: bool
 #   is_game_loading: bool - this node & IVSaveManager (true while loading)
@@ -95,6 +96,7 @@ func _on_init() -> void:
 	_state.is_splash_screen = false
 	_state.is_system_built = false
 	_state.is_system_ready = false
+	_state.is_started_or_about_to_start = false
 	_state.is_running = false # SceneTree.pause set in IVProjectBuilder
 	_state.is_quitting = false
 	_state.is_game_loading = false
@@ -142,6 +144,7 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	_state.is_system_ready = true
 	print("System tree ready...")
 	yield(_tree, "idle_frame")
+	_state.is_started_or_about_to_start = true
 	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
 	IVGlobal.verbose_signal("close_all_admin_popups_requested")
 	yield(_tree, "idle_frame")
@@ -264,6 +267,7 @@ func exit(force_exit := false, following_server := false) -> void:
 			emit_signal("client_is_dropping_out", true)
 	_state.is_system_built = false
 	_state.is_system_ready = false
+	_state.is_started_or_about_to_start = false
 	_state.is_running = false
 	_tree.paused = true
 	_state.is_loaded_game = false

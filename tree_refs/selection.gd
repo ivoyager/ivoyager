@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelection
+extends Reference
 
 # Wrapper for whatever you want selected, which could be anything or just a
 # text string. We wrap selection so all API expects the same type.
@@ -29,6 +30,7 @@ class_name IVSelection
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
+const CameraFlags := IVEnums.CameraFlags
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
 const ECLIPTIC_Y := Vector3(0.0, 1.0, 0.0)
@@ -124,7 +126,7 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 func get_global_origin() -> Vector3:
 	if !spatial:
 		return Vector3.ZERO
-	return spatial.global_transform.origin
+	return spatial.global_translation
 
 
 func get_flags() -> int:
@@ -145,20 +147,58 @@ func get_up(time := NAN) -> Vector3:
 	return body.get_north_pole(time)
 
 
-func get_ground_ref_basis(time := NAN) -> Basis:
+func get_ground_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
-	return body.get_ground_ref_basis(time)
+	return body.get_ground_basis(time)
 
 
-func get_orbit_ref_basis(time := NAN) -> Basis:
+func get_orbit_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
-	return body.get_orbit_ref_basis(time)
+	return body.get_orbit_basis(time)
+
+
+func get_ecliptic_basis() -> Basis:
+	if !is_body:
+		return IDENTITY_BASIS
+	return body.global_transform.basis
 
 
 func get_radius_for_camera() -> float:
 	if !is_body:
 		return IVUnits.KM
 	return body.get_mean_radius()
+
+
+func get_position_for_view_and_tracking(camera_flags: int) -> Vector3:
+	var view_type: int = (
+			0 if camera_flags & CameraFlags.VIEW_ZOOM
+			else 1 if camera_flags & CameraFlags.VIEW_45
+			else 2 if camera_flags & CameraFlags.VIEW_TOP
+			else 3)
+	if camera_flags & CameraFlags.TRACK_GROUND:
+		return track_ground_positions[view_type]
+	elif camera_flags & CameraFlags.TRACK_ORBIT:
+		return track_orbit_positions[view_type]
+	return track_ecliptic_positions[view_type]
+
+
+
+	
+	
+
+#	view_position[2] /= fov
+#	if view_type == VIEW_OUTWARD:
+#		view_rotations = OUTWARD_VIEW_ROTATION
+#	else:
+#		view_rotations = VECTOR3_ZERO
+	
+	
+	
+	
+	
+	
+	
+	
 	

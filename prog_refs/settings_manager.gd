@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,15 +53,18 @@ func _on_init():
 		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
 		viewport_symbols_size = 25,
+		point_size = 3,
 		hide_hud_when_close = true, # restart or load required
 	
 		# colors
-		planet_orbit_color =  Color(0.5,0.5,0.1),
-		dwarf_planet_orbit_color = Color(0.1,0.8,0.2),
-		moon_orbit_color = Color(0.3,0.3,0.9),
-		minor_moon_orbit_color = Color(0.35,0.1,0.35),
-		default_orbit_color = Color(0.4,0.4,0.8),
-		asteroid_point_color = Color("008800"),
+		planet_orbit_color =  Color(0.5, 0.5, 0.1),
+		dwarf_planet_orbit_color = Color(0.1, 0.8, 0.2),
+		moon_orbit_color = Color(0.3, 0.3, 0.9),
+		minor_moon_orbit_color = Color(0.35, 0.1, 0.35),
+		spacecraft_orbit_color = Color(0.4, 0.4, 0.8),
+		default_orbit_color = Color(0.4, 0.4, 0.8), # not in OptionsPopup
+		asteroid_orbit_color = Color(0.8, 0.2, 0.2),
+		asteroid_point_color = Color(0.0, 0.6, 0.0),
 		
 		# graphics/performance
 		starmap = IVEnums.StarmapSize.STARMAP_16K,

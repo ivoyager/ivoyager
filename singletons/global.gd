@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 # *****************************************************************************
 extends Node
 
-# Singleton "IVGlobal"
+# Instance global "IVGlobal"
 #
 # Project init values should be modified by extension in _extension_init() and
 # treated as immutable thereafter.
@@ -27,8 +27,8 @@ extends Node
 # Containers (arrays and dictionaries) are never replaced, so it is safe and
 # good practice to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.13"
-const IVOYAGER_VERSION_YMD := 20220928
+const IVOYAGER_VERSION := "0.0.14-DEV"
+const IVOYAGER_VERSION_YMD := 20230215
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -75,10 +75,9 @@ signal load_requested(path, is_quick_load) # ["", false] will trigger dialog
 signal save_quit_requested()
 
 # requests for camera action
-signal move_camera_to_selection_requested(selection, view_type, view_position,
-		view_rotations, track_type, is_instant_move) # 1st arg can be null; all others optional
-signal move_camera_to_body_requested(body, view_type, view_position, view_rotations,
-		track_type, is_instant_move) # 1st arg can be null; all others optional
+signal move_camera_requested(selection, camera_flags, view_position, view_rotations,
+		is_instant_move) # 1st arg can be null; all others optional
+
 
 # requests for GUI
 signal open_main_menu_requested()
@@ -110,6 +109,7 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
+var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
 var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
@@ -148,7 +148,8 @@ var limit_stops_in_multiplayer := true # overrides most stops
 var allow_fullscreen_toggle := true
 var auto_exposure_enabled := true # no effect in GLES2
 var vertecies_per_orbit: int = 500
-var max_camera_distance: float = 200.0 * IVUnits.AU
+var vertecies_per_orbit_low_res: int = 100 # for small bodies like asteroids
+var max_camera_distance: float = 5e3 * IVUnits.AU
 var obliquity_of_the_ecliptic := 23.439 * IVUnits.DEG
 var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 var unit_multipliers := IVUnits.MULTIPLIERS
@@ -159,38 +160,45 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,
 	good = Color.green,
 	warning = Color.yellow,
-	danger = Color(1.0, 0.5, 0.5), # "red" is hard to see
+	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared_resources := {
+var shared := { # more items added by initializers/shared_initializer.gd
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
-	orbit_ellipse_shader = preload("res://ivoyager/shaders/orbit_ellipse.shader"),
-	orbit_points_shader = preload("res://ivoyager/shaders/orbit_points.shader"),
-	orbit_points_lagrangian_shader = preload("res://ivoyager/shaders/orbit_points_lagrangian.shader"),
+	points_shader = preload("res://ivoyager/shaders/points.shader"),
+	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
+	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
+	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 }
 
 # Data table import
 var table_import := {
-	stars = "res://ivoyager/data/solar_system/stars.tsv",
-	planets = "res://ivoyager/data/solar_system/planets.tsv",
-	moons = "res://ivoyager/data/solar_system/moons.tsv",
-	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
-	models = "res://ivoyager/data/solar_system/models.tsv",
+	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
+	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
+	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
+	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
+	
+	# DEPRECIATE
 	lights = "res://ivoyager/data/solar_system/lights.tsv",
+	
+	models = "res://ivoyager/data/solar_system/models.tsv",
+	moons = "res://ivoyager/data/solar_system/moons.tsv",
+	planets = "res://ivoyager/data/solar_system/planets.tsv",
+	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
+	stars = "res://ivoyager/data/solar_system/stars.tsv",
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 
 var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
 var wikipedia_locales := ["en"] # add locales present in data tables
 
-var body_tables := ["stars", "planets", "moons"] # table names; order matters!
+var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
-# like "albedo". To build a model, IVModelBuilder first looks for an existing
+# like "albedo". To build a model, IVModelManager first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
 # a premade generic mesh (e.g., globe_mesh) and search for map textures in
 # maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will
@@ -212,7 +220,7 @@ var asset_paths_for_load := { # loaded into "assets" dict by IVAssetInitializer
 	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
-	fallback_model = "res://ivoyager_assets/models/Phobos.4000_1_1000.glb", # NOT IMPLEMENTED!
+#	fallback_model = "res://ivoyager_assets/models/phobos/Phobos.1_1000.glb", # implement in 0.0.14
 }
 var translations := [
 	# Added here so extensions can modify. Note that IVTranslationImporter will

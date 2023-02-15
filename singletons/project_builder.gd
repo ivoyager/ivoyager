@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 # *****************************************************************************
 extends Node
 
-# Singleton "IVProjectBuilder".
+# Instance global "IVProjectBuilder".
 #
 # This node builds the program (not the solar system!) and makes program
 # nodes, references, and classes availible in IVGlobal dictionaries. All
@@ -28,8 +28,8 @@ extends Node
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
-# See example extension files for our Planetarium and Project Template (the 1st
-# involves more substantial changes) here:
+#
+# See example extension files for our Planetarium and Project Template:
 # https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
 # https://github.com/ivoyager/project_template/blob/master/replace_me/replace_me.gd
 #
@@ -43,8 +43,8 @@ extends Node
 #        existing classes, remove classes, or add new classes.
 #     (Above happens before anything else is instantiated!)
 # 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
-#    init values of instantiated nodes (before they are added to tree) or
-#    instantiated references (before they are used). Nodes and references can
+#    init values of instantiated Nodes (before they are added to tree) or
+#    instantiated References (before they are used). Nodes and References can
 #    be accessed after instantiation in the IVGlobal.program dictionary.
 #
 # Init sequence here expects (but does not provide) a parent GUI node. This
@@ -101,6 +101,7 @@ var initializers := {
 	# themselves from IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
+	_SharedInitializer_ = SharedInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableImporter_ = IVTableImporter,
@@ -115,12 +116,7 @@ var prog_builders := {
 	_SystemBuilder_ = IVSystemBuilder,
 	_BodyBuilder_ = IVBodyBuilder,
 	_OrbitBuilder_ = IVOrbitBuilder,
-	_ModelBuilder_ = IVModelBuilder,
-	_RingsBuilder_ = IVRingsBuilder,
-	_LightBuilder_ = IVLightBuilder,
-	_HUDsBuilder_ = IVHUDsBuilder,
-	_MinorBodiesBuilder_ = IVMinorBodiesBuilder,
-	_LagrangePointBuilder_ = IVLagrangePointBuilder,
+	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 }
@@ -133,12 +129,14 @@ var prog_refs := {
 	_IOManager_ = IVIOManager,
 	_FontManager_ = IVFontManager, # ok to replace
 	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
-	_QuantityFormatter_ = IVQuantityFormatter,
 	_TableReader_ = IVTableReader,
 	_MainMenuManager_ = IVMainMenuManager,
 	_SleepManager_ = IVSleepManager,
-	_VisualsHelper_ = IVVisualsHelper,
 	_WikiManager_ = IVWikiManager,
+	_ModelManager_ = IVModelManager,
+	_BodyFinisher_ = IVBodyFinisher,
+	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
+	_QuantityFormatter_ = IVQuantityFormatter,
 }
 
 var prog_nodes := {
@@ -149,9 +147,8 @@ var prog_nodes := {
 	_Timekeeper_ = IVTimekeeper,
 	_Scheduler_ = IVScheduler,
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
-	_HUDsManager_ = IVHUDsManager,
-	_PointsManager_ = IVPointsManager,
-	_MinorBodiesManager_ = IVMinorBodiesManager,
+	_HUDsVisibility_ = IVHUDsVisibility,
+	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_WindowManager_ = IVWindowManager,
 }
 
@@ -163,9 +160,11 @@ var gui_nodes := {
 	# project init, or 2) reorder children of Universe after project build.
 	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
-	_ProjectionSurface_ = IVProjectionSurface, # Control ok
-	_ProjectGUI_ = null, # Project MUST supply its own top Control!
-	_SplashScreen_ = null, # Can erase if IVGlobal.skip_splash_screen = true
+	_WorldController_ = IVWorldController, # Control ok
+	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to replace or remove
+	_FragmentLabel_ = IVFragmentLabel, # remove w/ above
+	_ProjectGUI_ = null, # project MUST supply its own top Control!
+	_SplashScreen_ = null, # needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
@@ -183,17 +182,22 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = IVBody,
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
-	_LPoint_ = IVLPoint,
-	_HUDLabel_ = IVHUDLabel,
-	_HUDOrbit_ = IVHUDOrbit,
+	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
+	_HUDLabel_ = IVHUDLabel, # replace w/ Spatial
+	_HUDOrbit_ = IVHUDOrbit, # replace w/ Spatial
+	_HUDOrbits_ = IVHUDOrbits,
 	_HUDPoints_ = IVHUDPoints,
-	_SelectionManager_ = IVSelectionManager,
+	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
+	_ModelSpace_ = IVModelSpace,
+	_OrbitSpace_ = IVOrbitSpace, # replace w/ Spatial
+	_Rings_ = IVRings, # replace w/ Spatial
+	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
+	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
 	# tree_refs
+	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 	_Orbit_ = IVOrbit,
-	_ModelController_ = IVModelController,
 	_Selection_ = IVSelection,
 	_View_ = IVView,
-	_AsteroidGroup_ = IVAsteroidGroup,
 	_Composition_ = IVComposition, # replaceable, but look for dependencies
 	# _BodyList_ = IVBodyList, # WIP
 }

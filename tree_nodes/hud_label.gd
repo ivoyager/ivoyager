@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,39 +17,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-extends Label
+extends Label3D
 class_name IVHUDLabel
 
-# IVBody sets its own IVHUDLabel visibility during _process().
+# Visual text name or symbol for a Body.
 
+var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+var _body: IVBody
+var _body_flags: int
 var _body_name: String
 var _body_symbol: String
 var _name_font: Font
 var _symbol_font: Font
+var _names_visible := false
+var _symbols_visible := false
+var _body_huds_visible := false # too close / too far
 
-onready var _huds_manager: IVHUDsManager = IVGlobal.program.HUDsManager
+
+func _init(body: IVBody) -> void:
+	_body = body
+	_body_flags = body.flags
+	_body_name = body.get_hud_name()
+	_body_symbol = body.get_symbol()
+	_name_font = IVGlobal.fonts.hud_names
+	_symbol_font = IVGlobal.fonts.hud_symbols
 
 
 func _ready() -> void:
-	_huds_manager.connect("show_huds_changed", self, "_on_show_huds_changed")
-	_name_font = IVGlobal.fonts.hud_names
-	_symbol_font = IVGlobal.fonts.hud_symbols
-	align = ALIGN_CENTER
-	valign = VALIGN_CENTER
+	_huds_visibility.connect("body_huds_visibility_changed", self, "_on_global_huds_changed")
+	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
+	horizontal_alignment = ALIGN_CENTER
+	vertical_alignment = VALIGN_CENTER
+	billboard = SpatialMaterial.BILLBOARD_ENABLED
+	
+	fixed_size = true
+	pixel_size = 0.0006 # FIXME: Check this!
+	
+	_body_huds_visible = _body.huds_visible
+	_on_global_huds_changed()
 
 
-func set_body_name(body_name: String) -> void:
-	_body_name = body_name
+func _on_global_huds_changed() -> void:
+	_names_visible = _huds_visibility.is_name_visible(_body_flags)
+	_symbols_visible = !_names_visible and _huds_visibility.is_symbol_visible(_body_flags)
+	_set_visual_state()
 
 
-func set_body_symbol(body_symbol: String) -> void:
-	_body_symbol = body_symbol
+func _on_body_huds_changed(is_visible: bool) -> void:
+	_body_huds_visible = is_visible
+	_set_visual_state()
 
 
-func _on_show_huds_changed() -> void:
-	if _huds_manager.show_names:
+func _set_visual_state() -> void:
+	if !_body_huds_visible:
+		visible = false
+		return
+	if _names_visible:
 		text = _body_name
-		set("custom_fonts/font", _name_font)
-	elif _huds_manager.show_symbols:
+		font = _name_font
+		visible = true
+	elif _symbols_visible:
 		text = _body_symbol
-		set("custom_fonts/font", _symbol_font)
+		font = _symbol_font
+		visible = true
+	else:
+		visible = false
+

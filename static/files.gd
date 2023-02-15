@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFiles
+extends Object
 
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
@@ -135,12 +136,15 @@ static func get_dir_files(dir_path: String) -> Array:
 	return result
 
 
-static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
+static func find_resource_file(dir_paths: Array, prefix: String,
+		search_prefix_subdirectories := true) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
 	# followed by dot. Returns resource path if it exists. We expect to
 	# find file with .import extension (this is the ONLY file in an exported
 	# project!), but ".import" must be removed from end to load it.
-	file_prefix = file_prefix + "."
+	# Search is case-insensitive.
+	var prefix_dot := prefix + "."
+	var match_size := prefix_dot.length()
 	var dir := Directory.new()
 	for dir_path in dir_paths:
 		if dir.open(dir_path) != OK:
@@ -149,15 +153,22 @@ static func find_resource_file(dir_paths: Array, file_prefix: String) -> String:
 		var file_name := dir.get_next()
 		while file_name:
 			if !dir.current_is_dir():
-				if file_name.begins_with(file_prefix):
-					if file_name.get_extension() == "import":
+				if file_name.get_extension() == "import":
+					if file_name.substr(0, match_size).matchn(prefix_dot):
 						return dir_path.plus_file(file_name).get_basename()
+			elif search_prefix_subdirectories:
+				if file_name.matchn(prefix):
+					var subdir_path: String = dir_path + "/" + file_name
+					var subdir_result := find_resource_file([subdir_path], prefix, false)
+					if subdir_result:
+						return subdir_result
 			file_name = dir.get_next()
 	return ""
 
 
-static func find_and_load_resource(dir_paths: Array, file_prefix: String) -> Resource:
-	var path := find_resource_file(dir_paths, file_prefix)
+static func find_and_load_resource(dir_paths: Array, prefix: String,
+		search_prefix_subdirectories := true) -> Resource:
+	var path := find_resource_file(dir_paths, prefix, search_prefix_subdirectories)
 	if path:
 		return load(path)
 	return null

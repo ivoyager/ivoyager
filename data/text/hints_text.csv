@@ -23,10 +23,12 @@ HINT_TIME_SPEED,Increase speed
 HINT_TIME_REVERSE,Reverse time
 HINT_TIME_PAUSE,Pause
 HINT_TIME_REAL,Set actual time (UT)
-HINT_TRACK_GROUND,Camera will maintain latitude & longitude
-HINT_TRACK_ORBIT,Camera will track orbit of the selected object
+HINT_TRACK_GROUND,Camera will maintain latitude & longitude with respect to the target object
+HINT_TRACK_ORBIT,Camera will track orbit of the target object
+HINT_TRACK_ECLIPTIC,Camera follows the target object but orients to the ecliptic plane
 HINT_TRANS_NEPTUNE,Show trans-Neptunian asteroids
 HINT_TROJANS,Show Jupiter Trojans
+HINT_UP_LOCK,"Locks camera orientation with respect to reference frame: Ecliptic, Orbit or Ground"
 HINT_VIEW_45,View from 45\u00B0 above
 HINT_VIEW_OUTWARD,Look outward from current selection
 HINT_VIEW_TOP,View from top

@@ -1,0 +1,8 @@
+name	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
+Type	BOOL	REAL	REAL	REAL	REAL
+Unit		au			
+Default	TRUE				
+Prefix/OMNI_LIGHT_					
+SUN		120	3.0	1.5	0.5
+SUN_GLES2		120	3.0	1.2	0.2
+#					

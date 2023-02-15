@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVViewButtons
 extends HBoxContainer
 
-# GUI widget. Expects the camera to have "view_type_changed" signal and to use
-# VIEW_TYPE_ enums.
+# GUI widget. Expects the camera to have "view_type_changed" signal.
 
-const ViewType := IVEnums.ViewType
+const CameraFlags := IVEnums.CameraFlags
 
-var enable_outward := false # under dev for astronomy; it's pretty crappy now
+var enable_outward := false # WIP for astronomy; it's pretty crappy now
 var use_small_txt := false
 
 var _camera: Camera
@@ -70,18 +70,18 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 
-func _update_view_type(view_type: int) -> void:
-	_zoom_button.pressed = view_type == ViewType.VIEW_ZOOM
-	_45_button.pressed = view_type == ViewType.VIEW_45
-	_top_button.pressed = view_type == ViewType.VIEW_TOP
-	_outward_button.pressed = view_type == ViewType.VIEW_OUTWARD
+func _update_view_type(flags: int, _disable_flags: int) -> void:
+	_zoom_button.pressed = bool(flags & CameraFlags.VIEW_ZOOM)
+	_45_button.pressed = bool(flags & CameraFlags.VIEW_45)
+	_top_button.pressed = bool(flags & CameraFlags.VIEW_TOP)
+	_outward_button.pressed = bool(flags & CameraFlags.VIEW_OUTWARD)
 
 
 func _on_zoom_pressed() -> void:
 	if !_camera:
 		return
 	if _zoom_button.pressed:
-		_camera.move_to_selection(null, ViewType.VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, CameraFlags.VIEW_ZOOM)
 	else:
 		_zoom_button.pressed = true
 
@@ -90,7 +90,7 @@ func _on_45_pressed() -> void:
 	if !_camera:
 		return
 	if _45_button.pressed:
-		_camera.move_to_selection(null, ViewType.VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, CameraFlags.VIEW_45)
 	else:
 		_45_button.pressed = true
 
@@ -99,7 +99,7 @@ func _on_top_pressed() -> void:
 	if !_camera:
 		return
 	if _top_button.pressed:
-		_camera.move_to_selection(null, ViewType.VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, CameraFlags.VIEW_TOP)
 	else:
 		_top_button.pressed = true
 
@@ -108,6 +108,6 @@ func _on_outward_pressed() -> void:
 	if !_camera:
 		return
 	if _outward_button.pressed:
-		_camera.move_to_selection(null, ViewType.VIEW_OUTWARD, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(null, CameraFlags.VIEW_OUTWARD)
 	else:
 		_outward_button.pressed = true

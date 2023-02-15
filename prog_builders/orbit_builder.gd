@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbitBuilder
+extends Reference
 
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
@@ -26,6 +27,7 @@ const DPRINT := false
 const PIdiv2 := PI / 2.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
 const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
+const DAY := IVUnits.DAY
 
 var _dynamic_orbits: bool = IVGlobal.dynamic_orbits
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
@@ -54,6 +56,7 @@ var _d := {
 	M_adj_f = NAN,
 	Pw = NAN,
 	Pnode = NAN,
+	epoch_jd = NAN,
 	ref_plane = "",
 }
 
@@ -119,6 +122,11 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 			M0 = -n * _d.T0
 		else:
 			assert(false, "Elements must include M0, L0 or T0")
+	if !is_nan(_d.epoch_jd):
+		var epoch_offset: float = (2451545.0 - _d.epoch_jd) * DAY # J2000
+		M0 += n * epoch_offset
+		M0 = wrapf(M0, 0.0, TAU)
+	
 	var elements := [a, e, i, Om, w, M0, n]
 	var orbit: IVOrbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements

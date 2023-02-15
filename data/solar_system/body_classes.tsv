@@ -7,9 +7,11 @@ GAS_GIANT	Gas_giant
 ICE_GIANT	Ice_giant
 DWARF_PLANET	Dwarf_planet
 NATURAL_SATELLITE	Natural_satellite
+ASTEROID	Asteroid
 C_ASTEROID	C-type_asteroid
 S_ASTEROID	S-type_asteroid
 M_ASTEROID	M-type_asteroid
+V_ASTEROID	V-type_asteroid
 COMET	Comet
 SPACECRAFT	Spacecraft
 #	

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/body_huds_grid.gd" type="Script" id=1]
+
+[node name="BodyHUDsGrid" type="GridContainer"]
+margin_right = 40.0
+margin_bottom = 40.0
+custom_constants/vseparation = -2
+custom_constants/hseparation = 15
+columns = 4
+script = ExtResource( 1 )

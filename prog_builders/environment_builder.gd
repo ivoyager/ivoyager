@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVEnvironmentBuilder
+extends Reference
 
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.

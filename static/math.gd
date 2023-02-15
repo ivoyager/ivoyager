@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMath
+extends Object
 
 # Call directly using IVMath, or better, localize in your class header area.
 # Issue #37529 prevents localization of global class_name to const. Use:
@@ -34,6 +35,25 @@ const Z_VECTOR := Vector3(0.0, 0.0, 1.0)
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const LOG_OF_10 := log(10.0)
+
+
+
+static func get_rotation_vector(basis: Basis) -> Vector3:
+	# Axis & angle can be obtained by vector.normalized() & vector.length().
+	# Identity basis will result in Vector3.ZERO.
+	var u := Vector3(
+		basis[1][2] - basis[2][1],
+		basis[2][0] - basis[0][2],
+		basis[0][1] - basis[1][0]
+	)
+	var trace := basis[0][0] + basis[1][1] + basis[2][2]
+	if !u:
+		if trace > 2.5: # 0.0 rotation
+			return VECTOR3_ZERO
+		else: # PI rotation
+			return(Vector3(PI, 0.0, 0.0)) # axis is arbitrary
+	var th := acos((trace - 1.0) / 2.0)
+	return u.normalized() * th
 
 
 static func rotate_vector_z(vector: Vector3, new_z: Vector3) -> Vector3:
@@ -248,25 +268,72 @@ static func get_fov_scaling_factor(fov: float) -> float:
 	return 0.00005 * fov * fov + 0.0001 * fov + 0.0816
 
 
-# Conversions (use IVUnits for most conversions!)
-static func srgb2linear(color: Color) -> Color:
-	if color.r <= 0.04045:
-		color.r /= 12.92
-	else:
-		color.r = pow((color.r + 0.055) / 1.055, 2.4)
-	if color.g <= 0.04045:
-		color.g /= 12.92
-	else:
-		color.g = pow((color.g + 0.055) / 1.055, 2.4)
-	if color.b <= 0.04045:
-		color.b /= 12.92
-	else:
-		color.b = pow((color.b + 0.055) / 1.055, 2.4)
-	return color
+# Quadratic fit and transformation
+
+static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
+	# Returns [a, b, c] where y = ax^2 + bx + c is least-squares fit,
+	# or [0.0, 0.0, 0.0] if indeterminant or nearly indeterminant.
+	var n := x_array.size()
+	assert(n == y_array.size())
+	var sum_x := 0.0
+	var sum_x2 := 0.0
+	var sum_x3 := 0.0
+	var sum_x4 := 0.0
+	var sum_y := 0.0
+	var sum_xy := 0.0
+	var sum_x2y := 0.0
+	for i in n:
+		var x: float = x_array[i]
+		var x2 := x * x
+		var x3 := x2 * x
+		var x4 := x3 * x
+		var y: float = y_array[i]
+		var xy := x * y
+		var x2y := x2 * y
+		sum_x += x
+		sum_x2 += x2
+		sum_x3 += x3
+		sum_x4 += x4
+		sum_y += y
+		sum_xy += xy
+		sum_x2y += x2y
+	var mean_x := sum_x / n
+	var mean_x2 := sum_x2 / n
+	var mean_y := sum_y / n
+	var S11 := sum_x2 - sum_x * mean_x
+	var S12 := sum_x3 - sum_x * mean_x2
+	var S22 := sum_x4 - sum_x2 * mean_x2
+	var Sy1 := sum_xy - sum_y * mean_x
+	var Sy2 := sum_x2y - sum_y * mean_x2
+	var divisor := S22 * S11 - S12 * S12
+	if is_zero_approx(divisor):
+		return [0.0, 0.0, 0.0]
+	var b := (Sy1 * S22 - Sy2 * S12) / divisor
+	var a := (Sy2 * S11 - Sy1 * S12) / divisor
+	var c := mean_y - b * mean_x - a * mean_x2
+	return [a, b, c]
 
 
-static func linear2srgb(x: float) -> float:
-	if x <= 0.0031308:
-		return x * 12.92
-	else:
-		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
+static func quadratic(x: float, coefficients: Array) -> float:
+	var a: float = coefficients[0]
+	var b: float = coefficients[1]
+	var c: float = coefficients[2]
+	return a * x * x + b * x + c
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

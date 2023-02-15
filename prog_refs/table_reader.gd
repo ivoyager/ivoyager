@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableReader
+extends Reference
 
 # API here provides constructor methods and table access with protections for
 # missing table fields and values. Alternatively, you can access data directly
@@ -278,6 +279,14 @@ func build_object(object: Object, fields: Array, table: String, row: int) -> voi
 		if has_value(table, field, row):
 			object.set(field, _tables[table][field][row])
 		i += 1
+
+
+func build_object_all_fields(object: Object, table: String, row: int) -> void:
+	# Sets object property for each field that exactly matches a field in table.
+	# Missing value in table without default will not be set.
+	for field in _tables[table]:
+		if has_value(table, field, row):
+			object.set(field, _tables[table][field][row])
 
 
 func get_flags(flag_fields: Dictionary, table: String, row: int, flags := 0) -> int:

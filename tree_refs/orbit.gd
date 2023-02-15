@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,21 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbit
+extends Reference
 
 # Orbit info is kept in standardized arrays of fixed size. reference_normal is
 # normal to the reference plane (ecliptic, equatorial or specified Laplace
 # plane; many moons use the latter two); the "orbit normal" precesses around
 # the reference_normal.
+#
+# The standard orbital 'elements' array:
+#   [0] a, semi-major axis
+#   [1] e, eccentricity
+#   [2] i, inclination
+#   [3] Om, longitude of the ascending node
+#   [4] w, argument of periapsis
+#   [5] M0, mean anomaly at epoch
+#   [6] n, mean motion
 #
 # Position is determined by time, reference_normal and current_elements;
 # current_elements is determined by time, elements_at_epoch, element_rates
@@ -147,6 +157,35 @@ func get_mean_motion(time := NAN) -> float:
 	return elements[6]
 
 
+func get_orbit_period(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	return TAU / elements[6]
+
+
+func get_semiminor_axis(time := NAN) -> float:
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	var a: float = elements[0]
+	var e: float = elements[1]
+	return sqrt(a * a * (1.0 - e * e))
+
+
+func get_characteristic_length(time := NAN) -> float:
+	# For lagrange point calculation. I'm not 100% sure this is right.
+	var elements := current_elements
+	if !is_nan(time) and (time > _end_current or time < _begin_current):
+		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		_set_elements(time, elements)
+	var a: float = elements[0]
+	var e: float = elements[1]
+	return a * (1.0 - e)
+
+
 func get_inclination_to_ecliptic(time := NAN) -> float:
 	if reference_normal == ECLIPTIC_UP:
 		return get_inclination(time)
@@ -245,13 +284,13 @@ func get_true_anomaly(time := NAN) -> float:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	return 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # nu
 
 
 func get_mean_longitude(time := NAN) -> float:
@@ -276,13 +315,13 @@ func get_true_longitude(time := NAN) -> float:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # nu
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # nu
 	return wrapf(nu + elements[3] + elements[4], -PI, PI) # nu + Om + w
 
 
@@ -336,14 +375,14 @@ static func get_position_from_elements(elements: Array, time: float) -> Vector3:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # true anomaly
-	var r := a * (1.0 - e * cos(E))
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # true anomaly
+	var r := a * (1.0 - e * cos(EA))
 	var cos_i := cos(i)
 	var sin_i := sin(i)
 	var sin_Om := sin(Om)
@@ -367,14 +406,14 @@ static func get_vectors_from_elements(elements: Array, time: float) -> Array:
 	var M0: float = elements[5] # mean anomaly at epoch
 	var n: float = elements[6]  # mean motion
 	var M := wrapf(M0 + n * time, -PI, PI) # mean anomaly
-	var E := M + e * sin(M) # eccentric anomaly
-	var dE := (E - M - e * sin(E)) / (1.0 - e * cos(E))
-	E -= dE
-	while abs(dE) > 1e-5:
-		dE = (E - M - e * sin(E)) / (1.0 - e * cos(E))
-		E -= dE
-	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(E / 2.0)) # true anomaly
-	var r := a * (1.0 - e * cos(E))
+	var EA := M + e * sin(M) # eccentric anomaly
+	var dEA := (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+	EA -= dEA
+	while abs(dEA) > 1e-5:
+		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA))
+		EA -= dEA
+	var nu := 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0)) # true anomaly
+	var r := a * (1.0 - e * cos(EA))
 	var cos_i := cos(i)
 	var sin_i := sin(i)
 	var sin_Om := sin(Om)
@@ -428,8 +467,8 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 		else:
 			w = 0.0
 	var n := sqrt(mu / a / a / a)
-	var E := 2.0 * atan(sqrt((1.0 - e) / (1.0 + e)) * tan(nu / 2.0))
-	var M0 := E - e * sin(E) - n * time
+	var EA := 2.0 * atan(sqrt((1.0 - e) / (1.0 + e)) * tan(nu / 2.0))
+	var M0 := EA - e * sin(EA) - n * time
 	return [a, e, i, Om, w, M0, n]
 
 

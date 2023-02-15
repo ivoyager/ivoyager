@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,52 +17,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSSSBsCkbxs
 extends VBoxContainer
 
-# GUI widget. Small Solar System Bodies. This one is hard-coded for our
-# specific Solar System composition.
+# DEPRECIATE. We'll keep until we have something better in the Project
+# Template. After that this will be removed.
 #
-# Comets check box is present but hidden (until they are implemented). 
+# GUI widget. Small Solar System Bodies.
+#
+# Comets check box is present but hidden (until they are implemented).
 
-onready var _points_manager: IVPointsManager = IVGlobal.program.PointsManager
-onready var _buttons := {
-	all_asteroids = $HBox1/AllAsteroids,
-	NE = $HBox2/NE,
-	MC = $HBox3/MC,
-	MB = $HBox2/MB,
-	JT = $HBox3/JT, # this button controls both JT4 AND JT5 groups
-	CE = $HBox2/CE,
-	TN = $HBox3/TN,
-}
+
+
+onready var chkbxs := [
+	[$HBox1/AllAsteroids, ["NE", "MC", "MB", "JT4", "JT5", "CE", "TN"]],
+	[$HBox2/NE, ["NE"]],
+	[$HBox3/MC, ["MC"]],
+	[$HBox2/MB, ["MB"]],
+	[$HBox3/JT, ["JT4", "JT5"]],
+	[$HBox2/CE, ["CE"]],
+	[$HBox3/TN, ["TN"]],
+]
+
+onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
 func _ready() -> void:
-	_points_manager.connect("show_points_changed", self, "_on_show_points_changed")
-	for key in _buttons:
-		var button: Button = _buttons[key]
-		button.connect("pressed", self, "_on_pressed", [key, button])
+	_huds_visibility.connect("sbg_points_visibility_changed", self, "_update_ckbxs")
+	for i in chkbxs.size():
+		var chkbx: CheckBox = chkbxs[i][0]
+		var groups: Array = chkbxs[i][1]
+		chkbx.connect("pressed", self, "_show_hide_points", [chkbx, groups])
 
 
-func _on_pressed(group_or_category: String, button: Button) -> void:
-	if group_or_category == "JT":
-		_points_manager.show_points("JT4", button.pressed)
-		_points_manager.show_points("JT5", button.pressed)
-	else:
-		_points_manager.show_points(group_or_category, button.pressed)
+func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
+	var pressed := ckbx.pressed
+	for group in groups:
+		_huds_visibility.change_sbg_points_visibility(group, pressed)
 
 
-func _on_show_points_changed(group_or_category: String, is_show: bool) -> void:
-	if group_or_category == "JT4" or group_or_category == "JT5":
-		_buttons.JT.pressed = is_show
-	else:
-		_buttons[group_or_category].pressed = is_show
-	if group_or_category == "all_asteroids":
-		return
-	if !is_show:
-		_buttons.all_asteroids.pressed = false
-	else:
-		for key in _buttons:
-			if key != "all_asteroids" and !_buttons[key].pressed:
-				_buttons.all_asteroids.pressed = false
-				return
-		_buttons.all_asteroids.pressed = true
+func _update_ckbxs() -> void:
+	for i in chkbxs.size():
+		var chkbx: CheckBox = chkbxs[i][0]
+		var groups: Array = chkbxs[i][1]
+		var is_visible := true
+		for group in groups:
+			if !_huds_visibility.is_sbg_points_visible(group):
+				is_visible = false
+				break
+		chkbx.pressed = is_visible
+

@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelectionBuilder
+extends Reference
 
 
 const BodyFlags := IVEnums.BodyFlags
@@ -44,7 +45,7 @@ var latitude_offset_top := deg2rad(85.0)
 var latitude_offset_45 := deg2rad(45.0)
 var min_view_dist_radius_multiplier := 1.65
 var zoom_divisor := 1.5e-4 * IVUnits.KM # bigger makes zoom closer
-var size_ratio_exponent := 0.8 # at 1.0 bodies are distanced to appear same size
+var size_ratio_exponent := 0.8 # FIXME: Redundant but also inconsisten w/ camera property
 var system_radius_multiplier_top := 2.5
 
 # private

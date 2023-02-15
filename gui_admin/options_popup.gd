@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,7 @@ var format_overrides := {
 	camera_transfer_time = {max_value = 10.0},
 	viewport_names_size = {min_value = 4.0, max_value = 50.0},
 	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
+	point_size = {min_value = 3, max_value = 20},
 }
 
 var _settings: Dictionary = IVGlobal.settings
@@ -70,6 +71,8 @@ func _on_init():
 				dwarf_planet_orbit_color = "LABEL_DWARF_PLANET_ORBITS",
 				moon_orbit_color = "LABEL_MAJOR_MOON_ORBITS",
 				minor_moon_orbit_color = "LABEL_MINOR_MOON_ORBITS",
+				spacecraft_orbit_color = "LABEL_SPACECRAFT_ORBITS",
+				asteroid_orbit_color = "LABEL_ASTEROID_ORBITS",
 				asteroid_point_color = "LABEL_ASTEROID_POINTS",
 			},
 			{
@@ -77,6 +80,7 @@ func _on_init():
 				gui_size = "LABEL_GUI_SIZE",
 				viewport_names_size = "LABEL_NAMES_SIZE",
 				viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
+				point_size = "LABEL_POINT_SIZE",
 				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
 			},
 			{

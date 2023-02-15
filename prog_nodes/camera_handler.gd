@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +30,9 @@ enum {
 	DRAG_PITCH_YAW_ROLL_HYBRID
 }
 
-const VIEW_ZOOM = IVEnums.ViewType.VIEW_ZOOM
-const VIEW_45 = IVEnums.ViewType.VIEW_45
-const VIEW_TOP = IVEnums.ViewType.VIEW_TOP
-const VIEW_OUTWARD = IVEnums.ViewType.VIEW_OUTWARD
-const VIEW_BUMPED = IVEnums.ViewType.VIEW_BUMPED
-const VIEW_BUMPED_ROTATED = IVEnums.ViewType.VIEW_BUMPED_ROTATED
+
+const CameraFlags := IVEnums.CameraFlags
+
 const VECTOR2_ZERO := Vector2.ZERO
 const VECTOR3_ZERO := Vector3.ZERO
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
@@ -61,7 +58,7 @@ var hybrid_drag_outside_zone := 0.7 # for DRAG_PITCH_YAW_ROLL_HYBRID
 
 # private
 var _settings: Dictionary = IVGlobal.settings
-var _visuals_helper: IVVisualsHelper = IVGlobal.program.VisualsHelper
+var _world_targeting: Array = IVGlobal.world_targeting
 var _camera: IVCamera
 var _selection_manager: IVSelectionManager
 
@@ -71,7 +68,7 @@ var _mwheel_turning := 0.0
 var _move_pressed := VECTOR3_ZERO
 var _rotate_pressed := VECTOR3_ZERO
 
-onready var _projection_surface: IVProjectionSurface = IVGlobal.program.ProjectionSurface
+onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
 onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
@@ -89,15 +86,19 @@ func _ready():
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_projection_surface.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
-	_projection_surface.connect("mouse_dragged", self, "_on_mouse_dragged")
-	_projection_surface.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
+	_world_controller.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
+	_world_controller.connect("mouse_dragged", self, "_on_mouse_dragged")
+	_world_controller.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.ProjectGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
+	
+	
+	
+	
 
 
 func _process(delta: float) -> void:
@@ -105,18 +106,18 @@ func _process(delta: float) -> void:
 		match _drag_mode:
 			DRAG_MOVE:
 				_drag_vector *= delta * _mouse_move_rate
-				_camera.add_move_action(Vector3(-_drag_vector.x, _drag_vector.y, 0.0))
+				_camera.add_motion(Vector3(-_drag_vector.x, _drag_vector.y, 0.0))
 			DRAG_PITCH_YAW:
 				_drag_vector *= delta * _mouse_pitch_yaw_rate
-				_camera.add_rotate_action(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
+				_camera.add_rotation(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
-				var mouse_position: Vector2 = _visuals_helper.mouse_position
+				var mouse_position: Vector2 = _world_targeting[0]
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				_drag_vector *= delta * _mouse_roll_rate
-				_camera.add_rotate_action(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
+				_camera.add_rotation(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
 			DRAG_PITCH_YAW_ROLL_HYBRID:
 				# one or a mix of two above based on mouse position
-				var mouse_position: Vector2 = _visuals_helper.mouse_position
+				var mouse_position: Vector2 = _world_targeting[0]
 				var mouse_rotate := _drag_vector * delta
 				var z_proportion := (2.0 * mouse_position - _viewport.size).length() / _viewport.size.x
 				z_proportion -= hybrid_drag_center_zone
@@ -125,15 +126,15 @@ func _process(delta: float) -> void:
 				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
-				_camera.add_rotate_action(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
+				_camera.add_rotation(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
 		_drag_vector = VECTOR2_ZERO
 	if _mwheel_turning:
-		_camera.add_move_action(Vector3(0.0, 0.0, _mwheel_turning * delta))
+		_camera.add_motion(Vector3(0.0, 0.0, _mwheel_turning * delta))
 		_mwheel_turning = 0.0
 	if _move_pressed:
-		_camera.add_move_action(_move_pressed * delta)
+		_camera.add_motion(_move_pressed * delta)
 	if _rotate_pressed:
-		_camera.add_rotate_action(_rotate_pressed * delta)
+		_camera.add_rotation(_rotate_pressed * delta)
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
@@ -141,13 +142,13 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		return
 	if event.is_pressed():
 		if event.is_action_pressed("camera_zoom_view"):
-			_camera.move_to_selection(null, VIEW_ZOOM, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, CameraFlags.VIEW_ZOOM)
 		elif event.is_action_pressed("camera_45_view"):
-			_camera.move_to_selection(null, VIEW_45, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, CameraFlags.VIEW_45)
 		elif event.is_action_pressed("camera_top_view"):
-			_camera.move_to_selection(null, VIEW_TOP, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, CameraFlags.VIEW_TOP)
 		elif event.is_action_pressed("recenter"):
-			_camera.move_to_selection(null, -1, Vector3.ZERO, Vector3.ZERO, -1)
+			_camera.move_to(null, CameraFlags.UP_LOCKED, VECTOR3_ZERO, VECTOR3_ZERO)
 		elif event.is_action_pressed("camera_left"):
 			_move_pressed.x = -_key_move_rate
 		elif event.is_action_pressed("camera_right"):
@@ -227,35 +228,33 @@ func _disconnect_camera() -> void:
 
 func _on_selection_changed() -> void:
 	if _camera and _camera.is_camera_lock:
-		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
-				Vector3.ZERO, -1)
+		_camera.move_to(_selection_manager.selection)
 
 func _on_selection_reselected() -> void:
 	if _camera and _camera.is_camera_lock:
-		# Cancel rotations, but keep relative position.
-		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
-				Vector3.ZERO, -1)
+		# If no view in effect, recenter & level the camera.
+		if _camera.flags & CameraFlags.ANY_VIEW_FLAGS:
+			return
+		_camera.move_to(null, 0, VECTOR3_ZERO, VECTOR3_ZERO)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
 	if is_camera_lock:
-		_camera.move_to_selection(_selection_manager.selection, -1, Vector3.ZERO,
-				NULL_ROTATION, -1)
+		_camera.move_to(_selection_manager.selection)
 
 
 func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_mask: int) -> void:
 	# We only handle IVBody as target object for now. This could change.
 	if !_camera:
 		return
-	var body := target as IVBody
-	if !body:
+	var selection := _selection_manager.get_or_make_selection(target.name)
+	if !selection:
 		return
 	if _camera.is_camera_lock: # move via selection
-		_selection_manager.select_body(body)
+		_selection_manager.select(selection)
 	else: # move camera directly
 		# Cancel rotations, but keep relative position.
-		_camera.move_to_body(body, -1, Vector3.ZERO, Vector3.ZERO, -1)
+		_camera.move_to(selection)
 
 
 func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:

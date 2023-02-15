@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,8 +33,8 @@ extends Spatial
 #
 # We use origin shifting to prevent 'imprecision shakes' caused by vast scale
 # differences, e.g, when viewing a small body at 1e9 km from the sun. To do
-# this, the camera adjusts the translation of this node (or substitute root
-# node) each frame.
+# so, the camera adjusts the translation of this node (or substitute root node)
+# every frame.
 #
 # 'persist' dictionary is not used by ivoyager code but is available for
 # game save persistence in extension projects. It can hold Godot built-ins,

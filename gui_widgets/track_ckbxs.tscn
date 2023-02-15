@@ -1,0 +1,34 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/track_ckbxs.gd" type="Script" id=1]
+
+[node name="TrackCkbxs" type="HBoxContainer"]
+margin_right = 40.0
+margin_bottom = 40.0
+mouse_filter = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource( 1 )
+
+[node name="Ecliptic" type="CheckBox" parent="."]
+margin_right = 143.0
+margin_bottom = 40.0
+hint_tooltip = "HINT_TRACK_ECLIPTIC"
+action_mode = 0
+text = "BUTTON_ECLIPTIC"
+
+[node name="Orbit" type="CheckBox" parent="."]
+margin_left = 147.0
+margin_right = 275.0
+margin_bottom = 40.0
+hint_tooltip = "HINT_TRACK_ORBIT"
+action_mode = 0
+text = "BUTTON_ORBIT"
+
+[node name="Ground" type="CheckBox" parent="."]
+margin_left = 279.0
+margin_right = 426.0
+margin_bottom = 40.0
+hint_tooltip = "HINT_TRACK_GROUND"
+action_mode = 0
+text = "BUTTON_GROUND"

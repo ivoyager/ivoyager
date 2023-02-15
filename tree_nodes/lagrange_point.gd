@@ -1,8 +1,8 @@
-# minor_bodies_manager.gd
+# lagrange_point.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,30 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVMinorBodiesManager
-extends Node
+class_name IVLagrangePoint
+extends Spatial
+
+# Passive Spatial that exists in the RotatingSpace of a Body. Use Body API to
+# obtain. (Uses lazy init.)
 
 
-const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := [
-	"group_names",
-	"ids_by_group",
-	"group_refs_by_name",
-	"lagrange_points",
-]
-
-# persisted
-var group_names := []
-var ids_by_group := {} # arrays of ids indexed by group name
-var group_refs_by_name := {} # AsteroidGroups now
-var lagrange_points := {} # dict of lagrange_point objects indexed by group name
+const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
+const PERSIST_PROPERTIES := ["lp_integer"]
 
 
-func _ready():
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
+var lp_integer: int # 1, 2, 3, 4, 5
 
-func _restore_init_state() -> void:
-	group_names.clear()
-	ids_by_group.clear()
-	group_refs_by_name.clear()
-	lagrange_points.clear()
+
+func init(lp_integer_: int) -> void:
+	lp_integer = lp_integer_

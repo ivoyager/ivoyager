@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableImporter
+extends Reference
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for REAL) results to IVGlobal dictionaries. Data can be
@@ -252,28 +253,32 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 				assert(has_types) # required
 				reading_header = false
 				
-				# process defaults
-				for column in range(1, n_columns): # column 0 never has Default
-					var field: String = _field_map[column]
-					if !field:
-						continue
-					var type: int = field_info[field][0]
-					var prefix: String = field_info[field][1]
-					var unit: String = field_info[field][2]
-					var default: String = field_info[field][3] # preprocessed
-					field_info[field][3] = _get_processed_value(default, type, prefix, unit)
+				# process defaults (new table only)
+				if !is_mod:
+					for column in range(1, n_columns): # column 0 never has Default
+						var field: String = _field_map[column]
+						if !field:
+							continue
+						var type: int = field_info[field][0]
+						var prefix: String = field_info[field][1]
+						var unit: String = field_info[field][2]
+						var default = _get_processed_value(field_info[field][3], type, prefix, unit)
+						field_info[field][3] = default # replace w/ processed default
 				
-				# impute data for new fields (mod table only)
+				# process defaults & impute data for new fields (mod table only)
 				if _add_fields:
 					var n_rows: int = _tables["n_" + table_name] # base table
 					while _add_fields:
 						var field: String = _add_fields.pop_back()
-						var default = field_info[field][3] # untyped
+						var type: int = field_info[field][0]
+						var prefix: String = field_info[field][1]
+						var unit: String = field_info[field][2]
+						var default = _get_processed_value(field_info[field][3], type, prefix, unit)
+						field_info[field][3] = default # replace w/ processed default
 						var table_column := []
 						table_column.resize(n_rows)
 						table_column.fill(default) # mod table will overwrite
 						table[field] = table_column
-						var type: int = field_info[field][0]
 						if type != TYPE_REAL:
 							continue
 						var precisions_column := []

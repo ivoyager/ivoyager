@@ -81,21 +81,21 @@ Comment: NASA/Goddard Space Flight Center Scientific Visualization Studio
  Usage: https://www.nasa.gov/multimedia/guidelines/index.html
 Licence: public-domain
 
-Files: */globe_wraps/Earth.albedo.nasa.land_ocean_ice_cloud_4k.jpg
+Files: */maps/Earth.albedo.land_ocean_ice_cloud_8192.jpg
  */2d_bodies/Earth.256.png
 Comment: NASA Visible Earth
  The Blue Marble: Land Surface, Ocean Color, Sea Ice and Clouds
  Usage: https://www.nasa.gov/multimedia/guidelines/index.html
 Licence: public-domain
 
-Files: */globe_wraps/Jupiter.albedo.new.BjornJonsson.4096.jpg
+Files: */maps/Jupiter.albedo.new.BjornJonsson.4096.jpg
  */2d_bodies/Jupiter.256.png
 Comment: Merged Cassini and Juno global map of Jupiter
 Copyright: 2018, Björn Jónsson
 Licence: CC-BY-3.0
 
-Files: */globe_wraps/Neptune.albedo.BjornJonsson.CWreprocessed.4096.jpg
- */globe_wraps/Venus.albedo.BjornJonsson.CWreprocessed.4096.jpg
+Files: */maps/Neptune.albedo.BjornJonsson.CWreprocessed.4096.jpg
+ */maps/Venus.albedo.BjornJonsson.CWreprocessed.4096.jpg
  */2d_bodies/Neptune.256.png
  */2d_bodies/Venus.256.png
  */planet_rings/saturn_rings.png
@@ -106,7 +106,7 @@ Comment: Björn Jónsson planetary maps
 Copyright: 1998-2011, 2012, Björn Jónsson
 Licence: website-notice-1
 
-Files: */globe_wraps/Sun.albedo.JHT.CWreprocessed.4096.jpg
+Files: */maps/Sun.albedo.JHT.CWreprocessed.4096.jpg
  */2d_bodies/Sun.256.png
  */2d_bodies/Sun_slice.256.png
 Comment: James Hastings-Trew sun map
@@ -115,33 +115,33 @@ Comment: James Hastings-Trew sun map
 Copyright: 2006, James Hastings-Trew
 Licence: website-notice-2
 
-Files: *globe_wraps/Ariel.albedo.partial.noaa.2048.jpg
- */globe_wraps/Callisto.albedo.noaa.2400.jpg
- */globe_wraps/Ceres.albedo.noaa.CWcolored.4096.jpg
- */globe_wraps/Charon.albedo.partial.noaa.4096.jpg
- */globe_wraps/Dione.albedo.noaa.4096.jpg
- */globe_wraps/Enceladus.albedo.noaa.4096.jpg
- */globe_wraps/Europa.albedo.noaa.4096.jpg
- */globe_wraps/Ganymede.albedo.noaa.4096.jpg
- */globe_wraps/Iapetus.albedo.noaa.4096.jpg
- */globe_wraps/Io.albedo.noaa.4096.jpg
- */globe_wraps/Mars.albedo.noaa.CWreprocessed.4096.jpg
- */globe_wraps/Mercury.albedo.GlobalColor2017.CWreprocessed.4096.jpg
- */globe_wraps/Mimas.albedo.noaa.4096.jpg
- */globe_wraps/Miranda.albedo.partial.2048.jpg
- */globe_wraps/Moon.albedo.noaa.4096.jpg
- */globe_wraps/Oberon.albedo.partial.noaa.2048.jpg
- */globe_wraps/Phoebe.albedo.partial.noaa.4096.jpg
- */globe_wraps/Pluto.albedo.partial.noaa.4096.jpg
- */globe_wraps/Rhea.albedo.noaa.4096.jpg
- */globe_wraps/Saturn.albedo.noaa.2880.jpg
- */globe_wraps/Tethys.albedo.noaa.4096.jpg
- */globe_wraps/Titan.albedo.noaa.2k.jpg
- */globe_wraps/Titania.albedo.partial.noaa.2048.jpg
- */globe_wraps/Triton.albedo.incomplete.noaa.4096.jpg
- */globe_wraps/Umbriel.albedo.partial.noaa.3600.jpg
- */globe_wraps/Uranus.albedo.noaa.1024.jpg
- */globe_wraps/Vesta.albedo.noaa.4096.jpg
+Files: *maps/Ariel.albedo.partial.noaa.2048.jpg
+ */maps/Callisto.albedo.noaa.2400.jpg
+ */maps/Ceres.albedo.noaa.CWcolored.4096.jpg
+ */maps/Charon.albedo.partial.noaa.4096.jpg
+ */maps/Dione.albedo.noaa.4096.jpg
+ */maps/Enceladus.albedo.noaa.4096.jpg
+ */maps/Europa.albedo.noaa.4096.jpg
+ */maps/Ganymede.albedo.noaa.4096.jpg
+ */maps/Iapetus.albedo.noaa.4096.jpg
+ */maps/Io.albedo.noaa.4096.jpg
+ */maps/Mars.albedo.noaa.CWreprocessed.4096.jpg
+ */maps/Mercury.albedo.GlobalColor2017.CWreprocessed.4096.jpg
+ */maps/Mimas.albedo.noaa.4096.jpg
+ */maps/Miranda.albedo.partial.2048.jpg
+ */maps/Moon.albedo.noaa.4096.jpg
+ */maps/Oberon.albedo.partial.noaa.2048.jpg
+ */maps/Phoebe.albedo.partial.noaa.4096.jpg
+ */maps/Pluto.albedo.partial.noaa.4096.jpg
+ */maps/Rhea.albedo.noaa.4096.jpg
+ */maps/Saturn.albedo.noaa.2880.jpg
+ */maps/Tethys.albedo.noaa.4096.jpg
+ */maps/Titan.albedo.noaa.2k.jpg
+ */maps/Titania.albedo.partial.noaa.2048.jpg
+ */maps/Triton.albedo.incomplete.noaa.4096.jpg
+ */maps/Umbriel.albedo.partial.noaa.3600.jpg
+ */maps/Uranus.albedo.noaa.1024.jpg
+ */maps/Vesta.albedo.noaa.4096.jpg
  */2d_bodies/Ariel.256.png
  */2d_bodies/Callisto.256.png
  */2d_bodies/Ceres.256.png

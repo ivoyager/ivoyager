@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVEnums
+extends Object
 
 # We keep enums here that are broadly needed by the program.
 #
@@ -27,42 +28,10 @@ class_name IVEnums
 #  - IVTableImporter for interpretting enum names in external *.tsv files
 #  - GUI widget selection_data.gd for object info display 
 
-enum { # duplicated from IVSaveBuilder so we can remove the gamesave system
+enum { # duplicated in IVSaveBuilder
 	NO_PERSIST,
 	PERSIST_PROPERTIES_ONLY,
 	PERSIST_PROCEDURAL,
-}
-
-
-enum NetworkState {
-	NO_NETWORK,
-	IS_SERVER,
-	IS_CLIENT,
-}
-
-enum NetworkStopSync {
-	BUILD_SYSTEM,
-	SAVE,
-	LOAD,
-	NEW_PLAYER, # needs save to enter in-progress game
-	EXIT,
-	QUIT,
-	DONT_SYNC,
-}
-
-enum ViewType {
-	VIEW_ZOOM,
-	VIEW_45,
-	VIEW_TOP,
-	VIEW_OUTWARD,
-	VIEW_BUMPED, # unspecified view_position
-	VIEW_BUMPED_ROTATED # unspecified view_position & view_rotations
-}
-
-enum CameraTrackType {
-	TRACK_NONE,
-	TRACK_ORBIT,
-	TRACK_GROUND,
 }
 
 enum GUISize {
@@ -84,6 +53,60 @@ enum Confidence {
 	CONFIDENCE_YES,
 }
 
+enum NetworkState {
+	NO_NETWORK,
+	IS_SERVER,
+	IS_CLIENT,
+}
+
+enum NetworkStopSync {
+	BUILD_SYSTEM,
+	SAVE,
+	LOAD,
+	NEW_PLAYER, # needs save to enter in-progress game
+	EXIT,
+	QUIT,
+	DONT_SYNC,
+}
+
+# WIP - Not used yet
+enum LazyType { # WIP - for rebuild of body/model lazy init system
+	LAZY_NEVER, # default for stars and planets
+	LAZY_OUT_OF_SYSTEM, # default for dwarf planets & major moons
+	LAZY_MAX, # default for minor moons, instantiated asteroids & spacecraft
+}
+
+enum CameraFlags {
+	UP_LOCKED = 1 << 0,
+	UP_UNLOCKED = 1 << 1,
+	
+	TRACK_GROUND = 1 << 2,
+	TRACK_ORBIT = 1 << 3,
+	TRACK_ECLIPTIC = 1 << 4,
+	TRACK_GALACIC = 1 << 5, # not implemented yet
+	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
+	
+	VIEW_ZOOM = 1 << 7,
+	VIEW_45 = 1 << 8,
+	VIEW_TOP = 1 << 9,
+	VIEW_OUTWARD = 1 << 10, # disabled now; needs special GUI to use reasonably
+	
+	# bits 32-63 should be safe to use for any extension project
+	
+	# combo masks
+	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
+	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
+	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
+}
+
+enum CameraDisabledFlags {
+	DISABLED_TRACK_GROUND = 1 << 0,
+	DISABLED_TRACK_ORBIT = 1 << 1,
+	DISABLED_TRACK_ECLIPTIC = 1 << 2,
+	DISABLED_TRACK_GALACIC = 1 << 3, # not implemented yet
+	DISABLED_TRACK_SUPERGALACIC = 1 << 4, # not implemented yet
+}
+
 enum BodyFlags {
 	
 	IS_BARYCENTER = 1 << 0, # not implemented yet
@@ -99,8 +122,8 @@ enum BodyFlags {
 	# combos
 	IS_PLANET_OR_MOON = 1 << 2 | 1 << 5,
 
-	# reserved 1 << 9,
-	# reserved 1 << 10,
+	IS_PLANETARY_MASS_OBJECT = 1 << 9,
+	SHOW_IN_NAV_PANEL = 1 << 10,
 	
 	NEVER_SLEEP = 1 << 11, # won't work correctly if ancestor node sleeps
 	IS_TOP = 1 << 12, # non-orbiting stars; is in IVGlobal.top_bodies
@@ -110,17 +133,19 @@ enum BodyFlags {
 	IS_TIDALLY_LOCKED = 1 << 16,
 	IS_AXIS_LOCKED = 1 << 17,
 	TUMBLES_CHAOTICALLY = 1 << 18,
-	IS_NAVIGATOR_MOON = 1 << 19, # show in system navigator
-	LIKELY_HYDROSTATIC_EQUILIBRIUM = 1 << 20, # for moon orbit color
-	DISPLAY_M_RADIUS = 1 << 21,
-	HAS_ATMOSPHERE = 1 << 22,
-	IS_GAS_GIANT = 1 << 23,
-	NO_ORBIT = 1 << 24, # Hill Sphere is smaller than body radius
-	NO_STABLE_ORBIT = 1 << 25, # Hill Sphere / 3 is smaller than body radius
-#	APPROX_RADIUS = 1 << 24, # e.g., display as "~1 km" (TODO)
-#	APPROX_GM = 1 << 25,
-#
-#   reserved to 1 << 39,
+	IS_NAVIGATOR_MOON = 1 << 19, # IVSelectionManager uses for cycling
+	IS_PLANETARY_MASS_MOON = 1 << 20,
+	IS_NON_PLANETARY_MASS_MOON = 1 << 21,
+	
+	DISPLAY_M_RADIUS = 1 << 22,
+	HAS_ATMOSPHERE = 1 << 23,
+	IS_GAS_GIANT = 1 << 24,
+	NO_ORBIT = 1 << 25, # Hill Sphere is smaller than body radius
+	NO_STABLE_ORBIT = 1 << 26, # Hill Sphere / 3 is smaller than body radius
+	USE_CARDINAL_DIRECTIONS = 1 << 27,
+	USE_PITCH_YAW = 1 << 28,
+	
+#   Reserved to 1 << 39.
 #
 #	Higher bits safe for extension project.
 #	Max bit shift is 1 << 63.

@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVPlanetMoonButtons
 extends HBoxContainer
 
 # GUI widget. Builds itself from an existing solar system!
@@ -25,8 +26,11 @@ extends HBoxContainer
 # strech ratios: 1.0 (SunSliceButton) and 10.0 (this widget or container that
 # contains this widget).
 
-const IS_PLANET := IVEnums.BodyFlags.IS_TRUE_PLANET | IVEnums.BodyFlags.IS_DWARF_PLANET
-const IS_NAVIGATOR_MOON := IVEnums.BodyFlags.IS_NAVIGATOR_MOON
+const IS_PLANET := IVEnums.BodyFlags.IS_PLANET
+const IS_MOON := IVEnums.BodyFlags.IS_MOON
+
+const SHOW_IN_NAV_PANEL := IVEnums.BodyFlags.SHOW_IN_NAV_PANEL
+
 const STAR_SLICE_MULTIPLIER := 0.05 # what fraction of star is in image "slice"?
 const INIT_WIDTH := 560.0
 
@@ -100,7 +104,7 @@ func _build(_dummy := false) -> void:
 	# build the system button tree
 	var column := 0
 	for planet in star.satellites: # vertical box for each planet w/ its moons
-		if not planet.flags & IS_PLANET:
+		if not planet.flags & IS_PLANET or not planet.flags & SHOW_IN_NAV_PANEL:
 			continue
 		# For each planet column, column_widths[column] sets the top Spacer
 		# width (and therefore the column width) and planet_sizes[column] sets
@@ -117,7 +121,7 @@ func _build(_dummy := false) -> void:
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column])
 		for moon in planet.satellites:
-			if not moon.flags & IS_NAVIGATOR_MOON:
+			if not moon.flags & IS_MOON or not moon.flags & SHOW_IN_NAV_PANEL:
 				continue
 			size = round(pow(moon.get_mean_radius(), size_exponent) * scale)
 			if size < min_body_size:
@@ -136,7 +140,7 @@ func _clear() -> void:
 
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
-	var button := NavButton.new(body, image_size, _selection_manager)
+	var button := IVNavigationButton.new(body, image_size, _selection_manager)
 	button.connect("selected", self, "_on_nav_button_selected", [button])
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
@@ -193,63 +197,3 @@ func _settings_resize() -> void:
 	for child in get_children():
 		child.show()
 
-
-# ****************************** INNER CLASS **********************************
-
-class NavButton extends Button:
-	
-	signal selected()
-	
-	var _selection_manager: IVSelectionManager
-	var _body: IVBody # this button
-	var _has_mouse := false
-	
-	
-	func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManager) -> void:
-		_body = body
-		_selection_manager = selection_manager
-		toggle_mode = true
-		hint_tooltip = body.name
-		set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
-		rect_min_size = Vector2(image_size, image_size)
-		flat = true
-		focus_mode = FOCUS_ALL
-		var texture_box := TextureRect.new()
-		texture_box.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
-		texture_box.expand = true
-		texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		texture_box.texture = body.texture_2d
-		texture_box.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(texture_box)
-		connect("mouse_entered", self, "_on_mouse_entered")
-		connect("mouse_exited", self, "_on_mouse_exited")
-
-
-	func _ready():
-		IVGlobal.connect("update_gui_requested", self, "_update_selection")
-		_selection_manager.connect("selection_changed", self, "_update_selection")
-		_selection_manager.connect("selection_reselected", self, "_update_selection")
-		action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-		set_default_cursor_shape(CURSOR_POINTING_HAND)
-
-
-	func _pressed() -> void:
-		_selection_manager.select_body(_body)
-
-
-	func _update_selection() -> void:
-		var is_selected := _selection_manager.get_body() == _body
-		pressed = is_selected
-		if is_selected:
-			emit_signal("selected")
-		flat = !is_selected and !_has_mouse
-
-
-	func _on_mouse_entered() -> void:
-		_has_mouse = true
-		flat = false
-
-
-	func _on_mouse_exited() -> void:
-		_has_mouse = false
-		flat = !pressed

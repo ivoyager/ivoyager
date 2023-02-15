@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVSelectionImage
 extends TextureRect
 
 # GUI widget. An ancestor Control must have member "selection_manager".
@@ -49,9 +50,9 @@ func _connect_selection_manager(_dummy := false) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
-		# image click centers and "levels" the target body
-		IVGlobal.emit_signal("move_camera_to_selection_requested", _selection_manager.selection,
-				-1, Vector3.ZERO, Vector3.ZERO, -1)
+		# image click centers and levels the target body
+		IVGlobal.emit_signal("move_camera_requested", _selection_manager.selection, 0,
+				Vector3.ZERO, Vector3.ZERO)
 
 
 func _update_image() -> void:

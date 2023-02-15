@@ -2,7 +2,7 @@
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
-# Copyright 2017-2022 Charlie Whitfield
+# Copyright 2017-2023 Charlie Whitfield
 # I, Voyager is a registered trademark of Charlie Whitfield in the US
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSystemBuilder
+extends Reference
 
 # Builds the star system(s) from data tables & binaries.
 
@@ -46,11 +47,10 @@ func build_system_tree() -> void:
 	var state_manager: IVStateManager = IVGlobal.program.StateManager
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
 	IVGlobal.verbose_signal("about_to_build_system_tree")
-	_body_builder.init_system_build()
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
-	var minor_bodies_builder: IVMinorBodiesBuilder = IVGlobal.program.MinorBodiesBuilder
-	minor_bodies_builder.build()
+	var small_bodies_builder: IVSmallBodiesBuilder = IVGlobal.program.SmallBodiesBuilder
+	small_bodies_builder.build()
 	if add_camera:
 		_add_camera()
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)
