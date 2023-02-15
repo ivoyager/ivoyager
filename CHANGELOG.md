@@ -10,30 +10,30 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 Under development using Godot 3.5.2.rc2.
 
-New assets for 0.0.14! - WIP
+Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14**; download [here](https://github.com/ivoyager/non_release_assets/releases). Previous release assets should be ok but will not have ISS, Hubble, and several visited asteroids (will have fallback sphere grid instead).
 
 ### Added
-* Spacecraft: International Space Station, Hubble and Juno. (For Juno, we only have its orbit and a fallback model; the open-source Juno model crashes in GLES2 operation so isn't included yet.)
-* Explored asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
-* Asteroid orbit lines can be shown by group (these are MultiMeshInstances), or all at once. Yes, all ~65,000 of them!
-* Visual screen points (i.e., asteroids) and orbit lines (of Bodies & *all* asteroids) are identified by name on mouse-over. This was crazy hard viewport and shader programing to do. See class [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd) for details. 
-* IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays orieted to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
-* IVAllHUDsGrid widget organizes HUD visibility checkboxes.
+* Spacecrafts! For now, just ISS and Hubble. (Juno has been added as an object, but it uses a fallback blank model because the open-source Juno model causes crashes in GLES2 operation.)
+* Visited asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
+* Asteroid orbit lines can be shown by group, or all at once. Yes, all ~65,000 of them!
+* Visual screen points (i.e., asteroids) and orbit lines are now identified by name on mouse-over. This involved some crazy shader/viewport hacking; for details see class [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd). 
+* IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays oriented to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
+* New IVAllHUDsGrid widget organizes HUD visibility checkboxes.
 
 
 ### Changed
-* New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground' or 'orbit tracking' mode.
+* New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground-' or 'orbit-tracking' mode.
 * Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
 * [Breaks API!] Removed/replaced table columns. E.g., new 'show_in_nav_panel' needed for display by the navigation panel widgets. Some others may be API breaking.
-* [Breaks API!] Significantly changed API in classes: IVCamera (uses new CameraFlags system for move orders), IVView.
-* [Breaks API!] Replaced classes (different API): IVLPoint -> IVLagrangePoint.
+* [Breaks API!] Significantly changed API in classes: IVCamera, IVView.
+* [Breaks API!] Replaced classes: IVLPoint -> IVLagrangePoint.
 * [Breaks API!] Removed classes: IVModelController, several 'builder' classes.
 * [Breaks API!] Various changes to IVGlobal signals.
 * [Breaks API!] Various changes to IVEnums.
 * Improved code throughout (especially the pre-2019 classes like IVCamera).
 
 ### Fixed
-* Somewhat less inacurate Trojan orbits. (Since there are no closed-form solutions, these will always be approximations.)
+* Somewhat less inacurate Trojan orbits. Ocillation of longitude and semi-major axis are now phased correctly. (There is still a lot of room for improvement in the tadpole orbit approximation, although it will always be a rough approximation because there are no closed-form solutions.)
 
 
 ## [v0.0.13] - 2022-09-28
