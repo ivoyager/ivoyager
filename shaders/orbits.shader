@@ -36,24 +36,30 @@ void vertex() {
 	fragment_id = INSTANCE_CUSTOM.xyz;
 }
 
+
 bool is_id_signaling_pixel(vec2 offset){
-	// Follows grid pattern near mouse described in FragmentIdentifier. You can
-	// modify to return true in the full range area for debugging, but that
-	// causes FragmentIdentifier to do a worse job identifying valid ids in a
-	// crowded field of points.
+	// Follows grid pattern near mouse described in FragmentIdentifier, which
+	// will capture any point in range area with POINT_SIZE >= 3 and generally
+	// captures orbit lines.
+	//
+	// Note that FRAGCOORD x and y are offset from pixel coordinate by either
+	// exaclty +0.5 (Windows) or close to but not exactly +0.5 (HTML5 export).
+	// Code below covers either case. Comment out the 'mod' filter to
+	// troubleshoot (the calibration region wlll be painfully obvious).
 	
-	// Note that FRAGCOORD is always offset +0.5 from pixel coordinate in both
-	// x and y. If that changes, the following line will need to be changed.
 	offset -= vec2(0.5);
-	
 	offset = abs(offset);
+	
 	if (offset.x > fragment_range) {
 		return false;
 	}
+	
 	if (offset.y > fragment_range) {
 		return false;
 	}
-	if (mod(offset, 3.0) != vec2(0.0)) {
+	
+	vec2 mod_3 = mod(offset, 3.0);
+	if (mod_3.x > 0.5 || mod_3.y > 0.5) {
 		return false;
 	}
 
