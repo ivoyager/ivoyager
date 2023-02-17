@@ -1,12 +1,16 @@
-name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	#comments
-Type	INT	REAL	STRING	STRING	REAL	REAL	REAL	REAL	
-Default									
-Unit					au	au	au	au	
-Prefix/ASTEROID_GROUP_	STAR_								
-NEAR_EARTH	SUN	17	NE			1.3			2694 total
-MARS_CROSSERS	SUN	16	MC		1.3	1.666			5157 total
-MAIN_BELT	SUN	15	MB		1.666			4.6	510336  total (!)
-JUPITER_TROJANS	SUN	15	JT	PLANET_JUPITER			4.6	5.5	4869 total; if no L-point, will fall into next group
-CENTAURS	SUN	15	CE				4.6	30.1	95 total
-TRANS_NEPTUNE	SUN	15	TN				30.1		409 total
-#									
+name	star	mag_cutoff	group	trojan_of	min_q	max_q	min_a	max_a	max_e	max_i	#comments
+Type	INT	REAL	STRING	STRING	REAL	REAL	REAL	REAL	REAL	REAL	
+Default											
+Unit					au	au	au	au		deg	
+Prefix/ASTEROID_GROUP_	STAR_										
+NEAR_EARTH	SUN	17	NE			1.3					
+MARS_CROSSERS	SUN	16	MC			1.666					
+INNER_MAIN_BELT	SUN	15	IMB					2.5			
+MIDDLE_MAIN_BELT	SUN	15	MMB					2.82			
+HILDAS	SUN	15	HI				3.7	4.2	0.3	20	min_e ???
+OUTER_MAIN_BELT	SUN	15	OMB					4.6			
+JUPITER_TROJANS	SUN	15	JT	PLANET_JUPITER				5.5			->JT4, JT5; falls into next group if no l-point
+CENTAURS	SUN	15	CE					30.1			
+TRANS_NEPTUNE	SUN	15	TN								
+# ordered; 1st passing											
+# criteria sets the group											

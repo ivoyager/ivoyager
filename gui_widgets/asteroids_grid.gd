@@ -25,10 +25,13 @@ extends GridContainer
 var column0_en_width := 20
 
 var chkbx_rows := [
-	["LABEL_ALL_ASTEROIDS", ["NE", "MC", "MB", "JT4", "JT5", "CE", "TN"]],
+	["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"]],
 	["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
 	["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
-	["   " + tr("LABEL_MAIN_BELT"), ["MB"]],
+	["   " + tr("LABEL_MAIN_BELT_INNER"), ["IMB"]],
+	["   " + tr("LABEL_MAIN_BELT_MIDDLE"), ["MMB"]],
+	["   " + tr("LABEL_MAIN_BELT_OUTER"), ["OMB"]],
+	["   " + tr("LABEL_HILDAS"), ["HI"]],
 	["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
 	["   " + tr("LABEL_CENTAURS"), ["CE"]],
 	["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
