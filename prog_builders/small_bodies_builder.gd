@@ -96,7 +96,7 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 
 func _load_binary(group: IVSmallBodiesGroup, group_name: String,
 		mag_str: String) -> void:
-	var binary_name := group_name + "." + mag_str + ".vbinary"
+	var binary_name := group_name + "." + mag_str + ".ivbinary"
 	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
 	var binary := File.new()
 	if binary.open(path, File.READ) != OK: # skip if file doesn't exist

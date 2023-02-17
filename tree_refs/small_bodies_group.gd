@@ -178,21 +178,22 @@ func get_fragment_data(index: int, fragment_type: int) -> Array:
 
 
 func _fix_binary_keplerian_elements() -> void:
-	var au := units.AU
-	var year := units.YEAR
-	var mu := primary_body.get_std_gravitational_parameter()
-	assert(mu)
+#	var au := units.AU
+#	var year := units.YEAR
+#	var mu := primary_body.get_std_gravitational_parameter()
+#	assert(mu)
 	var size := names.size()
 	var index := 0
 	while index < size:
-		var a: float = a_e_i[index][0] * au # from au
-		a_e_i[index][0] = a
+		var a: float = a_e_i[index][0] # * au # from au
+#		a_e_i[index][0] = a
 		var n: float = Om_w_M0_n[index][3]
-		if n != 0.0:
-			n /= year # from rad/year
-		else:
-			n = sqrt(mu / (a * a * a))
-		Om_w_M0_n[index][3] = n
+		assert(n)
+#		if n != 0.0:
+#			n /= year # from rad/year
+#		else:
+#			n = sqrt(mu / (a * a * a))
+#		Om_w_M0_n[index][3] = n
 		# Fix M0 for different epoch.
 		# Currently, *.cat files have epoch MJD 58200. We need to check this
 		# whenever we download new source data and adjust code accordingly.
@@ -201,10 +202,10 @@ func _fix_binary_keplerian_elements() -> void:
 		# MJD = 58200
 		# JD = MJD + 2400000.5 = 2458200.5
 		# J2000 day = JD - 2451545 = 6655.5
-		var M0: float = Om_w_M0_n[index][2] # already in rad
-		var M0_J2000: float = M0 - n * 6655.5 * IVUnits.DAY
-		M0_J2000 = fposmod(M0_J2000, TAU)
-		Om_w_M0_n[index][2] = M0_J2000
+#		var M0: float = Om_w_M0_n[index][2] # already in rad
+#		var M0_J2000: float = M0 - n * 6655.5 * IVUnits.DAY
+#		M0_J2000 = fposmod(M0_J2000, TAU)
+#		Om_w_M0_n[index][2] = M0_J2000
 		# apoapsis
 		var e: float = a_e_i[index][1]
 		var apoapsis := a * (1.0 + e)
@@ -215,20 +216,20 @@ func _fix_binary_keplerian_elements() -> void:
 
 
 func _fix_binary_trojan_elements() -> void:
-	var au := units.AU
-	var year := units.YEAR
+#	var au := units.AU
+#	var year := units.YEAR
 	var characteristic_length := secondary_body.orbit.get_characteristic_length()
 	var size := names.size()
 	var index := 0
 	while index < size:
-		var d: float = d_e_i[index][0] * au # from au
-		d_e_i[index][0] = d
-		Om_w_D_f[index][3] /= year # f; from rad/year
+		var d: float = d_e_i[index][0] # * au # from au
+#		d_e_i[index][0] = d
+#		Om_w_D_f[index][3] /= year # f; from rad/year
 		# Random th0. We can't determine where we are in cycle from proper
 		# elements alone. If we had current a & M (and epoch), we could
 		# probably back-calculate th0. 
-		var th0_ := rand_range(0.0, TAU)
-		th0[index][0] = th0_
+#		var th0_ := rand_range(0.0, TAU)
+#		th0[index][0] = th0_
 		# apoapsis
 		var e: float = d_e_i[index][1]
 		var apoapsis := characteristic_length / (1.0 - e) + d
