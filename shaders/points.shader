@@ -40,13 +40,17 @@ uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 void vertex() {
 	// orbital elements
-	float a = NORMAL.x; // semi-major axis
-	float e = NORMAL.y; // eccentricity
-	float i = NORMAL.z; // inclination
-	float Om = COLOR.x; // longitude of the ascending node
-	float w = COLOR.y; // argument of periapsis
-	float M0 = COLOR.z; // mean anomaly at epoch
-	float n = COLOR.w; // mean motion
+	float a = NORMAL[0]; // semi-major axis
+	float e = COLOR[0]; // eccentricity
+	float i = COLOR[1]; // inclination
+	float Om = COLOR[2]; // longitude of the ascending node
+	float w = COLOR[3]; // argument of periapsis
+	float M0 = NORMAL[1]; // mean anomaly at epoch
+	float n = NORMAL[2]; // mean motion
+	
+	// orbit precessions
+	float s = UV[0]; // NOT IMPLEMENTED YET
+	float g = UV[1]; // NOT IMPLEMENTED YET
 	
 	float M = M0 + n * time; // mean anomaly
 	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI

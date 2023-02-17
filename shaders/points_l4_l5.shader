@@ -64,15 +64,21 @@ float axis_ocillator(float da, float th){
 
 
 void vertex() {
+
+	// orbit elements
+	float e = COLOR[0]; // eccentricity
+	float i = COLOR[1]; // inclination
+	float Om = COLOR[2]; // longitude of the ascending node
+	float w = COLOR[3]; // argument of periapsis
 	
-	// orbital elements modified for lagrangian
-	float da = NORMAL.x; // amplitude of 'a' ocillation
-	float e = NORMAL.y; // eccentricity
-	float i = NORMAL.z; // inclination
-	float Om = COLOR.x; // longitude of the ascending node
-	float w = COLOR.y; // argument of periapsis
-	float D = COLOR.z; // amplitude of 'M' ocillation relative to L-point
-	float f = COLOR.w; // long-period rate
+	// orbit precessions
+	float s = UV[0]; // NOT IMPLEMENTED YET
+	float g = UV[1]; // NOT IMPLEMENTED YET
+	
+	// lagrangian
+	float da = NORMAL[0]; // amplitude of 'a' ocillation
+	float D = NORMAL[1]; // amplitude of 'M' ocillation relative to L-point
+	float f = NORMAL[2]; // long-period rate
 	float th0 = UV2.x; // long-period ocillator at epoch
 	
 	
