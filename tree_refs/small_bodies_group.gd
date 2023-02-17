@@ -37,7 +37,7 @@ extends Reference
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const VPRINT = true # print verbose asteroid summary on load
+const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
 
@@ -88,8 +88,8 @@ func get_number() -> int:
 
 func get_orbit_elements(index: int) -> Array:
 	# [a, e, i, Om, w, M0, n]
-	# Does not work for Trojans (yet)
-	assert(lp_integer == -1) # for now
+	# WIP - Trojan elements a, M0 & n vary with libration. This is reflected in
+	# shader point calculations but not in elements here.
 	var e_i_Om_w_item := e_i_Om_w[index]
 	var a_M0_n_item := a_M0_n[index]
 	return [

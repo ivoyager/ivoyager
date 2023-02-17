@@ -20,7 +20,7 @@
 class_name IVAsteroidsGrid
 extends GridContainer
 
-# GUI widget. Trojan orbits are currently not viewable so disabled.
+# GUI widget.
 
 var column0_en_width := 20
 
@@ -71,17 +71,12 @@ func _ready() -> void:
 		points_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
 		_points_chkbxs.append(points_chkbx)
 		add_child(points_chkbx)
-		if groups == ["JT4", "JT5"]:
-			var spacer := Control.new()
-			_orbits_chkbxs.append(null)
-			add_child(spacer)
-		else:
-			var orbits_chkbx := CheckBox.new()
-			orbits_chkbx.connect("pressed", self, "_show_hide_orbits", [orbits_chkbx, groups])
-			orbits_chkbx.align = Button.ALIGN_CENTER
-			orbits_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
-			_orbits_chkbxs.append(orbits_chkbx)
-			add_child(orbits_chkbx)
+		var orbits_chkbx := CheckBox.new()
+		orbits_chkbx.connect("pressed", self, "_show_hide_orbits", [orbits_chkbx, groups])
+		orbits_chkbx.align = Button.ALIGN_CENTER
+		orbits_chkbx.size_flags_horizontal = SIZE_SHRINK_CENTER
+		_orbits_chkbxs.append(orbits_chkbx)
+		add_child(orbits_chkbx)
 		extra_columns = columns - 3
 		while extra_columns > 0:
 			var spacer := Control.new()
@@ -102,8 +97,6 @@ func _show_hide_orbits(ckbx: CheckBox, groups: Array) -> void:
 	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		if group == "JT4" or group == "JT5":
-			continue
 		_huds_visibility.change_sbg_orbits_visibility(group, pressed)
 	_suppress_update = false
 	_update_orbits_ckbxs()
@@ -127,12 +120,8 @@ func _update_orbits_ckbxs() -> void:
 		return
 	for i in _n_rows:
 		var groups: Array = chkbx_rows[i][1]
-		if groups == ["JT4", "JT5"]:
-			continue
 		var is_orbits_visible := true
 		for group in groups:
-			if group == "JT4" or group == "JT5":
-				continue
 			if !_huds_visibility.is_sbg_orbits_visible(group):
 				is_orbits_visible = false
 				break
