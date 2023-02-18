@@ -10,7 +10,10 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 Under development using Godot 3.5.2.rc2.
 
-Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14**; download [here](https://github.com/ivoyager/non_release_assets/releases). Previous release assets should be ok but will not have ISS, Hubble, and several visited asteroids (will have fallback sphere grid instead).
+Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** with replacement folder **asteroid_binaries-2023-02-18**. Download [here](https://github.com/ivoyager/non_release_assets/releases).
+
+**New!** Repository [ivbinary_maker](https://github.com/ivoyager/ivbinary_maker) has the updated tool for converting asteroid raw source data into ivoyager_assets/asteroid_binaries.
+
 
 ### Added
 * Spacecrafts! For now, just ISS and Hubble. (Juno has been added as an object, but it uses a fallback blank model because the open-source Juno model causes crashes in GLES2 operation.)
@@ -22,6 +25,7 @@ Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14**; down
 
 
 ### Changed
+* Split up asteroid Main Belt into MB (Inner), MB (Middle), MB (Outer) and Hildas.
 * New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground-' or 'orbit-tracking' mode.
 * Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
 * [Breaks API!] Removed/replaced table columns. E.g., new 'show_in_nav_panel' needed for display by the navigation panel widgets. Some others may be API breaking.
@@ -33,6 +37,7 @@ Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14**; down
 * Improved code throughout (especially the pre-2019 classes like IVCamera).
 
 ### Fixed
+* Misclassification of some Trojan asteroids to Centaur group.
 * Somewhat less inacurate Trojan orbits. Ocillation of longitude and semi-major axis are now phased correctly. (There is still a lot of room for improvement in the tadpole orbit approximation, although it will always be a rough approximation because there are no closed-form solutions.)
 
 

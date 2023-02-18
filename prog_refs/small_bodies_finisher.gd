@@ -48,8 +48,6 @@ func _init_hud_points(group: IVSmallBodiesGroup) -> void:
 
 
 func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
-	if group.lp_integer != -1:
-		return
 	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group, "asteroid_orbit_color")
 	var primary_body := group.primary_body
 	primary_body.add_child(hud_orbits)
