@@ -136,6 +136,7 @@ func read_binary(binary: File) -> void:
 func finish_binary_import() -> void:
 	# set max apoapsis and do verbose tally
 	var size := names.size()
+	assert(size)
 	var index := 0
 	if lp_integer == -1:
 		while index < size:

@@ -61,6 +61,9 @@ func _load_binaries(star: IVBody) -> void:
 	var n_groups := _table_reader.get_n_rows("asteroid_groups")
 	var row := 0
 	while row < n_groups:
+		if _table_reader.get_bool("asteroid_groups", "skip_import", row):
+			row += 1
+			continue
 		var group_name := _table_reader.get_string("asteroid_groups", "group", row)
 		var trojan_of: IVBody
 		var trojan_of_name := _table_reader.get_string("asteroid_groups", "trojan_of", row)
@@ -91,6 +94,8 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 		else:
 			break
 	group.finish_binary_import()
+	
+	
 	_running_count += group.get_number()
 
 
