@@ -9,8 +9,9 @@ INNER_MAIN_BELT	SUN	15	IMB					2.5
 MIDDLE_MAIN_BELT	SUN	15	MMB					2.82			
 HILDAS	SUN	15	HI				3.7	4.2	0.3	20	min_e ???
 OUTER_MAIN_BELT	SUN	15	OMB					4.6			
-JUPITER_TROJANS	SUN	15	JT	PLANET_JUPITER				5.5			->JT4, JT5; falls into next group if no l-point
-CENTAURS	SUN	15	CE					30.1			
+JUPITER_TROJANS	SUN	15	JT	PLANET_JUPITER				5.5			->JT4, JT5; falls into next group if no L-point from propers
+CENTAURS	SUN	15	CE		5.2			30.1			
+SUSPECT_JUPITER_TROJANS	SUN	15	XJTX					5.5			discarded; we don't have proper data for Trojan libration
 TRANS_NEPTUNE	SUN	15	TN								
 # ordered; 1st passing											
 # criteria sets the group											
