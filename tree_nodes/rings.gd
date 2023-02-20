@@ -21,18 +21,18 @@ class_name IVRings
 extends MeshInstance
 
 # Visual planetary rings. Not persisted so added by BodyFinisher.
-#
-# TODO: A shader rings would be visually superior. 
-# See: https://bjj.mmedia.is/data/s_rings
+# Uses 'rings.shader'.
 
 var _body: IVBody
 var _texture: Texture
+var _main_light_source: Spatial # for phase-angle effects
 var _rings_material := ShaderMaterial.new()
 
 
-func _init(body: IVBody, texture: Texture) -> void:
+func _init(body: IVBody, texture: Texture, main_light_source: Spatial) -> void:
 	_body = body
 	_texture = texture
+	_main_light_source = main_light_source
 
 
 func _ready() -> void:
@@ -40,20 +40,18 @@ func _ready() -> void:
 	var inner_radius: float = _body.get_rings_inner_radius()
 	var inner_fraction := inner_radius / outer_radius
 	scale = Vector3(outer_radius, outer_radius, outer_radius)
-
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
 	mesh = PlaneMesh.new()
-	
 	_rings_material.shader = IVGlobal.shared.rings_shader
-	_rings_material.set_shader_param("ring_texture", _texture)
+	_rings_material.set_shader_param("rings_texture", _texture)
 	_rings_material.set_shader_param("inner_fraction", inner_fraction)
+	_rings_material.set_shader_param("pixel_size", 1.0 / _texture.get_width())
 	set_surface_material(0, _rings_material)
 	rotate_x(PI / 2.0)
 
 
 func _process(_delta: float) -> void:
-	var sun := get_parent_spatial().get_parent_spatial().get_parent_spatial()
-	var sun_global_translation := sun.global_translation
+	var sun_global_translation := _main_light_source.global_translation
 	var is_sun_above := to_local(sun_global_translation).y > 0.0
 	_rings_material.set_shader_param("is_sun_above", is_sun_above)
 	_rings_material.set_shader_param("sun_translation", sun_global_translation)

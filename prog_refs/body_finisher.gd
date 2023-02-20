@@ -164,7 +164,8 @@ func _io_finish(array: Array) -> void: # Main thread
 	if texture_slice_2d:
 		body.texture_slice_2d = texture_slice_2d
 	if rings_texture:
-		var rings: Spatial = _Rings_.new(body, rings_texture)
+		var main_light_source := body.get_parent_spatial() # assumes no moon rings!
+		var rings: Spatial = _Rings_.new(body, rings_texture, main_light_source)
 		body.add_child_to_model_space(rings)
 	if _is_building_system:
 		_system_finished_count += 1
