@@ -40,8 +40,8 @@ void fragment() {
 		ALPHA = 0.0;
 	} else {
 		float ring_coord = (radius - inner_fraction) / (1.0 - inner_fraction);
-		vec4 color1 = texture(ring_texture, vec2(ring_coord, 0.0));
-		vec4 color2 = texture(ring_texture, vec2(ring_coord, 1.0));
+		vec4 color2 = texture(ring_texture, vec2(ring_coord, 0.0));
+		vec4 color1 = texture(ring_texture, vec2(ring_coord, 1.0));
 		
 		if (FRONT_FACING == is_sun_above) {
 			// lit side
@@ -58,7 +58,7 @@ void fragment() {
 			ALBEDO = unlit_color * color2.z;
 		}
 
-		ALPHA = 1.0 - color1.w;
+		ALPHA = color2.w;
 	}
 }
 
