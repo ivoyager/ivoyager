@@ -31,6 +31,8 @@ uniform sampler2D rings_texture;// : hint_albedo;
 uniform float inner_fraction = 0.5307358; // Saturn: 74510 km / 140390 km
 uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1/13177
 
+uniform float min_phase = 0.75; // -cos(139 degress), where we apply only forward scatter
+
 uniform float max_phase_angle = 3.141592654; // TODO: Max out at 135 degrees, not 180
 uniform vec3 unlit_color = vec3(1.0, 0.97075, 0.952);
 
@@ -78,16 +80,23 @@ void fragment() {
 				
 				// lit side
 				
-				// phase angle
-				vec3 sun_vector = (INV_CAMERA_MATRIX * vec4(sun_translation.x,sun_translation.y,sun_translation.z,1.0)).xyz;
-//				float phase_dot_product = dot(normalize(sun_vector), normalize(VIEW));
-				float phase_angle = (acos(dot(normalize(sun_vector), normalize(VIEW))));
-				float phase = clamp(phase_angle / max_phase_angle, 0.0, 1.0);
-				// back- and forward-scatter
+				// back-/forward-scatter mix
+				// We use 'phase' (=cos(phase_angle)), clipped for min_phase
+				// and scaled to 0.0 .. 1.0. Note that 'phase' +1.0 corresponds
+				// to phase angle 0 (100% backscatter). 
+				vec3 sun_vector = (INV_CAMERA_MATRIX * vec4(sun_translation.x, sun_translation.y,
+						sun_translation.z, 1.0)).xyz;
+				
+				float phase = dot(normalize(sun_vector), normalize(VIEW)); // cos(phase_angle)
+				if (phase < min_phase) { // only gets forward scatter
+					phase = min_phase;
+				}
+				phase -= min_phase; // 0.0 .. (1.0 - min_phase)
+				phase /= 1.0 - min_phase; // 0.0 .. 1.0
 				float scatter = scatter_alpha_0.y * w0 + scatter_alpha_1.y * w1; // forward only
-				if (phase < 1.0) {
+				if (phase > 0.01) {
 					float backscatter = scatter_alpha_0.x * w0 + scatter_alpha_1.x * w1;
-					scatter = mix(backscatter, scatter, phase);
+					scatter = mix(scatter, backscatter, phase);
 				}
 				// lit color
 				vec3 lit_color_0 = texture(rings_texture, vec2(x0, 1.0)).rgb;
@@ -102,28 +111,7 @@ void fragment() {
 				ALBEDO = lit_color * scatter;
 				
 			}
-		
-		
-//			vec4 scatteralpha = texture(rings_texture, vec2(ring_coord, 0.0));
-//
-//			if (FRONT_FACING == is_sun_above) {
-//				// lit side
-//				vec4 litcolor = texture(rings_texture, vec2(ring_coord, 1.0));
-//				vec3 sun_vector = (INV_CAMERA_MATRIX * vec4(sun_translation.x,sun_translation.y,sun_translation.z,1.0)).xyz;
-//				float phase_dot_product = dot(normalize(sun_vector), normalize(VIEW));
-//				float phase_angle = (acos(phase_dot_product));
-//				phase_angle /= 3.141592654;
-//				phase_angle = clamp(phase_angle, 0.0, 1.0); // Weird camera flashing if we don't clamp
-//				float scatter = mix(scatteralpha.x, scatteralpha.y, phase_angle);
-//				ALBEDO = litcolor.xyz * scatter;
-//
-//			} else {
-//				// unlit side
-//				ALBEDO = unlit_color * scatteralpha.z;
-//			}
-//			ALPHA = scatteralpha.w;
 		}
-
 	}
 }
 

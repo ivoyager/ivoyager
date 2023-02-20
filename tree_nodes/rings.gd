@@ -28,6 +28,8 @@ var _texture: Texture
 var _main_light_source: Spatial # for phase-angle effects
 var _rings_material := ShaderMaterial.new()
 
+var _is_sun_above := false;
+
 
 func _init(body: IVBody, texture: Texture, main_light_source: Spatial) -> void:
 	_body = body
@@ -53,7 +55,10 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var sun_global_translation := _main_light_source.global_translation
 	var is_sun_above := to_local(sun_global_translation).y > 0.0
-	_rings_material.set_shader_param("is_sun_above", is_sun_above)
+	if _is_sun_above != is_sun_above:
+		_is_sun_above = is_sun_above
+		_rings_material.set_shader_param("is_sun_above", is_sun_above)
+	# TODO4.0: Make below a global uniform.
 	_rings_material.set_shader_param("sun_translation", sun_global_translation)
 
 
