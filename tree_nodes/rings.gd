@@ -27,6 +27,7 @@ extends MeshInstance
 
 var _body: IVBody
 var _texture: Texture
+var _rings_material := ShaderMaterial.new()
 
 
 func _init(body: IVBody, texture: Texture) -> void:
@@ -35,15 +36,26 @@ func _init(body: IVBody, texture: Texture) -> void:
 
 
 func _ready() -> void:
-	var radius: float = _body.get_rings_radius()
-	scale = Vector3(radius * 2.0, radius * 2.0, 1.0)
+	var outer_radius: float = _body.get_rings_outer_radius()
+	var inner_radius: float = _body.get_rings_inner_radius()
+	var inner_fraction := inner_radius / outer_radius
+	scale = Vector3(outer_radius, outer_radius, outer_radius)
+
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
-	mesh = QuadMesh.new()
-	var rings_material := SpatialMaterial.new()
-	rings_material.albedo_texture = _texture
-	rings_material.flags_transparent = true
-	rings_material.params_cull_mode = SpatialMaterial.CULL_DISABLED # both sides visible
-	rings_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
-	set_surface_material(0, rings_material)
+	mesh = PlaneMesh.new()
+	
+	_rings_material.shader = IVGlobal.shared.rings_shader
+	_rings_material.set_shader_param("ring_texture", _texture)
+	_rings_material.set_shader_param("inner_fraction", inner_fraction)
+	set_surface_material(0, _rings_material)
+	rotate_x(PI / 2.0)
+
+
+func _process(_delta: float) -> void:
+	var sun := get_parent_spatial().get_parent_spatial().get_parent_spatial()
+	var sun_global_translation := sun.global_translation
+	var is_sun_above := to_local(sun_global_translation).y > 0.0
+	_rings_material.set_shader_param("is_sun_above", is_sun_above)
+	_rings_material.set_shader_param("sun_translation", sun_global_translation)
 
 

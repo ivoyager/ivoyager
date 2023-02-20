@@ -170,6 +170,7 @@ var shared := { # more items added by initializers/shared_initializer.gd
 	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
 	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
+	rings_shader = preload("res://ivoyager/shaders/rings.shader"),
 	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
 }
 

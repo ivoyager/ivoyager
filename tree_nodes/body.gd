@@ -319,8 +319,12 @@ func get_rings_file_prefix() -> String:
 	return characteristics.get("rings_file_prefix", "")
 
 
-func get_rings_radius() -> float:
-	return characteristics.get("rings_radius", 0.0)
+func get_rings_inner_radius() -> float:
+	return characteristics.get("rings_inner_radius", 0.0)
+
+
+func get_rings_outer_radius() -> float:
+	return characteristics.get("rings_outer_radius", 0.0)
 
 
 func get_mass() -> float:

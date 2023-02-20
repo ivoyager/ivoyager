@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://ivoyager/shaders/rings.shader" type="Shader" id=1]
+[ext_resource path="res://ivoyager_assets/rings/saturn.rings.png" type="Texture" id=2]
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 1 )
+shader_param/sun_angle = 0.467
+shader_param/texture_size = 13177.0
+shader_param/inner_fraction = 0.530736
+shader_param/ring_texture = ExtResource( 2 )
+
+[sub_resource type="PlaneMesh" id=1]
+material = SubResource( 2 )
+
+[node name="RingsTest" type="MeshInstance"]
+transform = Transform( 0.533551, 0.272829, 0.800555, 0.153024, 0.89978, -0.408632, -0.83181, 0.34053, 0.438329, -0.00697643, -0.00931299, -0.00962281 )
+mesh = SubResource( 1 )
