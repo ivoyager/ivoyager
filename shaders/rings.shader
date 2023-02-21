@@ -18,25 +18,30 @@
 // limitations under the License.
 // *****************************************************************************
 shader_type spatial;
-render_mode cull_disabled;
+render_mode cull_disabled, unshaded;
 
 // Source data and expert guidance: https://bjj.mmedia.is/data/s_rings.
 //
+// FIXME: Existing problems:
+//  - Must be unshaded to work in GLES2 (which we need for planetarium). In any
+//    case, unshaded looks much better on the dark side. But we'll need to fix
+//    to have shadows.
+//
 // TODO: Possible improvements:
-//  Should disappear w/ proximity. Adjust transparency?
-//  Per Bjorn, slight dimming and red shift with greater phase angle.
-//  Aliasing is very bad on the dark side. Maybe blur the transparency?
+//  - Should disappear w/ proximity. Adjust transparency?
+//  - Per Bjorn, slight dimming and red shift with greater phase angle.
+//  - Aliasing is very bad on the dark side. Maybe blur the transparency?
 
 
 uniform bool is_sun_above = false;
 uniform vec3 sun_translation;
 uniform sampler2D rings_texture;// : hint_albedo;
 uniform float inner_fraction = 0.5307358; // Saturn: 74510 km / 140390 km
-uniform float pixel_number = 13177.0; // saturn.rings
-uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1/13177
+uniform float pixel_number = 13177.0; // saturn.rings: 13177.0
+uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1.0 / 13177.0
 uniform float min_phase = -0.75; // cos(139 degress), where we apply only forward scatter
 uniform vec3 unlit_color = vec3(1.0, 0.97075, 0.952);
-
+uniform float proximity_fade = 1.0;
 
 
 void fragment() {
@@ -47,6 +52,10 @@ void fragment() {
 		// out of ring boundary
 		ALPHA = 0.0;
 	} else {
+		
+		
+		
+		
 		float ring_coord = (radius - inner_fraction) / (1.0 - inner_fraction); // 0.0 .. 1.0
 		
 		// antialiasing sample coordinates & weights
@@ -98,7 +107,7 @@ void fragment() {
 		if (alpha < 0.005) {
 			ALPHA = 0.0;
 		} else {
-			ALPHA = alpha;
+			
 			if (FRONT_FACING != is_sun_above) {
 				
 				// unlit side
@@ -153,6 +162,14 @@ void fragment() {
 				
 				ALBEDO = lit_color * scatter;
 				
+			}
+
+			// This test blurs the sudden cull transition when camera is too near
+			float depth_fade = FRAGCOORD.z / 1.0;
+			if (depth_fade < alpha) {
+				ALPHA = depth_fade;
+			} else {
+				ALPHA = alpha;
 			}
 		}
 	}

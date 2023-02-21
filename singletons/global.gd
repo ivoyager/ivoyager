@@ -171,7 +171,7 @@ var shared := { # more items added by initializers/shared_initializer.gd
 	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
 	rings_shader = preload("res://ivoyager/shaders/rings.shader"),
-	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
+#	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
 }
 
 # Data table import
@@ -181,10 +181,6 @@ var table_import := {
 	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
-	
-	# DEPRECIATE
-	lights = "res://ivoyager/data/solar_system/lights.tsv",
-	
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
