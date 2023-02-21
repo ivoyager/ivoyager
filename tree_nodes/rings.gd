@@ -47,7 +47,9 @@ func _ready() -> void:
 	_rings_material.shader = IVGlobal.shared.rings_shader
 	_rings_material.set_shader_param("rings_texture", _texture)
 	_rings_material.set_shader_param("inner_fraction", inner_fraction)
-	_rings_material.set_shader_param("pixel_size", 1.0 / _texture.get_width())
+	var width := float(_texture.get_width())
+	_rings_material.set_shader_param("pixel_number", width)
+	_rings_material.set_shader_param("pixel_size", 1.0 / width)
 	set_surface_material(0, _rings_material)
 	rotate_x(PI / 2.0)
 
