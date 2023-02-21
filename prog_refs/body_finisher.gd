@@ -150,22 +150,22 @@ func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	if rings_file_prefix:
 		var rings_search: Array = IVGlobal.rings_search
 		rings_texture = files.find_and_load_resource(rings_search, rings_file_prefix)
-		assert(rings_texture, "Could not find rings texture (no fallback!)")
+		if !rings_texture:
+			print("WARNING! Could not find rings texture prefix ", rings_file_prefix)
 	array.append(rings_texture) # [6]
 
 
 func _io_finish(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var is_star: bool = array[2]
-	var rings_file_prefix: String = array[3]
 	var texture_2d: Texture = array[4]
+	var texture_slice_2d: Texture = array[5]
+	var rings_texture: Texture = array[6]
 	body.texture_2d = texture_2d
-	if is_star:
-		var texture_slice_2d: Texture = array[5]
+	if texture_slice_2d:
 		body.texture_slice_2d = texture_slice_2d
-	if rings_file_prefix:
-		var rings_texture: Texture = array[6]
-		var rings: Spatial = _Rings_.new(body, rings_texture)
+	if rings_texture:
+		var main_light_source := body.get_parent_spatial() # assumes no moon rings!
+		var rings: Spatial = _Rings_.new(body, rings_texture, main_light_source)
 		body.add_child_to_model_space(rings)
 	if _is_building_system:
 		_system_finished_count += 1

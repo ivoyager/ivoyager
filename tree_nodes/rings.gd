@@ -21,29 +21,46 @@ class_name IVRings
 extends MeshInstance
 
 # Visual planetary rings. Not persisted so added by BodyFinisher.
-#
-# TODO: A shader rings would be visually superior. 
-# See: https://bjj.mmedia.is/data/s_rings
+# Uses 'rings.shader'.
 
 var _body: IVBody
 var _texture: Texture
+var _main_light_source: Spatial # for phase-angle effects
+var _rings_material := ShaderMaterial.new()
+
+var _is_sun_above := false;
 
 
-func _init(body: IVBody, texture: Texture) -> void:
+func _init(body: IVBody, texture: Texture, main_light_source: Spatial) -> void:
 	_body = body
 	_texture = texture
+	_main_light_source = main_light_source
 
 
 func _ready() -> void:
-	var radius: float = _body.get_rings_radius()
-	scale = Vector3(radius * 2.0, radius * 2.0, 1.0)
+	var outer_radius: float = _body.get_rings_outer_radius()
+	var inner_radius: float = _body.get_rings_inner_radius()
+	var inner_fraction := inner_radius / outer_radius
+	scale = Vector3(outer_radius, outer_radius, outer_radius)
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
-	mesh = QuadMesh.new()
-	var rings_material := SpatialMaterial.new()
-	rings_material.albedo_texture = _texture
-	rings_material.flags_transparent = true
-	rings_material.params_cull_mode = SpatialMaterial.CULL_DISABLED # both sides visible
-	rings_material.params_blend_mode = SpatialMaterial.BLEND_MODE_ADD
-	set_surface_material(0, rings_material)
+	mesh = PlaneMesh.new()
+	_rings_material.shader = IVGlobal.shared.rings_shader
+	_rings_material.set_shader_param("rings_texture", _texture)
+	_rings_material.set_shader_param("inner_fraction", inner_fraction)
+	var width := float(_texture.get_width())
+	_rings_material.set_shader_param("pixel_number", width)
+	_rings_material.set_shader_param("pixel_size", 1.0 / width)
+	set_surface_material(0, _rings_material)
+	rotate_x(PI / 2.0)
+
+
+func _process(_delta: float) -> void:
+	var sun_global_translation := _main_light_source.global_translation
+	var is_sun_above := to_local(sun_global_translation).y > 0.0
+	if _is_sun_above != is_sun_above:
+		_is_sun_above = is_sun_above
+		_rings_material.set_shader_param("is_sun_above", is_sun_above)
+	# TODO4.0: Make below a global uniform.
+	_rings_material.set_shader_param("sun_translation", sun_global_translation)
 
 
