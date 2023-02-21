@@ -209,7 +209,6 @@ var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
 var rings_search := ["res://ivoyager_assets/rings"]
 
 var asset_paths := {
-	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
