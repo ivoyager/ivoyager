@@ -182,9 +182,9 @@ func _on_init() -> void:
 		cycle_prev_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT, shift = true}],
 		
 	}
-
+	
 	current = {}
-	_is_references = true
+
 
 func _project_init() -> void:
 	._project_init()
@@ -334,40 +334,6 @@ static func strip_scancode_mods(scancode: int) -> int:
 
 
 # *****************************************************************************
-
-func _is_equal(events_array_1: Array, events_array_2: Array) -> bool:
-	var events_array_2_size := events_array_2.size()
-	if events_array_1.size() != events_array_2_size:
-		return false
-	var array_2_indexes: Array = range(events_array_2_size)
-	for event_dict_1 in events_array_1:
-		var is_match := false
-		var i := 0
-		while i < events_array_2_size:
-			var index_2: int = array_2_indexes[i]
-			var event_dict_2: Dictionary = events_array_2[index_2]
-			if _is_event_dict_equal(event_dict_1, event_dict_2):
-				is_match = true
-				array_2_indexes.remove(i)
-				events_array_2_size -= 1
-			else:
-				i += 1
-		if !is_match:
-			return false
-#	prints("_is_equal:", events_array_1, events_array_2)
-	return true
-
-
-func _is_event_dict_equal(event_dict_1: Dictionary, event_dict_2: Dictionary) -> bool:
-	if event_dict_1.size() != event_dict_2.size():
-		return false
-	for key in event_dict_1:
-		if !event_dict_2.has(key):
-			return false
-		if event_dict_1[key] != event_dict_2[key]:
-			return false
-	return true
-
 
 func _about_to_change_current(action: String) -> void:
 	var scancodes := get_scancodes_w_mods_for_action(action)
