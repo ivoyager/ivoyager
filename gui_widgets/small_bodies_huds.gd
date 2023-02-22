@@ -30,10 +30,11 @@ extends GridContainer
 
 const NULL_COLOR := Color.black
 
-
 var has_headers := true
-var column0_en_width := 0 # column 0 spacer if has_headers
-var column_master: Control # if set, column widths follow master children 
+var column0_en_width := 0 # 'EN QUAD' padding; applied only if above is true
+
+var column_master: Control # if set, column widths follow master children
+var columns_en_width := 0 # applied only if above is null
 
 var rows := [
 	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"]], # example row
@@ -116,10 +117,11 @@ func _ready() -> void:
 		_orbits_color_pkrs.append(color_button)
 		hbox.add_child(color_button)
 	
-	# column width control
-	if column_master:
-		column_master.connect("resized", self, "_resize_columns_to_master")
-		_resize_columns_to_master(true)
+	# column sizing
+	if IVGlobal.state.is_started_or_about_to_start:
+		_resize_columns()
+	else:
+		IVGlobal.connect("about_to_start_simulator", self, "_resize_columns", [], CONNECT_ONESHOT)
 
 
 func _make_checkbox() -> CheckBox:
@@ -296,11 +298,17 @@ func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
 		button.get_popup().hide()
 
 
-func _resize_columns_to_master(delay := false) -> void:
-	if delay:
+func _resize_columns(_dummy := false) -> void:
+	if column_master:
+		column_master.connect("resized", self, "_resize_columns_to_master")
+		_resize_columns_to_master(1)
+	else:
+		_resize_columns_to_en_width(0)
+
+
+func _resize_columns_to_master(delay_frames := 0) -> void:
+	for i in delay_frames:
 		yield(get_tree(), "idle_frame")
-		yield(get_tree(), "idle_frame") # needs 2 frame delay as of 3.5.2
-		yield(get_tree(), "idle_frame") # added extra for safety
 	var n_master_children := column_master.get_child_count()
 	for i in columns:
 		if i == n_master_children:
@@ -308,7 +316,21 @@ func _resize_columns_to_master(delay := false) -> void:
 		get_child(i).rect_min_size.x = column_master.get_child(i).rect_size.x
 
 
+func _resize_columns_to_en_width(delay_frames := 0) -> void:
+	# 1 delay_frames needed for font size change.
+	for i in delay_frames:
+		yield(get_tree(), "idle_frame")
+	var font := get_font("normal", "Label")
+	var en_width := font.get_char_size(ord("\u2000")).x
+	var min_width := en_width * columns_en_width
+	for i in range(1, columns):
+		get_child(i).rect_min_size.x = min_width
+
+
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "small_bodies_points_colors":
 		_update_points_color_buttons()
+	elif setting == "gui_size":
+		if !column_master:
+			_resize_columns_to_en_width(1)
 		

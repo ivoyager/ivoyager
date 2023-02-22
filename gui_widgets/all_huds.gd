@@ -48,7 +48,7 @@ func _on_child_entered_tree(control: Control) -> void:
 		"SunHUDs":
 			# This grid controls all other grid's column widths.
 			_column_master = control
-			control.column0_en_width = 25
+			control.column0_en_width = 23
 			control.columns_en_width = 6
 			control.rows = [
 				["LABEL_SUN", BodyFlags.IS_STAR],

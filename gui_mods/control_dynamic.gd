@@ -55,7 +55,6 @@ var _margin_drag_x := 0.0
 var _margin_drag_y := 0.0
 var _drag_point := Vector2.ZERO
 var _custom_size := Vector2.ZERO
-var _default_size: Vector2
 
 onready var _viewport := get_viewport()
 onready var _parent: Control = get_parent()
@@ -368,15 +367,14 @@ func _set_anchors_to_position() -> void:
 
 func _resize() -> void:
 	var default_size := _get_default_size()
-	if _default_size == default_size:
-		return
-	_default_size = default_size
 	_parent.rect_min_size = default_size
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
 	# _custom_size may be (0, 0) or smaller than rect_min_size now, but code
 	# below will trigger immediate and delayed size refreshes in any case. 
 	_parent.rect_size = _custom_size
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
 	yield(get_tree(), "idle_frame")
 	_parent.rect_size = _custom_size
 	# reposition to anchors given new actual size

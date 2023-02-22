@@ -122,7 +122,9 @@ func _ready() -> void:
 		
 		# orbits
 		if disable_orbits_rows.has(i):
-			add_child(Control.new())
+			var spacer := Control.new()
+			spacer.size_flags_horizontal = SIZE_SHRINK_CENTER
+			add_child(spacer)
 			_orbits_ckbxs.append(null)
 			_orbits_color_pkrs.append(null)
 		else:
@@ -141,12 +143,11 @@ func _ready() -> void:
 			_orbits_color_pkrs.append(color_button)
 			hbox.add_child(color_button)
 	
-	# column width control
-	if column_master:
-		column_master.connect("resized", self, "_resize_columns_to_master")
-		_resize_columns_to_master(3)
+	# column sizing
+	if IVGlobal.state.is_started_or_about_to_start:
+		_resize_columns()
 	else:
-		_resize_columns_to_en_width(3)
+		IVGlobal.connect("about_to_start_simulator", self, "_resize_columns", [], CONNECT_ONESHOT)
 
 
 func _make_checkbox() -> CheckBox:
@@ -277,8 +278,15 @@ func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
 		button.get_popup().hide()
 
 
+func _resize_columns(_dummy := false) -> void:
+	if column_master:
+		column_master.connect("resized", self, "_resize_columns_to_master")
+		_resize_columns_to_master(1)
+	else:
+		_resize_columns_to_en_width(0)
+
+
 func _resize_columns_to_master(delay_frames := 0) -> void:
-	# At least 2 delay_frames needed after _ready().
 	for i in delay_frames:
 		yield(get_tree(), "idle_frame")
 	var n_master_children := column_master.get_child_count()
@@ -289,7 +297,7 @@ func _resize_columns_to_master(delay_frames := 0) -> void:
 
 
 func _resize_columns_to_en_width(delay_frames := 0) -> void:
-	# 1 delay_frames needed for font size change; at least 2 after _ready().
+	# 1 delay_frames needed for font size change.
 	for i in delay_frames:
 		yield(get_tree(), "idle_frame")
 	var font := get_font("normal", "Label")
