@@ -22,46 +22,39 @@ extends GridContainer
 
 # GUI widget.
 #
-# Class properties must be set before _ready(). Use parent _enter_tree() and
-# 'child_entered_tree' signal to do so.
+# Class properties must be set before _ready(). See widget IVAllHUDs for complex
+# row construction, setting up multiple grids, and aligning their columns.
 #
-# See widget IVAllHUDsGrids for setting up multiple grids and aligning their
-# columns.
+# To display correctly, ColorPickerButton needs a StyleBoxTexture with no
+# margins. See default TopGUI for how to do this.
 
-var NULL_COLOR := Color.black
+const NULL_COLOR := Color.black
 
 
 var has_headers := true
-var column0_en_width := 0
+var column0_en_width := 0 # column 0 spacer if has_headers
 var column_master: Control # if set, column widths follow master children 
 
 var rows := [
-	["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"]],
-	["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
-	["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
-	["   " + tr("LABEL_MAIN_BELT_INNER"), ["IMB"]],
-	["   " + tr("LABEL_MAIN_BELT_MIDDLE"), ["MMB"]],
-	["   " + tr("LABEL_MAIN_BELT_OUTER"), ["OMB"]],
-	["   " + tr("LABEL_HILDAS"), ["HI"]],
-	["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
-	["   " + tr("LABEL_CENTAURS"), ["CE"]],
-	["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
+	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"]], # example row
 ]
 
 var headers := ["LABEL_POINTS", "LABEL_ORBITS"]
+var header_hints := ["HINT_POINTS_CKBX_COLOR", "HINT_ORBITS_CKBX_COLOR"]
 
-var _points_chkbxs := []
-var _orbits_chkbxs := []
+
+var _points_ckbxs := []
+var _orbits_ckbxs := []
 var _points_color_pkrs := []
 var _orbits_color_pkrs := []
-
 var _suppress_update := false
 var _is_color_change := false
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _small_bodies_points_colors: Dictionary = IVGlobal.settings.small_bodies_points_colors
-onready var _small_bodies_orbits_colors: Dictionary = IVGlobal.settings.small_bodies_orbits_colors
+onready var _settings: Dictionary = IVGlobal.settings
+onready var _small_bodies_points_colors: Dictionary = _settings.small_bodies_points_colors
+onready var _small_bodies_orbits_colors: Dictionary = _settings.small_bodies_orbits_colors
 onready var _n_rows := rows.size()
 
 
@@ -80,10 +73,12 @@ func _ready() -> void:
 			spacer_text += "\u2000" # EN QUAD
 		spacer.text = spacer_text
 		add_child(spacer)
-		for header_text in headers:
+		for i in 2:
 			var header := Label.new()
 			header.align = Label.ALIGN_CENTER
-			header.text = header_text
+			header.text = headers[i]
+			header.hint_tooltip = header_hints[i]
+			header.mouse_filter = Control.MOUSE_FILTER_PASS
 			add_child(header)
 	
 	# grid content
@@ -97,13 +92,12 @@ func _ready() -> void:
 		add_child(label)
 		# points
 		var hbox := HBoxContainer.new()
-#		hbox.size_flags_horizontal = SIZE_SHRINK_CENTER
 		hbox.alignment = BoxContainer.ALIGN_CENTER
 		add_child(hbox)
-		var chkbx := _make_checkbox()
-		chkbx.connect("pressed", self, "_show_hide_points", [chkbx, groups])
-		_points_chkbxs.append(chkbx)
-		hbox.add_child(chkbx)
+		var ckbx := _make_checkbox()
+		ckbx.connect("pressed", self, "_show_hide_points", [ckbx, groups])
+		_points_ckbxs.append(ckbx)
+		hbox.add_child(ckbx)
 		var color_button := _make_color_picker_button(points_default_color)
 		color_button.connect("color_changed", self, "_change_points_color", [groups])
 		_points_color_pkrs.append(color_button)
@@ -113,23 +107,19 @@ func _ready() -> void:
 		hbox.size_flags_horizontal = SIZE_SHRINK_CENTER
 		hbox.alignment = BoxContainer.ALIGN_CENTER
 		add_child(hbox)
-		chkbx = _make_checkbox()
-		chkbx.connect("pressed", self, "_show_hide_orbits", [chkbx, groups])
-		_orbits_chkbxs.append(chkbx)
-		hbox.add_child(chkbx)
+		ckbx = _make_checkbox()
+		ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, groups])
+		_orbits_ckbxs.append(ckbx)
+		hbox.add_child(ckbx)
 		color_button = _make_color_picker_button(orbits_default_color)
 		color_button.connect("color_changed", self, "_change_orbits_color", [groups])
 		_orbits_color_pkrs.append(color_button)
 		hbox.add_child(color_button)
 	
 	# column width control
-	if !column_master:
-		return
-	column_master.connect("resized", self, "_resize_columns")
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame") # needs 2 frame delay as of 3.5.2
-	yield(get_tree(), "idle_frame") # added extra for safety
-	_resize_columns()
+	if column_master:
+		column_master.connect("resized", self, "_resize_columns_to_master")
+		_resize_columns_to_master(true)
 
 
 func _make_checkbox() -> CheckBox:
@@ -203,7 +193,7 @@ func _update_points_ckbxs() -> void:
 			if !_huds_visibility.is_sbg_points_visible(group):
 				is_points_visible = false
 				break
-		_points_chkbxs[i].pressed = is_points_visible
+		_points_ckbxs[i].pressed = is_points_visible
 
 
 func _update_orbits_ckbxs() -> void:
@@ -216,7 +206,7 @@ func _update_orbits_ckbxs() -> void:
 			if !_huds_visibility.is_sbg_orbits_visible(group):
 				is_orbits_visible = false
 				break
-		_orbits_chkbxs[i].pressed = is_orbits_visible
+		_orbits_ckbxs[i].pressed = is_orbits_visible
 
 
 func _update_points_color_buttons() -> void:
@@ -258,19 +248,19 @@ func _update_orbits_color_buttons() -> void:
 func _get_settings_points_color(group: String) -> Color:
 	if _small_bodies_points_colors.has(group):
 		return _small_bodies_points_colors[group]
-	return IVGlobal.settings.small_bodies_points_default_color
+	return _settings.small_bodies_points_default_color
 
 
 func _get_settings_orbits_color(group: String) -> Color:
 	if _small_bodies_orbits_colors.has(group):
 		return _small_bodies_orbits_colors[group]
-	return IVGlobal.settings.small_bodies_orbits_default_color
+	return _settings.small_bodies_orbits_default_color
 
 
 func _set_settings_points_color(group: String, color: Color) -> void:
 	if color.is_equal_approx(_get_settings_points_color(group)):
 		return
-	if color == IVGlobal.settings.small_bodies_points_default_color:
+	if color == _settings.small_bodies_points_default_color:
 		_small_bodies_points_colors.erase(group)
 	else:
 		_small_bodies_points_colors[group] = color
@@ -298,20 +288,24 @@ func _on_color_picker_hide() -> void:
 	_settings_manager.cache_now()
 
 
-func _resize_columns() -> void:
-	var n_master_children := column_master.get_child_count()
-	for i in columns:
-		if i == n_master_children:
-			break
-		get_child(i).rect_min_size.x = column_master.get_child(i).rect_size.x
-
-
 func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
 	# Hack fix to let button toggle off, as it should...
 	# Requres action_mode = ACTION_MODE_BUTTON_PRESS
 	if !is_pressed:
 		yield(get_tree(), "idle_frame")
 		button.get_popup().hide()
+
+
+func _resize_columns_to_master(delay := false) -> void:
+	if delay:
+		yield(get_tree(), "idle_frame")
+		yield(get_tree(), "idle_frame") # needs 2 frame delay as of 3.5.2
+		yield(get_tree(), "idle_frame") # added extra for safety
+	var n_master_children := column_master.get_child_count()
+	for i in columns:
+		if i == n_master_children:
+			break
+		get_child(i).rect_min_size.x = column_master.get_child(i).rect_size.x
 
 
 func _settings_listener(setting: String, _value) -> void:

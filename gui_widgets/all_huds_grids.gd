@@ -21,6 +21,13 @@ class_name IVAllHUDsGrids
 extends VBoxContainer
 
 # GUI widget that holds all the HUD visibility widgets.
+#
+# IMPORTANT! For correct visibility control, BodyFlags used in rows of BodyHUDs
+# instances must be a subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
+#
+# TODO: Upper-left button row:
+#   [Hide All][Show Default][Save as Default]
+
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
@@ -34,46 +41,59 @@ func _enter_tree() -> void:
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
 		
-		# BodyHUDsGrid instances
-		"SunGrid":
+		# BodyHUDs instances
+		"SunHUDs":
+			# This grid controls all other grid's column widths.
 			_column_master = control
 			control.column0_en_width = 25
-			control.ckbx_rows = [
+			control.columns_en_width = 6
+			control.rows = [
 				["LABEL_SUN", BodyFlags.IS_STAR],
 			]
-			control.skip_ckbx_indexes.append(7) # skips the orbit ckbx
-		"PMOsGrid":
+			control.disable_orbits_rows.append(0) # no orbit for the Sun
+		"PMOsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags below to be set
 				["   " + tr("LABEL_PLANETS"), BodyFlags.IS_TRUE_PLANET],
 				["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
 				["   " + tr("LABEL_MOONS"), BodyFlags.IS_PLANETARY_MASS_MOON],
 			]
-		"NonPMOMoonsGrid":
+		"NonPMOMoonsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_NON_PMO_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
 			]
-		"VisitedAsteroidsGrid":
+		"VisitedAsteroidsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_VISITED_ASTEROIDS", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
 			]
-		"SpacecraftGrid":
+		"SpacecraftHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
 			]
 
 		# SmallBodiesHUDs instance
 		"AsteroidsHUDs":
 			control.column_master = _column_master
-			control.column0_en_width = 0
+			control.rows = [
+				["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"]],
+				["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
+				["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
+				["   " + tr("LABEL_MAIN_BELT_INNER"), ["IMB"]],
+				["   " + tr("LABEL_MAIN_BELT_MIDDLE"), ["MMB"]],
+				["   " + tr("LABEL_MAIN_BELT_OUTER"), ["OMB"]],
+				["   " + tr("LABEL_HILDAS"), ["HI"]],
+				["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
+				["   " + tr("LABEL_CENTAURS"), ["CE"]],
+				["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
+			]
 
 
 

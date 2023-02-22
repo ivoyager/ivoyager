@@ -22,11 +22,11 @@ extends GridContainer
 
 # GUI widget.
 #
-# Class properties must be set before _ready(). Use parent _enter_tree() and
-# 'child_entered_tree' signal to do so.
+# Class properties must be set before _ready(). See widget IVAllHUDs for complex
+# row construction, setting up multiple grids, and aligning their columns.
 #
-# See widget IVAllHUDsGrids for setting up multiple grids and aligning their
-# columns.
+# To display correctly, ColorPickerButton needs a StyleBoxTexture with no
+# margins. See default TopGUI for how to do this.
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
@@ -34,14 +34,14 @@ var has_headers := true
 var column0_en_width := 20 # 'EN QUAD' padding; applied only if above is true
 var column_master: Control # if set, column widths follow master children
 
-var ckbx_rows := [
-	["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags below to be set
+var rows := [
+	["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags from following rows to be set
 	["   " + tr("LABEL_PLANETS"), BodyFlags.IS_TRUE_PLANET],
 	["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
 	["   " + tr("LABEL_MOONS"), BodyFlags.IS_PLANETARY_MASS_MOON],
 ]
 
-var skip_ckbx_indexes := [] # child indexes; allow for column headers
+var disable_indexes := [] # e.g., no orbit for Sun; allow for column headers
 
 
 var _headers := ["LABEL_NAMES", "LABEL_SYMBOLS", "LABEL_ORBITS"]
@@ -51,7 +51,7 @@ var _symbols_ckbxs := []
 var _orbits_ckbxs := []
 
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
-onready var _n_rows := ckbx_rows.size()
+onready var _n_rows := rows.size()
 
 
 func _ready() -> void:
@@ -78,21 +78,21 @@ func _ready() -> void:
 			add_child(Control.new())
 	
 	for i in _n_rows:
-		var flags: int = ckbx_rows[i][1]
+		var flags: int = rows[i][1]
 		_all_flags |= flags
 	
 	for i in _n_rows:
-		var label_text: String = ckbx_rows[i][0]
-		var flags: int = ckbx_rows[i][1]
+		var label_text: String = rows[i][0]
+		var flags: int = rows[i][1]
 		if !flags:
-			ckbx_rows[i][1] = _all_flags
+			rows[i][1] = _all_flags
 			flags = _all_flags
 			
 		var label := Label.new()
 		label.text = label_text
 		add_child(label)
 	
-		if !skip_ckbx_indexes.has(get_child_count()):
+		if !disable_indexes.has(get_child_count()):
 			var ckbx := CheckBox.new()
 			ckbx.connect("pressed", self, "_show_hide_names", [ckbx, flags])
 			ckbx.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -102,7 +102,7 @@ func _ready() -> void:
 			_names_ckbxs.append(null)
 			add_child(Control.new())
 			
-		if !skip_ckbx_indexes.has(get_child_count()):
+		if !disable_indexes.has(get_child_count()):
 			var ckbx := CheckBox.new()
 			ckbx.connect("pressed", self, "_show_hide_symbols", [ckbx, flags])
 			ckbx.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -112,7 +112,7 @@ func _ready() -> void:
 			_symbols_ckbxs.append(null)
 			add_child(Control.new())
 		
-		if !skip_ckbx_indexes.has(get_child_count()):
+		if !disable_indexes.has(get_child_count()):
 			var ckbx := CheckBox.new()
 			ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, flags])
 			ckbx.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -146,7 +146,7 @@ func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
 
 func _update_ckbxs() -> void:
 	for i in _n_rows:
-		var flags: int = ckbx_rows[i][1]
+		var flags: int = rows[i][1]
 		if _names_ckbxs[i] is CheckBox:
 			_names_ckbxs[i].pressed = _huds_visibility.is_name_visible(flags, true)
 		if _symbols_ckbxs[i] is CheckBox:

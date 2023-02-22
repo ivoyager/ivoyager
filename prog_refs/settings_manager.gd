@@ -25,6 +25,8 @@ extends IVCacheManager
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
 
+const BodyFlags: Dictionary = IVEnums.BodyFlags
+
 
 func _on_init():
 	# project vars - modify on signal project_objects_instantiated
@@ -56,7 +58,7 @@ func _on_init():
 		point_size = 3,
 		hide_hud_when_close = true, # restart or load required
 	
-		# colors
+		# DEPRECIATE
 		planet_orbit_color =  Color(0.5, 0.5, 0.1),
 		dwarf_planet_orbit_color = Color(0.1, 0.8, 0.2),
 		moon_orbit_color = Color(0.3, 0.3, 0.9),
@@ -77,6 +79,17 @@ func _on_init():
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
 		
+		body_orbit_default_color = Color(0.4, 0.4, 0.8),
+		body_orbit_colors = {
+			# Keys must match single bits in IVHUDsVisibility.visibility_body_flags
+			BodyFlags.IS_STAR : Color(0.4, 0.4, 0.8), # maybe future use
+			BodyFlags.IS_TRUE_PLANET :  Color(0.5, 0.5, 0.1),
+			BodyFlags.IS_DWARF_PLANET : Color(0.1, 0.8, 0.2),
+			BodyFlags.IS_PLANETARY_MASS_MOON : Color(0.3, 0.3, 0.9),
+			BodyFlags.IS_NON_PLANETARY_MASS_MOON : Color(0.35, 0.1, 0.35),
+			BodyFlags.IS_ASTEROID : Color(0.8, 0.2, 0.2),
+			BodyFlags.IS_SPACECRAFT : Color(0.4, 0.4, 0.8),
+		},
 		small_bodies_points_default_color = Color(0.0, 0.6, 0.0),
 		small_bodies_points_colors = {},
 		small_bodies_orbits_default_color = Color(0.8, 0.2, 0.2),

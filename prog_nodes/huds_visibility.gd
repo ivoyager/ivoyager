@@ -56,7 +56,7 @@ var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 
 
 # not persisted - modify at project init if new types to manage
-var all_hud_flags: int = (
+var visibility_body_flags: int = (
 		BodyFlags.IS_STAR
 		| BodyFlags.IS_TRUE_PLANET
 		| BodyFlags.IS_DWARF_PLANET
@@ -88,11 +88,11 @@ func _on_update_gui_requested() -> void:
 func _unhandled_key_input(event: InputEventKey):
 	# Only Body HUDs, for now...
 	if event.is_action_pressed("toggle_orbits"):
-		set_all_orbits_visibility(bool(orbit_visible_flags != all_hud_flags))
+		set_all_orbits_visibility(bool(orbit_visible_flags != visibility_body_flags))
 	elif event.is_action_pressed("toggle_symbols"):
-		set_all_symbols_visibility(bool(symbol_visible_flags != all_hud_flags))
+		set_all_symbols_visibility(bool(symbol_visible_flags != visibility_body_flags))
 	elif event.is_action_pressed("toggle_names"):
-		set_all_names_visibility(bool(name_visible_flags != all_hud_flags))
+		set_all_names_visibility(bool(name_visible_flags != visibility_body_flags))
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
@@ -102,39 +102,39 @@ func _unhandled_key_input(event: InputEventKey):
 
 func is_orbit_visible(body_flags: int, match_all := false) -> bool:
 	if match_all:
-		body_flags &= all_hud_flags
+		body_flags &= visibility_body_flags
 		return body_flags & orbit_visible_flags == body_flags
 	return bool(body_flags & orbit_visible_flags) # any flags
 
 
 func is_name_visible(body_flags: int, match_all := false) -> bool:
 	if match_all:
-		body_flags &= all_hud_flags
+		body_flags &= visibility_body_flags
 		return body_flags & name_visible_flags == body_flags
 	return bool(body_flags & name_visible_flags) # any flags
 
 
 func is_symbol_visible(body_flags: int, match_all := false) -> bool:
 	if match_all:
-		body_flags &= all_hud_flags
+		body_flags &= visibility_body_flags
 		return body_flags & symbol_visible_flags == body_flags
 	return bool(body_flags & symbol_visible_flags) # any flags
 
 
 func is_all_orbits_visible() -> bool:
-	return orbit_visible_flags == all_hud_flags
+	return orbit_visible_flags == visibility_body_flags
 
 
 func is_all_names_visible() -> bool:
-	return name_visible_flags == all_hud_flags
+	return name_visible_flags == visibility_body_flags
 
 
 func is_all_symbols_visible() -> bool:
-	return symbol_visible_flags == all_hud_flags
+	return symbol_visible_flags == visibility_body_flags
 
 
 func set_orbit_visibility(body_flags: int, is_show: bool) -> void:
-	body_flags &= all_hud_flags
+	body_flags &= visibility_body_flags
 	if is_show:
 		if orbit_visible_flags & body_flags == body_flags:
 			return
@@ -148,7 +148,7 @@ func set_orbit_visibility(body_flags: int, is_show: bool) -> void:
 
 
 func set_name_visibility(body_flags: int, is_show: bool) -> void:
-	body_flags &= all_hud_flags
+	body_flags &= visibility_body_flags
 	if is_show:
 		if name_visible_flags & body_flags == body_flags:
 			return
@@ -163,7 +163,7 @@ func set_name_visibility(body_flags: int, is_show: bool) -> void:
 
 
 func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
-	body_flags &= all_hud_flags
+	body_flags &= visibility_body_flags
 	if is_show:
 		if symbol_visible_flags & body_flags == body_flags:
 			return
@@ -179,9 +179,9 @@ func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
 
 func set_all_orbits_visibility(is_show: bool) -> void:
 	if is_show:
-		if orbit_visible_flags == all_hud_flags:
+		if orbit_visible_flags == visibility_body_flags:
 			return
-		orbit_visible_flags = all_hud_flags
+		orbit_visible_flags = visibility_body_flags
 	else:
 		if orbit_visible_flags == 0:
 			return
@@ -191,9 +191,9 @@ func set_all_orbits_visibility(is_show: bool) -> void:
 
 func set_all_names_visibility(is_show: bool) -> void:
 	if is_show:
-		if name_visible_flags == all_hud_flags:
+		if name_visible_flags == visibility_body_flags:
 			return
-		name_visible_flags = all_hud_flags
+		name_visible_flags = visibility_body_flags
 		symbol_visible_flags = 0 # exclusive
 	else:
 		if name_visible_flags == 0:
@@ -204,9 +204,9 @@ func set_all_names_visibility(is_show: bool) -> void:
 
 func set_all_symbols_visibility(is_show: bool) -> void:
 	if is_show:
-		if symbol_visible_flags == all_hud_flags:
+		if symbol_visible_flags == visibility_body_flags:
 			return
-		symbol_visible_flags = all_hud_flags
+		symbol_visible_flags = visibility_body_flags
 		name_visible_flags = 0 # exclusive
 	else:
 		if symbol_visible_flags == 0:

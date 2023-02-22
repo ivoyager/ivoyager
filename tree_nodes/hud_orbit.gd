@@ -25,17 +25,31 @@ extends MeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
+const BodyFlags := IVEnums.BodyFlags
+#const visibility_body_flags := (
+#		# Must be an exclusive set!
+#		BodyFlags.IS_STAR
+#		| BodyFlags.IS_TRUE_PLANET
+#		| BodyFlags.IS_DWARF_PLANET
+#		| BodyFlags.IS_PLANETARY_MASS_MOON
+#		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
+#		| BodyFlags.IS_ASTEROID
+#		| BodyFlags.IS_COMET
+#		| BodyFlags.IS_SPACECRAFT
+#)
+
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
 var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
-var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 # instance info
 var _body: IVBody
 var _orbit: IVOrbit
 var _body_flags: int
-var _color_setting: String
+var _visibility_flag: int
+var _color: Color
 # visibility control
-var _orbits_visible: bool
+var _is_orbit_group_visible: bool
 var _body_huds_visible: bool # too close / too far
 var _body_visible: bool # this HUD node is sibling (nut child) of its Body
 var _needs_transform := true
@@ -46,21 +60,25 @@ func _init(body: IVBody) -> void:
 	_body = body
 	_orbit = body.orbit
 	_body_flags = body.flags
-	var BodyFlags := IVEnums.BodyFlags
-	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.IS_PLANETARY_MASS_OBJECT:
-		_color_setting = "moon_orbit_color"
-	elif _body_flags & BodyFlags.IS_MOON:
-		_color_setting = "minor_moon_orbit_color"
-	elif _body_flags & BodyFlags.IS_TRUE_PLANET:
-		_color_setting = "planet_orbit_color"
-	elif _body_flags & BodyFlags.IS_DWARF_PLANET:
-		_color_setting = "dwarf_planet_orbit_color"
-	elif _body_flags & BodyFlags.IS_ASTEROID:
-		_color_setting = "asteroid_orbit_color"
-	elif _body_flags & BodyFlags.IS_SPACECRAFT:
-		_color_setting = "spacecraft_orbit_color"
-	else:
-		_color_setting = "default_orbit_color"
+	_visibility_flag = _body_flags & _huds_visibility.visibility_body_flags
+	assert(_visibility_flag and !(_visibility_flag & (_visibility_flag - 1)),
+			"_visibility_flag failed single bit test")
+			
+#	var BodyFlags := IVEnums.BodyFlags
+#	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.IS_PLANETARY_MASS_OBJECT:
+#		_color_setting = "moon_orbit_color"
+#	elif _body_flags & BodyFlags.IS_MOON:
+#		_color_setting = "minor_moon_orbit_color"
+#	elif _body_flags & BodyFlags.IS_TRUE_PLANET:
+#		_color_setting = "planet_orbit_color"
+#	elif _body_flags & BodyFlags.IS_DWARF_PLANET:
+#		_color_setting = "dwarf_planet_orbit_color"
+#	elif _body_flags & BodyFlags.IS_ASTEROID:
+#		_color_setting = "asteroid_orbit_color"
+#	elif _body_flags & BodyFlags.IS_SPACECRAFT:
+#		_color_setting = "spacecraft_orbit_color"
+#	else:
+#		_color_setting = "default_orbit_color"
 
 
 func _ready() -> void:
@@ -71,20 +89,20 @@ func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	var color: Color = IVGlobal.settings[_color_setting]
 	if _fragment_identifier: # use self-identifying fragment shader
 		var fragment_info := [_body.name, _fragment_identifier.FRAGMENT_ORBIT]
 		var fragment_id := _fragment_identifier.get_new_id_as_vec3(fragment_info)
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbit_shader
-		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+#		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 		material_override.set_shader_param("fragment_id", fragment_id)
 		material_override.set_shader_param("fragment_range", _world_targeting[7]) # TODO4.0: global uniform
 	else:
 		material_override = SpatialMaterial.new()
 		material_override.flags_unshaded = true
-		material_override.albedo_color = color
+#		material_override.albedo_color = color
 		set_process(false)
+	_set_color(IVGlobal.settings.body_orbit_colors)
 	_body_huds_visible = _body.huds_visible
 	_body_visible = _body.visible
 	_on_global_huds_changed()
@@ -118,7 +136,7 @@ func _set_transform_from_orbit(_is_scheduled := false) -> void:
 
 
 func _on_global_huds_changed() -> void:
-	_orbits_visible = _huds_visibility.is_orbit_visible(_body_flags)
+	_is_orbit_group_visible = _huds_visibility.is_orbit_visible(_body_flags)
 	_set_visual_state()
 
 
@@ -133,15 +151,27 @@ func _on_body_visibility_changed() -> void:
 
 
 func _set_visual_state() -> void:
-	visible = _orbits_visible and _body_huds_visible and _body_visible
+	visible = _is_orbit_group_visible and _body_huds_visible and _body_visible
 	if visible and _needs_transform:
 		_set_transform_from_orbit()
 
 
+func _set_color(orbit_colors: Dictionary) -> void:
+	var new_color: Color
+	if orbit_colors.has(_visibility_flag):
+		new_color = orbit_colors[_visibility_flag]
+	else:
+		new_color = IVGlobal.settings.body_orbit_default_color
+	if _color == new_color:
+		return
+	_color = new_color
+	if _fragment_identifier:
+		material_override.set_shader_param("color", Vector3(new_color.r, new_color.g, new_color.b))
+	else:
+		material_override.albedo_color = new_color
+
+
 func _settings_listener(setting: String, value) -> void:
-	if setting == _color_setting:
-		if _fragment_identifier:
-			material_override.set_shader_param("color", Vector3(value.r, value.g, value.b))
-		else:
-			material_override.albedo_color = value
+	if setting == "body_orbit_colors":
+		_set_color(value)
 
