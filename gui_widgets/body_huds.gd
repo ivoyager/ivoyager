@@ -29,7 +29,7 @@ extends GridContainer
 # margins. See default TopGUI for how to do this.
 #
 # IMPORTANT! For correct visibility control, BodyFlags used in rows must be a
-# subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
+# subset of IVHUDsVisibility.visibility_body_flags.
 
 const NULL_COLOR := Color.black
 const BodyFlags: Dictionary = IVEnums.BodyFlags
@@ -135,7 +135,7 @@ func _ready() -> void:
 			hbox.add_child(ckbx)
 			var orbit_default_color: Color = NULL_COLOR
 			if flags and !(flags & (flags - 1)): # single bit test
-				orbit_default_color = _get_settings_orbit_color(flags)
+				orbit_default_color = _get_default_orbit_color(flags)
 			var color_button := _make_color_picker_button(orbit_default_color)
 			color_button.connect("color_changed", self, "_change_orbit_color", [flags])
 			_orbits_color_pkrs.append(color_button)
@@ -157,9 +157,6 @@ func _make_checkbox() -> CheckBox:
 
 
 func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
-	
-	prints("_make_color_picker_button", default_color == NULL_COLOR)
-	
 	var button := ColorPickerButton.new()
 	button.connect("toggled", self, "_hack_fix_toggle_off", [button])
 	button.rect_min_size.x = 15
@@ -171,6 +168,10 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	if default_color != NULL_COLOR:
 		var color_picker := button.get_picker()
 		color_picker.add_preset(default_color)
+	else:
+		pass
+		# FIXME or Godot bug: The ColorPicker that never had any add_preset()
+		# calls shows all presets in all ColorPickers (even redundant ones).
 	var picker_popup := button.get_popup()
 	picker_popup.connect("popup_hide", self, "_on_color_picker_hide")
 	return button
@@ -239,6 +240,14 @@ func _get_settings_orbit_color(flag: int) -> Color:
 	if _body_orbit_colors.has(flag):
 		return _body_orbit_colors[flag]
 	return _settings.body_orbit_default_color
+
+
+func _get_default_orbit_color(flag: int) -> Color:
+	var default_body_orbit_colors: Dictionary = _settings_manager.defaults.body_orbit_colors
+	if default_body_orbit_colors.has(flag):
+		return default_body_orbit_colors[flag]
+	return _settings_manager.defaults.body_orbit_default_color
+	
 
 
 func _set_settings_orbit_color(flag: int, color: Color) -> void:

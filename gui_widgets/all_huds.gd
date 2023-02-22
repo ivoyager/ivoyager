@@ -1,4 +1,4 @@
-# all_huds_grids.gd
+# all_huds.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,23 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVAllHUDsGrids
+class_name IVAllHUDs
 extends VBoxContainer
-
-
-# DEPRECIATE: Replaced by IVAllHUDs
-
-
-
 
 # GUI widget that holds all the HUD visibility widgets.
 #
 # IMPORTANT! For correct visibility control, BodyFlags used in rows of BodyHUDs
 # instances must be a subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
 #
-# TODO: Upper-left button row:
-#   [Hide All][Show Default][Save as Default]
-
+# WIP - hidden buttons [Hide All][Show Default]
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
@@ -42,6 +34,11 @@ var _column_master: GridContainer
 
 func _enter_tree() -> void:
 	connect("child_entered_tree", self, "_on_child_entered_tree")
+
+
+func _ready() -> void:
+	$"%HideAllButton".connect("pressed", self, "_hide_all")
+	$"%ShowDefaultButton".connect("pressed", self, "_show_default")
 
 
 func _on_child_entered_tree(control: Control) -> void:
@@ -84,7 +81,7 @@ func _on_child_entered_tree(control: Control) -> void:
 			control.rows = [
 				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
 			]
-
+		
 		# SmallBodiesHUDs instance
 		"AsteroidsHUDs":
 			control.column_master = _column_master

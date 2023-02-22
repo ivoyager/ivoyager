@@ -66,16 +66,6 @@ func _on_init():
 		],
 		[ # column 2
 			{
-				header = "LABEL_ORBIT_POINT_COLORS",
-				planet_orbit_color = "LABEL_PLANET_ORBITS",
-				dwarf_planet_orbit_color = "LABEL_DWARF_PLANET_ORBITS",
-				moon_orbit_color = "LABEL_MAJOR_MOON_ORBITS",
-				minor_moon_orbit_color = "LABEL_MINOR_MOON_ORBITS",
-				spacecraft_orbit_color = "LABEL_SPACECRAFT_ORBITS",
-				asteroid_orbit_color = "LABEL_ASTEROID_ORBITS",
-				asteroid_point_color = "LABEL_ASTEROID_POINTS",
-			},
-			{
 				header = "LABEL_GUI_AND_HUD",
 				gui_size = "LABEL_GUI_SIZE",
 				viewport_names_size = "LABEL_NAMES_SIZE",
