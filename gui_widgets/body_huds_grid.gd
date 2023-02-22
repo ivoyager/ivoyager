@@ -22,9 +22,8 @@ extends GridContainer
 
 # GUI widget.
 #
-# The widget can be modified by settings public vars below before the _ready()
-# virtual call. To do so, the parent control can connect to 'child_entered_tree'
-# signal in its _enter_tree() method.
+# Class properties must be set before _ready(). Use parent _enter_tree() and
+# 'child_entered_tree' signal to do so.
 #
 # See widget IVAllHUDsGrids for setting up multiple grids and aligning their
 # columns.
@@ -33,6 +32,7 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 var has_headers := true
 var column0_en_width := 20 # 'EN QUAD' padding; applied only if above is true
+var column_master: Control # if set, column widths follow master children
 
 var ckbx_rows := [
 	["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags below to be set
@@ -121,6 +121,15 @@ func _ready() -> void:
 		else:
 			_orbits_ckbxs.append(null)
 			add_child(Control.new())
+	
+	# columns follow master
+	if !column_master:
+		return
+	column_master.connect("resized", self, "_resize_columns")
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame") # needs 2 frame delay as of 3.5.2
+	yield(get_tree(), "idle_frame") # added extra for safety
+	_resize_columns()
 
 
 func _show_hide_names(ckbx: CheckBox, flags: int) -> void:
@@ -144,4 +153,12 @@ func _update_ckbxs() -> void:
 			_symbols_ckbxs[i].pressed = _huds_visibility.is_symbol_visible(flags, true)
 		if _orbits_ckbxs[i] is CheckBox:
 			_orbits_ckbxs[i].pressed = _huds_visibility.is_orbit_visible(flags, true)
+
+
+func _resize_columns() -> void:
+	var n_master_children := column_master.get_child_count()
+	for i in columns:
+		if i == n_master_children:
+			break
+		get_child(i).rect_min_size.x = column_master.get_child(i).rect_size.x
 

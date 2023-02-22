@@ -72,14 +72,16 @@ func _on_init():
 		# misc
 		mouse_action_releases_gui_focus = true,
 
-		# cached but not in base IVOptionsPopup
+		# cached but not in IVOptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
 		
-		# TODO:
-#		planet_label_color
-#		moon_label_color
+		small_bodies_points_default_color = Color(0.0, 0.6, 0.0),
+		small_bodies_points_colors = {},
+		small_bodies_orbits_default_color = Color(0.8, 0.2, 0.2),
+		small_bodies_orbits_colors = {},
+
 		}
 	
 	# read-only

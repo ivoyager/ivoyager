@@ -20,6 +20,8 @@
 class_name IVAsteroidsGrid
 extends GridContainer
 
+# DEPRECIATE: replace w/ SmallBodiesHUDs
+
 # GUI widget.
 
 var column0_en_width := 20

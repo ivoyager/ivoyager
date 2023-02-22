@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/small_bodies_huds.gd" type="Script" id=1]
+
+[node name="SmallBodiesHUDs" type="GridContainer"]
+margin_right = 242.0
+margin_bottom = 210.0
+mouse_filter = 2
+custom_constants/vseparation = -2
+custom_constants/hseparation = 15
+columns = 3
+script = ExtResource( 1 )

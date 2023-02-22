@@ -182,6 +182,7 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 			var color_picker_button := ColorPickerButton.new()
 			setting_hbox.add_child(color_picker_button)
 			color_picker_button.rect_min_size.x = 60.0
+			color_picker_button.edit_alpha = false
 			_set_overrides(color_picker_button, setting)
 			color_picker_button.color = value
 			color_picker_button.connect("color_changed", self, "_on_change", [setting, default_button])

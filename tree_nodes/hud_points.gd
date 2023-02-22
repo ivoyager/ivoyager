@@ -43,7 +43,7 @@ var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _group: IVSmallBodiesGroup
-var _color_setting: String
+var _color: Color
 var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
 
 # Lagrange point
@@ -54,9 +54,8 @@ var _secondary_orbit: IVOrbit
 onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
-func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
+func _init(group: IVSmallBodiesGroup) -> void:
 	_group = group
-	_color_setting = color_setting
 	_lp_integer = _group.lp_integer
 	material_override = ShaderMaterial.new()
 	if _lp_integer == -1: # not trojans
@@ -106,8 +105,7 @@ func draw_points() -> void:
 	var half_aabb = _group.max_apoapsis * Vector3.ONE
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
-	var color: Color = IVGlobal.settings[_color_setting]
-	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	_set_color(IVGlobal.settings.small_bodies_points_colors)
 	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
 	material_override.set_shader_param("fragment_range", _world_targeting[7])
 	if _lp_integer >= 4: # trojans
@@ -131,14 +129,24 @@ func _process(_delta: float) -> void:
 		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
 
 
+func _set_color(points_colors: Dictionary) -> void:
+	var new_color: Color
+	if points_colors.has(_group.group_name):
+		new_color = points_colors[_group.group_name]
+	else:
+		new_color = IVGlobal.settings.small_bodies_points_default_color
+	if _color != new_color:
+		_color = new_color
+		material_override.set_shader_param("color", Vector3(new_color.r, new_color.g, new_color.b))
+
+
 func _on_visibility_changed() -> void:
 	visible = _huds_visibility.is_sbg_points_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:
-	if setting == _color_setting:
-		material_override.set_shader_param("color", Vector3(value.r, value.g, value.b))
-	elif setting == "point_size":
+	if setting == "point_size":
 		material_override.set_shader_param("point_size", float(value))
-	
-	
+	elif setting == "small_bodies_points_colors":
+		_set_color(value)
+
