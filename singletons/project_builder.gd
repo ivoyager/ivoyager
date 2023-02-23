@@ -183,7 +183,7 @@ var gui_nodes := {
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
-var move_top_gui_children_to_index := [] # add Control names to order ahead of others
+var move_top_gui_children_to_index := [] # nulls ok; add Control names at index
 
 var procedural_classes := {
 	# Nodes and references NOT instantiated by IVProjectBuilder. These class
@@ -274,6 +274,8 @@ func init_extensions() -> void:
 		IVGlobal.extensions.append([
 			extension.EXTENSION_NAME,
 			extension.EXTENSION_VERSION,
+			extension.EXTENSION_BUILD,
+			extension.EXTENSION_STATE,
 			extension.EXTENSION_YMD
 			])
 	for extension in _project_extensions:
@@ -376,6 +378,8 @@ func add_program_nodes() -> void:
 		var object_key = key.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
 	for i in move_top_gui_children_to_index.size():
+		if !move_top_gui_children_to_index[i]:
+			continue
 		var object_key: String = move_top_gui_children_to_index[i]
 		top_gui.move_child(_program[object_key], i)
 	IVGlobal.verbose_signal("project_nodes_added")

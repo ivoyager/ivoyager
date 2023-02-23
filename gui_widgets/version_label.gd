@@ -31,8 +31,6 @@ var multiline := true # splits format at spaces
 var add_name := false
 var add_ymd := false
 var add_ymd_if_dev := true
-var prepend := ""
-var append := ""
 
 
 func _ready():
@@ -43,7 +41,7 @@ func set_label() -> void:
 	# Call directly if properties changed after added to tree.
 	var sep := "\n" if multiline else " "
 	var is_project := use_project and IVGlobal.project_name
-	text = prepend
+	text = ""
 	if add_name:
 		text += (IVGlobal.project_name if is_project else "I, Voyager") + sep
 	text += IVGlobal.project_version if is_project else IVGlobal.IVOYAGER_VERSION
@@ -53,5 +51,4 @@ func set_label() -> void:
 		text += "-" + state
 	if add_ymd or (add_ymd_if_dev and state == "dev"):
 		text += sep + str(IVGlobal.project_ymd if is_project else IVGlobal.IVOYAGER_YMD)
-	text += append
 

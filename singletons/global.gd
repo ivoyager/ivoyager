@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14"
-const IVOYAGER_BUILD := "" # hotfix or debug
+const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
 const IVOYAGER_YMD := 20230223
 
@@ -116,7 +116,7 @@ var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # IVProjectBuilder [[name, version, build, type, ymd], ...]
+var extensions := [] # IVProjectBuilder [[name, version, build, state, ymd], ...]
 
 # project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""

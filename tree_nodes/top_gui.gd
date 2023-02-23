@@ -27,7 +27,7 @@ extends Control
 # Control ancestry tree. This property must be assigned before IVGlobal signal
 # 'system_tree_ready'.
 #
-# 'PERSIST_MODE' is needed here for save/load persistence of the
+# 'PERSIST_' constants are needed here for save/load persistence of the
 # SelectionManager instance.
 #
 # IVThemeManager (prog_refs/theme_manager.gd) sets the 'main' Theme in IVGlobal
@@ -35,6 +35,7 @@ extends Control
 # proper GUI widget appearance.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
+const PERSIST_PROPERTIES := ["selection_manager"]
 
 var selection_manager: IVSelectionManager
 

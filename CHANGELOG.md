@@ -33,6 +33,8 @@ Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND..
 * Split up asteroid Main Belt into MB (Inner), MB (Middle), MB (Outer) and Hildas.
 * New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground-' or 'orbit-tracking' mode.
 * Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
+* [Breaks Projects!] ivoyager has it's own default IVTopGUI that is used unless extension project sets 'top_gui' in IVProjectBuilder.
+* [Breaks Projects!] Extension project must set IVGlobal.skip_splash_screen = false if it has a splash screen. (Otherwise, ivoyager will build the solar system.)
 * [Breaks API!] Removed/replaced table columns. E.g., new 'show_in_nav_panel' needed for display by the navigation panel widgets. Some others may be API breaking.
 * [Breaks API!] Significantly changed API in classes: IVCamera, IVView.
 * [Breaks API!] Replaced classes: IVLPoint -> IVLagrangePoint.
