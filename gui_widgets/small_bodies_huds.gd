@@ -26,7 +26,7 @@ extends GridContainer
 # row construction, setting up multiple grids, and aligning their columns.
 #
 # To display correctly, ColorPickerButton needs a StyleBoxTexture with no
-# margins. See default TopGUI for how to do this.
+# margins.
 
 const NULL_COLOR := Color.black
 

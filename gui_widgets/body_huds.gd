@@ -26,7 +26,7 @@ extends GridContainer
 # row construction, setting up multiple grids, and aligning their columns.
 #
 # To display correctly, ColorPickerButton needs a StyleBoxTexture with no
-# margins. See default TopGUI for how to do this.
+# margins.
 #
 # IMPORTANT! For correct visibility control, BodyFlags used in rows must be a
 # subset of IVHUDsVisibility.visibility_body_flags.

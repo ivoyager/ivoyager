@@ -27,9 +27,10 @@ extends Node
 # Containers (arrays and dictionaries) are never replaced, so it is safe and
 # good practice to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20230222
-const DEBUG_BUILD := ""
+const IVOYAGER_VERSION := "0.0.14"
+const IVOYAGER_BUILD := "" # hotfix or debug
+const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
+const IVOYAGER_YMD := 20230223
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
@@ -115,12 +116,14 @@ var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # IVProjectBuilder [[name, version, version_ymd], ...]
+var extensions := [] # IVProjectBuilder [[name, version, build, type, ymd], ...]
 
 # project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""
 var project_version := "" # external project can set for gamesave debuging
-var project_version_ymd := 0
+var project_build := ""
+var project_state := ""
+var project_ymd := 0
 var verbose := false # prints state broadcast signals and whatever else we add
 var is_modded := false # this is aspirational
 var enable_save_load := true
@@ -130,7 +133,7 @@ var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
-var skip_splash_screen := false
+var skip_splash_screen := true
 var disable_pause := false
 var disable_exit := false
 var disable_quit := false
@@ -241,8 +244,8 @@ var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
 
 
 func _ready():
-	prints("I, Voyager", IVOYAGER_VERSION, str(IVOYAGER_VERSION_YMD) + DEBUG_BUILD,
-			"- https://www.ivoyager.dev")
+	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
+			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
 
 
 func verbose_signal(signal_str: String, arg1 = null, arg2 = null) -> void:

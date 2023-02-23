@@ -20,9 +20,39 @@
 class_name IVTopGUI
 extends Control
 
-# This is just an empty Control to build on if no substitute is suppled. See
-# comments in singletons/project_builder.gd.
+# An extension can replace the top GUI in IVProjectBuilder 
+# (singletons/project_builder.gd) but see comments below:
+# 
+# Many GUI widgets expect to find 'selection_manager' somewhere in their 
+# Control ancestry tree. This property must be assigned before IVGlobal signal
+# 'system_tree_ready'.
 #
-# Out-of-the-box theming is done by IVThemeManager (prog_refs/theme_manager.gd)
-# which will apply a global Theme to whatever top GUI is set in ProjectBuilder.
+# 'PERSIST_MODE' is needed here for save/load persistence of the
+# SelectionManager instance.
+#
+# IVThemeManager (prog_refs/theme_manager.gd) sets the 'main' Theme in IVGlobal
+# dictionary 'themes', which is applied here. Some Theme changes are needed for
+# proper GUI widget appearance.
+
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
+
+var selection_manager: IVSelectionManager
+
+
+func _init() -> void:
+	anchor_right = 1.0
+	anchor_bottom = 1.0
+	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished")
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+
+
+func _on_project_builder_finished() -> void:
+	theme = IVGlobal.themes.main
+
+
+func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
+	if is_new_game:
+		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		selection_manager = _SelectionManager_.new()
+		add_child(selection_manager)
 

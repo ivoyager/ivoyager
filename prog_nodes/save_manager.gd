@@ -36,15 +36,21 @@ const NetworkStopSync = IVEnums.NetworkStopSync
 
 const DPRINT := false
 
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := [
+	"project_version",
+	"project_ymd",
+	"ivoyager_version",
+	"ivoyager_ymd",
+	"is_modded"
+]
+	
 # persisted - values will be replaced by file values on game load!
 var project_version: String = IVGlobal.project_version
-var project_version_ymd: int = IVGlobal.project_version_ymd
+var project_ymd: int = IVGlobal.project_ymd
 var ivoyager_version: String = IVGlobal.IVOYAGER_VERSION
-var ivoyager_version_ymd: int = IVGlobal.IVOYAGER_VERSION_YMD
+var ivoyager_ymd: int = IVGlobal.IVOYAGER_YMD
 var is_modded: bool = IVGlobal.is_modded
-const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["project_version", "project_version_ymd",
-	"ivoyager_version", "ivoyager_version_ymd", "is_modded"]
 
 # private
 var _state: Dictionary = IVGlobal.state
@@ -204,14 +210,14 @@ func _on_load_requested(path: String, is_quick_load := false) -> void:
 
 func _test_version() -> void:
 	if project_version != IVGlobal.project_version \
-			or project_version_ymd != IVGlobal.project_version_ymd \
+			or project_ymd != IVGlobal.project_ymd \
 			or ivoyager_version != IVGlobal.IVOYAGER_VERSION \
-			or ivoyager_version_ymd != IVGlobal.IVOYAGER_VERSION_YMD:
+			or ivoyager_ymd != IVGlobal.IVOYAGER_YMD:
 		print("WARNING! Loaded game was created with different program version...")
-		prints(" ivoayger running: ", IVGlobal.IVOYAGER_VERSION, IVGlobal.IVOYAGER_VERSION_YMD)
-		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_version_ymd)
-		prints(" project running:  ", IVGlobal.project_version, IVGlobal.project_version_ymd)
-		prints(" project loaded:   ", project_version, project_version_ymd)
+		prints(" ivoayger running: ", IVGlobal.IVOYAGER_VERSION, IVGlobal.IVOYAGER_YMD)
+		prints(" ivoyager loaded:  ", ivoyager_version, ivoyager_ymd)
+		prints(" project running:  ", IVGlobal.project_version, IVGlobal.project_ymd)
+		prints(" project loaded:   ", project_version, project_ymd)
 
 
 # *****************************************************************************

@@ -20,8 +20,6 @@
 class_name IVThemeManager
 extends Reference
 
-# TODO: Rethink this whole system now that I know a little more about Themes.
-
 # Maintains IVGlobal.themes dictionary. All controls are expected to set their
 # own theme from this dictionary.
 
@@ -42,12 +40,8 @@ func _project_init() -> void:
 	_themes.main_menu.default_font = _fonts[main_menu_font]
 	_themes.splash_screen.default_font = _fonts[splash_screen_font]
 	
-	_themes.no_margin_style_box_texture = StyleBoxTexture.new()
-	
-	# WIP - remove border from ColorPickerButton
+	# Remove border from ColorPickerButton
 	var color_picker_button_stylebox := StyleBoxTexture.new()
 	_themes.main.set_stylebox("normal", "ColorPickerButton", color_picker_button_stylebox)
-
-
 
 

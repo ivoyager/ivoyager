@@ -22,12 +22,15 @@ extends Node
 # Instance global "IVProjectBuilder".
 #
 # This node builds the program (not the solar system!) and makes program
-# nodes, references, and classes availible in IVGlobal dictionaries. All
+# nodes, references, and class scripts availible in IVGlobal dictionaries. All
 # dictionaries here (except procedural_classes) define "small-s singletons";
-# a single instance of each class is instantiated and added to the global
-# dictionary: IVGlobal.program.
+# a single instance of each class is instantiated, and nodes are added to
+# either the top Spatial node (specified by 'universe') or the top Control node
+# (specified by 'top_gui'). All object instantiations can be accessed in
+# IVGlobal dictionary 'program' and all class scripts can be accessed in
+# IVGlobal dictionary 'script_classes'.
 #
-# Only extension init files should reference this node.
+# Only extension init files should access this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
 #
 # See example extension files for our Planetarium and Project Template:
@@ -39,23 +42,24 @@ extends Node
 #    <name> is the name of your project or addon. This file should have an
 #    _extension_init() function. Instructions 2-3 refer to this file.
 # 2. Use _extension_init() to:
-#     a. modify "project init" values in IVGlobal singleton.
+#     a. modify "project init" values in the IVGlobal singleton.
 #     b. modify this node's dictionaries to extend (i.e., subclass) or replace
-#        existing classes, remove classes, or add new classes.
+#        existing classes, remove classes, or add new classes. You can remove a
+#        class by either erasing the dictionary key or setting it to null.
 #     (Above happens before anything else is instantiated!)
 # 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
 #    init values of instantiated Nodes (before they are added to tree) or
-#    instantiated References (before they are used). Nodes and References can
-#    be accessed after instantiation in the IVGlobal.program dictionary.
+#    References (before they are used). Nodes and References can be
+#    accessed after instantiation in the IVGlobal.program dictionary.
+# 4. Build your project GUI using the many widgets in ivoyager/gui_widgets.
 #
-# Init sequence here expects (but does not provide) a parent GUI node. This
-# must be set in dictionary below ('gui_nodes._ProjectGUI_') by your extension
-# file. (Or erase the '_ProjectGUI_' element to avoid an error.)
-# The various optional GUI widgets found in ivoyager/gui_widgets/ directory
-# expect to find a non-null 'selection_manager' property somewhere up thier
-# Control ancestry tree, which can be in the parent GUI node if not elsewhere.
-# See example parent GUI ("GameGUI") for our Project Template here:
-# https://github.com/ivoyager/project_template/blob/master/replace_me/gui_example/game_gui.gd
+# By itself, ivoyager will run but it lacks a GUI: the default IVTopGUI has no
+# child GUIs. You can either build on the existing IVTopGUI or provide your own
+# by setting 'top_gui' here (but see comments in tree_nodes/top_gui.gd).
+#
+# For a game that needs a splash screen at startup, add the splash screen to
+# 'gui_nodes' here and set IVGlobal.skip_splash_screen = false (for example,
+# see https://github.com/ivoyager/project_template).
 
 
 signal init_step_finished() # for internal IVProjectBuilder use only
@@ -147,7 +151,7 @@ var prog_refs := {
 }
 
 var prog_nodes := {
-	# IVProjectBuilder instances one of each and adds as child of Universe. Use
+	# IVProjectBuilder instances one of each and adds as child to Universe. Use
 	# PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_StateManager_ = IVStateManager,
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
@@ -161,16 +165,14 @@ var prog_nodes := {
 }
 
 var gui_nodes := {
-	# IVProjectBuilder instances one of each and adds as child of Universe. Use
-	# PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
-	# ORDER MATTERS!!! Last in list is "on top" for viewing and 1st for input
-	# processing. To reorder, either: 1) clear and rebuild this dictionary on
-	# project init, or 2) reorder children of Universe after project build.
-	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
-	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
+	# IVProjectBuilder instances one of each and adds as child to TopGUI, or
+	# whatever substitute Control is set in 'top_gui'.
+	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
+	# To reorder children, add Control names to 'move_top_gui_children_to_index'
+	# in the desired index positions.
 	_WorldController_ = IVWorldController, # Control ok
 	_FragmentLabel_ = IVFragmentLabel, # remove w/ IVFragmentIdentifier
-	_SplashScreen_ = null, # needed if IVGlobal.skip_splash_screen == false
+	_SplashScreen_ = null, # assign here if convenient (below MainMenu, etc.)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
@@ -181,14 +183,14 @@ var gui_nodes := {
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
-var move_top_gui_children_to_index := ["WorldController", "FragmentLabel"] # move below all others
+var move_top_gui_children_to_index := [] # add Control names to order ahead of others
 
 var procedural_classes := {
-	# Nodes and references NOT instantiated by IVProjectBuilder. These classes
-	# plus all above can be accessed from IVGlobal.script_classes (keys still
+	# Nodes and references NOT instantiated by IVProjectBuilder. These class
+	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
 	# have underscores). 
 	# tree_nodes
-	_Body_ = IVBody,
+	_Body_ = IVBody, # many dependencies, best to subclass
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
 	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
 	_HUDLabel_ = IVHUDLabel, # replace w/ Spatial
@@ -207,7 +209,6 @@ var procedural_classes := {
 	_Selection_ = IVSelection,
 	_View_ = IVView,
 	_Composition_ = IVComposition, # replaceable, but look for dependencies
-	# _BodyList_ = IVBodyList, # WIP
 }
 
 
@@ -266,14 +267,14 @@ func init_extensions() -> void:
 		var extension_script: Script = load(path)
 		if not "EXTENSION_NAME" in extension_script \
 				or not "EXTENSION_VERSION" in extension_script \
-				or not "EXTENSION_VERSION_YMD" in extension_script:
+				or not "EXTENSION_YMD" in extension_script:
 			continue
 		var extension: Object = extension_script.new()
 		_project_extensions.append(extension)
 		IVGlobal.extensions.append([
 			extension.EXTENSION_NAME,
 			extension.EXTENSION_VERSION,
-			extension.EXTENSION_VERSION_YMD
+			extension.EXTENSION_YMD
 			])
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
@@ -286,10 +287,11 @@ func set_simulator_root() -> void:
 	# 1. An extension assigns property 'universe' in this object.
 	# 2. This method finds a tree node named 'Universe'. (In the project
 	#    template, Universe is already present as the main scene.)
-	# 3. IVUniverse (tree_nodes/universe.tscn) is instantiated. In this case,
-	#    other code will need to add it to the tree.
-	# Note: the sim always accesses this node via IVGlobal.program.Universe.
-	# The actual node name doesn't matter.
+	# 3. IVUniverse (tree_nodes/universe.gd) is instantiated. In this case,
+	#    some other code will need to add it to the tree.
+	#
+	# Note: ivoyager code always gets this node via IVGlobal.program.Universe,
+	# never by node name. The actual node name doesn't matter.
 	if universe:
 		return
 	var scenetree_root := get_tree().get_root()
@@ -301,10 +303,12 @@ func set_simulator_root() -> void:
 
 
 func set_simulator_top_gui() -> void:
-	# 'top_gui' is either assigned by an extension or instatiated here. It is
-	# added to Universe if add_top_gui_to_universe == true.
-	# Note: the sim always accesses this node via IVGlobal.program.TopGUI.
-	# The actual node name doesn't matter.
+	# 'top_gui' is either assigned by an extension or assigned here with an
+	# instatiation of the default IVTopGUI. It is added to Universe in
+	# add_program_nodes() if add_top_gui_to_universe == true.
+	#
+	# Note: ivoyager code always gets this node via IVGlobal.program.TopGUI,
+	# never by node name. The actual node name doesn't matter.
 	if !top_gui:
 		top_gui = files.make_object_or_scene(IVTopGUI)
 
@@ -315,6 +319,8 @@ func instantiate_and_index_program_objects() -> void:
 	_program.TopGUI = top_gui
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
+			if !dict[key]:
+				continue
 			var object_key: String = key.rstrip("_").lstrip("_")
 			assert(!_program.has(object_key))
 			var object: Object = files.make_object_or_scene(dict[key])
@@ -324,6 +330,8 @@ func instantiate_and_index_program_objects() -> void:
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes,
 			procedural_classes]:
 		for key in dict:
+			if !dict[key]:
+				continue
 			assert(!_script_classes.has(key))
 			_script_classes[key] = dict[key]
 	IVGlobal.verbose_signal("project_objects_instantiated")
@@ -331,37 +339,45 @@ func instantiate_and_index_program_objects() -> void:
 
 func init_program_objects() -> void:
 	for key in initializers:
+		if !initializers[key]:
+			continue
 		var object_key: String = key.rstrip("_").lstrip("_")
-		if _program.has(object_key): # might have removed themselves already
-			var object: Object = _program[object_key]
-			if object.has_method("_project_init"):
-				object._project_init()
+		if !_program.has(object_key): # might have removed itself already
+			continue
+		var object: Object = _program[object_key]
+		if object.has_method("_project_init"):
+			object._project_init()
+	if top_gui.has_method("_project_init"):
+		top_gui._project_init()
 	for dict in [prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
+			if !dict[key]:
+				continue
 			var object_key: String = key.rstrip("_").lstrip("_")
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
-	if top_gui.has_method("_project_init"):
-		top_gui._project_init()
 	IVGlobal.verbose_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
 
 
 func add_program_nodes() -> void:
-	for key in prog_nodes:
-		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(_program[object_key])
 	if add_top_gui_to_universe:
 		universe.add_child(top_gui)
+	for key in prog_nodes:
+		if !prog_nodes[key]:
+			continue
+		var object_key = key.rstrip("_").lstrip("_")
+		universe.add_child(_program[object_key])
 	for key in gui_nodes:
+		if !gui_nodes[key]:
+			continue
 		var object_key = key.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
 	for i in move_top_gui_children_to_index.size():
-		var node_name: String = move_top_gui_children_to_index[i]
-		top_gui.move_child(_program[node_name], i)
-
+		var object_key: String = move_top_gui_children_to_index[i]
+		top_gui.move_child(_program[object_key], i)
 	IVGlobal.verbose_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
