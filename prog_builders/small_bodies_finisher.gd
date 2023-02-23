@@ -42,13 +42,13 @@ func _init_unpersisted(_is_new_game: bool) -> void:
 
 
 func _init_hud_points(group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new(group, "asteroid_point_color")
+	var hud_points: IVHUDPoints = _HUDPoints_.new(group)
 	var primary_body := group.primary_body
 	primary_body.add_child(hud_points)
 
 
 func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
-	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group, "asteroid_orbit_color")
+	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group)
 	var primary_body := group.primary_body
 	primary_body.add_child(hud_orbits)
 

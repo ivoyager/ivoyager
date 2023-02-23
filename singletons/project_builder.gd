@@ -115,8 +115,10 @@ var prog_builders := {
 	_EnvironmentBuilder_ = IVEnvironmentBuilder,
 	_SystemBuilder_ = IVSystemBuilder,
 	_BodyBuilder_ = IVBodyBuilder,
+	_BodyFinisher_ = IVBodyFinisher,
 	_OrbitBuilder_ = IVOrbitBuilder,
 	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
+	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 }
@@ -134,8 +136,6 @@ var prog_refs := {
 	_SleepManager_ = IVSleepManager,
 	_WikiManager_ = IVWikiManager,
 	_ModelManager_ = IVModelManager,
-	_BodyFinisher_ = IVBodyFinisher,
-	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
 	_QuantityFormatter_ = IVQuantityFormatter,
 }
 

@@ -1,4 +1,4 @@
-# all_huds_grids.gd
+# all_huds.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,15 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVAllHUDsGrids
+class_name IVAllHUDs
 extends VBoxContainer
 
-# GUI widget that holds a number of BodyHUDsGrid and AsteroidsGrid widgets.
+# GUI widget that holds all the HUD visibility widgets.
+#
+# IMPORTANT! For correct visibility control, BodyFlags used in rows of BodyHUDs
+# instances must be a subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
+#
+# WIP - hidden buttons [Hide All][Show Default]
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 var _column_master: GridContainer
-var _column_follower_grids := []
 
 
 func _enter_tree() -> void:
@@ -33,66 +37,66 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame") # needs 2 frame delay as of 3.5.2
-	yield(get_tree(), "idle_frame") # added extra for safety
-	_resize_columns()
+	$"%HideAllButton".connect("pressed", self, "_hide_all")
+	$"%ShowDefaultButton".connect("pressed", self, "_show_default")
 
 
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
 		
-		# BodyHUDsGrid instances
-		"SunGrid":
+		# BodyHUDs instances
+		"SunHUDs":
+			# This grid controls all other grid's column widths.
 			_column_master = control
-			control.connect("resized", self, "_resize_columns")
-			control.column0_en_width = 25
-			control.ckbx_rows = [
+			control.column0_en_width = 23
+			control.columns_en_width = 6
+			control.rows = [
 				["LABEL_SUN", BodyFlags.IS_STAR],
 			]
-			control.skip_ckbx_indexes.append(7) # skips the orbit ckbx
-		"PMOsGrid":
-			_column_follower_grids.append(control)
+			control.disable_orbits_rows.append(0) # no orbit for the Sun
+		"PMOsHUDs":
+			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags below to be set
 				["   " + tr("LABEL_PLANETS"), BodyFlags.IS_TRUE_PLANET],
 				["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
 				["   " + tr("LABEL_MOONS"), BodyFlags.IS_PLANETARY_MASS_MOON],
 			]
-		"NonPMOMoonsGrid":
-			_column_follower_grids.append(control)
+		"NonPMOMoonsHUDs":
+			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_NON_PMO_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
 			]
-		"VisitedAsteroidsGrid":
-			_column_follower_grids.append(control)
+		"VisitedAsteroidsHUDs":
+			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_VISITED_ASTEROIDS", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
 			]
-		"SpacecraftGrid":
-			_column_follower_grids.append(control)
+		"SpacecraftHUDs":
+			control.column_master = _column_master
 			control.has_headers = false
-			control.ckbx_rows = [
+			control.rows = [
 				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
 			]
-
-		# AsteroidsGrid instance
-		"AllAsteroidsGrid":
-			_column_follower_grids.append(control)
-			control.column0_en_width = 0
-
-
-func _resize_columns() -> void:
-	var n_columns := _column_master.columns
-	for i in _column_follower_grids.size():
-		var grid: GridContainer = _column_follower_grids[i]
-		for j in n_columns:
-			if j == grid.columns:
-				break
-			grid.get_child(j).rect_min_size.x = _column_master.get_child(j).rect_size.x
+		
+		# SmallBodiesHUDs instance
+		"AsteroidsHUDs":
+			control.column_master = _column_master
+			control.rows = [
+				["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"]],
+				["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
+				["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
+				["   " + tr("LABEL_MAIN_BELT_INNER"), ["IMB"]],
+				["   " + tr("LABEL_MAIN_BELT_MIDDLE"), ["MMB"]],
+				["   " + tr("LABEL_MAIN_BELT_OUTER"), ["OMB"]],
+				["   " + tr("LABEL_HILDAS"), ["HI"]],
+				["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
+				["   " + tr("LABEL_CENTAURS"), ["CE"]],
+				["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
+			]
 
 
 

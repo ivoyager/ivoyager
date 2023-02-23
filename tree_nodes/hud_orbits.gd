@@ -30,14 +30,13 @@ var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentI
 var _world_targeting: Array = IVGlobal.world_targeting
 
 var _group: IVSmallBodiesGroup
-var _color_setting: String
+var _color: Color
 var _vec3ids := PoolVector3Array() # orbit ids for FragmentIdentifier
 
 
 
-func _init(group: IVSmallBodiesGroup, color_setting: String) -> void:
+func _init(group: IVSmallBodiesGroup) -> void:
 	_group = group
-	_color_setting = color_setting
 	# fragment ids
 	if _fragment_identifier:
 		var n := group.get_number()
@@ -57,18 +56,16 @@ func _ready() -> void:
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = IVGlobal.shared.circle_mesh_low_res
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	var color: Color = IVGlobal.settings[_color_setting]
 	if _fragment_identifier: # use self-identifying fragment shader
 		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbits_shader
-		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 		material_override.set_shader_param("fragment_range", _world_targeting[7]) # TODO4.0: global uniform
 	else:
 		material_override = SpatialMaterial.new()
 		material_override.flags_unshaded = true
-		material_override.albedo_color = color
 		set_process(false)
+	_set_color(IVGlobal.settings.small_bodies_orbits_colors)
 	_set_transforms_and_ids()
 	hide()
 
@@ -102,13 +99,25 @@ func _set_transforms_and_ids() -> void:
 		i += 1
 
 
+func _set_color(orbits_colors: Dictionary) -> void:
+	var new_color: Color
+	if orbits_colors.has(_group.group_name):
+		new_color = orbits_colors[_group.group_name]
+	else:
+		new_color = IVGlobal.settings.small_bodies_orbits_default_color
+	if _color == new_color:
+		return
+	_color = new_color
+	if _fragment_identifier:
+		material_override.set_shader_param("color", Vector3(new_color.r, new_color.g, new_color.b))
+	else:
+		material_override.albedo_color = new_color
+
+
 func _on_visibility_changed() -> void:
 	visible = _huds_visibility.is_sbg_orbits_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:
-	if setting == _color_setting:
-		if _fragment_identifier:
-			material_override.set_shader_param("color", Vector3(value.r, value.g, value.b))
-		else:
-			material_override.albedo_color = value
+	if setting == "small_bodies_orbits_colors":
+		_set_color(value)

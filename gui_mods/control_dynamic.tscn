@@ -47,8 +47,6 @@ mouse_default_cursor_shape = 10
 [node name="TL" type="Control" parent="."]
 margin_left = -7.0
 margin_top = -7.0
-margin_right = 4.76837e-07
-margin_bottom = 4.76837e-07
 rect_min_size = Vector2( 7, 7 )
 mouse_default_cursor_shape = 12
 

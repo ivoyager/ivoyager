@@ -52,7 +52,6 @@ var max_default_screen_proportions := Vector2(0.45, 0.45)
 # private
 var _settings: Dictionary = IVGlobal.settings
 var _drag_point := Vector2.ZERO
-var _default_size: Vector2
 
 onready var _viewport := get_viewport()
 onready var _parent: Control = get_parent()
@@ -323,12 +322,11 @@ func _set_anchors_to_position() -> void:
 
 func _resize() -> void:
 	var default_size := _get_default_size()
-	if _default_size == default_size:
-		return
-	_default_size = default_size
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
 	_parent.rect_size = default_size
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
 	yield(get_tree(), "idle_frame")
 	_parent.rect_size = default_size
 	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)

@@ -66,16 +66,6 @@ func _on_init():
 		],
 		[ # column 2
 			{
-				header = "LABEL_ORBIT_POINT_COLORS",
-				planet_orbit_color = "LABEL_PLANET_ORBITS",
-				dwarf_planet_orbit_color = "LABEL_DWARF_PLANET_ORBITS",
-				moon_orbit_color = "LABEL_MAJOR_MOON_ORBITS",
-				minor_moon_orbit_color = "LABEL_MINOR_MOON_ORBITS",
-				spacecraft_orbit_color = "LABEL_SPACECRAFT_ORBITS",
-				asteroid_orbit_color = "LABEL_ASTEROID_ORBITS",
-				asteroid_point_color = "LABEL_ASTEROID_POINTS",
-			},
-			{
 				header = "LABEL_GUI_AND_HUD",
 				gui_size = "LABEL_GUI_SIZE",
 				viewport_names_size = "LABEL_NAMES_SIZE",
@@ -182,6 +172,7 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 			var color_picker_button := ColorPickerButton.new()
 			setting_hbox.add_child(color_picker_button)
 			color_picker_button.rect_min_size.x = 60.0
+			color_picker_button.edit_alpha = false
 			_set_overrides(color_picker_button, setting)
 			color_picker_button.color = value
 			color_picker_button.connect("color_changed", self, "_on_change", [setting, default_button])

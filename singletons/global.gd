@@ -28,7 +28,7 @@ extends Node
 # good practice to keep a local reference in class files.
 
 const IVOYAGER_VERSION := "0.0.14-DEV"
-const IVOYAGER_VERSION_YMD := 20230218
+const IVOYAGER_VERSION_YMD := 20230222
 const DEBUG_BUILD := ""
 
 # simulator state broadcasts
@@ -170,7 +170,8 @@ var shared := { # more items added by initializers/shared_initializer.gd
 	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
 	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
-	# TODO: a rings shader! See: https://bjj.mmedia.is/data/s_rings
+	rings_shader = preload("res://ivoyager/shaders/rings.shader"),
+#	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
 }
 
 # Data table import
@@ -180,10 +181,6 @@ var table_import := {
 	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
-	
-	# DEPRECIATE
-	lights = "res://ivoyager/data/solar_system/lights.tsv",
-	
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
@@ -212,7 +209,6 @@ var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
 var rings_search := ["res://ivoyager_assets/rings"]
 
 var asset_paths := {
-	asteroid_binaries_dir = "res://ivoyager_assets/asteroid_binaries",
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }

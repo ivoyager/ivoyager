@@ -37,14 +37,12 @@ var _SmallBodiesGroup_: Script
 var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 var _table_reader: IVTableReader
 var _small_bodies_group_indexing: IVSmallBodiesGroupIndexing
-var _asteroid_binaries_dir: String
 var _running_count := 0
 
 
 func _project_init() -> void:
 	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
 	_table_reader = IVGlobal.program.TableReader
-	_asteroid_binaries_dir = IVGlobal.asset_paths.asteroid_binaries_dir
 
 
 func build() -> void:
@@ -83,6 +81,7 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 	assert(lp_integer == -1 or lp_integer == 4 or lp_integer == 5)
 	var group: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
 	group.init(group_name, star, trojan_of, lp_integer)
+	var binary_dir := _table_reader.get_string("asteroid_groups", "binary_dir", table_row)
 	var mag_cutoff := 100.0
 	if _asteroid_mag_cutoff_override != INF:
 		mag_cutoff = _asteroid_mag_cutoff_override
@@ -90,7 +89,7 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 		mag_cutoff = _table_reader.get_real("asteroid_groups", "mag_cutoff", table_row)
 	for mag_str in BINARY_FILE_MAGNITUDES:
 		if float(mag_str) < mag_cutoff:
-			_load_binary(group, group_name, mag_str)
+			_load_binary(group, group_name, mag_str, binary_dir)
 		else:
 			break
 	group.finish_binary_import()
@@ -99,10 +98,10 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 	_running_count += group.get_number()
 
 
-func _load_binary(group: IVSmallBodiesGroup, group_name: String,
-		mag_str: String) -> void:
+func _load_binary(group: IVSmallBodiesGroup, group_name: String, mag_str: String,
+		binary_dir: String) -> void:
 	var binary_name := group_name + "." + mag_str + ".ivbinary"
-	var path: String = _asteroid_binaries_dir.plus_file(binary_name)
+	var path: String = binary_dir.plus_file(binary_name)
 	var binary := File.new()
 	if binary.open(path, File.READ) != OK: # skip if file doesn't exist
 		return

@@ -151,4 +151,3 @@ enum BodyFlags {
 #	Max bit shift is 1 << 63.
 }
 
-

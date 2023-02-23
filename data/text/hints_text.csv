@@ -10,8 +10,11 @@ HINT_MAIN_BELT,Show Main Belt asteroids
 HINT_MARS_CROSSERS,Show Mars-crossing asteroids
 HINT_MOUSE_ONLY_GUI_NAV,"If checked, arrow keys move camera only;\notherwise, arrows navigate GUI controls"
 HINT_NAMES,Show names
+HINT_NAMES_SYMBOLS_CKBXS,"Toggle to show names or symbols, or hide both"
 HINT_NEAR_EARTH,Show near-Earth asteroids
 HINT_ORBITS,Show orbits
+HINT_ORBITS_CKBX_COLOR,Show/hide orbits and set their color
+HINT_POINTS_CKBX_COLOR,Show/hide points and set their color
 HINT_SELECTION_IMAGE,Click to center and orient
 HINT_SELECTION_BACK,Select last
 HINT_SELECTION_FORWARD,Select next

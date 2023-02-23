@@ -29,9 +29,6 @@ var cache_file_name := "generic_item.vbinary" # change in subclass
 var defaults: Dictionary # subclass defines in _init()
 var current: Dictionary # subclass makes or references an existing dict
 
-# subclass setting
-var _is_references := false # set if cache items are arrays or dicts
-
 # private
 var _io_manager: IVIOManager
 var _file_path: String
@@ -55,19 +52,27 @@ func _project_init() -> void:
 	var dir = Directory.new()
 	if dir.open(cache_dir) != OK:
 		dir.make_dir(cache_dir)
-	for item_name in defaults:
-		var default = defaults[item_name] # unknown type
-		current[item_name] = default.duplicate(true) if _is_references else default
+	for key in defaults:
+		var default = defaults[key] # unknown type
+		var type := typeof(default)
+		if type == TYPE_DICTIONARY or type == TYPE_ARRAY:
+			current[key] = default.duplicate(true)
+		else:
+			current[key] = default
 	_read_cache()
 
 
 # *****************************************************************************
 
-func change_current(item_name: String, value, suppress_caching := false) -> void:
+func change_current(key: String, value, suppress_caching := false) -> void:
 	# If suppress_caching = true, then be sure to call cache_now() later.
-	_about_to_change_current(item_name)
-	current[item_name] = value.duplicate(true) if _is_references else value
-	_on_change_current(item_name)
+	_about_to_change_current(key)
+	var type := typeof(value)
+	if type == TYPE_DICTIONARY or type == TYPE_ARRAY:
+		current[key] = value.duplicate(true)
+	else:
+		current[key] = value
+	_on_change_current(key)
 	if !suppress_caching:
 		cache_now()
 
@@ -76,60 +81,60 @@ func cache_now() -> void:
 	_write_cache()
 
 
-func is_default(item_name: String) -> bool:
-	return _is_equal(current[item_name], defaults[item_name])
+func is_default(key: String) -> bool:
+	return deep_equal(current[key], defaults[key])
 
 
 func is_all_defaults() -> bool:
-	for item_name in defaults:
-		if !_is_equal(current[item_name], defaults[item_name]):
+	for key in defaults:
+		if !deep_equal(current[key], defaults[key]):
 			return false
 	return true
 
 
-func get_cached_value(item_name: String, cached_values: Dictionary): # unknown type
+func get_cached_value(key: String, cached_values: Dictionary): # unknown type
 	# If cache doesn't have it, we treat default as cached
-	if cached_values.has(item_name):
-		return cached_values[item_name]
-	return defaults[item_name]
+	if cached_values.has(key):
+		return cached_values[key]
+	return defaults[key]
 
 
-func is_cached(item_name: String, cached_values: Dictionary) -> bool:
-	if cached_values.has(item_name):
-		return _is_equal(current[item_name], cached_values[item_name])
-	return _is_equal(current[item_name], defaults[item_name])
+func is_cached(key: String, cached_values: Dictionary) -> bool:
+	if cached_values.has(key):
+		return deep_equal(current[key], cached_values[key])
+	return deep_equal(current[key], defaults[key])
 
 
 func get_cached_values() -> Dictionary:
 	return _cached
 
 
-func restore_default(item_name: String, suppress_caching := false) -> void:
-	if !is_default(item_name):
-		change_current(item_name, defaults[item_name], suppress_caching)
+func restore_default(key: String, suppress_caching := false) -> void:
+	if !is_default(key):
+		change_current(key, defaults[key], suppress_caching)
 
 
 func restore_all_defaults(suppress_caching := false) -> void:
-	for item_name in defaults:
-		change_current(item_name, defaults[item_name], true)
+	for key in defaults:
+		change_current(key, defaults[key], true)
 	if !suppress_caching:
 		cache_now()
 
 
 func is_cache_current() -> bool:
 	var cached_values := get_cached_values()
-	for item_name in defaults:
-		if !is_cached(item_name, cached_values):
+	for key in defaults:
+		if !is_cached(key, cached_values):
 			return false
 	return true
 
 
 func restore_from_cache() -> void:
 	var cached_values := get_cached_values()
-	for item_name in defaults:
-		if !is_cached(item_name, cached_values):
-			var cached_value = get_cached_value(item_name, cached_values)
-			change_current(item_name, cached_value, true)
+	for key in defaults:
+		if !is_cached(key, cached_values):
+			var cached_value = get_cached_value(key, cached_values)
+			change_current(key, cached_value, true)
 
 
 # *****************************************************************************
@@ -144,15 +149,11 @@ func _on_change_current(_item_name: String) -> void:
 	pass
 
 
-func _is_equal(value1, value2) -> bool:
-	return value1 == value2 # or supply subclass logic
-
-
 func _write_cache() -> void:
 	_cached.clear()
-	for item_name in defaults:
-		if !_is_equal(current[item_name], defaults[item_name]): # cache non-default values
-			_cached[item_name] = current[item_name] # reference ok
+	for key in defaults:
+		if !deep_equal(current[key], defaults[key]): # cache only non-default values
+			_cached[key] = current[key]
 	_io_manager.store_var_to_file(_cached.duplicate(true), _file_path)
 
 
@@ -164,6 +165,6 @@ func _read_cache() -> void:
 		prints("Did not find cache file:", _file_path)
 		return
 	_cached = file.get_var()
-	for item_name in _cached:
-		if current.has(item_name): # possibly old verson obsoleted item_name
-			current[item_name] = _cached[item_name] # reference ok
+	for key in _cached:
+		if current.has(key): # possibly old verson obsoleted key
+			current[key] = _cached[key] # reference ok
