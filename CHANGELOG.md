@@ -10,18 +10,22 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 Under development using Godot 3.5.2.rc2.
 
-Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** with replacement folder **asteroid_binaries-2023-02-18**. Download [here](https://github.com/ivoyager/non_release_assets/releases).
+Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND...
+* **asteroid_binaries-2023-02-18** (replace ivoyager_assets/asteroid_binaries)
+* **rings-2023-02-22** (replace ivoyager_assets/rings)
+Download dev assets [here](https://github.com/ivoyager/non_release_assets/releases).
 
 **New!** Repository [ivbinary_maker](https://github.com/ivoyager/ivbinary_maker) has the updated tool for converting asteroid raw source data into ivoyager_assets/asteroid_binaries.
 
 
 ### Added
+* New rings.shader makes Saturn rings from 1d data, and dynamically responds to phase angle!
 * Spacecrafts! For now, just ISS and Hubble. (Juno has been added as an object, but it uses a fallback blank model because the open-source Juno model causes crashes in GLES2 operation.)
 * Visited asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
 * Asteroid orbit lines can be shown by group, or all at once. Yes, all ~65,000 of them!
 * Visual screen points (i.e., asteroids) and orbit lines are now identified by name on mouse-over. This involved some crazy shader/viewport hacking; for details see class [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd). 
 * IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays oriented to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
-* New IVAllHUDsGrid widget organizes HUD visibility checkboxes.
+* New GUI widgets to interact with the new features and content.
 
 
 ### Changed
