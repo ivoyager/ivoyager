@@ -13,9 +13,10 @@ Under development using Godot 3.5.2.rc2.
 Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND...
 * **asteroid_binaries-2023-02-18** (replace ivoyager_assets/asteroid_binaries)
 * **rings-2023-02-22** (replace ivoyager_assets/rings)
-Download dev assets [here](https://github.com/ivoyager/non_release_assets/releases).
 
-**New!** Repository [ivbinary_maker](https://github.com/ivoyager/ivbinary_maker) has the updated tool for converting asteroid raw source data into ivoyager_assets/asteroid_binaries.
+...download dev assets [here](https://github.com/ivoyager/non_release_assets/releases).
+
+**New!** Repository [ivbinary_maker](https://github.com/ivoyager/ivbinary_maker) has tools for converting asteroid raw source data into ivoyager_assets/asteroid_binaries and Saturns rings image data into a 1d texture for rings.shader.
 
 
 ### Added
