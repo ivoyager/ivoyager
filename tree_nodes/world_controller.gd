@@ -52,6 +52,13 @@ onready var _is_fragment_identifier := IVGlobal.program.has("FragmentIdentifier"
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	_world_targeting.resize(9)
+	_world_targeting[0] = Vector2.ZERO
+	_world_targeting[1] = 0.0
+	_world_targeting[5] = INF
+	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for FragmentIdentifier & shaders
+	_world_targeting[7] = 9.0 # fragment_range; FragmentIdentifier will override
+	_world_targeting[8] = 0.0 # fragment_cycler: FragmentIdentifier maintains
 
 
 func _ready() -> void:
@@ -60,13 +67,7 @@ func _ready() -> void:
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
 	mouse_filter = MOUSE_FILTER_STOP
 	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting.resize(9)
-	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = _viewport.size.y
-	_world_targeting[5] = INF
-	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for FragmentIdentifier & shaders
-	_world_targeting[7] = 9.0 # fragment_range; FragmentIdentifier will override
-	_world_targeting[8] = 0.0 # fragment_cycler: FragmentIdentifier maintains
 
 
 func _clear() -> void:

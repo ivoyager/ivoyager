@@ -24,7 +24,8 @@ extends Node
 # This node builds the program (not the solar system!) and makes program
 # nodes, references, and classes availible in IVGlobal dictionaries. All
 # dictionaries here (except procedural_classes) define "small-s singletons";
-# a single instance of each class is instantiated and added to IVGlobal.program.
+# a single instance of each class is instantiated and added to the global
+# dictionary: IVGlobal.program.
 #
 # Only extension init files should reference this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
@@ -71,18 +72,24 @@ var allow_project_build := true # blockable by another autoload singleton
 var init_sequence := [
 	# [object, method, wait_for_signal]
 	[self, "init_extensions", false],
-	[self, "set_simulator_root_node", false],
+	[self, "set_simulator_root", false],
+	[self, "set_simulator_top_gui", false],
 	[self, "instantiate_and_index_program_objects", false],
 	[self, "init_program_objects", true],
 	[self, "add_program_nodes", true],
 	[self, "finish", false]
 ]
 
-# Extension can assign a Spatial to var 'universe' to set simulator root node.
-# Otherwise, init code here will attempt to find a node with name 'Universe'.
-# Other than this search, root node name does not matter; ivoyager always
-# obtains this and other "program nodes" from dictionary IVGlobal.program.
+# All nodes instatiated here are added to 'universe' or 'top_gui'. Extension
+# can set either or both of these, or let ProjectBuilder assign default nodes
+# from the core ivoyager submodule (or for universe, by tree search.
+# Whatever is assigned to these properties will be accessible from
+# IVGlobal.program.Universe and IVGlobal.program.TopGUI (node names don't
+# matter).
+
 var universe: Spatial
+var top_gui: Control
+var add_top_gui_to_universe := true
 
 # Replace classes in dictionaries below with a subclass of the original unless
 # comment indicates otherwise. E.g., "Spatial ok": replace with a class that
@@ -150,6 +157,7 @@ var prog_nodes := {
 	_HUDsVisibility_ = IVHUDsVisibility,
 	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_WindowManager_ = IVWindowManager,
+	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to replace or remove
 }
 
 var gui_nodes := {
@@ -161,9 +169,7 @@ var gui_nodes := {
 	# EXTENTION PROJECT MUST SET '_ProjectGUI_' !!!!
 	# Set '_SplashScreen_' or erase and set IVGlobal.skip_splash_screen = true.
 	_WorldController_ = IVWorldController, # Control ok
-	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to replace or remove
-	_FragmentLabel_ = IVFragmentLabel, # remove w/ above
-	_ProjectGUI_ = null, # project MUST supply its own top Control!
+	_FragmentLabel_ = IVFragmentLabel, # remove w/ IVFragmentIdentifier
 	_SplashScreen_ = null, # needed if IVGlobal.skip_splash_screen == false
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
@@ -174,6 +180,8 @@ var gui_nodes := {
 	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
+
+var move_top_gui_children_to_index := ["WorldController", "FragmentLabel"] # move below all others
 
 var procedural_classes := {
 	# Nodes and references NOT instantiated by IVProjectBuilder. These classes
@@ -273,18 +281,38 @@ func init_extensions() -> void:
 	IVGlobal.verbose_signal("extentions_inited")
 
 
-func set_simulator_root_node() -> void:
-	# Does nothing if an extension has already set property 'universe'.
+func set_simulator_root() -> void:
+	# Sim root node 'universe' is assigned in one of three ways:
+	# 1. An extension assigns property 'universe' in this object.
+	# 2. This method finds a tree node named 'Universe'. (In the project
+	#    template, Universe is already present as the main scene.)
+	# 3. IVUniverse (tree_nodes/universe.tscn) is instantiated. In this case,
+	#    other code will need to add it to the tree.
+	# Note: the sim always accesses this node via IVGlobal.program.Universe.
+	# The actual node name doesn't matter.
 	if universe:
 		return
 	var scenetree_root := get_tree().get_root()
 	universe = scenetree_root.find_node("Universe", true, false)
-	assert(universe)
+	if universe:
+		return
+	universe = files.make_object_or_scene(IVUniverse)
+	universe.name = "Universe"
+
+
+func set_simulator_top_gui() -> void:
+	# 'top_gui' is either assigned by an extension or instatiated here. It is
+	# added to Universe if add_top_gui_to_universe == true.
+	# Note: the sim always accesses this node via IVGlobal.program.TopGUI.
+	# The actual node name doesn't matter.
+	if !top_gui:
+		top_gui = files.make_object_or_scene(IVTopGUI)
 
 
 func instantiate_and_index_program_objects() -> void:
 	_program.Global = IVGlobal
 	_program.Universe = universe
+	_program.TopGUI = top_gui
 	for dict in [initializers, prog_builders, prog_refs, prog_nodes, gui_nodes]:
 		for key in dict:
 			var object_key: String = key.rstrip("_").lstrip("_")
@@ -314,6 +342,8 @@ func init_program_objects() -> void:
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
+	if top_gui.has_method("_project_init"):
+		top_gui._project_init()
 	IVGlobal.verbose_signal("project_inited")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
@@ -323,9 +353,15 @@ func add_program_nodes() -> void:
 	for key in prog_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
+	if add_top_gui_to_universe:
+		universe.add_child(top_gui)
 	for key in gui_nodes:
 		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(_program[object_key])
+		top_gui.add_child(_program[object_key])
+	for i in move_top_gui_children_to_index.size():
+		var node_name: String = move_top_gui_children_to_index[i]
+		top_gui.move_child(_program[node_name], i)
+
 	IVGlobal.verbose_signal("project_nodes_added")
 	yield(get_tree(), "idle_frame")
 	emit_signal("init_step_finished")
