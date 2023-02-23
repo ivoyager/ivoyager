@@ -35,10 +35,9 @@ const NULL_COLOR := Color.black
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 var has_headers := true
-var column0_en_width := 0 # 'EN QUAD' padding; applied only if above is true
-
 var column_master: Control # if set, column widths follow master children
-var columns_en_width := 0 # applied only if above is null
+var column0_en_width := 0 # 'EN QUAD' size if column_master == null
+var columns_en_width := 0 # as above for data columns
 
 var rows := [
 	["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 replaced by all flags from following rows
@@ -75,12 +74,7 @@ func _ready() -> void:
 	
 	# headers
 	if has_headers:
-		var spacer := Label.new()
-		var spacer_text := ""
-		for i in column0_en_width:
-			spacer_text += "\u2000" # EN QUAD
-		spacer.text = spacer_text
-		add_child(spacer)
+		add_child(Control.new())
 		for i in 2:
 			var header := Label.new()
 			header.align = Label.ALIGN_CENTER
@@ -293,7 +287,9 @@ func _resize_columns_to_master(delay_frames := 0) -> void:
 	for i in columns:
 		if i == n_master_children:
 			break
-		get_child(i).rect_min_size.x = column_master.get_child(i).rect_size.x
+		var master_column_width: float = column_master.get_child(i).rect_size.x
+		get_child(i).rect_min_size.x = master_column_width
+		get_child(i).rect_size.x = master_column_width
 
 
 func _resize_columns_to_en_width(delay_frames := 0) -> void:
@@ -302,9 +298,13 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 		yield(get_tree(), "idle_frame")
 	var font := get_font("normal", "Label")
 	var en_width := font.get_char_size(ord("\u2000")).x
+	var min_width_col0 := en_width * column0_en_width
+	get_child(0).rect_min_size.x = min_width_col0
+	get_child(0).rect_size.x = min_width_col0
 	var min_width := en_width * columns_en_width
 	for i in range(1, columns):
 		get_child(i).rect_min_size.x = min_width
+		get_child(i).rect_size.x = min_width
 
 
 func _settings_listener(setting: String, _value) -> void:
