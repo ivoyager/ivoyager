@@ -19,7 +19,7 @@
 # *****************************************************************************
 class_name IVCachedItemsPopup
 extends PopupPanel
-const SCENE := "res://ivoyager/gui_admin/cached_items_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/cached_items_popup.tscn"
 
 # Abstract base class for user interface with cached items. I, Voyager
 # subclasses: IVOptionsPopup, IVHotkeysPopup.

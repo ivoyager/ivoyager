@@ -19,6 +19,7 @@
 # *****************************************************************************
 class_name IVHotkeyDialog
 extends ConfirmationDialog
+const SCENE := "res://ivoyager/gui_popups/hotkey_dialog.tscn"
 
 # Used by IVHotkeysPopup.
 

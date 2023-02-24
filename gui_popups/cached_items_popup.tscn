@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://ivoyager/gui_admin/cached_items_popup.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_popups/cached_items_popup.gd" type="Script" id=1]
+
 
 [node name="CachedItemsPopup" type="PopupPanel"]
 pause_mode = 2

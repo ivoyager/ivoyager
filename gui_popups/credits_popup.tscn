@@ -1,7 +1,8 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://ivoyager/gui_admin/credits_popup.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_popups/credits_popup.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/md_file_label.tscn" type="PackedScene" id=2]
+
 
 [node name="CreditsPopup" type="PopupPanel"]
 pause_mode = 2

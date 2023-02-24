@@ -27,8 +27,7 @@ const DPRINT := true
 
 var key_box_min_size_x := 300
 
-var _hotkey_dialog: ConfirmationDialog = \
-		preload("res://ivoyager/gui_admin/hotkey_dialog.tscn").instance()
+var _hotkey_dialog: IVHotkeyDialog
 
 onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 onready var _actions: Dictionary = _input_map_manager.current
@@ -129,6 +128,8 @@ func _on_init():
 
 func _project_init() -> void:
 	._project_init()
+	_hotkey_dialog = IVGlobal.program.HotkeyDialog
+	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 	IVGlobal.connect("hotkeys_requested", self, "open")
 	if IVGlobal.disable_pause:
 		remove_item("toggle_pause")
@@ -164,9 +165,6 @@ func _on_ready():
 	note_label.anchor_right = 1
 	note_label.text = "TXT_GUI_HOTKEY_NOTE"
 	$VBox.add_child_below_node($VBox/TopHBox, note_label)
-	# hotkey dialog
-	add_child(_hotkey_dialog)
-	_hotkey_dialog.connect("hotkey_confirmed", self, "_on_hotkey_confirmed")
 
 
 func _input(event: InputEvent) -> void:

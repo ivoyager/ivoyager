@@ -19,7 +19,7 @@
 # *****************************************************************************
 class_name IVMainProgBar
 extends ProgressBar
-const SCENE := "res://ivoyager/gui_admin/main_prog_bar.tscn"
+const SCENE := "res://ivoyager/gui_widgets/main_prog_bar.tscn"
 
 # Target object must have property "progress" w/ integer value 0 - 100. This
 # node updates when the main thread is idle, so the target object needs to be

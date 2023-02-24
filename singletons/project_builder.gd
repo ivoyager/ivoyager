@@ -174,18 +174,19 @@ var gui_nodes := {
 	# in the desired index positions.
 	_WorldController_ = IVWorldController, # Control ok
 	_FragmentLabel_ = IVFragmentLabel, # remove w/ IVFragmentIdentifier
-	_SplashScreen_ = null, # assign here if convenient (below MainMenu, etc.)
+	_SplashScreen_ = null, # assign here if convenient (below MainMenuPopup, etc.)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
 	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
 	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
+	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
 	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
-var move_top_gui_children_to_index := [] # nulls ok; add Control names at index
+var move_top_gui_children_to_index := [] # nulls ok; add Control names at insert index
 
 var procedural_classes := {
 	# Nodes and references NOT instantiated by IVProjectBuilder. These class

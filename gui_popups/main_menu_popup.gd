@@ -19,7 +19,7 @@
 # *****************************************************************************
 class_name IVMainMenuPopup
 extends Popup
-const SCENE := "res://ivoyager/gui_admin/main_menu_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/main_menu_popup.tscn"
 
 # Unlike all other popups, this one is always listening for "ui_cancel". Other
 # popups listen only when open and process before IVMainMenuPopup (due to order

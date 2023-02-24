@@ -1,4 +1,4 @@
-# load_dialog.gd
+# save_dialog.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVLoadDialog
+class_name IVSaveDialog
 extends FileDialog
-const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
+const SCENE := "res://ivoyager/gui_popups/save_dialog.tscn"
 
 # Key actions for save/load are handled in save_manager.gd. This Control handles
 # dialog request and only processes _input() when open.
@@ -27,23 +27,22 @@ const SCENE := "res://ivoyager/gui_admin/load_dialog.tscn"
 const files := preload("res://ivoyager/static/files.gd")
 
 # project var
-var add_quick_load_button := true
+var add_quick_save_button := true
 
-var _state: Dictionary = IVGlobal.state
+var _settings: Dictionary = IVGlobal.settings
 var _blocking_popups: Array = IVGlobal.blocking_popups
-var _main_menu_manager: IVMainMenuManager
+
+onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
-func _project_init():
+func _project_init() -> void:
 	if !IVGlobal.enable_save_load:
 		return
-	_main_menu_manager = IVGlobal.program.MainMenuManager
 	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("load_dialog_requested", self, "_open")
-	IVGlobal.connect("game_save_finished", self, "_update_quick_load_button")
+	IVGlobal.connect("save_dialog_requested", self, "_open")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	connect("file_selected", self, "_load_file")
+	connect("file_selected", self, "_save_file")
 	connect("popup_hide", self, "_on_hide")
 
 
@@ -51,10 +50,6 @@ func _ready():
 	theme = IVGlobal.themes.main
 	set_process_input(false)
 	_blocking_popups.append(self)
-
-
-func _on_system_tree_ready(_is_new_game: bool) -> void:
-	_update_quick_load_button()
 
 
 func _input(event: InputEvent) -> void:
@@ -73,24 +68,26 @@ func _open() -> void:
 	IVGlobal.emit_signal("sim_stop_required", self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, IVGlobal.settings.save_dir)
-	current_dir = save_dir
-	if _state.last_save_path:
-		current_path = _state.last_save_path
-		deselect_items()
+	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
+	var date_string: String = _timekeeper.get_current_date_for_file() \
+			if _settings.append_date_to_save else ""
+	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
+	deselect_items()
 
 
-func _load_file(path: String) -> void:
+func _save_file(path: String) -> void:
+	var cache_settings := false
+	var save_base_name := files.get_base_file_name(current_file)
+	if save_base_name != _settings.save_base_name:
+		_settings_manager.change_current("save_base_name", save_base_name, true)
+		cache_settings = true
+	if current_dir != _settings.save_dir:
+		_settings_manager.change_current("save_dir", current_dir, true)
+		cache_settings = true
+	if cache_settings:
+		_settings_manager.cache_now()
 	IVGlobal.emit_signal("close_main_menu_requested")
-	IVGlobal.emit_signal("load_requested", path, false)
-
-
-func _update_quick_load_button() -> void:
-	if add_quick_load_button and _main_menu_manager:
-		var button_state := _main_menu_manager.DISABLED
-		if _state.last_save_path:
-			button_state = _main_menu_manager.ACTIVE
-		_main_menu_manager.change_button_state("BUTTON_QUICK_LOAD", button_state)
+	IVGlobal.emit_signal("save_requested", path, false)
 
 
 func _on_hide() -> void:

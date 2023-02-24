@@ -19,7 +19,7 @@
 # *****************************************************************************
 class_name IVRichTextPopup
 extends PopupPanel
-const SCENE := "res://ivoyager/gui_admin/rich_text_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/rich_text_popup.tscn"
 
 # Generic PopupPanel with RichTextLabel using BBCode.
 # BBCode is really limited, but I think improvements are coming in Godot 3.2.

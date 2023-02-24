@@ -19,7 +19,7 @@
 # *****************************************************************************
 class_name IVCreditsPopup
 extends PopupPanel
-const SCENE := "res://ivoyager/gui_admin/credits_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/credits_popup.tscn"
 
 # WIP - I'm not super happy with the credits appearance right now. Needs work!
 # This was narrowly coded to parse ivoyager/CREDITS.md or file with identical
