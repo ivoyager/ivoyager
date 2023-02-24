@@ -31,6 +31,9 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 var _column_master: GridContainer
 
+onready var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+onready var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+
 
 func _enter_tree() -> void:
 	connect("child_entered_tree", self, "_on_child_entered_tree")
@@ -98,5 +101,16 @@ func _on_child_entered_tree(control: Control) -> void:
 				["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
 			]
 
+
+func _hide_all() -> void:
+	pass
+
+
+func _show_default() -> void:
+	pass
+
+
+func _save_as_default() -> void:
+	pass
 
 

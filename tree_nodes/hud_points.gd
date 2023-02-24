@@ -42,6 +42,7 @@ const PI_DIV_3 := PI / 3.0 # 60 degrees
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 var _group: IVSmallBodiesGroup
 var _color: Color
 var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
@@ -50,8 +51,6 @@ var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
 var _lp_integer := -1
 var _secondary_orbit: IVOrbit
 
-
-onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
 func _init(group: IVSmallBodiesGroup) -> void:
@@ -78,7 +77,7 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
-	_huds_visibility.connect("sbg_points_visibility_changed", self, "_on_visibility_changed")
+	_sbg_huds_visibility.connect("points_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	draw_points()
@@ -141,7 +140,7 @@ func _set_color(points_colors: Dictionary) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_sbg_points_visible(_group.group_name)
+	visible = _sbg_huds_visibility.is_points_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:

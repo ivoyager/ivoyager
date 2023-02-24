@@ -75,24 +75,25 @@ func set_camera_state(camera: IVCamera, is_instant_move := true) -> void:
 
 func remember_huds_visibility() -> void:
 	has_huds_state = true
-	var huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
-	orbit_visible_flags = huds_visibility.orbit_visible_flags
-	name_visible_flags = huds_visibility.name_visible_flags
-	symbol_visible_flags = huds_visibility.symbol_visible_flags
-	sbg_points_visibility = huds_visibility.sbg_points_visibility.duplicate()
-	sbg_orbits_visibility = huds_visibility.sbg_orbits_visibility.duplicate()
+	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
+	name_visible_flags = body_huds_visibility.name_visible_flags
+	symbol_visible_flags = body_huds_visibility.symbol_visible_flags
+	sbg_points_visibility = sbg_huds_visibility.points_visibility.duplicate()
+	sbg_orbits_visibility = sbg_huds_visibility.orbits_visibility.duplicate()
 
 
 func set_huds_visibility() -> void:
 	if !has_huds_state:
 		return
-	var program: Dictionary = IVGlobal.program
-	var huds_visibility: IVHUDsVisibility = program.HUDsVisibility
-	huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
-	huds_visibility.set_name_visible_flags(name_visible_flags)
-	huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
+	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+	body_huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
+	body_huds_visibility.set_name_visible_flags(name_visible_flags)
+	body_huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
 	for group in sbg_points_visibility:
-		huds_visibility.change_sbg_points_visibility(group, sbg_points_visibility[group])
+		sbg_huds_visibility.change_points_visibility(group, sbg_points_visibility[group])
 	for group in sbg_orbits_visibility:
-		huds_visibility.change_sbg_orbits_visibility(group, sbg_orbits_visibility[group])
+		sbg_huds_visibility.change_orbits_visibility(group, sbg_orbits_visibility[group])
 

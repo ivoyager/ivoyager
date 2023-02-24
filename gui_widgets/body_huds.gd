@@ -29,7 +29,7 @@ extends GridContainer
 # margins.
 #
 # IMPORTANT! For correct visibility control, BodyFlags used in rows must be a
-# subset of IVHUDsVisibility.visibility_body_flags.
+# subset of IVBodyHUDsVisibility.visibility_flags.
 
 const NULL_COLOR := Color.black
 const BodyFlags: Dictionary = IVEnums.BodyFlags
@@ -60,7 +60,7 @@ var _orbits_color_pkrs := []
 var _suppress_update := false
 var _is_color_change := false
 
-onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+onready var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _settings: Dictionary = IVGlobal.settings
 onready var _body_orbit_colors: Dictionary = _settings.body_orbit_colors
@@ -70,7 +70,7 @@ onready var _n_rows := rows.size()
 func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	IVGlobal.connect("update_gui_requested", self, "_update_orbit_color_buttons")
-	_huds_visibility.connect("body_huds_visibility_changed", self, "_update_ckbxs")
+	_body_huds_visibility.connect("visibility_changed", self, "_update_ckbxs")
 	
 	# headers
 	if has_headers:
@@ -173,24 +173,24 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 
 
 func _show_hide_names(ckbx: CheckBox, flags: int) -> void:
-	_huds_visibility.set_name_visibility(flags, ckbx.pressed)
+	_body_huds_visibility.set_name_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_symbols(ckbx: CheckBox, flags: int) -> void:
-	_huds_visibility.set_symbol_visibility(flags, ckbx.pressed)
+	_body_huds_visibility.set_symbol_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
-	_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
+	_body_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
 
 
 func _update_ckbxs() -> void:
 	for i in _n_rows:
 		var flags: int = rows[i][1]
-		_names_ckbxs[i].pressed = _huds_visibility.is_name_visible(flags, true)
-		_symbols_ckbxs[i].pressed = _huds_visibility.is_symbol_visible(flags, true)
+		_names_ckbxs[i].pressed = _body_huds_visibility.is_name_visible(flags, true)
+		_symbols_ckbxs[i].pressed = _body_huds_visibility.is_symbol_visible(flags, true)
 		if _orbits_ckbxs[i]:
-			_orbits_ckbxs[i].pressed = _huds_visibility.is_orbit_visible(flags, true)
+			_orbits_ckbxs[i].pressed = _body_huds_visibility.is_orbit_visible(flags, true)
 
 
 func _change_orbit_color(color: Color, flags: int) -> void:

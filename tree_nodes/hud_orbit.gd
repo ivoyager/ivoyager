@@ -25,21 +25,9 @@ extends MeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
-const BodyFlags := IVEnums.BodyFlags
-#const visibility_body_flags := (
-#		# Must be an exclusive set!
-#		BodyFlags.IS_STAR
-#		| BodyFlags.IS_TRUE_PLANET
-#		| BodyFlags.IS_DWARF_PLANET
-#		| BodyFlags.IS_PLANETARY_MASS_MOON
-#		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-#		| BodyFlags.IS_ASTEROID
-#		| BodyFlags.IS_COMET
-#		| BodyFlags.IS_SPACECRAFT
-#)
 
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
-var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 var _times: Array = IVGlobal.times
 var _world_targeting: Array = IVGlobal.world_targeting
 # instance info
@@ -60,30 +48,14 @@ func _init(body: IVBody) -> void:
 	_body = body
 	_orbit = body.orbit
 	_body_flags = body.flags
-	_visibility_flag = _body_flags & _huds_visibility.visibility_body_flags
+	_visibility_flag = _body_flags & _body_huds_visibility.visibility_flags
 	assert(_visibility_flag and !(_visibility_flag & (_visibility_flag - 1)),
 			"_visibility_flag failed single bit test")
-			
-#	var BodyFlags := IVEnums.BodyFlags
-#	if _body_flags & BodyFlags.IS_MOON and _body_flags & BodyFlags.IS_PLANETARY_MASS_OBJECT:
-#		_color_setting = "moon_orbit_color"
-#	elif _body_flags & BodyFlags.IS_MOON:
-#		_color_setting = "minor_moon_orbit_color"
-#	elif _body_flags & BodyFlags.IS_TRUE_PLANET:
-#		_color_setting = "planet_orbit_color"
-#	elif _body_flags & BodyFlags.IS_DWARF_PLANET:
-#		_color_setting = "dwarf_planet_orbit_color"
-#	elif _body_flags & BodyFlags.IS_ASTEROID:
-#		_color_setting = "asteroid_orbit_color"
-#	elif _body_flags & BodyFlags.IS_SPACECRAFT:
-#		_color_setting = "spacecraft_orbit_color"
-#	else:
-#		_color_setting = "default_orbit_color"
 
 
 func _ready() -> void:
 	_orbit.connect("changed", self, "_set_transform_from_orbit")
-	_huds_visibility.connect("body_huds_visibility_changed", self, "_on_global_huds_changed")
+	_body_huds_visibility.connect("visibility_changed", self, "_on_global_huds_changed")
 	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
 	_body.connect("visibility_changed", self, "_on_body_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -136,7 +108,7 @@ func _set_transform_from_orbit(_is_scheduled := false) -> void:
 
 
 func _on_global_huds_changed() -> void:
-	_is_orbit_group_visible = _huds_visibility.is_orbit_visible(_body_flags)
+	_is_orbit_group_visible = _body_huds_visibility.is_orbit_visible(_body_flags)
 	_set_visual_state()
 
 

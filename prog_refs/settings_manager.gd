@@ -71,7 +71,7 @@ func _on_init():
 		
 		body_orbit_default_color = Color(0.4, 0.4, 0.8),
 		body_orbit_colors = {
-			# Keys must match single bits in IVHUDsVisibility.visibility_body_flags
+			# Keys must match single bits in IVBodyHUDsVisibility.visibility_flags
 			BodyFlags.IS_STAR : Color(0.4, 0.4, 0.8), # maybe future use
 			BodyFlags.IS_TRUE_PLANET :  Color(0.5, 0.5, 0.1),
 			BodyFlags.IS_DWARF_PLANET : Color(0.1, 0.8, 0.2),
