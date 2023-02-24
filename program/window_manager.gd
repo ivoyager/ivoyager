@@ -44,7 +44,7 @@ func _ready() -> void:
 		_tree.connect("screen_resized", self, "_extended_test_for_screen_resize")
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("toggle_fullscreen"):
 		_change_fullscreen()
 		_tree.set_input_as_handled()

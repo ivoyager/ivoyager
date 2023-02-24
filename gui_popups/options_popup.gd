@@ -99,7 +99,7 @@ func _on_ready() -> void:
 	_header_right.add_child(hotkeys_button)
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("toggle_options"):
 		get_tree().set_input_as_handled()
 		if visible:

@@ -43,14 +43,13 @@ func _ready():
 	connect("confirmed", self, "_on_confirmed")
 	connect("popup_hide", self, "_on_popup_hide")
 	_delete.connect("pressed", self, "_on_delete")
-	set_process_input(false)
+	set_process_unhandled_key_input(false)
 	_ok_button.disabled = true
 
 
-func _input(event: InputEvent) -> void:
-	# only processes when not hidden
-	_tree.set_input_as_handled() # eat all input
-	if not event is InputEventKey:
+func _unhandled_key_input(event: InputEventKey) -> void:
+	_tree.set_input_as_handled() # eat all keys
+	if !event.is_pressed():
 		return
 	if event.is_action_pressed("ui_cancel"):
 		hide()
@@ -59,8 +58,6 @@ func _input(event: InputEvent) -> void:
 		if !_ok_button.disabled:
 			hide()
 			_on_confirmed()
-		return
-	if !event.is_pressed():
 		return
 	var scancode_w_mods: int = event.get_scancode_with_modifiers()
 	if !_scancode_is_valid(scancode_w_mods):
@@ -103,7 +100,7 @@ func open(action: String, index: int, action_label_str: String, key_as_text: Str
 	_ok_button.disabled = true
 	_key_label.text = key_as_text
 	_key_label.set("custom_colors/font_color", _ok_color)
-	set_process_input(true)
+	set_process_unhandled_key_input(true)
 	popup_centered()
 
 
@@ -115,7 +112,6 @@ func _on_delete():
 
 
 func _on_confirmed() -> void:
-#	print("confirmed")
 	if !_input_event_key: # delete existing hotkey
 		emit_signal("hotkey_confirmed", _action, _index, -1, false, false, false, false)
 		return
@@ -129,7 +125,7 @@ func _on_confirmed() -> void:
 
 
 func _on_popup_hide() -> void:
-	set_process_input(false)
+	set_process_unhandled_key_input(false)
 
 
 func _scancode_is_valid(scancode: int) -> bool:

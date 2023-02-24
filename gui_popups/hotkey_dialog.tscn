@@ -3,10 +3,10 @@
 [ext_resource path="res://ivoyager/gui_popups/hotkey_dialog.gd" type="Script" id=1]
 
 [node name="HotkeyDialog" type="ConfirmationDialog"]
+pause_mode = 2
 margin_right = 400.0
 margin_bottom = 140.0
 rect_min_size = Vector2( 300, 105 )
-mouse_filter = 1
 popup_exclusive = true
 window_title = ""
 dialog_text = "Press a key to change..."

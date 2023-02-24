@@ -29,16 +29,19 @@ extends Node
 #   is_system_built: bool - this node & IVSaveManager
 #   is_system_ready: bool
 #	is_started_or_about_to_start: bool
-#   is_running: bool - _run/_stop_simulator(); is_running == !SceneTree.paused
+#   is_running: bool - _run/_stop_simulator(); not the same as pause!
 #   is_quitting: bool
 #   is_game_loading: bool - this node & IVSaveManager (true while loading)
 #   is_loaded_game: bool - this node & IVSaveManager (stays true after load)
 #   last_save_path: String - this node & IVSaveManager
 #   network_state: IVEnums.NetworkState - if exists, NetworkLobby also writes
 #
-# Note: SceneTree.paused is set only when simulatator "stopped". Simulator
-# "paused" is managed by IVTimekeeper and works more like a game speed (process
-# still happens so the camera can move, etc.).
+# Note: Universe has pause_mode = PAUSE_MODE_PROCESS so the camera can still
+# move and visuals still work. Although redundant, we try to include this
+# set in other nodes that might need it in case someone changes Universe.
+# Possibly the only node that pauses is IVTimekeeper.
+# TODO: Since pause is almost irrelevant to state, we should remove it from
+# here and maintain only in IVTimekeeper.
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
@@ -166,7 +169,7 @@ func _process(_delta: float) -> void:
 		IVGlobal.verbose_signal("paused_changed")
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("toggle_pause"):
 		change_pause()
 	elif event.is_action_pressed("quit"):

@@ -47,6 +47,10 @@ func _init() -> void:
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 
 
+func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
+
+
 func _on_project_builder_finished() -> void:
 	theme = IVGlobal.themes.main
 

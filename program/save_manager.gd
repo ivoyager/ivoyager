@@ -73,7 +73,7 @@ func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("quick_save"):

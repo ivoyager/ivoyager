@@ -41,6 +41,10 @@ extends Spatial
 # game save persistence in extension projects. It can hold Godot built-ins,
 # nested containers or other 'persist objects'. For details on save/load
 # persistence, see ivoyager/prog_builders/save_builder.gd.
+#
+# Note: pause_mode = PAUSE_MODE_PROCESS so that IVCamera can still move and
+# visuals can still work. Pausing causes IVTimekeeper to stop time.
+
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
 const PERSIST_PROPERTIES := ["persist"]

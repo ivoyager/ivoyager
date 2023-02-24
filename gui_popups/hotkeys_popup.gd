@@ -167,7 +167,7 @@ func _on_ready():
 	$VBox.add_child_below_node($VBox/TopHBox, note_label)
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("toggle_hotkeys"):
 		get_tree().set_input_as_handled()
 		if visible:

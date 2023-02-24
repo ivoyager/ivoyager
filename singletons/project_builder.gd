@@ -182,7 +182,7 @@ var gui_nodes := {
 	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
 	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
-	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
+#	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
@@ -368,13 +368,13 @@ func init_program_objects() -> void:
 
 
 func add_program_nodes() -> void:
-	if add_top_gui_to_universe:
-		universe.add_child(top_gui)
 	for key in prog_nodes:
 		if !prog_nodes[key]:
 			continue
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
+	if add_top_gui_to_universe:
+		universe.add_child(top_gui)
 	for key in gui_nodes:
 		if !gui_nodes[key]:
 			continue

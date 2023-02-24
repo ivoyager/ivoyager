@@ -38,7 +38,6 @@ func _project_init() -> void:
 
 func _ready() -> void:
 	theme = IVGlobal.themes.main
-	set_process_input(false)
 	IVGlobal.connect("credits_requested", self, "open")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	connect("popup_hide", self, "_on_hide")
@@ -47,8 +46,8 @@ func _ready() -> void:
 	_blocking_popups.append(self)
 
 
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+func _unhandled_key_input(event: InputEventKey) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		hide()
 
@@ -56,14 +55,12 @@ func _input(event: InputEvent) -> void:
 func open() -> void:
 	if _is_blocking_popup():
 		return
-	set_process_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	popup_centered_minsize()
 
 
 func _on_hide() -> void:
-	set_process_input(false)
 	if stop_sim:
 		_state_manager.allow_run(self)
 

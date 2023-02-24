@@ -61,7 +61,6 @@ func _on_ready() -> void:
 	connect("popup_hide", self, "_on_popup_hide")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	theme = IVGlobal.themes.main
-#	set_process_unhandled_key_input(false)
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
 	_header_right = $VBox/TopHBox/HeaderRight
@@ -75,7 +74,7 @@ func _on_ready() -> void:
 	_blocking_popups.append(self)
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_key_input(event: InputEventKey) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
 		_on_cancel()
@@ -158,7 +157,6 @@ func remove_item(item: String) -> void:
 func _open() -> void:
 	if _is_blocking_popup():
 		return
-#	set_process_unhandled_key_input(true)
 	if stop_sim:
 		_state_manager.require_stop(self)
 	_build_content()
@@ -221,7 +219,6 @@ func _on_cancel() -> void:
 
 
 func _on_popup_hide() -> void:
-#	set_process_unhandled_key_input(false)
 	for child in _content_container.get_children():
 		child.free()
 	if stop_sim:

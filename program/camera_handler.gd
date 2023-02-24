@@ -95,10 +95,6 @@ func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.TopGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
-	
-	
-	
-	
 
 
 func _process(delta: float) -> void:

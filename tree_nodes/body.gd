@@ -201,6 +201,8 @@ func _on_process(_delta: float) -> void: # subclass can override
 	
 	# get camera distance and check mouse proximity
 	var camera: Camera = _world_targeting[2]
+	if !camera:
+		return
 	var camera_dist := global_translation.distance_to(camera.global_translation)
 	var is_in_mouse_click_radius := false
 	if !camera.is_position_behind(global_translation):

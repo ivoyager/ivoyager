@@ -49,8 +49,8 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
-	get_tree().set_input_as_handled() # eat all keys
 	if event.is_action_pressed("ui_cancel"):
+		get_tree().set_input_as_handled() # eat all keys
 		hide()
 
 

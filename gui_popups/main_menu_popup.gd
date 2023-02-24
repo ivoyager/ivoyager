@@ -54,7 +54,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		return
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled()
-		if is_visible_in_tree():
+		if visible:
 			hide()
 		else:
 			_open()
