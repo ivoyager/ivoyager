@@ -163,6 +163,7 @@ var prog_nodes := {
 	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_WindowManager_ = IVWindowManager,
 	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to replace or remove
+	_ViewManager_ = IVViewManager,
 }
 
 var gui_nodes := {

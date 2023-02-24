@@ -124,8 +124,11 @@ var date: Array = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
 var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _disable_pause: bool = IVGlobal.disable_pause
 var _state: Dictionary = IVGlobal.state
+var _allow_time_setting := IVGlobal.allow_time_setting
+var _allow_real_world_time := IVGlobal.allow_real_world_time
+var _allow_time_reversal := IVGlobal.allow_time_reversal
+var _disable_pause: bool = IVGlobal.disable_pause
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
@@ -133,8 +136,7 @@ var _adj_sync_tolerance := 0.0
 var _prev_whole_solar_day := NAN
 
 onready var _tree := get_tree()
-onready var _allow_real_world_time: bool = IVGlobal.allow_real_world_time
-onready var _allow_time_reversal: bool = IVGlobal.allow_time_reversal
+
 
 
 # *****************************************************************************
@@ -389,9 +391,9 @@ func get_current_date_for_file() -> String:
 
 
 func set_real_world() -> void:
-	if _network_state == IS_CLIENT:
+	if !_allow_time_setting or !_allow_real_world_time:
 		return
-	if !_allow_real_world_time:
+	if _network_state == IS_CLIENT:
 		return
 	if !is_real_world_time:
 		set_time_reversed(false)
@@ -404,6 +406,8 @@ func set_real_world() -> void:
 
 
 func set_time(new_time: float) -> void:
+	if !_allow_time_setting:
+		return
 	if _network_state == IS_CLIENT:
 		return
 	var previous_time := time
@@ -414,9 +418,9 @@ func set_time(new_time: float) -> void:
 
 
 func set_time_reversed(new_is_reversed: bool) -> void:
-	if _network_state == IS_CLIENT:
+	if !_allow_time_setting or  !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
-	if !_allow_time_reversal or is_reversed == new_is_reversed:
+	if _network_state == IS_CLIENT:
 		return
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
@@ -443,10 +447,14 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 
 
 func can_incr_speed() -> bool:
+	if _network_state == IS_CLIENT:
+		return false
 	return speed_index < speeds.size() - 1
 
 
 func can_decr_speed() -> bool:
+	if _network_state == IS_CLIENT:
+		return false
 	return speed_index > 0
 
 

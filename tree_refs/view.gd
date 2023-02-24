@@ -23,6 +23,7 @@ extends Reference
 # Can optionally keep camera state, HUDs visibility and/or time. The object is
 # structured for persistence via game save or cache.
 
+
 const CACHE_VERSION := 101 # increment after any property change
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
@@ -65,6 +66,17 @@ var speed_index := 0
 var is_reversed := false
 
 
+
+func reset() -> void:
+	has_camera_state = false
+	has_huds_state = false
+	has_time_state = false
+	# below not needed except to reduce storage size
+	selection_name = ""
+	visible_points_groups.clear()
+	visible_orbits_groups.clear()
+
+
 func get_cache_data() -> Array:
 	var data := []
 	for property in PERSIST_PROPERTIES:
@@ -89,19 +101,49 @@ func set_cache_data(data) -> bool:
 	return true
 
 
+func set_camera_data(has_camera_state_: bool, selection_name_: String, camera_flags_: int,
+		view_position_: Vector3, view_rotations_: Vector3) -> void:
+	has_camera_state = has_camera_state_
+	selection_name = selection_name_
+	camera_flags = camera_flags_
+	view_position = view_position_
+	view_rotations = view_rotations_
+
+
+func set_hud_data(has_huds_state_: bool, orbit_visible_flags_: int, name_visible_flags_: int,
+		symbol_visible_flags_: int, visible_points_groups_: Array, visible_orbits_groups_: Array
+		) -> void:
+	has_huds_state = has_huds_state_
+	orbit_visible_flags = orbit_visible_flags_
+	name_visible_flags = name_visible_flags_
+	symbol_visible_flags = symbol_visible_flags_
+	visible_points_groups = visible_points_groups_
+	visible_orbits_groups = visible_orbits_groups_
+
+
+func set_time_data(has_time_state_: bool, time_: float, speed_index_: int, is_reversed_: int
+		) -> void:
+	has_time_state = has_time_state_
+	time = time_
+	speed_index = speed_index_
+	is_reversed = is_reversed_
+
+
 # camera state
 
-func remember_camera_state(camera: IVCamera) -> void:
+func save_camera_state() -> void:
 	has_camera_state = true
+	var camera: IVCamera = IVGlobal.get_viewport().get_camera()
 	selection_name = camera.selection.name
 	camera_flags = camera.flags
 	view_position = camera.view_position
 	view_rotations = camera.view_rotations
 
 
-func set_camera_state(camera: IVCamera, is_instant_move := true) -> void:
+func set_camera_state(is_instant_move := false) -> void:
 	if !has_camera_state:
 		return
+	var camera: IVCamera = IVGlobal.get_viewport().get_camera()
 	var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
 	var selection: IVSelection = _SelectionManager_.get_or_make_selection(selection_name)
 	assert(selection)
@@ -110,7 +152,8 @@ func set_camera_state(camera: IVCamera, is_instant_move := true) -> void:
 
 # HUDs state
 
-func remember_huds_visibility() -> void:
+func save_huds_state() -> void:
+	print("save_huds_state")
 	has_huds_state = true
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
@@ -121,7 +164,8 @@ func remember_huds_visibility() -> void:
 	visible_orbits_groups = sbg_huds_visibility.get_visible_orbits_groups()
 
 
-func set_huds_visibility() -> void:
+func set_huds_state() -> void:
+	print("set_huds_state")
 	if !has_huds_state:
 		return
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
@@ -135,7 +179,7 @@ func set_huds_visibility() -> void:
 
 # time state
 
-func remember_time_state() -> void:
+func save_time_state() -> void:
 	has_time_state = true
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	time = timekeeper.time

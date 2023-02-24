@@ -141,6 +141,7 @@ var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
+var allow_time_setting := false
 var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
 var home_view_from_user_time_zone := false # get user latitude
