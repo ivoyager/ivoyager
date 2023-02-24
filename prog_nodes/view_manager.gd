@@ -24,11 +24,11 @@ extends Node
 
 enum {
 	CAMERA_STATE = 1,
-	HUDS_STATE = 1 << 1,
+	HUDS_VISIBILITY_STATE = 1 << 1,
 	TIME_STATE = 1 << 2,
 	# below used in set_view()
 	CAMERA_STATE_IF_SAVED = 1 << 3,
-	HUDS_STATE_IF_SAVED = 1 << 4,
+	HUDS_VISIBILITY_STATE_IF_SAVED = 1 << 4,
 	TIME_STATE_IF_SAVED = 1 << 5,
 	INSTANT_CAMERA_MOVE = 1 << 6,
 }
@@ -70,7 +70,7 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 		view = _View_.new()
 	if flags & CAMERA_STATE:
 		view.save_camera_state()
-	if flags & HUDS_STATE:
+	if flags & HUDS_VISIBILITY_STATE:
 		view.save_huds_state()
 	if flags & TIME_STATE:
 		view.save_time_state()
@@ -92,8 +92,8 @@ func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) 
 		return
 	if flags & CAMERA_STATE or flags & CAMERA_STATE_IF_SAVED:
 		view.set_camera_state(bool(flags & INSTANT_CAMERA_MOVE))
-	if flags & HUDS_STATE or flags & HUDS_STATE_IF_SAVED:
-		view.set_huds_state()
+	if flags & HUDS_VISIBILITY_STATE or flags & HUDS_VISIBILITY_STATE_IF_SAVED:
+		view.set_huds_visibility_state()
 	if flags & TIME_STATE or flags & TIME_STATE_IF_SAVED:
 		view.set_time_state()
 

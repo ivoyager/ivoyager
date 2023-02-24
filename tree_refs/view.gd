@@ -20,8 +20,8 @@
 class_name IVView
 extends Reference
 
-# Can optionally keep camera state, HUDs visibility and/or time. The object is
-# structured for persistence via game save or cache.
+# Can optionally keep camera state, HUDs visibilities & colors, and/or time
+# state. The object is structured for persistence via game save or cache.
 
 
 const CACHE_VERSION := 101 # increment after any property change
@@ -34,12 +34,14 @@ const PERSIST_PROPERTIES := [
 	"camera_flags",
 	"view_position",
 	"view_rotations",
-	"has_huds_state",
+	
+	"has_huds_visibility_state",
 	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
 	"visible_points_groups",
 	"visible_orbits_groups",
+	
 	"has_time_state",
 	"time",
 	"speed_index",
@@ -53,7 +55,7 @@ var camera_flags := 0 # IVEnums.CameraFlags
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
 
-var has_huds_state := false
+var has_huds_visibility_state := false
 var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
@@ -69,7 +71,7 @@ var is_reversed := false
 
 func reset() -> void:
 	has_camera_state = false
-	has_huds_state = false
+	has_huds_visibility_state = false
 	has_time_state = false
 	# below not needed except to reduce storage size
 	selection_name = ""
@@ -110,10 +112,10 @@ func set_camera_data(has_camera_state_: bool, selection_name_: String, camera_fl
 	view_rotations = view_rotations_
 
 
-func set_hud_data(has_huds_state_: bool, orbit_visible_flags_: int, name_visible_flags_: int,
-		symbol_visible_flags_: int, visible_points_groups_: Array, visible_orbits_groups_: Array
-		) -> void:
-	has_huds_state = has_huds_state_
+func set_huds_visibility_data(has_huds_visibility_state_: bool, orbit_visible_flags_: int,
+		name_visible_flags_: int, symbol_visible_flags_: int, visible_points_groups_: Array,
+		visible_orbits_groups_: Array) -> void:
+	has_huds_visibility_state = has_huds_visibility_state_
 	orbit_visible_flags = orbit_visible_flags_
 	name_visible_flags = name_visible_flags_
 	symbol_visible_flags = symbol_visible_flags_
@@ -153,8 +155,7 @@ func set_camera_state(is_instant_move := false) -> void:
 # HUDs state
 
 func save_huds_state() -> void:
-	print("save_huds_state")
-	has_huds_state = true
+	has_huds_visibility_state = true
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
 	name_visible_flags = body_huds_visibility.name_visible_flags
@@ -164,9 +165,8 @@ func save_huds_state() -> void:
 	visible_orbits_groups = sbg_huds_visibility.get_visible_orbits_groups()
 
 
-func set_huds_state() -> void:
-	print("set_huds_state")
-	if !has_huds_state:
+func set_huds_visibility_state() -> void:
+	if !has_huds_visibility_state:
 		return
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 	body_huds_visibility.set_orbit_visible_flags(orbit_visible_flags)

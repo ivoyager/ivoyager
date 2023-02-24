@@ -68,7 +68,7 @@ func _ready() -> void:
 		return
 	var _View_: Script = IVGlobal.script_classes._View_
 	var view: IVView = _View_.new()
-	view.set_hud_data(
+	view.set_huds_visibility_data(
 		true,
 		default_orbit_visible_flags,
 		default_name_visible_flags,
@@ -143,10 +143,10 @@ func _hide_all() -> void:
 
 
 func _show_default() -> void:
-	_view_manager.set_view("default", "all_huds", true, _view_manager.HUDS_STATE)
+	_view_manager.set_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
 
 
 func _save_as_default() -> void:
-	_view_manager.save_view("default", "all_huds", true, _view_manager.HUDS_STATE)
+	_view_manager.save_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
 
 
