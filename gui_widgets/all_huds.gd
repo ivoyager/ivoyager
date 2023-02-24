@@ -103,7 +103,8 @@ func _on_child_entered_tree(control: Control) -> void:
 
 
 func _hide_all() -> void:
-	pass
+	_body_huds_visibility.hide_all()
+	_sbg_huds_visibility.hide_all()
 
 
 func _show_default() -> void:

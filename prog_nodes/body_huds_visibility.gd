@@ -86,7 +86,12 @@ func _unhandled_key_input(event: InputEventKey):
 	_tree.set_input_as_handled()
 
 
-# Body HUDs
+func hide_all() -> void:
+	orbit_visible_flags = 0
+	name_visible_flags = 0
+	symbol_visible_flags = 0
+	emit_signal("visibility_changed")
+
 
 func is_orbit_visible(body_flags: int, match_all := false) -> bool:
 	if match_all:

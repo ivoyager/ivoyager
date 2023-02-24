@@ -20,11 +20,10 @@
 class_name IVView
 extends Reference
 
-# Remembers camera state and/or HUDs visibility for persistence via game save
-# or cache. For example cache usage, see:
-# https://github.com/ivoyager/planetarium/blob/master/planetarium/view_cacher.gd
+# Can optionally keep camera state, HUDs visibility and/or time. The object is
+# structured for persistence via game save or cache.
 
-
+const CACHE_VERSION := 101 # increment after any property change
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
@@ -38,8 +37,12 @@ const PERSIST_PROPERTIES := [
 	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
-	"sbg_points_visibility",
-	"sbg_orbits_visibility",
+	"visible_points_groups",
+	"visible_orbits_groups",
+	"has_time_state",
+	"time",
+	"speed_index",
+	"is_reversed",
 ]
 
 # persisted
@@ -48,13 +51,45 @@ var selection_name := ""
 var camera_flags := 0 # IVEnums.CameraFlags
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
+
 var has_huds_state := false
 var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-var sbg_points_visibility := {}
-var sbg_orbits_visibility := {}
+var visible_points_groups := []
+var visible_orbits_groups := []
 
+var has_time_state := false # used by planetarium
+var time := 0.0
+var speed_index := 0
+var is_reversed := false
+
+
+func get_cache_data() -> Array:
+	var data := []
+	for property in PERSIST_PROPERTIES:
+		data.append(get(property))
+	data.append(CACHE_VERSION)
+	return data
+
+
+func set_cache_data(data) -> bool:
+	# Tests data integrity and returns false on failure.
+	if typeof(data) != TYPE_ARRAY:
+		return false
+	if data.size() != PERSIST_PROPERTIES.size() + 1:
+		return false
+	var version = data[-1] # keep untyped for safety
+	if typeof(version) != TYPE_INT:
+		return false
+	if version != CACHE_VERSION:
+		return false
+	for i in PERSIST_PROPERTIES.size():
+		set(PERSIST_PROPERTIES[i], data[i])
+	return true
+
+
+# camera state
 
 func remember_camera_state(camera: IVCamera) -> void:
 	has_camera_state = true
@@ -73,27 +108,47 @@ func set_camera_state(camera: IVCamera, is_instant_move := true) -> void:
 	camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
 
 
+# HUDs state
+
 func remember_huds_visibility() -> void:
 	has_huds_state = true
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
-	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
 	name_visible_flags = body_huds_visibility.name_visible_flags
 	symbol_visible_flags = body_huds_visibility.symbol_visible_flags
-	sbg_points_visibility = sbg_huds_visibility.points_visibility.duplicate()
-	sbg_orbits_visibility = sbg_huds_visibility.orbits_visibility.duplicate()
+	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+	visible_points_groups = sbg_huds_visibility.get_visible_points_groups()
+	visible_orbits_groups = sbg_huds_visibility.get_visible_orbits_groups()
 
 
 func set_huds_visibility() -> void:
 	if !has_huds_state:
 		return
 	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
-	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 	body_huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
 	body_huds_visibility.set_name_visible_flags(name_visible_flags)
 	body_huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
-	for group in sbg_points_visibility:
-		sbg_huds_visibility.change_points_visibility(group, sbg_points_visibility[group])
-	for group in sbg_orbits_visibility:
-		sbg_huds_visibility.change_orbits_visibility(group, sbg_orbits_visibility[group])
+	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+	sbg_huds_visibility.set_visible_points_groups(visible_points_groups)
+	sbg_huds_visibility.set_visible_orbits_groups(visible_orbits_groups)
+
+
+# time state
+
+func remember_time_state() -> void:
+	has_time_state = true
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+	time = timekeeper.time
+	speed_index = timekeeper.speed_index
+	is_reversed = timekeeper.is_reversed
+
+
+func set_time_state() -> void:
+	if !has_time_state:
+		return
+	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+	timekeeper.set_time(time)
+	timekeeper.change_speed(0, speed_index)
+	timekeeper.set_time_reversed(is_reversed)
+
 

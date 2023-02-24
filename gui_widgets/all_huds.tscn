@@ -51,10 +51,9 @@ margin_bottom = 20.0
 rect_min_size = Vector2( 0, 10 )
 
 [node name="ButtonBox" type="HBoxContainer" parent="."]
-visible = false
-margin_top = 24.0
-margin_right = 332.0
-margin_bottom = 44.0
+margin_top = 20.0
+margin_right = 133.0
+margin_bottom = 40.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
@@ -69,6 +68,7 @@ text = "BUTTON_HIDE_ALL"
 
 [node name="ShowDefaultButton" type="Button" parent="ButtonBox"]
 unique_name_in_owner = true
+visible = false
 margin_left = 137.0
 margin_right = 313.0
 margin_bottom = 20.0
