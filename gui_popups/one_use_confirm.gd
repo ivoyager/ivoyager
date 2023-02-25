@@ -48,6 +48,10 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	popup_centered()
 
 
+func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
+
+
 func _unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().set_input_as_handled() # eat all keys

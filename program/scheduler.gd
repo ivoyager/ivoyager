@@ -37,6 +37,7 @@ onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 # *****************************************************************************
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	_timekeeper.connect("time_altered", self, "_on_time_altered")
 	if IVGlobal.allow_time_reversal:

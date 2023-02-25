@@ -40,6 +40,7 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	theme = IVGlobal.themes.main
 	$VBox/Close.connect("pressed", self, "hide")
 	_blocking_popups.append(self)

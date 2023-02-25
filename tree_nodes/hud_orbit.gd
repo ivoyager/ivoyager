@@ -54,6 +54,7 @@ func _init(body: IVBody) -> void:
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
 	_orbit.connect("changed", self, "_set_transform_from_orbit")
 	_body_huds_visibility.connect("visibility_changed", self, "_on_global_huds_changed")
 	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")

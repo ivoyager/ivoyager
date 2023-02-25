@@ -40,6 +40,7 @@ onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapMan
 
 
 func _ready():
+	pause_mode = PAUSE_MODE_PROCESS
 	connect("confirmed", self, "_on_confirmed")
 	connect("popup_hide", self, "_on_popup_hide")
 	_delete.connect("pressed", self, "_on_delete")

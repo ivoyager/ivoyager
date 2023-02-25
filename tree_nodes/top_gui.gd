@@ -48,7 +48,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	if IVGlobal.pause_only_stops_time:
+		pause_mode = PAUSE_MODE_PROCESS
 
 
 func _on_project_builder_finished() -> void:

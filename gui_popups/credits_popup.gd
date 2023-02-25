@@ -37,6 +37,7 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	theme = IVGlobal.themes.main
 	IVGlobal.connect("credits_requested", self, "open")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")

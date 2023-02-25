@@ -50,6 +50,7 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
 	_sbg_huds_visibility.connect("orbits_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	multimesh = MultiMesh.new()

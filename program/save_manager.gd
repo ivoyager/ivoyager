@@ -67,10 +67,10 @@ onready var _tree := get_tree()
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("save_requested", self, "_on_save_requested")
 	IVGlobal.connect("load_requested", self, "_on_load_requested")
 	IVGlobal.connect("save_quit_requested", self, "save_quit")
-	pause_mode = PAUSE_MODE_PROCESS
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:

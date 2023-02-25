@@ -67,7 +67,7 @@ func remove_reverse_button() -> void:
 		_reverse = null
 
 
-func _update_buttons() -> void:
+func _update_buttons(_dummy := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		if _pause:
 			_pause.disabled = true

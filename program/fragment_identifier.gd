@@ -89,6 +89,7 @@ onready var _picker_texture: ViewportTexture = get_texture()
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	assert(fragment_range % 3 == 0)
 	add_child(_node2d)
 	_node2d.connect("draw", self, "_on_node2d_draw")

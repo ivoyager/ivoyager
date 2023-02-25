@@ -3,5 +3,4 @@
 [ext_resource path="res://ivoyager/tree_nodes/universe.gd" type="Script" id=1]
 
 [node name="Universe" type="Spatial"]
-pause_mode = 2
 script = ExtResource( 1 )

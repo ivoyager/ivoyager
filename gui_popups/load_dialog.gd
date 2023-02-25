@@ -47,6 +47,7 @@ func _project_init():
 
 
 func _ready():
+	pause_mode = PAUSE_MODE_PROCESS
 	theme = IVGlobal.themes.main
 	_blocking_popups.append(self)
 

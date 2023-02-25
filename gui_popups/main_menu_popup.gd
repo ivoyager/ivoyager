@@ -41,6 +41,7 @@ func _project_init():
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	theme = IVGlobal.themes.main_menu
 	if center:
 		$PanelContainer.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)

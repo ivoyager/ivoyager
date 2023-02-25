@@ -36,12 +36,10 @@ extends Node
 #   last_save_path: String - this node & IVSaveManager
 #   network_state: IVEnums.NetworkState - if exists, NetworkLobby also writes
 #
-# Note: Universe has pause_mode = PAUSE_MODE_PROCESS so the camera can still
-# move and visuals still work. Although redundant, we try to include this
-# set in other nodes that might need it in case someone changes Universe.
-# Possibly the only node that pauses is IVTimekeeper.
-# TODO: Since pause is almost irrelevant to state, we should remove it from
-# here and maintain only in IVTimekeeper.
+# if IVGlobal.pause_only_stops_time == true, then PAUSE_MODE_PROCESS is
+# set in Universe and TopGUI so IVCamera can still move, visuals work (some are
+# responsve to camera) and user can interact with the world. In this mode, only
+# IVTimekeeper pauses to stop time.
 #
 # There is no NetworkLobby in base I, Voyager. It's is a very application-
 # specific manager that you'll have to code yourself, but see:
@@ -72,7 +70,13 @@ const NetworkStopSync = IVEnums.NetworkStopSync
 
 const DPRINT := false
 
-# public - read-only!
+const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
+const PERSIST_PROPERTIES := ["user_paused"]
+
+# persisted - read-only!
+var user_paused := false # ignores pause from sim stop
+
+# read-only!
 var allow_threads := false
 var blocking_threads := []
 
@@ -81,8 +85,7 @@ var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
-var _paused := true # hack to generate paused_changed signal
-var _was_paused := false
+var _paused := true # hack to generate 'paused_changed' signal
 
 onready var _tree: SceneTree = get_tree()
 
@@ -118,6 +121,7 @@ func _on_ready() -> void:
 	IVGlobal.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
+	IVGlobal.connect("simulator_exited", self, "_on_simulator_exited")
 	IVGlobal.connect("change_pause_requested", self, "change_pause")
 	IVGlobal.connect("sim_stop_required", self, "require_stop")
 	IVGlobal.connect("sim_run_allowed", self, "allow_run")
@@ -127,46 +131,11 @@ func _on_ready() -> void:
 	require_stop(self, -1, true)
 
 
-func _on_project_builder_finished() -> void:
-	yield(_tree, "idle_frame")
-	_state.is_inited = true
-	_state.is_splash_screen = true
-	IVGlobal.verbose_signal("state_manager_inited")
-
-
-func _on_about_to_build_system_tree() -> void:
-	_state.is_splash_screen = false
-
-
-func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
-	_state.is_system_built = true
-	_state.is_game_loading = false
-
-
-func _on_system_tree_ready(is_new_game: bool) -> void:
-	_state.is_system_ready = true
-	print("System tree ready...")
-	yield(_tree, "idle_frame")
-	_state.is_started_or_about_to_start = true
-	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
-	IVGlobal.verbose_signal("close_all_admin_popups_requested")
-	yield(_tree, "idle_frame")
-	_was_paused = false
-	allow_run(self)
-	yield(_tree, "idle_frame")
-	IVGlobal.verbose_signal("update_gui_requested")
-	yield(_tree, "idle_frame")
-	IVGlobal.verbose_signal("simulator_started")
-	if !is_new_game and _settings.pause_on_load:
-		yield(_tree, "idle_frame")
-		change_pause(false, true)
-
-
 func _process(_delta: float) -> void:
 	# There is no SceneTree paused_changed signal, so we hacked one here.
 	if _paused != _tree.paused:
 		_paused = _tree.paused
-		IVGlobal.verbose_signal("paused_changed")
+		IVGlobal.verbose_signal("paused_changed", _paused)
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
@@ -209,11 +178,13 @@ func signal_threads_finished() -> void:
 
 
 func change_pause(is_toggle := true, is_pause := true) -> void:
+	# Only allowed if running and not otherwise prohibited.
 	if _state.network_state == IS_CLIENT:
 		return
 	if !_state.is_running or IVGlobal.disable_pause:
 		return
-	_tree.paused = !_tree.paused if is_toggle else is_pause
+	user_paused = !_tree.paused if is_toggle else is_pause
+	_tree.paused = user_paused
 
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
@@ -312,6 +283,43 @@ func quit(force_quit := false) -> void:
 # *****************************************************************************
 # private functions
 
+func _on_project_builder_finished() -> void:
+	yield(_tree, "idle_frame")
+	_state.is_inited = true
+	_state.is_splash_screen = true
+	IVGlobal.verbose_signal("state_manager_inited")
+
+
+func _on_about_to_build_system_tree() -> void:
+	_state.is_splash_screen = false
+
+
+func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
+	_state.is_system_built = true
+	_state.is_game_loading = false
+
+
+func _on_system_tree_ready(is_new_game: bool) -> void:
+	_state.is_system_ready = true
+	print("System tree ready...")
+	yield(_tree, "idle_frame")
+	_state.is_started_or_about_to_start = true
+	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
+	IVGlobal.verbose_signal("close_all_admin_popups_requested")
+	yield(_tree, "idle_frame")
+	allow_run(self)
+	yield(_tree, "idle_frame")
+	IVGlobal.verbose_signal("update_gui_requested")
+	yield(_tree, "idle_frame")
+	IVGlobal.verbose_signal("simulator_started")
+	if !is_new_game and _settings.pause_on_load:
+		user_paused = true
+
+
+func _on_simulator_exited() -> void:
+	user_paused = false
+
+
 func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
 	# particular, persist vars during save/load).
@@ -319,7 +327,6 @@ func _stop_simulator() -> void:
 	assert(DPRINT and prints("signal run_threads_must_stop") or true)
 	allow_threads = false
 	emit_signal("run_threads_must_stop")
-	_was_paused = _tree.paused
 	_state.is_running = false
 	_tree.paused = true
 	IVGlobal.verbose_signal("run_state_changed", false)
@@ -328,7 +335,7 @@ func _stop_simulator() -> void:
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
-	_tree.paused = _was_paused
+	_tree.paused = user_paused
 	IVGlobal.verbose_signal("run_state_changed", true)
 	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true

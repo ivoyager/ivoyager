@@ -58,6 +58,7 @@ func _ready():
 
 
 func _on_ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	connect("popup_hide", self, "_on_popup_hide")
 	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
 	theme = IVGlobal.themes.main

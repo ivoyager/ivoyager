@@ -42,10 +42,13 @@ signal mouse_wheel_turned(is_up)
 const NULL_MOUSE_COORD := Vector2(-100.0, -100.0)
 
 var _world_targeting: Array = IVGlobal.world_targeting
+var _pause_only_stops_time = IVGlobal.pause_only_stops_time
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
+var _is_true_pause := true
 
+onready var _tree := get_tree()
 onready var _viewport := get_viewport()
 onready var _is_fragment_identifier := IVGlobal.program.has("FragmentIdentifier")
 
@@ -62,20 +65,15 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS # but some functionaly stops if !pause_only_stops_time
+	mouse_filter = MOUSE_FILTER_STOP
+	IVGlobal.connect("paused_changed", self, "_set_true_pause_state")
+	IVGlobal.connect("simulator_started", self, "_set_true_pause_state")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
-	mouse_filter = MOUSE_FILTER_STOP
 	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
 	_world_targeting[1] = _viewport.size.y
-
-
-func _clear() -> void:
-	_world_targeting[2] = null
-	_world_targeting[4] = null
-	_world_targeting[5] = INF
-	_drag_start = Vector2.ZERO
-	_drag_segment_start = Vector2.ZERO
 
 
 func _process(_delta: float) -> void:
@@ -100,6 +98,19 @@ func _gui_input(input_event: InputEvent) -> void:
 	var event := input_event as InputEventMouse
 	if !event:
 		return # is this possible?
+	if event is InputEventMouseMotion:
+		var mouse_pos: Vector2 = event.position
+		_world_targeting[0] = mouse_pos
+		if _is_true_pause:
+			return
+		if _drag_segment_start: # accumulated mouse drag motion
+			var drag_vector := mouse_pos - _drag_segment_start
+			_drag_segment_start = mouse_pos
+			emit_signal("mouse_dragged", drag_vector, event.button_mask,
+					_get_key_modifier_mask(event))
+		return
+	if _is_true_pause:
+		return
 	if event is InputEventMouseButton:
 		var button_index: int = event.button_index
 		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
@@ -121,15 +132,21 @@ func _gui_input(input_event: InputEvent) -> void:
 								event.button_mask, _get_key_modifier_mask(event))
 				_drag_start = Vector2.ZERO
 				_drag_segment_start = Vector2.ZERO
-	
-	elif event is InputEventMouseMotion:
-		var mouse_pos: Vector2 = event.position
-		_world_targeting[0] = mouse_pos
-		if _drag_segment_start: # accumulated mouse drag motion
-			var drag_vector := mouse_pos - _drag_segment_start
-			_drag_segment_start = mouse_pos
-			emit_signal("mouse_dragged", drag_vector, event.button_mask,
-					_get_key_modifier_mask(event))
+
+
+func _clear() -> void:
+	_world_targeting[2] = null
+	_world_targeting[4] = null
+	_world_targeting[5] = INF
+	_drag_start = Vector2.ZERO
+	_drag_segment_start = Vector2.ZERO
+
+
+func _set_true_pause_state(_dummy := false) -> void:
+	_is_true_pause = !_pause_only_stops_time and _tree.paused
+	if _is_true_pause:
+		_drag_start = Vector2.ZERO
+		_drag_segment_start = Vector2.ZERO
 
 
 func _get_key_modifier_mask(event: InputEventMouse) -> int:

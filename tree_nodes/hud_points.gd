@@ -77,6 +77,8 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
+	if _fragment_identifier:
+		pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
 	_sbg_huds_visibility.connect("points_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF

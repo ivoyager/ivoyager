@@ -48,7 +48,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
-signal paused_changed() # there is no SceneTree signal, so we hacked one
+signal paused_changed(is_paused) # hacked, so happens on StateManager._process() after change
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
 signal about_to_quit()
@@ -134,6 +134,7 @@ var dynamic_orbits := true # allows use of orbit element rates
 var skip_asteroids := false
 var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
 var skip_splash_screen := true
+var pause_only_stops_time := false # if true, almost everything is pause-immune
 var disable_pause := false
 var disable_exit := false
 var disable_quit := false
