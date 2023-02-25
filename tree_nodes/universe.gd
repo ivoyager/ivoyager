@@ -40,7 +40,7 @@ extends Spatial
 # 'persist' dictionary is not used by ivoyager code but is available for
 # game save persistence in extension projects. It can hold Godot built-ins,
 # nested containers or other 'persist objects'. For details on save/load
-# persistence, see ivoyager/prog_builders/save_builder.gd.
+# persistence, see ivoyager/program/save_builder.gd.
 #
 # if IVGlobal.pause_only_stops_time == true, then PAUSE_MODE_PROCESS is
 # set here and TopGUI so IVCamera can still move, visuals work (some are
