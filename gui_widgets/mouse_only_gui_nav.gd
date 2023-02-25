@@ -32,29 +32,29 @@ var _settings: Dictionary = IVGlobal.settings
 var _init_focus_mode_by_class := {} # if not FOCUS_NONE
 
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _project_gui: Control = IVGlobal.program.ProjectGUI
+onready var _top_gui: Control = IVGlobal.program.TopGUI
 
 
 func _ready():
 	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_remember_focus_mode_recursive(_project_gui)
+	_remember_focus_mode_recursive(_top_gui)
 	var mouse_only_gui_nav: bool = _settings.mouse_only_gui_nav
 	if pressed == mouse_only_gui_nav:
-		_change_focus_mode_recursive(_project_gui, mouse_only_gui_nav)
+		_change_focus_mode_recursive(_top_gui, mouse_only_gui_nav)
 	else:
 		pressed = mouse_only_gui_nav # causes _toggled() call
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
-	_remember_focus_mode_recursive(_project_gui)
-	_change_focus_mode_recursive(_project_gui, pressed)
+	_remember_focus_mode_recursive(_top_gui)
+	_change_focus_mode_recursive(_top_gui, pressed)
 
 
 func _toggled(button_pressed):
 	if button_pressed != _settings.mouse_only_gui_nav:
 		_settings_manager.change_current("mouse_only_gui_nav", button_pressed)
-		_change_focus_mode_recursive(_project_gui, button_pressed)
+		_change_focus_mode_recursive(_top_gui, button_pressed)
 
 
 func _remember_focus_mode_recursive(control: Control) -> void:

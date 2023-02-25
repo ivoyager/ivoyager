@@ -120,8 +120,9 @@ static func make_or_clear_dir(dir_path: String) -> void:
 
 # loading assets & data files
 
-static func get_dir_files(dir_path: String) -> Array:
-	# Use for debugging. Export removes files & changes file names!
+static func get_dir_files(dir_path: String, extension := "") -> Array:
+	# No period in extension, if provided.
+	# Useful for debugging. Export removes files & changes file names!
 	var dir := Directory.new()
 	if dir.open(dir_path) != OK:
 		print("Could not open dir: ", dir_path)
@@ -131,7 +132,8 @@ static func get_dir_files(dir_path: String) -> Array:
 	var file_name := dir.get_next()
 	while file_name:
 		if !dir.current_is_dir():
-			result.append(file_name)
+			if !extension or file_name.get_extension() == extension:
+				result.append(file_name)
 		file_name = dir.get_next()
 	return result
 

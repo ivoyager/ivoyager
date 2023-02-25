@@ -25,9 +25,9 @@ extends MultiMeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
-var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
-var _world_targeting: Array = IVGlobal.world_targeting
+var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 
 var _group: IVSmallBodiesGroup
 var _color: Color
@@ -50,7 +50,8 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
-	_huds_visibility.connect("sbg_orbits_visibility_changed", self, "_on_visibility_changed")
+	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
+	_sbg_huds_visibility.connect("orbits_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
@@ -60,7 +61,7 @@ func _ready() -> void:
 		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbits_shader
-		material_override.set_shader_param("fragment_range", _world_targeting[7]) # TODO4.0: global uniform
+		material_override.set_shader_param("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 	else:
 		material_override = SpatialMaterial.new()
 		material_override.flags_unshaded = true
@@ -75,8 +76,8 @@ func _process(_delta: float) -> void:
 	if !visible:
 		return
 	# TODO4.0: These are global uniforms, so we can do this globally!
-	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
-	material_override.set_shader_param("mouse_coord", _world_targeting[6])
+	material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
+	material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transforms_and_ids() -> void:
@@ -115,7 +116,7 @@ func _set_color(orbits_colors: Dictionary) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_sbg_orbits_visible(_group.group_name)
+	visible = _sbg_huds_visibility.is_orbits_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:

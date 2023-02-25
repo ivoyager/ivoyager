@@ -146,8 +146,11 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
+	pause_mode = PAUSE_MODE_PROCESS # time will stop, but allow pointy finger on mouseover
+	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [],
+			CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
+			CONNECT_ONESHOT)
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 	timekeeper.connect("time_altered", self, "_on_time_altered")
@@ -201,6 +204,8 @@ func _on_process(_delta: float) -> void: # subclass can override
 	
 	# get camera distance and check mouse proximity
 	var camera: Camera = _world_targeting[2]
+	if !camera:
+		return
 	var camera_dist := global_translation.distance_to(camera.global_translation)
 	var is_in_mouse_click_radius := false
 	if !camera.is_position_behind(global_translation):

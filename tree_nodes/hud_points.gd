@@ -40,8 +40,9 @@ const L4_L5_ARRAY_FLAGS = (
 const PI_DIV_3 := PI / 3.0 # 60 degrees
 
 var _times: Array = IVGlobal.times
-var _world_targeting: Array = IVGlobal.world_targeting
+var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 var _group: IVSmallBodiesGroup
 var _color: Color
 var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
@@ -50,8 +51,6 @@ var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
 var _lp_integer := -1
 var _secondary_orbit: IVOrbit
 
-
-onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
 
 
 func _init(group: IVSmallBodiesGroup) -> void:
@@ -78,7 +77,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
-	_huds_visibility.connect("sbg_points_visibility_changed", self, "_on_visibility_changed")
+	if _fragment_identifier:
+		pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
+	_sbg_huds_visibility.connect("points_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	draw_points()
@@ -107,7 +108,8 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_set_color(IVGlobal.settings.small_bodies_points_colors)
 	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	material_override.set_shader_param("fragment_range", _world_targeting[7])
+	if _fragment_identifier:
+		material_override.set_shader_param("fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
 		material_override.set_shader_param("lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_characteristic_length()
@@ -119,14 +121,15 @@ func _process(_delta: float) -> void:
 		return
 	# TODO 4.0: global uniforms!
 	material_override.set_shader_param("time", _times[0])
-	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
-	material_override.set_shader_param("mouse_coord", _world_targeting[6])
 	if _lp_integer == 4:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
 		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
 	elif _lp_integer == 5:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
 		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
+	if _fragment_identifier:
+		material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
+		material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_color(points_colors: Dictionary) -> void:
@@ -141,7 +144,7 @@ func _set_color(points_colors: Dictionary) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _huds_visibility.is_sbg_points_visible(_group.group_name)
+	visible = _sbg_huds_visibility.is_points_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:

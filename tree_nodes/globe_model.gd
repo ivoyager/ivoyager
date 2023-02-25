@@ -63,8 +63,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	assert(_is_dynamic_star)
 	var camera: Camera = _world_targeting[2]
+	if !camera:
+		return
 	var camera_dist := global_translation.distance_to(camera.global_translation)
 	if camera_dist < DYNAMIC_STAR_GROW_DIST:
 		transform.basis = _reference_basis

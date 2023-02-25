@@ -50,15 +50,12 @@ margin_right = 332.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 0, 10 )
 
-[node name="ButtonBox" type="HBoxContainer" parent="."]
-visible = false
-margin_top = 24.0
+[node name="Buttons" type="HFlowContainer" parent="."]
+margin_top = 20.0
 margin_right = 332.0
-margin_bottom = 44.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
+margin_bottom = 64.0
 
-[node name="HideAllButton" type="Button" parent="ButtonBox"]
+[node name="HideAllButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
 margin_right = 133.0
 margin_bottom = 20.0
@@ -67,7 +64,7 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_HIDE_ALL"
 
-[node name="ShowDefaultButton" type="Button" parent="ButtonBox"]
+[node name="ShowDefaultButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
 margin_left = 137.0
 margin_right = 313.0
@@ -76,3 +73,13 @@ size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_SHOW_DEFAULT"
+
+[node name="SaveAsDefaultButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+margin_top = 24.0
+margin_right = 188.0
+margin_bottom = 44.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+action_mode = 0
+text = "BUTTON_SAVE_AS_DEFAULT"

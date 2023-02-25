@@ -149,10 +149,9 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 
 func _ready() -> void:
 	name = "Camera"
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready",
-			[], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free",
-			[], CONNECT_ONESHOT)
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
+	IVGlobal.connect("simulator_started", self, "_on_simulator_started", [], CONNECT_ONESHOT)
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
 	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
 	IVGlobal.connect("move_camera_requested", self, "move_to")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -163,6 +162,7 @@ func _ready() -> void:
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
 	IVGlobal.verbose_signal("camera_ready", self)
+	set_process(false) # don't process until sim started
 
 
 func _process(delta: float) -> void:
@@ -386,6 +386,10 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_from_selection = selection
 	_min_dist = selection.view_min_distance * 50.0 / fov
 	move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
+
+
+func _on_simulator_started() -> void:
+	set_process(true)
 
 
 func _prepare_to_free() -> void:

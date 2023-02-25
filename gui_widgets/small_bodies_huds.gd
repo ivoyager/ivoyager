@@ -26,7 +26,7 @@ extends GridContainer
 # row construction, setting up multiple grids, and aligning their columns.
 #
 # To display correctly, ColorPickerButton needs a StyleBoxTexture with no
-# margins. See default TopGUI for how to do this.
+# margins.
 
 const NULL_COLOR := Color.black
 
@@ -50,7 +50,7 @@ var _orbits_color_pkrs := []
 var _suppress_update := false
 var _is_color_change := false
 
-onready var _huds_visibility: IVHUDsVisibility = IVGlobal.program.HUDsVisibility
+onready var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 onready var _settings: Dictionary = IVGlobal.settings
 onready var _small_bodies_points_colors: Dictionary = _settings.small_bodies_points_colors
@@ -62,8 +62,8 @@ func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	IVGlobal.connect("update_gui_requested", self, "_update_points_color_buttons")
 	IVGlobal.connect("update_gui_requested", self, "_update_orbits_color_buttons")
-	_huds_visibility.connect("sbg_points_visibility_changed", self, "_update_points_ckbxs")
-	_huds_visibility.connect("sbg_orbits_visibility_changed", self, "_update_orbits_ckbxs")
+	_sbg_huds_visibility.connect("points_visibility_changed", self, "_update_points_ckbxs")
+	_sbg_huds_visibility.connect("orbits_visibility_changed", self, "_update_orbits_ckbxs")
 	
 	# headers
 	if has_headers:
@@ -145,7 +145,7 @@ func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
 	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		_huds_visibility.change_sbg_points_visibility(group, pressed)
+		_sbg_huds_visibility.change_points_visibility(group, pressed)
 	_suppress_update = false
 	_update_points_ckbxs()
 
@@ -154,7 +154,7 @@ func _show_hide_orbits(ckbx: CheckBox, groups: Array) -> void:
 	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		_huds_visibility.change_sbg_orbits_visibility(group, pressed)
+		_sbg_huds_visibility.change_orbits_visibility(group, pressed)
 	_suppress_update = false
 	_update_orbits_ckbxs()
 
@@ -186,7 +186,7 @@ func _update_points_ckbxs() -> void:
 		var groups: Array = rows[i][1]
 		var is_points_visible := true
 		for group in groups:
-			if !_huds_visibility.is_sbg_points_visible(group):
+			if !_sbg_huds_visibility.is_points_visible(group):
 				is_points_visible = false
 				break
 		_points_ckbxs[i].pressed = is_points_visible
@@ -199,7 +199,7 @@ func _update_orbits_ckbxs() -> void:
 		var groups: Array = rows[i][1]
 		var is_orbits_visible := true
 		for group in groups:
-			if !_huds_visibility.is_sbg_orbits_visible(group):
+			if !_sbg_huds_visibility.is_orbits_visible(group):
 				is_orbits_visible = false
 				break
 		_orbits_ckbxs[i].pressed = is_orbits_visible

@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+class_name IVUniverse
 extends Spatial
 
 # *****************************************************************************
@@ -39,9 +40,20 @@ extends Spatial
 # 'persist' dictionary is not used by ivoyager code but is available for
 # game save persistence in extension projects. It can hold Godot built-ins,
 # nested containers or other 'persist objects'. For details on save/load
-# persistence, see ivoyager/prog_builders/save_builder.gd.
+# persistence, see ivoyager/program/save_builder.gd.
+#
+# if IVGlobal.pause_only_stops_time == true, then PAUSE_MODE_PROCESS is
+# set here and TopGUI so IVCamera can still move, visuals work (some are
+# responsve to camera) and user can interact with the world. In this mode, only
+# IVTimekeeper pauses to stop time.
+
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
 const PERSIST_PROPERTIES := ["persist"]
 
 var persist := {}
+
+func _project_init():
+	if IVGlobal.pause_only_stops_time:
+		pause_mode = PAUSE_MODE_PROCESS
+

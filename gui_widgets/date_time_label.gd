@@ -44,11 +44,10 @@ onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_configure_display")
-	IVGlobal.connect("paused_changed", self, "_process", [0.0]) # force if paused
-	_timekeeper.connect("speed_changed", self, "_configure_display")
+	IVGlobal.connect("update_gui_requested", self, "_update_display")
+	_timekeeper.connect("speed_changed", self, "_update_display")
 	set("custom_colors/font_color", forward_color)
-	_configure_display()
+	_update_display()
 
 
 func _process(_delta: float) -> void:
@@ -71,7 +70,7 @@ func _process(_delta: float) -> void:
 	text = new_text
 
 
-func _configure_display() -> void:
+func _update_display() -> void:
 	_show_clock = _timekeeper.show_clock
 	_show_seconds = _timekeeper.show_seconds
 	if _is_reversed != _timekeeper.is_reversed:

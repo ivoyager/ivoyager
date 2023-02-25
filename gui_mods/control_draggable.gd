@@ -279,7 +279,7 @@ func _try_diagonal_offset(rect: Rect2, direction: int, offset: float, orthogonal
 
 func _get_overlap(rect: Rect2) -> Array:
 	for child in _parent.get_parent().get_children():
-		var other := child as Control
+		var other := child as PanelContainer
 		if !other or other == _parent:
 			continue
 		var other_rect := other.get_rect()
