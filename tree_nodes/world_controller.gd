@@ -29,18 +29,22 @@ extends Control
 #  [3] camera_fov: float (camera sets)
 #  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
 #  [5] mouse_target_dist: float (as above)
-#  [6] fragment_mouse_coord: Vector2 (this object sets; mouse_position w/ flipped y)
-#  [7] fragment_range: int (FragmentIdentifier overrides)
-#  [8] fragment_cycler: float (FragmentIdentifier overrides)
+#  [6] fragment_id: int (FragmentIdentifier sets)
+#  [7] cursor_type: int (this object sets)
 #
 # TODO: Recode using Godot's built-in mouse drag functionality.
 
+
+signal mouse_target_changed(target)
 signal mouse_target_clicked(target, button_mask, key_modifier_mask)
 signal mouse_dragged(drag_vector, button_mask, key_modifier_mask)
 signal mouse_wheel_turned(is_up)
 
-const NULL_MOUSE_COORD := Vector2(-100.0, -100.0)
 
+# read-only!
+var current_target: Object = null
+
+# private
 var _world_targeting: Array = IVGlobal.world_targeting
 var _pause_only_stops_time = IVGlobal.pause_only_stops_time
 var _drag_start := Vector2.ZERO
@@ -48,20 +52,18 @@ var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
 var _is_true_pause := true
 
-onready var _tree := get_tree()
-onready var _viewport := get_viewport()
-onready var _is_fragment_identifier := IVGlobal.program.has("FragmentIdentifier")
-
 
 func _project_init() -> void:
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	_world_targeting.resize(9)
+	_world_targeting.resize(8)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = 0.0
-	_world_targeting[5] = INF
-	_world_targeting[6] = NULL_MOUSE_COORD # mouse_coord for FragmentIdentifier & shaders
-	_world_targeting[7] = 9.0 # fragment_range; FragmentIdentifier will override
-	_world_targeting[8] = 0.0 # fragment_cycler: FragmentIdentifier maintains
+	_world_targeting[2] = null # Camera maintains
+	_world_targeting[3] = 50.0 # Camera maintains
+	_world_targeting[4] = null # potential targets maintain
+	_world_targeting[5] = INF # potential targets maintain
+	_world_targeting[6] = -1 # FragmentIdentifier maintains
+	_world_targeting[7] = CURSOR_ARROW
 
 
 func _ready() -> void:
@@ -72,25 +74,24 @@ func _ready() -> void:
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
-	_viewport.connect("size_changed", self, "_on_viewport_size_changed")
-	_world_targeting[1] = _viewport.size.y
+	var viewport := get_viewport()
+	viewport.connect("size_changed", self, "_on_viewport_size_changed")
+	_world_targeting[1] = viewport.size.y
 
 
 func _process(_delta: float) -> void:
+	var cursor_type = CURSOR_ARROW
 	if _drag_start:
-		_world_targeting[6] = NULL_MOUSE_COORD
-		set_default_cursor_shape(CURSOR_MOVE)
+		cursor_type = CURSOR_MOVE
 	elif _world_targeting[4]: # there is a target object under the mouse!
-		_world_targeting[6] = NULL_MOUSE_COORD
-		set_default_cursor_shape(CURSOR_POINTING_HAND)
-	else:
-		# no object target under mouse, but there could be a shader point
-		if _is_fragment_identifier and _has_mouse:
-			_world_targeting[6].x = _world_targeting[0].x
-			_world_targeting[6].y = _world_targeting[1] - _world_targeting[0].y # flipped
-		else:
-			_world_targeting[6] = NULL_MOUSE_COORD
-		set_default_cursor_shape(CURSOR_ARROW)
+		cursor_type = CURSOR_POINTING_HAND
+	# TODO: When we can have interaction with asteroid point, that will
+	# cause pointy finger too.
+	_world_targeting[7] = cursor_type
+	set_default_cursor_shape(cursor_type)
+	if current_target != _world_targeting[4]:
+		current_target = _world_targeting[4]
+		emit_signal("mouse_target_changed", current_target)
 
 
 func _gui_input(input_event: InputEvent) -> void:
@@ -143,7 +144,7 @@ func _clear() -> void:
 
 
 func _set_true_pause_state(_dummy := false) -> void:
-	_is_true_pause = !_pause_only_stops_time and _tree.paused
+	_is_true_pause = !_pause_only_stops_time and get_tree().paused
 	if _is_true_pause:
 		_drag_start = Vector2.ZERO
 		_drag_segment_start = Vector2.ZERO

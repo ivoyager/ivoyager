@@ -22,6 +22,12 @@ extends Viewport
 
 # Remove from ProjectBuilder.gui_nodes if not used.
 #
+# Inits & maintains 'IVGlobal.fragment_targeting' array. HUD visual nodes send
+# these data to shaders for fragment identification.
+#  [0] mouse_coord - y-flipped mouse pos
+#  [1] fragment_range
+#  [2] fragment_cycler - calibration and id sequencing
+#
 # Decodes id from shader fragment displayed on the root viewport (e.g.,
 # asteroid points). We capture a tiny square around the mouse so the
 # texture.get_data() read from GPU is as cheap as possible.
@@ -43,10 +49,7 @@ enum { # fragment_type
 
 const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
-
-
-# read-only!
-var fragment_data := {} # arrays indexed by 36-bit id integer; [name, fragment_type, maybe more...]
+const NULL_MOUSE_COORD := Vector2(-100.0, -100.0)
 
 
 # project vars
@@ -54,9 +57,14 @@ var drop_id_frames := 40 # tunes the loss of 'current' id by time
 var drop_id_mouse_movement := 20.0 # tunes the loss of 'current' id by mouse movement
 var fragment_range := 9 # multiple of 3! Going big is expensive!
 
+# read-only!
+var current_id := -1
+var fragment_data := {} # arrays indexed by 36-bit id integer; [name, fragment_type, maybe more...]
+
 
 # private
 var _node2d := Node2D.new()
+var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _world_targeting: Array = IVGlobal.world_targeting
 var _n_calibration_steps := CALIBRATION.size()
 var _n_pxls: int
@@ -64,7 +72,6 @@ var _picker_rect: Rect2
 var _src_rect: Rect2 # will follow mouse
 var _src_offset: Vector2
 var _picker_image: Image
-var _current_id := -1
 var _drop_frame_counter := 0
 var _drop_mouse_coord := Vector2.ZERO
 var _has_drawn := false
@@ -87,6 +94,13 @@ onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
 onready var _picker_texture: ViewportTexture = get_texture()
 
 
+func _project_init() -> void:
+	# Dictionary IVGlobal.fragment_targeting
+	_fragment_targeting.resize(3)
+	_fragment_targeting[0] = NULL_MOUSE_COORD
+	_fragment_targeting[1] = float(fragment_range)
+	_fragment_targeting[2] = 0.0
+	
 
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS
@@ -96,13 +110,15 @@ func _ready() -> void:
 	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
 	_init_rects_and_arrays()
-	_world_targeting[7] = float(fragment_range) # set in shaders
 	usage = USAGE_2D
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
-
+	
 
 func _process(_delta: float) -> void:
+	_fragment_targeting[0].x = _world_targeting[0].x
+	_fragment_targeting[0].y = _world_targeting[1] - _world_targeting[0].y # flipped
+	
 	# 'fragment_cycler' drives the calibration/value cycle of fragment shaders
 	# TODO4.0: fragment_cycler will become a global uniform
 	_cycle_step += 1
@@ -113,7 +129,7 @@ func _process(_delta: float) -> void:
 		fragment_cycler = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		fragment_cycler = float(_cycle_step - _n_calibration_steps + 1) # 1.0, 2.0, 3.0
-	_world_targeting[8] = fragment_cycler
+	_fragment_targeting[2] = fragment_cycler
 
 
 # public
@@ -257,17 +273,18 @@ func _sort_pxl_offsets(a: Array, b: Array) -> bool:
 
 func _on_node2d_draw() -> void:
 	# Copy a tiny square of root viewport texture to this viewport.
-	_src_rect.position = _world_targeting[6] - _src_offset
+	_src_rect.position = _fragment_targeting[0] - _src_offset
 	_node2d.draw_texture_rect_region(_root_texture, _picker_rect, _src_rect)
 	_has_drawn = true
 
 
 func _on_frame_post_draw() -> void:
 	# Grab image from this viewport; scan pixels for shaders signaling id.
-	if _world_targeting[6].x < 0.0: # ie, WorldController.NULL_MOUSE_COORD
+	if _fragment_targeting[0].x < 0.0: # ie, WorldController.NULL_MOUSE_COORD
 		_has_drawn = false
-		if _current_id != -1:
-			_current_id = -1
+		if current_id != -1:
+			current_id = -1
+			_world_targeting[6] = -1
 			emit_signal("fragment_changed", -1)
 		return
 	
@@ -284,23 +301,25 @@ func _on_frame_post_draw() -> void:
 		if id == -1 and _current_ids[pxl] != -1: # keep first valid id, if there is one
 			id = _current_ids[pxl]
 	if id != -1:
-		if _current_id != id: # gained or changed valid id
-			_current_id = id
+		if current_id != id: # gained or changed valid id
+			current_id = id
+			_world_targeting[6] = id
 			emit_signal("fragment_changed", id)
 		_drop_frame_counter = 0
-		_drop_mouse_coord = _world_targeting[6]
+		_drop_mouse_coord = _fragment_targeting[0]
 		return
 	
-	if _current_id == -1:
+	if current_id == -1:
 		return
 	
 	if (_drop_frame_counter > drop_id_frames or
-			_drop_mouse_coord.distance_to(_world_targeting[6]) > drop_id_mouse_movement):
-		_current_id = -1
+			_drop_mouse_coord.distance_to(_fragment_targeting[0]) > drop_id_mouse_movement):
+		current_id = -1
+		_world_targeting[6] = -1
 		emit_signal("fragment_changed", -1)
 		return
 	
-	# We've lost id signal, but don't reset _current_id yet
+	# We've lost id signal, but don't reset current_id yet
 	_drop_frame_counter += 1
 
 

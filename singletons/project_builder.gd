@@ -187,7 +187,7 @@ var gui_nodes := {
 	# 'project_nodes_added' signal using API below.
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
-	_FragmentLabel_ = IVFragmentLabel, # remove w/ IVFragmentIdentifier
+	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
 	_SplashScreen_ = null, # assign here if convenient (below MainMenuPopup, etc.)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove

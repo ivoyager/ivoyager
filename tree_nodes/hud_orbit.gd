@@ -29,7 +29,7 @@ const math := preload("res://ivoyager/static/math.gd")
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
 var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
 var _times: Array = IVGlobal.times
-var _world_targeting: Array = IVGlobal.world_targeting
+var _fragment_targeting: Array = IVGlobal.fragment_targeting
 # instance info
 var _body: IVBody
 var _orbit: IVOrbit
@@ -69,7 +69,7 @@ func _ready() -> void:
 		material_override.shader = IVGlobal.shared.orbit_shader
 #		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 		material_override.set_shader_param("fragment_id", fragment_id)
-		material_override.set_shader_param("fragment_range", _world_targeting[7]) # TODO4.0: global uniform
+		material_override.set_shader_param("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 	else:
 		material_override = SpatialMaterial.new()
 		material_override.flags_unshaded = true
@@ -86,8 +86,8 @@ func _process(_delta: float) -> void:
 	if !visible:
 		return
 	# TODO4.0: These are global uniforms, so we can do this globally!
-	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
-	material_override.set_shader_param("mouse_coord", _world_targeting[6])
+	material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
+	material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transform_from_orbit(_is_scheduled := false) -> void:

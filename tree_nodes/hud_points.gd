@@ -40,7 +40,7 @@ const L4_L5_ARRAY_FLAGS = (
 const PI_DIV_3 := PI / 3.0 # 60 degrees
 
 var _times: Array = IVGlobal.times
-var _world_targeting: Array = IVGlobal.world_targeting
+var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 var _group: IVSmallBodiesGroup
@@ -108,7 +108,8 @@ func draw_points() -> void:
 	mesh = points_mesh
 	_set_color(IVGlobal.settings.small_bodies_points_colors)
 	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
-	material_override.set_shader_param("fragment_range", _world_targeting[7])
+	if _fragment_identifier:
+		material_override.set_shader_param("fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
 		material_override.set_shader_param("lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_characteristic_length()
@@ -120,14 +121,15 @@ func _process(_delta: float) -> void:
 		return
 	# TODO 4.0: global uniforms!
 	material_override.set_shader_param("time", _times[0])
-	material_override.set_shader_param("fragment_cycler", _world_targeting[8])
-	material_override.set_shader_param("mouse_coord", _world_targeting[6])
 	if _lp_integer == 4:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
 		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
 	elif _lp_integer == 5:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
 		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
+	if _fragment_identifier:
+		material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
+		material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_color(points_colors: Dictionary) -> void:
