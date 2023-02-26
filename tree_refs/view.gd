@@ -24,7 +24,7 @@ extends Reference
 # state. The object is structured for persistence via game save or cache.
 
 
-const CACHE_VERSION := 101 # increment after any property change
+const CACHE_VERSION := 104 # increment after any property change
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
@@ -36,11 +36,15 @@ const PERSIST_PROPERTIES := [
 	"view_rotations",
 	
 	"has_huds_visibility_state",
-	"orbit_visible_flags",
 	"name_visible_flags",
 	"symbol_visible_flags",
+	"orbit_visible_flags",
 	"visible_points_groups",
 	"visible_orbits_groups",
+	
+	"has_huds_color_state",
+	"body_orbit_colors",
+	
 	
 	"has_time_state",
 	"time",
@@ -56,11 +60,14 @@ var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
 
 var has_huds_visibility_state := false
-var orbit_visible_flags := 0
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
+var orbit_visible_flags := 0
 var visible_points_groups := []
 var visible_orbits_groups := []
+
+var has_huds_color_state := false
+var body_orbit_colors := {}
 
 var has_time_state := false # used by planetarium
 var time := 0.0
@@ -80,6 +87,7 @@ func reset() -> void:
 
 
 func get_cache_data() -> Array:
+	# TODO: Don't need values if has_.._state == false
 	var data := []
 	for property in PERSIST_PROPERTIES:
 		data.append(get(property))
@@ -112,15 +120,22 @@ func set_camera_data(has_camera_state_: bool, selection_name_: String, camera_fl
 	view_rotations = view_rotations_
 
 
-func set_huds_visibility_data(has_huds_visibility_state_: bool, orbit_visible_flags_: int,
-		name_visible_flags_: int, symbol_visible_flags_: int, visible_points_groups_: Array,
+func set_huds_visibility_data(has_huds_visibility_state_: bool, name_visible_flags_: int,
+		symbol_visible_flags_: int, orbit_visible_flags_: int, visible_points_groups_: Array,
 		visible_orbits_groups_: Array) -> void:
+	# Keeps arrays!
 	has_huds_visibility_state = has_huds_visibility_state_
-	orbit_visible_flags = orbit_visible_flags_
 	name_visible_flags = name_visible_flags_
 	symbol_visible_flags = symbol_visible_flags_
+	orbit_visible_flags = orbit_visible_flags_
 	visible_points_groups = visible_points_groups_
 	visible_orbits_groups = visible_orbits_groups_
+
+
+func set_huds_color_data(has_huds_color_state_: bool, body_orbit_colors_: Dictionary) -> void:
+	# Keeps dictionaries!
+	has_huds_color_state = has_huds_color_state_
+	body_orbit_colors = body_orbit_colors_
 
 
 func set_time_data(has_time_state_: bool, time_: float, speed_index_: int, is_reversed_: int
@@ -152,14 +167,14 @@ func set_camera_state(is_instant_move := false) -> void:
 	camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
 
 
-# HUDs state
+# HUDs visibility state
 
-func save_huds_state() -> void:
+func save_huds_visibility_state() -> void:
 	has_huds_visibility_state = true
-	var body_huds_visibility: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
-	name_visible_flags = body_huds_visibility.name_visible_flags
-	symbol_visible_flags = body_huds_visibility.symbol_visible_flags
+	var body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+	name_visible_flags = body_huds_state.name_visible_flags
+	symbol_visible_flags = body_huds_state.symbol_visible_flags
+	orbit_visible_flags = body_huds_state.orbit_visible_flags
 	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 	visible_points_groups = sbg_huds_visibility.get_visible_points_groups()
 	visible_orbits_groups = sbg_huds_visibility.get_visible_orbits_groups()
@@ -168,13 +183,28 @@ func save_huds_state() -> void:
 func set_huds_visibility_state() -> void:
 	if !has_huds_visibility_state:
 		return
-	var body_huds_visibility: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-	body_huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
-	body_huds_visibility.set_name_visible_flags(name_visible_flags)
-	body_huds_visibility.set_symbol_visible_flags(symbol_visible_flags)
+	var body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+	body_huds_state.set_name_visible_flags(name_visible_flags)
+	body_huds_state.set_symbol_visible_flags(symbol_visible_flags)
+	body_huds_state.set_orbit_visible_flags(orbit_visible_flags)
 	var sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
 	sbg_huds_visibility.set_visible_points_groups(visible_points_groups)
 	sbg_huds_visibility.set_visible_orbits_groups(visible_orbits_groups)
+
+
+# HUDs color state
+
+func save_huds_color_state() -> void:
+	has_huds_color_state = true
+	var body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+	body_orbit_colors = body_huds_state.get_orbit_colors_dict() # ref safe
+
+
+func set_huds_color_state() -> void:
+	if !has_huds_color_state:
+		return
+	var body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+	body_huds_state.set_orbit_colors_dict(body_orbit_colors) # ref safe
 
 
 # time state

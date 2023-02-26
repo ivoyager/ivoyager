@@ -80,7 +80,7 @@ var fallback_orbit_color := Color(0.4, 0.4, 0.8)
 var name_visible_flags := default_name_visible_flags # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := default_symbol_visible_flags # exclusive w/ name_visible_flags
 var orbit_visible_flags := default_orbit_visible_flags
-var orbit_colors := default_orbit_colors
+var orbit_colors := default_orbit_colors.duplicate()
 
 
 onready var _tree := get_tree()
@@ -302,4 +302,14 @@ func set_orbit_color(body_flags: int, color: Color) -> void:
 		body_flags >>= 1
 	if color_changed:
 		emit_signal("color_changed")
+
+
+func get_orbit_colors_dict() -> Dictionary:
+	return orbit_colors.duplicate()
+
+
+func set_orbit_colors_dict(dict: Dictionary) -> void:
+	assert(dict.keys() == orbit_colors.keys())
+	orbit_colors.merge(dict, true) # overwrite
+	emit_signal("color_changed")
 

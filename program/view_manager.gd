@@ -25,12 +25,14 @@ extends Node
 enum {
 	CAMERA_STATE = 1,
 	HUDS_VISIBILITY_STATE = 1 << 1,
-	TIME_STATE = 1 << 2,
+	HUDS_COLOR_STATE = 1 << 2,
+	TIME_STATE = 1 << 3,
 	# below used in set_view()
-	CAMERA_STATE_IF_SAVED = 1 << 3,
-	HUDS_VISIBILITY_STATE_IF_SAVED = 1 << 4,
-	TIME_STATE_IF_SAVED = 1 << 5,
-	INSTANT_CAMERA_MOVE = 1 << 6,
+	CAMERA_STATE_IF_SAVED = 1 << 4,
+	HUDS_VISIBILITY_STATE_IF_SAVED = 1 << 5,
+	HUDS_COLOR_STATE_IF_SAVED = 1 << 6,
+	TIME_STATE_IF_SAVED = 1 << 7,
+	INSTANT_CAMERA_MOVE = 1 << 8,
 }
 
 
@@ -43,6 +45,10 @@ const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
 	"_gamesave_views",
 ]
+
+
+# TODO: Migrate ViewCacher functionality from Planetarium.
+
 
 var _gamesave_views := {}
 var _cached_views := {}
@@ -71,7 +77,9 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 	if flags & CAMERA_STATE:
 		view.save_camera_state()
 	if flags & HUDS_VISIBILITY_STATE:
-		view.save_huds_state()
+		view.save_huds_visibility_state()
+	if flags & HUDS_COLOR_STATE:
+		view.save_huds_color_state()
 	if flags & TIME_STATE:
 		view.save_time_state()
 	if is_cached:
@@ -94,6 +102,8 @@ func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) 
 		view.set_camera_state(bool(flags & INSTANT_CAMERA_MOVE))
 	if flags & HUDS_VISIBILITY_STATE or flags & HUDS_VISIBILITY_STATE_IF_SAVED:
 		view.set_huds_visibility_state()
+	if flags & HUDS_COLOR_STATE or flags & HUDS_COLOR_STATE_IF_SAVED:
+		view.set_huds_color_state()
 	if flags & TIME_STATE or flags & TIME_STATE_IF_SAVED:
 		view.set_time_state()
 

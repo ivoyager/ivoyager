@@ -28,6 +28,13 @@ extends VBoxContainer
 # WIP - hidden buttons [Hide All][Show Default]
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
+const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
+const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
+
+
+
+# WIP - New buttons [Default Visible][Default Colors] work via BodyHUDsState
+# Then, remove 'default' view construction here...
 
 # default HUDs view if user hasn't saved their own
 var default_orbit_visible_flags: int = (
@@ -70,9 +77,9 @@ func _ready() -> void:
 	var view: IVView = _View_.new()
 	view.set_huds_visibility_data(
 		true,
-		default_orbit_visible_flags,
 		default_name_visible_flags,
 		default_symbol_visible_flags,
+		default_orbit_visible_flags,
 		default_visible_points_groups,
 		default_visible_orbits_groups
 	)
@@ -143,10 +150,10 @@ func _hide_all() -> void:
 
 
 func _show_default() -> void:
-	_view_manager.set_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
+	_view_manager.set_view("default", "all_huds", true, HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
 
 
 func _save_as_default() -> void:
-	_view_manager.save_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
+	_view_manager.save_view("default", "all_huds", true, HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
 
 
