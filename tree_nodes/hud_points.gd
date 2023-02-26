@@ -79,11 +79,11 @@ func _init(group: IVSmallBodiesGroup) -> void:
 func _ready() -> void:
 	if _fragment_identifier:
 		pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_sbg_huds_state.connect("points_visibility_changed", self, "_on_visibility_changed")
+	_sbg_huds_state.connect("points_visibility_changed", self, "_set_visibility")
+	_sbg_huds_state.connect("points_color_changed", self, "_set_color")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	draw_points()
-	hide()
 
 
 func draw_points() -> void:
@@ -106,7 +106,6 @@ func draw_points() -> void:
 	var half_aabb = _group.max_apoapsis * Vector3.ONE
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
-	_set_color(IVGlobal.settings.small_bodies_points_colors)
 	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
 	if _fragment_identifier:
 		material_override.set_shader_param("fragment_range", _fragment_targeting[1])
@@ -114,6 +113,8 @@ func draw_points() -> void:
 		material_override.set_shader_param("lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_characteristic_length()
 		material_override.set_shader_param("characteristic_length", characteristic_length)
+	_set_visibility()
+	_set_color()
 
 
 func _process(_delta: float) -> void:
@@ -132,24 +133,19 @@ func _process(_delta: float) -> void:
 		material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
 
 
-func _set_color(points_colors: Dictionary) -> void:
-	var new_color: Color
-	if points_colors.has(_group.group_name):
-		new_color = points_colors[_group.group_name]
-	else:
-		new_color = IVGlobal.settings.small_bodies_points_default_color
-	if _color != new_color:
-		_color = new_color
-		material_override.set_shader_param("color", Vector3(new_color.r, new_color.g, new_color.b))
+func _set_visibility() -> void:
+	visible = _sbg_huds_state.is_points_visible(_group.group_name)
 
 
-func _on_visibility_changed() -> void:
-	visible = _sbg_huds_visibility.is_points_visible(_group.group_name)
+func _set_color() -> void:
+	var color := _sbg_huds_state.get_points_color(_group.group_name)
+	if _color == color:
+		return
+	_color = color
+	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == "point_size":
 		material_override.set_shader_param("point_size", float(value))
-	elif setting == "small_bodies_points_colors":
-		_set_color(value)
 
