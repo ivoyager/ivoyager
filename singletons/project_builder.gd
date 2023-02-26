@@ -173,7 +173,7 @@ var prog_nodes := {
 	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
 	_Timekeeper_ = IVTimekeeper,
 	_WindowManager_ = IVWindowManager,
-	_BodyHUDsVisibility_ = IVBodyHUDsVisibility,
+	_BodyHUDsState_ = IVBodyHUDsState,
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_StateManager_ = IVStateManager,
 }

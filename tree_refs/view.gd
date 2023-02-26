@@ -156,7 +156,7 @@ func set_camera_state(is_instant_move := false) -> void:
 
 func save_huds_state() -> void:
 	has_huds_visibility_state = true
-	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+	var body_huds_visibility: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 	orbit_visible_flags = body_huds_visibility.orbit_visible_flags
 	name_visible_flags = body_huds_visibility.name_visible_flags
 	symbol_visible_flags = body_huds_visibility.symbol_visible_flags
@@ -168,7 +168,7 @@ func save_huds_state() -> void:
 func set_huds_visibility_state() -> void:
 	if !has_huds_visibility_state:
 		return
-	var body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+	var body_huds_visibility: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 	body_huds_visibility.set_orbit_visible_flags(orbit_visible_flags)
 	body_huds_visibility.set_name_visible_flags(name_visible_flags)
 	body_huds_visibility.set_symbol_visible_flags(symbol_visible_flags)

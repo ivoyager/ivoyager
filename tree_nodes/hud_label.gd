@@ -22,7 +22,7 @@ class_name IVHUDLabel
 
 # Visual text name or symbol for a Body.
 
-var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 var _body: IVBody
 var _body_flags: int
 var _body_name: String
@@ -44,7 +44,7 @@ func _init(body: IVBody) -> void:
 
 
 func _ready() -> void:
-	_body_huds_visibility.connect("visibility_changed", self, "_on_global_huds_changed")
+	_body_huds_state.connect("visibility_changed", self, "_on_global_huds_changed")
 	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
 	horizontal_alignment = ALIGN_CENTER
 	vertical_alignment = VALIGN_CENTER
@@ -58,8 +58,8 @@ func _ready() -> void:
 
 
 func _on_global_huds_changed() -> void:
-	_names_visible = _body_huds_visibility.is_name_visible(_body_flags)
-	_symbols_visible = !_names_visible and _body_huds_visibility.is_symbol_visible(_body_flags)
+	_names_visible = _body_huds_state.is_name_visible(_body_flags)
+	_symbols_visible = !_names_visible and _body_huds_state.is_symbol_visible(_body_flags)
 	_set_visual_state()
 
 
