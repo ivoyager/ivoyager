@@ -24,7 +24,7 @@ extends Reference
 # state. The object is structured for persistence via game save or cache.
 
 
-const CACHE_VERSION := 104 # increment after any property change
+const CACHE_VERSION := 105 # increment after any property change
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
@@ -47,6 +47,7 @@ const PERSIST_PROPERTIES := [
 	
 	
 	"has_time_state",
+	"is_real_world_time",
 	"time",
 	"speed_index",
 	"is_reversed",
@@ -70,6 +71,7 @@ var has_huds_color_state := false
 var body_orbit_colors := {}
 
 var has_time_state := false # used by planetarium
+var is_real_world_time := false
 var time := 0.0
 var speed_index := 0
 var is_reversed := false
@@ -212,17 +214,22 @@ func set_huds_color_state() -> void:
 func save_time_state() -> void:
 	has_time_state = true
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	time = timekeeper.time
-	speed_index = timekeeper.speed_index
-	is_reversed = timekeeper.is_reversed
+	is_real_world_time = timekeeper.is_real_world_time
+	if !is_real_world_time:
+		time = timekeeper.time
+		speed_index = timekeeper.speed_index
+		is_reversed = timekeeper.is_reversed
 
 
 func set_time_state() -> void:
 	if !has_time_state:
 		return
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.set_time(time)
-	timekeeper.change_speed(0, speed_index)
-	timekeeper.set_time_reversed(is_reversed)
+	if is_real_world_time:
+		timekeeper.set_real_world()
+	else:
+		timekeeper.set_time(time)
+		timekeeper.change_speed(0, speed_index)
+		timekeeper.set_time_reversed(is_reversed)
 
 
