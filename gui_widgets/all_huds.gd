@@ -59,7 +59,7 @@ var default_visible_orbits_groups := []
 var _column_master: GridContainer
 
 onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-onready var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 
 
@@ -146,7 +146,7 @@ func _on_child_entered_tree(control: Control) -> void:
 
 func _hide_all() -> void:
 	_body_huds_state.hide_all()
-	_sbg_huds_visibility.hide_all()
+	_sbg_huds_state.hide_all()
 
 
 func _show_default() -> void:

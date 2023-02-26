@@ -27,7 +27,7 @@ const math := preload("res://ivoyager/static/math.gd")
 
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
-var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 
 var _group: IVSmallBodiesGroup
 var _color: Color
@@ -51,7 +51,7 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_sbg_huds_visibility.connect("orbits_visibility_changed", self, "_on_visibility_changed")
+	_sbg_huds_state.connect("orbits_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
@@ -116,7 +116,7 @@ func _set_color(orbits_colors: Dictionary) -> void:
 
 
 func _on_visibility_changed() -> void:
-	visible = _sbg_huds_visibility.is_orbits_visible(_group.group_name)
+	visible = _sbg_huds_state.is_orbits_visible(_group.group_name)
 
 
 func _settings_listener(setting: String, value) -> void:

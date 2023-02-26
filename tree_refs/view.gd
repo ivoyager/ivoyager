@@ -80,7 +80,7 @@ var is_reversed := false
 var _viewport := IVGlobal.get_viewport()
 var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 var _version_hash := PERSIST_PROPERTIES.hash()
 
@@ -231,8 +231,8 @@ func save_huds_visibility_state() -> void:
 	name_visible_flags = _body_huds_state.name_visible_flags
 	symbol_visible_flags = _body_huds_state.symbol_visible_flags
 	orbit_visible_flags = _body_huds_state.orbit_visible_flags
-	visible_points_groups = _sbg_huds_visibility.get_visible_points_groups()
-	visible_orbits_groups = _sbg_huds_visibility.get_visible_orbits_groups()
+	visible_points_groups = _sbg_huds_state.get_visible_points_groups()
+	visible_orbits_groups = _sbg_huds_state.get_visible_orbits_groups()
 
 
 func set_huds_visibility_state() -> void:
@@ -241,8 +241,8 @@ func set_huds_visibility_state() -> void:
 	_body_huds_state.set_name_visible_flags(name_visible_flags)
 	_body_huds_state.set_symbol_visible_flags(symbol_visible_flags)
 	_body_huds_state.set_orbit_visible_flags(orbit_visible_flags)
-	_sbg_huds_visibility.set_visible_points_groups(visible_points_groups)
-	_sbg_huds_visibility.set_visible_orbits_groups(visible_orbits_groups)
+	_sbg_huds_state.set_visible_points_groups(visible_points_groups)
+	_sbg_huds_state.set_visible_orbits_groups(visible_orbits_groups)
 
 
 # HUDs color state

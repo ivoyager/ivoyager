@@ -42,7 +42,7 @@ const PI_DIV_3 := PI / 3.0 # 60 degrees
 var _times: Array = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
-var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _group: IVSmallBodiesGroup
 var _color: Color
 var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
@@ -79,7 +79,7 @@ func _init(group: IVSmallBodiesGroup) -> void:
 func _ready() -> void:
 	if _fragment_identifier:
 		pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_sbg_huds_visibility.connect("points_visibility_changed", self, "_on_visibility_changed")
+	_sbg_huds_state.connect("points_visibility_changed", self, "_on_visibility_changed")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	draw_points()

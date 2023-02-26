@@ -163,7 +163,7 @@ var prog_nodes := {
 	# using API below.
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
-	_SBGHUDsVisibility_ = IVSBGHUDsVisibility,
+	_SBGHUDsState_ = IVSBGHUDsState,
 	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_ViewManager_ = IVViewManager,
 	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
