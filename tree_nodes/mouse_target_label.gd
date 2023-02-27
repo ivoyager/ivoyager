@@ -22,9 +22,6 @@ extends Label
 
 # Uses IVWorldController and (if present) IVFragmentIdentifier.
 
-const FRAGMENT_ORBIT := IVFragmentIdentifier.FRAGMENT_ORBIT
-
-
 var offset := Vector2(0.0, -7.0) # offset to not interfere w/ FragmentIdentifier
 var text_append_orbit := " (%s)" % tr("LABEL_ORBIT")
 
@@ -81,7 +78,7 @@ func _on_fragment_changed(id: int) -> void:
 		_fragment_text = ""
 		return
 	var data: Array = _fragment_data[id]
-	_fragment_text = tr(data[0])
-	if data[1] == FRAGMENT_ORBIT:
-		_fragment_text += text_append_orbit
+	var instance_id: int = data[0]
+	var target_object := instance_from_id(instance_id)
+	_fragment_text = target_object.get_fragment_text(data)
 

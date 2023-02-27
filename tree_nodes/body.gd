@@ -589,6 +589,16 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 	return rotating_space.get_lagrange_point_node3d(lp_integer)
 
 
+func get_fragment_data(_fragment_type: int) -> Array:
+	# only FRAGMENT_BODY_ORBIT at this time
+	return [get_instance_id()]
+
+
+func get_fragment_text(_data: Array) -> String:
+	# only FRAGMENT_BODY_ORBIT at this time
+	return tr(name) + " " + tr("LABEL_ORBIT")
+
+
 # private functions
 
 func _add_rotating_space() -> void:

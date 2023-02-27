@@ -164,7 +164,6 @@ var prog_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
 	_SBGHUDsState_ = IVSBGHUDsState,
-	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_ViewManager_ = IVViewManager,
 	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
 	
@@ -188,7 +187,8 @@ var gui_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
 	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
-	_SplashScreen_ = null, # assign here if convenient (below MainMenuPopup, etc.)
+	_GameGUI_ = null, # assign here if convenient (on top of MouseTargetLabel, below SplashScreen)
+	_SplashScreen_ = null, # assign here if convenient (below popups)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove

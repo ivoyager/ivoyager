@@ -20,7 +20,7 @@
 class_name IVSmallBodiesFinisher
 extends Reference
 
-# Adds HUDPoints and HUDOrbits for all SmallBodiesGroups at system tree built.
+# Adds HUDPoints and HUDOrbits for SmallBodiesGroup instances.
 
 var _HUDPoints_: Script
 var _HUDOrbits_: Script
@@ -28,28 +28,27 @@ var _settings: Dictionary = IVGlobal.settings
 
 
 func _project_init() -> void:
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_init_unpersisted")
+	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
 	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
 	_HUDOrbits_ = IVGlobal.script_classes._HUDOrbits_
 
 
-func _init_unpersisted(_is_new_game: bool) -> void:
-	var small_bodies_group_indexing: IVSmallBodiesGroupIndexing \
-			= IVGlobal.program.SmallBodiesGroupIndexing
-	for group in small_bodies_group_indexing.groups:
-		_init_hud_points(group)
-		_init_hud_orbits(group)
+func _on_node_added(node: Node) -> void:
+	var sbg := node as IVSmallBodiesGroup
+	if sbg:
+		_init_hud_points(sbg)
+		_init_hud_orbits(sbg)
 
 
-func _init_hud_points(group: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new(group)
-	var primary_body := group.primary_body
+func _init_hud_points(sbg: IVSmallBodiesGroup) -> void:
+	var hud_points: IVHUDPoints = _HUDPoints_.new(sbg)
+	var primary_body := sbg.primary_body
 	primary_body.add_child(hud_points)
 
 
-func _init_hud_orbits(group: IVSmallBodiesGroup) -> void:
-	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(group)
-	var primary_body := group.primary_body
+func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
+	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(sbg)
+	var primary_body := sbg.primary_body
 	primary_body.add_child(hud_orbits)
 
 

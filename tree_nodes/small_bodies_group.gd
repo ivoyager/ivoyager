@@ -18,10 +18,10 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSmallBodiesGroup
-extends Reference
+extends Node
 
 # Keeps compact data for large numbers of small bodies that we don't want to
-# instantiate as a full set - e.g., 10,000s of asteroids.
+# instantiate as a full set - e.g., 10000s of asteroids.
 #
 # Packed arrays are used to constitute ArrayMesh's in IVHUDPoints, and act as
 # small body source data (e.g., when a small body needs to be instantiated).
@@ -44,7 +44,6 @@ const DPRINT = false
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
 	"group_name",
-	"group_id",
 	"primary_body",
 	"secondary_body",
 	"lp_integer",
@@ -61,10 +60,10 @@ const PERSIST_PROPERTIES := [
 # *****************************************************************************
 # persisted
 
-var group_name: String
-var group_id: int
-var primary_body: IVBody
-var secondary_body: IVBody # null unless resonant group
+var group_name: String # DEPRECIATE (name from small_bodies_group.tsv)
+var primary_body: IVBody # DEPRECIATE
+
+var secondary_body: IVBody # e.g., Jupiter for Trojans; usually null
 var lp_integer := -1 # -1, 4 & 5 are currently supported
 
 var max_apoapsis := 0.0
@@ -75,7 +74,7 @@ var magnitudes := PoolRealArray()
 var e_i_Om_w := PoolColorArray() # fixed & precessing (e librates for secular resonance)
 var a_M0_n := PoolVector3Array() # librating in l-point objects
 var s_g := PoolVector2Array() # orbit precessions
-var da_D_f := PoolVector3Array() # Trojans: a amplitude, relative L amplitude, and frequency
+var da_D_f := PoolVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
 var th0_de := PoolVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
 
 
@@ -113,12 +112,6 @@ func init(group_name_: String, primary_body_: IVBody, secondary_body_: IVBody = 
 	primary_body = primary_body_
 	secondary_body = secondary_body_
 	lp_integer = lp_integer_
-	# self register in SmallBodiesGroupIndexing for persistence
-	var small_bodies_group_indexing: IVSmallBodiesGroupIndexing \
-			= IVGlobal.program.SmallBodiesGroupIndexing
-	group_id = small_bodies_group_indexing.groups.size()
-	small_bodies_group_indexing.groups.append(self)
-	small_bodies_group_indexing.group_ids[group_name] = group_id
 
 
 func read_binary(binary: File) -> void:
@@ -163,7 +156,18 @@ func finish_binary_import() -> void:
 			% [names.size(), group_name]) or true)
 
 
-func get_fragment_data(index: int, fragment_type: int) -> Array:
-	return [names[index], fragment_type, group_id, index]
+func get_fragment_data(fragment_type: int, index: int) -> Array:
+	return [get_instance_id(), fragment_type, index]
+
+
+func get_fragment_text(data: Array) -> String:
+	var fragment_type: int = data[1]
+	var index: int = data[2]
+	var text := names[index]
+	if fragment_type == IVFragmentIdentifier.FRAGMENT_SBG_ORBIT:
+		text += " " + tr("LABEL_ORBIT")
+	return text
+
+
 
 

@@ -43,8 +43,9 @@ extends Viewport
 signal fragment_changed(id) # -1 on target loss; get data from 'fragment_data'
 
 enum { # fragment_type
-	FRAGMENT_POINT,
-	FRAGMENT_ORBIT,
+	FRAGMENT_BODY_ORBIT,
+	FRAGMENT_SBG_POINT,
+	FRAGMENT_SBG_ORBIT,
 }
 
 const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
@@ -134,18 +135,18 @@ func _process(_delta: float) -> void:
 
 # public
 
-func get_new_id(info: Array) -> int:
+func get_new_id(data: Array) -> int:
 	# Assigns random id from interval 0 to 68_719_476_735 (36 bits).
-	# info = [name, fragment_type, maybe more...]
+	# data[0] is target instance_id; target assigns additional indexes as needed
 	var id := (randi() << 4) | (randi() & 15) # randi() is only 32 bits
 	while fragment_data.has(id):
 		id = (randi() << 4) | (randi() & 15)
-	fragment_data[id] = info
+	fragment_data[id] = data
 	return id
 
 
-func get_new_id_as_vec3(info: Array) -> Vector3:
-	var id := get_new_id(info)
+func get_new_id_as_vec3(data: Array) -> Vector3:
+	var id := get_new_id(data)
 	return encode_vec3(id)
 
 

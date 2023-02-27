@@ -24,6 +24,8 @@ extends MeshInstance
 # points_l4_l5.shader, which set vertex positions using their own orbital
 # math.
 
+const FRAGMENT_SBG_POINT := IVFragmentIdentifier.FRAGMENT_SBG_POINT
+const PI_DIV_3 := PI / 3.0 # 60 degrees
 const ARRAY_FLAGS = (
 		ArrayMesh.ARRAY_FORMAT_VERTEX
 		| ArrayMesh.ARRAY_FORMAT_COLOR
@@ -37,7 +39,6 @@ const L4_L5_ARRAY_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
-const PI_DIV_3 := PI / 3.0 # 60 degrees
 
 var _times: Array = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
@@ -68,10 +69,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	var n := group.get_number()
 	_vec3ids.resize(n) # needs resize whether we use ids or not
 	if _fragment_identifier:
-		var fragment_type := _fragment_identifier.FRAGMENT_POINT
 		var i := 0
 		while i < n:
-			var data := group.get_fragment_data(i, fragment_type)
+			var data := group.get_fragment_data(FRAGMENT_SBG_POINT, i)
 			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
 			i += 1
 

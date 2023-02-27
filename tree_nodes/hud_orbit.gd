@@ -25,6 +25,7 @@ extends MeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
+const FRAGMENT_BODY_ORBIT := IVFragmentIdentifier.FRAGMENT_BODY_ORBIT
 
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
@@ -64,8 +65,8 @@ func _ready() -> void:
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
-		var fragment_info := [_body.name, _fragment_identifier.FRAGMENT_ORBIT]
-		var fragment_id := _fragment_identifier.get_new_id_as_vec3(fragment_info)
+		var data := _body.get_fragment_data(FRAGMENT_BODY_ORBIT)
+		var fragment_id := _fragment_identifier.get_new_id_as_vec3(data)
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbit_shader
 		material_override.set_shader_param("fragment_id", fragment_id)

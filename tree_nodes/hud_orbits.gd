@@ -25,6 +25,8 @@ extends MultiMeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
+const FRAGMENT_SBG_ORBIT := IVFragmentIdentifier.FRAGMENT_SBG_ORBIT
+
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
@@ -41,10 +43,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	if _fragment_identifier:
 		var n := group.get_number()
 		_vec3ids.resize(n)
-		var fragment_type := _fragment_identifier.FRAGMENT_ORBIT
 		var i := 0
 		while i < n:
-			var data := group.get_fragment_data(i, fragment_type)
+			var data := group.get_fragment_data(FRAGMENT_SBG_ORBIT, i)
 			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
 			i += 1
 

@@ -36,7 +36,6 @@ const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 var _SmallBodiesGroup_: Script
 var _asteroid_mag_cutoff_override: float = IVGlobal.asteroid_mag_cutoff_override
 var _table_reader: IVTableReader
-var _small_bodies_group_indexing: IVSmallBodiesGroupIndexing
 var _running_count := 0
 
 
@@ -94,6 +93,7 @@ func _load_group_binaries(star: IVBody, group_name: String, table_row: int, lp_i
 			break
 	group.finish_binary_import()
 	
+	star.add_child(group)
 	
 	_running_count += group.get_number()
 
