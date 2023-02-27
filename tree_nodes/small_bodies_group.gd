@@ -43,8 +43,8 @@ const DPRINT = false
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"group_name",
-	"primary_body",
+	"sbg_alias",
+	"sbg_class",
 	"secondary_body",
 	"lp_integer",
 	"max_apoapsis",
@@ -60,8 +60,8 @@ const PERSIST_PROPERTIES := [
 # *****************************************************************************
 # persisted
 
-var group_name: String # DEPRECIATE (name from small_bodies_group.tsv)
-var primary_body: IVBody # DEPRECIATE
+var sbg_alias: String
+var sbg_class: int # IVEnums.SBGClass
 
 var secondary_body: IVBody # e.g., Jupiter for Trojans; usually null
 var lp_integer := -1 # -1, 4 & 5 are currently supported
@@ -105,11 +105,11 @@ func get_orbit_elements(index: int) -> Array:
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(group_name_: String, primary_body_: IVBody, secondary_body_: IVBody = null,
-		lp_integer_ := -1) -> void:
+func init(sbg_alias_: String, sbg_class_: int, secondary_body_: IVBody = null, lp_integer_ := -1
+		) -> void:
 	# Last 2 args only if these are Lagrange point objects.
-	group_name = group_name_
-	primary_body = primary_body_
+	sbg_alias = sbg_alias_
+	sbg_class = sbg_class_
 	secondary_body = secondary_body_
 	lp_integer = lp_integer_
 
@@ -153,7 +153,7 @@ func finish_binary_import() -> void:
 
 	# feedback
 	assert(VPRINT and print("%s %s asteroids loaded from binaries"
-			% [names.size(), group_name]) or true)
+			% [names.size(), sbg_alias]) or true)
 
 
 func get_fragment_data(fragment_type: int, index: int) -> Array:

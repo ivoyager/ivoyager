@@ -132,8 +132,7 @@ var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
 var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
-var skip_asteroids := false
-var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
+var sbg_mag_cutoff_override := INF # overrides small_bodies_group.tsv cutoff if <INF
 var skip_splash_screen := true
 var pause_only_stops_time := false # if true, Universe & TopGUI are set to process
 var disable_pause := false
@@ -183,13 +182,13 @@ var shared := { # more items added by initializers/shared_initializer.gd
 # Data table import
 var table_import := {
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
 	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
+	small_bodies_groups = "res://ivoyager/data/solar_system/small_bodies_groups.tsv",
 	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
 	stars = "res://ivoyager/data/solar_system/stars.tsv",
 }

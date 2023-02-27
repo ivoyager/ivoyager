@@ -40,10 +40,10 @@ const PERSIST_PROPERTIES := [
 ]
 
 # project vars
-var default_points_visibilities := {} # indexed by group_name; missing same as false
-var default_orbits_visibilities := {} # indexed by group_name; missing same as false
-var default_points_colors := {} # indexed by group_name; missing same as fallback_points_color
-var default_orbits_colors := {} # indexed by group_name; missing same as fallback_orbits_color
+var default_points_visibilities := {} # indexed by sbg_alias; missing same as false
+var default_orbits_visibilities := {} # indexed by sbg_alias; missing same as false
+var default_points_colors := {} # indexed by sbg_alias; missing same as fallback_points_color
+var default_orbits_colors := {} # indexed by sbg_alias; missing same as fallback_orbits_color
 var fallback_points_color := Color(0.0, 0.6, 0.0)
 var fallback_orbits_color := Color(0.8, 0.2, 0.2)
 

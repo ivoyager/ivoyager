@@ -1,4 +1,4 @@
-# small_bodies_finisher.gd
+# sbg_finisher.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSmallBodiesFinisher
+class_name IVSBGFinisher
 extends Reference
 
 # Adds HUDPoints and HUDOrbits for SmallBodiesGroup instances.
@@ -42,13 +42,15 @@ func _on_node_added(node: Node) -> void:
 
 func _init_hud_points(sbg: IVSmallBodiesGroup) -> void:
 	var hud_points: IVHUDPoints = _HUDPoints_.new(sbg)
-	var primary_body := sbg.primary_body
+	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(hud_points)
 
 
 func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
 	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(sbg)
-	var primary_body := sbg.primary_body
+	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(hud_orbits)
+
+
 
 

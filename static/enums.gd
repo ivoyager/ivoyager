@@ -34,6 +34,12 @@ enum { # duplicated in IVSaveBuilder
 	PERSIST_PROCEDURAL,
 }
 
+enum SBGClass {
+	SBG_CLASS_ASTEROIDS,
+	SBG_CLASS_ARTIFICIAL_SATELLITES, # TODO: Roadmap
+}
+
+
 enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,

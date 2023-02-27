@@ -62,6 +62,7 @@ const DPRINT := false
 
 
 var data_table_enums := [
+	IVEnums.SBGClass,
 	IVEnums.Confidence,
 ]
 

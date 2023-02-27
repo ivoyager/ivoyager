@@ -130,15 +130,15 @@ var prog_refs := {
 	_EnvironmentBuilder_ = IVEnvironmentBuilder,
 	_SystemBuilder_ = IVSystemBuilder,
 	_BodyBuilder_ = IVBodyBuilder,
+	_SBGBuilder_ = IVSBGBuilder,
 	_OrbitBuilder_ = IVOrbitBuilder,
-	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
 	
 	# 'finishers' (modify something on entering tree)
 	_BodyFinisher_ = IVBodyFinisher,
-	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
+	_SBGFinisher_ = IVSBGFinisher,
 	
 	# 'managers'
 	_InputMapManager_ = IVInputMapManager,

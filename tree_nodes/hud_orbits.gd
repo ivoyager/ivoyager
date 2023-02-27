@@ -102,11 +102,11 @@ func _set_transforms_and_ids() -> void:
 
 
 func _set_visibility() -> void:
-	visible = _sbg_huds_state.is_orbits_visible(_group.group_name)
+	visible = _sbg_huds_state.is_orbits_visible(_group.sbg_alias)
 
 
 func _set_color() -> void:
-	var color := _sbg_huds_state.get_orbits_color(_group.group_name)
+	var color := _sbg_huds_state.get_orbits_color(_group.sbg_alias)
 	if _color == color:
 		return
 	_color = color
