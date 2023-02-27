@@ -64,22 +64,31 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_HIDE_ALL"
 
-[node name="ShowDefaultButton" type="Button" parent="Buttons"]
+[node name="DefaultVisibleButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
 margin_left = 137.0
-margin_right = 313.0
+margin_right = 320.0
 margin_bottom = 20.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
-text = "BUTTON_SHOW_DEFAULT"
+text = "BUTTON_DEFAULT_VISIBLE"
 
-[node name="SaveAsDefaultButton" type="Button" parent="Buttons"]
+[node name="DefaultColorsButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
 margin_top = 24.0
-margin_right = 188.0
+margin_right = 187.0
 margin_bottom = 44.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
-text = "BUTTON_SAVE_AS_DEFAULT"
+text = "BUTTON_DEFAULT_COLORS"
+
+[node name="SaveButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+visible = false
+margin_left = 191.0
+margin_top = 24.0
+margin_right = 294.0
+margin_bottom = 44.0
+text = "BUTTON_SAVE"

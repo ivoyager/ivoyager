@@ -27,7 +27,7 @@ const math := preload("res://ivoyager/static/math.gd")
 
 
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
-var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
+var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 var _times: Array = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 # instance info
@@ -48,7 +48,7 @@ func _init(body: IVBody) -> void:
 	_body = body
 	_orbit = body.orbit
 	_body_flags = body.flags
-	_visibility_flag = _body_flags & _body_huds_visibility.visibility_flags
+	_visibility_flag = _body_flags & _body_huds_state.all_flags
 	assert(_visibility_flag and !(_visibility_flag & (_visibility_flag - 1)),
 			"_visibility_flag failed single bit test")
 
@@ -56,10 +56,11 @@ func _init(body: IVBody) -> void:
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
 	_orbit.connect("changed", self, "_set_transform_from_orbit")
-	_body_huds_visibility.connect("visibility_changed", self, "_on_global_huds_changed")
+	_body_huds_state.connect("visibility_changed", self, "_on_global_huds_changed")
+	_body_huds_state.connect("color_changed", self, "_set_color")
 	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
 	_body.connect("visibility_changed", self, "_on_body_visibility_changed")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+#	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
@@ -67,15 +68,13 @@ func _ready() -> void:
 		var fragment_id := _fragment_identifier.get_new_id_as_vec3(fragment_info)
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbit_shader
-#		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 		material_override.set_shader_param("fragment_id", fragment_id)
 		material_override.set_shader_param("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 	else:
 		material_override = SpatialMaterial.new()
 		material_override.flags_unshaded = true
-#		material_override.albedo_color = color
 		set_process(false)
-	_set_color(IVGlobal.settings.body_orbit_colors)
+	_set_color()
 	_body_huds_visible = _body.huds_visible
 	_body_visible = _body.visible
 	_on_global_huds_changed()
@@ -109,7 +108,7 @@ func _set_transform_from_orbit(_is_scheduled := false) -> void:
 
 
 func _on_global_huds_changed() -> void:
-	_is_orbit_group_visible = _body_huds_visibility.is_orbit_visible(_body_flags)
+	_is_orbit_group_visible = _body_huds_state.is_orbit_visible(_body_flags)
 	_set_visual_state()
 
 
@@ -129,22 +128,26 @@ func _set_visual_state() -> void:
 		_set_transform_from_orbit()
 
 
-func _set_color(orbit_colors: Dictionary) -> void:
-	var new_color: Color
-	if orbit_colors.has(_visibility_flag):
-		new_color = orbit_colors[_visibility_flag]
-	else:
-		new_color = IVGlobal.settings.body_orbit_default_color
-	if _color == new_color:
+func _set_color() -> void:
+	var color := _body_huds_state.get_orbit_color(_body_flags)
+	if _color == color:
 		return
-	_color = new_color
+	
+#	var new_color: Color
+#	if orbit_colors.has(_visibility_flag):
+#		new_color = orbit_colors[_visibility_flag]
+#	else:
+#		new_color = IVGlobal.settings.body_orbit_default_color
+#	if _color == new_color:
+#		return
+	_color = color
 	if _fragment_identifier:
-		material_override.set_shader_param("color", Vector3(new_color.r, new_color.g, new_color.b))
+		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	else:
-		material_override.albedo_color = new_color
+		material_override.albedo_color = color
 
-
-func _settings_listener(setting: String, value) -> void:
-	if setting == "body_orbit_colors":
-		_set_color(value)
+#
+#func _settings_listener(setting: String, value) -> void:
+#	if setting == "body_orbit_colors":
+#		_set_color(value)
 

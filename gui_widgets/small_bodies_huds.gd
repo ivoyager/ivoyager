@@ -50,20 +50,16 @@ var _orbits_color_pkrs := []
 var _suppress_update := false
 var _is_color_change := false
 
-onready var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
-onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _settings: Dictionary = IVGlobal.settings
-onready var _small_bodies_points_colors: Dictionary = _settings.small_bodies_points_colors
-onready var _small_bodies_orbits_colors: Dictionary = _settings.small_bodies_orbits_colors
+onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 onready var _n_rows := rows.size()
 
 
 func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	IVGlobal.connect("update_gui_requested", self, "_update_points_color_buttons")
-	IVGlobal.connect("update_gui_requested", self, "_update_orbits_color_buttons")
-	_sbg_huds_visibility.connect("points_visibility_changed", self, "_update_points_ckbxs")
-	_sbg_huds_visibility.connect("orbits_visibility_changed", self, "_update_orbits_ckbxs")
+	_sbg_huds_state.connect("points_visibility_changed", self, "_update_points_ckbxs")
+	_sbg_huds_state.connect("orbits_visibility_changed", self, "_update_orbits_ckbxs")
+	_sbg_huds_state.connect("points_color_changed", self, "_update_points_color_buttons")
+	_sbg_huds_state.connect("orbits_color_changed", self, "_update_orbits_color_buttons")
 	
 	# headers
 	if has_headers:
@@ -77,8 +73,6 @@ func _ready() -> void:
 			add_child(header)
 	
 	# grid content
-	var points_default_color: Color = IVGlobal.settings.small_bodies_points_default_color
-	var orbits_default_color: Color = IVGlobal.settings.small_bodies_orbits_default_color
 	for i in _n_rows:
 		var label_text: String = rows[i][0]
 		var groups: Array = rows[i][1]
@@ -93,6 +87,7 @@ func _ready() -> void:
 		ckbx.connect("pressed", self, "_show_hide_points", [ckbx, groups])
 		_points_ckbxs.append(ckbx)
 		hbox.add_child(ckbx)
+		var points_default_color := _sbg_huds_state.get_consensus_points_color(groups, true)
 		var color_button := _make_color_picker_button(points_default_color)
 		color_button.connect("color_changed", self, "_change_points_color", [groups])
 		_points_color_pkrs.append(color_button)
@@ -106,6 +101,7 @@ func _ready() -> void:
 		ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, groups])
 		_orbits_ckbxs.append(ckbx)
 		hbox.add_child(ckbx)
+		var orbits_default_color := _sbg_huds_state.get_consensus_orbits_color(groups, true)
 		color_button = _make_color_picker_button(orbits_default_color)
 		color_button.connect("color_changed", self, "_change_orbits_color", [groups])
 		_orbits_color_pkrs.append(color_button)
@@ -136,8 +132,6 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	var color_picker := button.get_picker()
 	color_picker.add_preset(default_color)
-	var picker_popup := button.get_popup()
-	picker_popup.connect("popup_hide", self, "_on_color_picker_hide")
 	return button
 
 
@@ -145,7 +139,7 @@ func _show_hide_points(ckbx: CheckBox, groups: Array) -> void:
 	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		_sbg_huds_visibility.change_points_visibility(group, pressed)
+		_sbg_huds_state.change_points_visibility(group, pressed)
 	_suppress_update = false
 	_update_points_ckbxs()
 
@@ -154,7 +148,7 @@ func _show_hide_orbits(ckbx: CheckBox, groups: Array) -> void:
 	_suppress_update = true
 	var pressed := ckbx.pressed
 	for group in groups:
-		_sbg_huds_visibility.change_orbits_visibility(group, pressed)
+		_sbg_huds_state.change_orbits_visibility(group, pressed)
 	_suppress_update = false
 	_update_orbits_ckbxs()
 
@@ -164,7 +158,7 @@ func _change_points_color(color: Color, groups: Array) -> void:
 		return
 	_suppress_update = true
 	for group in groups:
-		_set_settings_points_color(group, color)
+		_sbg_huds_state.set_points_color(group, color)
 	_suppress_update = false
 	_update_points_color_buttons()
 
@@ -174,7 +168,7 @@ func _change_orbits_color(color: Color, groups: Array) -> void:
 		return
 	_suppress_update = true
 	for group in groups:
-		_set_settings_orbits_color(group, color)
+		_sbg_huds_state.set_orbits_color(group, color)
 	_suppress_update = false
 	_update_orbits_color_buttons()
 
@@ -186,7 +180,7 @@ func _update_points_ckbxs() -> void:
 		var groups: Array = rows[i][1]
 		var is_points_visible := true
 		for group in groups:
-			if !_sbg_huds_visibility.is_points_visible(group):
+			if !_sbg_huds_state.is_points_visible(group):
 				is_points_visible = false
 				break
 		_points_ckbxs[i].pressed = is_points_visible
@@ -199,7 +193,7 @@ func _update_orbits_ckbxs() -> void:
 		var groups: Array = rows[i][1]
 		var is_orbits_visible := true
 		for group in groups:
-			if !_sbg_huds_visibility.is_orbits_visible(group):
+			if !_sbg_huds_state.is_orbits_visible(group):
 				is_orbits_visible = false
 				break
 		_orbits_ckbxs[i].pressed = is_orbits_visible
@@ -210,17 +204,8 @@ func _update_points_color_buttons() -> void:
 		return
 	for i in _n_rows:
 		var groups: Array = rows[i][1]
-		var use_null_color := false
-		var button_color := NULL_COLOR
-		for group in groups:
-			var color := _get_settings_points_color(group)
-			if !use_null_color and button_color == NULL_COLOR:
-				button_color = color
-			elif button_color != color:
-				use_null_color = true
-				button_color = NULL_COLOR
-				break
-		_points_color_pkrs[i].color = button_color
+		var color := _sbg_huds_state.get_consensus_points_color(groups)
+		_points_color_pkrs[i].color = color
 
 
 func _update_orbits_color_buttons() -> void:
@@ -228,60 +213,8 @@ func _update_orbits_color_buttons() -> void:
 		return
 	for i in _n_rows:
 		var groups: Array = rows[i][1]
-		var use_null_color := false
-		var button_color := NULL_COLOR
-		for group in groups:
-			var color := _get_settings_orbits_color(group)
-			if !use_null_color and button_color == NULL_COLOR:
-				button_color = color
-			elif button_color != color:
-				use_null_color = true
-				button_color = NULL_COLOR
-				break
-		_orbits_color_pkrs[i].color = button_color
-
-
-func _get_settings_points_color(group: String) -> Color:
-	if _small_bodies_points_colors.has(group):
-		return _small_bodies_points_colors[group]
-	return _settings.small_bodies_points_default_color
-
-
-func _get_settings_orbits_color(group: String) -> Color:
-	if _small_bodies_orbits_colors.has(group):
-		return _small_bodies_orbits_colors[group]
-	return _settings.small_bodies_orbits_default_color
-
-
-func _set_settings_points_color(group: String, color: Color) -> void:
-	if color.is_equal_approx(_get_settings_points_color(group)):
-		return
-	if color == _settings.small_bodies_points_default_color:
-		_small_bodies_points_colors.erase(group)
-	else:
-		_small_bodies_points_colors[group] = color
-	IVGlobal.emit_signal("setting_changed", "small_bodies_points_colors",
-			_small_bodies_points_colors)
-	_is_color_change = true
-
-
-func _set_settings_orbits_color(group: String, color: Color) -> void:
-	if color.is_equal_approx(_get_settings_orbits_color(group)):
-		return
-	if color == IVGlobal.settings.small_bodies_orbits_default_color:
-		_small_bodies_orbits_colors.erase(group)
-	else:
-		_small_bodies_orbits_colors[group] = color
-	IVGlobal.emit_signal("setting_changed", "small_bodies_orbits_colors",
-			_small_bodies_orbits_colors)
-	_is_color_change = true
-
-
-func _on_color_picker_hide() -> void:
-	if !_is_color_change:
-		return
-	_is_color_change = false
-	_settings_manager.cache_now()
+		var color := _sbg_huds_state.get_consensus_orbits_color(groups)
+		_orbits_color_pkrs[i].color = color
 
 
 func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
@@ -328,9 +261,6 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 
 
 func _settings_listener(setting: String, _value) -> void:
-	if setting == "small_bodies_points_colors":
-		_update_points_color_buttons()
-	elif setting == "gui_size":
+	if setting == "gui_size":
 		if !column_master:
 			_resize_columns_to_en_width(1)
-		

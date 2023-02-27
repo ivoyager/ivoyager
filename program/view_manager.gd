@@ -25,16 +25,14 @@ extends Node
 enum {
 	CAMERA_STATE = 1,
 	HUDS_VISIBILITY_STATE = 1 << 1,
-	TIME_STATE = 1 << 2,
-	# below used in set_view()
-	CAMERA_STATE_IF_SAVED = 1 << 3,
-	HUDS_VISIBILITY_STATE_IF_SAVED = 1 << 4,
-	TIME_STATE_IF_SAVED = 1 << 5,
-	INSTANT_CAMERA_MOVE = 1 << 6,
+	HUDS_COLOR_STATE = 1 << 2,
+	TIME_STATE = 1 << 3,
+	# combos
+	ALL_NON_TIME_STATE = (1 << 3) - 1,
+	ALL_VIEW_STATE = (1 << 4) - 1,
+	# set_view() flags
+	INSTANT_CAMERA_MOVE = 1 << 4,
 }
-
-
-const DPRINT := true
 
 const files := preload("res://ivoyager/static/files.gd")
 const FILE_EXTENSION := "ivbinary"
@@ -47,13 +45,14 @@ const PERSIST_PROPERTIES := [
 var _gamesave_views := {}
 var _cached_views := {}
 
-var _View_: Script
 var _cache_dir: String = IVGlobal.cache_dir + "/views"
-
+var _View_: Script
+var _timekeeper: IVTimekeeper
 
 
 func _project_init() -> void:
 	_View_ = IVGlobal.script_classes._View_
+	_timekeeper = IVGlobal.program.Timekeeper
 	files.make_dir_if_doesnt_exist(_cache_dir)
 	_read_cache()
 
@@ -61,7 +60,6 @@ func _project_init() -> void:
 # public
 
 func save_view(view_name: String, set_name: String, is_cached: bool, flags: int) -> void:
-	
 	var key := view_name + "." + set_name
 	var view := get_view_object(view_name, set_name, is_cached)
 	if view:
@@ -71,7 +69,9 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 	if flags & CAMERA_STATE:
 		view.save_camera_state()
 	if flags & HUDS_VISIBILITY_STATE:
-		view.save_huds_state()
+		view.save_huds_visibility_state()
+	if flags & HUDS_COLOR_STATE:
+		view.save_huds_color_state()
 	if flags & TIME_STATE:
 		view.save_time_state()
 	if is_cached:
@@ -90,11 +90,13 @@ func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) 
 		view = _gamesave_views.get(key)
 	if !view:
 		return
-	if flags & CAMERA_STATE or flags & CAMERA_STATE_IF_SAVED:
+	if flags & CAMERA_STATE:
 		view.set_camera_state(bool(flags & INSTANT_CAMERA_MOVE))
-	if flags & HUDS_VISIBILITY_STATE or flags & HUDS_VISIBILITY_STATE_IF_SAVED:
+	if flags & HUDS_VISIBILITY_STATE:
 		view.set_huds_visibility_state()
-	if flags & TIME_STATE or flags & TIME_STATE_IF_SAVED:
+	if flags & HUDS_COLOR_STATE:
+		view.set_huds_color_state()
+	if flags & TIME_STATE:
 		view.set_time_state()
 
 
@@ -105,7 +107,6 @@ func save_view_object(view: IVView, view_name: String, set_name: String, is_cach
 		_write_cache(key, view)
 	else:
 		_gamesave_views[key] = view
-		
 
 
 func get_view_object(view_name: String, set_name: String, is_cached: bool) -> IVView:
