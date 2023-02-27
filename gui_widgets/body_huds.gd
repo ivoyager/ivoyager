@@ -29,7 +29,7 @@ extends GridContainer
 # margins.
 #
 # IMPORTANT! For correct visibility control, BodyFlags used in rows must be a
-# subset of IVBodyHUDsVisibility.visibility_flags.
+# subset of IVBodyHUDsState.all_flags.
 
 const NULL_COLOR := Color.black
 const BodyFlags: Dictionary = IVEnums.BodyFlags
@@ -57,21 +57,17 @@ var _names_ckbxs := []
 var _symbols_ckbxs := []
 var _orbits_ckbxs := []
 var _orbits_color_pkrs := []
-var _suppress_update := false
-var _is_color_change := false
 
-onready var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
-onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _settings: Dictionary = IVGlobal.settings
-onready var _body_orbit_colors: Dictionary = _settings.body_orbit_colors
+onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 onready var _n_rows := rows.size()
 
 
 func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	IVGlobal.connect("update_gui_requested", self, "_update_orbit_color_buttons")
-	_body_huds_visibility.connect("visibility_changed", self, "_update_ckbxs")
-	
+	_body_huds_state.connect("visibility_changed", self, "_update_ckbxs")
+	_body_huds_state.connect("color_changed", self, "_update_orbit_color_buttons")
+
 	# headers
 	if has_headers:
 		add_child(Control.new())
@@ -129,9 +125,7 @@ func _ready() -> void:
 			ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, flags])
 			_orbits_ckbxs.append(ckbx)
 			hbox.add_child(ckbx)
-			var orbit_default_color: Color = NULL_COLOR
-			if flags and !(flags & (flags - 1)): # single bit test
-				orbit_default_color = _get_default_orbit_color(flags)
+			var orbit_default_color: Color = _body_huds_state.get_default_orbit_color(flags)
 			var color_button := _make_color_picker_button(orbit_default_color)
 			color_button.connect("color_changed", self, "_change_orbit_color", [flags])
 			_orbits_color_pkrs.append(color_button)
@@ -160,108 +154,46 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	button.set("custom_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
 	button.edit_alpha = false
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	if default_color != NULL_COLOR:
-		var color_picker := button.get_picker()
-		color_picker.add_preset(default_color)
-	else:
-		pass
-		# FIXME or Godot bug: The ColorPicker that never had any add_preset()
-		# calls shows all presets in all ColorPickers (even redundant ones).
-	var picker_popup := button.get_popup()
-	picker_popup.connect("popup_hide", self, "_on_color_picker_hide")
+	var color_picker := button.get_picker()
+	color_picker.add_preset(default_color)
+	# Note: As of Godot 3.5.2, a ColorPicker that never gets any add_preset()
+	# shows all presets set in all ColorPickers (even redundant ones). 
 	return button
 
 
 func _show_hide_names(ckbx: CheckBox, flags: int) -> void:
-	_body_huds_visibility.set_name_visibility(flags, ckbx.pressed)
+	_body_huds_state.set_name_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_symbols(ckbx: CheckBox, flags: int) -> void:
-	_body_huds_visibility.set_symbol_visibility(flags, ckbx.pressed)
+	_body_huds_state.set_symbol_visibility(flags, ckbx.pressed)
 
 
 func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
-	_body_huds_visibility.set_orbit_visibility(flags, ckbx.pressed)
+	_body_huds_state.set_orbit_visibility(flags, ckbx.pressed)
 
 
 func _update_ckbxs() -> void:
 	for i in _n_rows:
 		var flags: int = rows[i][1]
-		_names_ckbxs[i].pressed = _body_huds_visibility.is_name_visible(flags, true)
-		_symbols_ckbxs[i].pressed = _body_huds_visibility.is_symbol_visible(flags, true)
+		_names_ckbxs[i].pressed = _body_huds_state.is_name_visible(flags, true)
+		_symbols_ckbxs[i].pressed = _body_huds_state.is_symbol_visible(flags, true)
 		if _orbits_ckbxs[i]:
-			_orbits_ckbxs[i].pressed = _body_huds_visibility.is_orbit_visible(flags, true)
+			_orbits_ckbxs[i].pressed = _body_huds_state.is_orbit_visible(flags, true)
 
 
 func _change_orbit_color(color: Color, flags: int) -> void:
 	if color == NULL_COLOR:
 		return
-	_suppress_update = true
-	var flag := 1
-	while flags: # change color for each flag bit
-		if flags & 1:
-			_set_settings_orbit_color(flag, color)
-		flags >>= 1
-		flag <<= 1
-	_suppress_update = false
-	_update_orbit_color_buttons()
+	_body_huds_state.set_orbit_color(flags, color)
 
 
 func _update_orbit_color_buttons() -> void:
-	if _suppress_update:
-		return
 	for i in _n_rows:
 		if !_orbits_color_pkrs[i]:
 			continue
-		var use_null_color := false
-		var button_color := NULL_COLOR
 		var flags: int = rows[i][1]
-		var flag := 1
-		while flags: # test each flag
-			if flags & 1:
-				var color := _get_settings_orbit_color(flag)
-				if !use_null_color and button_color == NULL_COLOR:
-					button_color = color
-				elif button_color != color:
-					use_null_color = true
-					button_color = NULL_COLOR
-					break
-			flags >>= 1
-			flag <<= 1
-		_orbits_color_pkrs[i].color = button_color
-
-
-func _get_settings_orbit_color(flag: int) -> Color:
-	if _body_orbit_colors.has(flag):
-		return _body_orbit_colors[flag]
-	return _settings.body_orbit_default_color
-
-
-func _get_default_orbit_color(flag: int) -> Color:
-	var default_body_orbit_colors: Dictionary = _settings_manager.defaults.body_orbit_colors
-	if default_body_orbit_colors.has(flag):
-		return default_body_orbit_colors[flag]
-	return _settings_manager.defaults.body_orbit_default_color
-	
-
-
-func _set_settings_orbit_color(flag: int, color: Color) -> void:
-	if color.is_equal_approx(_get_settings_orbit_color(flag)):
-		return
-	if color == _settings.body_orbit_default_color:
-		_body_orbit_colors.erase(flag)
-	else:
-		_body_orbit_colors[flag] = color
-	IVGlobal.emit_signal("setting_changed", "body_orbit_colors",
-			_body_orbit_colors)
-	_is_color_change = true
-
-
-func _on_color_picker_hide() -> void:
-	if !_is_color_change:
-		return
-	_is_color_change = false
-	_settings_manager.cache_now()
+		_orbits_color_pkrs[i].color = _body_huds_state.get_orbit_color(flags)
 
 
 func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
@@ -308,8 +240,6 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 
 
 func _settings_listener(setting: String, _value) -> void:
-	if setting == "body_orbit_colors":
-		_update_orbit_color_buttons()
-	elif setting == "gui_size":
+	if setting == "gui_size":
 		if !column_master:
 			_resize_columns_to_en_width(1)

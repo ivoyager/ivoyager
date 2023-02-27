@@ -50,7 +50,7 @@ func _on_init():
 		camera_key_move_rate = 1.0,
 		camera_key_pitch_yaw_rate = 1.0,
 		camera_key_roll_rate = 1.0,
-
+	
 		# UI & HUD display
 		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
@@ -63,28 +63,12 @@ func _on_init():
 	
 		# misc
 		mouse_action_releases_gui_focus = true,
-
+	
 		# cached but not in IVOptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
-		
-		body_orbit_default_color = Color(0.4, 0.4, 0.8),
-		body_orbit_colors = {
-			# Keys must match single bits in IVBodyHUDsVisibility.visibility_flags
-			BodyFlags.IS_STAR : Color(0.4, 0.4, 0.8), # maybe future use
-			BodyFlags.IS_TRUE_PLANET :  Color(0.5, 0.5, 0.1),
-			BodyFlags.IS_DWARF_PLANET : Color(0.1, 0.8, 0.2),
-			BodyFlags.IS_PLANETARY_MASS_MOON : Color(0.3, 0.3, 0.9),
-			BodyFlags.IS_NON_PLANETARY_MASS_MOON : Color(0.35, 0.1, 0.35),
-			BodyFlags.IS_ASTEROID : Color(0.8, 0.2, 0.2),
-			BodyFlags.IS_SPACECRAFT : Color(0.4, 0.4, 0.8),
-		},
-		small_bodies_points_default_color = Color(0.0, 0.6, 0.0),
-		small_bodies_points_colors = {},
-		small_bodies_orbits_default_color = Color(0.8, 0.2, 0.2),
-		small_bodies_orbits_colors = {},
-
+	
 		}
 	
 	# read-only

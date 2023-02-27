@@ -28,31 +28,18 @@ extends VBoxContainer
 # WIP - hidden buttons [Hide All][Show Default]
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
+const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
+const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
 
-# default HUDs view if user hasn't saved their own
-var default_orbit_visible_flags: int = (
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-)
-var default_name_visible_flags: int = (
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-)
-var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-var default_visible_points_groups := []
-var default_visible_orbits_groups := []
+
+
+# WIP - New buttons [Default Visible][Default Colors] work via BodyHUDsState
 
 
 var _column_master: GridContainer
 
-onready var _body_huds_visibility: IVBodyHUDsVisibility = IVGlobal.program.BodyHUDsVisibility
-onready var _sbg_huds_visibility: IVSBGHUDsVisibility = IVGlobal.program.SBGHUDsVisibility
+onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 
 
@@ -62,22 +49,10 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%ShowDefaultButton".connect("pressed", self, "_show_default")
-	$"%SaveAsDefaultButton".connect("pressed", self, "_save_as_default")
-	if _view_manager.has_view("default", "all_huds", true):
-		return
-	var _View_: Script = IVGlobal.script_classes._View_
-	var view: IVView = _View_.new()
-	view.set_huds_visibility_data(
-		true,
-		default_orbit_visible_flags,
-		default_name_visible_flags,
-		default_symbol_visible_flags,
-		default_visible_points_groups,
-		default_visible_orbits_groups
-	)
-	_view_manager.save_view_object(view, "default", "all_huds", true)
-
+	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
+	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
+	$"%SaveButton".connect("pressed", self, "_save")
+	
 
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
@@ -138,15 +113,20 @@ func _on_child_entered_tree(control: Control) -> void:
 
 
 func _hide_all() -> void:
-	_body_huds_visibility.hide_all()
-	_sbg_huds_visibility.hide_all()
+	_body_huds_state.hide_all()
+	_sbg_huds_state.hide_all()
 
 
-func _show_default() -> void:
-	_view_manager.set_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
+func _default_visible() -> void:
+	_body_huds_state.set_default_visibilities()
+	_sbg_huds_state.set_default_visibilities()
 
 
-func _save_as_default() -> void:
-	_view_manager.save_view("default", "all_huds", true, _view_manager.HUDS_VISIBILITY_STATE)
+func _default_colors() -> void:
+	_body_huds_state.set_default_colors()
+	_sbg_huds_state.set_default_colors()
 
+
+func _save() -> void:
+	pass
 
