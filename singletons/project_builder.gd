@@ -214,7 +214,6 @@ var procedural_classes := {
 	_SBGPoints_ = IVSBGPoints,
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
 	_ModelSpace_ = IVModelSpace,
-	_OrbitSpace_ = IVOrbitSpace, # replace w/ Spatial
 	_Rings_ = IVRings, # replace w/ Spatial
 	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
 	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial

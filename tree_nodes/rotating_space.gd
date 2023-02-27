@@ -21,15 +21,13 @@ class_name IVRotatingSpace
 extends Spatial
 
 # Created and maintained by IVBody instance only when needed. This is the
-# rotating reference frame in which Lagrange points are defined.
-#
-# RotatingSpace is different than OrbitSpace for non-circular orbits. In
+# rotating reference frame in which Lagrange points are embeded. In
 # RotatingSpace, the primary body (P1) is maintained at constant position
 # (-characteristic_length, 0, 0). The secondary body (P2) will be near the
 # origin, but ocillating along the x-axis in proportion to orbit eccentricity.
 #
 # Note: Lagrange point calculations assume "large" mass ratio (> ~25) and
-# "small" eccentricity (I'm not sure exactly what small means).
+# "small" eccentricity. I'm not sure exactly what small eccentricity means.
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
