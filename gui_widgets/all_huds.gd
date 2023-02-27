@@ -48,7 +48,7 @@ func _ready() -> void:
 	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
 	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
 	$"%SaveButton".connect("pressed", self, "_save")
-	
+
 
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
@@ -91,7 +91,7 @@ func _on_child_entered_tree(control: Control) -> void:
 				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
 			]
 		
-		# SmallBodiesHUDs instance
+		# SBGHUDs instance
 		"AsteroidsHUDs":
 			control.column_master = _column_master
 			control.rows = [

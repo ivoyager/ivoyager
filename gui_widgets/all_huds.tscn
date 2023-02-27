@@ -2,7 +2,7 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/all_huds.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/body_huds.tscn" type="PackedScene" id=2]
-[ext_resource path="res://ivoyager/gui_widgets/small_bodies_huds.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/sbg_huds.tscn" type="PackedScene" id=3]
 
 [node name="AllHUDs" type="VBoxContainer"]
 margin_left = 10.0
@@ -39,7 +39,7 @@ margin_right = 332.0
 margin_bottom = 10.0
 rect_min_size = Vector2( 0, 10 )
 
-[node name="AsteroidsHUDs" parent="." instance=ExtResource( 4 )]
+[node name="AsteroidsHUDs" parent="." instance=ExtResource( 3 )]
 margin_top = 10.0
 margin_right = 0.0
 margin_bottom = 10.0
