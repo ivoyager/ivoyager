@@ -1,4 +1,4 @@
-# hud_orbit.gd
+# sbg_orbits.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDOrbits
+class_name IVSBGOrbits
 extends MultiMeshInstance
 
 # Visual orbits for a SmallBodiesGroup instance. If FragmentIdentifier exists,

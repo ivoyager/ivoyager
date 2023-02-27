@@ -1,4 +1,4 @@
-# hud_points.gd
+# sbg_points.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,12 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDPoints
+class_name IVSBGPoints
 extends MeshInstance
 
 # Visual points for a SmallBodiesGroup instance. Uses points.shader or
-# points_l4_l5.shader, which set vertex positions using their own orbital
-# math.
+# points_l4_l5.shader. Shaders maintain vertex positions using their own
+# orbital math.
+
+# TODO 4.0: Use shader CUSTOM channels rather than hacking COLOR, NORMAL, etc.:
+#  - CUSTOM0: e_i_Om_w
+#  - CUSTOM1: a_M0_n or da_D_f plus magnitude
+#  - CUSTOM2: s_g plus th0_de
+
 
 const FRAGMENT_SBG_POINT := IVFragmentIdentifier.FRAGMENT_SBG_POINT
 const PI_DIV_3 := PI / 3.0 # 60 degrees
@@ -148,4 +154,3 @@ func _set_color() -> void:
 func _settings_listener(setting: String, value) -> void:
 	if setting == "point_size":
 		material_override.set_shader_param("point_size", float(value))
-

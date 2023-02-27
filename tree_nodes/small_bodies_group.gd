@@ -23,15 +23,10 @@ extends Node
 # Keeps compact data for large numbers of small bodies that we don't want to
 # instantiate as a full set - e.g., 10000s of asteroids.
 #
-# Packed arrays are used to constitute ArrayMesh's in IVHUDPoints, and act as
-# small body source data (e.g., when a small body needs to be instantiated).
-# Packed arrays are also very fast to read/write in the game save file.
+# Packed arrays are used to constitute ArrayMesh's in IVSBGPoints, and act as
+# small body source data. Packed arrays are also very fast to read/write in the
+# game save file.
 #
-# TODO 4.0: Reorganize for new shader CUSTOM channels:
-#  - CUSTOM0: a, e, M0, n
-#  - CUSTOM1: i, Om, w
-#  - CUSTOM2: s, g
-#  - CUSTOM3: d, D, f, th0 (lagrange only)
 
 
 const units := preload("res://ivoyager/static/units.gd")

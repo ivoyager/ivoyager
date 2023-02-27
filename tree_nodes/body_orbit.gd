@@ -1,4 +1,4 @@
-# hud_orbit.gd
+# body_orbit.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDOrbit
+class_name IVBodyOrbit
 extends MeshInstance
 
 # Visual orbit for a Body instance. If FragmentIdentifier exists, then a shader
@@ -133,22 +133,11 @@ func _set_color() -> void:
 	var color := _body_huds_state.get_orbit_color(_body_flags)
 	if _color == color:
 		return
-	
-#	var new_color: Color
-#	if orbit_colors.has(_visibility_flag):
-#		new_color = orbit_colors[_visibility_flag]
-#	else:
-#		new_color = IVGlobal.settings.body_orbit_default_color
-#	if _color == new_color:
-#		return
 	_color = color
 	if _fragment_identifier:
 		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	else:
 		material_override.albedo_color = color
 
-#
-#func _settings_listener(setting: String, value) -> void:
-#	if setting == "body_orbit_colors":
-#		_set_color(value)
+
 

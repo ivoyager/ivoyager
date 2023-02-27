@@ -20,17 +20,17 @@
 class_name IVSBGFinisher
 extends Reference
 
-# Adds HUDPoints and HUDOrbits for SmallBodiesGroup instances.
+# Adds SBGPoints and SBGOrbits for SmallBodiesGroup instances.
 
-var _HUDPoints_: Script
-var _HUDOrbits_: Script
+var _SBGPoints_: Script
+var _SBGOrbits_: Script
 var _settings: Dictionary = IVGlobal.settings
 
 
 func _project_init() -> void:
 	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
-	_HUDPoints_ = IVGlobal.script_classes._HUDPoints_
-	_HUDOrbits_ = IVGlobal.script_classes._HUDOrbits_
+	_SBGPoints_ = IVGlobal.script_classes._SBGPoints_
+	_SBGOrbits_ = IVGlobal.script_classes._SBGOrbits_
 
 
 func _on_node_added(node: Node) -> void:
@@ -41,15 +41,15 @@ func _on_node_added(node: Node) -> void:
 
 
 func _init_hud_points(sbg: IVSmallBodiesGroup) -> void:
-	var hud_points: IVHUDPoints = _HUDPoints_.new(sbg)
+	var sbg_points: IVSBGPoints = _SBGPoints_.new(sbg)
 	var primary_body: IVBody = sbg.get_parent()
-	primary_body.add_child(hud_points)
+	primary_body.add_child(sbg_points)
 
 
 func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
-	var hud_orbits: IVHUDOrbits = _HUDOrbits_.new(sbg)
+	var sbg_orbits: IVSBGOrbits = _SBGOrbits_.new(sbg)
 	var primary_body: IVBody = sbg.get_parent()
-	primary_body.add_child(hud_orbits)
+	primary_body.add_child(sbg_orbits)
 
 
 

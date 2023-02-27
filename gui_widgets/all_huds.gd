@@ -20,12 +20,8 @@
 class_name IVAllHUDs
 extends VBoxContainer
 
-# GUI widget that holds all the HUD visibility widgets.
-#
-# IMPORTANT! For correct visibility control, BodyFlags used in rows of BodyHUDs
-# instances must be a subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
-#
-# WIP - hidden buttons [Hide All][Show Default]
+# GUI container widget that holds all the HUD widgets.
+
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
