@@ -1,4 +1,4 @@
-# time_set_popup.gd
+# time_set_button.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,24 +17,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVTimeSetPopup
-extends PopupPanel
-const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
+class_name IVTimeSetButton
+extends Button
 
-# Call popup_centered() to show.
+# GUI button widget that opens IVTimeSetPopup.
+#
+# Important! IVTimeSetPopup must be added by project extension file to
+# IVProjectBuilder.gui_nodes. Otherwise, it is not present and this button
+# won't do anything.
+
+
+var _time_set_popup: IVTimeSetPopup
 
 
 func _ready() -> void:
-	$ControlDraggable.set_min_size()
-	connect("about_to_show", self, "_on_about_to_show")
-	$"%TimeSetter".connect("time_set", self, "_on_time_set")
+	_time_set_popup = IVGlobal.program.get("TimeSetPopup")
+	if !_time_set_popup:
+		return
+	connect("toggled", self, "_on_toggled")
+	_time_set_popup.connect("visibility_changed", self, "_on_visibility_changed")
 
 
-func _on_about_to_show() -> void:
-	$"%TimeSetter".set_current()
+func _on_toggled(is_pressed) -> void:
+	if !_time_set_popup:
+		return
+	if is_pressed:
+		_time_set_popup.popup_centered()
+	else:
+		_time_set_popup.hide()
 
 
-func _on_time_set(is_close: bool) -> void:
-	if is_close:
-		hide()
+func _on_visibility_changed() -> void:
+	yield(get_tree(), "idle_frame")
+	if !_time_set_popup.visible:
+		pressed = false
+
 
