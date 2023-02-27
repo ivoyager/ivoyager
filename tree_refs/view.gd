@@ -43,7 +43,8 @@ const PERSIST_PROPERTIES := [
 	
 	"has_huds_color_state",
 	"body_orbit_colors",
-	
+	"sbg_points_colors",
+	"sbg_orbits_colors",
 	
 	"has_time_state",
 	"is_real_world_time",
@@ -68,6 +69,8 @@ var visible_orbits_groups := []
 
 var has_huds_color_state := false
 var body_orbit_colors := {}
+var sbg_points_colors := {}
+var sbg_orbits_colors := {}
 
 var has_time_state := false # used by Planetarium
 var is_real_world_time := false
@@ -95,32 +98,14 @@ func reset() -> void:
 	visible_points_groups.clear()
 	visible_orbits_groups.clear()
 	body_orbit_colors.clear()
+	sbg_points_colors.clear()
+	sbg_orbits_colors.clear()
 
 
 func get_cache_data() -> Array:
 	var data := []
-	data.append(has_camera_state)
-	if has_camera_state:
-		data.append(selection_name)
-		data.append(camera_flags)
-		data.append(view_position)
-		data.append(view_rotations)
-	data.append(has_huds_visibility_state)
-	if has_huds_visibility_state:
-		data.append(name_visible_flags)
-		data.append(symbol_visible_flags)
-		data.append(orbit_visible_flags)
-		data.append(visible_points_groups)
-		data.append(visible_orbits_groups)
-	data.append(has_huds_color_state)
-	if has_huds_color_state:
-		data.append(body_orbit_colors)
-	data.append(has_time_state)
-	if has_time_state:
-		data.append(is_real_world_time)
-		data.append(time)
-		data.append(speed_index)
-		data.append(is_reversed)
+	for property in PERSIST_PROPERTIES:
+		data.append(get(property))
 	data.append(_version_hash)
 	return data
 
@@ -136,72 +121,11 @@ func set_cache_data(data) -> bool:
 		return false
 	if version_hash != _version_hash:
 		return false
-	var i := 0
-	has_camera_state = data[i]
-	i += 1
-	if has_camera_state:
-		selection_name = data[i]
-		camera_flags = data[i + 1]
-		view_position = data[i + 2]
-		view_rotations = data[i + 3]
-		i += 4
-	has_huds_visibility_state = data[i]
-	i += 1
-	if has_huds_visibility_state:
-		name_visible_flags = data[i]
-		symbol_visible_flags = data[i + 1]
-		orbit_visible_flags = data[i + 2]
-		visible_points_groups = data[i + 3]
-		visible_orbits_groups = data[i + 4]
-		i += 5
-	has_huds_color_state = data[i]
-	i += 1
-	if has_huds_color_state:
-		body_orbit_colors = data[i]
-		i += 1
-	has_time_state = data[i]
-	i += 1
-	if has_time_state:
-		is_real_world_time = data[i]
-		time = data[i + 1]
-		speed_index = data[i + 2]
-		is_reversed = data[i + 3]
+	if data.size() != PERSIST_PROPERTIES.size() + 1:
+		return false
+	for i in PERSIST_PROPERTIES.size():
+		set(PERSIST_PROPERTIES[i], data[i])
 	return true
-
-
-func set_camera_data(has_camera_state_: bool, selection_name_: String, camera_flags_: int,
-		view_position_: Vector3, view_rotations_: Vector3) -> void:
-	has_camera_state = has_camera_state_
-	selection_name = selection_name_
-	camera_flags = camera_flags_
-	view_position = view_position_
-	view_rotations = view_rotations_
-
-
-func set_huds_visibility_data(has_huds_visibility_state_: bool, name_visible_flags_: int,
-		symbol_visible_flags_: int, orbit_visible_flags_: int, visible_points_groups_: Array,
-		visible_orbits_groups_: Array) -> void:
-	# Keeps arrays!
-	has_huds_visibility_state = has_huds_visibility_state_
-	name_visible_flags = name_visible_flags_
-	symbol_visible_flags = symbol_visible_flags_
-	orbit_visible_flags = orbit_visible_flags_
-	visible_points_groups = visible_points_groups_
-	visible_orbits_groups = visible_orbits_groups_
-
-
-func set_huds_color_data(has_huds_color_state_: bool, body_orbit_colors_: Dictionary) -> void:
-	# Keeps dictionaries!
-	has_huds_color_state = has_huds_color_state_
-	body_orbit_colors = body_orbit_colors_
-
-
-func set_time_data(has_time_state_: bool, time_: float, speed_index_: int, is_reversed_: int
-		) -> void:
-	has_time_state = has_time_state_
-	time = time_
-	speed_index = speed_index_
-	is_reversed = is_reversed_
 
 
 # camera state
@@ -250,12 +174,16 @@ func set_huds_visibility_state() -> void:
 func save_huds_color_state() -> void:
 	has_huds_color_state = true
 	body_orbit_colors = _body_huds_state.get_orbit_colors_dict() # ref safe
+	sbg_points_colors = _sbg_huds_state.get_points_colors_dict()
+	sbg_orbits_colors = _sbg_huds_state.get_orbits_colors_dict()
 
 
 func set_huds_color_state() -> void:
 	if !has_huds_color_state:
 		return
 	_body_huds_state.set_orbit_colors_dict(body_orbit_colors) # ref safe
+	_sbg_huds_state.set_points_colors_dict(sbg_points_colors)
+	_sbg_huds_state.set_orbits_colors_dict(sbg_orbits_colors)
 
 
 # time state

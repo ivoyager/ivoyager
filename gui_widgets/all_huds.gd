@@ -34,26 +34,6 @@ const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
 
 
 # WIP - New buttons [Default Visible][Default Colors] work via BodyHUDsState
-# Then, remove 'default' view construction here...
-
-# default HUDs view if user hasn't saved their own
-var default_orbit_visible_flags: int = (
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-)
-var default_name_visible_flags: int = (
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-)
-var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-var default_visible_points_groups := []
-var default_visible_orbits_groups := []
 
 
 var _column_master: GridContainer
@@ -69,22 +49,10 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%ShowDefaultButton".connect("pressed", self, "_show_default")
-	$"%SaveAsDefaultButton".connect("pressed", self, "_save_as_default")
-	if _view_manager.has_view("default", "all_huds", true):
-		return
-	var _View_: Script = IVGlobal.script_classes._View_
-	var view: IVView = _View_.new()
-	view.set_huds_visibility_data(
-		true,
-		default_name_visible_flags,
-		default_symbol_visible_flags,
-		default_orbit_visible_flags,
-		default_visible_points_groups,
-		default_visible_orbits_groups
-	)
-	_view_manager.save_view_object(view, "default", "all_huds", true)
-
+	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
+	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
+	$"%SaveButton".connect("pressed", self, "_save")
+	
 
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
@@ -149,11 +117,16 @@ func _hide_all() -> void:
 	_sbg_huds_state.hide_all()
 
 
-func _show_default() -> void:
-	_view_manager.set_view("default", "all_huds", true, HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
+func _default_visible() -> void:
+	_body_huds_state.set_default_visibilities()
+	_sbg_huds_state.set_default_visibilities()
 
 
-func _save_as_default() -> void:
-	_view_manager.save_view("default", "all_huds", true, HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
+func _default_colors() -> void:
+	_body_huds_state.set_default_colors()
+	_sbg_huds_state.set_default_colors()
 
+
+func _save() -> void:
+	pass
 

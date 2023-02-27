@@ -64,7 +64,7 @@ var default_name_visible_flags := default_orbit_visible_flags # exclusive w/ sym
 var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 
 var default_orbit_colors := {
-	# Keys must match all single bits in all_flags.
+	# Must have full key set from all_flags bits!
 	BodyFlags.IS_STAR : Color(0.4, 0.4, 0.8), # maybe future use
 	BodyFlags.IS_TRUE_PLANET :  Color(0.5, 0.5, 0.1),
 	BodyFlags.IS_DWARF_PLANET : Color(0.1, 0.8, 0.2),
@@ -80,11 +80,10 @@ var fallback_orbit_color := Color(0.4, 0.4, 0.8)
 var name_visible_flags := default_name_visible_flags # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := default_symbol_visible_flags # exclusive w/ name_visible_flags
 var orbit_visible_flags := default_orbit_visible_flags
-var orbit_colors := default_orbit_colors.duplicate()
+var orbit_colors := default_orbit_colors.duplicate() # must have full key set from all_flags bits!
 
 
 onready var _tree := get_tree()
-
 
 
 func _ready() -> void:
@@ -111,9 +110,22 @@ func _unhandled_key_input(event: InputEventKey):
 # visibility
 
 func hide_all() -> void:
+	if !orbit_visible_flags and !name_visible_flags and !symbol_visible_flags:
+		return
 	orbit_visible_flags = 0
 	name_visible_flags = 0
 	symbol_visible_flags = 0
+	emit_signal("visibility_changed")
+
+
+func set_default_visibilities() -> void:
+	if (name_visible_flags == default_name_visible_flags
+			and symbol_visible_flags == default_symbol_visible_flags
+			and orbit_visible_flags == default_orbit_visible_flags):
+		return
+	name_visible_flags = default_name_visible_flags
+	symbol_visible_flags = default_symbol_visible_flags
+	orbit_visible_flags = default_orbit_visible_flags
 	emit_signal("visibility_changed")
 
 
@@ -256,6 +268,13 @@ func set_orbit_visible_flags(orbit_visible_flags_: int) -> void:
 
 
 # color
+
+func set_default_colors() -> void:
+	if deep_equal(orbit_colors, default_orbit_colors):
+		return
+	orbit_colors.merge(default_orbit_colors, true)
+	emit_signal("color_changed")
+
 
 func get_default_orbit_color(body_flags: int) -> Color:
 	# If >1 bit from all_flags, will return fallback_orbit_color

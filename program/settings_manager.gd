@@ -50,7 +50,7 @@ func _on_init():
 		camera_key_move_rate = 1.0,
 		camera_key_pitch_yaw_rate = 1.0,
 		camera_key_roll_rate = 1.0,
-
+	
 		# UI & HUD display
 		gui_size = IVEnums.GUISize.GUI_MEDIUM,
 		viewport_names_size = 15,
@@ -63,18 +63,12 @@ func _on_init():
 	
 		# misc
 		mouse_action_releases_gui_focus = true,
-
+	
 		# cached but not in IVOptionsPopup
 		save_dir = "",
 		pbd_splash_caption_open = false,
 		mouse_only_gui_nav = false,
-		
-		# DEPRECIATE
-		small_bodies_points_default_color = Color(0.0, 0.6, 0.0),
-		small_bodies_points_colors = {},
-		small_bodies_orbits_default_color = Color(0.8, 0.2, 0.2),
-		small_bodies_orbits_colors = {},
-
+	
 		}
 	
 	# read-only

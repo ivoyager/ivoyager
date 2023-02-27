@@ -29,6 +29,8 @@ signal points_color_changed()
 signal orbits_color_changed()
 
 
+const NULL_COLOR := Color.black
+
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
 	"points_visibilities",
@@ -66,7 +68,18 @@ func hide_all() -> void:
 		orbits_visibilities[key] = false
 	emit_signal("points_visibility_changed")
 	emit_signal("orbits_visibility_changed")
-	
+
+
+func set_default_visibilities() -> void:
+	if !deep_equal(points_visibilities, default_points_visibilities):
+		points_visibilities.clear()
+		points_visibilities.merge(default_points_visibilities)
+		emit_signal("points_visibility_changed")
+	if !deep_equal(orbits_visibilities, default_orbits_visibilities):
+		orbits_visibilities.clear()
+		orbits_visibilities.merge(default_orbits_visibilities)
+		emit_signal("orbits_visibility_changed")
+
 
 func is_points_visible(group: String) -> bool:
 	return points_visibilities.get(group, false)
@@ -118,6 +131,17 @@ func set_visible_orbits_groups(array: Array) -> void:
 
 # color
 
+func set_default_colors() -> void:
+	if !deep_equal(points_colors, default_points_colors):
+		points_colors.clear()
+		points_colors.merge(default_points_colors)
+		emit_signal("points_color_changed")
+	if !deep_equal(orbits_colors, default_orbits_colors):
+		orbits_colors.clear()
+		orbits_colors.merge(default_orbits_colors)
+		emit_signal("orbits_color_changed")
+
+
 func get_default_points_color(group: String) -> Color:
 	if default_points_colors.has(group):
 		return default_points_colors[group]
@@ -140,6 +164,32 @@ func get_orbits_color(group: String) -> Color:
 	if orbits_colors.has(group):
 		return orbits_colors[group]
 	return fallback_orbits_color
+
+
+func get_consensus_points_color(groups: Array, is_default := false) -> Color:
+	var has_color := false
+	var consensus_color := NULL_COLOR
+	for group in groups:
+		var color := get_default_points_color(group) if is_default else get_points_color(group)
+		if !has_color:
+			has_color = true
+			consensus_color = color
+		elif color != consensus_color:
+			return NULL_COLOR
+	return consensus_color
+
+
+func get_consensus_orbits_color(groups: Array, is_default := false) -> Color:
+	var has_color := false
+	var consensus_color := NULL_COLOR
+	for group in groups:
+		var color := get_default_orbits_color(group) if is_default else get_orbits_color(group)
+		if !has_color:
+			has_color = true
+			consensus_color = color
+		elif color != consensus_color:
+			return NULL_COLOR
+	return consensus_color
 
 
 func set_points_color(group: String, color: Color) -> void:
