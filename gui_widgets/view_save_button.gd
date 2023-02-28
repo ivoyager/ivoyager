@@ -20,22 +20,35 @@
 class_name IVViewSaveButton
 extends Button
 
-# GUI button widget that opens IVViewSavePopup.
+# GUI button widget that opens its own IVViewSavePopup.
 #
-# Important! IVViewSavePopup must be added by project extension file to
-# IVProjectBuilder.gui_nodes. Otherwise, it is not present and this button
-# won't do anything.
+# See IVViewCollection for widget containing this button and resultant saved
+# view buttons.
 
+signal view_saved(view_name)
 
 var _view_save_popup: IVViewSavePopup
+var _view_saver: IVViewSaver
 
 
 func _ready() -> void:
-	_view_save_popup = IVGlobal.program.get("ViewSavePopup")
-	if !_view_save_popup:
-		return
+	var top_gui: Control = IVGlobal.program.TopGUI
+	_view_save_popup = IVFiles.make_object_or_scene(IVViewSavePopup)
+	_view_saver = _view_save_popup.find_node("ViewSaver")
+	_view_saver.connect("view_saved", self, "_on_view_saved")
+	top_gui.add_child(_view_save_popup)
 	connect("toggled", self, "_on_toggled")
 	_view_save_popup.connect("visibility_changed", self, "_on_visibility_changed")
+
+
+func init(default_view_name := "LABEL_CUSTOM_1", set_name := "view_saver", is_cached := true,
+		view_flags := IVViewManager.ALL_VIEW_STATE) -> void:
+	_view_saver.init(default_view_name, set_name, is_cached, view_flags)
+
+
+func _on_view_saved(view_name: String) -> void:
+	_view_save_popup.hide()
+	emit_signal("view_saved", view_name)
 
 
 func _on_toggled(is_pressed) -> void:

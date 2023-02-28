@@ -3,7 +3,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/all_huds.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/body_huds.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/sbg_huds.tscn" type="PackedScene" id=3]
-[ext_resource path="res://ivoyager/gui_widgets/view_save_button.tscn" type="PackedScene" id=4]
+[ext_resource path="res://ivoyager/gui_widgets/view_collection.tscn" type="PackedScene" id=4]
 
 [node name="AllHUDs" type="VBoxContainer"]
 margin_left = 10.0
@@ -36,7 +36,7 @@ margin_right = 0.0
 margin_bottom = 0.0
 
 [node name="Spacer" type="Control" parent="."]
-margin_right = 332.0
+margin_right = 511.0
 margin_bottom = 10.0
 rect_min_size = Vector2( 0, 10 )
 
@@ -47,16 +47,16 @@ margin_bottom = 10.0
 
 [node name="Spacer2" type="Control" parent="."]
 margin_top = 10.0
-margin_right = 332.0
+margin_right = 511.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 0, 10 )
 
-[node name="Buttons" type="HFlowContainer" parent="."]
+[node name="DefaultButtons" type="HBoxContainer" parent="."]
 margin_top = 20.0
-margin_right = 332.0
-margin_bottom = 64.0
+margin_right = 511.0
+margin_bottom = 40.0
 
-[node name="HideAllButton" type="Button" parent="Buttons"]
+[node name="HideAllButton" type="Button" parent="DefaultButtons"]
 unique_name_in_owner = true
 margin_right = 133.0
 margin_bottom = 20.0
@@ -65,7 +65,7 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_HIDE_ALL"
 
-[node name="DefaultVisibleButton" type="Button" parent="Buttons"]
+[node name="DefaultVisibleButton" type="Button" parent="DefaultButtons"]
 unique_name_in_owner = true
 margin_left = 137.0
 margin_right = 320.0
@@ -75,18 +75,20 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_DEFAULT_VISIBLE"
 
-[node name="DefaultColorsButton" type="Button" parent="Buttons"]
+[node name="DefaultColorsButton" type="Button" parent="DefaultButtons"]
 unique_name_in_owner = true
-margin_top = 24.0
-margin_right = 187.0
-margin_bottom = 44.0
+margin_left = 324.0
+margin_right = 511.0
+margin_bottom = 20.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_DEFAULT_COLORS"
 
-[node name="ViewSaveButton" parent="Buttons" instance=ExtResource( 4 )]
-margin_left = 191.0
-margin_top = 24.0
-margin_right = 294.0
+[node name="Spacer3" type="Control" parent="."]
+margin_top = 40.0
+margin_right = 511.0
 margin_bottom = 44.0
+rect_min_size = Vector2( 0, 4 )
+
+[node name="ViewCollection" parent="." instance=ExtResource( 4 )]

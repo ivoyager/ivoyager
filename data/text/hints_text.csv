@@ -15,6 +15,8 @@ HINT_NEAR_EARTH,Show near-Earth asteroids
 HINT_ORBITS,Show orbits
 HINT_ORBITS_CKBX_COLOR,Show/hide orbits and set their color
 HINT_POINTS_CKBX_COLOR,Show/hide points and set their color
+HINT_SAVE_VISIBILITIES_AND_COLORS,Save visibilities & colors
+HINT_SAVE_VIEW,Save view
 HINT_SELECTION_IMAGE,Click to center and orient
 HINT_SELECTION_BACK,Select last
 HINT_SELECTION_FORWARD,Select next

@@ -21,20 +21,16 @@ class_name IVViewSavePopup
 extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/view_save_popup.tscn"
 
-# Not added in base IVProjectBuilder.
+# Not added in base IVProjectBuilder. A unique instance is made by widget
+# ViewSaveButton.
 
-
-func _ready() -> void:
-	pass
-#	connect("about_to_show", self, "_on_about_to_show")
-#	$"%TimeSetter".connect("time_set", self, "_on_time_set")
+#signal view_saved(view_name)
 #
 #
-#func _on_about_to_show() -> void:
-#	$"%TimeSetter".set_current()
+#func _ready() -> void:
+#	$"%ViewSaver".connect("view_saved", self, "_on_view_saved")
 #
 #
-#func _on_time_set(is_close: bool) -> void:
-#	if is_close:
-#		hide()
+#func _on_view_saved(view_name: String) -> void:
+#	emit_signal("view_saved", view_name)
 

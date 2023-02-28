@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/view_collection.gd" type="Script" id=1]
+[ext_resource path="res://ivoyager/gui_widgets/view_save_button.tscn" type="PackedScene" id=2]
+
+[node name="ViewCollection" type="HFlowContainer"]
+margin_top = 44.0
+margin_right = 511.0
+margin_bottom = 64.0
+script = ExtResource( 1 )
+
+[node name="ViewSaveButton" parent="." instance=ExtResource( 2 )]
+margin_left = 0.0
+margin_right = 103.0
+margin_bottom = 20.0

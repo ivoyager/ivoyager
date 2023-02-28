@@ -6,7 +6,7 @@
 margin_left = 162.0
 margin_right = 255.0
 margin_bottom = 24.0
-hint_tooltip = "HINT_SET_TIME"
+hint_tooltip = "HINT_SAVE_VIEW"
 toggle_mode = true
 action_mode = 0
 text = "BUTTON_SAVE"

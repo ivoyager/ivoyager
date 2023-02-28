@@ -47,7 +47,11 @@ func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
 	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
 	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
-#	$"%SaveButton".connect("pressed", self, "_save")
+	$ViewCollection/ViewSaveButton.hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
+	$ViewCollection.init("LABEL_CUSTOM_1", "all_huds", true,
+			HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
+	
+#	$ViewCollection.hide_unused_states(HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
 
 
 func _on_child_entered_tree(control: Control) -> void:
@@ -121,8 +125,4 @@ func _default_visible() -> void:
 func _default_colors() -> void:
 	_body_huds_state.set_default_colors()
 	_sbg_huds_state.set_default_colors()
-
-
-func _save() -> void:
-	pass
 

@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/view_saver.gd" type="Script" id=1]
+
+[node name="ViewSaver" type="HBoxContainer"]
+margin_left = 5.0
+margin_top = 5.0
+margin_right = 73.0
+margin_bottom = 27.0
+script = ExtResource( 1 )
+
+[node name="LineEdit" type="LineEdit" parent="."]
+margin_right = 100.0
+margin_bottom = 24.0
+rect_min_size = Vector2( 100, 0 )
+
+[node name="CameraCkbx" type="CheckBox" parent="."]
+margin_left = 104.0
+margin_right = 224.0
+margin_bottom = 24.0
+pressed = true
+text = "CKBX_CAMERA"
+
+[node name="VisibilitiesCkbx" type="CheckBox" parent="."]
+margin_left = 228.0
+margin_right = 372.0
+margin_bottom = 24.0
+pressed = true
+text = "CKBX_VISIBILITIES"
+
+[node name="ColorsCkbx" type="CheckBox" parent="."]
+margin_left = 376.0
+margin_right = 495.0
+margin_bottom = 24.0
+pressed = true
+text = "CKBX_COLORS"
+
+[node name="TimeCkbx" type="CheckBox" parent="."]
+margin_left = 499.0
+margin_right = 597.0
+margin_bottom = 24.0
+pressed = true
+text = "CKBX_TIME"
+
+[node name="SaveButton" type="Button" parent="."]
+margin_left = 601.0
+margin_right = 704.0
+margin_bottom = 24.0
+text = "BUTTON_SAVE"
