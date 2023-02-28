@@ -47,7 +47,7 @@ func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
 	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
 	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
-	$"%SaveButton".connect("pressed", self, "_save")
+#	$"%SaveButton".connect("pressed", self, "_save")
 
 
 func _on_child_entered_tree(control: Control) -> void:

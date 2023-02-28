@@ -1,4 +1,4 @@
-# time_set_popup.gd
+# view_save_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,23 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVTimeSetPopup
+class_name IVViewSavePopup
 extends PopupPanel
-const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/view_save_popup.tscn"
 
 # Not added in base IVProjectBuilder.
 
 
 func _ready() -> void:
-	connect("about_to_show", self, "_on_about_to_show")
-	$"%TimeSetter".connect("time_set", self, "_on_time_set")
-
-
-func _on_about_to_show() -> void:
-	$"%TimeSetter".set_current()
-
-
-func _on_time_set(is_close: bool) -> void:
-	if is_close:
-		hide()
+	pass
+#	connect("about_to_show", self, "_on_about_to_show")
+#	$"%TimeSetter".connect("time_set", self, "_on_time_set")
+#
+#
+#func _on_about_to_show() -> void:
+#	$"%TimeSetter".set_current()
+#
+#
+#func _on_time_set(is_close: bool) -> void:
+#	if is_close:
+#		hide()
 

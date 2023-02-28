@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://ivoyager/gui_widgets/all_huds.gd" type="Script" id=1]
 [ext_resource path="res://ivoyager/gui_widgets/body_huds.tscn" type="PackedScene" id=2]
 [ext_resource path="res://ivoyager/gui_widgets/sbg_huds.tscn" type="PackedScene" id=3]
+[ext_resource path="res://ivoyager/gui_widgets/view_save_button.tscn" type="PackedScene" id=4]
 
 [node name="AllHUDs" type="VBoxContainer"]
 margin_left = 10.0
@@ -84,11 +85,8 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_DEFAULT_COLORS"
 
-[node name="SaveButton" type="Button" parent="Buttons"]
-unique_name_in_owner = true
-visible = false
+[node name="ViewSaveButton" parent="Buttons" instance=ExtResource( 4 )]
 margin_left = 191.0
 margin_top = 24.0
 margin_right = 294.0
 margin_bottom = 44.0
-text = "BUTTON_SAVE"
