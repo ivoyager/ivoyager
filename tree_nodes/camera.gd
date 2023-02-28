@@ -205,6 +205,8 @@ func add_rotation(rotation_amount: Vector3) -> void:
 
 func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTOR3_ZERO,
 		to_view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+	# Note: call IVCameraHandler.move_to() or move_to_by_name() to move camera
+	# *and* change selection.
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Some parameters override others (see code at '# overrides').
 	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,

@@ -80,8 +80,7 @@ var is_reversed := false
 
 
 # private
-var _viewport := IVGlobal.get_viewport()
-var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+var _camera_handler: IVCameraHandler = IVGlobal.program.CameraHandler
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
@@ -93,7 +92,6 @@ func reset() -> void:
 	has_huds_visibility_state = false
 	has_huds_color_state = false
 	has_time_state = false
-	# below not needed except to reduce storage size
 	selection_name = ""
 	visible_points_groups.clear()
 	visible_orbits_groups.clear()
@@ -132,20 +130,18 @@ func set_cache_data(data) -> bool:
 
 func save_camera_state() -> void:
 	has_camera_state = true
-	var camera: IVCamera = _viewport.get_camera()
-	selection_name = camera.selection.name
-	camera_flags = camera.flags
-	view_position = camera.view_position
-	view_rotations = camera.view_rotations
+	var view_state := _camera_handler.get_camera_view_state()
+	selection_name = view_state[0]
+	camera_flags = view_state[1]
+	view_position = view_state[2]
+	view_rotations = view_state[3]
 
 
 func set_camera_state(is_instant_move := false) -> void:
 	if !has_camera_state:
 		return
-	var camera: IVCamera = _viewport.get_camera()
-	var selection: IVSelection = _SelectionManager_.get_or_make_selection(selection_name)
-	assert(selection)
-	camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
+	_camera_handler.move_to_by_name(selection_name, camera_flags, view_position, view_rotations,
+			is_instant_move)
 
 
 # HUDs visibility state

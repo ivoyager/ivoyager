@@ -83,7 +83,7 @@ enum LazyType { # WIP - for rebuild of body/model lazy init system
 }
 
 enum CameraFlags {
-	UP_LOCKED = 1 << 0,
+	UP_LOCKED = 1,
 	UP_UNLOCKED = 1 << 1,
 	
 	TRACK_GROUND = 1 << 2,
@@ -115,7 +115,7 @@ enum CameraDisabledFlags {
 
 enum BodyFlags {
 	
-	IS_BARYCENTER = 1 << 0, # not implemented yet
+	IS_BARYCENTER = 1, # not implemented yet
 	IS_STAR = 1 << 1,
 	IS_PLANET = 1 << 2,
 	IS_TRUE_PLANET = 1 << 3,

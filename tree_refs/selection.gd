@@ -183,22 +183,3 @@ func get_position_for_view_and_tracking(camera_flags: int) -> Vector3:
 		return track_orbit_positions[view_type]
 	return track_ecliptic_positions[view_type]
 
-
-
-	
-	
-
-#	view_position[2] /= fov
-#	if view_type == VIEW_OUTWARD:
-#		view_rotations = OUTWARD_VIEW_ROTATION
-#	else:
-#		view_rotations = VECTOR3_ZERO
-	
-	
-	
-	
-	
-	
-	
-	
-	
