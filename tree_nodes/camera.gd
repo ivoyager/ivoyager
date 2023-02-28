@@ -300,7 +300,9 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			var to_radius := selection.get_radius_for_camera()
 			view_position[2] = utils.get_visual_radius_compensated_dist(from_dist, from_radius,
 					to_radius, size_ratio_exponent)
-
+		if to_view_rotations != NULL_ROTATION:
+			view_rotations = to_view_rotations
+	
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # roll
 	
