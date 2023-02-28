@@ -22,15 +22,9 @@ extends VBoxContainer
 
 # GUI container widget that holds all the HUD widgets.
 
-
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
 const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
-
-
-
-# WIP - New buttons [Default Visible][Default Colors] work via BodyHUDsState
-
 
 var _column_master: GridContainer
 
@@ -45,13 +39,11 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
-	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
-	$ViewCollection/ViewSaveButton.hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
-	$ViewCollection.init("LABEL_CUSTOM_1", "all_huds", true,
+	$"%Visible1Button".connect("pressed", self, "_default_visible")
+	$"%Colors1Button".connect("pressed", self, "_default_colors")
+	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
+	$ViewCollection.init($"%ViewSaveButton", "LABEL_CUSTOM_1", "all_huds", true,
 			HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
-	
-#	$ViewCollection.hide_unused_states(HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
 
 
 func _on_child_entered_tree(control: Control) -> void:

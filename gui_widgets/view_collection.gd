@@ -35,23 +35,25 @@ var view_flags := IVViewManager.ALL_VIEW_STATE
 func _ready() -> void:
 	IVGlobal.connect("about_to_start_simulator", self, "_build_view_buttons")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	$ViewSaveButton.connect("view_saved", self, "_on_view_saved")
 
 
-func init(default_view_name_ := "LABEL_CUSTOM_1", set_name_ := "view_collection",
+func init(view_save_button: IVViewSaveButton,
+		default_view_name_ := "LABEL_CUSTOM_1", set_name_ := "view_collection",
 		is_cached_ := true, view_flags_ := IVViewManager.ALL_VIEW_STATE) -> void:
 	default_view_name = default_view_name_
 	set_name = set_name_
 	is_cached = is_cached_
 	view_flags = view_flags_
-	$ViewSaveButton.init(default_view_name, set_name, is_cached, view_flags)
+	view_save_button.init(default_view_name, set_name, is_cached, view_flags)
+	view_save_button.connect("view_saved", self, "_on_view_saved")
 	if IVGlobal.state.is_started_or_about_to_start:
 		_build_view_buttons()
 
 
 func _clear() -> void:
-	for i in range(1, get_child_count()): # skip ViewSaveButton
-		get_child(i).queue_free()
+	for child in get_children():
+		if child is ViewButton:
+			child.queue_free()
 
 
 func _build_view_buttons(_dummy := false) -> void:
@@ -61,9 +63,9 @@ func _build_view_buttons(_dummy := false) -> void:
 
 
 func _build_view_button(view_name: String) -> void:
-	var button := Button.new()
-	button.text = view_name
+	var button := ViewButton.new(view_name)
 	button.connect("pressed", self, "_on_button_pressed", [button])
+	button.connect("right_clicked", self, "_on_button_right_clicked", [button])
 	add_child(button)
 
 
@@ -71,6 +73,26 @@ func _on_view_saved(view_name: String) -> void:
 	_build_view_button(view_name)
 	
 
-func _on_button_pressed(button: Button) -> void:
+func _on_button_pressed(button: ViewButton) -> void:
 	_view_manager.set_view(button.text, set_name, is_cached, view_flags)
 
+
+func _on_button_right_clicked(button: ViewButton) -> void:
+	_view_manager.remove_view(button.text, set_name, is_cached)
+	button.queue_free()
+
+
+
+class ViewButton extends Button:
+	# Provides right-clicked signal for removal.
+	
+	signal right_clicked()
+	
+	func _init(view_name: String) -> void:
+		text = view_name
+	
+	func _gui_input(event: InputEvent) -> void:
+		var mouse_button_event := event as InputEventMouseButton
+		if mouse_button_event and mouse_button_event.button_index == BUTTON_RIGHT:
+			emit_signal("right_clicked")
+	

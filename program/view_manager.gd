@@ -123,6 +123,15 @@ func has_view(view_name: String, set_name: String, is_cached: bool) -> bool:
 	return _gamesave_views.has(key)
 
 
+func remove_view(view_name: String, set_name: String, is_cached: bool) -> void:
+	var key := view_name + "." + set_name
+	if is_cached:
+		_cached_views.erase(key)
+		_remove_cache(key)
+	else:
+		_gamesave_views.erase(key)
+	
+
 func get_view_names_in_set(set_name: String, is_cached: bool) -> Array:
 	var set := []
 	var suffix := "." + set_name
@@ -141,6 +150,14 @@ func _write_cache(key: String, view: IVView) -> void:
 		return
 	var data := view.get_cache_data()
 	file.store_var(data)
+
+
+func _remove_cache(key: String) -> void:
+	var dir := Directory.new()
+	if dir.open(_cache_dir) != OK:
+		assert(false)
+		return
+	dir.remove(key + "." + FILE_EXTENSION)
 
 
 func _read_cache() -> void:
