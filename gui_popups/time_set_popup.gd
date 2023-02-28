@@ -21,11 +21,10 @@ class_name IVTimeSetPopup
 extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
 
-# Call popup_centered() to show.
+# Call popup() to show.
 
 
 func _ready() -> void:
-	$ControlDraggable.set_min_size()
 	connect("about_to_show", self, "_on_about_to_show")
 	$"%TimeSetter".connect("time_set", self, "_on_time_set")
 

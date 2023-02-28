@@ -42,7 +42,13 @@ func _on_toggled(is_pressed) -> void:
 	if !_time_set_popup:
 		return
 	if is_pressed:
-		_time_set_popup.popup_centered()
+		_time_set_popup.popup()
+		var position := rect_global_position + rect_size / 2.0 - _time_set_popup.rect_size
+		if position.x < 0.0:
+			position.x = 0.0
+		if position.y < 0.0:
+			position.y = 0.0
+		_time_set_popup.rect_position = position
 	else:
 		_time_set_popup.hide()
 
