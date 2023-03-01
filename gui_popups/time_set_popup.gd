@@ -21,8 +21,8 @@ class_name IVTimeSetPopup
 extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
 
-# Not added in base IVProjectBuilder.
-
+# Not added in base IVProjectBuilder. A unique instance is made by widget
+# TimeSetButton.
 
 func _ready() -> void:
 	connect("about_to_show", self, "_on_about_to_show")

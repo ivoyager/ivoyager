@@ -24,13 +24,3 @@ const SCENE := "res://ivoyager/gui_popups/view_save_popup.tscn"
 # Not added in base IVProjectBuilder. A unique instance is made by widget
 # ViewSaveButton.
 
-#signal view_saved(view_name)
-#
-#
-#func _ready() -> void:
-#	$"%ViewSaver".connect("view_saved", self, "_on_view_saved")
-#
-#
-#func _on_view_saved(view_name: String) -> void:
-#	emit_signal("view_saved", view_name)
-

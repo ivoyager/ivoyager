@@ -20,27 +20,20 @@
 class_name IVTimeSetButton
 extends Button
 
-# GUI button widget that opens IVTimeSetPopup.
-#
-# Important! IVTimeSetPopup must be added by project extension file to
-# IVProjectBuilder.gui_nodes. Otherwise, it is not present and this button
-# won't do anything.
-
+# GUI button widget that opens its own IVTimeSetPopup.
 
 var _time_set_popup: IVTimeSetPopup
 
 
 func _ready() -> void:
-	_time_set_popup = IVGlobal.program.get("TimeSetPopup")
-	if !_time_set_popup:
-		return
+	var top_gui: Control = IVGlobal.program.TopGUI
+	_time_set_popup = IVFiles.make_object_or_scene(IVTimeSetPopup)
+	top_gui.add_child(_time_set_popup)
 	connect("toggled", self, "_on_toggled")
 	_time_set_popup.connect("visibility_changed", self, "_on_visibility_changed")
 
 
 func _on_toggled(is_pressed) -> void:
-	if !_time_set_popup:
-		return
 	if is_pressed:
 		_time_set_popup.popup()
 		var position := rect_global_position + rect_size / 2.0 - _time_set_popup.rect_size
