@@ -68,10 +68,8 @@ func _project_init() -> void:
 		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
 		var points_color_str := table_reader.get_string("small_bodies_groups", "points_color", row)
 		var orbits_color_str := table_reader.get_string("small_bodies_groups", "orbits_color", row)
-		var default_points_color := utils.str2color(points_color_str)
-		var default_orbits_color := utils.str2color(orbits_color_str)
-		default_points_colors[sbg_alias] = default_points_color
-		default_orbits_colors[sbg_alias] = default_orbits_color
+		default_points_colors[sbg_alias] = Color(points_color_str)
+		default_orbits_colors[sbg_alias] = Color(orbits_color_str)
 	_set_current_to_default()
 
 

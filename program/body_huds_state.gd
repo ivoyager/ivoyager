@@ -63,17 +63,28 @@ var default_orbit_visible_flags: int = (
 var default_name_visible_flags := default_orbit_visible_flags # exclusive w/ symbol_visible_flags
 var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 
+
+# Color("e6e6fa"), # lavender
+
+# Color("3E69FF"), # blue (orange)
+# Color("3BFFFF"), # cyan (red)
+# Color("26FF26"), # green (fusia)
+# Color("FFFF26"), # yellow (blue)
+# Color("FE9C33"), # orange (cyan)
+# Color("FF4646"), # red (green)
+# Color("FF46FF"), # fusia (yellow)
+
 var default_orbit_colors := {
 	# Must have full key set from all_flags bits!
-	BodyFlags.IS_STAR : Color(0.5, 0.5, 1.0), # maybe future use
-	BodyFlags.IS_TRUE_PLANET :  Color(0.0, 1.0, 0.0),
-	BodyFlags.IS_DWARF_PLANET : Color(1.0, 1.0, 0.0),
-	BodyFlags.IS_PLANETARY_MASS_MOON : Color(1.0, 0.0, 1.0),
-	BodyFlags.IS_NON_PLANETARY_MASS_MOON : Color(0.0, 0.0, 1.0),
-	BodyFlags.IS_ASTEROID : Color(1.0, 0.0, 0.0),
-	BodyFlags.IS_SPACECRAFT : Color(0.0, 1.0, 1.0),
+	BodyFlags.IS_STAR : Color("9925EA"), # purple; maybe future use
+	BodyFlags.IS_TRUE_PLANET :  Color("26FF26"), # green
+	BodyFlags.IS_DWARF_PLANET : Color("FF46FF"), # fusia
+	BodyFlags.IS_PLANETARY_MASS_MOON : Color("FFFF26"), # yellow
+	BodyFlags.IS_NON_PLANETARY_MASS_MOON : Color("3E69FF"), # blue
+	BodyFlags.IS_ASTEROID : Color("FF4646"), # red
+	BodyFlags.IS_SPACECRAFT : Color("3BFFFF"), # cyan
 }
-var fallback_orbit_color := Color(0.5, 0.5, 1.0)
+var fallback_orbit_color := Color("FE9C33") # orange
 
 
 # persisted - read-only!
