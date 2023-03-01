@@ -122,6 +122,16 @@ static func linear2srgb(x: float) -> float:
 		return pow(x, 1.0 / 2.4) * 1.055 - 0.055
 
 
+static func str2color(string: String) -> Color:
+	# Only handles comma separated floats now; may be generalized in future.
+	var floats := string.split_floats(",")
+	var size := floats.size()
+	assert(size == 3 or size == 4)
+	if size == 3:
+		return Color(floats[0], floats[1], floats[2])
+	return Color(floats[0], floats[1], floats[2], floats[3])
+
+
 # Number strings
 
 static func binary_str(flags: int) -> String:

@@ -22,17 +22,19 @@ extends Reference
 
 # Builds SmallBodiesGroup instances from small_bodies_groups.tsv & binary data.
 
+const utils := preload("res://ivoyager/static/utils.gd")
 
 const DPRINT = false
-const BINARY_FILE_MAGNITUDES = ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5", "14.0", "14.5",
+const BINARY_EXTENSION := "ivbinary"
+const BINARY_FILE_MAGNITUDES := ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5", "14.0", "14.5",
 		"15.0", "15.5", "16.0", "16.5", "17.0", "17.5", "18.0", "18.5", "99.9"]
 
 
 var _sbg_mag_cutoff_override: float = IVGlobal.sbg_mag_cutoff_override
 var _SmallBodiesGroup_: Script
 var _table_reader: IVTableReader
-var _running_count := 0
-
+var _asteroid_count := 0
+var _binary_dir: String
 
 
 func _project_init() -> void:
@@ -41,56 +43,64 @@ func _project_init() -> void:
 
 
 func build_sbgs() -> void:
-	_running_count = 0
+	_asteroid_count = 0
 	var n_groups := _table_reader.get_n_rows("small_bodies_groups")
-	var row := 0
-	while row < n_groups:
-		if _table_reader.get_bool("small_bodies_groups", "skip_import", row):
-			row += 1
-			continue
-		var sbg_alias := _table_reader.get_string("small_bodies_groups", "sbg_alias", row)
-		var sbg_class := _table_reader.get_int("small_bodies_groups", "sbg_class", row)
-		var binary_dir := _table_reader.get_string("small_bodies_groups", "binary_dir", row)
-		var mag_cutoff := 100.0
-		if _sbg_mag_cutoff_override != INF:
-			mag_cutoff = _sbg_mag_cutoff_override
-		else:
-			mag_cutoff = _table_reader.get_real("small_bodies_groups", "mag_cutoff", row)
-		var primary_name := _table_reader.get_string("small_bodies_groups", "primary", row)
-		var primary: IVBody = IVGlobal.bodies.get(primary_name)
-		assert(primary, "Primary body missing for SmallBodiesGroup")
-		var lp_integer := _table_reader.get_int("small_bodies_groups", "lp_integer", row)
-		var secondary: IVBody
-		if lp_integer != -1:
-			assert(lp_integer == 4 or lp_integer == 5, "Only L4, L5 supported at this time!")
-			var secondary_name := _table_reader.get_string("small_bodies_groups", "secondary", row)
-			secondary = IVGlobal.bodies.get(secondary_name)
-			assert(secondary, "Secondary body missing for Lagrange point SmallBodiesGroup")
-		_load_group_binaries(sbg_alias, sbg_class, binary_dir, mag_cutoff, primary,
-					secondary, lp_integer)
-		row += 1
+	for row in n_groups:
+		build_sbg(row)
+	print("Added orbital data for ", _asteroid_count, " small bodies (asteroids, etc.)")
+
+
+func build_sbg(row: int) -> void:
+	if _table_reader.get_bool("small_bodies_groups", "skip_import", row):
+		return
 	
-	print("Added orbital data for ", _running_count, " small bodies (asteroids, etc.)")
-
-
-func _load_group_binaries(sbg_alias: String, sbg_class: int, binary_dir: String, mag_cutoff: float,
-		primary: IVBody, secondary: IVBody = null, lp_integer := -1) -> void:
+	# get table data
+	var name := _table_reader.get_string("small_bodies_groups", "name", row)
+	var sbg_alias := _table_reader.get_string("small_bodies_groups", "sbg_alias", row)
+	var sbg_class := _table_reader.get_int("small_bodies_groups", "sbg_class", row)
+	
+	# WIP - Should SBGHUDsState read default colors?
+#	var points_color_str := _table_reader.get_string("small_bodies_groups", "points_color", row)
+#	var orbits_color_str := _table_reader.get_string("small_bodies_groups", "orbits_color", row)
+#	var default_points_color := utils.str2color(points_color_str)
+#	var default_orbits_color := utils.str2color(orbits_color_str)
+	
+	_binary_dir = _table_reader.get_string("small_bodies_groups", "binary_dir", row)
+	var mag_cutoff := 100.0
+	if _sbg_mag_cutoff_override != INF:
+		mag_cutoff = _sbg_mag_cutoff_override
+	else:
+		mag_cutoff = _table_reader.get_real("small_bodies_groups", "mag_cutoff", row)
+	var primary_name := _table_reader.get_string("small_bodies_groups", "primary", row)
+	var primary: IVBody = IVGlobal.bodies.get(primary_name)
+	assert(primary, "Primary body missing for SmallBodiesGroup")
+	var lp_integer := _table_reader.get_int("small_bodies_groups", "lp_integer", row)
+	var secondary: IVBody
+	if lp_integer != -1:
+		assert(lp_integer == 4 or lp_integer == 5, "Only L4, L5 supported at this time!")
+		var secondary_name := _table_reader.get_string("small_bodies_groups", "secondary", row)
+		secondary = IVGlobal.bodies.get(secondary_name)
+		assert(secondary, "Secondary body missing for Lagrange point SmallBodiesGroup")
+	
+	# init
 	var sbg: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
-	sbg.init(sbg_alias, sbg_class, secondary, lp_integer)
+	sbg.init(name, sbg_alias, sbg_class, secondary, lp_integer)
+	
+	# binaries import
 	for mag_str in BINARY_FILE_MAGNITUDES:
-		if float(mag_str) < mag_cutoff:
-			_load_binary(sbg, sbg_alias, mag_str, binary_dir)
-		else:
+		if float(mag_str) >= mag_cutoff:
 			break
+		_load_group_binary(sbg, mag_str)
 	sbg.finish_binary_import()
-	_running_count += sbg.get_number()
+	_asteroid_count += sbg.get_number()
+	
+	# add to tree (SBGFinisher will add points and orbits HUDs)
 	primary.add_child(sbg)
 
 
-func _load_binary(sbg: IVSmallBodiesGroup, sbg_alias: String, mag_str: String, binary_dir: String
-		) -> void:
-	var binary_name := sbg_alias + "." + mag_str + ".ivbinary"
-	var path: String = binary_dir.plus_file(binary_name)
+func _load_group_binary(sbg: IVSmallBodiesGroup, mag_str: String) -> void:
+	var binary_name: String = sbg.sbg_alias + "." + mag_str + "." + BINARY_EXTENSION
+	var path: String = _binary_dir.plus_file(binary_name)
 	var binary := File.new()
 	if binary.open(path, File.READ) != OK: # skip quietly if file doesn't exist
 		return

@@ -26,8 +26,6 @@ extends Node
 # Packed arrays are used to constitute ArrayMesh's in IVSBGPoints, and act as
 # small body source data. Packed arrays are also very fast to read/write in the
 # game save file.
-#
-
 
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
@@ -35,9 +33,9 @@ const utils := preload("res://ivoyager/static/utils.gd")
 const VPRINT = false # print verbose asteroid summary on load
 const DPRINT = false
 
-
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
+	"name",
 	"sbg_alias",
 	"sbg_class",
 	"secondary_body",
@@ -51,16 +49,13 @@ const PERSIST_PROPERTIES := [
 	"da_D_f",
 	"th0_de",
 ]
-	
-# *****************************************************************************
+
 # persisted
 
 var sbg_alias: String
 var sbg_class: int # IVEnums.SBGClass
-
 var secondary_body: IVBody # e.g., Jupiter for Trojans; usually null
 var lp_integer := -1 # -1, 4 & 5 are currently supported
-
 var max_apoapsis := 0.0
 
 # binary import data
@@ -71,6 +66,8 @@ var a_M0_n := PoolVector3Array() # librating in l-point objects
 var s_g := PoolVector2Array() # orbit precessions
 var da_D_f := PoolVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
 var th0_de := PoolVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
+
+
 
 
 # *****************************************************************************
@@ -100,9 +97,10 @@ func get_orbit_elements(index: int) -> Array:
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(sbg_alias_: String, sbg_class_: int, secondary_body_: IVBody = null, lp_integer_ := -1
-		) -> void:
+func init(name_: String, sbg_alias_: String, sbg_class_: int, secondary_body_: IVBody = null,
+		lp_integer_ := -1) -> void:
 	# Last 2 args only if these are Lagrange point objects.
+	name = name_
 	sbg_alias = sbg_alias_
 	sbg_class = sbg_class_
 	secondary_body = secondary_body_
