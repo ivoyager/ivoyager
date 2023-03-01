@@ -37,7 +37,7 @@ margin_right = 0.0
 margin_bottom = 0.0
 
 [node name="Spacer" type="Control" parent="."]
-margin_right = 413.0
+margin_right = 563.0
 margin_bottom = 10.0
 rect_min_size = Vector2( 0, 10 )
 
@@ -48,13 +48,13 @@ margin_bottom = 10.0
 
 [node name="Spacer2" type="Control" parent="."]
 margin_top = 10.0
-margin_right = 413.0
+margin_right = 563.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 0, 10 )
 
 [node name="DefaultButtons" type="HBoxContainer" parent="."]
 margin_top = 20.0
-margin_right = 413.0
+margin_right = 563.0
 margin_bottom = 40.0
 
 [node name="HideAllButton" type="Button" parent="DefaultButtons"]
@@ -66,34 +66,44 @@ size_flags_vertical = 0
 action_mode = 0
 text = "BUTTON_HIDE_ALL"
 
-[node name="Visible1Button" type="Button" parent="DefaultButtons"]
+[node name="Planets1Button" type="Button" parent="DefaultButtons"]
 unique_name_in_owner = true
 margin_left = 137.0
-margin_right = 271.0
+margin_right = 272.0
 margin_bottom = 20.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
-text = "BUTTON_VISIBLE_1"
+text = "BUTTON_PLANETS1"
+
+[node name="Asteroids1Button" type="Button" parent="DefaultButtons"]
+unique_name_in_owner = true
+margin_left = 276.0
+margin_right = 427.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+action_mode = 0
+text = "BUTTON_ASTEROIDS1"
 
 [node name="Colors1Button" type="Button" parent="DefaultButtons"]
 unique_name_in_owner = true
-margin_left = 275.0
-margin_right = 413.0
+margin_left = 431.0
+margin_right = 563.0
 margin_bottom = 20.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 action_mode = 0
-text = "BUTTON_COLORS_1"
+text = "BUTTON_COLORS1"
 
 [node name="Spacer3" type="Control" parent="."]
 margin_top = 40.0
-margin_right = 413.0
+margin_right = 563.0
 margin_bottom = 44.0
 rect_min_size = Vector2( 0, 4 )
 
 [node name="ViewCollection" parent="." instance=ExtResource( 4 )]
-margin_right = 413.0
+margin_right = 563.0
 
 [node name="ViewSaveButton" parent="ViewCollection" instance=ExtResource( 5 )]
 unique_name_in_owner = true

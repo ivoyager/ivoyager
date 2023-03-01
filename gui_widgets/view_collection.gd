@@ -38,13 +38,13 @@ func _ready() -> void:
 
 
 func init(view_save_button: IVViewSaveButton,
-		default_view_name_ := "LABEL_CUSTOM_1", set_name_ := "view_collection",
-		is_cached_ := true, view_flags_ := IVViewManager.ALL_VIEW_STATE) -> void:
+		default_view_name_ := "LABEL_CUSTOM_1", set_name_ := "view_collection", is_cached_ := true,
+		view_flags_ := IVViewManager.ALL_VIEW_STATE, reserved_names := []) -> void:
 	default_view_name = default_view_name_
 	set_name = set_name_
 	is_cached = is_cached_
 	view_flags = view_flags_
-	view_save_button.init(default_view_name, set_name, is_cached, view_flags)
+	view_save_button.init(default_view_name, set_name, is_cached, view_flags, reserved_names)
 	view_save_button.connect("view_saved", self, "_on_view_saved")
 	if IVGlobal.state.is_started_or_about_to_start:
 		_build_view_buttons()

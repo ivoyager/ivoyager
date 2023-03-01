@@ -126,7 +126,7 @@ var prog_refs := {
 	# need first!
 	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
 	
-	# 'builders' (generator pattern, often from table or binary data)
+	# builders (generators, often from table or binary data)
 	_EnvironmentBuilder_ = IVEnvironmentBuilder,
 	_SystemBuilder_ = IVSystemBuilder,
 	_BodyBuilder_ = IVBodyBuilder,
@@ -136,11 +136,11 @@ var prog_refs := {
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
 	
-	# 'finishers' (modify something on entering tree)
+	# finishers (modify something on entering tree)
 	_BodyFinisher_ = IVBodyFinisher,
 	_SBGFinisher_ = IVSBGFinisher,
 	
-	# 'managers'
+	# managers
 	_InputMapManager_ = IVInputMapManager,
 	_IOManager_ = IVIOManager,
 	_FontManager_ = IVFontManager, # ok to replace
@@ -150,9 +150,10 @@ var prog_refs := {
 	_WikiManager_ = IVWikiManager,
 	_ModelManager_ = IVModelManager,
 	
-	# 'tools'
+	# tools and resources
 	_TableReader_ = IVTableReader,
 	_QuantityFormatter_ = IVQuantityFormatter,
+	_ViewDefaults_ = IVViewDefaults,
 }
 
 var prog_nodes := {

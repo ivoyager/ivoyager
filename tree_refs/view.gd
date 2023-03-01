@@ -68,9 +68,9 @@ var visible_points_groups := []
 var visible_orbits_groups := []
 
 var has_huds_color_state := false
-var body_orbit_colors := {}
-var sbg_points_colors := {}
-var sbg_orbits_colors := {}
+var body_orbit_colors := {} # has non-default only
+var sbg_points_colors := {} # has non-default only
+var sbg_orbits_colors := {} # has non-default only
 
 var has_time_state := false # used by Planetarium
 var is_real_world_time := false
@@ -87,43 +87,14 @@ var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 var _version_hash := PERSIST_PROPERTIES.hash()
 
 
-func reset() -> void:
-	has_camera_state = false
-	has_huds_visibility_state = false
-	has_huds_color_state = false
-	has_time_state = false
-	selection_name = ""
-	visible_points_groups.clear()
-	visible_orbits_groups.clear()
-	body_orbit_colors.clear()
-	sbg_points_colors.clear()
-	sbg_orbits_colors.clear()
 
+# all state
 
-func get_cache_data() -> Array:
-	var data := []
-	for property in PERSIST_PROPERTIES:
-		data.append(get(property))
-	data.append(_version_hash)
-	return data
-
-
-func set_cache_data(data) -> bool:
-	# Tests data integrity and returns false on failure.
-	if typeof(data) != TYPE_ARRAY:
-		return false
-	if !data:
-		return false
-	var version_hash = data[-1] # untyped for safety
-	if typeof(version_hash) != TYPE_INT:
-		return false
-	if version_hash != _version_hash:
-		return false
-	if data.size() != PERSIST_PROPERTIES.size() + 1:
-		return false
-	for i in PERSIST_PROPERTIES.size():
-		set(PERSIST_PROPERTIES[i], data[i])
-	return true
+func set_state(is_camera_instant_move := false) -> void:
+	set_camera_state(is_camera_instant_move)
+	set_huds_visibility_state()
+	set_huds_color_state()
+	set_time_state()
 
 
 # camera state
@@ -169,17 +140,17 @@ func set_huds_visibility_state() -> void:
 
 func save_huds_color_state() -> void:
 	has_huds_color_state = true
-	body_orbit_colors = _body_huds_state.get_orbit_colors_dict() # ref safe
-	sbg_points_colors = _sbg_huds_state.get_points_colors_dict()
-	sbg_orbits_colors = _sbg_huds_state.get_orbits_colors_dict()
+	body_orbit_colors = _body_huds_state.get_non_default_orbit_colors() # ref safe
+	sbg_points_colors = _sbg_huds_state.get_non_default_points_colors()
+	sbg_orbits_colors = _sbg_huds_state.get_non_default_orbits_colors()
 
 
 func set_huds_color_state() -> void:
 	if !has_huds_color_state:
 		return
-	_body_huds_state.set_orbit_colors_dict(body_orbit_colors) # ref safe
-	_sbg_huds_state.set_points_colors_dict(sbg_points_colors)
-	_sbg_huds_state.set_orbits_colors_dict(sbg_orbits_colors)
+	_body_huds_state.set_all_orbit_colors(body_orbit_colors) # ref safe
+	_sbg_huds_state.set_all_points_colors(sbg_points_colors)
+	_sbg_huds_state.set_all_orbits_colors(sbg_orbits_colors)
 
 
 # time state
@@ -203,4 +174,44 @@ func set_time_state() -> void:
 		_timekeeper.change_speed(0, speed_index)
 		_timekeeper.set_time_reversed(is_reversed)
 
+
+# IVViewManager
+
+func reset() -> void:
+	has_camera_state = false
+	has_huds_visibility_state = false
+	has_huds_color_state = false
+	has_time_state = false
+	selection_name = ""
+	visible_points_groups.clear()
+	visible_orbits_groups.clear()
+	body_orbit_colors.clear()
+	sbg_points_colors.clear()
+	sbg_orbits_colors.clear()
+
+
+func get_cache_data() -> Array:
+	var data := []
+	for property in PERSIST_PROPERTIES:
+		data.append(get(property))
+	data.append(_version_hash)
+	return data
+
+
+func set_cache_data(data) -> bool:
+	# Tests data integrity and returns false on failure.
+	if typeof(data) != TYPE_ARRAY:
+		return false
+	if !data:
+		return false
+	var version_hash = data[-1] # untyped for safety
+	if typeof(version_hash) != TYPE_INT:
+		return false
+	if version_hash != _version_hash:
+		return false
+	if data.size() != PERSIST_PROPERTIES.size() + 1:
+		return false
+	for i in PERSIST_PROPERTIES.size():
+		set(PERSIST_PROPERTIES[i], data[i])
+	return true
 

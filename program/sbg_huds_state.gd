@@ -228,28 +228,54 @@ func set_orbits_color(group: String, color: Color) -> void:
 	emit_signal("orbits_color_changed")
 
 
-func get_points_colors_dict() -> Dictionary:
-	return points_colors.duplicate()
+func get_non_default_points_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in points_colors:
+		if points_colors[key] != default_points_colors[key]:
+			dict[key] = points_colors[key]
+	return dict
 
 
-func get_orbits_colors_dict() -> Dictionary:
-	return orbits_colors.duplicate()
+func get_non_default_orbits_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in orbits_colors:
+		if orbits_colors[key] != default_orbits_colors[key]:
+			dict[key] = orbits_colors[key]
+	return dict
 
 
-func set_points_colors_dict(dict: Dictionary) -> void:
-	if deep_equal(dict, points_colors):
-		return
-	points_colors.clear()
-	points_colors.merge(dict)
-	emit_signal("points_color_changed")
+func set_all_points_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in points_colors:
+		if dict.has(key):
+			if points_colors[key] != dict[key]:
+				is_change = true
+				points_colors[key] = dict[key]
+		else:
+			if points_colors[key] != default_points_colors[key]:
+				is_change = true
+				points_colors[key] = default_points_colors[key]
+	if is_change:
+		emit_signal("points_color_changed")
 
 
-func set_orbits_colors_dict(dict: Dictionary) -> void:
-	if deep_equal(dict, orbits_colors):
-		return
-	orbits_colors.clear()
-	orbits_colors.merge(dict)
-	emit_signal("orbits_color_changed")
+func set_all_orbits_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in orbits_colors:
+		if dict.has(key):
+			if orbits_colors[key] != dict[key]:
+				is_change = true
+				orbits_colors[key] = dict[key]
+		else:
+			if orbits_colors[key] != default_orbits_colors[key]:
+				is_change = true
+				orbits_colors[key] = default_orbits_colors[key]
+	if is_change:
+		emit_signal("orbits_color_changed")
 
 
 # private

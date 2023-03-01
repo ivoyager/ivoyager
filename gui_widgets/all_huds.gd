@@ -26,11 +26,17 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
 const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
 
+
+var default_view_name := "LABEL_CUSTOM_1" # will increment if taken
+var set_name := "all_huds"
+var is_cached := true
+var view_flags := IVViewManager.HUDS_VISIBILITY_STATE | IVViewManager.HUDS_COLOR_STATE
+var reserved_view_names := [tr("BUTTON_PLANETS1"), tr("BUTTON_ASTEROIDS1"), tr("BUTTON_COLORS1")]
+
+
 var _column_master: GridContainer
 
-onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
-onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+onready var _view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 
 
 func _enter_tree() -> void:
@@ -39,11 +45,12 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%Visible1Button".connect("pressed", self, "_default_visible")
-	$"%Colors1Button".connect("pressed", self, "_default_colors")
+	$"%Planets1Button".connect("pressed", self, "_planets1")
+	$"%Asteroids1Button".connect("pressed", self, "_asteroids1")
+	$"%Colors1Button".connect("pressed", self, "_colors1")
 	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
-	$ViewCollection.init($"%ViewSaveButton", "LABEL_CUSTOM_1", "all_huds", true,
-			HUDS_VISIBILITY_STATE | HUDS_COLOR_STATE)
+	$ViewCollection.init($"%ViewSaveButton", default_view_name, set_name, is_cached, view_flags,
+			reserved_view_names)
 
 
 func _on_child_entered_tree(control: Control) -> void:
@@ -72,13 +79,13 @@ func _on_child_entered_tree(control: Control) -> void:
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_NON_PMO_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
+				["LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
 			]
 		"VisitedAsteroidsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_VISITED_ASTEROIDS", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
+				["LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
 			]
 		"SpacecraftHUDs":
 			control.column_master = _column_master
@@ -105,16 +112,18 @@ func _on_child_entered_tree(control: Control) -> void:
 
 
 func _hide_all() -> void:
-	_body_huds_state.hide_all()
-	_sbg_huds_state.hide_all()
+	_view_defaults.set_view("hide_all")
 
 
-func _default_visible() -> void:
-	_body_huds_state.set_default_visibilities()
-	_sbg_huds_state.set_default_visibilities()
+func _planets1() -> void:
+	_view_defaults.set_view("planets1")
 
 
-func _default_colors() -> void:
-	_body_huds_state.set_default_colors()
-	_sbg_huds_state.set_default_colors()
+func _asteroids1() -> void:
+	_view_defaults.set_view("asteroids1")
+
+
+func _colors1() -> void:
+	_view_defaults.set_view("default_colors")
+
 

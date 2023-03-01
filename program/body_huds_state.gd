@@ -323,12 +323,27 @@ func set_orbit_color(body_flags: int, color: Color) -> void:
 		emit_signal("color_changed")
 
 
-func get_orbit_colors_dict() -> Dictionary:
-	return orbit_colors.duplicate()
+func get_non_default_orbit_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in orbit_colors:
+		if orbit_colors[key] != default_orbit_colors[key]:
+			dict[key] = orbit_colors[key]
+	return dict
 
 
-func set_orbit_colors_dict(dict: Dictionary) -> void:
-	assert(dict.keys() == orbit_colors.keys())
-	orbit_colors.merge(dict, true) # overwrite
-	emit_signal("color_changed")
+func set_all_orbit_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in orbit_colors:
+		if dict.has(key):
+			if orbit_colors[key] != dict[key]:
+				is_change = true
+				orbit_colors[key] = dict[key]
+		else:
+			if orbit_colors[key] != default_orbit_colors[key]:
+				is_change = true
+				orbit_colors[key] = default_orbit_colors[key]
+	if is_change:
+		emit_signal("color_changed")
 

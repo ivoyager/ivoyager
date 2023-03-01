@@ -22,6 +22,8 @@ extends Node
 
 # Manages IVView instances that can be persisted via gamesave or cache.
 
+# FIXME: Breaks with bad file-name characters! Store 1 complete dictionary instead?
+
 enum {
 	CAMERA_STATE = 1,
 	HUDS_VISIBILITY_STATE = 1 << 1,
@@ -47,12 +49,10 @@ var _cached_views := {}
 
 var _cache_dir: String = IVGlobal.cache_dir + "/views"
 var _View_: Script
-var _timekeeper: IVTimekeeper
 
 
 func _project_init() -> void:
 	_View_ = IVGlobal.script_classes._View_
-	_timekeeper = IVGlobal.program.Timekeeper
 	files.make_dir_if_doesnt_exist(_cache_dir)
 	_read_cache()
 

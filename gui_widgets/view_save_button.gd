@@ -42,8 +42,8 @@ func _ready() -> void:
 
 
 func init(default_view_name := "LABEL_CUSTOM_1", set_name := "view_saver", is_cached := true,
-		view_flags := IVViewManager.ALL_VIEW_STATE) -> void:
-	_view_saver.init(default_view_name, set_name, is_cached, view_flags)
+		view_flags := IVViewManager.ALL_VIEW_STATE, reserved_names := []) -> void:
+	_view_saver.init(default_view_name, set_name, is_cached, view_flags, reserved_names)
 
 
 func _on_view_saved(view_name: String) -> void:

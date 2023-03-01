@@ -32,6 +32,7 @@ var default_view_name := "LABEL_CUSTOM_1" # will increment if taken
 var set_name := "view_saver"
 var is_cached := true
 var view_flags := IVViewManager.ALL_VIEW_STATE
+var reserved_names := []
 
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 onready var _line_edit: LineEdit = $LineEdit
@@ -44,11 +45,12 @@ func _ready() -> void:
 
 
 func init(default_view_name_ := "LABEL_CUSTOM_1", set_name_ := "view_saver", is_cached_ := true,
-		view_flags_ := IVViewManager.ALL_VIEW_STATE) -> void:
+		view_flags_ := IVViewManager.ALL_VIEW_STATE, reserved_names_ := []) -> void:
 	default_view_name = default_view_name_
 	set_name = set_name_
 	is_cached = is_cached_
 	view_flags = view_flags_
+	reserved_names = reserved_names_
 	_line_edit.text = tr(default_view_name)
 	_increment_name_as_needed()
 	_hide_unused_states()
@@ -76,15 +78,16 @@ func _on_save(_dummy := "") -> void:
 func _increment_name_as_needed() -> void:
 	if !_line_edit.text:
 		_line_edit.text = "1"
-	if !_view_manager.has_view(_line_edit.text, set_name, is_cached):
+	var text := _line_edit.text
+	if !_view_manager.has_view(text, set_name, is_cached) and !reserved_names.has(text):
 		return
-	if !_line_edit.text[-1].is_valid_integer():
+	if !text[-1].is_valid_integer():
 		_line_edit.text += "2"
-	elif _line_edit.text[-1] == "9":
+	elif text[-1] == "9":
 		_line_edit.text[-1] = "1"
 		_line_edit.text += "0"
 	else:
-		_line_edit.text[-1] = str(int(_line_edit.text[-1]) + 1)
+		_line_edit.text[-1] = str(int(text[-1]) + 1)
 	_increment_name_as_needed()
 
 
