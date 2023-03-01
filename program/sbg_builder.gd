@@ -54,17 +54,10 @@ func build_sbg(row: int) -> void:
 	if _table_reader.get_bool("small_bodies_groups", "skip_import", row):
 		return
 	
-	# get table data
+	# get table data (default colors are read by SBGHUDsState)
 	var name := _table_reader.get_string("small_bodies_groups", "name", row)
 	var sbg_alias := _table_reader.get_string("small_bodies_groups", "sbg_alias", row)
 	var sbg_class := _table_reader.get_int("small_bodies_groups", "sbg_class", row)
-	
-	# WIP - Should SBGHUDsState read default colors?
-#	var points_color_str := _table_reader.get_string("small_bodies_groups", "points_color", row)
-#	var orbits_color_str := _table_reader.get_string("small_bodies_groups", "orbits_color", row)
-#	var default_points_color := utils.str2color(points_color_str)
-#	var default_orbits_color := utils.str2color(orbits_color_str)
-	
 	_binary_dir = _table_reader.get_string("small_bodies_groups", "binary_dir", row)
 	var mag_cutoff := 100.0
 	if _sbg_mag_cutoff_override != INF:
@@ -84,7 +77,7 @@ func build_sbg(row: int) -> void:
 	
 	# init
 	var sbg: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
-	sbg.init(name, sbg_alias, sbg_class, secondary, lp_integer)
+	sbg.init(name, sbg_alias, sbg_class, lp_integer, secondary)
 	
 	# binaries import
 	for mag_str in BINARY_FILE_MAGNITUDES:

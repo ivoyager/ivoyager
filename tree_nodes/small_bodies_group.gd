@@ -97,14 +97,14 @@ func get_orbit_elements(index: int) -> Array:
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(name_: String, sbg_alias_: String, sbg_class_: int, secondary_body_: IVBody = null,
-		lp_integer_ := -1) -> void:
+func init(name_: String, sbg_alias_: String, sbg_class_: int,
+		lp_integer_ := -1, secondary_body_: IVBody = null) -> void:
 	# Last 2 args only if these are Lagrange point objects.
 	name = name_
 	sbg_alias = sbg_alias_
 	sbg_class = sbg_class_
-	secondary_body = secondary_body_
 	lp_integer = lp_integer_
+	secondary_body = secondary_body_
 
 
 func read_binary(binary: File) -> void:
