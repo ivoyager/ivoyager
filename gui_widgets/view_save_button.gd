@@ -48,6 +48,14 @@ func init(default_view_name := "LABEL_CUSTOM1", set_name := "", is_cached := tru
 	_view_saver.init(default_view_name, set_name, is_cached, show_flags, init_flags, reserved_names)
 
 
+func get_view_save_popup() -> IVViewSavePopup:
+	return _view_save_popup
+
+
+func get_view_saver() -> IVViewSaver:
+	return _view_saver
+
+
 func _on_view_saved(view_name: String) -> void:
 	_view_save_popup.hide()
 	emit_signal("view_saved", view_name)

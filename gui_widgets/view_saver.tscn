@@ -2,44 +2,59 @@
 
 [ext_resource path="res://ivoyager/gui_widgets/view_saver.gd" type="Script" id=1]
 
-[node name="ViewSaver" type="HBoxContainer"]
+[node name="ViewSaver" type="VBoxContainer"]
 margin_left = 5.0
 margin_top = 5.0
 margin_right = 73.0
 margin_bottom = 27.0
 script = ExtResource( 1 )
 
-[node name="LineEdit" type="LineEdit" parent="."]
-margin_right = 100.0
+[node name="SelectionCkbx" type="CheckBox" parent="."]
+unique_name_in_owner = true
+margin_right = 157.0
 margin_bottom = 24.0
-rect_min_size = Vector2( 100, 0 )
+text = "CKBX_SELECTION"
 
-[node name="CameraCkbx" type="CheckBox" parent="."]
-margin_left = 104.0
-margin_right = 224.0
-margin_bottom = 24.0
-text = "CKBX_CAMERA"
+[node name="OrientationCkbx" type="CheckBox" parent="."]
+unique_name_in_owner = true
+margin_top = 28.0
+margin_right = 157.0
+margin_bottom = 52.0
+text = "CKBX_ORIENTATION"
 
 [node name="VisibilitiesCkbx" type="CheckBox" parent="."]
-margin_left = 228.0
-margin_right = 372.0
-margin_bottom = 24.0
+unique_name_in_owner = true
+margin_top = 56.0
+margin_right = 157.0
+margin_bottom = 80.0
 text = "CKBX_VISIBILITIES"
 
 [node name="ColorsCkbx" type="CheckBox" parent="."]
-margin_left = 376.0
-margin_right = 495.0
-margin_bottom = 24.0
+unique_name_in_owner = true
+margin_top = 84.0
+margin_right = 157.0
+margin_bottom = 108.0
 text = "CKBX_COLORS"
 
 [node name="TimeCkbx" type="CheckBox" parent="."]
-margin_left = 499.0
-margin_right = 597.0
-margin_bottom = 24.0
-text = "CKBX_TIME"
+unique_name_in_owner = true
+margin_top = 112.0
+margin_right = 157.0
+margin_bottom = 136.0
+text = "CKBX_GAME_SPEED"
+
+[node name="LineEdit" type="LineEdit" parent="."]
+unique_name_in_owner = true
+margin_top = 140.0
+margin_right = 157.0
+margin_bottom = 164.0
+rect_min_size = Vector2( 100, 0 )
+caret_blink = true
+caret_blink_speed = 0.5
 
 [node name="SaveButton" type="Button" parent="."]
-margin_left = 601.0
-margin_right = 704.0
-margin_bottom = 24.0
+unique_name_in_owner = true
+margin_top = 168.0
+margin_right = 157.0
+margin_bottom = 188.0
 text = "BUTTON_SAVE"

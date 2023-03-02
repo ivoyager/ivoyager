@@ -18,12 +18,14 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVViewSaver
-extends HBoxContainer
+extends VBoxContainer
 
 # GUI widget that saves current view. This widget is contained in
 # IVViewSavePopup and works in conjunction with IVViewCollection (which shows
 # the resultant saved view buttons).
-
+#
+# 'TimeCkbx' has label 'Game Speed' by default, as that is what time state
+# means in most applications. Re-lable to something else if needed.
 
 signal view_saved(view_name)
 
@@ -35,12 +37,18 @@ var show_flags := IVView.ALL
 var reserved_names := []
 
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
-onready var _line_edit: LineEdit = $LineEdit
+onready var _selection_ckbx: CheckBox = $"%SelectionCkbx"
+onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
+onready var _visibilities_ckbx: CheckBox = $"%VisibilitiesCkbx"
+onready var _colors_ckbx: CheckBox = $"%ColorsCkbx"
+onready var _time_ckbx: CheckBox = $"%TimeCkbx"
+onready var _line_edit: LineEdit = $"%LineEdit"
+
 
 func _ready() -> void:
 	_line_edit.text = tr(default_view_name)
 	connect("visibility_changed", self, "_on_visibility_changed")
-	$SaveButton.connect("pressed", self, "_on_save")
+	$"%SaveButton".connect("pressed", self, "_on_save")
 	_line_edit.connect("text_entered", self, "_on_save")
 
 
@@ -57,14 +65,16 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_increment_name_as_needed()
 	
 	# init checkboxes
-	$CameraCkbx.visible = bool(show_flags & IVView.CAMERA_STATE)
-	$CameraCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_STATE))
-	$VisibilitiesCkbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY_STATE)
-	$VisibilitiesCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY_STATE))
-	$ColorsCkbx.visible = bool(show_flags & IVView.HUDS_COLOR_STATE)
-	$ColorsCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR_STATE))
-	$TimeCkbx.visible = bool(show_flags & IVView.TIME_STATE)
-	$TimeCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
+	_selection_ckbx.visible = bool(show_flags & IVView.CAMERA_SELECTION)
+	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
+	_orientation_ckbx.visible = bool(show_flags & IVView.CAMERA_ORIENTATION)
+	_orientation_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_ORIENTATION))
+	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY_STATE)
+	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY_STATE))
+	_colors_ckbx.visible = bool(show_flags & IVView.HUDS_COLOR_STATE)
+	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR_STATE))
+	_time_ckbx.visible = bool(show_flags & IVView.TIME_STATE)
+	_time_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
 
 
 func _on_visibility_changed():
@@ -97,13 +107,15 @@ func _increment_name_as_needed() -> void:
 
 func _get_view_flags() -> int:
 	var flags := 0
-	if $CameraCkbx.pressed:
-		flags |= IVView.CAMERA_STATE
-	if $VisibilitiesCkbx.pressed:
+	if _selection_ckbx.pressed:
+		flags |= IVView.CAMERA_SELECTION
+	if _orientation_ckbx.pressed:
+		flags |= IVView.CAMERA_ORIENTATION
+	if _visibilities_ckbx.pressed:
 		flags |= IVView.HUDS_VISIBILITY_STATE
-	if $ColorsCkbx.pressed:
+	if _colors_ckbx.pressed:
 		flags |= IVView.HUDS_COLOR_STATE
-	if $TimeCkbx.pressed:
+	if _time_ckbx.pressed:
 		flags |= IVView.TIME_STATE
 	return flags
 

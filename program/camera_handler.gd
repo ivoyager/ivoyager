@@ -217,9 +217,9 @@ func move_to_by_name(selection_name: String, camera_flags := 0, view_position :=
 		view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Some parameters override others.
-	var selection := _selection_manager.get_or_make_selection(selection_name)
-	if !selection:
-		return
+	var selection: IVSelection
+	if selection_name:
+		selection = _selection_manager.get_or_make_selection(selection_name)
 	move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
 
 
