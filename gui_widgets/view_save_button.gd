@@ -41,9 +41,12 @@ func _ready() -> void:
 	_view_save_popup.connect("visibility_changed", self, "_on_visibility_changed")
 
 
-func init(default_view_name := "LABEL_CUSTOM_1", set_name := "view_saver", is_cached := true,
-		view_flags := IVViewManager.ALL_VIEW_STATE, reserved_names := []) -> void:
-	_view_saver.init(default_view_name, set_name, is_cached, view_flags, reserved_names)
+func init(default_view_name := "LABEL_CUSTOM1", set_name := "", is_cached := true,
+		show_flags := IVViewManager.ALL_VIEW_STATE, init_flags := IVViewManager.ALL_VIEW_STATE,
+		reserved_names := []) -> void:
+	# Called by IVViewCollection in standard setup.
+	# Make 'set_name' unique to not share views with other GUI instances. 
+	_view_saver.init(default_view_name, set_name, is_cached, show_flags, init_flags, reserved_names)
 
 
 func _on_view_saved(view_name: String) -> void:

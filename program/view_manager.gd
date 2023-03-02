@@ -161,7 +161,7 @@ func _read_cache() -> void:
 			continue
 		_cached_views[key] = view
 	if bad_cache_data:
-		_write_cache() # overwrite existing
+		_write_cache() # removes all bad-version views
 
 
 func _write_cache() -> void:

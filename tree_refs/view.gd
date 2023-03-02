@@ -20,8 +20,20 @@
 class_name IVView
 extends Reference
 
-# Can optionally keep camera state, HUDs visibilities & colors, and/or time
-# state. The object is structured for persistence via game save or cache.
+# Can optionally keep selection, camera state (position & rotations), HUDs
+# visibilities, HUDs colors, and/or time state. The object can be persisted
+# via gamesave or cache.
+
+# WIP - move here!
+enum { # view_flags
+	CAMERA_STATE = 1,
+	HUDS_VISIBILITY_STATE = 1 << 1,
+	HUDS_COLOR_STATE = 1 << 2,
+	TIME_STATE = 1 << 3,
+	# flag sets
+	ALL_NON_TIME_STATE = (1 << 3) - 1,
+	ALL_VIEW_STATE = (1 << 4) - 1,
+}
 
 
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
@@ -47,7 +59,6 @@ const PERSIST_PROPERTIES := [
 	"sbg_orbits_colors",
 	
 	"has_time_state",
-	"is_real_world_time",
 	"time",
 	"speed_index",
 	"is_reversed",
@@ -73,7 +84,6 @@ var sbg_points_colors := {} # has non-default only
 var sbg_orbits_colors := {} # has non-default only
 
 var has_time_state := false # used by Planetarium
-var is_real_world_time := false
 var time := 0.0
 var speed_index := 0
 var is_reversed := false
@@ -157,22 +167,17 @@ func set_huds_color_state() -> void:
 
 func save_time_state() -> void:
 	has_time_state = true
-	is_real_world_time = _timekeeper.is_real_world_time
-	if !is_real_world_time:
-		time = _timekeeper.time
-		speed_index = _timekeeper.speed_index
-		is_reversed = _timekeeper.is_reversed
+	time = _timekeeper.time
+	speed_index = _timekeeper.speed_index
+	is_reversed = _timekeeper.is_reversed
 
 
 func set_time_state() -> void:
 	if !has_time_state:
 		return
-	if is_real_world_time:
-		_timekeeper.set_real_world()
-	else:
-		_timekeeper.set_time(time)
-		_timekeeper.change_speed(0, speed_index)
-		_timekeeper.set_time_reversed(is_reversed)
+	_timekeeper.set_time(time)
+	_timekeeper.change_speed(0, speed_index)
+	_timekeeper.set_time_reversed(is_reversed)
 
 
 # IVViewManager
