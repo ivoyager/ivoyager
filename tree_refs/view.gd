@@ -20,16 +20,15 @@
 class_name IVView
 extends Reference
 
-# Can optionally keep selection, camera state (position & rotations), HUDs
-# visibilities, HUDs colors, and/or time state. The object can be persisted
-# via gamesave or cache.
+# Optionally keeps state related to camera, HUDs, and/or time. The object can
+# be persisted via gamesave or cache.
 
 enum { # flags
 	CAMERA_SELECTION = 1,
 	CAMERA_ORIENTATION = 1 << 1
 
-	HUDS_VISIBILITY_STATE = 1 << 2,
-	HUDS_COLOR_STATE = 1 << 3,
+	HUDS_VISIBILITY = 1 << 2,
+	HUDS_COLOR = 1 << 3,
 	
 	TIME_STATE = 1 << 4,
 	
@@ -99,8 +98,7 @@ var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 # cache is 'bad' if _version_hash doesn't match
-var _hash_incr := 1 # something changed not covered by PERSIST_PROPERTIES
-var _version_hash := PERSIST_PROPERTIES.hash() + _hash_incr
+var _version_hash := PERSIST_PROPERTIES.hash() + 1
 
 
 # public API
@@ -190,26 +188,26 @@ func _set_camera_state(is_instant_move := false) -> void:
 
 
 func _save_huds_state() -> void:
-	if flags & HUDS_VISIBILITY_STATE:
+	if flags & HUDS_VISIBILITY:
 		name_visible_flags = _body_huds_state.name_visible_flags
 		symbol_visible_flags = _body_huds_state.symbol_visible_flags
 		orbit_visible_flags = _body_huds_state.orbit_visible_flags
 		visible_points_groups = _sbg_huds_state.get_visible_points_groups()
 		visible_orbits_groups = _sbg_huds_state.get_visible_orbits_groups()
-	if flags & HUDS_COLOR_STATE:
+	if flags & HUDS_COLOR:
 		body_orbit_colors = _body_huds_state.get_non_default_orbit_colors()
 		sbg_points_colors = _sbg_huds_state.get_non_default_points_colors()
 		sbg_orbits_colors = _sbg_huds_state.get_non_default_orbits_colors()
 
 
 func _set_huds_state() -> void:
-	if flags & HUDS_VISIBILITY_STATE:
+	if flags & HUDS_VISIBILITY:
 		_body_huds_state.set_name_visible_flags(name_visible_flags)
 		_body_huds_state.set_symbol_visible_flags(symbol_visible_flags)
 		_body_huds_state.set_orbit_visible_flags(orbit_visible_flags)
 		_sbg_huds_state.set_visible_points_groups(visible_points_groups)
 		_sbg_huds_state.set_visible_orbits_groups(visible_orbits_groups)
-	if flags & HUDS_COLOR_STATE:
+	if flags & HUDS_COLOR:
 		_body_huds_state.set_all_orbit_colors(body_orbit_colors) # ref safe
 		_sbg_huds_state.set_all_points_colors(sbg_points_colors)
 		_sbg_huds_state.set_all_orbits_colors(sbg_orbits_colors)

@@ -22,14 +22,18 @@ extends Reference
 
 # Generates 'default' IVView instances that GUI might want to use.
 
+const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+
+
 var views := {}
 
 
 func _project_init() -> void:
-	_make_hide_all()
-	_make_planets1()
-	_make_asteroids1()
-	_make_default_colors()
+	_hide_all()
+	_planets1()
+	_asteroids1()
+	_default_colors()
+#	_zoom()
 
 
 # public API
@@ -43,51 +47,51 @@ func set_view(view_name: String, is_camera_instant_move := false) -> void:
 
 # private
 
-func _make_hide_all() -> void:
+func _hide_all() -> void:
 	var _View_: Script = IVGlobal.script_classes._View_
-	var hide_all: IVView = _View_.new()
-	hide_all.flags = IVView.HUDS_VISIBILITY_STATE
-	views.hide_all = hide_all
+	var view: IVView = _View_.new()
+	view.flags = IVView.HUDS_VISIBILITY
+	views.hide_all = view
 
 
-func _make_planets1() -> void:
+func _planets1() -> void:
 	# Just the major bodies plus small moons (names and orbits).
 	var _View_: Script = IVGlobal.script_classes._View_
 	var BodyFlags: Dictionary = IVEnums.BodyFlags
 	
-	var planets1: IVView = _View_.new()
-	planets1.flags = IVView.HUDS_VISIBILITY_STATE
-	planets1.orbit_visible_flags = (
+	var view: IVView = _View_.new()
+	view.flags = IVView.HUDS_VISIBILITY
+	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!
 			BodyFlags.IS_TRUE_PLANET
 			| BodyFlags.IS_DWARF_PLANET
 			| BodyFlags.IS_PLANETARY_MASS_MOON
 			| BodyFlags.IS_NON_PLANETARY_MASS_MOON
 	)
-	planets1.name_visible_flags = planets1.orbit_visible_flags | BodyFlags.IS_STAR
-	views.planets1 = planets1
+	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
+	views.planets1 = view
 
 
-func _make_asteroids1() -> void:
+func _asteroids1() -> void:
 	# We set planet & moon visibilities for perspective. All asteroid points
 	# are set but not asteroid orbits (which are overwhelming).
 	var _View_: Script = IVGlobal.script_classes._View_
 	var BodyFlags: Dictionary = IVEnums.BodyFlags
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
 	
-	var asteroids1: IVView = _View_.new()
-	asteroids1.flags = IVView.HUDS_VISIBILITY_STATE
-	asteroids1.orbit_visible_flags = (
+	var view: IVView = _View_.new()
+	view.flags = IVView.HUDS_VISIBILITY
+	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!
 			BodyFlags.IS_TRUE_PLANET
 			| BodyFlags.IS_DWARF_PLANET
 			| BodyFlags.IS_PLANETARY_MASS_MOON
 			| BodyFlags.IS_NON_PLANETARY_MASS_MOON
 	)
-	asteroids1.name_visible_flags = asteroids1.orbit_visible_flags | BodyFlags.IS_STAR
+	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
 	
 	# Set asteroid point visibilities from table.
-	var visible_points_groups := asteroids1.visible_points_groups
+	var visible_points_groups := view.visible_points_groups
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("small_bodies_groups"):
 		if table_reader.get_bool("small_bodies_groups", "skip_import", row):
@@ -96,15 +100,41 @@ func _make_asteroids1() -> void:
 			continue
 		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
+	
+	views.asteroids1 = view
 
-	views.asteroids1 = asteroids1
 
-
-func _make_default_colors() -> void:
+func _default_colors() -> void:
 	# Empty View dicts set default colors.
 	var _View_: Script = IVGlobal.script_classes._View_
-	var default_colors: IVView = _View_.new()
-	default_colors.flags = IVView.HUDS_COLOR_STATE
-	views.default_colors = default_colors
+	var view: IVView = _View_.new()
+	view.flags = IVView.HUDS_COLOR
+	views.default_colors = view
+
+
+# WIP
+#
+#func _zoom() -> void:
+#	var CameraFlags := IVEnums.CameraFlags
+#
+#	var _View_: Script = IVGlobal.script_classes._View_
+#	var view: IVView = _View_.new()
+#	view.flags = IVView.CAMERA_ORIENTATION
+#	view.camera_flags = (
+#			CameraFlags.UP_LOCKED
+#			| CameraFlags.TRACK_ORBIT
+#	)
+#
+#	view.view_position
+#
+#	view.view_rotations = Vector3.ZERO
+#
+#	views.zoom = view
+	
+	
+	
+	
+
+
 
 

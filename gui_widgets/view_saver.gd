@@ -69,10 +69,10 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
 	_orientation_ckbx.visible = bool(show_flags & IVView.CAMERA_ORIENTATION)
 	_orientation_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_ORIENTATION))
-	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY_STATE)
-	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY_STATE))
-	_colors_ckbx.visible = bool(show_flags & IVView.HUDS_COLOR_STATE)
-	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR_STATE))
+	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY)
+	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY))
+	_colors_ckbx.visible = bool(show_flags & IVView.HUDS_COLOR)
+	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR))
 	_time_ckbx.visible = bool(show_flags & IVView.TIME_STATE)
 	_time_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
 
@@ -112,9 +112,9 @@ func _get_view_flags() -> int:
 	if _orientation_ckbx.pressed:
 		flags |= IVView.CAMERA_ORIENTATION
 	if _visibilities_ckbx.pressed:
-		flags |= IVView.HUDS_VISIBILITY_STATE
+		flags |= IVView.HUDS_VISIBILITY
 	if _colors_ckbx.pressed:
-		flags |= IVView.HUDS_COLOR_STATE
+		flags |= IVView.HUDS_COLOR
 	if _time_ckbx.pressed:
 		flags |= IVView.TIME_STATE
 	return flags
