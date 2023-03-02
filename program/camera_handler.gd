@@ -253,13 +253,13 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 
-func _on_selection_changed() -> void:
-	if _camera and _camera.is_camera_lock:
+func _on_selection_changed(suppress_camera_move: bool) -> void:
+	if !suppress_camera_move and _camera and _camera.is_camera_lock:
 		_camera.move_to(_selection_manager.selection)
 
 
-func _on_selection_reselected() -> void:
-	if _camera and _camera.is_camera_lock:
+func _on_selection_reselected(suppress_camera_move: bool) -> void:
+	if !suppress_camera_move and _camera and _camera.is_camera_lock:
 		# If no view in effect, recenter & level the camera.
 		if _camera.flags & CameraFlags.ANY_VIEW_FLAGS:
 			return

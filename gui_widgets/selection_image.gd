@@ -55,7 +55,7 @@ func _gui_input(event: InputEvent) -> void:
 				Vector3.ZERO, Vector3.ZERO)
 
 
-func _update_image() -> void:
+func _update_image(_dummy := false) -> void:
 	if !_selection_manager.has_selection():
 		return
 	hint_tooltip = tr(_selection_manager.get_body_name()) + _hint_extension

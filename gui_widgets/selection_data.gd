@@ -288,7 +288,7 @@ func _start_timer_coroutine() -> void:
 			_update_selection()
 
 
-func _update_selection() -> void:
+func _update_selection(_dummy := false) -> void:
 	_selection = _selection_manager.selection
 	if !_selection:
 		return

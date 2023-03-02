@@ -58,7 +58,7 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_update_selection()
 
 
-func _update_selection() -> void:
+func _update_selection(_dummy := false) -> void:
 	if !_selection_manager.has_selection():
 		return
 	var object_name: String = _selection_manager.get_name()
