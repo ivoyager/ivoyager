@@ -191,6 +191,7 @@ var table_import := {
 	small_bodies_groups = "res://ivoyager/data/solar_system/small_bodies_groups.tsv",
 	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
 	stars = "res://ivoyager/data/solar_system/stars.tsv",
+	visual_groups = "res://ivoyager/data/solar_system/visual_groups.tsv",
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 

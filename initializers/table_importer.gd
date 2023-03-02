@@ -62,8 +62,10 @@ const DPRINT := false
 
 
 var data_table_enums := [
+	# Can be read as int. Keys must be globally unique!
 	IVEnums.SBGClass,
 	IVEnums.Confidence,
+	IVEnums.BodyFlags,
 ]
 
 # source files
