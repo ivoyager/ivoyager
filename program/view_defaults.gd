@@ -46,7 +46,7 @@ func set_view(view_name: String, is_camera_instant_move := false) -> void:
 func _make_hide_all() -> void:
 	var _View_: Script = IVGlobal.script_classes._View_
 	var hide_all: IVView = _View_.new()
-	hide_all.has_huds_visibility_state = true
+	hide_all.flags = IVView.HUDS_VISIBILITY_STATE
 	views.hide_all = hide_all
 
 
@@ -56,9 +56,9 @@ func _make_planets1() -> void:
 	var BodyFlags: Dictionary = IVEnums.BodyFlags
 	
 	var planets1: IVView = _View_.new()
-	planets1.has_huds_visibility_state = true
+	planets1.flags = IVView.HUDS_VISIBILITY_STATE
 	planets1.orbit_visible_flags = (
-			# must be from IVBodyHUDsState.all_flags
+			# Must be from visibility_groups.tsv subset!
 			BodyFlags.IS_TRUE_PLANET
 			| BodyFlags.IS_DWARF_PLANET
 			| BodyFlags.IS_PLANETARY_MASS_MOON
@@ -76,9 +76,9 @@ func _make_asteroids1() -> void:
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
 	
 	var asteroids1: IVView = _View_.new()
-	asteroids1.has_huds_visibility_state = true
+	asteroids1.flags = IVView.HUDS_VISIBILITY_STATE
 	asteroids1.orbit_visible_flags = (
-			# must be from IVBodyHUDsState.all_flags
+			# Must be from visibility_groups.tsv subset!
 			BodyFlags.IS_TRUE_PLANET
 			| BodyFlags.IS_DWARF_PLANET
 			| BodyFlags.IS_PLANETARY_MASS_MOON
@@ -101,10 +101,10 @@ func _make_asteroids1() -> void:
 
 
 func _make_default_colors() -> void:
-	# Empty dicts set default colors.
+	# Empty View dicts set default colors.
 	var _View_: Script = IVGlobal.script_classes._View_
 	var default_colors: IVView = _View_.new()
-	default_colors.has_huds_color_state = true
+	default_colors.flags = IVView.HUDS_COLOR_STATE
 	views.default_colors = default_colors
 
 

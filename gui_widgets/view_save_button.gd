@@ -42,8 +42,7 @@ func _ready() -> void:
 
 
 func init(default_view_name := "LABEL_CUSTOM1", set_name := "", is_cached := true,
-		show_flags := IVViewManager.ALL_VIEW_STATE, init_flags := IVViewManager.ALL_VIEW_STATE,
-		reserved_names := []) -> void:
+		show_flags := IVView.ALL, init_flags := IVView.ALL, reserved_names := []) -> void:
 	# Called by IVViewCollection in standard setup.
 	# Make 'set_name' unique to not share views with other GUI instances. 
 	_view_saver.init(default_view_name, set_name, is_cached, show_flags, init_flags, reserved_names)

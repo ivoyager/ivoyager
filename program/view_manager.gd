@@ -22,18 +22,6 @@ extends Node
 
 # Manages IVView instances that are persisted via gamesave or cache.
 
-enum {
-	CAMERA_STATE = 1,
-	HUDS_VISIBILITY_STATE = 1 << 1,
-	HUDS_COLOR_STATE = 1 << 2,
-	TIME_STATE = 1 << 3,
-	# combos
-	ALL_NON_TIME_STATE = (1 << 3) - 1,
-	ALL_VIEW_STATE = (1 << 4) - 1,
-	# set_view() flags
-	INSTANT_CAMERA_MOVE = 1 << 4,
-}
-
 const files := preload("res://ivoyager/static/files.gd")
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
@@ -66,14 +54,7 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 		view.reset()
 	else:
 		view = _View_.new()
-	if flags & CAMERA_STATE:
-		view.save_camera_state()
-	if flags & HUDS_VISIBILITY_STATE:
-		view.save_huds_visibility_state()
-	if flags & HUDS_COLOR_STATE:
-		view.save_huds_color_state()
-	if flags & TIME_STATE:
-		view.save_time_state()
+	view.save_state(flags)
 	if is_cached:
 		_cached_views[key] = view
 		_write_cache()
@@ -81,7 +62,8 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 		_gamesave_views[key] = view
 
 
-func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) -> void:
+func set_view(view_name: String, set_name: String, is_cached: bool,
+		is_camera_instant_move := false) -> void:
 	var key := view_name + "." + set_name
 	var view: IVView
 	if is_cached:
@@ -90,14 +72,7 @@ func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) 
 		view = _gamesave_views.get(key)
 	if !view:
 		return
-	if flags & CAMERA_STATE:
-		view.set_camera_state(bool(flags & INSTANT_CAMERA_MOVE))
-	if flags & HUDS_VISIBILITY_STATE:
-		view.set_huds_visibility_state()
-	if flags & HUDS_COLOR_STATE:
-		view.set_huds_color_state()
-	if flags & TIME_STATE:
-		view.set_time_state()
+	view.set_state(is_camera_instant_move)
 
 
 func save_view_object(view: IVView, view_name: String, set_name: String, is_cached: bool) -> void:
@@ -156,19 +131,19 @@ func _read_cache() -> void:
 	for key in dict:
 		var data: Array = dict[key]
 		var view: IVView = _View_.new()
-		if !view.set_cache_data(data): # may be old version
+		if !view.set_data_from_cache(data): # may be prior version
 			bad_cache_data = true
 			continue
 		_cached_views[key] = view
 	if bad_cache_data:
-		_write_cache() # removes all bad-version views
+		_write_cache() # removes all prior-version views
 
 
 func _write_cache() -> void:
 	var dict := {}
 	for key in _cached_views:
 		var view: IVView = _cached_views[key]
-		var data := view.get_cache_data()
+		var data := view.get_data_for_cache()
 		dict[key] = data
 	_io_manager.callback(self, "_write_cache_on_io_thread", "", [dict])
 	

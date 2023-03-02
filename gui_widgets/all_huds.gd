@@ -23,16 +23,12 @@ extends VBoxContainer
 # GUI container widget that holds all the HUD widgets.
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
-const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
-const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
-
 
 var default_view_name := "LABEL_CUSTOM1" # will increment if taken
 var set_name := "AH"
 var is_cached := true
-var view_flags := IVViewManager.HUDS_VISIBILITY_STATE | IVViewManager.HUDS_COLOR_STATE
+var view_flags := IVView.ALL_HUDS
 var reserved_view_names := [tr("BUTTON_PLANETS1"), tr("BUTTON_ASTEROIDS1"), tr("BUTTON_COLORS1")]
-
 
 var _column_master: GridContainer
 

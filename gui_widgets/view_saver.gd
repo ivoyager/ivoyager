@@ -31,7 +31,7 @@ signal view_saved(view_name)
 var default_view_name := "LABEL_CUSTOM1" # will increment if taken
 var set_name := ""
 var is_cached := true
-var show_flags := IVViewManager.ALL_VIEW_STATE
+var show_flags := IVView.ALL
 var reserved_names := []
 
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
@@ -45,8 +45,7 @@ func _ready() -> void:
 
 
 func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := true,
-		show_flags_ := IVViewManager.ALL_VIEW_STATE, init_flags := IVViewManager.ALL_VIEW_STATE, 
-		reserved_names_ := []) -> void:
+		show_flags_ := IVView.ALL, init_flags := IVView.ALL, reserved_names_ := []) -> void:
 	# Called by IVViewSaveButton in standard setup.
 	# Make 'set_name_' unique to not share views with other GUI instances. 
 	default_view_name = default_view_name_
@@ -58,14 +57,14 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_increment_name_as_needed()
 	
 	# init checkboxes
-	$CameraCkbx.visible = bool(show_flags & IVViewManager.CAMERA_STATE)
-	$CameraCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVViewManager.CAMERA_STATE))
-	$VisibilitiesCkbx.visible = bool(show_flags & IVViewManager.HUDS_VISIBILITY_STATE)
-	$VisibilitiesCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVViewManager.HUDS_VISIBILITY_STATE))
-	$ColorsCkbx.visible = bool(show_flags & IVViewManager.HUDS_COLOR_STATE)
-	$ColorsCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVViewManager.HUDS_COLOR_STATE))
-	$TimeCkbx.visible = bool(show_flags & IVViewManager.TIME_STATE)
-	$TimeCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVViewManager.TIME_STATE))
+	$CameraCkbx.visible = bool(show_flags & IVView.CAMERA_STATE)
+	$CameraCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_STATE))
+	$VisibilitiesCkbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY_STATE)
+	$VisibilitiesCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY_STATE))
+	$ColorsCkbx.visible = bool(show_flags & IVView.HUDS_COLOR_STATE)
+	$ColorsCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR_STATE))
+	$TimeCkbx.visible = bool(show_flags & IVView.TIME_STATE)
+	$TimeCkbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
 
 
 func _on_visibility_changed():
@@ -98,13 +97,13 @@ func _increment_name_as_needed() -> void:
 
 func _get_view_flags() -> int:
 	var flags := 0
-	if $CameraCkbx.pressed and $CameraCkbx.visible:
-		flags |= IVViewManager.CAMERA_STATE
-	if $VisibilitiesCkbx.pressed and $VisibilitiesCkbx.visible:
-		flags |= IVViewManager.HUDS_VISIBILITY_STATE
-	if $ColorsCkbx.pressed and $ColorsCkbx.visible:
-		flags |= IVViewManager.HUDS_COLOR_STATE
-	if $TimeCkbx.pressed and $TimeCkbx.visible:
-		flags |= IVViewManager.TIME_STATE
+	if $CameraCkbx.pressed:
+		flags |= IVView.CAMERA_STATE
+	if $VisibilitiesCkbx.pressed:
+		flags |= IVView.HUDS_VISIBILITY_STATE
+	if $ColorsCkbx.pressed:
+		flags |= IVView.HUDS_COLOR_STATE
+	if $TimeCkbx.pressed:
+		flags |= IVView.TIME_STATE
 	return flags
 

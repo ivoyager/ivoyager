@@ -32,7 +32,7 @@ onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 var default_view_name := "LABEL_CUSTOM1" # will increment if taken
 var set_name := ""
 var is_cached := true
-var show_flags := IVViewManager.ALL_VIEW_STATE
+var show_flags := IVView.ALL
 
 
 func _ready() -> void:
@@ -42,7 +42,7 @@ func _ready() -> void:
 
 func init(view_save_button: IVViewSaveButton, default_view_name_ := "LABEL_CUSTOM1",
 		set_name_ := "", is_cached_ := true,
-		show_flags_ := IVViewManager.ALL_VIEW_STATE, init_flags := IVViewManager.ALL_VIEW_STATE,
+		show_flags_ := IVView.ALL, init_flags := IVView.ALL,
 		reserved_names := []) -> void:
 	# Call from containing scene.
 	# This method calls IVViewSaveButton.init() which calls IVViewSaver.init().
@@ -82,7 +82,7 @@ func _on_view_saved(view_name: String) -> void:
 	
 
 func _on_button_pressed(button: ViewButton) -> void:
-	_view_manager.set_view(button.text, set_name, is_cached, show_flags)
+	_view_manager.set_view(button.text, set_name, is_cached)
 
 
 func _on_button_right_clicked(button: ViewButton) -> void:

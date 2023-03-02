@@ -24,15 +24,16 @@ extends Reference
 # visibilities, HUDs colors, and/or time state. The object can be persisted
 # via gamesave or cache.
 
-# WIP - move here!
-enum { # view_flags
-	CAMERA_STATE = 1,
+enum { # flags
+	CAMERA_STATE = 1, # TODO: split CAMERA_SELECTION, _ORIENTATION [later: _LONGITUDE]
 	HUDS_VISIBILITY_STATE = 1 << 1,
 	HUDS_COLOR_STATE = 1 << 2,
 	TIME_STATE = 1 << 3,
 	# flag sets
-	ALL_NON_TIME_STATE = (1 << 3) - 1,
-	ALL_VIEW_STATE = (1 << 4) - 1,
+	ALL_CAMERA = 1,
+	ALL_HUDS = 1 << 1 | 1 << 2
+	ALL_BUT_TIME = (1 << 3) - 1,
+	ALL = (1 << 4) - 1,
 }
 
 
@@ -40,50 +41,46 @@ const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"has_camera_state",
+	"flags",
+	
 	"selection_name",
 	"camera_flags",
 	"view_position",
 	"view_rotations",
 	
-	"has_huds_visibility_state",
 	"name_visible_flags",
 	"symbol_visible_flags",
 	"orbit_visible_flags",
 	"visible_points_groups",
 	"visible_orbits_groups",
 	
-	"has_huds_color_state",
 	"body_orbit_colors",
 	"sbg_points_colors",
 	"sbg_orbits_colors",
 	
-	"has_time_state",
 	"time",
 	"speed_index",
 	"is_reversed",
 ]
 
 # persisted
-var has_camera_state := false
+var flags := 0 # what state does this View have?
+
 var selection_name := ""
 var camera_flags := 0 # IVEnums.CameraFlags
 var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
 var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
 
-var has_huds_visibility_state := false
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var orbit_visible_flags := 0
 var visible_points_groups := []
 var visible_orbits_groups := []
 
-var has_huds_color_state := false
 var body_orbit_colors := {} # has non-default only
 var sbg_points_colors := {} # has non-default only
 var sbg_orbits_colors := {} # has non-default only
 
-var has_time_state := false # used by Planetarium
 var time := 0.0
 var speed_index := 0
 var is_reversed := false
@@ -100,7 +97,19 @@ var _version_hash := PERSIST_PROPERTIES.hash()
 
 # all state
 
+func save_state(save_flags: int) -> void:
+	if save_flags & CAMERA_STATE:
+		save_camera_state()
+	if save_flags & HUDS_VISIBILITY_STATE:
+		save_huds_visibility_state()
+	if save_flags & HUDS_COLOR_STATE:
+		save_huds_color_state()
+	if save_flags & TIME_STATE:
+		save_time_state()
+
+
 func set_state(is_camera_instant_move := false) -> void:
+	# Sets all state that this view has.
 	set_camera_state(is_camera_instant_move)
 	set_huds_visibility_state()
 	set_huds_color_state()
@@ -110,7 +119,7 @@ func set_state(is_camera_instant_move := false) -> void:
 # camera state
 
 func save_camera_state() -> void:
-	has_camera_state = true
+	flags |= CAMERA_STATE
 	var view_state := _camera_handler.get_camera_view_state()
 	selection_name = view_state[0]
 	camera_flags = view_state[1]
@@ -119,7 +128,7 @@ func save_camera_state() -> void:
 
 
 func set_camera_state(is_instant_move := false) -> void:
-	if !has_camera_state:
+	if !(flags & CAMERA_STATE):
 		return
 	_camera_handler.move_to_by_name(selection_name, camera_flags, view_position, view_rotations,
 			is_instant_move)
@@ -128,7 +137,7 @@ func set_camera_state(is_instant_move := false) -> void:
 # HUDs visibility state
 
 func save_huds_visibility_state() -> void:
-	has_huds_visibility_state = true
+	flags |= HUDS_VISIBILITY_STATE
 	name_visible_flags = _body_huds_state.name_visible_flags
 	symbol_visible_flags = _body_huds_state.symbol_visible_flags
 	orbit_visible_flags = _body_huds_state.orbit_visible_flags
@@ -137,7 +146,7 @@ func save_huds_visibility_state() -> void:
 
 
 func set_huds_visibility_state() -> void:
-	if !has_huds_visibility_state:
+	if !(flags & HUDS_VISIBILITY_STATE):
 		return
 	_body_huds_state.set_name_visible_flags(name_visible_flags)
 	_body_huds_state.set_symbol_visible_flags(symbol_visible_flags)
@@ -149,14 +158,14 @@ func set_huds_visibility_state() -> void:
 # HUDs color state
 
 func save_huds_color_state() -> void:
-	has_huds_color_state = true
+	flags |= HUDS_COLOR_STATE
 	body_orbit_colors = _body_huds_state.get_non_default_orbit_colors() # ref safe
 	sbg_points_colors = _sbg_huds_state.get_non_default_points_colors()
 	sbg_orbits_colors = _sbg_huds_state.get_non_default_orbits_colors()
 
 
 func set_huds_color_state() -> void:
-	if !has_huds_color_state:
+	if !(flags & HUDS_COLOR_STATE):
 		return
 	_body_huds_state.set_all_orbit_colors(body_orbit_colors) # ref safe
 	_sbg_huds_state.set_all_points_colors(sbg_points_colors)
@@ -166,14 +175,14 @@ func set_huds_color_state() -> void:
 # time state
 
 func save_time_state() -> void:
-	has_time_state = true
+	flags |= TIME_STATE
 	time = _timekeeper.time
 	speed_index = _timekeeper.speed_index
 	is_reversed = _timekeeper.is_reversed
 
 
 func set_time_state() -> void:
-	if !has_time_state:
+	if !(flags & TIME_STATE):
 		return
 	_timekeeper.set_time(time)
 	_timekeeper.change_speed(0, speed_index)
@@ -183,10 +192,7 @@ func set_time_state() -> void:
 # IVViewManager
 
 func reset() -> void:
-	has_camera_state = false
-	has_huds_visibility_state = false
-	has_huds_color_state = false
-	has_time_state = false
+	flags = 0
 	selection_name = ""
 	visible_points_groups.clear()
 	visible_orbits_groups.clear()
@@ -195,7 +201,7 @@ func reset() -> void:
 	sbg_orbits_colors.clear()
 
 
-func get_cache_data() -> Array:
+func get_data_for_cache() -> Array:
 	var data := []
 	for property in PERSIST_PROPERTIES:
 		data.append(get(property))
@@ -203,7 +209,7 @@ func get_cache_data() -> Array:
 	return data
 
 
-func set_cache_data(data) -> bool:
+func set_data_from_cache(data) -> bool:
 	# Tests data integrity and returns false on failure.
 	if typeof(data) != TYPE_ARRAY:
 		return false
