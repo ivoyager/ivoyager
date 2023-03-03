@@ -270,10 +270,6 @@ func get_real_precision(path: String) -> int:
 	return characteristics.real_precisions.get(path, -1)
 
 
-func get_system_radius() -> float:
-	return characteristics.system_radius
-
-
 func get_hud_name() -> String:
 	return characteristics.get("hud_name", name)
 
@@ -333,6 +329,19 @@ func get_std_gravitational_parameter() -> float:
 
 
 func get_mean_radius() -> float:
+	return m_radius
+
+
+func get_system_radius() -> float:
+	# Defines radius for a top view.
+	return characteristics.system_radius
+
+
+func get_perspective_radius() -> float:
+	# For camera perspective distancing.
+	var perspective_radius: float = characteristics.get("perspective_radius", 0.0)
+	if perspective_radius:
+		return perspective_radius
 	return m_radius
 
 

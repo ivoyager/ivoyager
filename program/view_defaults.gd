@@ -20,7 +20,7 @@
 class_name IVViewDefaults
 extends Reference
 
-# Generates 'default' IVView instances that GUI might want to use.
+# Generates 'default' IVView instances that we might want to use.
 
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 

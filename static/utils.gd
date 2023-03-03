@@ -177,6 +177,7 @@ static func get_real_str_precision(real_str: String) -> int:
 
 # Misc
 
+# DEPRECIATE
 static func get_visual_radius_compensated_dist(from_dist: float, from_radius: float,
 		to_radius: float, exponent := 0.9) -> float:
 	# Use to get distance that is visually compensated (but not fully) for
@@ -184,6 +185,7 @@ static func get_visual_radius_compensated_dist(from_dist: float, from_radius: fl
 	#  exponent = 0.0, no compensation (result = old_dist)
 	#  exponent = 1.0; full compensation so target appears same size
 	return from_dist * pow(to_radius / from_radius, exponent)
+
 
 
 

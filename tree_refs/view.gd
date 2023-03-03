@@ -73,8 +73,8 @@ var flags := 0 # what state does this View have?
 var selection_name := ""
 
 var camera_flags := 0 # IVEnums.CameraFlags
-var view_position := Vector3.ZERO # spherical; relative to orbit or ground ref
-var view_rotations := NULL_ROTATION # euler; relative to looking_at(-origin, north)
+var view_position := Vector3.ZERO
+var view_rotations := NULL_ROTATION
 
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags

@@ -117,6 +117,12 @@ func get_system_radius() -> float:
 	return body.get_system_radius()
 
 
+func get_perspective_radius() -> float:
+	if !is_body:
+		return 0.0
+	return body.get_perspective_radius()
+
+
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 	if !is_body:
 		return VECTOR2_ZERO
