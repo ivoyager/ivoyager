@@ -32,7 +32,7 @@ var reserved_view_names := [tr("BUTTON_PLANETS1"), tr("BUTTON_ASTEROIDS1"), tr("
 
 var _column_master: GridContainer
 
-onready var _view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
+#onready var _view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 
 
 func _enter_tree() -> void:
@@ -40,12 +40,12 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%Planets1Button".connect("pressed", self, "_planets1")
-	$"%Asteroids1Button".connect("pressed", self, "_asteroids1")
-	$"%Colors1Button".connect("pressed", self, "_colors1")
+#	$"%HideAllButton".connect("pressed", self, "_hide_all")
+#	$"%Planets1Button".connect("pressed", self, "_planets1")
+#	$"%Asteroids1Button".connect("pressed", self, "_asteroids1")
+#	$"%Colors1Button".connect("pressed", self, "_colors1")
 	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
-	$ViewCollection.init($"%ViewSaveButton", default_view_name, set_name, is_cached,
+	$ViewSaveFlow.init($"%ViewSaveButton", default_view_name, set_name, is_cached,
 			view_flags, view_flags, reserved_view_names)
 
 
@@ -107,19 +107,19 @@ func _on_child_entered_tree(control: Control) -> void:
 			]
 
 
-func _hide_all() -> void:
-	_view_defaults.set_view("hide_all")
-
-
-func _planets1() -> void:
-	_view_defaults.set_view("planets1")
-
-
-func _asteroids1() -> void:
-	_view_defaults.set_view("asteroids1")
-
-
-func _colors1() -> void:
-	_view_defaults.set_view("default_colors")
+#func _hide_all() -> void:
+#	_view_defaults.set_view("hide_all")
+#
+#
+#func _planets1() -> void:
+#	_view_defaults.set_view("planets1")
+#
+#
+#func _asteroids1() -> void:
+#	_view_defaults.set_view("asteroids1")
+#
+#
+#func _colors1() -> void:
+#	_view_defaults.set_view("default_colors")
 
 

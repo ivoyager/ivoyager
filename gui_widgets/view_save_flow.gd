@@ -1,4 +1,4 @@
-# view_collection.gd
+# view_save_flow.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVViewCollection
+class_name IVViewSaveFlow
 extends HFlowContainer
 
 # GUI widget that coordinates with IVViewSaveButton and houses the saved view
