@@ -92,17 +92,11 @@ enum CameraFlags {
 	TRACK_GALACIC = 1 << 5, # not implemented yet
 	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
 	
-	VIEW_ZOOM = 1 << 7,
-	VIEW_45 = 1 << 8,
-	VIEW_TOP = 1 << 9,
-	VIEW_OUTWARD = 1 << 10, # disabled now; needs special GUI to use reasonably
-	
 	# bits 32-63 should be safe to use for any extension project
 	
 	# combo masks
 	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
 	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
-	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
 }
 
 enum CameraDisabledFlags {

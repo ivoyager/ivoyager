@@ -23,6 +23,8 @@ extends Reference
 # Optionally keeps state related to camera, HUDs, and/or time. The object can
 # be persisted via gamesave or cache.
 
+# TODO: Hotkey bindings!
+
 enum { # flags
 	CAMERA_SELECTION = 1,
 	CAMERA_ORIENTATION = 1 << 1

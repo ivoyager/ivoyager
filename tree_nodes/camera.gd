@@ -34,7 +34,6 @@ signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal up_lock_changed(flags, disabled_flags)
-signal view_type_changed(flags, disabled_flags)
 signal tracking_changed(flags, disabled_flags)
 
 
@@ -44,7 +43,6 @@ const utils := preload("res://ivoyager/static/utils.gd")
 const Flags := IVEnums.CameraFlags
 const ANY_UP_FLAGS := Flags.ANY_UP_FLAGS
 const ANY_TRACK_FLAGS := Flags.ANY_TRACK_FLAGS
-const ANY_VIEW_FLAGS := Flags.ANY_VIEW_FLAGS
 const DisabledFlags := IVEnums.CameraDisabledFlags
 
 const IDENTITY_BASIS := Basis.IDENTITY
@@ -86,7 +84,7 @@ const PERSIST_PROPERTIES := [
 # ******************************* PERSISTED ***********************************
 
 # public - read only except project init
-var flags: int = Flags.UP_LOCKED | Flags.VIEW_ZOOM | Flags.TRACK_ORBIT
+var flags: int = Flags.UP_LOCKED | Flags.TRACK_ORBIT
 var is_camera_lock := true
 
 # public - read only! (use move methods to set; these are "to" during transfer)
@@ -224,11 +222,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			to_view_rotations, is_instant_move) or true)
 
 	# overrides
-	if to_flags & ANY_VIEW_FLAGS:
-		to_flags |= Flags.UP_LOCKED # for all current views; this could change
-		to_flags &= ~Flags.UP_UNLOCKED
-		to_view_position = VECTOR3_ZERO
-		to_view_rotations = NULL_ROTATION
 	if to_flags & Flags.UP_LOCKED:
 		if to_view_rotations != NULL_ROTATION:
 			to_view_rotations.z = 0.0 # cancel roll, if any
@@ -237,11 +230,9 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
 	var to_track_flags := to_flags & ANY_TRACK_FLAGS
-	var to_view_flags := to_flags & ANY_VIEW_FLAGS
 	
 	assert(to_up_flags & (to_up_flags - 1) == 0, "only 1 or 0 bits allowed")
 	assert(to_track_flags & (to_track_flags - 1) == 0, "only 1 or 0 bits allowed")
-	assert(to_view_flags & (to_view_flags - 1) == 0, "only 1 or 0 bits allowed")
 
 	# don't move if *nothing* has changed and is_instant_move == false
 	if (
@@ -249,7 +240,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			and (!to_selection or to_selection == selection)
 			and (!to_up_flags or to_up_flags == flags & ANY_UP_FLAGS)
 			and (!to_track_flags or to_track_flags == flags & ANY_TRACK_FLAGS)
-			and (!to_view_flags or to_view_flags == flags & ANY_VIEW_FLAGS)
 			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
 			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
 	):
@@ -269,9 +259,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	var is_up_change: bool = ((to_up_flags and to_up_flags != flags & ANY_UP_FLAGS)
 			or (to_view_rotations != NULL_ROTATION and to_view_rotations.z and flags & Flags.UP_LOCKED))
 	var is_track_change := to_track_flags and to_track_flags != flags & ANY_TRACK_FLAGS
-	var is_view_change: bool = ((to_view_flags and to_view_flags != flags & ANY_VIEW_FLAGS)
-			or (to_view_position != VECTOR3_ZERO and flags & ANY_VIEW_FLAGS)
-			or (to_view_rotations != NULL_ROTATION and flags & ANY_VIEW_FLAGS))
 	
 	# set selection and flags
 	if to_selection and to_selection.spatial:
@@ -284,29 +271,16 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	if is_track_change:
 		flags &= ~ANY_TRACK_FLAGS
 		flags |= to_track_flags
-	if is_view_change:
-		flags &= ~ANY_VIEW_FLAGS
-		flags |= to_view_flags
-	if to_view_position != VECTOR3_ZERO:
-		flags &= ~ANY_VIEW_FLAGS
 	if to_view_rotations != NULL_ROTATION:
-		flags &= ~ANY_VIEW_FLAGS
 		if to_view_rotations.z:
 			flags &= ~Flags.UP_LOCKED
 			flags |= Flags.UP_UNLOCKED
 	
 	# set position & rotaion
-	if flags & ANY_VIEW_FLAGS:
-		view_position = selection.get_position_for_view_and_tracking(flags)
-		if flags & Flags.VIEW_OUTWARD:
-			view_rotations = Vector3(0.0, PI, 0.0)
-		else:
-			view_rotations = VECTOR3_ZERO
-	else:
-		if to_view_position != VECTOR3_ZERO:
-			view_position = to_view_position
-		if to_view_rotations != NULL_ROTATION:
-			view_rotations = to_view_rotations
+	if to_view_position != VECTOR3_ZERO:
+		view_position = to_view_position
+	if to_view_rotations != NULL_ROTATION:
+		view_rotations = to_view_rotations
 	
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # roll
@@ -333,8 +307,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 		emit_signal("up_lock_changed", flags, disabled_flags)
 	if is_track_change:
 		emit_signal("tracking_changed", flags, disabled_flags)
-	if is_view_change:
-		emit_signal("view_type_changed", flags, disabled_flags)
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 
 
@@ -491,20 +463,14 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 
 
 func _process_motions_and_rotations(delta: float) -> void:
-	var is_camera_bump := false
 	# maintain present position based on tracking
 	_transform = _get_view_transform(view_position, view_rotations, _reference_basis,
 			perspective_radius)
 	# process accumulated user inputs
 	if _motion_accumulator:
 		_process_motion(delta)
-		is_camera_bump = true
 	if _rotation_accumulator:
 		_process_rotation(delta)
-		is_camera_bump = true
-	if is_camera_bump and flags & ANY_VIEW_FLAGS:
-		flags &= ~ANY_VIEW_FLAGS
-		emit_signal("view_type_changed", flags, disabled_flags)
 
 
 func _process_motion(delta: float) -> void:
@@ -721,7 +687,6 @@ func _send_gui_refresh() -> void:
 	emit_signal("focal_length_changed", focal_length)
 	emit_signal("up_lock_changed", flags, disabled_flags)
 	emit_signal("tracking_changed", flags, disabled_flags)
-	emit_signal("view_type_changed", flags, disabled_flags)
 	_signal_range_latitude_longitude(true)
 
 

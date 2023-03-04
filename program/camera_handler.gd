@@ -137,13 +137,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 	if !event.is_action_type() or !_camera:
 		return
 	if event.is_pressed():
-		if event.is_action_pressed("camera_zoom_view"):
-			_camera.move_to(null, CameraFlags.VIEW_ZOOM)
-		elif event.is_action_pressed("camera_45_view"):
-			_camera.move_to(null, CameraFlags.VIEW_45)
-		elif event.is_action_pressed("camera_top_view"):
-			_camera.move_to(null, CameraFlags.VIEW_TOP)
-		elif event.is_action_pressed("recenter"):
+		if event.is_action_pressed("recenter"):
 			_camera.move_to(null, CameraFlags.UP_LOCKED, VECTOR3_ZERO, VECTOR3_ZERO)
 		elif event.is_action_pressed("camera_left"):
 			_move_pressed.x = -_key_move_rate
@@ -260,9 +254,6 @@ func _on_selection_changed(suppress_camera_move: bool) -> void:
 
 func _on_selection_reselected(suppress_camera_move: bool) -> void:
 	if !suppress_camera_move and _camera and _camera.is_camera_lock:
-		# If no view in effect, recenter & level the camera.
-		if _camera.flags & CameraFlags.ANY_VIEW_FLAGS:
-			return
 		_camera.move_to(null, 0, VECTOR3_ZERO, VECTOR3_ZERO)
 
 

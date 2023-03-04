@@ -44,11 +44,6 @@ const PERSIST_PROPERTIES := [
 	"gui_name",
 	"is_body",
 	"up_selection_name",
-	"view_rotate_when_close",
-	"view_min_distance",
-	"track_ground_positions",
-	"track_orbit_positions",
-	"track_ecliptic_positions",
 	"spatial",
 	"body",
 ]
@@ -58,11 +53,7 @@ var name: String
 var gui_name: String # name for GUI display (already translated)
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
-var view_rotate_when_close := false
-var view_min_distance: float # camera normalizes for fov = 50
-var track_ground_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-var track_orbit_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
-var track_ecliptic_positions: Array #Vector3 for 1st four VIEW_TYPE_'S
+
 var spatial: Spatial # for camera; same as 'body' if is_body
 var body: IVBody # = spatial if is_body else null
 
@@ -182,16 +173,4 @@ func get_radius_for_camera() -> float:
 		return IVUnits.KM
 	return body.get_mean_radius()
 
-
-func get_position_for_view_and_tracking(camera_flags: int) -> Vector3:
-	var view_type: int = (
-			0 if camera_flags & CameraFlags.VIEW_ZOOM
-			else 1 if camera_flags & CameraFlags.VIEW_45
-			else 2 if camera_flags & CameraFlags.VIEW_TOP
-			else 3)
-	if camera_flags & CameraFlags.TRACK_GROUND:
-		return track_ground_positions[view_type]
-	elif camera_flags & CameraFlags.TRACK_ORBIT:
-		return track_orbit_positions[view_type]
-	return track_ecliptic_positions[view_type]
 
