@@ -23,24 +23,22 @@ extends HBoxContainer
 # GUI Widget.
 
 const Flags := IVEnums.CameraFlags
-const DisabledFlags := IVEnums.CameraDisabledFlags
-
-
-var hide_highest_track := true # deselect 'Ground' & 'Orbit' to get 'Ecliptic'
 
 var _camera: Camera
 
-onready var _ecliptic_checkbox: CheckBox = $Ecliptic
-onready var _orbit_checkbox: CheckBox = $Orbit
 onready var _ground_checkbox: CheckBox = $Ground
+onready var _orbit_checkbox: CheckBox = $Orbit
+onready var _ecliptic_checkbox: CheckBox = $Ecliptic
 
 
 func _ready():
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	_connect_camera(get_viewport().get_camera())
-	_ecliptic_checkbox.connect("pressed", self, "_on_ecliptic_pressed")
-	_orbit_checkbox.connect("pressed", self, "_on_orbit_pressed")
-	_ground_checkbox.connect("pressed", self, "_on_ground_pressed")
+	var button_group := ButtonGroup.new()
+	button_group.connect("pressed", self, "_on_pressed")
+	_ecliptic_checkbox.group = button_group
+	_orbit_checkbox.group = button_group
+	_ground_checkbox.group = button_group
 
 
 func _connect_camera(camera: Camera) -> void:
@@ -56,34 +54,20 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 
+func _on_pressed(button: CheckBox) -> void:
+	if !_camera:
+		return
+	match button.name:
+		"Ground":
+			_camera.move_to(null, Flags.TRACK_GROUND)
+		"Orbit":
+			_camera.move_to(null, Flags.TRACK_ORBIT)
+		"Ecliptic":
+			_camera.move_to(null, Flags.TRACK_ECLIPTIC)
+
+
 func _update_tracking(flags: int, _disable_flags: int) -> void:
-	_ecliptic_checkbox.pressed = bool(flags & Flags.TRACK_ECLIPTIC)
-	_orbit_checkbox.pressed = bool(flags & Flags.TRACK_ORBIT)
-	_ground_checkbox.pressed = bool(flags & Flags.TRACK_GROUND)
+	$Ground.set_pressed_no_signal(flags & Flags.TRACK_GROUND)
+	$Orbit.set_pressed_no_signal(flags & Flags.TRACK_ORBIT)
+	$Ecliptic.set_pressed_no_signal(flags & Flags.TRACK_ECLIPTIC)
 
-
-func _on_ecliptic_pressed() -> void:
-	if !_camera:
-		return
-	if _ecliptic_checkbox.pressed:
-		_camera.move_to(null, Flags.TRACK_ECLIPTIC)
-	else:
-		_ecliptic_checkbox.pressed = true
-
-
-func _on_orbit_pressed() -> void:
-	if !_camera:
-		return
-	if _orbit_checkbox.pressed:
-		_camera.move_to(null, Flags.TRACK_ORBIT)
-	else:
-		_orbit_checkbox.pressed = true
-
-
-func _on_ground_pressed() -> void:
-	if !_camera:
-		return
-	if _ground_checkbox.pressed:
-		_camera.move_to(null, Flags.TRACK_GROUND)
-	else:
-		_ground_checkbox.pressed = true
