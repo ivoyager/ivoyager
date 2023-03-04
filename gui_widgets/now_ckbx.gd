@@ -1,4 +1,4 @@
-# present_time_ckbx.gd
+# now_ckbx.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVPresentTimeCkbx
+class_name IVNowCkbx
 extends CheckBox
 
 # UI widget. Used in Planetarium to select real-world present time.

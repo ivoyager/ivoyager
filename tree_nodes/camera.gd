@@ -109,11 +109,11 @@ var gui_ecliptic_coordinates_dist := 1e6 * KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.9 # 0.0, none; 1.0 moves to same visual size
-
-var perspective_close_radii := 100.0 # full perspective adj inside this
-var perspective_far_dist := 2e8 * KM # no perspective adj outside this
-var max_perspective_radius := 1e6 * KM # >sun; see assert() in _ready()
-var min_perspective_radius := 2.0 * METER # see assert() in _ready()
+# 'perspective' settings; see comments above & asserts in _ready()
+var perspective_close_radii := 500.0 # full perspective adj inside this
+var perspective_far_dist := 1e9 * KM # no perspective adj outside this
+var max_perspective_radius := 1e6 * KM # >sun
+var min_perspective_radius := 2.0 * METER
 
 # public read-only
 var parent: Spatial # actual Spatial parent at this time

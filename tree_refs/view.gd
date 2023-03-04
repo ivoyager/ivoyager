@@ -35,6 +35,7 @@ enum { # flags
 	
 	TIME_STATE = 1 << 5,
 	
+	
 	# flag sets
 	ALL_CAMERA = (1 << 3) - 1,
 	ALL_HUDS = 1 << 3 | 1 << 4
