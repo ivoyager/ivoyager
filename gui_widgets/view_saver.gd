@@ -38,6 +38,7 @@ var reserved_names := []
 
 onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 onready var _selection_ckbx: CheckBox = $"%SelectionCkbx"
+onready var _longitude_ckbx: CheckBox = $"%LongitudeCkbx"
 onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
 onready var _visibilities_ckbx: CheckBox = $"%VisibilitiesCkbx"
 onready var _colors_ckbx: CheckBox = $"%ColorsCkbx"
@@ -67,6 +68,8 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	# init checkboxes
 	_selection_ckbx.visible = bool(show_flags & IVView.CAMERA_SELECTION)
 	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
+	_longitude_ckbx.visible = bool(show_flags & IVView.CAMERA_LONGITUDE)
+	_longitude_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_LONGITUDE))
 	_orientation_ckbx.visible = bool(show_flags & IVView.CAMERA_ORIENTATION)
 	_orientation_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_ORIENTATION))
 	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY)
@@ -112,6 +115,8 @@ func _get_view_flags() -> int:
 	var flags := 0
 	if _selection_ckbx.pressed:
 		flags |= IVView.CAMERA_SELECTION
+	if _longitude_ckbx.pressed:
+		flags |= IVView.CAMERA_LONGITUDE
 	if _orientation_ckbx.pressed:
 		flags |= IVView.CAMERA_ORIENTATION
 	if _visibilities_ckbx.pressed:

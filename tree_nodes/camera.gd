@@ -49,8 +49,9 @@ const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
 const ECLIPTIC_Y := IDENTITY_BASIS.y
 const ECLIPTIC_Z := IDENTITY_BASIS.z # ecliptic north
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
-const VECTOR3_ZERO := Vector3.ZERO
+const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
+
+
 const METER := IVUnits.METER
 const KM := IVUnits.KM
 
@@ -91,7 +92,7 @@ var is_camera_lock := true
 var selection: IVSelection
 var perspective_radius := KM
 var view_position := Vector3.ONE # spherical, relative to ref frame; r is 'perspective'
-var view_rotations := VECTOR3_ZERO # euler, relative to looking_at(-origin, 'up')
+var view_rotations := Vector3.ZERO # euler, relative to looking_at(-origin, 'up')
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
@@ -127,8 +128,8 @@ var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
 
 # motions / rotations
-var _motion_accumulator := VECTOR3_ZERO
-var _rotation_accumulator := VECTOR3_ZERO
+var _motion_accumulator := Vector3.ZERO
+var _rotation_accumulator := Vector3.ZERO
 
 # move_to
 var _move_time: float
@@ -142,7 +143,7 @@ var _from_selection: IVSelection
 var _from_flags := flags
 var _from_perspective_radius := KM
 var _from_view_position := Vector3.ONE # any non-zero dist ok
-var _from_view_rotations := VECTOR3_ZERO
+var _from_view_rotations := Vector3.ZERO
 
 # gui signalling
 var _gui_range := NAN
@@ -212,20 +213,23 @@ func add_rotation(rotation_amount: Vector3) -> void:
 	_rotation_accumulator += rotation_amount
 
 
-func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_VECTOR3,
+		to_view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
 	# Note: call IVCameraHandler.move_to() or move_to_by_name() to move camera
 	# *and* change selection.
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Some parameters override others (see code at '# overrides').
+	# For this purpose, individual -INF elements in to_view_position and
+	# to_view_rotations are treated as 'null' (ie, we can set 1 or 2 elements).
+	# Note: some flags may override elements of position or rotation.
 	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
 			to_view_rotations, is_instant_move) or true)
 
 	# overrides
 	if to_flags & Flags.UP_LOCKED:
-		if to_view_rotations != NULL_ROTATION:
+		if to_view_rotations != NULL_VECTOR3:
 			to_view_rotations.z = 0.0 # cancel roll, if any
-	if to_view_rotations != NULL_ROTATION and to_view_rotations.z: # roll unlocks 'up'
+	if (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
+			and to_view_rotations.z): # any roll unlocks 'up'
 		to_flags |= Flags.UP_UNLOCKED
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
@@ -240,8 +244,8 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			and (!to_selection or to_selection == selection)
 			and (!to_up_flags or to_up_flags == flags & ANY_UP_FLAGS)
 			and (!to_track_flags or to_track_flags == flags & ANY_TRACK_FLAGS)
-			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
-			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
+			and (to_view_position == NULL_VECTOR3 or to_view_position == view_position)
+			and (to_view_rotations == NULL_VECTOR3 or to_view_rotations == view_rotations)
 	):
 		return
 	
@@ -257,7 +261,8 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	
 	# change booleans
 	var is_up_change: bool = ((to_up_flags and to_up_flags != flags & ANY_UP_FLAGS)
-			or (to_view_rotations != NULL_ROTATION and to_view_rotations.z and flags & Flags.UP_LOCKED))
+			or (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
+			and to_view_rotations.z and flags & Flags.UP_LOCKED))
 	var is_track_change := to_track_flags and to_track_flags != flags & ANY_TRACK_FLAGS
 	
 	# set selection and flags
@@ -271,20 +276,28 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	if is_track_change:
 		flags &= ~ANY_TRACK_FLAGS
 		flags |= to_track_flags
-	if to_view_rotations != NULL_ROTATION:
-		if to_view_rotations.z:
+	if to_view_rotations != NULL_VECTOR3:
+		if to_view_rotations.z != -INF and to_view_rotations.z:
 			flags &= ~Flags.UP_LOCKED
 			flags |= Flags.UP_UNLOCKED
 	
 	# set position & rotaion
-	if to_view_position != VECTOR3_ZERO:
-		view_position = to_view_position
-	if to_view_rotations != NULL_ROTATION:
-		view_rotations = to_view_rotations
-	
+	if to_view_position != NULL_VECTOR3:
+		if to_view_position.x != -INF:
+			view_position.x = to_view_position.x
+		if to_view_position.y != -INF:
+			view_position.y = to_view_position.y
+		if to_view_position.z != -INF:
+			view_position.z = to_view_position.z
+	if to_view_rotations != NULL_VECTOR3:
+		if to_view_rotations.x != -INF:
+			view_rotations.x = to_view_rotations.x
+		if to_view_rotations.y != -INF:
+			view_rotations.y = to_view_rotations.y
+		if to_view_rotations.z != -INF:
+			view_rotations.z = to_view_rotations.z
 	if flags & Flags.UP_LOCKED:
-		view_rotations.z = 0.0 # roll
-	
+		view_rotations.z = 0.0 # up lock overrides roll
 	view_position.z = clamp(view_position.z, MIN_DIST_RADII, _max_dist)
 	
 	# initiate move
@@ -299,8 +312,8 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	is_moving = true
 	
 	# TODO?: Allow accumulators during move?
-	_motion_accumulator = VECTOR3_ZERO
-	_rotation_accumulator = VECTOR3_ZERO
+	_motion_accumulator = Vector3.ZERO
+	_rotation_accumulator = Vector3.ZERO
 	
 	# signals
 	if is_up_change:
@@ -359,7 +372,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		perspective_radius = selection.get_perspective_radius()
 	_from_selection = selection
 	_from_perspective_radius = perspective_radius
-	move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
+	move_to(null, 0, NULL_VECTOR3, NULL_VECTOR3, true)
 
 
 func _on_simulator_started() -> void:

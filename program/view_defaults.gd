@@ -22,7 +22,7 @@ extends Reference
 
 # Generates 'default' IVView instances that we might want to use.
 
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 
 var views := {}
@@ -119,6 +119,7 @@ func _colors1() -> void:
 
 
 func _zoom() -> void:
+	# Shifted for dramatic view.
 	var CameraFlags := IVEnums.CameraFlags
 	var _View_: Script = IVGlobal.script_classes._View_
 	var view: IVView = _View_.new()
@@ -135,7 +136,7 @@ func _fortyfive() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(PI * 1.15, PI / 4.0, 10.0) # 3.0 radii
+	view.view_position = Vector3(-INF, PI / 4.0, 10.0) # Don't set longitude; 10.0 radii
 	view.view_rotations = Vector3.ZERO
 	views.Fortyfive = view
 
@@ -146,7 +147,7 @@ func _top() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(PI * 1.15, PI / 2.05, 25.0) # 3.0 radii
+	view.view_position = Vector3(-INF, PI / 2.05, 25.0) # Don't set longitude; 25.0 radii
 	view.view_rotations = Vector3.ZERO
 	views.Top = view
 

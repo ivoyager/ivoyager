@@ -15,46 +15,53 @@ margin_right = 157.0
 margin_bottom = 24.0
 text = "CKBX_SELECTION"
 
-[node name="OrientationCkbx" type="CheckBox" parent="."]
+[node name="LongitudeCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 28.0
 margin_right = 157.0
 margin_bottom = 52.0
-text = "CKBX_ORIENTATION"
+text = "CKBX_LONGITUDE"
 
-[node name="VisibilitiesCkbx" type="CheckBox" parent="."]
+[node name="OrientationCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 56.0
 margin_right = 157.0
 margin_bottom = 80.0
-text = "CKBX_VISIBILITIES"
+text = "CKBX_ORIENTATION"
 
-[node name="ColorsCkbx" type="CheckBox" parent="."]
+[node name="VisibilitiesCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 84.0
 margin_right = 157.0
 margin_bottom = 108.0
-text = "CKBX_COLORS"
+text = "CKBX_VISIBILITIES"
 
-[node name="TimeCkbx" type="CheckBox" parent="."]
+[node name="ColorsCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 112.0
 margin_right = 157.0
 margin_bottom = 136.0
-text = "CKBX_GAME_SPEED"
+text = "CKBX_COLORS"
 
-[node name="LineEdit" type="LineEdit" parent="."]
+[node name="TimeCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 140.0
 margin_right = 157.0
 margin_bottom = 164.0
+text = "CKBX_GAME_SPEED"
+
+[node name="LineEdit" type="LineEdit" parent="."]
+unique_name_in_owner = true
+margin_top = 168.0
+margin_right = 157.0
+margin_bottom = 192.0
 rect_min_size = Vector2( 100, 0 )
 caret_blink = true
 caret_blink_speed = 0.5
 
 [node name="SaveButton" type="Button" parent="."]
 unique_name_in_owner = true
-margin_top = 168.0
+margin_top = 196.0
 margin_right = 157.0
-margin_bottom = 188.0
+margin_bottom = 216.0
 text = "BUTTON_SAVE"

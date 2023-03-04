@@ -32,10 +32,7 @@ enum {
 
 
 const CameraFlags := IVEnums.CameraFlags
-
-const VECTOR2_ZERO := Vector2.ZERO
-const VECTOR3_ZERO := Vector3.ZERO
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 # project vars
 # set _adj vars so user option can be close to 1.0
@@ -63,10 +60,10 @@ var _camera: IVCamera
 var _selection_manager: IVSelectionManager
 
 var _drag_mode := -1 # one of DRAG_ enums when active
-var _drag_vector := VECTOR2_ZERO
+var _drag_vector := Vector2.ZERO
 var _mwheel_turning := 0.0
-var _move_pressed := VECTOR3_ZERO
-var _rotate_pressed := VECTOR3_ZERO
+var _move_pressed := Vector3.ZERO
+var _rotate_pressed := Vector3.ZERO
 
 onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
 onready var _tree := get_tree()
@@ -123,7 +120,7 @@ func _process(delta: float) -> void:
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
 				_camera.add_rotation(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
-		_drag_vector = VECTOR2_ZERO
+		_drag_vector = Vector2.ZERO
 	if _mwheel_turning:
 		_camera.add_motion(Vector3(0.0, 0.0, _mwheel_turning * delta))
 		_mwheel_turning = 0.0
@@ -138,7 +135,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		return
 	if event.is_pressed():
 		if event.is_action_pressed("recenter"):
-			_camera.move_to(null, CameraFlags.UP_LOCKED, VECTOR3_ZERO, VECTOR3_ZERO)
+			_camera.move_to(null, CameraFlags.UP_LOCKED, NULL_VECTOR3, Vector3.ZERO)
 		elif event.is_action_pressed("camera_left"):
 			_move_pressed.x = -_key_move_rate
 		elif event.is_action_pressed("camera_right"):
@@ -198,8 +195,8 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 
 # public API
 
-func move_to(selection: IVSelection, camera_flags := 0, view_position := VECTOR3_ZERO,
-		view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+func move_to(selection: IVSelection, camera_flags := 0, view_position := NULL_VECTOR3,
+		view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Some parameters override others.
 	if selection:
@@ -207,8 +204,8 @@ func move_to(selection: IVSelection, camera_flags := 0, view_position := VECTOR3
 	_camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
 
 
-func move_to_by_name(selection_name: String, camera_flags := 0, view_position := VECTOR3_ZERO,
-		view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+func move_to_by_name(selection_name: String, camera_flags := 0, view_position := NULL_VECTOR3,
+		view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Some parameters override others.
 	var selection: IVSelection
@@ -254,7 +251,7 @@ func _on_selection_changed(suppress_camera_move: bool) -> void:
 
 func _on_selection_reselected(suppress_camera_move: bool) -> void:
 	if !suppress_camera_move and _camera and _camera.is_camera_lock:
-		_camera.move_to(null, 0, VECTOR3_ZERO, VECTOR3_ZERO)
+		_camera.move_to(null, 0, NULL_VECTOR3, Vector3.ZERO)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:
