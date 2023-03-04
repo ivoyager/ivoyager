@@ -20,7 +20,7 @@
 class_name IVViewDefaults
 extends Reference
 
-# Generates 'default' IVView instances that GUI might want to use.
+# Generates 'default' IVView instances that we might want to use.
 
 const NULL_ROTATION := Vector3(-INF, -INF, -INF)
 
@@ -32,8 +32,10 @@ func _project_init() -> void:
 	_hide_all()
 	_planets1()
 	_asteroids1()
-	_default_colors()
-#	_zoom()
+	_colors1()
+	_zoom()
+	_fortyfive()
+	_top()
 
 
 # public API
@@ -45,13 +47,17 @@ func set_view(view_name: String, is_camera_instant_move := false) -> void:
 	view.set_state(is_camera_instant_move)
 
 
+func has_view(view_name: String) -> bool:
+	return views.has(view_name)
+
+
 # private
 
 func _hide_all() -> void:
 	var _View_: Script = IVGlobal.script_classes._View_
 	var view: IVView = _View_.new()
 	view.flags = IVView.HUDS_VISIBILITY
-	views.hide_all = view
+	views.HideAll = view
 
 
 func _planets1() -> void:
@@ -69,7 +75,7 @@ func _planets1() -> void:
 			| BodyFlags.IS_NON_PLANETARY_MASS_MOON
 	)
 	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
-	views.planets1 = view
+	views.Planets1 = view
 
 
 func _asteroids1() -> void:
@@ -101,40 +107,47 @@ func _asteroids1() -> void:
 		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
 	
-	views.asteroids1 = view
+	views.Asteroids1 = view
 
 
-func _default_colors() -> void:
+func _colors1() -> void:
 	# Empty View dicts set default colors.
 	var _View_: Script = IVGlobal.script_classes._View_
 	var view: IVView = _View_.new()
 	view.flags = IVView.HUDS_COLOR
-	views.default_colors = view
+	views.Colors1 = view
 
 
-# WIP
-#
-#func _zoom() -> void:
-#	var CameraFlags := IVEnums.CameraFlags
-#
-#	var _View_: Script = IVGlobal.script_classes._View_
-#	var view: IVView = _View_.new()
-#	view.flags = IVView.CAMERA_ORIENTATION
-#	view.camera_flags = (
-#			CameraFlags.UP_LOCKED
-#			| CameraFlags.TRACK_ORBIT
-#	)
-#
-#	view.view_position
-#
-#	view.view_rotations = Vector3.ZERO
-#
-#	views.zoom = view
-	
-	
-	
-	
+func _zoom() -> void:
+	var CameraFlags := IVEnums.CameraFlags
+	var _View_: Script = IVGlobal.script_classes._View_
+	var view: IVView = _View_.new()
+	view.flags = IVView.CAMERA_ORIENTATION
+	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
+	view.view_position = Vector3(PI * 1.15, PI * 0.1, 3.0) # 3.0 radii
+	view.view_rotations = Vector3.ZERO
+	views.Zoom = view
 
 
+func _fortyfive() -> void:
+	var CameraFlags := IVEnums.CameraFlags
+	var _View_: Script = IVGlobal.script_classes._View_
+	var view: IVView = _View_.new()
+	view.flags = IVView.CAMERA_ORIENTATION
+	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
+	view.view_position = Vector3(PI * 1.15, PI / 4.0, 10.0) # 3.0 radii
+	view.view_rotations = Vector3.ZERO
+	views.Fortyfive = view
+
+
+func _top() -> void:
+	var CameraFlags := IVEnums.CameraFlags
+	var _View_: Script = IVGlobal.script_classes._View_
+	var view: IVView = _View_.new()
+	view.flags = IVView.CAMERA_ORIENTATION
+	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
+	view.view_position = Vector3(PI * 1.15, PI / 2.05, 25.0) # 3.0 radii
+	view.view_rotations = Vector3.ZERO
+	views.Top = view
 
 

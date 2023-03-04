@@ -21,11 +21,11 @@ class_name IVViewSaver
 extends VBoxContainer
 
 # GUI widget that saves current view. This widget is contained in
-# IVViewSavePopup and works in conjunction with IVViewCollection (which shows
+# IVViewSavePopup and works in conjunction with IVViewSaveFlow (which shows
 # the resultant saved view buttons).
 #
-# 'TimeCkbx' has label 'Game Speed' by default, as that is what time state
-# means in most applications. Re-lable to something else if needed.
+# 'TimeCkbx' has label 'Game Speed' by default (because that is what time state
+# means in most applications). Relable to something else if needed.
 
 signal view_saved(view_name)
 
@@ -80,6 +80,9 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 func _on_visibility_changed():
 	if is_visible_in_tree():
 		_increment_name_as_needed()
+		_line_edit.select_all()
+		_line_edit.set_cursor_position(100)
+		_line_edit.call_deferred("grab_focus")
 
 
 func _on_save(_dummy := "") -> void:

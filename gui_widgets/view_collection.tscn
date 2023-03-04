@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=2]
-
-[ext_resource path="res://ivoyager/gui_widgets/view_collection.gd" type="Script" id=1]
-
-[node name="ViewCollection" type="HFlowContainer"]
-margin_top = 44.0
-margin_right = 511.0
-margin_bottom = 64.0
-script = ExtResource( 1 )

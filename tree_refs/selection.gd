@@ -31,6 +31,7 @@ extends Reference
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
 
 const CameraFlags := IVEnums.CameraFlags
+const BodyFlags := IVEnums.BodyFlags
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := Vector3(1.0, 0.0, 0.0)
 const ECLIPTIC_Y := Vector3(0.0, 1.0, 0.0)
@@ -117,6 +118,12 @@ func get_system_radius() -> float:
 	return body.get_system_radius()
 
 
+func get_perspective_radius() -> float:
+	if !is_body:
+		return 0.0
+	return body.get_perspective_radius()
+
+
 func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 	if !is_body:
 		return VECTOR2_ZERO
@@ -156,7 +163,12 @@ func get_ground_basis(time := NAN) -> Basis:
 func get_orbit_basis(time := NAN) -> Basis:
 	if !is_body:
 		return IDENTITY_BASIS
-	return body.get_orbit_basis(time)
+	# FIXME: Make this more honest. We flip basis for planets for better view.
+	# Function names should make it clear this is for camera use.
+	var basis := body.get_orbit_basis(time)
+	if body.flags & BodyFlags.IS_STAR_ORBITING:
+		return basis.rotated(basis.z, PI)
+	return basis
 
 
 func get_ecliptic_basis() -> Basis:
