@@ -49,7 +49,7 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_update_buttons()
 
 
-func _update_buttons() -> void:
+func _update_buttons(_dummy := false) -> void:
 	_back.disabled = !_selection_manager.can_go_back()
 	_forward.disabled = !_selection_manager.can_go_forward()
 	_up.disabled = !_selection_manager.can_go_up()

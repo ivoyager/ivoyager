@@ -43,8 +43,8 @@ var progress := 0 # for external progress bar
 
 # private
 #var _ModelController_: Script
-var _HUDLabel_: Script
-var _HUDOrbit_: Script
+var _BodyLabel_: Script
+var _BodyOrbit_: Script
 var _Rings_: Script
 
 var _table_reader: IVTableReader
@@ -72,8 +72,8 @@ func _project_init() -> void:
 	_io_manager = IVGlobal.program.IOManager
 	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 #	_ModelController_ = IVGlobal.script_classes._ModelController_
-	_HUDLabel_ = IVGlobal.script_classes._HUDLabel_
-	_HUDOrbit_ = IVGlobal.script_classes._HUDOrbit_
+	_BodyLabel_ = IVGlobal.script_classes._BodyLabel_
+	_BodyOrbit_ = IVGlobal.script_classes._BodyOrbit_
 	_Rings_ = IVGlobal.script_classes._Rings_
 	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
 
@@ -120,10 +120,10 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		_table_reader.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
-		var hud_orbit: Spatial = _HUDOrbit_.new(body)
-		body.get_parent().add_child(hud_orbit)
-	var hud_label: Spatial = _HUDLabel_.new(body)
-	body.add_child(hud_label)
+		var body_orbit: Spatial = _BodyOrbit_.new(body)
+		body.get_parent().add_child(body_orbit)
+	var body_label: Spatial = _BodyLabel_.new(body)
+	body.add_child(body_label)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
 	var rings_file_prefix := body.get_rings_file_prefix()

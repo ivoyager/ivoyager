@@ -58,7 +58,7 @@ func _pressed() -> void:
 	_selection_manager.select_body(_body)
 
 
-func _update_selection() -> void:
+func _update_selection(_dummy := false) -> void:
 	var is_selected := _selection_manager.get_body() == _body
 	pressed = is_selected
 	if is_selected:

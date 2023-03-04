@@ -31,7 +31,7 @@ extends Reference
 #
 # Work is processed in the order added on the I/O thread. Finish callbacks
 # on the Main thread will occur in future frames, but are guarantied to be in
-# the order added. TEST THIS!!!
+# the order added.
 #
 # All methods will work on the Main thread if IVGlobal.use_threads == false.
 

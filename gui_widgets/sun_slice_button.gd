@@ -78,7 +78,7 @@ func _clear() -> void:
 	_has_mouse = false
 
 
-func _update_selection() -> void:
+func _update_selection(_dummy := false) -> void:
 	var is_selected := _selection_manager.get_body() == _body
 	pressed = is_selected
 	flat = !is_selected and !_has_mouse

@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.14"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230226
+const IVOYAGER_YMD := 20230304
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
@@ -132,8 +132,7 @@ var save_file_extension := "IVoyagerSave"
 var save_file_extension_name := "I Voyager Save"
 var use_threads := true # false helps for debugging
 var dynamic_orbits := true # allows use of orbit element rates
-var skip_asteroids := false
-var asteroid_mag_cutoff_override := INF # overrides table cutoff if <INF
+var sbg_mag_cutoff_override := INF # overrides small_bodies_group.tsv cutoff if <INF
 var skip_splash_screen := true
 var pause_only_stops_time := false # if true, Universe & TopGUI are set to process
 var disable_pause := false
@@ -144,9 +143,8 @@ var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_time_setting := false
-var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
-var home_view_from_user_time_zone := false # get user latitude
+var allow_time_zone_from_system := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
 var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true
@@ -183,15 +181,16 @@ var shared := { # more items added by initializers/shared_initializer.gd
 # Data table import
 var table_import := {
 	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
-	asteroid_groups = "res://ivoyager/data/solar_system/asteroid_groups.tsv",
 	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
 	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
 	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
 	models = "res://ivoyager/data/solar_system/models.tsv",
 	moons = "res://ivoyager/data/solar_system/moons.tsv",
 	planets = "res://ivoyager/data/solar_system/planets.tsv",
+	small_bodies_groups = "res://ivoyager/data/solar_system/small_bodies_groups.tsv",
 	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
 	stars = "res://ivoyager/data/solar_system/stars.tsv",
+	visual_groups = "res://ivoyager/data/solar_system/visual_groups.tsv",
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 

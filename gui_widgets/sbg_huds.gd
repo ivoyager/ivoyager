@@ -1,4 +1,4 @@
-# small_boides_huds.gd
+# sbg_huds.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSmallBodiesHUDs
+class_name IVSBGHUDs
 extends GridContainer
 
 # GUI widget.

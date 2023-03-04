@@ -1,4 +1,4 @@
-# small_bodies_group_indexing.gd
+# time_set_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,31 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSmallBodiesGroupIndexing
-extends Node
+class_name IVTimeSetPopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
 
-# Indexes and persists IVSmallBodiesGroup instances (which are Reference
-# class). Instances must access this node and manage 'group_ids' and 'groups'
-# themselves.
+# Not added in base IVProjectBuilder. A unique instance is made by widget
+# TimeSetButton.
 
-
-const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := [
-	"group_ids",
-	"groups",
-]
+func _ready() -> void:
+	connect("about_to_show", self, "_on_about_to_show")
+	$"%TimeSetter".connect("time_set", self, "_on_time_set")
 
 
-# persisted; read-only!
-var group_ids := {} # indexed by group name; groups add themselves
-var groups := [] # indexed by group_id; groups add themselves
+func _on_about_to_show() -> void:
+	$"%TimeSetter".set_current()
 
 
-func _ready():
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-
-
-func _clear() -> void: # just objects
-	groups.clear()
-
+func _on_time_set(is_close: bool) -> void:
+	if is_close:
+		hide()
 

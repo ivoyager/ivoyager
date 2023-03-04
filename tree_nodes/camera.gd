@@ -21,9 +21,8 @@ class_name IVCamera
 extends Camera
 
 # This camera works with the IVSelection object, which is a wrapper that can
-# hold IVBody instances (WIP: or IVLagrangePoint instances), or can be extended
-# to hold anything. It recieves most of its control input from IVCameraHandler
-# (see ivoyager/prog_nodes/).
+# potentially hold anything (in ivoyaber, IVBody and [TODO:] IVLagrangePoint
+# instances). IVCamera recieves most of its control input from IVCameraHandler.
 #
 # Replacing this class should be possible but may be challenging. Very many
 # GUI widgets are built to use it.
@@ -35,7 +34,6 @@ signal latitude_longitude_changed(lat_long, is_ecliptic, selection)
 signal focal_length_changed(focal_length)
 signal camera_lock_changed(is_camera_lock)
 signal up_lock_changed(flags, disabled_flags)
-signal view_type_changed(flags, disabled_flags)
 signal tracking_changed(flags, disabled_flags)
 
 
@@ -45,21 +43,24 @@ const utils := preload("res://ivoyager/static/utils.gd")
 const Flags := IVEnums.CameraFlags
 const ANY_UP_FLAGS := Flags.ANY_UP_FLAGS
 const ANY_TRACK_FLAGS := Flags.ANY_TRACK_FLAGS
-const ANY_VIEW_FLAGS := Flags.ANY_VIEW_FLAGS
 const DisabledFlags := IVEnums.CameraDisabledFlags
 
 const IDENTITY_BASIS := Basis.IDENTITY
 const ECLIPTIC_X := IDENTITY_BASIS.x # primary direction
 const ECLIPTIC_Y := IDENTITY_BASIS.y
 const ECLIPTIC_Z := IDENTITY_BASIS.z # ecliptic north
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
-const VECTOR3_ZERO := Vector3.ZERO
+const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
+
+
+const METER := IVUnits.METER
+const KM := IVUnits.KM
 
 const DPRINT := false
 const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
 const POLE_LIMITER := PI / 2.1
+const MIN_DIST_RADII := 1.5
 
 # Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
 # It used to be that ~10 orders of magnitude was allowed between near and far,
@@ -73,6 +74,7 @@ const PERSIST_PROPERTIES := [
 	"flags",
 	"is_camera_lock",
 	"selection",
+	"perspective_radius",
 	"view_position",
 	"view_rotations",
 	"focal_length",
@@ -83,18 +85,19 @@ const PERSIST_PROPERTIES := [
 # ******************************* PERSISTED ***********************************
 
 # public - read only except project init
-var flags: int = Flags.UP_LOCKED | Flags.VIEW_ZOOM | Flags.TRACK_ORBIT
+var flags: int = Flags.UP_LOCKED | Flags.TRACK_ORBIT
 var is_camera_lock := true
 
 # public - read only! (use move methods to set; these are "to" during transfer)
 var selection: IVSelection
-var view_position := Vector3.ONE # spherical; relative to orbit or ground ref
-var view_rotations := VECTOR3_ZERO # euler; relative to looking_at(-origin, north)
+var perspective_radius := KM
+var view_position := Vector3(0.5, 2.5, 3.0) # spherical, relative to ref frame; r is 'perspective'
+var view_rotations := Vector3.ZERO # euler, relative to looking_at(-origin, 'up')
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
 # private
-var _transform := Transform(Basis(), Vector3.ONE) # working value
+var _transform := Transform(Basis(), Vector3(0, 0, KM)) # working value
 
 # *****************************************************************************
 
@@ -102,10 +105,15 @@ var _transform := Transform(Basis(), Vector3.ONE) # working value
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0
-var gui_ecliptic_coordinates_dist := 1e6 * IVUnits.KM
+var gui_ecliptic_coordinates_dist := 1e6 * KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.9 # 0.0, none; 1.0 moves to same visual size
+# 'perspective' settings; see comments above & asserts in _ready()
+var perspective_close_radii := 500.0 # full perspective adj inside this
+var perspective_far_dist := 1e9 * KM # no perspective adj outside this
+var max_perspective_radius := 1e6 * KM # >sun
+var min_perspective_radius := 2.0 * METER
 
 # public read-only
 var parent: Spatial # actual Spatial parent at this time
@@ -118,11 +126,11 @@ var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
-var _min_dist := IVUnits.METER # changes on move for parent body size
+var _user_longitude := -INF
 
 # motions / rotations
-var _motion_accumulator := VECTOR3_ZERO
-var _rotation_accumulator := VECTOR3_ZERO
+var _motion_accumulator := Vector3.ZERO
+var _rotation_accumulator := Vector3.ZERO
 
 # move_to
 var _move_time: float
@@ -134,8 +142,9 @@ var _trasfer_spatial: Spatial
 var _from_spatial: Spatial
 var _from_selection: IVSelection
 var _from_flags := flags
-var _from_view_position := Vector3.ONE # any non-zero dist ok
-var _from_view_rotations := VECTOR3_ZERO
+var _from_perspective_radius := KM
+var _from_view_position := Vector3(0, 0, 3)
+var _from_view_rotations := Vector3.ZERO
 
 # gui signalling
 var _gui_range := NAN
@@ -148,6 +157,8 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 # virtual functions
 
 func _ready() -> void:
+	assert(perspective_far_dist > perspective_close_radii * max_perspective_radius)
+	assert(min_perspective_radius > IVUnits.METER)
 	name = "Camera"
 	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
 	IVGlobal.connect("simulator_started", self, "_on_simulator_started", [], CONNECT_ONESHOT)
@@ -161,6 +172,10 @@ func _ready() -> void:
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
+	if IVGlobal.allow_time_zone_from_system:
+		var time_zone := Time.get_time_zone_from_system()
+		if time_zone and time_zone.has("bias"):
+			_user_longitude = time_zone.bias * TAU / 1440.0
 	IVGlobal.verbose_signal("camera_ready", self)
 	set_process(false) # don't process until sim started
 
@@ -203,32 +218,32 @@ func add_rotation(rotation_amount: Vector3) -> void:
 	_rotation_accumulator += rotation_amount
 
 
-func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTOR3_ZERO,
-		to_view_rotations := NULL_ROTATION, is_instant_move := false) -> void:
+func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_VECTOR3,
+		to_view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
+	# Note: call IVCameraHandler.move_to() or move_to_by_name() to move camera
+	# *and* change selection.
 	# Null or null-equivilant args tell the camera to keep its current value.
-	# Some parameters override others (see code at '# overrides').
+	# For this purpose, individual -INF elements in to_view_position and
+	# to_view_rotations are treated as 'null' (ie, we can set 1 or 2 elements).
+	# Note: some flags may override elements of position or rotation.
 	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
 			to_view_rotations, is_instant_move) or true)
 
 	# overrides
-	if to_flags & ANY_VIEW_FLAGS:
-		to_flags |= Flags.UP_LOCKED # for all current views; this could change
-		to_flags &= ~Flags.UP_UNLOCKED
-		to_view_position = VECTOR3_ZERO
-		to_view_rotations = NULL_ROTATION
 	if to_flags & Flags.UP_LOCKED:
-		if to_view_rotations != NULL_ROTATION:
+		if to_view_rotations != NULL_VECTOR3:
 			to_view_rotations.z = 0.0 # cancel roll, if any
-	if to_view_rotations != NULL_ROTATION and to_view_rotations.z: # roll unlocks 'up'
+	if (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
+			and to_view_rotations.z): # any roll unlocks 'up'
 		to_flags |= Flags.UP_UNLOCKED
+	if to_flags & Flags.SET_USER_LONGITUDE and _user_longitude != -INF:
+		to_view_position.x = _user_longitude
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
 	var to_track_flags := to_flags & ANY_TRACK_FLAGS
-	var to_view_flags := to_flags & ANY_VIEW_FLAGS
 	
 	assert(to_up_flags & (to_up_flags - 1) == 0, "only 1 or 0 bits allowed")
 	assert(to_track_flags & (to_track_flags - 1) == 0, "only 1 or 0 bits allowed")
-	assert(to_view_flags & (to_view_flags - 1) == 0, "only 1 or 0 bits allowed")
 
 	# don't move if *nothing* has changed and is_instant_move == false
 	if (
@@ -236,15 +251,15 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 			and (!to_selection or to_selection == selection)
 			and (!to_up_flags or to_up_flags == flags & ANY_UP_FLAGS)
 			and (!to_track_flags or to_track_flags == flags & ANY_TRACK_FLAGS)
-			and (!to_view_flags or to_view_flags == flags & ANY_VIEW_FLAGS)
-			and (to_view_position == VECTOR3_ZERO or to_view_position == view_position)
-			and (to_view_rotations == NULL_ROTATION or to_view_rotations == view_rotations)
+			and (to_view_position == NULL_VECTOR3 or to_view_position == view_position)
+			and (to_view_rotations == NULL_VECTOR3 or to_view_rotations == view_rotations)
 	):
 		return
 	
 	# data needed during the move
 	_from_selection = selection
 	_from_flags = flags
+	_from_perspective_radius = perspective_radius
 	_from_view_position = view_position
 	_from_view_rotations = view_rotations
 	_from_spatial = parent
@@ -253,61 +268,44 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	
 	# change booleans
 	var is_up_change: bool = ((to_up_flags and to_up_flags != flags & ANY_UP_FLAGS)
-			or (to_view_rotations != NULL_ROTATION and to_view_rotations.z and flags & Flags.UP_LOCKED))
+			or (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
+			and to_view_rotations.z and flags & Flags.UP_LOCKED))
 	var is_track_change := to_track_flags and to_track_flags != flags & ANY_TRACK_FLAGS
-	var is_view_change: bool = ((to_view_flags and to_view_flags != flags & ANY_VIEW_FLAGS)
-			or (to_view_position != VECTOR3_ZERO and flags & ANY_VIEW_FLAGS)
-			or (to_view_rotations != NULL_ROTATION and flags & ANY_VIEW_FLAGS))
 	
 	# set selection and flags
 	if to_selection and to_selection.spatial:
 		selection = to_selection
+		perspective_radius = selection.get_perspective_radius()
 		_to_spatial = to_selection.spatial
-		_min_dist = selection.view_min_distance * 50.0 / fov
 	if is_up_change:
 		flags &= ~ANY_UP_FLAGS
 		flags |= to_up_flags
 	if is_track_change:
 		flags &= ~ANY_TRACK_FLAGS
 		flags |= to_track_flags
-	if is_view_change:
-		flags &= ~ANY_VIEW_FLAGS
-		flags |= to_view_flags
-	if to_view_position != VECTOR3_ZERO:
-		flags &= ~ANY_VIEW_FLAGS
-	if to_view_rotations != NULL_ROTATION:
-		flags &= ~ANY_VIEW_FLAGS
-		if to_view_rotations.z:
+	if to_view_rotations != NULL_VECTOR3:
+		if to_view_rotations.z != -INF and to_view_rotations.z:
 			flags &= ~Flags.UP_LOCKED
 			flags |= Flags.UP_UNLOCKED
 	
 	# set position & rotaion
-	if flags & ANY_VIEW_FLAGS:
-		view_position = selection.get_position_for_view_and_tracking(flags)
-		view_position[2] /= fov
-		if flags & Flags.VIEW_OUTWARD:
-			view_rotations = Vector3(0.0, PI, 0.0)
-		else:
-			view_rotations = VECTOR3_ZERO
-	else:
-		if to_view_position != VECTOR3_ZERO:
-			view_position = to_view_position
-		elif _from_selection != selection:
-			# Keep our current view_position, but compensate distance component
-			# for size of target.
-			var from_dist := view_position[2]
-			var from_radius := _from_selection.get_radius_for_camera()
-			var to_radius := selection.get_radius_for_camera()
-			view_position[2] = utils.get_visual_radius_compensated_dist(from_dist, from_radius,
-					to_radius, size_ratio_exponent)
-
+	if to_view_position != NULL_VECTOR3:
+		if to_view_position.x != -INF:
+			view_position.x = to_view_position.x
+		if to_view_position.y != -INF:
+			view_position.y = to_view_position.y
+		if to_view_position.z != -INF:
+			view_position.z = to_view_position.z
+	if to_view_rotations != NULL_VECTOR3:
+		if to_view_rotations.x != -INF:
+			view_rotations.x = to_view_rotations.x
+		if to_view_rotations.y != -INF:
+			view_rotations.y = to_view_rotations.y
+		if to_view_rotations.z != -INF:
+			view_rotations.z = to_view_rotations.z
 	if flags & Flags.UP_LOCKED:
-		view_rotations.z = 0.0 # roll
-	
-	if view_position[2] > _max_dist:
-		view_position[2] = _max_dist
-	elif view_position[2] < _min_dist:
-		view_position[2] = _min_dist
+		view_rotations.z = 0.0 # up lock overrides roll
+	view_position.z = clamp(view_position.z, MIN_DIST_RADII, _max_dist)
 	
 	# initiate move
 	if is_instant_move:
@@ -321,16 +319,14 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	is_moving = true
 	
 	# TODO?: Allow accumulators during move?
-	_motion_accumulator = VECTOR3_ZERO
-	_rotation_accumulator = VECTOR3_ZERO
+	_motion_accumulator = Vector3.ZERO
+	_rotation_accumulator = Vector3.ZERO
 	
 	# signals
 	if is_up_change:
 		emit_signal("up_lock_changed", flags, disabled_flags)
 	if is_track_change:
 		emit_signal("tracking_changed", flags, disabled_flags)
-	if is_view_change:
-		emit_signal("view_type_changed", flags, disabled_flags)
 	emit_signal("move_started", _to_spatial, is_camera_lock)
 
 
@@ -356,14 +352,11 @@ func increment_focal_length(increment: int) -> void:
 		set_focal_length_index(new_fl_index, false)
 
 
-func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
+func set_focal_length_index(new_fl_index, _suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
-	if !suppress_move:
-		move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
 
 
@@ -383,9 +376,10 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
 		selection = _SelectionManager_.get_or_make_selection(parent.name)
 		assert(selection)
+		perspective_radius = selection.get_perspective_radius()
 	_from_selection = selection
-	_min_dist = selection.view_min_distance * 50.0 / fov
-	move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
+	_from_perspective_radius = perspective_radius
+	move_to(null, 0, NULL_VECTOR3, NULL_VECTOR3, true)
 
 
 func _on_simulator_started() -> void:
@@ -427,8 +421,9 @@ func _process_move_to(delta: float) -> void:
 	else:
 		var from_reference_basis := _get_reference_basis(_from_selection, _from_flags)
 		from_transform = _get_view_transform(_from_view_position, _from_view_rotations,
-				from_reference_basis)
-	var to_transform := _get_view_transform(view_position, view_rotations, _reference_basis)
+				from_reference_basis, _from_perspective_radius)
+	var to_transform := _get_view_transform(view_position, view_rotations, _reference_basis,
+			perspective_radius)
 	var progress := ease(_move_time / _transfer_time, -ease_exponent)
 	_interpolate_path(from_transform, to_transform, progress)
 	
@@ -488,19 +483,14 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 
 
 func _process_motions_and_rotations(delta: float) -> void:
-	var is_camera_bump := false
 	# maintain present position based on tracking
-	_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
+	_transform = _get_view_transform(view_position, view_rotations, _reference_basis,
+			perspective_radius)
 	# process accumulated user inputs
 	if _motion_accumulator:
 		_process_motion(delta)
-		is_camera_bump = true
 	if _rotation_accumulator:
 		_process_rotation(delta)
-		is_camera_bump = true
-	if is_camera_bump and flags & ANY_VIEW_FLAGS:
-		flags &= ~ANY_VIEW_FLAGS
-		emit_signal("view_type_changed", flags, disabled_flags)
 
 
 func _process_motion(delta: float) -> void:
@@ -545,9 +535,11 @@ func _process_motion(delta: float) -> void:
 		origin = origin.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
 		origin *= 1.0 + move_now.z
-		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
-		_transform = _get_view_transform(view_position, view_rotations, _reference_basis)
+		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
+				MIN_DIST_RADII, _max_dist)
+		_transform = _get_view_transform(view_position, view_rotations, _reference_basis,
+				perspective_radius)
 		
 	else:
 		# 'Free' rotation of origin and basis around target. Allows pole
@@ -557,8 +549,9 @@ func _process_motion(delta: float) -> void:
 		origin = origin.rotated(basis.x, -move_now.y)
 		basis = basis.rotated(basis.x, -move_now.y)
 		origin *= 1.0 + move_now.z
-		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
+		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
+				MIN_DIST_RADII, _max_dist)
 		_transform = Transform(basis, origin)
 		# back-calculate view_rotations
 		var unrotated_transform := Transform(IDENTITY_BASIS, origin).looking_at(
@@ -620,8 +613,10 @@ func _process_rotation(delta: float) -> void:
 	_transform.basis *= view_basis
 
 
-static func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
-		reference_basis: Basis) -> Transform:
+func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
+		reference_basis: Basis, perspective_radius_: float) -> Transform:
+	view_position_.z = clamp(_convert_perspective_dist(view_position_.z, perspective_radius_),
+			MIN_DIST_RADII, _max_dist)
 	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, reference_basis.z)
@@ -637,13 +632,41 @@ static func _get_reference_basis(selection_: IVSelection, flags_: int) -> Basis:
 	return selection_.get_ecliptic_basis() # identity basis for any IVBody
 
 
-func _clamp_origin_length(origin: Vector3) -> Vector3:
-	var dist := origin.length()
-	if dist > _max_dist:
-		origin *= _max_dist / dist
-	elif dist < _min_dist:
-		origin *= _min_dist / dist
-	return origin
+func _get_perspective_dist(dist: float, radius: float) -> float:
+	# 'Perspective' distance allows camera to move among bodies maintaining the
+	# same body size in the viewscreen when close. However, we don't want any
+	# adjustment when very far from the body (ie, at solar system view).
+	# When close, persp_dist = dist / radius.
+	# When far, persp_dist = dist / 1 meter. (So radius doesn't matter.)
+	if dist >= perspective_far_dist:
+		return dist
+	if radius > max_perspective_radius:
+		radius = max_perspective_radius
+	elif radius < min_perspective_radius:
+		radius = min_perspective_radius
+	var cr := perspective_close_radii * radius
+	if dist <= cr:
+		return dist / radius
+		
+	# Equation covers the transition zone (continuous but not smooth).
+	return ((dist - cr) * (perspective_far_dist / METER - perspective_close_radii)
+			/ (perspective_far_dist - cr)
+			+ perspective_close_radii)
+
+
+func _convert_perspective_dist(persp_dist: float, radius: float) -> float:
+	# Inverse of _get_perspective_dist().
+	if persp_dist >= perspective_far_dist:
+		return persp_dist
+	if radius > max_perspective_radius:
+		radius = max_perspective_radius
+	if persp_dist <= perspective_close_radii:
+		return persp_dist * radius
+	
+	var cr := perspective_close_radii * radius
+	return ((persp_dist - perspective_close_radii) * (perspective_far_dist - cr)
+			/ (perspective_far_dist / METER - perspective_close_radii)
+			+ cr)
 
 
 func _signal_range_latitude_longitude(is_refresh := false) -> void:
@@ -659,6 +682,14 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 	if _gui_range != dist:
 		_gui_range = dist
 		emit_signal("range_changed", dist)
+		
+		# debug
+#		var radius := selection.get_perspective_radius()
+#		var persp_dist := _get_perspective_dist(dist, radius)
+#		var conv := _convert_perspective_dist(persp_dist, radius)
+#		prints(persp_dist, conv, dist, conv / dist, dist / persp_dist)
+		
+		
 	var is_ecliptic := dist > gui_ecliptic_coordinates_dist
 	var lat_long: Vector2
 	if is_ecliptic:
@@ -676,7 +707,6 @@ func _send_gui_refresh() -> void:
 	emit_signal("focal_length_changed", focal_length)
 	emit_signal("up_lock_changed", flags, disabled_flags)
 	emit_signal("tracking_changed", flags, disabled_flags)
-	emit_signal("view_type_changed", flags, disabled_flags)
 	_signal_range_latitude_longitude(true)
 
 

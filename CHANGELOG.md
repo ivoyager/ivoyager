@@ -8,7 +8,7 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.14] - Not Released
 
-Under development using Godot 3.5.2.rc2.
+Under development using Godot 3.5.2.rc2. (Expect 0.0.14 release soon after Godot 3.5.2.official!)
 
 Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND...
 * **asteroid_binaries-2023-02-18** (replace ivoyager_assets/asteroid_binaries)
@@ -25,6 +25,7 @@ Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND..
 * Visited asteroids: Vesta, Bennu, Eros, Itokawa and Arrokoth.
 * Asteroid orbit lines can be shown by group, or all at once. Yes, all ~65,000 of them!
 * Mouse-over text now identifies almost anything on the world screen, including bodies, orbit lines and points (yes, including the ~65,000 asteroids). For the shader trickery involved in this feature, see [IVFragmentIdentifier](https://github.com/ivoyager/ivoyager/blob/master/tree_nodes/fragment_identifier.gd). 
+* New View system allows saving 'Views' that optionally keep selection, camera orientation, HUDs visibility & color, and/or time state.
 * IVCamera now has an 'up lock' that provides two modes of operation: 'Locked' stays oriented to current reference: Ecliptic, Orbit or Ground. 'Unlocked' allows free movement which can introduce roll.
 * New IVGlobal.pause_only_stops_time setting allows two different modes of operation. If true, pretty much everything processes except IVTimekeeper. If false, the camera is frozen although most visuals still process.
 * Some IVProjectBuilder API for reordering children of Universe and TopGUI.
@@ -35,6 +36,7 @@ Requires non-Git-tracked development assets **ivoyager_assets-2023-02-14** AND..
 * Split up asteroid Main Belt into MB (Inner), MB (Middle), MB (Outer) and Hildas.
 * New ModelSpace and RotatingSpace (Spatials) are maintained by IVBody instances to hold models, planetary rings and Lagrange points, and to provide reference for IVCamera when in 'ground-' or 'orbit-tracking' mode.
 * Improved camera operation: Non-glitchy pole traversal when 'up unlocked'; better pathing between bodies; and more...
+* Improved many GUI widgets (appearance & program modularity).
 * [Breaks Projects!] ivoyager has it's own default IVTopGUI that is used unless extension project sets 'top_gui' in IVProjectBuilder.
 * [Breaks Projects!] Extension project must set IVGlobal.skip_splash_screen = false if it has a splash screen. (Otherwise, ivoyager will build the solar system.)
 * [Breaks Projects!] Dictionary changes in IVProjectBuilder.

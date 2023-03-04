@@ -28,6 +28,7 @@ signal orbits_visibility_changed()
 signal points_color_changed()
 signal orbits_color_changed()
 
+const utils := preload("res://ivoyager/static/utils.gd")
 
 const NULL_COLOR := Color.black
 
@@ -39,24 +40,37 @@ const PERSIST_PROPERTIES := [
 	"orbits_colors",
 ]
 
-# project vars
-var default_points_visibilities := {} # indexed by group_name; missing same as false
-var default_orbits_visibilities := {} # indexed by group_name; missing same as false
-var default_points_colors := {} # indexed by group_name; missing same as fallback_points_color
-var default_orbits_colors := {} # indexed by group_name; missing same as fallback_orbits_color
+# persisted - read-only!
+var points_visibilities := {} # indexed by sbg_alias; missing same as false
+var orbits_visibilities := {} # "
+var points_colors := {} # indexed by sbg_alias; missing same as fallback color
+var orbits_colors := {} # "
+
+# project vars - set at project init
 var fallback_points_color := Color(0.0, 0.6, 0.0)
 var fallback_orbits_color := Color(0.8, 0.2, 0.2)
+var default_points_visibilities := {} # default is none, unless project changes
+var default_orbits_visibilities := {}
+
+# imported from small_bodies_groups.tsv - ready-only!
+var default_points_colors := {}
+var default_orbits_colors := {}
 
 
-# persisted - read-only!
-var points_visibilities := default_points_visibilities.duplicate()
-var orbits_visibilities := default_orbits_visibilities.duplicate()
-var points_colors := default_points_colors.duplicate()
-var orbits_colors := default_orbits_colors.duplicate()
 
-
-func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_on_update_gui_requested")
+func _project_init() -> void:
+	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
+	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	var table_reader: IVTableReader = IVGlobal.program.TableReader
+	for row in table_reader.get_n_rows("small_bodies_groups"):
+		if table_reader.get_bool("small_bodies_groups", "skip_import", row):
+			continue
+		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
+		var points_color_str := table_reader.get_string("small_bodies_groups", "points_color", row)
+		var orbits_color_str := table_reader.get_string("small_bodies_groups", "orbits_color", row)
+		default_points_colors[sbg_alias] = Color(points_color_str)
+		default_orbits_colors[sbg_alias] = Color(orbits_color_str)
+	_set_current_to_default()
 
 
 # visibility
@@ -212,33 +226,64 @@ func set_orbits_color(group: String, color: Color) -> void:
 	emit_signal("orbits_color_changed")
 
 
-func get_points_colors_dict() -> Dictionary:
-	return points_colors.duplicate()
+func get_non_default_points_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in points_colors:
+		if points_colors[key] != default_points_colors[key]:
+			dict[key] = points_colors[key]
+	return dict
 
 
-func get_orbits_colors_dict() -> Dictionary:
-	return orbits_colors.duplicate()
+func get_non_default_orbits_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in orbits_colors:
+		if orbits_colors[key] != default_orbits_colors[key]:
+			dict[key] = orbits_colors[key]
+	return dict
 
 
-func set_points_colors_dict(dict: Dictionary) -> void:
-	if deep_equal(dict, points_colors):
-		return
-	points_colors.clear()
-	points_colors.merge(dict)
-	emit_signal("points_color_changed")
+func set_all_points_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in points_colors:
+		if dict.has(key):
+			if points_colors[key] != dict[key]:
+				is_change = true
+				points_colors[key] = dict[key]
+		else:
+			if points_colors[key] != default_points_colors[key]:
+				is_change = true
+				points_colors[key] = default_points_colors[key]
+	if is_change:
+		emit_signal("points_color_changed")
 
 
-func set_orbits_colors_dict(dict: Dictionary) -> void:
-	if deep_equal(dict, orbits_colors):
-		return
-	orbits_colors.clear()
-	orbits_colors.merge(dict)
-	emit_signal("orbits_color_changed")
+func set_all_orbits_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in orbits_colors:
+		if dict.has(key):
+			if orbits_colors[key] != dict[key]:
+				is_change = true
+				orbits_colors[key] = dict[key]
+		else:
+			if orbits_colors[key] != default_orbits_colors[key]:
+				is_change = true
+				orbits_colors[key] = default_orbits_colors[key]
+	if is_change:
+		emit_signal("orbits_color_changed")
 
 
 # private
 
-func _on_update_gui_requested() -> void:
+func _set_current_to_default() -> void:
+	set_default_visibilities()
+	set_default_colors()
+
+
+func _signal_all_changed() -> void:
 	emit_signal("points_visibility_changed")
 	emit_signal("orbits_visibility_changed")
 	emit_signal("points_color_changed")

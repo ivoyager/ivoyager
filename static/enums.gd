@@ -34,6 +34,12 @@ enum { # duplicated in IVSaveBuilder
 	PERSIST_PROCEDURAL,
 }
 
+enum SBGClass {
+	SBG_CLASS_ASTEROIDS,
+	SBG_CLASS_ARTIFICIAL_SATELLITES, # TODO: Roadmap
+}
+
+
 enum GUISize {
 	GUI_SMALL,
 	GUI_MEDIUM,
@@ -77,7 +83,7 @@ enum LazyType { # WIP - for rebuild of body/model lazy init system
 }
 
 enum CameraFlags {
-	UP_LOCKED = 1 << 0,
+	UP_LOCKED = 1,
 	UP_UNLOCKED = 1 << 1,
 	
 	TRACK_GROUND = 1 << 2,
@@ -86,17 +92,13 @@ enum CameraFlags {
 	TRACK_GALACIC = 1 << 5, # not implemented yet
 	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
 	
-	VIEW_ZOOM = 1 << 7,
-	VIEW_45 = 1 << 8,
-	VIEW_TOP = 1 << 9,
-	VIEW_OUTWARD = 1 << 10, # disabled now; needs special GUI to use reasonably
+	SET_USER_LONGITUDE = 1 << 7, # only works if IVGlobal.allow_time_zone_from_system = true
 	
 	# bits 32-63 should be safe to use for any extension project
 	
 	# combo masks
 	ANY_UP_FLAGS = 1 << 0 | 1 << 1,
 	ANY_TRACK_FLAGS = 1 << 2 | 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6,
-	ANY_VIEW_FLAGS = 1 << 7 | 1 << 8 | 1 << 9 | 1 << 10,
 }
 
 enum CameraDisabledFlags {
@@ -109,7 +111,7 @@ enum CameraDisabledFlags {
 
 enum BodyFlags {
 	
-	IS_BARYCENTER = 1 << 0, # not implemented yet
+	IS_BARYCENTER = 1, # not implemented yet
 	IS_STAR = 1 << 1,
 	IS_PLANET = 1 << 2,
 	IS_TRUE_PLANET = 1 << 3,

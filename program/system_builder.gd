@@ -28,12 +28,14 @@ var add_camera := true
 # private
 var _table_reader: IVTableReader
 var _body_builder: IVBodyBuilder
+var _sbg_builder: IVSBGBuilder
 
 
 func _project_init():
 	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
 	_table_reader = IVGlobal.program.TableReader
 	_body_builder = IVGlobal.program.BodyBuilder
+	_sbg_builder = IVGlobal.program.SBGBuilder
 
 
 func _on_state_manager_inited() -> void:
@@ -49,8 +51,7 @@ func build_system_tree() -> void:
 	IVGlobal.verbose_signal("about_to_build_system_tree")
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
-	var small_bodies_builder: IVSmallBodiesBuilder = IVGlobal.program.SmallBodiesBuilder
-	small_bodies_builder.build()
+	_sbg_builder.build_sbgs()
 	if add_camera:
 		_add_camera()
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)

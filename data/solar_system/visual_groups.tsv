@@ -1,0 +1,13 @@
+name	body_flag	default_name_visible	default_symbol_visible	default_orbit_visible	default_orbit_color
+Type	INT	BOOL	BOOL	BOOL	STRING
+Default					
+Unit					
+Prefix/VISUAL_GROUP_					
+STARS	IS_STAR	x		x	9925EA
+TRUE_PLANETS	IS_TRUE_PLANET	x		x	26FF26
+DWARF_PLANETS	IS_DWARF_PLANET	x		x	FF46FF
+PMO_MOONS	IS_PLANETARY_MASS_MOON	x		x	FFFF26
+NON_PMO_MOONS	IS_NON_PLANETARY_MASS_MOON	x		x	3E69FF
+ASTEROIDS	IS_ASTEROID				FF4646
+SPACECRAFT	IS_SPACECRAFT				3BFFFF
+# Exclusive sets from BodyFlags					

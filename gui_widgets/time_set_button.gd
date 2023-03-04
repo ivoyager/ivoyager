@@ -1,4 +1,4 @@
-# present_time_ckbx.gd
+# time_set_button.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,34 +17,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVPresentTimeCkbx
-extends CheckBox
+class_name IVTimeSetButton
+extends Button
 
-# UI widget. Used in Planetarium to select real-world present time.
+# GUI button widget that opens its own IVTimeSetPopup.
 
-const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
-
-var _state: Dictionary = IVGlobal.state
-
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+var _time_set_popup: IVTimeSetPopup
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_ckbx")
-	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_on_time_altered")
-	connect("pressed", self, "_set_real_world")
+	var top_gui: Control = IVGlobal.program.TopGUI
+	_time_set_popup = IVFiles.make_object_or_scene(IVTimeSetPopup)
+	top_gui.add_child(_time_set_popup)
+	connect("toggled", self, "_on_toggled")
+	_time_set_popup.connect("visibility_changed", self, "_on_visibility_changed")
 
 
-func _update_ckbx() -> void:
-	pressed = _timekeeper.is_real_world_time
+func _on_toggled(is_pressed) -> void:
+	if is_pressed:
+		_time_set_popup.popup()
+		var position := rect_global_position + rect_size / 2.0 - _time_set_popup.rect_size
+		if position.x < 0.0:
+			position.x = 0.0
+		if position.y < 0.0:
+			position.y = 0.0
+		_time_set_popup.rect_position = position
+	else:
+		_time_set_popup.hide()
 
 
-func _on_time_altered(_previous_time: float) -> void:
-	pressed = _timekeeper.is_real_world_time
+func _on_visibility_changed() -> void:
+	yield(get_tree(), "idle_frame")
+	if !_time_set_popup.visible:
+		pressed = false
 
 
-func _set_real_world() -> void:
-	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_real_world()
-		pressed = true

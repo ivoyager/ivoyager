@@ -1,4 +1,4 @@
-# hud_points.gd
+# sbg_points.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,13 +17,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDPoints
+class_name IVSBGPoints
 extends MeshInstance
 
 # Visual points for a SmallBodiesGroup instance. Uses points.shader or
-# points_l4_l5.shader, which set vertex positions using their own orbital
-# math.
+# points_l4_l5.shader. Shaders maintain vertex positions using their own
+# orbital math.
 
+# TODO 4.0: Use shader CUSTOM channels rather than hacking COLOR, NORMAL, etc.:
+#  - CUSTOM0: e_i_Om_w
+#  - CUSTOM1: a_M0_n or da_D_f plus magnitude
+#  - CUSTOM2: s_g plus th0_de
+
+
+const FRAGMENT_SBG_POINT := IVFragmentIdentifier.FRAGMENT_SBG_POINT
+const PI_DIV_3 := PI / 3.0 # 60 degrees
 const ARRAY_FLAGS = (
 		ArrayMesh.ARRAY_FORMAT_VERTEX
 		| ArrayMesh.ARRAY_FORMAT_COLOR
@@ -37,7 +45,6 @@ const L4_L5_ARRAY_FLAGS = (
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV
 		| ArrayMesh.ARRAY_FORMAT_TEX_UV2
 )
-const PI_DIV_3 := PI / 3.0 # 60 degrees
 
 var _times: Array = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
@@ -68,10 +75,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	var n := group.get_number()
 	_vec3ids.resize(n) # needs resize whether we use ids or not
 	if _fragment_identifier:
-		var fragment_type := _fragment_identifier.FRAGMENT_POINT
 		var i := 0
 		while i < n:
-			var data := group.get_fragment_data(i, fragment_type)
+			var data := group.get_fragment_data(FRAGMENT_SBG_POINT, i)
 			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
 			i += 1
 
@@ -134,11 +140,11 @@ func _process(_delta: float) -> void:
 
 
 func _set_visibility() -> void:
-	visible = _sbg_huds_state.is_points_visible(_group.group_name)
+	visible = _sbg_huds_state.is_points_visible(_group.sbg_alias)
 
 
 func _set_color() -> void:
-	var color := _sbg_huds_state.get_points_color(_group.group_name)
+	var color := _sbg_huds_state.get_points_color(_group.sbg_alias)
 	if _color == color:
 		return
 	_color = color
@@ -148,4 +154,3 @@ func _set_color() -> void:
 func _settings_listener(setting: String, value) -> void:
 	if setting == "point_size":
 		material_override.set_shader_param("point_size", float(value))
-

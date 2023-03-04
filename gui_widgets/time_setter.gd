@@ -22,11 +22,15 @@ extends HBoxContainer
 
 # GUI widget. For usage in a setter popup, see gui_widgets/time_set_popup.tscn.
 
+signal time_set(is_close)
+
+
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	$Set.connect("pressed", self, "_on_set")
+	$Set.connect("pressed", self, "_on_set", [false])
+	$SetAndClose.connect("pressed", self, "_on_set", [true])
 	$Year.connect("value_changed", self, "_on_date_changed")
 	$Month.connect("value_changed", self, "_on_date_changed")
 	$Day.connect("value_changed", self, "_on_date_changed")
@@ -44,7 +48,7 @@ func set_current() -> void:
 	$Second.value = time_array[2]
 
 
-func _on_set() -> void:
+func _on_set(is_close: bool) -> void:
 	var year := int($Year.value)
 	var month := int($Month.value)
 	var day := int($Day.value)
@@ -53,6 +57,7 @@ func _on_set() -> void:
 	var second := int($Second.value)
 	var new_time := _timekeeper.get_sim_time(year, month, day, hour, minute, second)
 	_timekeeper.set_time(new_time)
+	emit_signal("time_set", is_close)
 
 
 func _on_date_changed(_value: float) -> void:

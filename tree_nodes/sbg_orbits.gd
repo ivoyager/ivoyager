@@ -1,4 +1,4 @@
-# hud_orbit.gd
+# sbg_orbits.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,13 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDOrbits
+class_name IVSBGOrbits
 extends MultiMeshInstance
 
 # Visual orbits for a SmallBodiesGroup instance. If FragmentIdentifier exists,
 # then a shader is used to allow screen identification of the orbit loops.
 
 const math := preload("res://ivoyager/static/math.gd")
+
+const FRAGMENT_SBG_ORBIT := IVFragmentIdentifier.FRAGMENT_SBG_ORBIT
 
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
@@ -41,10 +43,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	if _fragment_identifier:
 		var n := group.get_number()
 		_vec3ids.resize(n)
-		var fragment_type := _fragment_identifier.FRAGMENT_ORBIT
 		var i := 0
 		while i < n:
-			var data := group.get_fragment_data(i, fragment_type)
+			var data := group.get_fragment_data(FRAGMENT_SBG_ORBIT, i)
 			_vec3ids[i] = _fragment_identifier.get_new_id_as_vec3(data)
 			i += 1
 
@@ -101,11 +102,11 @@ func _set_transforms_and_ids() -> void:
 
 
 func _set_visibility() -> void:
-	visible = _sbg_huds_state.is_orbits_visible(_group.group_name)
+	visible = _sbg_huds_state.is_orbits_visible(_group.sbg_alias)
 
 
 func _set_color() -> void:
-	var color := _sbg_huds_state.get_orbits_color(_group.group_name)
+	var color := _sbg_huds_state.get_orbits_color(_group.sbg_alias)
 	if _color == color:
 		return
 	_color = color

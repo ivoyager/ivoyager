@@ -32,10 +32,7 @@ enum {
 
 
 const CameraFlags := IVEnums.CameraFlags
-
-const VECTOR2_ZERO := Vector2.ZERO
-const VECTOR3_ZERO := Vector3.ZERO
-const NULL_ROTATION := Vector3(-INF, -INF, -INF)
+const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 # project vars
 # set _adj vars so user option can be close to 1.0
@@ -63,10 +60,10 @@ var _camera: IVCamera
 var _selection_manager: IVSelectionManager
 
 var _drag_mode := -1 # one of DRAG_ enums when active
-var _drag_vector := VECTOR2_ZERO
+var _drag_vector := Vector2.ZERO
 var _mwheel_turning := 0.0
-var _move_pressed := VECTOR3_ZERO
-var _rotate_pressed := VECTOR3_ZERO
+var _move_pressed := Vector3.ZERO
+var _rotate_pressed := Vector3.ZERO
 
 onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
 onready var _tree := get_tree()
@@ -82,7 +79,7 @@ onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_ad
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
 	IVGlobal.connect("camera_ready", self, "_connect_camera")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
@@ -91,7 +88,7 @@ func _ready():
 	_world_controller.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
 
 
-func _on_about_to_start_simulator(_is_new_game: bool) -> void:
+func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.TopGUI.selection_manager
 	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
 	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
@@ -123,7 +120,7 @@ func _process(delta: float) -> void:
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
 				_camera.add_rotation(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
-		_drag_vector = VECTOR2_ZERO
+		_drag_vector = Vector2.ZERO
 	if _mwheel_turning:
 		_camera.add_motion(Vector3(0.0, 0.0, _mwheel_turning * delta))
 		_mwheel_turning = 0.0
@@ -137,14 +134,8 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 	if !event.is_action_type() or !_camera:
 		return
 	if event.is_pressed():
-		if event.is_action_pressed("camera_zoom_view"):
-			_camera.move_to(null, CameraFlags.VIEW_ZOOM)
-		elif event.is_action_pressed("camera_45_view"):
-			_camera.move_to(null, CameraFlags.VIEW_45)
-		elif event.is_action_pressed("camera_top_view"):
-			_camera.move_to(null, CameraFlags.VIEW_TOP)
-		elif event.is_action_pressed("recenter"):
-			_camera.move_to(null, CameraFlags.UP_LOCKED, VECTOR3_ZERO, VECTOR3_ZERO)
+		if event.is_action_pressed("recenter"):
+			_camera.move_to(null, CameraFlags.UP_LOCKED, NULL_VECTOR3, Vector3.ZERO)
 		elif event.is_action_pressed("camera_left"):
 			_move_pressed.x = -_key_move_rate
 		elif event.is_action_pressed("camera_right"):
@@ -202,6 +193,37 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		_tree.set_input_as_handled()
 
 
+# public API
+
+func move_to(selection: IVSelection, camera_flags := 0, view_position := NULL_VECTOR3,
+		view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
+	# Null or null-equivilant args tell the camera to keep its current value.
+	# Some parameters override others.
+	if selection:
+		_selection_manager.select(selection, true)
+	_camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
+
+
+func move_to_by_name(selection_name: String, camera_flags := 0, view_position := NULL_VECTOR3,
+		view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
+	# Null or null-equivilant args tell the camera to keep its current value.
+	# Some parameters override others.
+	var selection: IVSelection
+	if selection_name:
+		selection = _selection_manager.get_or_make_selection(selection_name)
+	move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
+
+
+func get_camera_view_state() -> Array:
+	return [
+		_camera.selection.name,
+		_camera.flags,
+		_camera.view_position,
+		_camera.view_rotations,
+	]
+
+# private
+
 func _restore_init_state() -> void:
 	_disconnect_camera()
 	if _selection_manager:
@@ -222,16 +244,14 @@ func _disconnect_camera() -> void:
 	_camera = null
 
 
-func _on_selection_changed() -> void:
-	if _camera and _camera.is_camera_lock:
+func _on_selection_changed(suppress_camera_move: bool) -> void:
+	if !suppress_camera_move and _camera and _camera.is_camera_lock:
 		_camera.move_to(_selection_manager.selection)
 
-func _on_selection_reselected() -> void:
-	if _camera and _camera.is_camera_lock:
-		# If no view in effect, recenter & level the camera.
-		if _camera.flags & CameraFlags.ANY_VIEW_FLAGS:
-			return
-		_camera.move_to(null, 0, VECTOR3_ZERO, VECTOR3_ZERO)
+
+func _on_selection_reselected(suppress_camera_move: bool) -> void:
+	if !suppress_camera_move and _camera and _camera.is_camera_lock:
+		_camera.move_to(null, 0, NULL_VECTOR3, Vector3.ZERO)
 
 
 func _on_camera_lock_changed(is_camera_lock: bool) -> void:

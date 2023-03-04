@@ -20,10 +20,13 @@
 class_name IVBodyHUDsState
 extends Node
 
-# Maintains visibility and color state for Body HUDs, and defines defaults.
-# Body HUDs must connect and set their own visibility on changed signals.
+# Maintains visibility and color state for Body HUDs. Body HUDs must connect
+# and set their own visibility on changed signals.
 #
-# See also IVSBGHUDsState for small body group HUDs.
+# A complete set of group 'keys' is defined in data table 'visual_groups.tsv'
+# based on exclusive bit flags in IVEnums.BodyFlags.
+#
+# See also IVSBGHUDsState for SmallBodiesGroup HUDs.
 
 signal visibility_changed()
 signal color_changed()
@@ -40,58 +43,49 @@ const PERSIST_PROPERTIES := [
 	"orbit_colors",
 ]
 
-# not persisted - modify at project init
-
-var all_flags: int = (
-		# This is the complete and exclusive set.
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-		| BodyFlags.IS_ASTEROID
-		| BodyFlags.IS_SPACECRAFT
-)
-
-var default_orbit_visible_flags: int = (
-		BodyFlags.IS_STAR
-		| BodyFlags.IS_TRUE_PLANET
-		| BodyFlags.IS_DWARF_PLANET
-		| BodyFlags.IS_PLANETARY_MASS_MOON
-		| BodyFlags.IS_NON_PLANETARY_MASS_MOON
-)
-var default_name_visible_flags := default_orbit_visible_flags # exclusive w/ symbol_visible_flags
-var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
-
-var default_orbit_colors := {
-	# Must have full key set from all_flags bits!
-	BodyFlags.IS_STAR : Color(0.4, 0.4, 0.8), # maybe future use
-	BodyFlags.IS_TRUE_PLANET :  Color(0.5, 0.5, 0.1),
-	BodyFlags.IS_DWARF_PLANET : Color(0.1, 0.8, 0.2),
-	BodyFlags.IS_PLANETARY_MASS_MOON : Color(0.3, 0.3, 0.9),
-	BodyFlags.IS_NON_PLANETARY_MASS_MOON : Color(0.35, 0.1, 0.35),
-	BodyFlags.IS_ASTEROID : Color(0.8, 0.2, 0.2),
-	BodyFlags.IS_SPACECRAFT : Color(0.4, 0.4, 0.8),
-}
-var fallback_orbit_color := Color(0.4, 0.4, 0.8)
-
 
 # persisted - read-only!
-var name_visible_flags := default_name_visible_flags # exclusive w/ symbol_visible_flags
-var symbol_visible_flags := default_symbol_visible_flags # exclusive w/ name_visible_flags
-var orbit_visible_flags := default_orbit_visible_flags
-var orbit_colors := default_orbit_colors.duplicate() # must have full key set from all_flags bits!
+var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
+var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
+var orbit_visible_flags := 0
+var orbit_colors := {} # must have full key set from all_flags bits!
+
+# project vars - set at project init
+var fallback_orbit_color := Color("FE9C33") # orange
+
+# imported from visual_groups.tsv - ready-only!
+var all_flags := 0
+var default_name_visible_flags := 0 # exclusive w/ symbol_visible_flags
+var default_symbol_visible_flags := 0 # exclusive w/ name_visible_flags
+var default_orbit_visible_flags := 0
+var default_orbit_colors := {}
 
 
 onready var _tree := get_tree()
 
 
-func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_on_update_gui_requested")
 
-
-func _on_update_gui_requested() -> void:
-	emit_signal("visibility_changed")
+func _project_init() -> void:
+	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
+	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	var table_reader: IVTableReader = IVGlobal.program.TableReader
+	for row in table_reader.get_n_rows("visual_groups"):
+		var body_flag := table_reader.get_int("visual_groups", "body_flag", row)
+		var is_name_visible := table_reader.get_bool("visual_groups", "default_name_visible", row)
+		var is_symbol_visible := table_reader.get_bool("visual_groups", "default_symbol_visible", row)
+		var is_orbit_visible := table_reader.get_bool("visual_groups", "default_orbit_visible", row)
+		var orbit_color_str := table_reader.get_string("visual_groups", "default_orbit_color", row)
+		
+		all_flags |= body_flag
+		if is_name_visible:
+			default_name_visible_flags |= body_flag
+		if is_symbol_visible:
+			default_symbol_visible_flags |= body_flag
+		if is_orbit_visible:
+			default_orbit_visible_flags |= body_flag
+		default_orbit_colors[body_flag] = Color(orbit_color_str)
+	
+	_set_current_to_default()
 
 
 func _unhandled_key_input(event: InputEventKey):
@@ -105,6 +99,7 @@ func _unhandled_key_input(event: InputEventKey):
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
+
 
 
 # visibility
@@ -323,12 +318,41 @@ func set_orbit_color(body_flags: int, color: Color) -> void:
 		emit_signal("color_changed")
 
 
-func get_orbit_colors_dict() -> Dictionary:
-	return orbit_colors.duplicate()
+func get_non_default_orbit_colors() -> Dictionary:
+	# key-values equal to default are skipped
+	var dict := {}
+	for key in orbit_colors:
+		if orbit_colors[key] != default_orbit_colors[key]:
+			dict[key] = orbit_colors[key]
+	return dict
 
 
-func set_orbit_colors_dict(dict: Dictionary) -> void:
-	assert(dict.keys() == orbit_colors.keys())
-	orbit_colors.merge(dict, true) # overwrite
+func set_all_orbit_colors(dict: Dictionary) -> void:
+	# missing key-values are set to default
+	var is_change := false
+	for key in orbit_colors:
+		if dict.has(key):
+			if orbit_colors[key] != dict[key]:
+				is_change = true
+				orbit_colors[key] = dict[key]
+		else:
+			if orbit_colors[key] != default_orbit_colors[key]:
+				is_change = true
+				orbit_colors[key] = default_orbit_colors[key]
+	if is_change:
+		emit_signal("color_changed")
+
+
+# private
+
+func _set_current_to_default() -> void:
+	set_default_visibilities()
+	set_default_colors()
+
+
+func _signal_all_changed() -> void:
+	emit_signal("visibility_changed")
 	emit_signal("color_changed")
+
+
 

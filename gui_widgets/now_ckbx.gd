@@ -1,4 +1,4 @@
-# time_set_popup.gd
+# now_ckbx.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,16 +17,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVTimeSetterPopup
-extends PopupPanel
+class_name IVNowCkbx
+extends CheckBox
 
-# Call popup() to show.
+# UI widget. Used in Planetarium to select real-world present time.
+
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
+
+var _state: Dictionary = IVGlobal.state
+
+onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	$ControlDraggable.set_min_size()
-	connect("about_to_show", self, "_on_about_to_show")
+	IVGlobal.connect("update_gui_requested", self, "_update_ckbx")
+	_timekeeper.connect("speed_changed", self, "_update_ckbx")
+	_timekeeper.connect("time_altered", self, "_on_time_altered")
+	connect("pressed", self, "_set_real_world")
 
 
-func _on_about_to_show() -> void:
-	$MarginContainer/TimeSetter.set_current()
+func _update_ckbx() -> void:
+	pressed = _timekeeper.is_now
+
+
+func _on_time_altered(_previous_time: float) -> void:
+	pressed = _timekeeper.is_now
+
+
+func _set_real_world() -> void:
+	if _state.network_state != IS_CLIENT:
+		_timekeeper.set_now()
+		pressed = true

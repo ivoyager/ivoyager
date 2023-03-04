@@ -20,27 +20,19 @@
 class_name IVAllHUDs
 extends VBoxContainer
 
-# GUI widget that holds all the HUD visibility widgets.
-#
-# IMPORTANT! For correct visibility control, BodyFlags used in rows of BodyHUDs
-# instances must be a subset of IVHUDOrbit.VISIBILITY_BODY_FLAGS.
-#
-# WIP - hidden buttons [Hide All][Show Default]
+# GUI container widget that holds all the HUD widgets.
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
-const HUDS_VISIBILITY_STATE := IVViewManager.HUDS_VISIBILITY_STATE
-const HUDS_COLOR_STATE := IVViewManager.HUDS_COLOR_STATE
 
-
-
-# WIP - New buttons [Default Visible][Default Colors] work via BodyHUDsState
-
+var default_view_name := "LABEL_CUSTOM1" # will increment if taken
+var set_name := "AH"
+var is_cached := true
+var view_flags := IVView.ALL_HUDS
+var reserved_view_names := [tr("BUTTON_PLANETS1"), tr("BUTTON_ASTEROIDS1"), tr("BUTTON_COLORS1")]
 
 var _column_master: GridContainer
 
-onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
-onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+#onready var _view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 
 
 func _enter_tree() -> void:
@@ -48,11 +40,14 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	$"%HideAllButton".connect("pressed", self, "_hide_all")
-	$"%DefaultVisibleButton".connect("pressed", self, "_default_visible")
-	$"%DefaultColorsButton".connect("pressed", self, "_default_colors")
-	$"%SaveButton".connect("pressed", self, "_save")
-	
+#	$"%HideAllButton".connect("pressed", self, "_hide_all")
+#	$"%Planets1Button".connect("pressed", self, "_planets1")
+#	$"%Asteroids1Button".connect("pressed", self, "_asteroids1")
+#	$"%Colors1Button".connect("pressed", self, "_colors1")
+	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
+	$ViewSaveFlow.init($"%ViewSaveButton", default_view_name, set_name, is_cached,
+			view_flags, view_flags, reserved_view_names)
+
 
 func _on_child_entered_tree(control: Control) -> void:
 	match control.name:
@@ -80,13 +75,13 @@ func _on_child_entered_tree(control: Control) -> void:
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_NON_PMO_MOONS", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
+				["LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
 			]
 		"VisitedAsteroidsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_VISITED_ASTEROIDS", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
+				["LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
 			]
 		"SpacecraftHUDs":
 			control.column_master = _column_master
@@ -95,7 +90,7 @@ func _on_child_entered_tree(control: Control) -> void:
 				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
 			]
 		
-		# SmallBodiesHUDs instance
+		# SBGHUDs instance
 		"AsteroidsHUDs":
 			control.column_master = _column_master
 			control.rows = [
@@ -112,21 +107,19 @@ func _on_child_entered_tree(control: Control) -> void:
 			]
 
 
-func _hide_all() -> void:
-	_body_huds_state.hide_all()
-	_sbg_huds_state.hide_all()
+#func _hide_all() -> void:
+#	_view_defaults.set_view("hide_all")
+#
+#
+#func _planets1() -> void:
+#	_view_defaults.set_view("planets1")
+#
+#
+#func _asteroids1() -> void:
+#	_view_defaults.set_view("asteroids1")
+#
+#
+#func _colors1() -> void:
+#	_view_defaults.set_view("default_colors")
 
-
-func _default_visible() -> void:
-	_body_huds_state.set_default_visibilities()
-	_sbg_huds_state.set_default_visibilities()
-
-
-func _default_colors() -> void:
-	_body_huds_state.set_default_colors()
-	_sbg_huds_state.set_default_colors()
-
-
-func _save() -> void:
-	pass
 

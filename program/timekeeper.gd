@@ -112,7 +112,7 @@ var speed_index: int
 var is_reversed := false
 
 # public - read only!
-var is_real_world_time := false
+var is_now := false
 var engine_time: float # accumulated delta
 var speed_multiplier: float # negative if is_reversed
 var show_clock := false
@@ -126,7 +126,6 @@ var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 # private
 var _state: Dictionary = IVGlobal.state
 var _allow_time_setting := IVGlobal.allow_time_setting
-var _allow_real_world_time := IVGlobal.allow_real_world_time
 var _allow_time_reversal := IVGlobal.allow_time_reversal
 var _disable_pause: bool = IVGlobal.disable_pause
 var _network_state := NO_NETWORK
@@ -179,12 +178,12 @@ func _on_ready() -> void: # subclass can override
 func _on_about_to_start_simulator(is_new_game: bool) -> void:
 	if is_new_game:
 		if start_real_world_time:
-			set_real_world()
+			set_now()
 
 
 func _set_init_state() -> void:
 	if start_real_world_time:
-		time = get_real_world_time()
+		time = get_time_from_operating_system()
 	else:
 		time = IVGlobal.start_time
 	engine_time = 0.0
@@ -381,29 +380,16 @@ func get_jdn_for_solar_day(solar_day_: float) -> int:
 	return int(floor(j2000day)) + J2000_JDN
 
 
-func get_real_world_time() -> float:
-	var sys_msec := OS.get_system_time_msecs() # no Time method; ok for all systems?
+func get_time_from_operating_system() -> float:
+	# As of Godot 3.5.2.rc2, Time.get_unix_time_from_system() does not work in
+	# HTML5 export. TODO: Retest and make a godot issue!
+	var sys_msec := OS.get_system_time_msecs() # TODO: Remove if below works in HTML5 export
 	var j2000sec := (sys_msec - 946728000000) * 0.001
 	return j2000sec * SECOND
 
 
 func get_current_date_for_file() -> String:
 	return date_format_for_file % date.slice(0, 2)
-
-
-func set_real_world() -> void:
-	if !_allow_time_setting or !_allow_real_world_time:
-		return
-	if _network_state == IS_CLIENT:
-		return
-	if !is_real_world_time:
-		set_time_reversed(false)
-		change_speed(0, real_time_speed)
-		is_real_world_time = true
-	var previous_time := time
-	time = get_real_world_time()
-	_reset_time()
-	emit_signal("time_altered", previous_time)
 
 
 func set_time(new_time: float) -> void:
@@ -413,7 +399,22 @@ func set_time(new_time: float) -> void:
 		return
 	var previous_time := time
 	time = new_time
-	is_real_world_time = false
+	is_now = false
+	_reset_time()
+	emit_signal("time_altered", previous_time)
+
+
+func set_now() -> void:
+	if !_allow_time_setting:
+		return
+	if _network_state == IS_CLIENT:
+		return
+	if !is_now:
+		set_time_reversed(false)
+		change_speed(0, real_time_speed)
+		is_now = true
+	var previous_time := time
+	time = get_time_from_operating_system()
 	_reset_time()
 	emit_signal("time_altered", previous_time)
 
@@ -425,7 +426,7 @@ func set_time_reversed(new_is_reversed: bool) -> void:
 		return
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
-	is_real_world_time = false
+	is_now = false
 	emit_signal("speed_changed")
 
 
@@ -442,7 +443,7 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	if new_index == speed_index:
 		return
 	speed_index = new_index
-	is_real_world_time = false
+	is_now = false
 	_reset_speed()
 	emit_signal("speed_changed")
 
@@ -491,9 +492,9 @@ func _refresh_gui() -> void:
 
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
-	if is_running and is_real_world_time:
+	if is_running and is_now:
 		yield(_tree, "idle_frame")
-		set_real_world()
+		set_now()
 
 
 remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
@@ -527,7 +528,7 @@ remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
 	is_reversed = is_reversed_
 	show_clock = show_clock_
 	show_seconds = show_seconds_
-	is_real_world_time = is_real_world_time_
+	is_now = is_real_world_time_
 	emit_signal("speed_changed")
 
 
@@ -535,4 +536,4 @@ func _on_speed_changed() -> void:
 	if _network_state != IS_SERVER:
 		return
 	rpc("_speed_changed_sync", speed_index, is_reversed, show_clock,
-			show_seconds, is_real_world_time)
+			show_seconds, is_now)

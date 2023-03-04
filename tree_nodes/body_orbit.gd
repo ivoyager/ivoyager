@@ -1,4 +1,4 @@
-# hud_orbit.gd
+# body_orbit.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVHUDOrbit
+class_name IVBodyOrbit
 extends MeshInstance
 
 # Visual orbit for a Body instance. If FragmentIdentifier exists, then a shader
@@ -25,6 +25,7 @@ extends MeshInstance
 
 const math := preload("res://ivoyager/static/math.gd")
 
+const FRAGMENT_BODY_ORBIT := IVFragmentIdentifier.FRAGMENT_BODY_ORBIT
 
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
@@ -64,8 +65,8 @@ func _ready() -> void:
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
-		var fragment_info := [_body.name, _fragment_identifier.FRAGMENT_ORBIT]
-		var fragment_id := _fragment_identifier.get_new_id_as_vec3(fragment_info)
+		var data := _body.get_fragment_data(FRAGMENT_BODY_ORBIT)
+		var fragment_id := _fragment_identifier.get_new_id_as_vec3(data)
 		material_override = ShaderMaterial.new()
 		material_override.shader = IVGlobal.shared.orbit_shader
 		material_override.set_shader_param("fragment_id", fragment_id)
@@ -132,22 +133,11 @@ func _set_color() -> void:
 	var color := _body_huds_state.get_orbit_color(_body_flags)
 	if _color == color:
 		return
-	
-#	var new_color: Color
-#	if orbit_colors.has(_visibility_flag):
-#		new_color = orbit_colors[_visibility_flag]
-#	else:
-#		new_color = IVGlobal.settings.body_orbit_default_color
-#	if _color == new_color:
-#		return
 	_color = color
 	if _fragment_identifier:
 		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
 	else:
 		material_override.albedo_color = color
 
-#
-#func _settings_listener(setting: String, value) -> void:
-#	if setting == "body_orbit_colors":
-#		_set_color(value)
+
 

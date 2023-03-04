@@ -105,9 +105,6 @@ func _on_init():
 		[ # column 3
 			{
 				header = "LABEL_CAMERA",
-				camera_zoom_view = "LABEL_ZOOM_VIEW",
-				camera_45_view = "LABEL_45_VIEW",
-				camera_top_view = "LABEL_TOP_VIEW",
 				camera_up = "LABEL_MOVE_UP",
 				camera_down = "LABEL_MOVE_DOWN",
 				camera_left = "LABEL_MOVE_LEFT",

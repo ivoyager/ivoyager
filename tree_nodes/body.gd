@@ -23,7 +23,7 @@ extends Spatial
 # Base class for objects that orbit or are orbited. The system tree under
 # Universe is composed of IVBody instances from top to bottom. Other kinds of
 # nodes (HUDs, camera, etc.) are added to this node or its 'model_space' or
-# 'orbit_space', depending on what is needed.
+# 'rotating_space', depending on what is needed.
 #
 # IVBody nodes are NEVER scaled or rotated. Hence, distances and directions
 # (e.g., ecliptic "up") are always consistent at any level of the tree.
@@ -86,7 +86,6 @@ var satellites := [] # IVBody instances
 var huds_visible := false # too far / too close toggle
 var model_visible := false
 var model_space: Spatial # rotation only, not scaled (lazy init)
-var orbit_space: Spatial # rotates wih orbit for camera orbit tracking (lazy init)
 var rotating_space: IVRotatingSpace # rotates & translates for L-points (lazy init)
 var rotation_vector := ECLIPTIC_Z # synonymous with 'north'
 var rotation_rate := 0.0
@@ -112,7 +111,6 @@ var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _model_visible := false
-var _aux_graphic_visible := false
 var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -232,19 +230,13 @@ func _on_process(_delta: float) -> void: # subclass can override
 	# update translation and reference frame 'spaces'
 	if orbit:
 		translation = orbit.get_position()
-		if orbit_space or rotating_space:
+		if rotating_space:
 			var orbit_dist := translation.length()
 			var x_axis := -translation / orbit_dist
 			var z_axis := orbit.get_normal()
 			var y_axis := z_axis.cross(x_axis)
-			if rotating_space:
-				rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
-				rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
-			if orbit_space:
-				if orbit.is_retrograde():
-					orbit_space.transform.basis = Basis(x_axis, -y_axis, -z_axis)
-				else:
-					orbit_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+			rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+			rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
 	if model_space:
 		var rotation_angle := wrapf(_times[0] * rotation_rate, 0.0, TAU)
 		model_space.transform.basis = basis_at_epoch.rotated(rotation_vector, rotation_angle)
@@ -276,10 +268,6 @@ func get_real_precision(path: String) -> int:
 	if !characteristics.has("real_precisions"):
 		return -1
 	return characteristics.real_precisions.get(path, -1)
-
-
-func get_system_radius() -> float:
-	return characteristics.system_radius
 
 
 func get_hud_name() -> String:
@@ -341,6 +329,19 @@ func get_std_gravitational_parameter() -> float:
 
 
 func get_mean_radius() -> float:
+	return m_radius
+
+
+func get_system_radius() -> float:
+	# Defines radius for a top view.
+	return characteristics.system_radius
+
+
+func get_perspective_radius() -> float:
+	# For camera perspective distancing.
+	var perspective_radius: float = characteristics.get("perspective_radius", 0.0)
+	if perspective_radius:
+		return perspective_radius
 	return m_radius
 
 
@@ -454,7 +455,7 @@ func get_axial_tilt_to_ecliptic(time := NAN) -> float:
 
 
 func get_ground_basis(time := NAN) -> Basis:
-	# returns rotation basis referenced to ground
+	# Returns a rotating basis referenced to ground (i.e, the Body model).
 	if model_space and is_nan(time):
 		return model_space.transform.basis
 	else:
@@ -465,11 +466,11 @@ func get_ground_basis(time := NAN) -> Basis:
 
 
 func get_orbit_basis(time := NAN) -> Basis:
-	# returns rotation basis referenced to parent body
+	# Returns a rotating basis with Body parent in the -x direction.
+	if rotating_space and is_nan(time):
+		return rotating_space.transform.basis
 	if !orbit:
 		return IDENTITY_BASIS
-	if orbit_space and is_nan(time):
-		return orbit_space.transform.basis
 	var x_axis := -orbit.get_position(time).normalized()
 	var z_axis := orbit.get_normal(time, true)
 	var y_axis := z_axis.cross(x_axis)
@@ -510,21 +511,6 @@ func remove_child_from_model_space(spatial: Spatial) -> void:
 	if model_space.get_child_count() == 0:
 		model_space.queue_free()
 		model_space = null
-
-
-func add_child_to_orbit_space(spatial: Spatial) -> void:
-	if !orbit_space:
-		var _OrbitSpace_: Script = IVGlobal.script_classes._OrbitSpace_
-		orbit_space = _OrbitSpace_.new()
-		add_child(orbit_space)
-	orbit_space.add_child(spatial)
-
-
-func remove_child_from_orbit_space(spatial: Spatial) -> void:
-	orbit_space.remove_child(spatial)
-	if orbit_space.get_child_count() == 0:
-		orbit_space.queue_free()
-		orbit_space = null
 
 
 func set_orbit(orbit_: IVOrbit) -> void: # null ok
@@ -589,31 +575,14 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 	return rotating_space.get_lagrange_point_node3d(lp_integer)
 
 
-# private functions
+func get_fragment_data(_fragment_type: int) -> Array:
+	# Only FRAGMENT_BODY_ORBIT at this time.
+	return [get_instance_id()]
 
-func _add_rotating_space() -> void:
-	# bail out if we don't have requried parameters
-	if !orbit:
-		return
-	var m2: float = get_mass()
-	if !m2:
-		return
-	var m1: float = get_parent_spatial().get_mass()
-	if !m1:
-		return
-	var mass_ratio: float = m1 / m2
-	var characteristic_length := orbit.get_characteristic_length()
-	var characteristic_time := orbit.get_orbit_period()
-	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
-	rotating_space = _RotatingSpace_.new()
-	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
-	var translation_ := orbit.get_position()
-	var orbit_dist := translation_.length()
-	var x_axis := -translation_ / orbit_dist
-	var z_axis := orbit.get_normal()
-	var y_axis := z_axis.cross(x_axis)
-	rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
-	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+
+func get_fragment_text(_data: Array) -> String:
+	# Only FRAGMENT_BODY_ORBIT at this time.
+	return tr(name) + " " + tr("LABEL_ORBIT")
 
 
 func reset_orientation_and_rotation() -> void:
@@ -690,6 +659,33 @@ func reset_orientation_and_rotation() -> void:
 
 	var basis := math.rotate_basis_z(Basis(), rotation_vector)
 	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch)
+
+
+# private functions
+
+func _add_rotating_space() -> void:
+	# bail out if we don't have requried parameters
+	if !orbit:
+		return
+	var m2: float = get_mass()
+	if !m2:
+		return
+	var m1: float = get_parent_spatial().get_mass()
+	if !m1:
+		return
+	var mass_ratio: float = m1 / m2
+	var characteristic_length := orbit.get_characteristic_length()
+	var characteristic_time := orbit.get_orbit_period()
+	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
+	rotating_space = _RotatingSpace_.new()
+	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
+	var translation_ := orbit.get_position()
+	var orbit_dist := translation_.length()
+	var x_axis := -translation_ / orbit_dist
+	var z_axis := orbit.get_normal()
+	var y_axis := z_axis.cross(x_axis)
+	rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
+	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
 
 
 func _on_orbit_changed(is_scheduled: bool) -> void:

@@ -126,21 +126,21 @@ var prog_refs := {
 	# need first!
 	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
 	
-	# 'builders' (generator pattern, often from table or binary data)
+	# builders (generators, often from table or binary data)
 	_EnvironmentBuilder_ = IVEnvironmentBuilder,
 	_SystemBuilder_ = IVSystemBuilder,
 	_BodyBuilder_ = IVBodyBuilder,
+	_SBGBuilder_ = IVSBGBuilder,
 	_OrbitBuilder_ = IVOrbitBuilder,
-	_SmallBodiesBuilder_ = IVSmallBodiesBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
 	
-	# 'finishers' (modify something on entering tree)
+	# finishers (modify something on entering tree)
 	_BodyFinisher_ = IVBodyFinisher,
-	_SmallBodiesFinisher_ = IVSmallBodiesFinisher,
+	_SBGFinisher_ = IVSBGFinisher,
 	
-	# 'managers'
+	# managers
 	_InputMapManager_ = IVInputMapManager,
 	_IOManager_ = IVIOManager,
 	_FontManager_ = IVFontManager, # ok to replace
@@ -150,9 +150,10 @@ var prog_refs := {
 	_WikiManager_ = IVWikiManager,
 	_ModelManager_ = IVModelManager,
 	
-	# 'tools'
+	# tools and resources
 	_TableReader_ = IVTableReader,
 	_QuantityFormatter_ = IVQuantityFormatter,
+	_ViewDefaults_ = IVViewDefaults,
 }
 
 var prog_nodes := {
@@ -164,7 +165,6 @@ var prog_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
 	_SBGHUDsState_ = IVSBGHUDsState,
-	_SmallBodiesGroupIndexing_ = IVSmallBodiesGroupIndexing,
 	_ViewManager_ = IVViewManager,
 	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
 	
@@ -188,7 +188,8 @@ var gui_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
 	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
-	_SplashScreen_ = null, # assign here if convenient (below MainMenuPopup, etc.)
+	_GameGUI_ = null, # assign here if convenient (on top of MouseTargetLabel, below SplashScreen)
+	_SplashScreen_ = null, # assign here if convenient (below popups)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
@@ -208,13 +209,12 @@ var procedural_classes := {
 	_Body_ = IVBody, # many dependencies, best to subclass
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
 	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
-	_HUDLabel_ = IVHUDLabel, # replace w/ Spatial
-	_HUDOrbit_ = IVHUDOrbit, # replace w/ Spatial
-	_HUDOrbits_ = IVHUDOrbits,
-	_HUDPoints_ = IVHUDPoints,
+	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
+	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
+	_SBGOrbits_ = IVSBGOrbits,
+	_SBGPoints_ = IVSBGPoints,
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
 	_ModelSpace_ = IVModelSpace,
-	_OrbitSpace_ = IVOrbitSpace, # replace w/ Spatial
 	_Rings_ = IVRings, # replace w/ Spatial
 	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
 	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial

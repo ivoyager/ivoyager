@@ -1,4 +1,4 @@
-# hud_label.gd
+# body_label.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -18,9 +18,9 @@
 # limitations under the License.
 # *****************************************************************************
 extends Label3D
-class_name IVHUDLabel
+class_name IVBodyLabel
 
-# Visual text name or symbol for a Body.
+# Visual text name or symbol for a IVBody.
 
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 var _body: IVBody

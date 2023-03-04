@@ -72,9 +72,6 @@ func _on_init() -> void:
 #			{event_class = "InputEventJoypadButton", button_index = 15},
 #			],
 		
-		camera_zoom_view = [{event_class = "InputEventKey", scancode = KEY_HOME}],
-		camera_45_view = [{event_class = "InputEventKey", scancode = KEY_DELETE}],
-		camera_top_view = [{event_class = "InputEventKey", scancode = KEY_END}],
 		camera_up = [
 			{event_class = "InputEventKey", scancode = KEY_UP},
 			{event_class = "InputEventKey", scancode = KEY_UP, control = true},

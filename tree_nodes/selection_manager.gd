@@ -25,8 +25,8 @@ extends Node
 # search up their ancestor tree and obtain from the first Control node with
 # non-null member 'selection_manager'.
 
-signal selection_changed()
-signal selection_reselected()
+signal selection_changed(suppress_camera_move)
+signal selection_reselected(suppress_camera_move)
 
 enum {
 	# not all of these are implemented yet...
@@ -173,25 +173,25 @@ static func get_body_at_above_selection_w_flags(selection_: IVSelection, flags: 
 # Non-static methods for this manager's selection or history
 
 
-func select(selection_: IVSelection) -> void:
+func select(selection_: IVSelection, suppress_camera_move := false) -> void:
 	if selection == selection_:
-		emit_signal("selection_reselected")
+		emit_signal("selection_reselected", suppress_camera_move)
 		return
 	selection = selection_
 	_add_history()
-	emit_signal("selection_changed")
+	emit_signal("selection_changed", suppress_camera_move)
 
 
-func select_body(body: IVBody) -> void:
+func select_body(body: IVBody, suppress_camera_move := false) -> void:
 	var selection_ := get_or_make_selection(body.name)
 	if selection_:
-		select(selection_)
+		select(selection_, suppress_camera_move)
 
 
-func select_by_name(selection_name: String) -> void:
+func select_by_name(selection_name: String, suppress_camera_move := false) -> void:
 	var selection_ := get_or_make_selection(selection_name)
 	if selection_:
-		select(selection_)
+		select(selection_, suppress_camera_move)
 
 
 func has_selection() -> bool:

@@ -9,9 +9,6 @@ mouse_filter = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="Year" type="SpinBox" parent="."]
 margin_right = 74.0
@@ -108,3 +105,9 @@ margin_left = 555.0
 margin_right = 648.0
 margin_bottom = 40.0
 text = "BUTTON_SET"
+
+[node name="SetAndClose" type="Button" parent="."]
+margin_left = 652.0
+margin_right = 826.0
+margin_bottom = 40.0
+text = "BUTTON_SET_AND_CLOSE"

@@ -62,7 +62,10 @@ const DPRINT := false
 
 
 var data_table_enums := [
+	# Can be read as int. Keys must be globally unique!
+	IVEnums.SBGClass,
 	IVEnums.Confidence,
+	IVEnums.BodyFlags,
 ]
 
 # source files
@@ -401,6 +404,10 @@ func _get_processed_value(raw_value: String, type: int, prefix: String, unit: St
 				value = NAN
 			elif raw_value == "?":
 				value = INF
+			elif raw_value == "INF":
+				value = INF
+			elif raw_value == "-INF":
+				value = -INF
 			else:
 				raw_value = raw_value.replace("E", "e")
 				if raw_value.begins_with("~"):

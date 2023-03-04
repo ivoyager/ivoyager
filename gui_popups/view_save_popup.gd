@@ -1,4 +1,4 @@
-# orbit_space.gd
+# view_save_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,20 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVOrbitSpace
-extends Spatial
+class_name IVViewSavePopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_popups/view_save_popup.tscn"
 
-# Created and maintained by IVBody instance only when needed. The camera uses
-# this space when orbit tracking.
-#
-# OrbitSpace is similar to but different than RotatingSpace for non-zero orbit
-# eccentricity. In OrbitSpace, the secondary body (P2) is maintained at the
-# origin with the P1 body ocillating along the x-axis between minus apoapsis
-# and minus periapsis. Lagrange points are defined in RotatingSpace where the
-# P1 body is fixed at minus 'characteristic length'. Z-axis is normal to
-# orbit plane using 'north/up' for OrbitSpace and positive pole for
-# RotatingSpace.
-
-const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
-
+# Not added in base IVProjectBuilder. A unique instance is made by widget
+# ViewSaveButton.
 

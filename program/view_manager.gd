@@ -20,40 +20,28 @@
 class_name IVViewManager
 extends Node
 
-# Manages IVView instances that can be persisted via gamesave or cache.
-
-enum {
-	CAMERA_STATE = 1,
-	HUDS_VISIBILITY_STATE = 1 << 1,
-	HUDS_COLOR_STATE = 1 << 2,
-	TIME_STATE = 1 << 3,
-	# combos
-	ALL_NON_TIME_STATE = (1 << 3) - 1,
-	ALL_VIEW_STATE = (1 << 4) - 1,
-	# set_view() flags
-	INSTANT_CAMERA_MOVE = 1 << 4,
-}
+# Manages IVView instances that are persisted via gamesave or cache.
 
 const files := preload("res://ivoyager/static/files.gd")
-const FILE_EXTENSION := "ivbinary"
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
 	"_gamesave_views",
 ]
 
+var file_path := IVGlobal.cache_dir.plus_file("views.ivbinary")
+
 var _gamesave_views := {}
 var _cached_views := {}
 
-var _cache_dir: String = IVGlobal.cache_dir + "/views"
 var _View_: Script
-var _timekeeper: IVTimekeeper
+var _io_manager: IVIOManager
 
 
 func _project_init() -> void:
 	_View_ = IVGlobal.script_classes._View_
-	_timekeeper = IVGlobal.program.Timekeeper
-	files.make_dir_if_doesnt_exist(_cache_dir)
+	_io_manager = IVGlobal.program.IOManager
+	files.make_dir_if_doesnt_exist(IVGlobal.cache_dir)
 	_read_cache()
 
 
@@ -66,22 +54,16 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 		view.reset()
 	else:
 		view = _View_.new()
-	if flags & CAMERA_STATE:
-		view.save_camera_state()
-	if flags & HUDS_VISIBILITY_STATE:
-		view.save_huds_visibility_state()
-	if flags & HUDS_COLOR_STATE:
-		view.save_huds_color_state()
-	if flags & TIME_STATE:
-		view.save_time_state()
+	view.save_state(flags)
 	if is_cached:
 		_cached_views[key] = view
-		_write_cache(key, view)
+		_write_cache()
 	else:
 		_gamesave_views[key] = view
 
 
-func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) -> void:
+func set_view(view_name: String, set_name: String, is_cached: bool,
+		is_camera_instant_move := false) -> void:
 	var key := view_name + "." + set_name
 	var view: IVView
 	if is_cached:
@@ -90,21 +72,14 @@ func set_view(view_name: String, set_name: String, is_cached: bool, flags: int) 
 		view = _gamesave_views.get(key)
 	if !view:
 		return
-	if flags & CAMERA_STATE:
-		view.set_camera_state(bool(flags & INSTANT_CAMERA_MOVE))
-	if flags & HUDS_VISIBILITY_STATE:
-		view.set_huds_visibility_state()
-	if flags & HUDS_COLOR_STATE:
-		view.set_huds_color_state()
-	if flags & TIME_STATE:
-		view.set_time_state()
+	view.set_state(is_camera_instant_move)
 
 
 func save_view_object(view: IVView, view_name: String, set_name: String, is_cached: bool) -> void:
 	var key := view_name + "." + set_name
 	if is_cached:
 		_cached_views[key] = view
-		_write_cache(key, view)
+		_write_cache()
 	else:
 		_gamesave_views[key] = view
 
@@ -123,6 +98,15 @@ func has_view(view_name: String, set_name: String, is_cached: bool) -> bool:
 	return _gamesave_views.has(key)
 
 
+func remove_view(view_name: String, set_name: String, is_cached: bool) -> void:
+	var key := view_name + "." + set_name
+	if is_cached:
+		_cached_views.erase(key)
+		_write_cache()
+	else:
+		_gamesave_views.erase(key)
+	
+
 func get_view_names_in_set(set_name: String, is_cached: bool) -> Array:
 	var set := []
 	var suffix := "." + set_name
@@ -135,38 +119,42 @@ func get_view_names_in_set(set_name: String, is_cached: bool) -> Array:
 
 # private
 
-func _write_cache(key: String, view: IVView) -> void:
-	var file := _get_file(key + "." + FILE_EXTENSION, File.WRITE)
-	if !file:
-		return
-	var data := view.get_cache_data()
-	file.store_var(data)
-
-
 func _read_cache() -> void:
-	# Populates _cached_views; only once at project init!
-	var file_names := files.get_dir_files(_cache_dir, FILE_EXTENSION)
-	for file_name in file_names:
-		var file := _get_file(file_name, File.READ)
-		if !file:
-			continue
-		var data = file.get_var() # View will test type, version & integrity
-		var view: IVView = _View_.new()
-		if !view.set_cache_data(data):
-			continue
-		var key: String = file_name.get_basename()
-		_cached_views[key] = view
-
-
-func _get_file(file_name: String, flags: int) -> File:
-	var file_path := _cache_dir.plus_file(file_name)
+	# Populate _cached_views once at project init (on main thread).
 	var file := File.new()
-	if file.open(file_path, flags) != OK:
-		if flags == File.WRITE:
-			print("ERROR! Could not open ", file_path, " for write!")
-		else:
-			print("Could not open ", file_path, " for read (expected if no changes)")
-		return null
-	return file
+	if file.open(file_path, File.READ) != OK:
+		print("Did not find cache file ", file_path, " (expected if no changes)")
+		return
+	var dict: Dictionary = file.get_var()
+	file.close()
+	var bad_cache_data := false
+	for key in dict:
+		var data: Array = dict[key]
+		var view: IVView = _View_.new()
+		if !view.set_data_from_cache(data): # may be prior version
+			bad_cache_data = true
+			continue
+		_cached_views[key] = view
+	if bad_cache_data:
+		_write_cache() # removes all prior-version views
 
+
+func _write_cache() -> void:
+	var dict := {}
+	for key in _cached_views:
+		var view: IVView = _cached_views[key]
+		var data := view.get_data_for_cache()
+		dict[key] = data
+	_io_manager.callback(self, "_write_cache_on_io_thread", "", [dict])
+	
+
+func _write_cache_on_io_thread(thread_data: Array) -> void:
+	# No one is waiting for this, so do the file write on i/o thread.
+	var dict: Dictionary = thread_data[0]
+	var file := File.new()
+	if file.open(file_path, File.WRITE) != OK:
+		print("ERROR! Could not open ", file_path, " for write!")
+		return
+	file.store_var(dict)
+	file.close()
 

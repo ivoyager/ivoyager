@@ -20,7 +20,8 @@
 class_name IVModelSpace
 extends Spatial
 
-# Maintained by IVBody instance only when needed. Child nodes may include the
-# body's model and rings and the camera when ground tracking.
+# Maintained by IVBody instance only when needed. Child nodes include the
+# Body's model and (for Saturn) rings. This reference frame is useful because
+# the actual model Spatial is scaled and rotated.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
