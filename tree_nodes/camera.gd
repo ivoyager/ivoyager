@@ -91,13 +91,13 @@ var is_camera_lock := true
 # public - read only! (use move methods to set; these are "to" during transfer)
 var selection: IVSelection
 var perspective_radius := KM
-var view_position := Vector3.ONE # spherical, relative to ref frame; r is 'perspective'
+var view_position := Vector3(0.5, 2.5, 3.0) # spherical, relative to ref frame; r is 'perspective'
 var view_rotations := Vector3.ZERO # euler, relative to looking_at(-origin, 'up')
 var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
 # private
-var _transform := Transform(Basis(), Vector3.ONE) # working value
+var _transform := Transform(Basis(), Vector3(0, 0, KM)) # working value
 
 # *****************************************************************************
 
@@ -143,7 +143,7 @@ var _from_spatial: Spatial
 var _from_selection: IVSelection
 var _from_flags := flags
 var _from_perspective_radius := KM
-var _from_view_position := Vector3.ONE # any non-zero dist ok
+var _from_view_position := Vector3(0, 0, 3)
 var _from_view_rotations := Vector3.ZERO
 
 # gui signalling
