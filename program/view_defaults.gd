@@ -176,7 +176,11 @@ func _home() -> void:
 			| IVView.IS_NOW
 	)
 	view.selection_name = "PLANET_EARTH"
-	view.camera_flags = CameraFlags.UP_LOCKED  | CameraFlags.TRACK_GROUND
+	view.camera_flags = (
+			CameraFlags.UP_LOCKED
+			| CameraFlags.TRACK_GROUND
+			| CameraFlags.SET_USER_LONGITUDE
+	)
 	view.view_position = Vector3(-INF, 0.0, 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	view.orbit_visible_flags = (

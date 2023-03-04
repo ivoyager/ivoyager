@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.14"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230228
+const IVOYAGER_YMD := 20230304
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
@@ -143,9 +143,8 @@ var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
 var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_time_setting := false
-var allow_real_world_time := false # get UT from user system seconds
 var allow_time_reversal := false
-var home_view_from_user_time_zone := false # get user latitude
+var allow_time_zone_from_system := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
 var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true

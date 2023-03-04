@@ -37,14 +37,14 @@ func _ready() -> void:
 
 
 func _update_ckbx() -> void:
-	pressed = _timekeeper.is_real_world_time
+	pressed = _timekeeper.is_now
 
 
 func _on_time_altered(_previous_time: float) -> void:
-	pressed = _timekeeper.is_real_world_time
+	pressed = _timekeeper.is_now
 
 
 func _set_real_world() -> void:
 	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_real_world()
+		_timekeeper.set_now()
 		pressed = true

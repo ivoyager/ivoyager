@@ -234,6 +234,6 @@ func _set_time_state() -> void:
 		_timekeeper.change_speed(0, speed_index)
 		_timekeeper.set_time_reversed(is_reversed)
 	elif flags & IS_NOW:
-		_timekeeper.set_real_world()
+		_timekeeper.set_now()
 
 

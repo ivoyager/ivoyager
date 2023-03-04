@@ -29,7 +29,6 @@ var above_bodies_selection_name := "" # "SYSTEM_SOLAR_SYSTEM"
 
 
 # private
-var _home_view_from_user_time_zone: bool = IVGlobal.home_view_from_user_time_zone
 var _Selection_: Script
 
 
