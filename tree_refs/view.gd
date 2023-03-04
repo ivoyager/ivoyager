@@ -33,14 +33,14 @@ enum { # flags
 	HUDS_VISIBILITY = 1 << 3,
 	HUDS_COLOR = 1 << 4,
 	
-	TIME_STATE = 1 << 5,
-	
+	TIME_STATE = 1 << 5, # overrides IS_NOW
+	IS_NOW = 1 << 6,
 	
 	# flag sets
 	ALL_CAMERA = (1 << 3) - 1,
 	ALL_HUDS = 1 << 3 | 1 << 4
 	ALL_BUT_TIME = (1 << 5) - 1,
-	ALL = (1 << 6) - 1,
+	ALL = (1 << 7) - 1,
 }
 
 
@@ -98,7 +98,7 @@ var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 # cache is 'bad' if _version_hash doesn't match
-var _version_hash := PERSIST_PROPERTIES.hash() + 1
+var _version_hash := PERSIST_PROPERTIES.hash() + 2
 
 
 # public API
@@ -220,18 +220,20 @@ func _set_huds_state() -> void:
 
 func _save_time_state() -> void:
 	if flags & TIME_STATE:
+		flags &= ~IS_NOW
 		time = _timekeeper.time
 		speed_index = _timekeeper.speed_index
 		is_reversed = _timekeeper.is_reversed
 
 
 func _set_time_state() -> void:
+	# Note: IVTimekeeper ignores set functions that are disallowed in IVGlobal
+	# project settings. In most game applications, only speed is set.
 	if flags & TIME_STATE:
-		# Note: IVTimekeeper ignores set_time() and set_time_reversed() if
-		# disallowed in IVGlobal project settings. So in most game applications
-		# only speed is set.
 		_timekeeper.set_time(time)
 		_timekeeper.change_speed(0, speed_index)
 		_timekeeper.set_time_reversed(is_reversed)
+	elif flags & IS_NOW:
+		_timekeeper.set_real_world()
 
 

@@ -170,7 +170,11 @@ func _home() -> void:
 	# If project allows, home longitude (from sys timezone) and actual time.
 	# Planets, moons & spacecraft visible.
 	var view: IVView = _View_.new()
-	view.flags = IVView.CAMERA_ORIENTATION | IVView.CAMERA_LONGITUDE | IVView.HUDS_VISIBILITY
+	view.flags = (
+			IVView.ALL_CAMERA
+			| IVView.HUDS_VISIBILITY
+			| IVView.IS_NOW
+	)
 	view.selection_name = "PLANET_EARTH"
 	view.camera_flags = CameraFlags.UP_LOCKED  | CameraFlags.TRACK_GROUND
 	view.view_position = Vector3(-INF, 0.0, 3.0) # z, radii dist when close

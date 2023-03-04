@@ -60,9 +60,6 @@ func _update_tracking(flags: int, _disable_flags: int) -> void:
 	_ecliptic_checkbox.pressed = bool(flags & Flags.TRACK_ECLIPTIC)
 	_orbit_checkbox.pressed = bool(flags & Flags.TRACK_ORBIT)
 	_ground_checkbox.pressed = bool(flags & Flags.TRACK_GROUND)
-#	_ecliptic_checkbox.disabled = disable_flags & DisabledFlags.DISABLED_TRACK_ECLIPTIC
-#	_orbit_checkbox.disabled = disable_flags & DisabledFlags.DISABLED_TRACK_ORBIT
-#	_ground_checkbox.disabled = disable_flags & DisabledFlags.DISABLED_TRACK_GROUND
 
 
 func _on_ecliptic_pressed() -> void:

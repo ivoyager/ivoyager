@@ -50,18 +50,25 @@ margin_right = 157.0
 margin_bottom = 164.0
 text = "CKBX_GAME_SPEED"
 
-[node name="LineEdit" type="LineEdit" parent="."]
+[node name="NowCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true
 margin_top = 168.0
 margin_right = 157.0
 margin_bottom = 192.0
+text = "CKBX_NOW"
+
+[node name="LineEdit" type="LineEdit" parent="."]
+unique_name_in_owner = true
+margin_top = 196.0
+margin_right = 157.0
+margin_bottom = 220.0
 rect_min_size = Vector2( 100, 0 )
 caret_blink = true
 caret_blink_speed = 0.5
 
 [node name="SaveButton" type="Button" parent="."]
 unique_name_in_owner = true
-margin_top = 196.0
+margin_top = 224.0
 margin_right = 157.0
-margin_bottom = 216.0
+margin_bottom = 244.0
 text = "BUTTON_SAVE"

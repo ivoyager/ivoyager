@@ -43,6 +43,7 @@ onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
 onready var _visibilities_ckbx: CheckBox = $"%VisibilitiesCkbx"
 onready var _colors_ckbx: CheckBox = $"%ColorsCkbx"
 onready var _time_ckbx: CheckBox = $"%TimeCkbx"
+onready var _now_ckbx: CheckBox = $"%NowCkbx" # exclusive w/ _time_ckbx
 onready var _line_edit: LineEdit = $"%LineEdit"
 
 
@@ -66,18 +67,33 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_increment_name_as_needed()
 	
 	# init checkboxes
+	if init_flags & IVView.TIME_STATE:
+		init_flags &= ~IVView.IS_NOW # exclusive
+		
 	_selection_ckbx.visible = bool(show_flags & IVView.CAMERA_SELECTION)
-	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
 	_longitude_ckbx.visible = bool(show_flags & IVView.CAMERA_LONGITUDE)
-	_longitude_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_LONGITUDE))
 	_orientation_ckbx.visible = bool(show_flags & IVView.CAMERA_ORIENTATION)
-	_orientation_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_ORIENTATION))
 	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY)
-	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY))
 	_colors_ckbx.visible = bool(show_flags & IVView.HUDS_COLOR)
-	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR))
 	_time_ckbx.visible = bool(show_flags & IVView.TIME_STATE)
+	_now_ckbx.visible = bool(show_flags & IVView.IS_NOW)
+	
+	if _time_ckbx.visible and _now_ckbx.visible:
+		_time_ckbx.connect("toggled", self, "_unset_exclusive", [_now_ckbx])
+		_now_ckbx.connect("toggled", self, "_unset_exclusive", [_time_ckbx])
+	
+	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
+	_longitude_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_LONGITUDE))
+	_orientation_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_ORIENTATION))
+	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY))
+	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR))
 	_time_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
+	_now_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.IS_NOW))
+
+
+func _unset_exclusive(is_pressed: bool, exclusive_button: CheckBox) -> void:
+	if is_pressed:
+		exclusive_button.pressed = false
 
 
 func _on_visibility_changed():
@@ -125,5 +141,7 @@ func _get_view_flags() -> int:
 		flags |= IVView.HUDS_COLOR
 	if _time_ckbx.pressed:
 		flags |= IVView.TIME_STATE
+	if _now_ckbx.pressed:
+		flags |= IVView.IS_NOW
 	return flags
 
