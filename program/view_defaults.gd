@@ -35,6 +35,7 @@ func _project_init() -> void:
 	_colors1()
 	_zoom()
 	_fortyfive()
+	_top()
 
 
 # public API
@@ -123,7 +124,7 @@ func _zoom() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(0.0, 0.0, 3.0) # 3.0 radii
+	view.view_position = Vector3(PI * 1.15, PI * 0.1, 3.0) # 3.0 radii
 	view.view_rotations = Vector3.ZERO
 	views.Zoom = view
 
@@ -134,13 +135,19 @@ func _fortyfive() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(0.0, PI / 4.0, 10.0) # 3.0 radii
+	view.view_position = Vector3(PI * 1.15, PI / 4.0, 10.0) # 3.0 radii
 	view.view_rotations = Vector3.ZERO
 	views.Fortyfive = view
-	
-	
-	
 
 
+func _top() -> void:
+	var CameraFlags := IVEnums.CameraFlags
+	var _View_: Script = IVGlobal.script_classes._View_
+	var view: IVView = _View_.new()
+	view.flags = IVView.CAMERA_ORIENTATION
+	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
+	view.view_position = Vector3(PI * 1.15, PI / 2.05, 25.0) # 3.0 radii
+	view.view_rotations = Vector3.ZERO
+	views.Top = view
 
 

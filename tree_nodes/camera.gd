@@ -61,6 +61,7 @@ const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
 const POLE_LIMITER := PI / 2.1
+const MIN_DIST_RADII := 1.5
 
 # Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
 # It used to be that ~10 orders of magnitude was allowed between near and far,
@@ -126,7 +127,6 @@ var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
-var _min_dist := METER # changes on move for parent body size
 
 # motions / rotations
 var _motion_accumulator := VECTOR3_ZERO
@@ -278,7 +278,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 		selection = to_selection
 		perspective_radius = selection.get_perspective_radius()
 		_to_spatial = to_selection.spatial
-#		_min_dist = selection.view_min_distance * 50.0 / fov
 	if is_up_change:
 		flags &= ~ANY_UP_FLAGS
 		flags |= to_up_flags
@@ -306,27 +305,13 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := VECTO
 	else:
 		if to_view_position != VECTOR3_ZERO:
 			view_position = to_view_position
-#		elif _from_selection != selection:
-#			# Keep our current view_position, but compensate distance component
-#			# for size of target.
-#			var from_dist := view_position[2]
-#			var from_radius := _from_selection.get_radius_for_camera()
-#			var to_radius := selection.get_radius_for_camera()
-#			view_position[2] = utils.get_visual_radius_compensated_dist(from_dist, from_radius,
-#					to_radius, size_ratio_exponent)
 		if to_view_rotations != NULL_ROTATION:
 			view_rotations = to_view_rotations
 	
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # roll
 	
-	if view_position.z > _max_dist:
-		view_position.z = _max_dist
-	
-	
-	# TODO: We don't need to change _min_dist; use const MIN_DIST_RADII
-	elif view_position.z < 1.0:
-		view_position.z = 1.0
+	view_position.z = clamp(view_position.z, MIN_DIST_RADII, _max_dist)
 	
 	# initiate move
 	if is_instant_move:
@@ -375,14 +360,11 @@ func increment_focal_length(increment: int) -> void:
 		set_focal_length_index(new_fl_index, false)
 
 
-func set_focal_length_index(new_fl_index, suppress_move := false) -> void:
+func set_focal_length_index(new_fl_index, _suppress_move := false) -> void:
 	focal_length_index = new_fl_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
-#	_min_dist = selection.view_min_distance * 50.0 / fov
 	_world_targeting[3] = fov
-	if !suppress_move:
-		move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
 	emit_signal("focal_length_changed", focal_length)
 
 
@@ -405,7 +387,6 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		perspective_radius = selection.get_perspective_radius()
 	_from_selection = selection
 	_from_perspective_radius = perspective_radius
-#	_min_dist = selection.view_min_distance * 50.0 / fov
 	move_to(null, 0, VECTOR3_ZERO, NULL_ROTATION, true)
 
 
@@ -568,9 +549,9 @@ func _process_motion(delta: float) -> void:
 		origin = origin.rotated(basis.y, move_now.x)
 		origin = origin.rotated(basis.x, -move_now.y)
 		origin *= 1.0 + move_now.z
-		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
-		view_position.z = _get_perspective_dist(view_position.z, perspective_radius)
+		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
+				MIN_DIST_RADII, _max_dist)
 		_transform = _get_view_transform(view_position, view_rotations, _reference_basis,
 				perspective_radius)
 		
@@ -582,9 +563,9 @@ func _process_motion(delta: float) -> void:
 		origin = origin.rotated(basis.x, -move_now.y)
 		basis = basis.rotated(basis.x, -move_now.y)
 		origin *= 1.0 + move_now.z
-		origin = _clamp_origin_length(origin)
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
-		view_position.z = _get_perspective_dist(view_position.z, perspective_radius)
+		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
+				MIN_DIST_RADII, _max_dist)
 		_transform = Transform(basis, origin)
 		# back-calculate view_rotations
 		var unrotated_transform := Transform(IDENTITY_BASIS, origin).looking_at(
@@ -648,7 +629,8 @@ func _process_rotation(delta: float) -> void:
 
 func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
 		reference_basis: Basis, perspective_radius_: float) -> Transform:
-	view_position_.z = _convert_perspective_dist(view_position_.z, perspective_radius_)
+	view_position_.z = clamp(_convert_perspective_dist(view_position_.z, perspective_radius_),
+			MIN_DIST_RADII, _max_dist)
 	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
 	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, reference_basis.z)
@@ -699,15 +681,6 @@ func _convert_perspective_dist(persp_dist: float, radius: float) -> float:
 	return ((persp_dist - perspective_close_radii) * (perspective_far_dist - cr)
 			/ (perspective_far_dist / METER - perspective_close_radii)
 			+ cr)
-
-
-func _clamp_origin_length(origin: Vector3) -> Vector3:
-	var dist := origin.length()
-	if dist > _max_dist:
-		origin *= _max_dist / dist
-#	elif dist < _min_dist:
-#		origin *= _min_dist / dist
-	return origin
 
 
 func _signal_range_latitude_longitude(is_refresh := false) -> void:
