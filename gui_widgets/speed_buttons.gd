@@ -35,6 +35,7 @@ onready var _reverse: Button = $Reverse
 
 
 func _ready() -> void:
+	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
 	IVGlobal.connect("paused_changed", self, "_update_buttons")
 	_timekeeper.connect("speed_changed", self, "_update_buttons")
