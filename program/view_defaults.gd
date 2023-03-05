@@ -179,9 +179,9 @@ func _home() -> void:
 	view.camera_flags = (
 			CameraFlags.UP_LOCKED
 			| CameraFlags.TRACK_GROUND
-			| CameraFlags.SET_USER_LONGITUDE
+			| CameraFlags.SET_HOME
 	)
-	view.view_position = Vector3(-INF, 0.0, 3.0) # z, radii dist when close
+	view.view_position = Vector3(-INF, -INF, 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!

@@ -92,7 +92,7 @@ enum CameraFlags {
 	TRACK_GALACIC = 1 << 5, # not implemented yet
 	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
 	
-	SET_USER_LONGITUDE = 1 << 7, # only works if IVGlobal.allow_time_zone_from_system = true
+	SET_HOME = 1 << 7, # world & coordinates in IVGlobal
 	
 	# bits 32-63 should be safe to use for any extension project
 	

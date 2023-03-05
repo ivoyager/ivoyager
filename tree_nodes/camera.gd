@@ -172,10 +172,7 @@ func _ready() -> void:
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	if IVGlobal.allow_time_zone_from_system:
-		var time_zone := Time.get_time_zone_from_system()
-		if time_zone and time_zone.has("bias"):
-			_user_longitude = time_zone.bias * TAU / 1440.0
+	
 	IVGlobal.verbose_signal("camera_ready", self)
 	set_process(false) # don't process until sim started
 
@@ -236,8 +233,10 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	if (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
 			and to_view_rotations.z): # any roll unlocks 'up'
 		to_flags |= Flags.UP_UNLOCKED
-	if to_flags & Flags.SET_USER_LONGITUDE and _user_longitude != -INF:
-		to_view_position.x = _user_longitude
+	if to_flags & Flags.SET_HOME:
+		to_selection = IVSelectionManager.get_or_make_selection(IVGlobal.home_name)
+		to_view_position.x = IVGlobal.home_longitude
+		to_view_position.y = IVGlobal.home_latitude
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
 	var to_track_flags := to_flags & ANY_TRACK_FLAGS
