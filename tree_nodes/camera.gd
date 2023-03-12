@@ -287,6 +287,12 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 			flags &= ~Flags.UP_LOCKED
 			flags |= Flags.UP_UNLOCKED
 	
+	# if track change w/out specified longitude, go to current longitude in new reference frame
+	if is_track_change and to_view_position.x == -INF:
+		var current_basis := _get_reference_basis(selection, flags)
+		var current_view_position = math.get_rotated_spherical3(translation, current_basis)
+		to_view_position.x = current_view_position.x
+	
 	# set position & rotaion
 	if to_view_position != NULL_VECTOR3:
 		if to_view_position.x != -INF:
