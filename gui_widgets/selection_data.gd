@@ -49,8 +49,8 @@ const NULL_ARRAY := []
 const NO_ARGS := []
 
 # project vars
-var test_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
-var test_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
+var enable_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
+var enable_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
 var use_kept_precisions := true # set same as IVBodyBuilder.keep_real_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
@@ -189,7 +189,6 @@ var special_processing := {
 
 var _state: Dictionary = IVGlobal.state
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
-var _wiki_locale: String = IVGlobal.wiki
 var _header_buttons := []
 var _grids := []
 var _meta_lookup := {} # translate link text to wiki key
@@ -383,14 +382,14 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var table_name: String = line_data[4]
 				key = _table_reader.get_row_name(table_name, value)
 				value_txt = tr(key)
-				if test_wiki_values and _wiki_titles.has(key):
+				if enable_wiki_values and _wiki_titles.has(key):
 					value_wiki_key = key
 			elif data_type == ENUM:
 				var enum_dict: Dictionary = line_data[4]
 				var enum_keys: Array = enum_dict.keys()
 				key = enum_keys[value]
 				value_txt = tr(key)
-				if test_wiki_values and _wiki_titles.has(key):
+				if enable_wiki_values and _wiki_titles.has(key):
 					value_wiki_key = key
 			else:
 				value_txt = str(value)
@@ -414,18 +413,13 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC
 				var long_form: bool = args[4] if n_args > 4 else false
 				var case_type: int = args[5] if n_args > 5 else IVQuantityFormatter.CASE_MIXED
-				
-#				if _path == "body/characteristics/dist_galactic_core":
-#					print("precision = ", precision)
-#
-				
 				value_txt = _quantity_formatter.number_option(value, option_type, unit, precision,
 						num_type, long_form, case_type)
 				if precision == 0:
 					value_txt = "~" + value_txt
 		TYPE_STRING:
 			value_txt = tr(value)
-			if test_wiki_values and _wiki_titles.has(value):
+			if enable_wiki_values and _wiki_titles.has(value):
 				value_wiki_key = value
 		TYPE_OBJECT:
 			if data_type == OBJECT_LABELS_VALUES:
@@ -457,7 +451,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 	# wiki links
 	var is_label_link := false
 	var is_value_link := false
-	if test_wiki_labels and _wiki_titles.has(label_key): # label is wiki link
+	if enable_wiki_labels and _wiki_titles.has(label_key): # label is wiki link
 		_meta_lookup[label_txt] = label_key
 		label_txt = "[url]" + label_txt + "[/url]"
 		is_label_link = true
