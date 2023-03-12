@@ -30,19 +30,25 @@ extends GridContainer
 
 const NULL_COLOR := Color.black
 
+
+var enable_wiki: bool = IVGlobal.enable_wiki
+
 var has_headers := true
 var column_master: Control # if set, column widths follow master children
 var column0_en_width := 0 # 'EN QUAD' size if column_master == null
 var columns_en_width := 0 # as above for data columns
+var indent := "  "
 
 var rows := [
-	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"]], # example row
+	# [row_name, sbg_aliases, is_indent]
+	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"], false], # example row
 ]
 
 var headers := ["LABEL_POINTS", "LABEL_ORBITS"]
 var header_hints := ["HINT_POINTS_CKBX_COLOR", "HINT_ORBITS_CKBX_COLOR"]
 
 
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _points_ckbxs := []
 var _orbits_ckbxs := []
 var _points_color_pkrs := []
@@ -74,11 +80,24 @@ func _ready() -> void:
 	
 	# grid content
 	for i in _n_rows:
-		var label_text: String = rows[i][0]
+		var row_name: String = rows[i][0]
 		var groups: Array = rows[i][1]
-		var label := Label.new()
-		label.text = label_text
-		add_child(label)
+		var is_indent: bool = rows[i][2]
+		# row label
+		if enable_wiki and _wiki_titles.has(row_name):
+			var rtlabel := RichTextLabel.new()
+			rtlabel.connect("meta_clicked", self, "_on_meta_clicked", [row_name])
+			rtlabel.bbcode_enabled = true
+			rtlabel.fit_content_height = true
+			rtlabel.scroll_active = false
+			if is_indent:
+				rtlabel.bbcode_text = indent
+			rtlabel.bbcode_text += "[url]" + tr(row_name) + "[/url]"
+			add_child(rtlabel)
+		else:
+			var label := Label.new()
+			label.text = indent + tr(row_name) if is_indent else row_name
+			add_child(label)
 		# points
 		var hbox := HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGN_CENTER
@@ -258,6 +277,11 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 	for i in range(1, columns):
 		get_child(i).rect_min_size.x = min_width
 		get_child(i).rect_size.x = min_width
+
+
+func _on_meta_clicked(_meta: String, row_name: String) -> void:
+	var wiki_title: String = _wiki_titles[row_name]
+	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
 
 
 func _settings_listener(setting: String, _value) -> void:
