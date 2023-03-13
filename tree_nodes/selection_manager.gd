@@ -87,7 +87,7 @@ func _ready() -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	if is_new_game:
 		var selection_ := get_or_make_selection(IVGlobal.home_name)
-		select(selection_)
+		select(selection_, true)
 	else:
 		_add_history()
 

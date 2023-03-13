@@ -92,8 +92,6 @@ enum CameraFlags {
 	TRACK_GALACIC = 1 << 5, # not implemented yet
 	TRACK_SUPERGALACIC = 1 << 6, # not implemented yet
 	
-	SET_HOME = 1 << 7, # world & coordinates in IVGlobal
-	
 	# bits 32-63 should be safe to use for any extension project
 	
 	# combo masks

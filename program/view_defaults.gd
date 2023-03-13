@@ -20,7 +20,8 @@
 class_name IVViewDefaults
 extends Reference
 
-# Generates 'default' IVView instances that we might want to use.
+# Generates 'default' IVView instances that we might want to use. Also moves
+# the camera home at game start, unless move_home_at_start = false.
 
 
 const CameraFlags := IVEnums.CameraFlags
@@ -29,13 +30,17 @@ const AU := IVUnits.AU
 const KM := IVUnits.KM
 const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
+# project var
+var move_home_at_start := true
 
+# read-only!
 var views := {}
 
 var _View_: Script
 
 
 func _project_init() -> void:
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
 	_View_ = IVGlobal.script_classes._View_
 	
 	# visibilities & colors only
@@ -67,6 +72,13 @@ func set_view(view_name: String, is_camera_instant_move := false) -> void:
 
 func has_view(view_name: String) -> bool:
 	return views.has(view_name)
+
+
+# private
+
+func _on_about_to_start_simulator(is_new_game: bool) -> void:
+	if is_new_game and move_home_at_start:
+		set_view("Home", true)
 
 
 # visibilities & colors only
@@ -164,8 +176,7 @@ func _top() -> void:
 # selection, camera, and more...
 
 func _home() -> void:
-	# Earth zoom. Ground tracking.
-	# If project allows, home longitude (from sys timezone) and actual time.
+	# Body, longitude & latitude from IVGlobal 'home_' settings. Ground tracking.
 	# Planets, moons & spacecraft visible.
 	var view: IVView = _View_.new()
 	view.flags = (
@@ -173,13 +184,12 @@ func _home() -> void:
 			| IVView.HUDS_VISIBILITY
 			| IVView.IS_NOW
 	)
-	view.selection_name = "PLANET_EARTH"
+	view.selection_name = IVGlobal.home_name
 	view.camera_flags = (
 			CameraFlags.UP_LOCKED
 			| CameraFlags.TRACK_GROUND
-			| CameraFlags.SET_HOME
 	)
-	view.view_position = Vector3(-INF, -INF, 3.0) # z, radii dist when close
+	view.view_position = Vector3(IVGlobal.home_longitude, IVGlobal.home_latitude, 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!

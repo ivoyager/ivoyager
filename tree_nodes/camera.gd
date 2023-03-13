@@ -172,7 +172,6 @@ func _ready() -> void:
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	
 	IVGlobal.verbose_signal("camera_ready", self)
 	set_process(false) # don't process until sim started
 
@@ -233,10 +232,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	if (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
 			and to_view_rotations.z): # any roll unlocks 'up'
 		to_flags |= Flags.UP_UNLOCKED
-	if to_flags & Flags.SET_HOME:
-		to_selection = IVSelectionManager.get_or_make_selection(IVGlobal.home_name)
-		to_view_position.x = IVGlobal.home_longitude
-		to_view_position.y = IVGlobal.home_latitude
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
 	var to_track_flags := to_flags & ANY_TRACK_FLAGS
@@ -384,7 +379,6 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		perspective_radius = selection.get_perspective_radius()
 	_from_selection = selection
 	_from_perspective_radius = perspective_radius
-	move_to(null, 0, NULL_VECTOR3, NULL_VECTOR3, true)
 
 
 func _on_simulator_started() -> void:
