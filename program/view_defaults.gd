@@ -32,8 +32,6 @@ const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 var views := {}
 
-
-
 var _View_: Script
 
 
@@ -138,7 +136,7 @@ func _zoom() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION | IVView.CAMERA_LONGITUDE
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(-INF, 0.0, 3.0) # z, radii dist when close
+	view.view_position = Vector3(-INF, deg2rad(18.0), 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	views.Zoom = view
 
