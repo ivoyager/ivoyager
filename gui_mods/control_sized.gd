@@ -53,12 +53,13 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("simulator_started", self, "_resize")
+	IVGlobal.connect("simulator_started", self, "_resize_and_position_to_anchor")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "_resize")
+	_viewport.connect("size_changed", self, "_resize_and_position_to_anchor")
+	_parent.connect("resized", self, "_resize_and_position_to_anchor")
 
 
-func _resize() -> void:
+func _resize_and_position_to_anchor() -> void:
 	var default_size := _get_default_size()
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
@@ -85,4 +86,4 @@ func _get_default_size() -> Vector2:
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
-		_resize()
+		_resize_and_position_to_anchor()

@@ -90,7 +90,6 @@ func _on_button_right_clicked(button: ViewButton) -> void:
 	button.queue_free()
 
 
-
 class ViewButton extends Button:
 	# Provides right-clicked signal for removal.
 	
