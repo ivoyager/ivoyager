@@ -6,5 +6,5 @@
 margin_right = 24.0
 margin_bottom = 24.0
 hint_tooltip = "HINT_TIME_REAL"
-text = "CKBX_NOW"
+text = "CKBX_LOCK_NOW"
 script = ExtResource( 1 )

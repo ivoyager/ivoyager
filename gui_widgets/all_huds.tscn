@@ -5,7 +5,7 @@
 [ext_resource path="res://ivoyager/gui_widgets/sbg_huds.tscn" type="PackedScene" id=3]
 [ext_resource path="res://ivoyager/gui_widgets/view_save_flow.tscn" type="PackedScene" id=4]
 [ext_resource path="res://ivoyager/gui_widgets/view_save_button.tscn" type="PackedScene" id=5]
-[ext_resource path="res://ivoyager/gui_widgets/view_buttons.tscn" type="PackedScene" id=6]
+[ext_resource path="res://ivoyager/gui_widgets/view_button.tscn" type="PackedScene" id=7]
 
 [node name="AllHUDs" type="VBoxContainer"]
 margin_left = 10.0
@@ -53,32 +53,28 @@ margin_right = 563.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 0, 10 )
 
-[node name="ViewButtons" parent="." instance=ExtResource( 6 )]
+[node name="HBox" type="HBoxContainer" parent="."]
 margin_top = 20.0
 margin_right = 563.0
 margin_bottom = 40.0
 
-[node name="HideAll" type="Button" parent="ViewButtons"]
+[node name="HideAll" parent="HBox" instance=ExtResource( 7 )]
 margin_right = 133.0
-margin_bottom = 20.0
 text = "BUTTON_HIDE_ALL"
 
-[node name="Planets1" type="Button" parent="ViewButtons"]
+[node name="Planets1" parent="HBox" instance=ExtResource( 7 )]
 margin_left = 137.0
 margin_right = 272.0
-margin_bottom = 20.0
 text = "BUTTON_PLANETS1"
 
-[node name="Asteroids1" type="Button" parent="ViewButtons"]
+[node name="Asteroids1" parent="HBox" instance=ExtResource( 7 )]
 margin_left = 276.0
 margin_right = 427.0
-margin_bottom = 20.0
 text = "BUTTON_ASTEROIDS1"
 
-[node name="Colors1" type="Button" parent="ViewButtons"]
+[node name="Colors1" parent="HBox" instance=ExtResource( 7 )]
 margin_left = 431.0
 margin_right = 563.0
-margin_bottom = 20.0
 text = "BUTTON_COLORS1"
 
 [node name="Spacer3" type="Control" parent="."]

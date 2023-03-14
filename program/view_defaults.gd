@@ -116,6 +116,7 @@ func _asteroids1() -> void:
 			| BodyFlags.IS_DWARF_PLANET
 			| BodyFlags.IS_PLANETARY_MASS_MOON
 			| BodyFlags.IS_NON_PLANETARY_MASS_MOON
+			| BodyFlags.IS_ASTEROID
 	)
 	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
 	
