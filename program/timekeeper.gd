@@ -40,7 +40,9 @@ extends Node
 # https://en.wikipedia.org/wiki/Julian_day
 # https://en.wikipedia.org/wiki/Epoch_(astronomy)#Julian_years_and_J2000
 #
-# Note: there is some old rpc (remote player call) code here that is not
+# Note: pause and 'user pause' are maintained by IVStateManager.
+#
+# FIXME: there is some old rpc (remote player call) code here that is not
 # currently maintained. This will be fixed and maintained again with Godot 4.0.
 
 signal speed_changed()
@@ -142,6 +144,15 @@ onready var _tree := get_tree()
 # virtual functions, inits & destructors
 
 func _project_init() -> void:
+	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
+	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
+	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
+	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
+	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
+	IVGlobal.connect("user_pause_changed", self, "_on_user_pause_changed")
+	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
+	connect("speed_changed", self, "_on_speed_changed")
 	times.resize(3)
 	clock.resize(3)
 	match date_format:
@@ -161,16 +172,8 @@ func _ready() -> void:
 
 
 func _on_ready() -> void: # subclass can override
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
-	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
-	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
-	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
-	connect("speed_changed", self, "_on_speed_changed")
-	_set_ready_state()
 	pause_mode = PAUSE_MODE_STOP
+	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
 	set_process_priority(-100) # always first!
 
@@ -227,7 +230,11 @@ func _on_process(delta: float) -> void: # subclass can override
 		emit_signal("date_changed")
 
 
-func _unhandled_key_input(event: InputEventKey):
+func _unhandled_key_input(event: InputEventKey) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEventKey) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("incr_speed"):
@@ -239,6 +246,18 @@ func _unhandled_key_input(event: InputEventKey):
 	else:
 		return # input NOT handled!
 	_tree.set_input_as_handled()
+
+
+func _notification(what: int) -> void:
+	_on_notification(what)
+
+
+func _on_notification(what: int) -> void:
+	if what == NOTIFICATION_WM_FOCUS_IN:
+		print("NOTIFICATION_WM_FOCUS_IN")
+		if is_now:
+			set_now()
+
 
 
 # *****************************************************************************
@@ -488,6 +507,10 @@ func _reset_speed() -> void:
 
 func _refresh_gui() -> void:
 	emit_signal("speed_changed")
+
+
+func _on_user_pause_changed(_is_paused: bool) -> void:
+	is_now = false
 
 
 func _on_run_state_changed(is_running: bool) -> void:

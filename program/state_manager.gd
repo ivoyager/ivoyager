@@ -71,10 +71,10 @@ const NetworkStopSync = IVEnums.NetworkStopSync
 const DPRINT := false
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["user_paused"]
+const PERSIST_PROPERTIES := ["is_user_paused"]
 
 # persisted - read-only!
-var user_paused := false # ignores pause from sim stop
+var is_user_paused := false # ignores pause from sim stop
 
 # read-only!
 var allow_threads := false
@@ -85,7 +85,6 @@ var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
-var _paused := true # hack to generate 'paused_changed' signal
 
 onready var _tree: SceneTree = get_tree()
 
@@ -129,13 +128,6 @@ func _on_ready() -> void:
 	IVGlobal.connect("exit_requested", self, "exit")
 	_tree.paused = true
 	require_stop(self, -1, true)
-
-
-func _process(_delta: float) -> void:
-	# There is no SceneTree paused_changed signal, so we hacked one here.
-	if _paused != _tree.paused:
-		_paused = _tree.paused
-		IVGlobal.verbose_signal("paused_changed", _paused)
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
@@ -183,8 +175,9 @@ func change_pause(is_toggle := true, is_pause := true) -> void:
 		return
 	if !_state.is_running or IVGlobal.disable_pause:
 		return
-	user_paused = !_tree.paused if is_toggle else is_pause
-	_tree.paused = user_paused
+	is_user_paused = !_tree.paused if is_toggle else is_pause
+	_tree.paused = is_user_paused
+	IVGlobal.verbose_signal("user_pause_changed", is_user_paused)
 
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
@@ -313,11 +306,11 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	yield(_tree, "idle_frame")
 	IVGlobal.verbose_signal("simulator_started")
 	if !is_new_game and _settings.pause_on_load:
-		user_paused = true
+		is_user_paused = true
 
 
 func _on_simulator_exited() -> void:
-	user_paused = false
+	is_user_paused = false
 
 
 func _stop_simulator() -> void:
@@ -335,7 +328,7 @@ func _stop_simulator() -> void:
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
-	_tree.paused = user_paused
+	_tree.paused = is_user_paused
 	IVGlobal.verbose_signal("run_state_changed", true)
 	assert(DPRINT and prints("signal run_threads_allowed") or true)
 	allow_threads = true

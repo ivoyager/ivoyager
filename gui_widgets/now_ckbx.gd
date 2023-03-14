@@ -30,17 +30,13 @@ onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_ckbx")
+	IVGlobal.connect("user_pause_changed", self, "_update_ckbx")
 	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_on_time_altered")
+	_timekeeper.connect("time_altered", self, "_update_ckbx")
 	connect("pressed", self, "_set_real_world")
 
 
-func _update_ckbx() -> void:
-	pressed = _timekeeper.is_now
-
-
-func _on_time_altered(_previous_time: float) -> void:
+func _update_ckbx(_dummy = false) -> void:
 	pressed = _timekeeper.is_now
 
 

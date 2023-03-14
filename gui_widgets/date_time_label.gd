@@ -39,8 +39,8 @@ var _ymd: Array = [0, 0, 0]
 var _hms := [0, 0, 0]
 var _hm := [0, 0]
 
-onready var _tree := get_tree()
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _ready() -> void:
@@ -65,7 +65,7 @@ func _process(_delta: float) -> void:
 			_hm[0] = _clock[0]
 			_hm[1] = _clock[1]
 			new_text += clock_hm_format % _hm
-	if show_pause and _tree.paused:
+	if show_pause and _state_manager.is_user_paused:
 		new_text += " " + tr("LABEL_PAUSED")
 	text = new_text
 

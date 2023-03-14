@@ -48,7 +48,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
-signal paused_changed(is_paused) # hacked, so happens on StateManager._process() after change
+signal user_pause_changed(is_paused) # ignores pause from sim stop
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
 signal about_to_quit()

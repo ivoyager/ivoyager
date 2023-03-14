@@ -33,7 +33,7 @@ enum { # flags
 	HUDS_VISIBILITY = 1 << 3,
 	HUDS_COLOR = 1 << 4,
 	
-	TIME_STATE = 1 << 5, # overrides IS_NOW
+	TIME_STATE = 1 << 5,
 	IS_NOW = 1 << 6,
 	
 	# flag sets
@@ -219,6 +219,10 @@ func _set_huds_state() -> void:
 # time state
 
 func _save_time_state() -> void:
+	# If both TIME_STATE and IS_NOW flags set, we unset one depending on
+	# IVTimekeeper.is_now.
+	if flags & IS_NOW and _timekeeper.is_now:
+		flags &= ~TIME_STATE
 	if flags & TIME_STATE:
 		flags &= ~IS_NOW
 		time = _timekeeper.time

@@ -26,8 +26,8 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _tree := get_tree()
 onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 onready var _minus: Button = $Minus
 onready var _plus: Button = $Plus
 onready var _pause: Button = $Pause
@@ -37,7 +37,7 @@ onready var _reverse: Button = $Reverse
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS
 	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
-	IVGlobal.connect("paused_changed", self, "_update_buttons")
+	IVGlobal.connect("user_pause_changed", self, "_update_buttons")
 	_timekeeper.connect("speed_changed", self, "_update_buttons")
 	_minus.connect("pressed", self, "_increment_speed", [-1])
 	_plus.connect("pressed", self, "_increment_speed", [1])
@@ -79,7 +79,7 @@ func _update_buttons(_dummy := false) -> void:
 		return
 	if _pause:
 		_pause.disabled = false
-		_pause.pressed = _tree.paused
+		_pause.pressed = _state_manager.is_user_paused
 	if _reverse:
 		_reverse.disabled = false
 		_reverse.pressed = _timekeeper.is_reversed
