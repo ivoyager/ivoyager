@@ -48,7 +48,7 @@ unique_name_in_owner = true
 margin_top = 140.0
 margin_right = 157.0
 margin_bottom = 164.0
-text = "CKBX_GAME_SPEED"
+text = "CKBX_TIME"
 
 [node name="NowCkbx" type="CheckBox" parent="."]
 unique_name_in_owner = true

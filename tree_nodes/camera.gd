@@ -224,7 +224,7 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	# Note: some flags may override elements of position or rotation.
 	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
 			to_view_rotations, is_instant_move) or true)
-
+	
 	# overrides
 	if to_flags & Flags.UP_LOCKED:
 		if to_view_rotations != NULL_VECTOR3:

@@ -20,8 +20,9 @@
 class_name IVViewSaveFlow
 extends HFlowContainer
 
-# GUI widget that coordinates with IVViewSaveButton and houses the saved view
-# buttons. IVViewSaveButton can be added inside this container or elsewhere.
+# GUI widget that coordinates with IVViewSaveButton and houses the saved
+# (removable) view buttons. IVViewSaveButton can be added inside this container
+# or elsewhere. It's also ok to add IVViewButton instances to this container.
 # 
 # Call init() to populate the saved view buttons and to init IVViewSaveButton
 # and IVViewSaver.
@@ -60,7 +61,7 @@ func init(view_save_button: IVViewSaveButton, default_view_name_ := "LABEL_CUSTO
 
 func _clear() -> void:
 	for child in get_children():
-		if child is ViewButton:
+		if child is RemovableViewButton:
 			child.queue_free()
 
 
@@ -71,7 +72,7 @@ func _build_view_buttons(_dummy := false) -> void:
 
 
 func _build_view_button(view_name: String) -> void:
-	var button := ViewButton.new(view_name)
+	var button := RemovableViewButton.new(view_name)
 	button.connect("pressed", self, "_on_button_pressed", [button])
 	button.connect("right_clicked", self, "_on_button_right_clicked", [button])
 	add_child(button)
@@ -81,16 +82,16 @@ func _on_view_saved(view_name: String) -> void:
 	_build_view_button(view_name)
 	
 
-func _on_button_pressed(button: ViewButton) -> void:
+func _on_button_pressed(button: RemovableViewButton) -> void:
 	_view_manager.set_view(button.text, set_name, is_cached)
 
 
-func _on_button_right_clicked(button: ViewButton) -> void:
+func _on_button_right_clicked(button: RemovableViewButton) -> void:
 	_view_manager.remove_view(button.text, set_name, is_cached)
 	button.queue_free()
 
 
-class ViewButton extends Button:
+class RemovableViewButton extends Button:
 	# Provides right-clicked signal for removal.
 	
 	signal right_clicked()
