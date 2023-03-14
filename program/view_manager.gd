@@ -120,10 +120,10 @@ func get_view_names_in_set(set_name: String, is_cached: bool) -> Array:
 # private
 
 func _read_cache() -> void:
-	# Populate _cached_views once at project init (on main thread).
+	# Populate _cached_views once at project init on main thread.
 	var file := File.new()
 	if file.open(file_path, File.READ) != OK:
-		print("Did not find cache file ", file_path, " (expected if no changes)")
+		print("Did not find cache file ", file_path)
 		return
 	var dict: Dictionary = file.get_var()
 	file.close()
