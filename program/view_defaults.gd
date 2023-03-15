@@ -125,7 +125,7 @@ func _asteroids1() -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
 	for row in table_reader.get_n_rows("small_bodies_groups"):
-		if table_reader.get_bool("small_bodies_groups", "skip_import", row):
+		if table_reader.get_bool("small_bodies_groups", "skip", row):
 			continue
 		if table_reader.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue
@@ -272,7 +272,7 @@ func _asteroids() -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
 	for row in table_reader.get_n_rows("small_bodies_groups"):
-		if table_reader.get_bool("small_bodies_groups", "skip_import", row):
+		if table_reader.get_bool("small_bodies_groups", "skip", row):
 			continue
 		if table_reader.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue

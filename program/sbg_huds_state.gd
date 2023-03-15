@@ -63,7 +63,7 @@ func _project_init() -> void:
 	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("small_bodies_groups"):
-		if table_reader.get_bool("small_bodies_groups", "skip_import", row):
+		if table_reader.get_bool("small_bodies_groups", "skip", row):
 			continue
 		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
 		var points_color_str := table_reader.get_string("small_bodies_groups", "points_color", row)
