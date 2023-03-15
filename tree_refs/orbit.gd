@@ -175,22 +175,6 @@ func get_semiminor_axis(time := NAN) -> float:
 	return sqrt(a * a * (1.0 - e * e))
 
 
-func get_characteristic_length(time := NAN) -> float:
-	
-	return get_semimajor_axis(time)
-	
-	# For lagrange point calculation. I'm not 100% sure this is right.
-	# FIXME: This is wrong!
-	
-#	var elements := current_elements
-#	if !is_nan(time) and (time > _end_current or time < _begin_current):
-#		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-#		_set_elements(time, elements)
-#	var a: float = elements[0]
-#	var e: float = elements[1]
-#	return a * (1.0 - e / 2.0)
-
-
 func get_inclination_to_ecliptic(time := NAN) -> float:
 	if reference_normal == ECLIPTIC_UP:
 		return get_inclination(time)

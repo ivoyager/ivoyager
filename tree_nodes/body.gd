@@ -674,7 +674,7 @@ func _add_rotating_space() -> void:
 	if !m1:
 		return
 	var mass_ratio: float = m1 / m2
-	var characteristic_length := orbit.get_characteristic_length()
+	var characteristic_length := orbit.get_semimajor_axis()
 	var characteristic_time := orbit.get_orbit_period()
 	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
 	rotating_space = _RotatingSpace_.new()

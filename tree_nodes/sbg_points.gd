@@ -117,7 +117,7 @@ func draw_points() -> void:
 		material_override.set_shader_param("fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
 		material_override.set_shader_param("lp_integer", _lp_integer)
-		var characteristic_length := _secondary_orbit.get_characteristic_length()
+		var characteristic_length := _secondary_orbit.get_semimajor_axis()
 		material_override.set_shader_param("characteristic_length", characteristic_length)
 	_set_visibility()
 	_set_color()
