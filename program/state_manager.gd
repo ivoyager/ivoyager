@@ -90,13 +90,9 @@ onready var _tree: SceneTree = get_tree()
 
 
 # *****************************************************************************
-# virtual functions, inits & destructors
+# virtual functions
 
-func _init() -> void:
-	_on_init()
-
-
-func _on_init() -> void:
+func _project_init() -> void:
 	_state.is_inited = false
 	_state.is_splash_screen = false
 	_state.is_system_built = false
@@ -131,6 +127,10 @@ func _on_ready() -> void:
 
 
 func _unhandled_key_input(event: InputEventKey) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEventKey) -> void:
 	if event.is_action_pressed("toggle_pause"):
 		change_pause()
 	elif event.is_action_pressed("quit"):

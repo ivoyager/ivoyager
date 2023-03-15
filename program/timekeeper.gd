@@ -178,28 +178,6 @@ func _on_ready() -> void: # subclass can override
 	set_process_priority(-100) # always first!
 
 
-func _on_about_to_start_simulator(is_new_game: bool) -> void:
-	if is_new_game:
-		if start_real_world_time:
-			set_now()
-
-
-func _set_init_state() -> void:
-	if start_real_world_time:
-		time = get_time_from_operating_system()
-	else:
-		time = IVGlobal.start_time
-	engine_time = 0.0
-	times[0] = time
-	times[1] = engine_time
-	speed_index = start_speed
-
-
-func _set_ready_state() -> void:
-	_reset_time()
-	_reset_speed()
-
-
 func _process(delta: float) -> void:
 	_on_process(delta)
 
@@ -254,7 +232,6 @@ func _notification(what: int) -> void:
 
 func _on_notification(what: int) -> void:
 	if what == NOTIFICATION_WM_FOCUS_IN:
-		print("NOTIFICATION_WM_FOCUS_IN")
 		if is_now:
 			set_now()
 
@@ -482,8 +459,26 @@ func can_decr_speed() -> bool:
 # *****************************************************************************
 # private functions
 
-func _on_network_state_changed(network_state: int) -> void:
-	_network_state = network_state
+func _on_about_to_start_simulator(is_new_game: bool) -> void:
+	if is_new_game:
+		if start_real_world_time:
+			set_now()
+
+
+func _set_init_state() -> void:
+	if start_real_world_time:
+		time = get_time_from_operating_system()
+	else:
+		time = IVGlobal.start_time
+	engine_time = 0.0
+	times[0] = time
+	times[1] = engine_time
+	speed_index = start_speed
+
+
+func _set_ready_state() -> void:
+	_reset_time()
+	_reset_speed()
 
 
 func _reset_time() -> void:
@@ -518,6 +513,10 @@ func _on_run_state_changed(is_running: bool) -> void:
 	if is_running and is_now:
 		yield(_tree, "idle_frame")
 		set_now()
+
+
+func _on_network_state_changed(network_state: int) -> void:
+	_network_state = network_state
 
 
 remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
