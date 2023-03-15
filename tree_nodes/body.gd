@@ -582,7 +582,7 @@ func get_fragment_data(_fragment_type: int) -> Array:
 
 func get_fragment_text(_data: Array) -> String:
 	# Only FRAGMENT_BODY_ORBIT at this time.
-	return tr(name) + " " + tr("LABEL_ORBIT")
+	return tr(name) + " (" + tr("LABEL_ORBIT").to_lower() + ")"
 
 
 func reset_orientation_and_rotation() -> void:
