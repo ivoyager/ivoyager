@@ -69,7 +69,9 @@ func _ready() -> void:
 	
 	# headers
 	if has_headers:
-		add_child(Control.new())
+		var empty_cell := Control.new()
+		empty_cell.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(empty_cell)
 		for i in 2:
 			var header := Label.new()
 			header.align = Label.ALIGN_CENTER
@@ -101,6 +103,7 @@ func _ready() -> void:
 		# points
 		var hbox := HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGN_CENTER
+		hbox.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(hbox)
 		var ckbx := _make_checkbox()
 		ckbx.connect("pressed", self, "_show_hide_points", [ckbx, groups])
@@ -115,6 +118,7 @@ func _ready() -> void:
 		hbox = HBoxContainer.new()
 		hbox.size_flags_horizontal = SIZE_SHRINK_CENTER
 		hbox.alignment = BoxContainer.ALIGN_CENTER
+		hbox.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(hbox)
 		ckbx = _make_checkbox()
 		ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, groups])

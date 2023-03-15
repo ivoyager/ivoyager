@@ -58,13 +58,11 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("simulator_started", self, "reset")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
 	_parent.connect("resized", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag
-	reset()
 
 
 func _input(event: InputEvent) -> void:
@@ -74,13 +72,6 @@ func _input(event: InputEvent) -> void:
 		if !event.pressed and event.button_index == BUTTON_LEFT:
 			_finish_move()
 			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)
-
-
-func reset() -> void:
-	if !IVGlobal.state.is_system_built:
-		return
-	resize_and_position_to_anchor()
-	_finish_move()
 
 
 func resize_and_position_to_anchor() -> void:

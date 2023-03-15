@@ -76,13 +76,15 @@ func _ready() -> void:
 
 	# headers
 	if has_headers:
-		add_child(Control.new())
+		var empty_cell := Control.new()
+		empty_cell.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(empty_cell)
 		for i in 2:
 			var header := Label.new()
 			header.align = Label.ALIGN_CENTER
 			header.text = headers[i]
 			header.hint_tooltip = header_hints[i]
-			header.mouse_filter = Control.MOUSE_FILTER_PASS
+			header.mouse_filter = MOUSE_FILTER_PASS
 			add_child(header)
 	
 	# set '_all_flags' from all rows
@@ -106,7 +108,6 @@ func _ready() -> void:
 			rtlabel.bbcode_enabled = true
 			rtlabel.fit_content_height = true
 			rtlabel.scroll_active = false
-#			rtlabel.size_flags_horizontal = SIZE_EXPAND_FILL
 			if is_indent:
 				rtlabel.bbcode_text = indent
 			rtlabel.bbcode_text += "[url]" + tr(row_name) + "[/url]"
@@ -119,6 +120,7 @@ func _ready() -> void:
 		# names/symbols
 		var hbox := HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGN_CENTER
+		hbox.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(hbox)
 		var ckbx := _make_checkbox()
 		ckbx.connect("pressed", self, "_show_hide_names", [ckbx, flags])
@@ -133,12 +135,14 @@ func _ready() -> void:
 		if disable_orbits_rows.has(i):
 			var spacer := Control.new()
 			spacer.size_flags_horizontal = SIZE_SHRINK_CENTER
+			spacer.mouse_filter = MOUSE_FILTER_IGNORE
 			add_child(spacer)
 			_orbits_ckbxs.append(null)
 			_orbits_color_pkrs.append(null)
 		else:
 			hbox = HBoxContainer.new()
 			hbox.alignment = BoxContainer.ALIGN_CENTER
+			hbox.mouse_filter = MOUSE_FILTER_IGNORE
 			add_child(hbox)
 			ckbx = _make_checkbox()
 			ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, flags])

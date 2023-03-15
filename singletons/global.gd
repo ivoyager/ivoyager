@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.14"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230314
+const IVOYAGER_YMD := 20230315
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
