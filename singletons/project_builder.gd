@@ -311,9 +311,14 @@ func _init_extensions() -> void:
 		if !files.exists(path):
 			continue
 		var extension_script: Script = load(path)
-		if not "EXTENSION_NAME" in extension_script \
-				or not "EXTENSION_VERSION" in extension_script \
-				or not "EXTENSION_YMD" in extension_script:
+		if (
+				not "EXTENSION_NAME" in extension_script
+				or not "EXTENSION_VERSION" in extension_script
+				or not "EXTENSION_BUILD" in extension_script
+				or not "EXTENSION_STATE" in extension_script
+				or not "EXTENSION_YMD" in extension_script
+		):
+			print("WARNING! Missing required const members in extension file " + path)
 			continue
 		var extension: Object = extension_script.new()
 		_project_extensions.append(extension)
