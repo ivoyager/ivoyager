@@ -6,7 +6,7 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
-## [v0.0.14] - 2022-03-15
+## [v0.0.14] - 2023-03-15
 
 Developed for Godot 3.5.2.
 
