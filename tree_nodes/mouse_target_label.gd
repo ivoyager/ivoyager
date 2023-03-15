@@ -23,8 +23,6 @@ extends Label
 # Uses IVWorldController and (if present) IVFragmentIdentifier.
 
 var offset := Vector2(0.0, -7.0) # offset to not interfere w/ FragmentIdentifier
-var text_append_orbit := " (%s)" % tr("LABEL_ORBIT")
-
 
 var _world_targeting: Array = IVGlobal.world_targeting
 var _fragment_data: Dictionary

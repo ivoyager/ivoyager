@@ -42,7 +42,7 @@ var actions_by_scancode_w_mods := {}
 
 func _on_init() -> void:
 	# project vars - modify on signal project_objects_instantiated
-	cache_file_name = "input_map.vbinary"
+	cache_file_name = "input_map.ivbinary"
 	defaults = {
 		# Each "event_dict" must have event_class; all other keys are properties
 		# to be set on the InputEvent. Don't remove an action -- just give it an

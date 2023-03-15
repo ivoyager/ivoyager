@@ -51,10 +51,10 @@ func _on_init():
 			},
 			{
 				header = "LABEL_GUI",
+				toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
 				toggle_orbits = "LABEL_SHOW_HIDE_ORBITS",
 				toggle_names = "LABEL_SHOW_HIDE_NAMES",
 				toggle_symbols = "LABEL_SHOW_HIDE_SYMBOLS",
-				toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
 				
 				# Below two should be added by extension add_item(), if used.
 				# See Planetarim project (planetarium/planetarium.gd).

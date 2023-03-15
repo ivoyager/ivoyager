@@ -1,18 +1,18 @@
-name	sbg_alias	sbg_class	binary_dir	mag_cutoff	skip_import	points_color	orbits_color	primary	secondary	lp_integer	min_q	max_q	min_a	max_a	max_e	max_i	#comments
-Type	STRING	INT	STRING	REAL	BOOL	STRING	STRING	STRING	STRING	INT	REAL	REAL	REAL	REAL	REAL	REAL	
-Default						26FF26	FF46FF										
-Unit											au	au	au	au		deg	
-Prefix/SBG_		SBG_CLASS_															
-NEAR_EARTH	NE	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	17		26FF26	FF46FF	STAR_SUN				1.3					
-MARS_CROSSERS	MC	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	16		FF4646	26FF26	STAR_SUN				1.666					
-INNER_MAIN_BELT	IMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						2.5			
-MIDDLE_MAIN_BELT	MMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						2.82			
-HILDAS	HI	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FFFF26	3E69FF	STAR_SUN					3.7	4.2	0.3	20	
-OUTER_MAIN_BELT	OMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						4.6			
-JUPITER_L4_TROJANS	JT4	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FF46FF	FFFF26	STAR_SUN	PLANET_JUPITER	4							has synthetic elements from tro.syn
-JUPITER_L5_TROJANS	JT5	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FF46FF	FFFF26	STAR_SUN	PLANET_JUPITER	5							has synthetic elements from tro.syn
-SUSPECT_JUPITER_TROJANS	XJTX	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15	x			STAR_SUN						5.5			discarded; we don't have elements for libration
-CENTAURS	CE	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FE9C33	3BFFFF	STAR_SUN			5.2			30.1			
-TRANS_NEPTUNE	TN	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3E69FF	FE9C33	STAR_SUN									
-# ivbinary_maker assigns																	
-# to 1st row that passes																	
+name	en.wikipedia	sbg_alias	sbg_class	binary_dir	mag_cutoff	skip	points_color	orbits_color	primary	secondary	lp_integer	min_q	max_q	min_a	max_a	max_e	max_i	#comments
+Type	STRING	STRING	INT	STRING	REAL	BOOL	STRING	STRING	STRING	STRING	INT	REAL	REAL	REAL	REAL	REAL	REAL	
+Default							26FF26	FF46FF										
+Unit												au	au	au	au		deg	
+Prefix/SBG_			SBG_CLASS_															
+NEAR_EARTH	Near-Earth_object	NE	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	17		26FF26	FF46FF	STAR_SUN				1.3					
+MARS_CROSSERS	List_of_Mars-crossing_minor_planets	MC	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	16		FF4646	26FF26	STAR_SUN				1.666					
+INNER_MAIN_BELT	Asteroid_belt	IMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						2.5			
+MIDDLE_MAIN_BELT	Asteroid_belt	MMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						2.82			
+HILDAS	Hilda_asteroid	HI	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FFFF26	3E69FF	STAR_SUN					3.7	4.2	0.3	20	
+OUTER_MAIN_BELT	Asteroid_belt	OMB	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3BFFFF	FF4646	STAR_SUN						4.6			
+JUPITER_L4_TROJANS	Jupiter_trojan	JT4	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FF46FF	FFFF26	STAR_SUN	PLANET_JUPITER	4							has synthetic elements from tro.syn
+JUPITER_L5_TROJANS	Jupiter_trojan	JT5	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FF46FF	FFFF26	STAR_SUN	PLANET_JUPITER	5							has synthetic elements from tro.syn
+SUSPECT_JUPITER_TROJANS	Jupiter_trojan	XJTX	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15	x			STAR_SUN						5.5			discarded; we don't have elements for libration
+CENTAURS	Centaur_(small_Solar_System_body)	CE	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		FE9C33	3BFFFF	STAR_SUN			5.2			30.1			
+TRANS_NEPTUNE	Trans-Neptunian_object	TN	ASTEROIDS	res://ivoyager_assets/asteroid_binaries	15		3E69FF	FE9C33	STAR_SUN									
+# ivbinary_maker assigns																		
+# to 1st row that passes																		

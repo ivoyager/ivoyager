@@ -79,6 +79,5 @@ func _add_bodies(table_name: String) -> void:
 func _add_camera() -> void:
 	var camera_script: Script = IVGlobal.script_classes._Camera_
 	var camera: Camera = camera_script.new()
-	var start_body_name: String = IVGlobal.start_body_name
-	var start_body: IVBody = IVGlobal.bodies[start_body_name]
+	var start_body: IVBody = IVGlobal.bodies[IVGlobal.home_name]
 	start_body.add_child(camera)

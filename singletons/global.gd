@@ -29,8 +29,8 @@ extends Node
 
 const IVOYAGER_VERSION := "0.0.14"
 const IVOYAGER_BUILD := "" # hotfix or debug build
-const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230304
+const IVOYAGER_STATE := "" # 'dev', 'alpha', 'beta', 'rc', ''
+const IVOYAGER_YMD := 20230315
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
@@ -48,7 +48,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
-signal paused_changed(is_paused) # hacked, so happens on StateManager._process() after change
+signal user_pause_changed(is_paused) # ignores pause from sim stop
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
 signal about_to_quit()
@@ -140,11 +140,9 @@ var disable_exit := false
 var disable_quit := false
 var enable_wiki := false
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
-var start_body_name := "PLANET_EARTH"
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_time_setting := false
 var allow_time_reversal := false
-var allow_time_zone_from_system := false
 var popops_can_stop_sim := true # false overrides stop_sim member in all popups
 var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true
@@ -159,6 +157,12 @@ var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
 var unit_multipliers := IVUnits.MULTIPLIERS
 var unit_functions := IVUnits.FUNCTIONS
 var cache_dir := "user://cache"
+
+# theses could be modified during gameplay
+var home_name := "PLANET_EARTH"
+var home_longitude := 0.0
+var home_latitude := 0.0
+
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
 	normal = Color.white,

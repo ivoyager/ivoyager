@@ -34,16 +34,21 @@ extends GridContainer
 const NULL_COLOR := Color.black
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
+
+var enable_wiki: bool = IVGlobal.enable_wiki
+
 var has_headers := true
 var column_master: Control # if set, column widths follow master children
 var column0_en_width := 0 # 'EN QUAD' size if column_master == null
 var columns_en_width := 0 # as above for data columns
+var indent := "  "
 
 var rows := [
-	["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 replaced by all flags from following rows
-	["   " + tr("LABEL_PLANETS"), BodyFlags.IS_TRUE_PLANET],
-	["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
-	["   " + tr("LABEL_MOONS"), BodyFlags.IS_PLANETARY_MASS_MOON],
+	# [row_name, flags, is_indent]
+	["LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 replaced by all flags from following rows
+	["LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
+	["LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
+	["LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
 ]
 
 var disable_orbits_rows := [] # e.g., no orbit for Sun
@@ -52,6 +57,7 @@ var headers := ["LABEL_NAMES_SLASH_SYMBOLS_SHORT", "LABEL_ORBITS"]
 var header_hints := ["HINT_NAMES_SYMBOLS_CKBXS", "HINT_ORBITS_CKBX_COLOR"]
 
 
+var _wiki_titles: Dictionary = IVGlobal.wiki_titles
 var _all_flags := 0 # generated from all rows
 var _names_ckbxs := []
 var _symbols_ckbxs := []
@@ -70,13 +76,15 @@ func _ready() -> void:
 
 	# headers
 	if has_headers:
-		add_child(Control.new())
+		var empty_cell := Control.new()
+		empty_cell.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(empty_cell)
 		for i in 2:
 			var header := Label.new()
 			header.align = Label.ALIGN_CENTER
 			header.text = headers[i]
 			header.hint_tooltip = header_hints[i]
-			header.mouse_filter = Control.MOUSE_FILTER_PASS
+			header.mouse_filter = MOUSE_FILTER_PASS
 			add_child(header)
 	
 	# set '_all_flags' from all rows
@@ -92,14 +100,27 @@ func _ready() -> void:
 			flags = _all_flags
 		
 		# row label
-		var label_text: String = rows[i][0]
-		var label := Label.new()
-		label.text = label_text
-		add_child(label)
+		var row_name: String = rows[i][0]
+		var is_indent: bool = rows[i][2]
+		if enable_wiki and _wiki_titles.has(row_name):
+			var rtlabel := RichTextLabel.new()
+			rtlabel.connect("meta_clicked", self, "_on_meta_clicked", [row_name])
+			rtlabel.bbcode_enabled = true
+			rtlabel.fit_content_height = true
+			rtlabel.scroll_active = false
+			if is_indent:
+				rtlabel.bbcode_text = indent
+			rtlabel.bbcode_text += "[url]" + tr(row_name) + "[/url]"
+			add_child(rtlabel)
+		else:
+			var label := Label.new()
+			label.text = indent + tr(row_name) if is_indent else row_name
+			add_child(label)
 		
 		# names/symbols
 		var hbox := HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGN_CENTER
+		hbox.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(hbox)
 		var ckbx := _make_checkbox()
 		ckbx.connect("pressed", self, "_show_hide_names", [ckbx, flags])
@@ -114,12 +135,14 @@ func _ready() -> void:
 		if disable_orbits_rows.has(i):
 			var spacer := Control.new()
 			spacer.size_flags_horizontal = SIZE_SHRINK_CENTER
+			spacer.mouse_filter = MOUSE_FILTER_IGNORE
 			add_child(spacer)
 			_orbits_ckbxs.append(null)
 			_orbits_color_pkrs.append(null)
 		else:
 			hbox = HBoxContainer.new()
 			hbox.alignment = BoxContainer.ALIGN_CENTER
+			hbox.mouse_filter = MOUSE_FILTER_IGNORE
 			add_child(hbox)
 			ckbx = _make_checkbox()
 			ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, flags])
@@ -237,6 +260,11 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 	for i in range(1, columns):
 		get_child(i).rect_min_size.x = min_width
 		get_child(i).rect_size.x = min_width
+
+
+func _on_meta_clicked(_meta: String, row_name: String) -> void:
+	var wiki_title: String = _wiki_titles[row_name]
+	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
 
 
 func _settings_listener(setting: String, _value) -> void:

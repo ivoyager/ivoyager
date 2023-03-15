@@ -237,6 +237,7 @@ func set_all_orbits_visibility(is_show: bool) -> void:
 		if orbit_visible_flags == 0:
 			return
 		orbit_visible_flags = 0
+	emit_signal("visibility_changed")
 
 
 func set_name_visible_flags(name_visible_flags_: int) -> void:

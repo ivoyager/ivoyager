@@ -23,9 +23,6 @@ extends VBoxContainer
 # GUI widget that saves current view. This widget is contained in
 # IVViewSavePopup and works in conjunction with IVViewSaveFlow (which shows
 # the resultant saved view buttons).
-#
-# 'TimeCkbx' has label 'Game Speed' by default (because that is what time state
-# means in most applications). Relable to something else if needed.
 
 signal view_saved(view_name)
 
@@ -52,6 +49,8 @@ func _ready() -> void:
 	connect("visibility_changed", self, "_on_visibility_changed")
 	$"%SaveButton".connect("pressed", self, "_on_save")
 	_line_edit.connect("text_entered", self, "_on_save")
+	if !IVGlobal.allow_time_setting:
+		_time_ckbx.text = "CKBX_GAME_SPEED" # this is the only 'time' element that can be modified
 
 
 func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := true,
@@ -69,14 +68,14 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	# init checkboxes
 	if init_flags & IVView.TIME_STATE:
 		init_flags &= ~IVView.IS_NOW # exclusive
-		
+	
 	_selection_ckbx.visible = bool(show_flags & IVView.CAMERA_SELECTION)
 	_longitude_ckbx.visible = bool(show_flags & IVView.CAMERA_LONGITUDE)
 	_orientation_ckbx.visible = bool(show_flags & IVView.CAMERA_ORIENTATION)
 	_visibilities_ckbx.visible = bool(show_flags & IVView.HUDS_VISIBILITY)
 	_colors_ckbx.visible = bool(show_flags & IVView.HUDS_COLOR)
 	_time_ckbx.visible = bool(show_flags & IVView.TIME_STATE)
-	_now_ckbx.visible = bool(show_flags & IVView.IS_NOW)
+	_now_ckbx.visible = bool(show_flags & IVView.IS_NOW) and IVGlobal.allow_time_setting
 	
 	if _time_ckbx.visible and _now_ckbx.visible:
 		_time_ckbx.connect("toggled", self, "_unset_exclusive", [_now_ckbx])
@@ -88,7 +87,8 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_visibilities_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_VISIBILITY))
 	_colors_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.HUDS_COLOR))
 	_time_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.TIME_STATE))
-	_now_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.IS_NOW))
+	_now_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.IS_NOW)
+			and IVGlobal.allow_time_setting)
 
 
 func _unset_exclusive(is_pressed: bool, exclusive_button: CheckBox) -> void:

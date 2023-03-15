@@ -86,9 +86,8 @@ func _ready() -> void:
 
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	if is_new_game:
-		var start_body_name: String = IVGlobal.start_body_name
-		var selection_ := get_or_make_selection(start_body_name)
-		select(selection_)
+		var selection_ := get_or_make_selection(IVGlobal.home_name)
+		select(selection_, true)
 	else:
 		_add_history()
 

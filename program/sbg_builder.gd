@@ -51,7 +51,7 @@ func build_sbgs() -> void:
 
 
 func build_sbg(row: int) -> void:
-	if _table_reader.get_bool("small_bodies_groups", "skip_import", row):
+	if _table_reader.get_bool("small_bodies_groups", "skip", row):
 		return
 	
 	# get table data (default colors are read by SBGHUDsState)
@@ -81,7 +81,7 @@ func build_sbg(row: int) -> void:
 	
 	# binaries import
 	for mag_str in BINARY_FILE_MAGNITUDES:
-		if float(mag_str) >= mag_cutoff:
+		if float(mag_str) > mag_cutoff:
 			break
 		_load_group_binary(sbg, mag_str)
 	sbg.finish_binary_import()

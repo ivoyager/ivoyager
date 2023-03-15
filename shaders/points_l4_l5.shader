@@ -22,26 +22,23 @@ render_mode unshaded, cull_disabled, skip_vertex_transform;
 
 // See comments in points.shader.
 //
-// For trojans, a & M are determined by trojan elements d, D, f & th0 together
-// with a and M of the influencing orbital body.
+// For L4/L5 objects, a & M are determined by da, D, f & th0 together with
+// Lagrange point radius and longitude.
 //
-// FIXME: Trojan orbits!
-// Here is my 2023 interpretation/guess of parameters (raw -> internal units):
-// H: short-period epicycle? (not currently imported)
-// da: amplitude of a ocillation (AU -> m)
-// D: amplitude of M ocillation relative to L-point (deg -> rad)
-// f: rate of long-period ocillation (deg/y -> rad/s); period = TAU / f
-// e, i, s, g: as expected
+// da: amplitude of axis ocillation
+// D: amplitude of longitudinal ocillation
+// f: frequency of ocillation (period = TAU / f)
+// e, i, s, g: same as non-lagrange-point orbits
 //
-// We're using a harmonic ocillator as a *very* rough approximation. It's not
-// really a tadpole.
-// TODO: Hack a 'tadpole' ocillator. There is no closed-form solution so it's
-// gotta be a hack.
+// We're using a harmonic ocillator as a *very* rough approximation. There is
+// no closed-form solution so this will always be approximate.
+// TODO: Notwithstanding above, we could hack our ocillator functions to give
+// more 'tadpole'-shaped librations.
 
 uniform float time; // update per frame
 uniform float lp_mean_longitude; // update per frame
-uniform int lp_integer; // 4 or 5; not currently used but might be for better ocillators
-uniform float characteristic_length; // radius of circularized orbit
+uniform int lp_integer; // 4 or 5; not currently used but could be for better ocillators
+uniform float characteristic_length; // semi-major axis of the secondary body
 uniform float point_size = 3.0;
 uniform vec2 mouse_coord;
 uniform float fragment_range = 9.0;
@@ -51,7 +48,7 @@ uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 
 float longitude_ocillator(float D, float th){
-	// th = 0 when trojan is at 'leading' extreme (max L relative to L-point)
+	// th = 0 when trojan is at 'leading' extreme (max L relative to L-point).
 	return D * cos(th);
 }
 
@@ -76,18 +73,16 @@ void vertex() {
 	float g = UV[1]; // NOT IMPLEMENTED YET
 	
 	// lagrangian
-	float da = NORMAL[0]; // amplitude of 'a' ocillation
-	float D = NORMAL[1]; // amplitude of 'M' ocillation relative to L-point
-	float f = NORMAL[2]; // long-period rate
-	float th0 = UV2.x; // long-period ocillator at epoch
+	float da = NORMAL[0]; // amplitude of axis ocillation
+	float D = NORMAL[1]; // amplitude of longitudinal ocillation
+	float f = NORMAL[2]; // frequency of ocillation
+	float th0 = UV2[0]; // ocillator at epoch
 	
-	
-	// Libration of a & M
+	// libration of a & M
 	float th = th0 + f * time;
+	float a = characteristic_length + axis_ocillator(da, th);
 	float M = lp_mean_longitude - Om - w + longitude_ocillator(D, th);
 	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI;
-	float a = characteristic_length / (1.0 - e) + axis_ocillator(da, th);
-
 
 // ****************************************************************************
 // Entire file below is an exact copy of points.shader!!!

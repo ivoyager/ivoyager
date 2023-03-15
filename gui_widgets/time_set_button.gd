@@ -36,7 +36,9 @@ func _ready() -> void:
 func _on_toggled(is_pressed) -> void:
 	if is_pressed:
 		_time_set_popup.popup()
-		var position := rect_global_position + rect_size / 2.0 - _time_set_popup.rect_size
+		yield(get_tree(), "idle_frame") # popup may not know its correct size yet
+		var position := rect_global_position - _time_set_popup.rect_size
+		position.x += rect_size.x / 2.0
 		if position.x < 0.0:
 			position.x = 0.0
 		if position.y < 0.0:

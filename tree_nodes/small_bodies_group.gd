@@ -131,17 +131,15 @@ func finish_binary_import() -> void:
 			var apoapsis := a * (1.0 + e)
 			if max_apoapsis < apoapsis:
 				max_apoapsis = apoapsis
-#			assert(VPRINT and _verbose_min_max_tally(a_e_i[index], Om_w_M0_n[index]) or true)
 			index += 1
 	else:
-		var characteristic_length := secondary_body.orbit.get_characteristic_length()
+		var characteristic_length := secondary_body.orbit.get_semimajor_axis()
 		while index < size:
 			var da: float = da_D_f[index][0]
 			var e: float = e_i_Om_w[index][0]
-			var apoapsis := characteristic_length / (1.0 - e) + da
+			var apoapsis := (characteristic_length + da) * (1.0 + e)
 			if max_apoapsis < apoapsis:
 				max_apoapsis = apoapsis
-#			assert(VPRINT and _verbose_min_max_tally(d_e_i[index], Om_w_D_f[index], th0[index]) or true)
 			index += 1
 
 	# feedback
@@ -158,9 +156,6 @@ func get_fragment_text(data: Array) -> String:
 	var index: int = data[2]
 	var text := names[index]
 	if fragment_type == IVFragmentIdentifier.FRAGMENT_SBG_ORBIT:
-		text += " " + tr("LABEL_ORBIT")
+		text += " (" + tr("LABEL_ORBIT").to_lower() + ")"
 	return text
-
-
-
 

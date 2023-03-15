@@ -50,7 +50,7 @@ var _pause_only_stops_time = IVGlobal.pause_only_stops_time
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
-var _is_true_pause := true
+var _pause_mouse_input := true
 
 
 func _project_init() -> void:
@@ -69,8 +69,6 @@ func _project_init() -> void:
 func _ready() -> void:
 	pause_mode = PAUSE_MODE_PROCESS # but some functionaly stops if !pause_only_stops_time
 	mouse_filter = MOUSE_FILTER_STOP
-	IVGlobal.connect("paused_changed", self, "_set_true_pause_state")
-	IVGlobal.connect("simulator_started", self, "_set_true_pause_state")
 	connect("mouse_entered", self, "_on_mouse_entered")
 	connect("mouse_exited", self, "_on_mouse_exited")
 	set_anchors_and_margins_preset(Control.PRESET_WIDE)
@@ -102,7 +100,7 @@ func _gui_input(input_event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var mouse_pos: Vector2 = event.position
 		_world_targeting[0] = mouse_pos
-		if _is_true_pause:
+		if _pause_mouse_input:
 			return
 		if _drag_segment_start: # accumulated mouse drag motion
 			var drag_vector := mouse_pos - _drag_segment_start
@@ -110,7 +108,7 @@ func _gui_input(input_event: InputEvent) -> void:
 			emit_signal("mouse_dragged", drag_vector, event.button_mask,
 					_get_key_modifier_mask(event))
 		return
-	if _is_true_pause:
+	if _pause_mouse_input:
 		return
 	if event is InputEventMouseButton:
 		var button_index: int = event.button_index
@@ -135,19 +133,22 @@ func _gui_input(input_event: InputEvent) -> void:
 				_drag_segment_start = Vector2.ZERO
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED:
+		if !_pause_only_stops_time:
+			_pause_mouse_input = true
+			_drag_start = Vector2.ZERO
+			_drag_segment_start = Vector2.ZERO
+	elif what == NOTIFICATION_UNPAUSED:
+		_pause_mouse_input = false
+
+
 func _clear() -> void:
 	_world_targeting[2] = null
 	_world_targeting[4] = null
 	_world_targeting[5] = INF
 	_drag_start = Vector2.ZERO
 	_drag_segment_start = Vector2.ZERO
-
-
-func _set_true_pause_state(_dummy := false) -> void:
-	_is_true_pause = !_pause_only_stops_time and get_tree().paused
-	if _is_true_pause:
-		_drag_start = Vector2.ZERO
-		_drag_segment_start = Vector2.ZERO
 
 
 func _get_key_modifier_mask(event: InputEventMouse) -> int:

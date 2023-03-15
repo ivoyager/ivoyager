@@ -1,4 +1,4 @@
-# now_ckbx.gd
+# view_button.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,30 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVNowCkbx
-extends CheckBox
+class_name IVViewButton
+extends Button
 
-# UI widget. Used in Planetarium to select real-world present time.
-
-const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
-
-var _state: Dictionary = IVGlobal.state
-
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+# GUI button widget for 'default' views in IVViewDefaults. This button name
+# must be changed to a valid key in IVViewDefaults.views.
+#
+# See IVViewSaveFlow for saved/removable view buttons.
 
 
 func _ready() -> void:
-	IVGlobal.connect("user_pause_changed", self, "_update_ckbx")
-	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_update_ckbx")
-	connect("pressed", self, "_set_real_world")
+	var view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
+	assert(view_defaults.has_view(name), "No default view with name = " + name)
+	connect("pressed", view_defaults, "set_view", [name])
 
-
-func _update_ckbx(_dummy = false) -> void:
-	pressed = _timekeeper.is_now
-
-
-func _set_real_world() -> void:
-	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_now()
-		pressed = true

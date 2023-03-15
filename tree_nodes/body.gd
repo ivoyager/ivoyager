@@ -582,7 +582,7 @@ func get_fragment_data(_fragment_type: int) -> Array:
 
 func get_fragment_text(_data: Array) -> String:
 	# Only FRAGMENT_BODY_ORBIT at this time.
-	return tr(name) + " " + tr("LABEL_ORBIT")
+	return tr(name) + " (" + tr("LABEL_ORBIT").to_lower() + ")"
 
 
 func reset_orientation_and_rotation() -> void:
@@ -674,7 +674,7 @@ func _add_rotating_space() -> void:
 	if !m1:
 		return
 	var mass_ratio: float = m1 / m2
-	var characteristic_length := orbit.get_characteristic_length()
+	var characteristic_length := orbit.get_semimajor_axis()
 	var characteristic_time := orbit.get_orbit_period()
 	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
 	rotating_space = _RotatingSpace_.new()

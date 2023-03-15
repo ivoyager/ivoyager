@@ -1,4 +1,4 @@
-# view_buttons.gd
+# huds_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,31 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVViewButtons
-extends HBoxContainer
+class_name IVHUDsPopup
+extends PopupPanel
+const SCENE := "res://ivoyager/gui_popups/huds_popup.tscn"
 
-# GUI button widget for 'default' views created by IVViewDefaults. Buttons can
-# be pre-added to this conainer in scene construction (name must be a valid key
-# in IVViewDefaults.views) or can be added later by calling add_button().
-
-
-var _view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 
 
 func _ready() -> void:
-	for child in get_children():
-		_connect_button(child)
+	var view_save_flow: IVViewSaveFlow = $AllHUDs.find_node("ViewSaveFlow")
+	view_save_flow.connect("resized", self, "_reset_size")
 
 
-func add_button(view_name: String, button_text: String) -> void:
-	var button := Button.new()
-	button.name = view_name
-	button.text = button_text
-	_connect_button(button)
-	add_child(button)
+func _reset_size() -> void:
+	# Needed when FlowContainer loses a row (as of Godot 3.5.2).
+	rect_size = Vector2.ZERO
 
-
-func _connect_button(button: Button) -> void:
-	if !_view_defaults.has_view(button.name):
-		return
-	button.connect("pressed", _view_defaults, "set_view", [button.name])

@@ -104,7 +104,7 @@ var _transform := Transform(Basis(), Vector3(0, 0, KM)) # working value
 # public - project init vars
 var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
-var ease_exponent := 5.0
+var ease_exponent := 5.0 # DEPRECIATE: Make dynamic for distance / size
 var gui_ecliptic_coordinates_dist := 1e6 * KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
@@ -172,10 +172,6 @@ func _ready() -> void:
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	if IVGlobal.allow_time_zone_from_system:
-		var time_zone := Time.get_time_zone_from_system()
-		if time_zone and time_zone.has("bias"):
-			_user_longitude = time_zone.bias * TAU / 1440.0
 	IVGlobal.verbose_signal("camera_ready", self)
 	set_process(false) # don't process until sim started
 
@@ -228,7 +224,7 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	# Note: some flags may override elements of position or rotation.
 	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
 			to_view_rotations, is_instant_move) or true)
-
+	
 	# overrides
 	if to_flags & Flags.UP_LOCKED:
 		if to_view_rotations != NULL_VECTOR3:
@@ -236,8 +232,6 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	if (to_view_rotations != NULL_VECTOR3 and to_view_rotations.z != -INF
 			and to_view_rotations.z): # any roll unlocks 'up'
 		to_flags |= Flags.UP_UNLOCKED
-	if to_flags & Flags.SET_USER_LONGITUDE and _user_longitude != -INF:
-		to_view_position.x = _user_longitude
 	
 	var to_up_flags := to_flags & ANY_UP_FLAGS
 	var to_track_flags := to_flags & ANY_TRACK_FLAGS
@@ -287,6 +281,12 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 		if to_view_rotations.z != -INF and to_view_rotations.z:
 			flags &= ~Flags.UP_LOCKED
 			flags |= Flags.UP_UNLOCKED
+	
+	# if track change w/out specified longitude, go to current longitude in new reference frame
+	if is_track_change and to_view_position.x == -INF:
+		var current_basis := _get_reference_basis(selection, flags)
+		var current_view_position = math.get_rotated_spherical3(translation, current_basis)
+		to_view_position.x = current_view_position.x
 	
 	# set position & rotaion
 	if to_view_position != NULL_VECTOR3:
@@ -379,7 +379,6 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 		perspective_radius = selection.get_perspective_radius()
 	_from_selection = selection
 	_from_perspective_radius = perspective_radius
-	move_to(null, 0, NULL_VECTOR3, NULL_VECTOR3, true)
 
 
 func _on_simulator_started() -> void:

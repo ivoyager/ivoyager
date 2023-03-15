@@ -61,9 +61,8 @@ onready var _parent: Control = get_parent()
 
 
 func _ready():
-	IVGlobal.connect("simulator_started", self, "reset")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "_resize")
+	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	$TL.connect("gui_input", self, "_on_margin_input", [TL])
 	$T.connect("gui_input", self, "_on_margin_input", [T])
@@ -74,7 +73,6 @@ func _ready():
 	$BL.connect("gui_input", self, "_on_margin_input", [BL])
 	$L.connect("gui_input", self, "_on_margin_input", [L])
 	set_process_input(false) # only during drag
-	reset()
 
 
 func _input(event):
@@ -86,15 +84,21 @@ func _input(event):
 			_parent.set_default_cursor_shape(CURSOR_ARROW)
 
 
-func reset() -> void:
-	if !IVGlobal.state.is_system_built:
-		return
-	_resize()
-	_finish_move()
+func resize_and_position_to_anchor() -> void:
+	var default_size := _get_default_size()
+	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
+	# conform to its parent container). Other content needs delayed resize.
+	_parent.rect_size = default_size
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
+	_parent.rect_size = default_size
+	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
+	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
 
-func set_min_size() -> void:
-	for i in range(default_sizes.size()):
+func set_size_to_content() -> void:
+	for i in default_sizes.size():
 		default_sizes[i] = Vector2.ZERO
 
 
@@ -365,23 +369,6 @@ func _set_anchors_to_position() -> void:
 	_parent.rect_position = position # setting anchors screws up position (Godot bug?)
 
 
-func _resize() -> void:
-	var default_size := _get_default_size()
-	_parent.rect_min_size = default_size
-	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
-	# conform to its parent container). Other content needs delayed resize.
-	# _custom_size may be (0, 0) or smaller than rect_min_size now, but code
-	# below will trigger immediate and delayed size refreshes in any case. 
-	_parent.rect_size = _custom_size
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	_parent.rect_size = _custom_size
-	# reposition to anchors given new actual size
-	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
-	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
-
-
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = default_sizes[gui_size]
@@ -408,4 +395,4 @@ func _update_custom_size() -> void:
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
-		_resize()
+		resize_and_position_to_anchor()

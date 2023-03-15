@@ -40,10 +40,6 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-#	$"%HideAllButton".connect("pressed", self, "_hide_all")
-#	$"%Planets1Button".connect("pressed", self, "_planets1")
-#	$"%Asteroids1Button".connect("pressed", self, "_asteroids1")
-#	$"%Colors1Button".connect("pressed", self, "_colors1")
 	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
 	$ViewSaveFlow.init($"%ViewSaveButton", default_view_name, set_name, is_cached,
 			view_flags, view_flags, reserved_view_names)
@@ -59,67 +55,52 @@ func _on_child_entered_tree(control: Control) -> void:
 			control.column0_en_width = 23
 			control.columns_en_width = 6
 			control.rows = [
-				["LABEL_SUN", BodyFlags.IS_STAR],
+				["STAR_SUN", BodyFlags.IS_STAR, false],
 			]
 			control.disable_orbits_rows.append(0) # no orbit for the Sun
 		"PMOsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_PLANETARY_MASS_OBJECTS", 0], # 0 causes all flags below to be set
-				["   " + tr("LABEL_PLANETS"), BodyFlags.IS_TRUE_PLANET],
-				["   " + tr("LABEL_DWARF_PLANETS"), BodyFlags.IS_DWARF_PLANET],
-				["   " + tr("LABEL_MOONS"), BodyFlags.IS_PLANETARY_MASS_MOON],
+				["LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 causes all flags below to be set
+				["LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
+				["LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
+				["LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
 			]
 		"NonPMOMoonsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON],
+				["LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON, false],
 			]
 		"VisitedAsteroidsHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID], # TODO: IS_VISITED_ASTEROID flag
+				["LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID, false], # TODO: IS_VISITED_ASTEROID flag
 			]
 		"SpacecraftHUDs":
 			control.column_master = _column_master
 			control.has_headers = false
 			control.rows = [
-				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT],
+				["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT, false],
 			]
 		
 		# SBGHUDs instance
 		"AsteroidsHUDs":
 			control.column_master = _column_master
 			control.rows = [
-				["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"]],
-				["   " + tr("LABEL_NEAR_EARTH"), ["NE"]],
-				["   " + tr("LABEL_MARS_CROSSERS"), ["MC"]],
-				["   " + tr("LABEL_MAIN_BELT_INNER"), ["IMB"]],
-				["   " + tr("LABEL_MAIN_BELT_MIDDLE"), ["MMB"]],
-				["   " + tr("LABEL_MAIN_BELT_OUTER"), ["OMB"]],
-				["   " + tr("LABEL_HILDAS"), ["HI"]],
-				["   " + tr("LABEL_JUPITER_TROJANS"), ["JT4", "JT5"]],
-				["   " + tr("LABEL_CENTAURS"), ["CE"]],
-				["   " + tr("LABEL_TRANS_NEPTUNIAN"), ["TN"]],
+				["LABEL_ASTEROIDS",
+						["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"], false],
+				["SBG_NEAR_EARTH", ["NE"], true],
+				["SBG_MARS_CROSSERS", ["MC"], true],
+				["SBG_INNER_MAIN_BELT", ["IMB"], true],
+				["SBG_MIDDLE_MAIN_BELT", ["MMB"], true],
+				["SBG_OUTER_MAIN_BELT", ["OMB"], true],
+				["SBG_HILDAS", ["HI"], true],
+				["LABEL_JUPITER_TROJANS", ["JT4", "JT5"], true],
+				["SBG_CENTAURS", ["CE"], true],
+				["SBG_TRANS_NEPTUNE", ["TN"], true],
 			]
-
-
-#func _hide_all() -> void:
-#	_view_defaults.set_view("hide_all")
-#
-#
-#func _planets1() -> void:
-#	_view_defaults.set_view("planets1")
-#
-#
-#func _asteroids1() -> void:
-#	_view_defaults.set_view("asteroids1")
-#
-#
-#func _colors1() -> void:
-#	_view_defaults.set_view("default_colors")
 
 

@@ -58,19 +58,11 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("simulator_started", self, "_reset")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "_resize")
+	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
+	_parent.connect("resized", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag
-	_reset()
-
-
-func _reset() -> void:
-	if !IVGlobal.state.is_system_built:
-		return
-	_resize()
-	_finish_move()
 
 
 func _input(event: InputEvent) -> void:
@@ -82,8 +74,21 @@ func _input(event: InputEvent) -> void:
 			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 
-func set_min_size() -> void:
-	for i in range(default_sizes.size()):
+func resize_and_position_to_anchor() -> void:
+	var default_size := _get_default_size()
+	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
+	# conform to its parent container). Other content needs delayed resize.
+	_parent.rect_size = default_size
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "idle_frame")
+	_parent.rect_size = default_size
+	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
+	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
+
+
+func set_size_to_content() -> void:
+	for i in default_sizes.size():
 		default_sizes[i] = Vector2.ZERO
 
 
@@ -320,19 +325,6 @@ func _set_anchors_to_position() -> void:
 	_parent.rect_position = position # setting anchors screws up position (Godot bug?)
 
 
-func _resize() -> void:
-	var default_size := _get_default_size()
-	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
-	# conform to its parent container). Other content needs delayed resize.
-	_parent.rect_size = default_size
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	_parent.rect_size = default_size
-	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
-	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
-
-
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = default_sizes[gui_size]
@@ -347,4 +339,4 @@ func _get_default_size() -> Vector2:
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
-		_resize()
+		resize_and_position_to_anchor()

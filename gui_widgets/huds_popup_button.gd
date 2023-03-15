@@ -1,4 +1,4 @@
-# now_ckbx.gd
+# huds_popup_button.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,30 +17,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVNowCkbx
-extends CheckBox
+class_name IVHUDsPopupButton
+extends Button
 
-# UI widget. Used in Planetarium to select real-world present time.
 
-const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
-
-var _state: Dictionary = IVGlobal.state
-
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+var _huds_popup: PopupPanel
 
 
 func _ready() -> void:
-	IVGlobal.connect("user_pause_changed", self, "_update_ckbx")
-	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_update_ckbx")
-	connect("pressed", self, "_set_real_world")
+	var top_gui: Control = IVGlobal.program.TopGUI
+	_huds_popup = IVFiles.make_object_or_scene(IVHUDsPopup)
+	top_gui.add_child(_huds_popup)
+	connect("toggled", self, "_on_toggled")
+	_huds_popup.connect("visibility_changed", self, "_on_visibility_changed")
 
 
-func _update_ckbx(_dummy = false) -> void:
-	pressed = _timekeeper.is_now
+func _on_toggled(is_pressed) -> void:
+	if !_huds_popup:
+		return
+	if is_pressed:
+		_huds_popup.popup()
+		yield(get_tree(), "idle_frame") # popup may not know its correct size yet
+		var position := rect_global_position - _huds_popup.rect_size
+		position.x += rect_size.x / 2.0
+		if position.x < 0.0:
+			position.x = 0.0
+		if position.y < 0.0:
+			position.y = 0.0
+		_huds_popup.rect_position = position
+	else:
+		_huds_popup.hide()
 
 
-func _set_real_world() -> void:
-	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_now()
-		pressed = true
+func _on_visibility_changed() -> void:
+	yield(get_tree(), "idle_frame")
+	if !_huds_popup.visible:
+		pressed = false
+
+
+

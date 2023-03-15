@@ -25,7 +25,7 @@ extends Reference
 # IVSettingsManager & IVInputMapManager.
 
 # project vars - set in subclass _init(); project can modify at init
-var cache_file_name := "generic_item.vbinary" # change in subclass
+var cache_file_name := "generic_item.ivbinary" # change in subclass
 var defaults: Dictionary # subclass defines in _init()
 var current: Dictionary # subclass makes or references an existing dict
 

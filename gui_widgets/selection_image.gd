@@ -52,7 +52,7 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
 		# image click centers and levels the target body
 		IVGlobal.emit_signal("move_camera_requested", _selection_manager.selection, 0,
-				Vector3.ZERO, Vector3.ZERO)
+				Vector3(-INF, -INF, -INF), Vector3.ZERO)
 
 
 func _update_image(_dummy := false) -> void:

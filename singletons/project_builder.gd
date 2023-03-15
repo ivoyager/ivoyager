@@ -86,7 +86,7 @@ var init_sequence := [
 
 # All nodes instatiated here are added to 'universe' or 'top_gui'. Extension
 # can set either or both of these, or let ProjectBuilder assign default nodes
-# from the core ivoyager submodule (or for universe, by tree search.
+# from the core ivoyager submodule (or for universe, by tree search).
 # Whatever is assigned to these properties will be accessible from
 # IVGlobal.program.Universe and IVGlobal.program.TopGUI (node names don't
 # matter).
@@ -188,7 +188,7 @@ var gui_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
 	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
-	_GameGUI_ = null, # assign here if convenient (on top of MouseTargetLabel, below SplashScreen)
+	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
 	_SplashScreen_ = null, # assign here if convenient (below popups)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
@@ -211,10 +211,10 @@ var procedural_classes := {
 	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
 	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
 	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
-	_SBGOrbits_ = IVSBGOrbits,
-	_SBGPoints_ = IVSBGPoints,
+	_SBGOrbits_ = IVSBGOrbits, # replace w/ Spatial
+	_SBGPoints_ = IVSBGPoints, # replace w/ Spatial
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-	_ModelSpace_ = IVModelSpace,
+	_ModelSpace_ = IVModelSpace, # replace w/ Spatial
 	_Rings_ = IVRings, # replace w/ Spatial
 	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
 	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
@@ -274,7 +274,7 @@ func move_top_gui_child_to_sibling(node_name: String, sibling_name: String,
 
 
 func build_project(override := false) -> void:
-	# Call only if extension set allow_project_build = false.
+	# Call directly only if extension set allow_project_build = false.
 	if !override and !allow_project_build:
 		return
 	# Build loop is designed so that array 'init_sequence' can be modified even
@@ -311,9 +311,14 @@ func _init_extensions() -> void:
 		if !files.exists(path):
 			continue
 		var extension_script: Script = load(path)
-		if not "EXTENSION_NAME" in extension_script \
-				or not "EXTENSION_VERSION" in extension_script \
-				or not "EXTENSION_YMD" in extension_script:
+		if (
+				not "EXTENSION_NAME" in extension_script
+				or not "EXTENSION_VERSION" in extension_script
+				or not "EXTENSION_BUILD" in extension_script
+				or not "EXTENSION_STATE" in extension_script
+				or not "EXTENSION_YMD" in extension_script
+		):
+			print("WARNING! Missing required const members in extension file " + path)
 			continue
 		var extension: Object = extension_script.new()
 		_project_extensions.append(extension)
