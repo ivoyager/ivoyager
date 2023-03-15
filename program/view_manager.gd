@@ -47,7 +47,8 @@ func _project_init() -> void:
 
 # public
 
-func save_view(view_name: String, set_name: String, is_cached: bool, flags: int) -> void:
+func save_view(view_name: String, set_name: String, is_cached: bool, flags: int,
+		allow_threaded_cache_write := true) -> void:
 	var key := view_name + "." + set_name
 	var view := get_view_object(view_name, set_name, is_cached)
 	if view:
@@ -57,7 +58,7 @@ func save_view(view_name: String, set_name: String, is_cached: bool, flags: int)
 	view.save_state(flags)
 	if is_cached:
 		_cached_views[key] = view
-		_write_cache()
+		_write_cache(allow_threaded_cache_write)
 	else:
 		_gamesave_views[key] = view
 
@@ -75,11 +76,12 @@ func set_view(view_name: String, set_name: String, is_cached: bool,
 	view.set_state(is_camera_instant_move)
 
 
-func save_view_object(view: IVView, view_name: String, set_name: String, is_cached: bool) -> void:
+func save_view_object(view: IVView, view_name: String, set_name: String, is_cached: bool,
+		allow_threaded_cache_write := true) -> void:
 	var key := view_name + "." + set_name
 	if is_cached:
 		_cached_views[key] = view
-		_write_cache()
+		_write_cache(allow_threaded_cache_write)
 	else:
 		_gamesave_views[key] = view
 
@@ -139,18 +141,22 @@ func _read_cache() -> void:
 		_write_cache() # removes all prior-version views
 
 
-func _write_cache() -> void:
+func _write_cache(allow_threaded_cache_write := true) -> void:
+	# Unless this is app exit, no one is waiting for this and we can do the
+	# file write on i/o thread.
 	var dict := {}
 	for key in _cached_views:
 		var view: IVView = _cached_views[key]
 		var data := view.get_data_for_cache()
 		dict[key] = data
-	_io_manager.callback(self, "_write_cache_on_io_thread", "", [dict])
+	if allow_threaded_cache_write:
+		_io_manager.callback(self, "_write_cache_maybe_on_io_thread", "", [dict])
+	else:
+		_write_cache_maybe_on_io_thread([dict])
 	
 
-func _write_cache_on_io_thread(thread_data: Array) -> void:
-	# No one is waiting for this, so do the file write on i/o thread.
-	var dict: Dictionary = thread_data[0]
+func _write_cache_maybe_on_io_thread(data: Array) -> void:
+	var dict: Dictionary = data[0]
 	var file := File.new()
 	if file.open(file_path, File.WRITE) != OK:
 		print("ERROR! Could not open ", file_path, " for write!")
