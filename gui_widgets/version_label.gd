@@ -29,6 +29,7 @@ extends Label
 var use_project := true # otherwise, displays ivoyager version
 var multiline := true # splits format at spaces
 var add_name := false
+var version_prefix := "v"
 var add_ymd := false
 var add_ymd_if_dev := true
 
@@ -44,6 +45,7 @@ func set_label() -> void:
 	text = ""
 	if add_name:
 		text += (IVGlobal.project_name if is_project else "I, Voyager") + sep
+	text += version_prefix
 	text += IVGlobal.project_version if is_project else IVGlobal.IVOYAGER_VERSION
 	text += IVGlobal.project_build if is_project else IVGlobal.IVOYAGER_BUILD
 	var state := IVGlobal.project_state if is_project else IVGlobal.IVOYAGER_STATE
