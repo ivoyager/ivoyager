@@ -36,14 +36,13 @@ extends Node
 # For draggable and user resizable windows, use ControlDynamic instead.
 
 # project vars
-var default_sizes := [
-	# Use rounded floats. Values applied at runtime may be reduced by
-	# max_default_screen_proportions, below.
+var min_sizes := [
+	# Use init_min_size() to set.
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
-var max_default_screen_proportions := Vector2(0.45, 0.45)
+var max_default_screen_proportions := Vector2(0.45, 0.45) # can override above
 
 # private
 var _settings: Dictionary = IVGlobal.settings
@@ -59,7 +58,18 @@ func _ready() -> void:
 	_parent.connect("resized", self, "_resize_and_position_to_anchor")
 
 
-func _resize_and_position_to_anchor() -> void:
+func init_min_size(gui_size: int, size: Vector2) -> void:
+	# 'gui_size' is one of IVEnums.GUISize, or use -1 to set all.
+	# Set x or y or both to zero for shrink to content.
+	# Args [-1, Vector2.ZERO] sets all GUI sizes to shrink to content. 
+	if gui_size != -1:
+		min_sizes[gui_size] = size
+	else:
+		for i in min_sizes.size():
+			min_sizes[i] = size
+
+
+func resize_and_position_to_anchor() -> void:
 	var default_size := _get_default_size()
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
@@ -74,7 +84,7 @@ func _resize_and_position_to_anchor() -> void:
 
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
-	var default_size: Vector2 = default_sizes[gui_size]
+	var default_size: Vector2 = min_sizes[gui_size]
 	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
 	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
 	if default_size.x > max_x:
@@ -86,4 +96,4 @@ func _get_default_size() -> Vector2:
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
-		_resize_and_position_to_anchor()
+		resize_and_position_to_anchor()
