@@ -52,10 +52,10 @@ onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("simulator_started", self, "_resize_and_position_to_anchor")
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "_resize_and_position_to_anchor")
-	_parent.connect("resized", self, "_resize_and_position_to_anchor")
+	IVGlobal.connect("simulator_started", self, "resize_and_position_to_anchor")
+	_parent.connect("resized", self, "resize_and_position_to_anchor")
+	resize_and_position_to_anchor()
 
 
 func init_min_size(gui_size: int, size: Vector2) -> void:

@@ -59,7 +59,6 @@ onready var _parent: Control = get_parent()
 func _ready() -> void:
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	IVGlobal.connect("simulator_started", self, "resize_and_position_to_anchor")
-	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
 	_parent.connect("resized", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	set_process_input(false) # only during drag

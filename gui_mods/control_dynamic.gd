@@ -61,7 +61,6 @@ onready var _parent: Control = get_parent()
 
 func _ready():
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	$TL.connect("gui_input", self, "_on_margin_input", [TL])
 	$T.connect("gui_input", self, "_on_margin_input", [T])
