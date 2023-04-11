@@ -199,6 +199,16 @@ func get_real(table: String, field: String, row := -1, row_name := "") -> float:
 	return _tables[table][field][row]
 
 
+func get_array(table: String, field: String, row := -1, row_name := "") -> Array:
+	# Use for table Type 'ARRAY:xxxx'; returns NAN if missing
+	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	if !_tables[table].has(field):
+		return []
+	if row_name:
+		row = _enumerations[row_name]
+	return _tables[table][field][row]
+
+
 func get_real_precision(table: String, field: String, row := -1, row_name := "") -> int:
 	# field must be type REAL
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
