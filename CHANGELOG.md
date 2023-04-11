@@ -6,6 +6,16 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
+## [v0.0.15] - Unreleased
+
+Under development using Godot 3.5.2.
+
+Requires non-Git-tracked **ivoyager_assets-0.0.14**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).
+
+### Added
+* Data table (.tsv files) cells can encode arrays using the new column type 'ARRAY:xxxx' (where 'xxxx' is any other type).
+
+
 ## [v0.0.14] - 2023-03-15
 
 Developed for Godot 3.5.2.
@@ -466,6 +476,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
+[v0.0.15]: https://github.com/ivoyager/ivoyager/compare/v0.0.14...HEAD
 [v0.0.14]: https://github.com/ivoyager/ivoyager/compare/v0.0.13...v0.0.14
 [v0.0.13]: https://github.com/ivoyager/ivoyager/compare/v0.0.12...v0.0.13
 [v0.0.12]: https://github.com/ivoyager/ivoyager/compare/v0.0.11...v0.0.12
