@@ -40,14 +40,13 @@ enum {UP, DOWN, LEFT, RIGHT}
 var avoid_overlap := true
 var screen_edge_snap := 100.0
 var panel_edge_snap := 40.0
-var default_sizes := [
-	# Use rounded floats. Values applied at runtime may be reduced by
-	# max_default_screen_proportions, below.
+var min_sizes := [
+	# Use init_min_size() to set.
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
 	Vector2(712.0, 421.0), # GUI_LARGE
 ]
-var max_default_screen_proportions := Vector2(0.45, 0.45)
+var max_default_screen_proportions := Vector2(0.45, 0.45) # can override above
 
 # private
 var _settings: Dictionary = IVGlobal.settings
@@ -62,7 +61,6 @@ onready var _parent: Control = get_parent()
 
 func _ready():
 	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_viewport.connect("size_changed", self, "resize_and_position_to_anchor")
 	_parent.connect("gui_input", self, "_on_parent_input")
 	$TL.connect("gui_input", self, "_on_margin_input", [TL])
 	$T.connect("gui_input", self, "_on_margin_input", [T])
@@ -80,8 +78,19 @@ func _input(event):
 	# to never get the button-up event (happens in HTML5 builds).
 	if event is InputEventMouseButton:
 		if !event.pressed and event.button_index == BUTTON_LEFT:
-			_finish_move()
+			finish_move()
 			_parent.set_default_cursor_shape(CURSOR_ARROW)
+
+
+func init_min_size(gui_size: int, size: Vector2) -> void:
+	# 'gui_size' is one of IVEnums.GUISize, or use -1 to set all.
+	# Set x or y or both to zero for shrink to content.
+	# Args [-1, Vector2.ZERO] sets all GUI sizes to shrink to content. 
+	if gui_size != -1:
+		min_sizes[gui_size] = size
+	else:
+		for i in min_sizes.size():
+			min_sizes[i] = size
 
 
 func resize_and_position_to_anchor() -> void:
@@ -97,9 +106,15 @@ func resize_and_position_to_anchor() -> void:
 	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
 
 
-func set_size_to_content() -> void:
-	for i in default_sizes.size():
-		default_sizes[i] = Vector2.ZERO
+func finish_move() -> void:
+	_drag_point = Vector2.ZERO
+	set_process_input(false)
+	_snap_horizontal()
+	_snap_vertical()
+	_fix_offscreen()
+	if avoid_overlap:
+		_fix_overlap()
+	_set_anchors_to_position()
 
 
 func _on_parent_input(event: InputEvent) -> void:
@@ -131,7 +146,7 @@ func _on_margin_input(event: InputEvent, location: int) -> void:
 				_margin_drag_x = 0.0
 				_margin_drag_y = 0.0
 				_update_custom_size()
-				_finish_move()
+				finish_move()
 	elif event is InputEventMouseMotion and (_margin_drag_x or _margin_drag_y):
 		var mouse_pos := get_global_mouse_position()
 		match location:
@@ -144,17 +159,6 @@ func _on_margin_input(event: InputEvent, location: int) -> void:
 				_parent.margin_left = mouse_pos.x - _margin_drag_x
 			TR, R, BR:
 				_parent.margin_right = mouse_pos.x - _margin_drag_x
-
-
-func _finish_move() -> void:
-	_drag_point = Vector2.ZERO
-	set_process_input(false)
-	_snap_horizontal()
-	_snap_vertical()
-	_fix_offscreen()
-	if avoid_overlap:
-		_fix_overlap()
-	_set_anchors_to_position()
 
 
 func _snap_horizontal() -> void:
@@ -371,7 +375,7 @@ func _set_anchors_to_position() -> void:
 
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
-	var default_size: Vector2 = default_sizes[gui_size]
+	var default_size: Vector2 = min_sizes[gui_size]
 	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
 	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
 	if default_size.x > max_x:

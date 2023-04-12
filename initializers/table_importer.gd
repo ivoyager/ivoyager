@@ -203,23 +203,14 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 					var field: String = _field_map[column]
 					if !field:
 						continue
-					var raw_type: String = line_array[column]
-					var type := -1
 					if column == 0:
-						type = TYPE_STRING # always name field (or nil)
-					elif raw_type == "REAL":
-						type = TYPE_REAL
-						if !is_mod:
-							precisions[field] = []
-					elif raw_type == "BOOL":
-						type = TYPE_BOOL
-					elif raw_type == "INT":
-						type = TYPE_INT
-					elif raw_type == "STRING":
-						type = TYPE_STRING
+						field_info[field][0] = TYPE_STRING # always name field (or nil)
 					else:
-						assert(false, 'Missing or unknown table Type "%s"' % raw_type)
-					field_info[field][0] = type
+						var raw_type: String = line_array[column]
+						var type := _get_type_int(raw_type)
+						field_info[field][0] = type
+						if type == TYPE_REAL and !is_mod:
+							precisions[field] = []
 				has_types = true
 			
 			elif cell_0.begins_with("Prefix"):
@@ -374,6 +365,21 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			_wiki_titles[row_name] = value
 
 
+func _get_type_int(raw_type: String) -> int:
+	if raw_type == "REAL":
+		return TYPE_REAL
+	if raw_type == "BOOL":
+		return TYPE_BOOL
+	if raw_type == "INT":
+		return TYPE_INT
+	if raw_type == "STRING":
+		return TYPE_STRING
+	if raw_type.begins_with("ARRAY:"):
+		return TYPE_MAX + _get_type_int(raw_type.trim_prefix("ARRAY:"))
+	assert(false, 'Missing or unknown table Type "%s"' % raw_type)
+	return -1
+
+
 func _get_processed_value(raw_value: String, type: int, prefix: String, unit: String,
 		include_precision := false):
 	# return is appropriate type, excpet INT converted in _postprocess_ints()
@@ -382,6 +388,18 @@ func _get_processed_value(raw_value: String, type: int, prefix: String, unit: St
 		raw_value = raw_value.lstrip("\"").rstrip("\"")
 	raw_value = raw_value.lstrip("'")
 	raw_value = raw_value.lstrip("_")
+	
+	if type >= TYPE_MAX: # raw_value encodes an array
+		var content_type := type - TYPE_MAX
+		assert(content_type < TYPE_MAX)
+		if !raw_value:
+			return []
+		var raw_array := raw_value.split(",")
+		var result_array := []
+		for raw_element in raw_array:
+			result_array.append(_get_processed_value(raw_element, content_type, prefix, unit))
+		return result_array
+	
 	match type:
 		TYPE_BOOL:
 			if raw_value == "x" or raw_value.matchn("true"):
@@ -438,24 +456,36 @@ func _postprocess_ints() -> void:
 		var field_info: Dictionary = _field_infos[table_name]
 		var table: Dictionary = _tables[table_name]
 		for field in field_info:
-			if field_info[field][0] != TYPE_INT: # type
+			var type: int = field_info[field][0]
+			if type != TYPE_INT and type != TYPE_MAX + TYPE_INT:
 				continue
 			var preprocess_column: Array = table[field]
-			var size := preprocess_column.size()
-			var postprocess_column := [] # TODO 4.0: type this array
-			postprocess_column.resize(size)
-			for i in size:
-				var raw_value: String = preprocess_column[i]
-				var value: int
-				if !raw_value:
-					value = -1
-				elif raw_value.is_valid_integer():
-					value = int(raw_value)
-				else:
-					assert(_enumerations.has(raw_value), "Unknown enumeration '%s'" % raw_value)
-					value = _enumerations[raw_value]
-				postprocess_column[i] = value
-			table[field] = postprocess_column
+			var n_rows := preprocess_column.size()
+			if type == TYPE_INT:
+				var postprocess_column := [] # TODO 4.0: type this array
+				postprocess_column.resize(n_rows)
+				for row in n_rows:
+					var raw_value: String = preprocess_column[row]
+					postprocess_column[row] = _get_int(raw_value)
+				table[field] = postprocess_column
+				continue
+			# cell values are arrays of ints
+			for row in n_rows:
+				var raw_array: Array = preprocess_column[row]
+				var int_array := [] # TODO 4.0: type this array
+				int_array.resize(raw_array.size())
+				for i in raw_array.size():
+					int_array[i] = _get_int(raw_array[i])
+				preprocess_column[row] = int_array
+
+
+func _get_int(raw_value: String) -> int:
+	if !raw_value:
+		return -1
+	if raw_value.is_valid_integer():
+		return int(raw_value)
+	assert(_enumerations.has(raw_value), "Unknown enumeration '%s'" % raw_value)
+	return _enumerations[raw_value]
 
 
 func _import_wiki_titles(path: String) -> void:
