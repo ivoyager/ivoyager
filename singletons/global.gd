@@ -29,8 +29,9 @@ extends Node
 
 const IVOYAGER_VERSION := "0.0.15"
 const IVOYAGER_BUILD := "" # hotfix or debug build
-const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230411
+const IVOYAGER_STATE := "" # 'dev', 'alpha', 'beta', 'rc', ''
+const IVOYAGER_YMD := 20230724
+
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
@@ -79,7 +80,6 @@ signal save_quit_requested()
 signal move_camera_requested(selection, camera_flags, view_position, view_rotations,
 		is_instant_move) # 1st arg can be null; all others optional
 
-
 # requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
@@ -93,6 +93,7 @@ signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, bbcode_text)
 signal open_wiki_requested(wiki_title)
+
 
 # containers - write authority indicated; safe to localize container reference
 var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
