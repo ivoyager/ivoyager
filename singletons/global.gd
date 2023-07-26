@@ -27,9 +27,9 @@ extends Node
 # Containers (arrays and dictionaries) are never replaced, so it is safe and
 # good practice to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.15"
+const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
-const IVOYAGER_STATE := "" # 'dev', 'alpha', 'beta', 'rc', ''
+const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
 const IVOYAGER_YMD := 20230724
 
 
