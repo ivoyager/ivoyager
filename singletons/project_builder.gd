@@ -75,13 +75,13 @@ var allow_project_build := true # blockable by another autoload singleton
 # extension instantiated at the first step of this sequence.
 var init_sequence := [
 	# [object, method, wait_for_signal]
-	[self, "_init_extensions", false],
-	[self, "_set_simulator_root", false],
-	[self, "_set_simulator_top_gui", false],
-	[self, "_instantiate_and_index_program_objects", false],
-	[self, "_init_program_objects", true],
-	[self, "_add_program_nodes", true],
-	[self, "_finish", false]
+#	[self, "_init_extensions", false],
+#	[self, "_set_simulator_root", false],
+#	[self, "_set_simulator_top_gui", false],
+#	[self, "_instantiate_and_index_program_objects", false],
+#	[self, "_init_program_objects", true],
+#	[self, "_add_program_nodes", true],
+#	[self, "_finish", false]
 ]
 
 # All nodes instatiated here are added to 'universe' or 'top_gui'. Extension
@@ -108,122 +108,122 @@ var add_top_gui_to_universe := true # happens in add_program_nodes()
 # and the 'name' property in the case of nodes.
 
 var initializers := {
-	# Reference classes. IVProjectBuilder instances these (first!) and adds to
-	# dictionary IVGlobal.program. They may erase themselves from
-	# IVGlobal.program when done (thereby freeing themselves).
-	_LogInitializer_ = IVLogInitializer,
-	_AssetInitializer_ = IVAssetInitializer,
-	_SharedInitializer_ = SharedInitializer,
-	_WikiInitializer_ = IVWikiInitializer,
-	_TranslationImporter_ = IVTranslationImporter,
-	_TableImporter_ = IVTableImporter,
+#	# Reference classes. IVProjectBuilder instances these (first!) and adds to
+#	# dictionary IVGlobal.program. They may erase themselves from
+#	# IVGlobal.program when done (thereby freeing themselves).
+#	_LogInitializer_ = IVLogInitializer,
+#	_AssetInitializer_ = IVAssetInitializer,
+#	_SharedInitializer_ = SharedInitializer,
+#	_WikiInitializer_ = IVWikiInitializer,
+#	_TranslationImporter_ = IVTranslationImporter,
+#	_TableImporter_ = IVTableImporter,
 }
 
 var prog_refs := {
-	# Reference classes. IVProjectBuilder instances one of each and adds to
-	# dictionary IVGlobal.program. No save/load persistence.
-	
-	# need first!
-	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
-	
-	# builders (generators, often from table or binary data)
-	_EnvironmentBuilder_ = IVEnvironmentBuilder,
-	_SystemBuilder_ = IVSystemBuilder,
-	_BodyBuilder_ = IVBodyBuilder,
-	_SBGBuilder_ = IVSBGBuilder,
-	_OrbitBuilder_ = IVOrbitBuilder,
-	_SelectionBuilder_ = IVSelectionBuilder,
-	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
-	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
-	
-	# finishers (modify something on entering tree)
-	_BodyFinisher_ = IVBodyFinisher,
-	_SBGFinisher_ = IVSBGFinisher,
-	
-	# managers
-	_InputMapManager_ = IVInputMapManager,
-	_IOManager_ = IVIOManager,
-	_FontManager_ = IVFontManager, # ok to replace
-	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
-	_MainMenuManager_ = IVMainMenuManager,
-	_SleepManager_ = IVSleepManager,
-	_WikiManager_ = IVWikiManager,
-	_ModelManager_ = IVModelManager,
-	
-	# tools and resources
-	_TableReader_ = IVTableReader,
-	_QuantityFormatter_ = IVQuantityFormatter,
-	_ViewDefaults_ = IVViewDefaults,
+#	# Reference classes. IVProjectBuilder instances one of each and adds to
+#	# dictionary IVGlobal.program. No save/load persistence.
+#
+#	# need first!
+#	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
+#
+#	# builders (generators, often from table or binary data)
+#	_EnvironmentBuilder_ = IVEnvironmentBuilder,
+#	_SystemBuilder_ = IVSystemBuilder,
+#	_BodyBuilder_ = IVBodyBuilder,
+#	_SBGBuilder_ = IVSBGBuilder,
+#	_OrbitBuilder_ = IVOrbitBuilder,
+#	_SelectionBuilder_ = IVSelectionBuilder,
+#	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
+#	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
+#
+#	# finishers (modify something on entering tree)
+#	_BodyFinisher_ = IVBodyFinisher,
+#	_SBGFinisher_ = IVSBGFinisher,
+#
+#	# managers
+#	_InputMapManager_ = IVInputMapManager,
+#	_IOManager_ = IVIOManager,
+#	_FontManager_ = IVFontManager, # ok to replace
+#	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
+#	_MainMenuManager_ = IVMainMenuManager,
+#	_SleepManager_ = IVSleepManager,
+#	_WikiManager_ = IVWikiManager,
+#	_ModelManager_ = IVModelManager,
+#
+#	# tools and resources
+#	_TableReader_ = IVTableReader,
+#	_QuantityFormatter_ = IVQuantityFormatter,
+#	_ViewDefaults_ = IVViewDefaults,
 }
 
 var prog_nodes := {
-	# IVProjectBuilder instances one of each and adds as child to Universe
-	# (after TopGUI) and to dictionary IVGlobal.program.
-	# Order determines input event handling (last child is 1st input handled).
-	# Universe children can be reordered after 'project_nodes_added' signal
-	# using API below.
-	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
-	_Scheduler_ = IVScheduler,
-	_SBGHUDsState_ = IVSBGHUDsState,
-	_ViewManager_ = IVViewManager,
-	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
-	
-	# Nodes below are ordered for input handling. We mainly need to intercept
-	# cntr-something actions (quit, full-screen, etc.) before CameraHandler.
-	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
-	_Timekeeper_ = IVTimekeeper,
-	_WindowManager_ = IVWindowManager,
-	_BodyHUDsState_ = IVBodyHUDsState,
-	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
-	_StateManager_ = IVStateManager,
+#	# IVProjectBuilder instances one of each and adds as child to Universe
+#	# (after TopGUI) and to dictionary IVGlobal.program.
+#	# Order determines input event handling (last child is 1st input handled).
+#	# Universe children can be reordered after 'project_nodes_added' signal
+#	# using API below.
+#	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
+#	_Scheduler_ = IVScheduler,
+#	_SBGHUDsState_ = IVSBGHUDsState,
+#	_ViewManager_ = IVViewManager,
+#	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
+#
+#	# Nodes below are ordered for input handling. We mainly need to intercept
+#	# cntr-something actions (quit, full-screen, etc.) before CameraHandler.
+#	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
+#	_Timekeeper_ = IVTimekeeper,
+#	_WindowManager_ = IVWindowManager,
+#	_BodyHUDsState_ = IVBodyHUDsState,
+#	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
+#	_StateManager_ = IVStateManager,
 }
 
 var gui_nodes := {
-	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
-	# whatever substitute Control is set in 'top_gui') and to dictionary
-	# IVGlobal.program.
-	# Order determines visual 'on top' and input event handling (last in list
-	# is on top and 1st handled). TopGUI children can be reordered after
-	# 'project_nodes_added' signal using API below.
-	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
-	_WorldController_ = IVWorldController, # Control ok
-	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
-	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
-	_SplashScreen_ = null, # assign here if convenient (below popups)
-	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
-	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
-	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
-	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
-	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
-	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
-	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
-#	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
-	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
+#	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
+#	# whatever substitute Control is set in 'top_gui') and to dictionary
+#	# IVGlobal.program.
+#	# Order determines visual 'on top' and input event handling (last in list
+#	# is on top and 1st handled). TopGUI children can be reordered after
+#	# 'project_nodes_added' signal using API below.
+#	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
+#	_WorldController_ = IVWorldController, # Control ok
+#	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
+#	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
+#	_SplashScreen_ = null, # assign here if convenient (below popups)
+#	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
+#	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
+#	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
+#	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
+#	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
+#	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
+#	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
+##	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
+#	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
 var procedural_classes := {
-	# Nodes and references NOT instantiated by IVProjectBuilder. These class
-	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
-	# have underscores). 
-	# tree_nodes
-	_Body_ = IVBody, # many dependencies, best to subclass
-	_Camera_ = IVCamera, # replaceable, but look for dependencies
-	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
-	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
-	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
-	_SBGOrbits_ = IVSBGOrbits, # replace w/ Spatial
-	_SBGPoints_ = IVSBGPoints, # replace w/ Spatial
-	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-	_ModelSpace_ = IVModelSpace, # replace w/ Spatial
-	_Rings_ = IVRings, # replace w/ Spatial
-	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
-	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
-	# tree_refs
-	_SmallBodiesGroup_ = IVSmallBodiesGroup,
-	_Orbit_ = IVOrbit,
-	_Selection_ = IVSelection,
-	_View_ = IVView,
-	_Composition_ = IVComposition, # replaceable, but look for dependencies
+#	# Nodes and references NOT instantiated by IVProjectBuilder. These class
+#	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
+#	# have underscores). 
+#	# tree_nodes
+#	_Body_ = IVBody, # many dependencies, best to subclass
+#	_Camera_ = IVCamera, # replaceable, but look for dependencies
+#	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
+#	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
+#	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
+#	_SBGOrbits_ = IVSBGOrbits, # replace w/ Spatial
+#	_SBGPoints_ = IVSBGPoints, # replace w/ Spatial
+#	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
+#	_ModelSpace_ = IVModelSpace, # replace w/ Spatial
+#	_Rings_ = IVRings, # replace w/ Spatial
+#	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
+#	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
+#	# tree_refs
+#	_SmallBodiesGroup_ = IVSmallBodiesGroup,
+#	_Orbit_ = IVOrbit,
+#	_Selection_ = IVSelection,
+#	_View_ = IVView,
+#	_Composition_ = IVComposition, # replaceable, but look for dependencies
 }
 
 
