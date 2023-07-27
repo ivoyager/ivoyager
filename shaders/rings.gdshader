@@ -112,7 +112,7 @@ void fragment() {
 				
 				// unlit side
 				float unlit_scatter = scatter_alpha_0.z * w1 + scatter_alpha_1.z * w2;
-				ALBEDO = unlit_color * unlit_scatter
+				ALBEDO = unlit_color * unlit_scatter;
 				
 			} else {
 				

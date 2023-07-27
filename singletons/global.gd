@@ -247,7 +247,7 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
-var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
+var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
 func _ready():

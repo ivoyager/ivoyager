@@ -298,8 +298,7 @@ func _init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
 	# (where <name> != "ivoyager" and does not start with ".") and then calls
 	# their _extension_init() function.
-	var dir := DirAccess.new()
-	dir.open("res://")
+	var dir := DirAccess.open("res://")
 	dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	while true:
 		var dir_name := dir.get_next()
