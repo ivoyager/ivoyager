@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVView
-extends Reference
+extends RefCounted
 
 # Optionally keeps state related to camera, HUDs, and/or time. The object can
 # be persisted via gamesave or cache.

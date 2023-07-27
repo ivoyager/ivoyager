@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVAssetInitializer
-extends Reference
+extends RefCounted
 
 # Loads assets specified in IVGlobal.
 

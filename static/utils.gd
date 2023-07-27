@@ -39,7 +39,7 @@ static func free_procedural_nodes(node: Node) -> void:
 				free_procedural_nodes(child)
 
 
-static func get_ancestor_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
+static func get_ancestor_spatial(spatial1: Node3D, spatial2: Node3D) -> Node3D:
 	# Returns parent spatial or common spatial ancestor. Assumes no non-Spatial
 	# nodes in the ancestor tree.
 	while spatial1:
@@ -47,8 +47,8 @@ static func get_ancestor_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatia
 		while loop_spatial2:
 			if spatial1 == loop_spatial2:
 				return loop_spatial2
-			loop_spatial2 = loop_spatial2.get_parent_spatial()
-		spatial1 = spatial1.get_parent_spatial()
+			loop_spatial2 = loop_spatial2.get_parent_node_3d()
+		spatial1 = spatial1.get_parent_node_3d()
 	return null
 
 
@@ -165,7 +165,7 @@ static func get_real_str_precision(real_str: String) -> int:
 				if deduct_zeroes:
 					n_unsig_zeros += 1
 		elif chr != "-":
-			assert(chr.is_valid_integer(), "Unknown REAL character: " + chr)
+			assert(chr.is_valid_int(), "Unknown REAL character: " + chr)
 			started = true
 			n_digits += 1
 			n_unsig_zeros = 0

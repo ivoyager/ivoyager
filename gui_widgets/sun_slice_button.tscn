@@ -3,8 +3,8 @@
 [ext_resource path="res://ivoyager/gui_widgets/sun_slice_button.gd" type="Script" id=1]
 
 [node name="SunSliceButton" type="Button"]
-margin_right = 40.0
-margin_bottom = 40.0
+offset_right = 40.0
+offset_bottom = 40.0
 toggle_mode = true
 action_mode = 0
 script = ExtResource( 1 )

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVIOManager
-extends Reference
+extends RefCounted
 
 # Manages a separate thread for I/O operations including resource loading.
 # As per Godot docs, loading a resource from multiple threads can crash. Thus,
@@ -58,11 +58,11 @@ func _project_init() -> void:
 	_state_manager = IVGlobal.program.StateManager
 	if !_use_threads:
 		return
-	IVGlobal.connect("about_to_stop_before_quit", self, "_block_quit_until_finished")
+	IVGlobal.connect("about_to_stop_before_quit", Callable(self, "_block_quit_until_finished"))
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
-	_thread.start(self, "_run_thread", 0)
+	_thread.start(Callable(self, "_run_thread").bind(0))
 
 
 func _block_quit_until_finished() -> void:

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name SharedInitializer
-extends Reference
+extends RefCounted
 
 # Adds constructed items to IVGlobal.shared.
 
@@ -38,7 +38,7 @@ func _make_shared_resources() -> void:
 
 func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
 	# All orbits (e < 1.0) are shared circle mesh with modified basis.
-	var verteces := PoolVector3Array()
+	var verteces := PackedVector3Array()
 	verteces.resize(n_vertecies)
 	var angle_increment := TAU / n_vertecies
 	var i := 0

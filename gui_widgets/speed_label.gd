@@ -27,13 +27,13 @@ var reverse_color: Color = IVGlobal.colors.danger
 
 var _is_reversed := false
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_speed")
-	_timekeeper.connect("speed_changed", self, "_update_speed")
-	set("custom_colors/font_color", forward_color)
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_speed"))
+	_timekeeper.connect("speed_changed", Callable(self, "_update_speed"))
+	set("theme_override_colors/font_color", forward_color)
 	_update_speed()
 
 
@@ -41,4 +41,4 @@ func _update_speed() -> void:
 		text = _timekeeper.speed_name
 		if _is_reversed != _timekeeper.is_reversed:
 			_is_reversed = !_is_reversed
-			set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)
+			set("theme_override_colors/font_color", reverse_color if _is_reversed else forward_color)

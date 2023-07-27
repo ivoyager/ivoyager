@@ -23,12 +23,12 @@ extends CheckBox
 # GUI widget. Expects the camera to have signal "camera_lock_changed" and
 # function "change_camera_lock".
 
-var _camera: Camera
+var _camera: Camera3D
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	_connect_camera(get_viewport().get_camera_3d())
 	pressed = true
 
 
@@ -37,16 +37,16 @@ func _pressed() -> void:
 		_camera.change_camera_lock(pressed)
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+		_camera.connect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
+		_camera.disconnect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
 	_camera = null
 
 

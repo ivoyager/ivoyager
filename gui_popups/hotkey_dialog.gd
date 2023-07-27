@@ -23,7 +23,7 @@ const SCENE := "res://ivoyager/gui_popups/hotkey_dialog.tscn"
 
 # Used by IVHotkeysPopup.
 
-signal hotkey_confirmed(action, scancode, control, alt, shift, meta)
+signal hotkey_confirmed(action, keycode, control, alt, shift, meta)
 
 var _in_use_color: Color = IVGlobal.colors.danger
 var _ok_color: Color = IVGlobal.colors.normal
@@ -32,23 +32,23 @@ var _action: String
 var _index: int
 var _layout: Array
 
-onready var _key_label: Label = $HBox/KeyLabel
-onready var _delete: Button = $HBox/Delete
-onready var _ok_button: Button = get_ok()
-onready var _tree := get_tree()
-onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
+@onready var _key_label: Label = $HBox/KeyLabel
+@onready var _delete: Button = $HBox/Delete
+@onready var _ok_button: Button = get_ok_button()
+@onready var _tree := get_tree()
+@onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 
 
 func _ready():
-	pause_mode = PAUSE_MODE_PROCESS
-	connect("confirmed", self, "_on_confirmed")
-	connect("popup_hide", self, "_on_popup_hide")
-	_delete.connect("pressed", self, "_on_delete")
+	process_mode = PROCESS_MODE_ALWAYS
+	connect("confirmed", Callable(self, "_on_confirmed"))
+	connect("popup_hide", Callable(self, "_on_popup_hide"))
+	_delete.connect("pressed", Callable(self, "_on_delete"))
 	set_process_unhandled_key_input(false)
 	_ok_button.disabled = true
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	_tree.set_input_as_handled() # eat all keys
 	if !event.is_pressed():
 		return
@@ -60,32 +60,32 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 			hide()
 			_on_confirmed()
 		return
-	var scancode_w_mods: int = event.get_scancode_with_modifiers()
+	var scancode_w_mods: int = event.get_keycode_with_modifiers()
 	if !_scancode_is_valid(scancode_w_mods):
 		return
-	var key_as_text := OS.get_scancode_string(scancode_w_mods)
+	var key_as_text := OS.get_keycode_string(scancode_w_mods)
 	if _scancode_is_reserved(scancode_w_mods):
 		_key_label.text = key_as_text + "\n(Reserved)"
-		_key_label.set("custom_colors/font_color", _in_use_color)
+		_key_label.set("theme_override_colors/font_color", _in_use_color)
 		_input_event_key = null
 		_ok_button.disabled = true
 		_delete.hide()
 	elif _scancode_is_present_action(scancode_w_mods):
 		_key_label.text = key_as_text
-		_key_label.set("custom_colors/font_color", _ok_color)
+		_key_label.set("theme_override_colors/font_color", _ok_color)
 		_input_event_key = null
 		_ok_button.disabled = true
 		_delete.show()
 	elif _scancode_is_available(scancode_w_mods):
 		_key_label.text = key_as_text
-		_key_label.set("custom_colors/font_color", _ok_color)
+		_key_label.set("theme_override_colors/font_color", _ok_color)
 		_input_event_key = event
 		_ok_button.disabled = false
 		_delete.show()
 	else:
 		var other_action_text := _get_scancode_action_text(scancode_w_mods)
 		_key_label.text = key_as_text + "\n(Used by " + other_action_text + ")"
-		_key_label.set("custom_colors/font_color", _in_use_color)
+		_key_label.set("theme_override_colors/font_color", _in_use_color)
 		_input_event_key = null
 		_ok_button.disabled = true
 		_delete.hide()
@@ -100,7 +100,7 @@ func open(action: String, index: int, action_label_str: String, key_as_text: Str
 	window_title = action_label_str
 	_ok_button.disabled = true
 	_key_label.text = key_as_text
-	_key_label.set("custom_colors/font_color", _ok_color)
+	_key_label.set("theme_override_colors/font_color", _ok_color)
 	set_process_unhandled_key_input(true)
 	popup_centered()
 
@@ -116,27 +116,27 @@ func _on_confirmed() -> void:
 	if !_input_event_key: # delete existing hotkey
 		emit_signal("hotkey_confirmed", _action, _index, -1, false, false, false, false)
 		return
-	var scancode := _input_event_key.scancode
-	assert(scancode == _input_map_manager.strip_scancode_mods(scancode))
+	var keycode := _input_event_key.keycode
+	assert(keycode == _input_map_manager.strip_scancode_mods(keycode))
 	var control := _input_event_key.control
 	var alt := _input_event_key.alt
 	var shift := _input_event_key.shift
 	var meta := _input_event_key.meta
-	emit_signal("hotkey_confirmed", _action, _index, scancode, control, alt, shift, meta)
+	emit_signal("hotkey_confirmed", _action, _index, keycode, control, alt, shift, meta)
 
 
 func _on_popup_hide() -> void:
 	set_process_unhandled_key_input(false)
 
 
-func _scancode_is_valid(scancode: int) -> bool:
-	scancode = _input_map_manager.strip_scancode_mods(scancode)
-	return ![KEY_SHIFT, KEY_CONTROL, KEY_ALT, KEY_META].has(scancode)
+func _scancode_is_valid(keycode: int) -> bool:
+	keycode = _input_map_manager.strip_scancode_mods(keycode)
+	return ![KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META].has(keycode)
 
 
-func _scancode_is_reserved(scancode: int) -> bool:
-	scancode = _input_map_manager.strip_scancode_mods(scancode)
-	return _input_map_manager.reserved_scancodes.has(scancode)
+func _scancode_is_reserved(keycode: int) -> bool:
+	keycode = _input_map_manager.strip_scancode_mods(keycode)
+	return _input_map_manager.reserved_scancodes.has(keycode)
 
 
 func _scancode_is_present_action(scancode_w_mods: int) -> bool:

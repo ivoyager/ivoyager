@@ -24,33 +24,33 @@ extends HBoxContainer
 
 const Flags := IVEnums.CameraFlags
 
-var _camera: Camera
+var _camera: Camera3D
 
-onready var _ground_checkbox: CheckBox = $Ground
-onready var _orbit_checkbox: CheckBox = $Orbit
-onready var _ecliptic_checkbox: CheckBox = $Ecliptic
+@onready var _ground_checkbox: CheckBox = $Ground
+@onready var _orbit_checkbox: CheckBox = $Orbit
+@onready var _ecliptic_checkbox: CheckBox = $Ecliptic
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	_connect_camera(get_viewport().get_camera_3d())
 	var button_group := ButtonGroup.new()
-	button_group.connect("pressed", self, "_on_pressed")
+	button_group.connect("pressed", Callable(self, "_on_pressed"))
 	_ecliptic_checkbox.group = button_group
 	_orbit_checkbox.group = button_group
 	_ground_checkbox.group = button_group
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("tracking_changed", self, "_update_tracking")
+		_camera.connect("tracking_changed", Callable(self, "_update_tracking"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("tracking_changed", self, "_update_tracking")
+		_camera.disconnect("tracking_changed", Callable(self, "_update_tracking"))
 	_camera = null
 
 

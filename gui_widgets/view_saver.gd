@@ -33,22 +33,22 @@ var is_cached := true
 var show_flags := IVView.ALL
 var reserved_names := []
 
-onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
-onready var _selection_ckbx: CheckBox = $"%SelectionCkbx"
-onready var _longitude_ckbx: CheckBox = $"%LongitudeCkbx"
-onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
-onready var _visibilities_ckbx: CheckBox = $"%VisibilitiesCkbx"
-onready var _colors_ckbx: CheckBox = $"%ColorsCkbx"
-onready var _time_ckbx: CheckBox = $"%TimeCkbx"
-onready var _now_ckbx: CheckBox = $"%NowCkbx" # exclusive w/ _time_ckbx
-onready var _line_edit: LineEdit = $"%LineEdit"
+@onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+@onready var _selection_ckbx: CheckBox = $"%SelectionCkbx"
+@onready var _longitude_ckbx: CheckBox = $"%LongitudeCkbx"
+@onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
+@onready var _visibilities_ckbx: CheckBox = $"%VisibilitiesCkbx"
+@onready var _colors_ckbx: CheckBox = $"%ColorsCkbx"
+@onready var _time_ckbx: CheckBox = $"%TimeCkbx"
+@onready var _now_ckbx: CheckBox = $"%NowCkbx" # exclusive w/ _time_ckbx
+@onready var _line_edit: LineEdit = $"%LineEdit"
 
 
 func _ready() -> void:
 	_line_edit.text = tr(default_view_name)
-	connect("visibility_changed", self, "_on_visibility_changed")
-	$"%SaveButton".connect("pressed", self, "_on_save")
-	_line_edit.connect("text_entered", self, "_on_save")
+	connect("visibility_changed", Callable(self, "_on_visibility_changed"))
+	$"%SaveButton".connect("pressed", Callable(self, "_on_save"))
+	_line_edit.connect("text_submitted", Callable(self, "_on_save"))
 	if !IVGlobal.allow_time_setting:
 		_time_ckbx.text = "CKBX_GAME_SPEED" # this is the only 'time' element that can be modified
 
@@ -78,8 +78,8 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 	_now_ckbx.visible = bool(show_flags & IVView.IS_NOW) and IVGlobal.allow_time_setting
 	
 	if _time_ckbx.visible and _now_ckbx.visible:
-		_time_ckbx.connect("toggled", self, "_unset_exclusive", [_now_ckbx])
-		_now_ckbx.connect("toggled", self, "_unset_exclusive", [_time_ckbx])
+		_time_ckbx.connect("toggled", Callable(self, "_unset_exclusive").bind(_now_ckbx))
+		_now_ckbx.connect("toggled", Callable(self, "_unset_exclusive").bind(_time_ckbx))
 	
 	_selection_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_SELECTION))
 	_longitude_ckbx.set_pressed_no_signal(bool(show_flags & init_flags & IVView.CAMERA_LONGITUDE))
@@ -93,14 +93,14 @@ func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := 
 
 func _unset_exclusive(is_pressed: bool, exclusive_button: CheckBox) -> void:
 	if is_pressed:
-		exclusive_button.pressed = false
+		exclusive_button.button_pressed = false
 
 
 func _on_visibility_changed():
 	if is_visible_in_tree():
 		_increment_name_as_needed()
 		_line_edit.select_all()
-		_line_edit.set_cursor_position(100)
+		_line_edit.set_caret_column(100)
 		_line_edit.call_deferred("grab_focus")
 
 
@@ -117,7 +117,7 @@ func _increment_name_as_needed() -> void:
 	var text := _line_edit.text
 	if !_view_manager.has_view(text, set_name, is_cached) and !reserved_names.has(text):
 		return
-	if !text[-1].is_valid_integer():
+	if !text[-1].is_valid_int():
 		_line_edit.text += "2"
 	elif text[-1] == "9":
 		_line_edit.text[-1] = "1"

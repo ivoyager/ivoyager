@@ -25,11 +25,11 @@ var _stop_sim: bool
 
 func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 		args := [], stop_sim := true, window_txt := "", ok_txt := "", cancel_txt := ""):
-	connect("confirmed", on_confirm_object, on_confirm_method, args, CONNECT_ONESHOT)
-	connect("popup_hide", self, "_on_hide")
+	connect("confirmed", Callable(on_confirm_object, on_confirm_method).bind(args), CONNECT_ONE_SHOT)
+	connect("popup_hide", Callable(self, "_on_hide"))
 	dialog_text = text
-	popup_exclusive = true
-	pause_mode = PAUSE_MODE_PROCESS
+	exclusive = true
+	process_mode = PROCESS_MODE_ALWAYS
 	_stop_sim = stop_sim
 	if _stop_sim:
 		IVGlobal.emit_signal("sim_stop_required", self)
@@ -38,23 +38,23 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	if window_txt:
 		window_title = window_txt
 	if ok_txt:
-		var ok_button := get_ok()
+		var ok_button := get_ok_button()
 		ok_button.text = ok_txt
 	if cancel_txt:
-		var cancel_button := get_cancel()
+		var cancel_button := get_cancel_button()
 		cancel_button.text = cancel_txt
 	var label := get_label()
-	label.align = Label.ALIGN_CENTER
+	label.align = Label.ALIGNMENT_CENTER
 	popup_centered()
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled() # eat all keys
+		get_viewport().set_input_as_handled() # eat all keys
 		hide()
 
 

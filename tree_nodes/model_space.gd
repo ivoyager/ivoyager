@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVModelSpace
-extends Spatial
+extends Node3D
 
 # Maintained by IVBody instance only when needed. Child nodes include the
 # Body's model and (for Saturn) rings. This reference frame is useful because

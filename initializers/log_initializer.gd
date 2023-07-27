@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVLogInitializer
-extends Reference
+extends RefCounted
 
 # Inits a debug file specified in IVGlobal when in debug mode.
 

@@ -3,11 +3,11 @@
 [ext_resource path="res://ivoyager/gui_widgets/main_menu.gd" type="Script" id=1]
 
 [node name="MainMenu" type="VBoxContainer"]
-pause_mode = 2
-margin_left = 35.0
-margin_top = 35.0
-margin_right = 40.0
-margin_bottom = 40.0
+process_mode = 3
+offset_left = 35.0
+offset_top = 35.0
+offset_right = 40.0
+offset_bottom = 40.0
 mouse_filter = 2
 script = ExtResource( 1 )
 __meta__ = {

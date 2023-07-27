@@ -33,24 +33,24 @@ func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManage
 	assert(body and selection_manager)
 	_body = body
 	_selection_manager = selection_manager
-	hint_tooltip = body.name
-	set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
-	rect_min_size = Vector2(image_size, image_size)
+	tooltip_text = body.name
+	set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
+	custom_minimum_size = Vector2(image_size, image_size)
 	var texture_box := TextureRect.new()
-	texture_box.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
+	texture_box.set_anchors_and_offsets_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
 	texture_box.expand = true
 	texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_box.texture = body.texture_2d
 	texture_box.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(texture_box)
-	connect("mouse_entered", self, "_on_mouse_entered")
-	connect("mouse_exited", self, "_on_mouse_exited")
+	connect("mouse_entered", Callable(self, "_on_mouse_entered"))
+	connect("mouse_exited", Callable(self, "_on_mouse_exited"))
 
 
 func _ready():
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	_selection_manager.connect("selection_changed", self, "_update_selection")
-	_selection_manager.connect("selection_reselected", self, "_update_selection")
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_selection"))
+	_selection_manager.connect("selection_changed", Callable(self, "_update_selection"))
+	_selection_manager.connect("selection_reselected", Callable(self, "_update_selection"))
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 

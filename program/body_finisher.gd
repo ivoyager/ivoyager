@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyFinisher
-extends Reference
+extends RefCounted
 
 # Decorates Body (and its parent) with Body-associated unpersisted elements,
 # such as HUD elements, rings, omni light, etc. Everything here happens
@@ -50,7 +50,7 @@ var _Rings_: Script
 var _table_reader: IVTableReader
 var _model_manager: IVModelManager
 var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
-var _fallback_body_2d: Texture
+var _fallback_body_2d: Texture2D
 
 var _io_manager: IVIOManager
 var _main_prog_bar: IVMainProgBar
@@ -64,9 +64,9 @@ var _system_build_start_msec := 0
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_build_system_tree", self, "init_system_build")
-	IVGlobal.connect("game_load_started", self, "init_system_build")
-	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	IVGlobal.connect("about_to_build_system_tree", Callable(self, "init_system_build"))
+	IVGlobal.connect("game_load_started", Callable(self, "init_system_build"))
+	IVGlobal.get_tree().connect("node_added", Callable(self, "_on_node_added"))
 	_table_reader = IVGlobal.program.TableReader
 	_model_manager = IVGlobal.program.ModelManager
 	_io_manager = IVGlobal.program.IOManager
@@ -115,14 +115,14 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		_model_manager.add_model(body, lazy_init)
 	if body.has_omni_light():
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
-		var omni_light := OmniLight.new()
+		var omni_light := OmniLight3D.new()
 		# set properties entirely from table
 		_table_reader.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
-		var body_orbit: Spatial = _BodyOrbit_.new(body)
+		var body_orbit: Node3D = _BodyOrbit_.new(body)
 		body.get_parent().add_child(body_orbit)
-	var body_label: Spatial = _BodyLabel_.new(body)
+	var body_label: Node3D = _BodyLabel_.new(body)
 	body.add_child(body_label)
 	var file_prefix := body.get_file_prefix()
 	var is_star := bool(body.flags & BodyFlags.IS_STAR)
@@ -137,16 +137,16 @@ func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 	var file_prefix: String = array[1]
 	var is_star: bool = array[2]
 	var rings_file_prefix: String = array[3]
-	var texture_2d: Texture = files.find_and_load_resource(_bodies_2d_search, file_prefix)
+	var texture_2d: Texture2D = files.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !texture_2d:
 		texture_2d = _fallback_body_2d
 	array.append(texture_2d) # [4]
-	var texture_slice_2d: Texture
+	var texture_slice_2d: Texture2D
 	if is_star:
 		var slice_name = file_prefix + "_slice"
 		texture_slice_2d = files.find_and_load_resource(_bodies_2d_search, slice_name)
 	array.append(texture_slice_2d) # [5]
-	var rings_texture: Texture
+	var rings_texture: Texture2D
 	if rings_file_prefix:
 		var rings_search: Array = IVGlobal.rings_search
 		rings_texture = files.find_and_load_resource(rings_search, rings_file_prefix)
@@ -157,15 +157,15 @@ func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
 
 func _io_finish(array: Array) -> void: # Main thread
 	var body: IVBody = array[0]
-	var texture_2d: Texture = array[4]
-	var texture_slice_2d: Texture = array[5]
-	var rings_texture: Texture = array[6]
+	var texture_2d: Texture2D = array[4]
+	var texture_slice_2d: Texture2D = array[5]
+	var rings_texture: Texture2D = array[6]
 	body.texture_2d = texture_2d
 	if texture_slice_2d:
 		body.texture_slice_2d = texture_slice_2d
 	if rings_texture:
-		var main_light_source := body.get_parent_spatial() # assumes no moon rings!
-		var rings: Spatial = _Rings_.new(body, rings_texture, main_light_source)
+		var main_light_source := body.get_parent_node_3d() # assumes no moon rings!
+		var rings: Node3D = _Rings_.new(body, rings_texture, main_light_source)
 		body.add_child_to_model_space(rings)
 	if _is_building_system:
 		_system_finished_count += 1

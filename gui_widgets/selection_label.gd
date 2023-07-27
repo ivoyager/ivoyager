@@ -26,9 +26,9 @@ var _selection_manager: IVSelectionManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_connect_selection_manager"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_selection"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 	_connect_selection_manager()
 
 
@@ -42,7 +42,7 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_selection_manager.connect("selection_changed", Callable(self, "_update_selection"))
 	_update_selection()
 
 

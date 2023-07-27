@@ -35,15 +35,15 @@ var _fragment_id := -1
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	var world_controller: IVWorldController = IVGlobal.program.WorldController
-	world_controller.connect("mouse_target_changed", self, "_on_mouse_target_changed")
+	world_controller.connect("mouse_target_changed", Callable(self, "_on_mouse_target_changed"))
 	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 	if fragment_identifier:
-		fragment_identifier.connect("fragment_changed", self, "_on_fragment_changed")
+		fragment_identifier.connect("fragment_changed", Callable(self, "_on_fragment_changed"))
 		_fragment_data = fragment_identifier.fragment_data
-	set("custom_fonts/font", IVGlobal.fonts.hud_names)
-	align = ALIGN_CENTER
+	set("theme_override_fonts/font", IVGlobal.fonts.hud_names)
+	align = ALIGNMENT_CENTER
 	grow_horizontal = GROW_DIRECTION_BOTH
 	size_flags_horizontal = SIZE_SHRINK_CENTER
 	hide()
@@ -61,7 +61,7 @@ func _process(_delta: float) -> void:
 		hide()
 		return
 	show()
-	rect_position = _world_targeting[0] + offset + Vector2(-rect_size.x / 2.0, -rect_size.y)
+	position = _world_targeting[0] + offset + Vector2(-size.x / 2.0, -size.y)
 
 
 func _on_mouse_target_changed(object: Object) -> void:

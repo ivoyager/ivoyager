@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSystemBuilder
-extends Reference
+extends RefCounted
 
 # Builds the star system(s) from data tables & binaries.
 
@@ -32,7 +32,7 @@ var _sbg_builder: IVSBGBuilder
 
 
 func _project_init():
-	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
+	IVGlobal.connect("state_manager_inited", Callable(self, "_on_state_manager_inited").bind(), CONNECT_ONE_SHOT)
 	_table_reader = IVGlobal.program.TableReader
 	_body_builder = IVGlobal.program.BodyBuilder
 	_sbg_builder = IVGlobal.program.SBGBuilder
@@ -71,13 +71,13 @@ func _add_bodies(table_name: String) -> void:
 			parent.add_child(body)
 			parent.satellites.append(body)
 		else: # top body
-			var universe: Spatial = IVGlobal.program.Universe
+			var universe: Node3D = IVGlobal.program.Universe
 			universe.add_child(body)
 		row += 1
 
 
 func _add_camera() -> void:
 	var camera_script: Script = IVGlobal.script_classes._Camera_
-	var camera: Camera = camera_script.new()
+	var camera: Camera3D = camera_script.new()
 	var start_body: IVBody = IVGlobal.bodies[IVGlobal.home_name]
 	start_body.add_child(camera)

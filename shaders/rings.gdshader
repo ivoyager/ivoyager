@@ -35,7 +35,7 @@ render_mode cull_disabled, unshaded;
 
 uniform bool is_sun_above = false;
 uniform vec3 sun_translation;
-uniform sampler2D rings_texture;// : hint_albedo;
+uniform sampler2D rings_texture;// : source_color;
 uniform float inner_fraction = 0.5307358; // Saturn: 74510 km / 140390 km
 uniform float pixel_number = 13177.0; // saturn.rings: 13177.0
 uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1.0 / 13177.0
@@ -122,7 +122,7 @@ void fragment() {
 				// We use 'phase' (=cos(phase_angle)), clipped for min_phase
 				// and scaled to 0.0 .. 1.0. Note that 'phase' +1.0 corresponds
 				// to phase angle 0 (100% backscatter). 
-				vec3 sun_vector = (INV_CAMERA_MATRIX * vec4(sun_translation.x, sun_translation.y,
+				vec3 sun_vector = (VIEW_MATRIX * vec4(sun_translation.x, sun_translation.y,
 						sun_translation.z, 1.0)).xyz;
 				
 				float phase = dot(normalize(sun_vector), normalize(VIEW)); // cos(phase_angle)

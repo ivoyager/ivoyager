@@ -44,11 +44,11 @@ func _init(body: IVBody) -> void:
 
 
 func _ready() -> void:
-	_body_huds_state.connect("visibility_changed", self, "_on_global_huds_changed")
-	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
-	horizontal_alignment = ALIGN_CENTER
+	_body_huds_state.connect("visibility_changed", Callable(self, "_on_global_huds_changed"))
+	_body.connect("huds_visibility_changed", Callable(self, "_on_body_huds_changed"))
+	horizontal_alignment = ALIGNMENT_CENTER
 	vertical_alignment = VALIGN_CENTER
-	billboard = SpatialMaterial.BILLBOARD_ENABLED
+	billboard = StandardMaterial3D.BILLBOARD_ENABLED
 	
 	fixed_size = true
 	pixel_size = 0.0006 # FIXME: Check this!

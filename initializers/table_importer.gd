@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableImporter
-extends Reference
+extends RefCounted
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for REAL) results to IVGlobal dictionaries. Data can be
@@ -209,7 +209,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						var raw_type: String = line_array[column]
 						var type := _get_type_int(raw_type)
 						field_info[field][0] = type
-						if type == TYPE_REAL and !is_mod:
+						if type == TYPE_FLOAT and !is_mod:
 							precisions[field] = []
 				has_types = true
 			
@@ -273,7 +273,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						table_column.resize(n_rows)
 						table_column.fill(default) # mod table will overwrite
 						table[field] = table_column
-						if type != TYPE_REAL:
+						if type != TYPE_FLOAT:
 							continue
 						var precisions_column := []
 						precisions_column.resize(n_rows)
@@ -329,7 +329,7 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 				var default = field_info[field][3] # untyped
 				table[field].append(default)
 				var type: int = field_info[field][0]
-				if type == TYPE_REAL:
+				if type == TYPE_FLOAT:
 					precisions[field].append(1) # ad hoc default
 	
 	for field in _column_map:
@@ -344,7 +344,7 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			var prefix: String = field_info[field][1]
 			var unit: String = field_info[field][2]
 			value = _get_processed_value(raw_value, type, prefix, unit, true) # untyped
-			if type == TYPE_REAL: # function return is array [value, precision]
+			if type == TYPE_FLOAT: # function return is array [value, precision]
 				precision = value[1]
 				value = value[0]
 		else: # blank cell
@@ -355,7 +355,7 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			table[field][row] = value
 		else:
 			table[field].append(value)
-		if type == TYPE_REAL:
+		if type == TYPE_FLOAT:
 			if is_mod:
 				precisions[field][row] = precision
 			else:
@@ -367,7 +367,7 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 
 func _get_type_int(raw_type: String) -> int:
 	if raw_type == "REAL":
-		return TYPE_REAL
+		return TYPE_FLOAT
 	if raw_type == "BOOL":
 		return TYPE_BOOL
 	if raw_type == "INT":
@@ -415,7 +415,7 @@ func _get_processed_value(raw_value: String, type: int, prefix: String, unit: St
 			if prefix:
 				return prefix + raw_value
 			return raw_value
-		TYPE_REAL:
+		TYPE_FLOAT:
 			var value: float
 			var precision := -1
 			if !raw_value:
@@ -482,7 +482,7 @@ func _postprocess_ints() -> void:
 func _get_int(raw_value: String) -> int:
 	if !raw_value:
 		return -1
-	if raw_value.is_valid_integer():
+	if raw_value.is_valid_int():
 		return int(raw_value)
 	assert(_enumerations.has(raw_value), "Unknown enumeration '%s'" % raw_value)
 	return _enumerations[raw_value]

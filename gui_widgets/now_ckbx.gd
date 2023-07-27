@@ -26,14 +26,14 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("user_pause_changed", self, "_update_ckbx")
-	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_update_ckbx")
-	connect("pressed", self, "_set_real_world")
+	IVGlobal.connect("user_pause_changed", Callable(self, "_update_ckbx"))
+	_timekeeper.connect("speed_changed", Callable(self, "_update_ckbx"))
+	_timekeeper.connect("time_altered", Callable(self, "_update_ckbx"))
+	connect("pressed", Callable(self, "_set_real_world"))
 
 
 func _update_ckbx(_dummy = false) -> void:

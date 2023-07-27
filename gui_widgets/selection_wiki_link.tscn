@@ -4,11 +4,11 @@
 
 
 [node name="SelectionWikiLink" type="RichTextLabel"]
-margin_top = 275.0
-margin_right = 100.0
-margin_bottom = 305.0
+offset_top = 275.0
+offset_right = 100.0
+offset_bottom = 305.0
 bbcode_enabled = true
-bbcode_text = "[url]Wikipedia[/url]"
+text = "[url]Wikipedia[/url]"
 text = "Wikipedia"
 fit_content_height = true
 scroll_active = false

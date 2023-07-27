@@ -38,7 +38,7 @@ var format_overrides := {
 
 var _settings: Dictionary = IVGlobal.settings
 
-onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+@onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 
 
 func _on_init():
@@ -82,26 +82,26 @@ func _on_init():
 
 
 func _project_init() -> void:
-	._project_init()
-	IVGlobal.connect("options_requested", self, "open")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	super._project_init()
+	IVGlobal.connect("options_requested", Callable(self, "open"))
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	if !IVGlobal.enable_save_load:
 		remove_subpanel("LABEL_SAVE_LOAD")
 
 
 func _on_ready() -> void:
-	._on_ready()
+	super._on_ready()
 	_header_label.text = "LABEL_OPTIONS"
 	var hotkeys_button := Button.new()
 	hotkeys_button.size_flags_horizontal = SIZE_SHRINK_END
 	hotkeys_button.text = "BUTTON_HOTKEYS"
-	hotkeys_button.connect("pressed", self, "_open_hotkeys")
+	hotkeys_button.connect("pressed", Callable(self, "_open_hotkeys"))
 	_header_right.add_child(hotkeys_button)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_options"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		if visible:
 			_on_cancel()
 		else:
@@ -109,7 +109,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 
 
 func open() -> void:
-	._open()
+	super._open()
 
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
@@ -121,7 +121,7 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	var default_button := Button.new()
 	default_button.text = "!"
 	default_button.disabled = _settings_manager.is_default(setting)
-	default_button.connect("pressed", self, "_restore_default", [setting])
+	default_button.connect("pressed", Callable(self, "_restore_default").bind(setting))
 	var value = _settings[setting]
 	var default_value = _settings_manager.defaults[setting]
 	var type := typeof(default_value)
@@ -131,8 +131,8 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 			setting_hbox.add_child(checkbox)
 			checkbox.size_flags_horizontal = BoxContainer.SIZE_SHRINK_END
 			_set_overrides(checkbox, setting)
-			checkbox.pressed = value
-			checkbox.connect("toggled", self, "_on_change", [setting, default_button])
+			checkbox.button_pressed = value
+			checkbox.connect("toggled", Callable(self, "_on_change").bind(setting, default_button))
 		TYPE_INT: # handle enums here
 			if not setting_enums.has(setting):
 				continue
@@ -144,19 +144,19 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 				option_button.add_item(key)
 			_set_overrides(option_button, setting)
 			option_button.selected = value
-			option_button.connect("item_selected", self, "_on_change", [setting, default_button])
-		TYPE_INT, TYPE_REAL:
+			option_button.connect("item_selected", Callable(self, "_on_change").bind(setting, default_button))
+		TYPE_INT, TYPE_FLOAT:
 			var is_int := type == TYPE_INT
 			var spin_box := SpinBox.new()
 			setting_hbox.add_child(spin_box)
-			spin_box.align = LineEdit.ALIGN_CENTER # ALIGN_RIGHT is buggy w/ big fonts
+			spin_box.align = LineEdit.ALIGNMENT_CENTER # ALIGN_RIGHT is buggy w/ big fonts
 			spin_box.step = 1.0 if is_int else 0.1
 			spin_box.rounded = is_int
 			spin_box.min_value = 0.0
 			spin_box.max_value = 100.0
 			_set_overrides(spin_box, setting)
 			spin_box.value = value
-			spin_box.connect("value_changed", self, "_on_change", [setting, default_button, is_int])
+			spin_box.connect("value_changed", Callable(self, "_on_change").bind(setting, default_button, is_int))
 			var line_edit := spin_box.get_line_edit()
 			line_edit.context_menu_enabled = false
 			line_edit.update()
@@ -164,18 +164,18 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 			var line_edit := LineEdit.new()
 			setting_hbox.add_child(line_edit)
 			line_edit.size_flags_horizontal = BoxContainer.SIZE_SHRINK_END
-			line_edit.rect_min_size.x = 100.0
+			line_edit.custom_minimum_size.x = 100.0
 			_set_overrides(line_edit, setting)
 			line_edit.text = value
-			line_edit.connect("text_changed", self, "_on_change", [setting, default_button])
+			line_edit.connect("text_changed", Callable(self, "_on_change").bind(setting, default_button))
 		TYPE_COLOR:
 			var color_picker_button := ColorPickerButton.new()
 			setting_hbox.add_child(color_picker_button)
-			color_picker_button.rect_min_size.x = 60.0
+			color_picker_button.custom_minimum_size.x = 60.0
 			color_picker_button.edit_alpha = false
 			_set_overrides(color_picker_button, setting)
 			color_picker_button.color = value
-			color_picker_button.connect("color_changed", self, "_on_change", [setting, default_button])
+			color_picker_button.connect("color_changed", Callable(self, "_on_change").bind(setting, default_button))
 		_:
 			print("ERROR: Unknown Option type!")
 	setting_hbox.add_child(default_button)
@@ -224,13 +224,13 @@ func _on_cancel_changes() -> void:
 
 
 func _open_hotkeys() -> void:
-	if !is_connected("popup_hide", IVGlobal, "emit_signal"):
-		connect("popup_hide", IVGlobal, "emit_signal", ["hotkeys_requested"], CONNECT_ONESHOT)
+	if !is_connected("popup_hide", Callable(IVGlobal, "emit_signal")):
+		connect("popup_hide", Callable(IVGlobal, "emit_signal").bind("hotkeys_requested"), CONNECT_ONE_SHOT)
 	_on_cancel()
 
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
-		yield(get_tree(), "idle_frame") # allow font changes
+		await get_tree().idle_frame # allow font changes
 		hide()
 		_open()

@@ -29,22 +29,22 @@ var _allow_fullscreen_toggle: bool = IVGlobal.allow_fullscreen_toggle
 var _is_fullscreen := false
 var _test_countdown := 0
 
-onready var _tree := get_tree()
-onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
+@onready var _tree := get_tree()
+@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	if add_menu_button:
 		_main_menu_manager.make_button("BUTTON_FULL_SCREEN", button_priority, false, true, self,
 				"_change_fullscreen")
 		_main_menu_manager.make_button("BUTTON_MINIMIZE", button_priority, false, true, self,
 				"_change_fullscreen", [], _main_menu_manager.HIDDEN)
-		IVGlobal.connect("update_gui_requested", self, "_update_buttons")
-		_tree.connect("screen_resized", self, "_extended_test_for_screen_resize")
+		IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
+		_tree.connect("screen_resized", Callable(self, "_extended_test_for_screen_resize"))
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_fullscreen"):
 		_change_fullscreen()
 		_tree.set_input_as_handled()
@@ -53,11 +53,11 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 func _change_fullscreen() -> void:
 	if !_allow_fullscreen_toggle:
 		return
-	OS.window_fullscreen = !OS.window_fullscreen
+	get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN if (!((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN))) else Window.MODE_WINDOWED
 
 
 func _update_buttons() -> void:
-	if _is_fullscreen == OS.window_fullscreen:
+	if _is_fullscreen == ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN)):
 		return
 	_is_fullscreen = !_is_fullscreen
 	if _is_fullscreen:
@@ -77,6 +77,6 @@ func _extended_test_for_screen_resize() -> void:
 	_test_countdown = 20
 	_update_buttons()
 	while _test_countdown:
-		yield(_tree, "idle_frame")
+		await _tree.idle_frame
 		_update_buttons()
 		_test_countdown -= 1

@@ -30,31 +30,31 @@ var stop_sim := true
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _project_init():
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("open_main_menu_requested", self, "_open")
-	IVGlobal.connect("close_main_menu_requested", self, "hide")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	connect("popup_hide", Callable(self, "_on_popup_hide"))
+	IVGlobal.connect("open_main_menu_requested", Callable(self, "_open"))
+	IVGlobal.connect("close_main_menu_requested", Callable(self, "hide"))
+	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main_menu
 	if center:
-		$PanelContainer.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+		$PanelContainer.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
 		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if !_state.is_system_built:
 		# bypass; the splash screen should have its own MainMenu widget!
 		return
 	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		if visible:
 			hide()
 		else:

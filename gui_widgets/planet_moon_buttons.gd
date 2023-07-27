@@ -47,14 +47,14 @@ var _currently_selected: Button
 var _resize_control_multipliers := {}
 var _is_built := false
 
-onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+@onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_build")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("resized", self, "_resize")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_build"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	connect("resized", Callable(self, "_resize"))
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	_build()
 
 
@@ -68,7 +68,7 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
-	set("custom_constants/separation", column_separation)
+	set("theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size
 	var star: IVBody = IVGlobal.top_bodies[0]
 	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
@@ -115,7 +115,7 @@ func _build(_dummy := false) -> void:
 		add_child(planet_vbox)
 		var spacer := Control.new()
 		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0)
-		spacer.rect_min_size.y = spacer_height
+		spacer.custom_minimum_size.y = spacer_height
 		spacer.mouse_filter = MOUSE_FILTER_IGNORE
 		_resize_control_multipliers[spacer] = Vector2(0.0, spacer_height / INIT_WIDTH)
 		planet_vbox.add_child(spacer)
@@ -141,7 +141,7 @@ func _clear() -> void:
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var button := IVNavigationButton.new(body, image_size, _selection_manager)
-	button.connect("selected", self, "_on_nav_button_selected", [button])
+	button.connect("selected", Callable(self, "_on_nav_button_selected").bind(button))
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
@@ -157,18 +157,18 @@ func _resize() -> void:
 	# iffy. We have a few images already smaller than their bounding buttons
 	# (Ceres & Pluto, depending on min_button_width_proportion) and this is why
 	# it is possible to shrink the widget before image resizing.
-	var widget_width := rect_size.x
+	var widget_width := size.x
 	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-	set("custom_constants/separation", column_separation)
+	set("theme_override_constants/separation", column_separation)
 	for key in _resize_control_multipliers:
 		var control := key as Control
 		var multipliers: Vector2 = _resize_control_multipliers[control]
-		control.rect_min_size = multipliers * widget_width
+		control.custom_minimum_size = multipliers * widget_width
 
 
 func _on_nav_button_selected(selected: Button) -> void:
 	_currently_selected = selected
-	if !_mouse_only_gui_nav and !get_focus_owner():
+	if !_mouse_only_gui_nav and !get_viewport().gui_get_focus_owner():
 		if selected.focus_mode != FOCUS_NONE:
 			selected.grab_focus()
 
@@ -181,7 +181,7 @@ func _settings_listener(setting: String, value) -> void:
 		"mouse_only_gui_nav":
 			_mouse_only_gui_nav = value
 			if !_mouse_only_gui_nav and _currently_selected:
-				yield(get_tree(), "idle_frame") # wait for _mouse_only_gui_nav.gd
+				await get_tree().idle_frame # wait for _mouse_only_gui_nav.gd
 				if _currently_selected.focus_mode != FOCUS_NONE:
 					_currently_selected.grab_focus()
 
@@ -192,7 +192,7 @@ func _settings_resize() -> void:
 	# the widget.
 	for child in get_children():
 		child.hide()
-	yield(get_tree(), "idle_frame")
+	await get_tree().idle_frame
 	_resize()
 	for child in get_children():
 		child.show()

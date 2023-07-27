@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSleepManager
-extends Reference
+extends RefCounted
 
 # This manager is optional. If present, it will reduce process load by putting
 # to sleep IVBody instances that we don't need to process. For now, we're mainly
@@ -29,14 +29,14 @@ extends Reference
 
 const IS_STAR_ORBITING := IVEnums.BodyFlags.IS_STAR_ORBITING
 
-var _camera: Camera
+var _camera: Camera3D
 var _current_star_orbiter: IVBody
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
@@ -49,16 +49,16 @@ func _clear() -> void:
 	_disconnect_camera()
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("parent_changed", self, "_on_camera_parent_changed")
+		_camera.connect("parent_changed", Callable(self, "_on_camera_parent_changed"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("parent_changed", self, "_on_camera_parent_changed")
+		_camera.disconnect("parent_changed", Callable(self, "_on_camera_parent_changed"))
 	_camera = null
 
 
@@ -75,7 +75,7 @@ func _on_camera_parent_changed(body: IVBody) -> void:
 
 func _get_star_orbiter(body: IVBody) -> IVBody:
 	while not body.flags & IS_STAR_ORBITING:
-		body = body.get_parent_spatial() as IVBody
+		body = body.get_parent_node_3d() as IVBody
 		if !body: # reached the top
 			return null
 	return body

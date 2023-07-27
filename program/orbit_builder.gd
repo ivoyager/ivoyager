@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbitBuilder
-extends Reference
+extends RefCounted
 
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
@@ -26,7 +26,7 @@ const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #375
 const DPRINT := false
 const PIdiv2 := PI / 2.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
-const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
+const MIN_I_FOR_NODAL_PRECESSION := deg_to_rad(0.1)
 const DAY := IVUnits.DAY
 
 var _dynamic_orbits: bool = IVGlobal.dynamic_orbits

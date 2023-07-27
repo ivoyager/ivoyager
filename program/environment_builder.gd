@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVEnvironmentBuilder
-extends Reference
+extends RefCounted
 
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.
@@ -27,8 +27,8 @@ var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
 
 
 func _project_init() -> void:
-	IVGlobal.connect("project_objects_instantiated", self, "_check_starmap_availability")
-	IVGlobal.connect("project_inited", self, "add_world_environment")
+	IVGlobal.connect("project_objects_instantiated", Callable(self, "_check_starmap_availability"))
+	IVGlobal.connect("project_inited", Callable(self, "add_world_environment"))
 
 
 func _check_starmap_availability() -> void:
@@ -63,7 +63,7 @@ func _get_environment() -> Environment: # I/O thread!
 	# TODO: Read env settings from data table!
 	var settings: Dictionary = IVGlobal.settings
 	var asset_paths: Dictionary = IVGlobal.asset_paths
-	var panorama_sky := PanoramaSky.new()
+	var panorama_sky := Sky.new()
 	var starmap_file: String
 	match settings.starmap:
 		IVEnums.StarmapSize.STARMAP_8K:
@@ -72,13 +72,13 @@ func _get_environment() -> Environment: # I/O thread!
 			starmap_file = asset_paths.starmap_16k
 	if !IVFiles.exists(starmap_file):
 		starmap_file = asset_paths[fallback_starmap]
-	var starmap: Texture = load(starmap_file)
+	var starmap: Texture2D = load(starmap_file)
 	panorama_sky.panorama = starmap
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.background_sky = panorama_sky
 	env.background_energy = 1.0
-	env.ambient_light_color = Color.white
+	env.ambient_light_color = Color.WHITE
 	env.ambient_light_sky_contribution = 0.0
 	env.ambient_light_energy = 0.03
 	env.glow_enabled = true

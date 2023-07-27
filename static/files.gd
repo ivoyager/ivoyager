@@ -33,7 +33,7 @@ static func make_object_or_scene(script: Script) -> Object:
 	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
 	var pkd_scene: PackedScene = load(scene_path)
 	assert(pkd_scene, "Expected scene path at: " + scene_path)
-	var root_node: Node = pkd_scene.instance()
+	var root_node: Node = pkd_scene.instantiate()
 	if root_node.script != script: # root_node.script may be parent class
 		root_node.set_script(script)
 	return root_node
@@ -49,7 +49,7 @@ static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> Str
 			if !save_dir.ends_with("/unmodded_saves"):
 				save_dir = ""
 	if save_dir:
-		var dir := Directory.new()
+		var dir := DirAccess.new()
 		if dir.open(save_dir) != OK:
 			save_dir = ""
 	if save_dir == "":
@@ -91,12 +91,12 @@ static func exists(file_path: String) -> bool:
 static func is_valid_dir(dir_path: String) -> bool:
 	if dir_path == "":
 		return false
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	return dir.open(dir_path) == OK
 
 
 static func make_dir_if_doesnt_exist(dir_path: String, recursive := true) -> void:
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	if !dir.dir_exists(dir_path):
 		if recursive:
 			dir.make_dir_recursive(dir_path)
@@ -105,10 +105,10 @@ static func make_dir_if_doesnt_exist(dir_path: String, recursive := true) -> voi
 
 
 static func make_or_clear_dir(dir_path: String) -> void:
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	if dir.dir_exists(dir_path):
 		assert(dir.open(dir_path) == OK)
-		dir.list_dir_begin()
+		dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 		var file_name := dir.get_next()
 		while file_name:
 			if !dir.current_is_dir():
@@ -123,12 +123,12 @@ static func make_or_clear_dir(dir_path: String) -> void:
 static func get_dir_files(dir_path: String, extension := "") -> Array:
 	# No period in extension, if provided.
 	# Useful for debugging. Export removes files & changes file names!
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	if dir.open(dir_path) != OK:
 		print("Could not open dir: ", dir_path)
 		return []
 	var result := []
-	dir.list_dir_begin()
+	dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	var file_name := dir.get_next()
 	while file_name:
 		if !dir.current_is_dir():
@@ -147,11 +147,11 @@ static func find_resource_file(dir_paths: Array, prefix: String,
 	# Search is case-insensitive.
 	var prefix_dot := prefix + "."
 	var match_size := prefix_dot.length()
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	for dir_path in dir_paths:
 		if dir.open(dir_path) != OK:
 			continue
-		dir.list_dir_begin()
+		dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 		var file_name := dir.get_next()
 		while file_name:
 			if !dir.current_is_dir():

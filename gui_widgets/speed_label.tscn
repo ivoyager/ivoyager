@@ -3,8 +3,8 @@
 [ext_resource path="res://ivoyager/gui_widgets/speed_label.gd" type="Script" id=1]
 
 [node name="SpeedLabel" type="Label"]
-margin_right = 40.0
-margin_bottom = 14.0
+offset_right = 40.0
+offset_bottom = 14.0
 size_flags_horizontal = 4
 text = "hr/s"
 script = ExtResource( 1 )

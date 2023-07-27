@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFragmentIdentifier
-extends Viewport
+extends SubViewport
 
 # Remove from ProjectBuilder.gui_nodes if not used.
 #
@@ -91,8 +91,8 @@ var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
 
-onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
-onready var _picker_texture: ViewportTexture = get_texture()
+@onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
+@onready var _picker_texture: ViewportTexture = get_texture()
 
 
 func _project_init() -> void:
@@ -104,12 +104,12 @@ func _project_init() -> void:
 	
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	assert(fragment_range % 3 == 0)
 	add_child(_node2d)
-	_node2d.connect("draw", self, "_on_node2d_draw")
-	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	_node2d.connect("draw", Callable(self, "_on_node2d_draw"))
+	RenderingServer.connect("frame_post_draw", Callable(self, "_on_frame_post_draw"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 	_init_rects_and_arrays()
 	usage = USAGE_2D
 	render_target_update_mode = UPDATE_ALWAYS
@@ -243,7 +243,7 @@ func _init_rects_and_arrays() -> void:
 	for x in pxl_center_offsets:
 		for y in pxl_center_offsets:
 			pxl_center_xy_offsets.append([x, y])
-	pxl_center_xy_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize center
+	pxl_center_xy_offsets.sort_custom(Callable(self, "_sort_pxl_offsets")) # prioritize center
 	_n_pxls = pxl_center_xy_offsets.size()
 	_pxl_x_offsets.resize(_n_pxls)
 	_pxl_y_offsets.resize(_n_pxls)
@@ -295,7 +295,7 @@ func _on_frame_post_draw() -> void:
 	
 	_has_drawn = false
 	_picker_image = _picker_texture.get_data() # expensive!
-	_picker_image.lock()
+	false # _picker_image.lock() # TODOConverter3To4, Image no longer requires locking, `false` helps to not break one line if/else, so it can freely be removed
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!

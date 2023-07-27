@@ -4,24 +4,24 @@
 [ext_resource path="res://ivoyager/gui_popups/time_set_popup.gd" type="Script" id=2]
 
 [node name="TimeSetPopup" type="PopupPanel"]
-margin_right = 40.0
-margin_bottom = 40.0
+offset_right = 40.0
+offset_bottom = 40.0
 script = ExtResource( 2 )
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
-margin_left = 4.0
-margin_top = 4.0
-margin_right = 840.0
-margin_bottom = 38.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 840.0
+offset_bottom = 38.0
 mouse_filter = 2
-custom_constants/margin_right = 5
-custom_constants/margin_top = 5
-custom_constants/margin_left = 5
-custom_constants/margin_bottom = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_bottom = 5
 
 [node name="TimeSetter" parent="MarginContainer" instance=ExtResource( 1 )]
 unique_name_in_owner = true
-margin_left = 5.0
-margin_top = 5.0
-margin_right = 831.0
-margin_bottom = 29.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 831.0
+offset_bottom = 29.0

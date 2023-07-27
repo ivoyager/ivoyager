@@ -136,7 +136,7 @@ var _sync_engine_time := -INF
 var _adj_sync_tolerance := 0.0
 var _prev_whole_solar_day := NAN
 
-onready var _tree := get_tree()
+@onready var _tree := get_tree()
 
 
 
@@ -144,15 +144,15 @@ onready var _tree := get_tree()
 # virtual functions, inits & destructors
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_set_init_state")
-	IVGlobal.connect("game_load_finished", self, "_set_ready_state")
-	IVGlobal.connect("simulator_exited", self, "_set_ready_state")
-	IVGlobal.connect("network_state_changed", self, "_on_network_state_changed")
-	IVGlobal.connect("run_state_changed", self, "_on_run_state_changed") # starts/stops
-	IVGlobal.connect("user_pause_changed", self, "_on_user_pause_changed")
-	IVGlobal.connect("update_gui_requested", self, "_refresh_gui")
-	connect("speed_changed", self, "_on_speed_changed")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_set_init_state"))
+	IVGlobal.connect("game_load_finished", Callable(self, "_set_ready_state"))
+	IVGlobal.connect("simulator_exited", Callable(self, "_set_ready_state"))
+	IVGlobal.connect("network_state_changed", Callable(self, "_on_network_state_changed"))
+	IVGlobal.connect("run_state_changed", Callable(self, "_on_run_state_changed")) # starts/stops
+	IVGlobal.connect("user_pause_changed", Callable(self, "_on_user_pause_changed"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_refresh_gui"))
+	connect("speed_changed", Callable(self, "_on_speed_changed"))
 	times.resize(3)
 	clock.resize(3)
 	match date_format:
@@ -172,7 +172,7 @@ func _ready() -> void:
 
 
 func _on_ready() -> void: # subclass can override
-	pause_mode = PAUSE_MODE_STOP
+	process_mode = PROCESS_MODE_PAUSABLE
 	_set_ready_state()
 	set_process(false) # changes with "run_state_changed" signal
 	set_process_priority(-100) # always first!
@@ -208,11 +208,11 @@ func _on_process(delta: float) -> void: # subclass can override
 		emit_signal("date_changed")
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	_on_unhandled_key_input(event)
 
 
-func _on_unhandled_key_input(event: InputEventKey) -> void:
+func _on_unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("incr_speed"):
@@ -231,7 +231,7 @@ func _notification(what: int) -> void:
 
 
 func _on_notification(what: int) -> void:
-	if what == NOTIFICATION_WM_FOCUS_IN:
+	if what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		if is_now:
 			set_now()
 
@@ -511,7 +511,7 @@ func _on_user_pause_changed(_is_paused: bool) -> void:
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_now:
-		yield(_tree, "idle_frame")
+		await _tree.idle_frame
 		set_now()
 
 
@@ -519,9 +519,9 @@ func _on_network_state_changed(network_state: int) -> void:
 	_network_state = network_state
 
 
-remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
+@rpc("any_peer") func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
 	# client-side network game only
-	if _tree.get_rpc_sender_id() != 1:
+	if _tree.get_remote_sender_id() != 1:
 		return # from server only
 	if engine_time_ < _sync_engine_time: # out-of-order packet
 		return
@@ -539,10 +539,10 @@ remote func _time_sync(time_: float, engine_time_: float, speed_multiplier_: flo
 	engine_time = 0.75 * engine_time + 0.25 * engine_time_
 
 
-remote func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
+@rpc("any_peer") func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
 		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
 	# client-side network game only
-	if _tree.get_rpc_sender_id() != 1:
+	if _tree.get_remote_sender_id() != 1:
 		return # from server only
 	speed_index = speed_index_
 	speed_name = speed_names[speed_index_]

@@ -65,33 +65,33 @@ var _mwheel_turning := 0.0
 var _move_pressed := Vector3.ZERO
 var _rotate_pressed := Vector3.ZERO
 
-onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
-onready var _tree := get_tree()
-onready var _viewport := get_viewport()
-onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
-onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
-onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
-onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * mouse_roll_adj
-onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * key_in_out_adj
-onready var _key_move_rate: float = _settings.camera_key_move_rate * key_move_adj
-onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * key_pitch_yaw_adj
-onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
+@onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
+@onready var _tree := get_tree()
+@onready var _viewport := get_viewport()
+@onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
+@onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
+@onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
+@onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * mouse_roll_adj
+@onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * key_in_out_adj
+@onready var _key_move_rate: float = _settings.camera_key_move_rate * key_move_adj
+@onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * key_pitch_yaw_adj
+@onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
 
 
 func _ready():
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_restore_init_state")
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_world_controller.connect("mouse_target_clicked", self, "_on_mouse_target_clicked")
-	_world_controller.connect("mouse_dragged", self, "_on_mouse_dragged")
-	_world_controller.connect("mouse_wheel_turned", self, "_on_mouse_wheel_turned")
+	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_restore_init_state"))
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	_world_controller.connect("mouse_target_clicked", Callable(self, "_on_mouse_target_clicked"))
+	_world_controller.connect("mouse_dragged", Callable(self, "_on_mouse_dragged"))
+	_world_controller.connect("mouse_wheel_turned", Callable(self, "_on_mouse_wheel_turned"))
 
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.TopGUI.selection_manager
-	_selection_manager.connect("selection_changed", self, "_on_selection_changed")
-	_selection_manager.connect("selection_reselected", self, "_on_selection_reselected")
+	_selection_manager.connect("selection_changed", Callable(self, "_on_selection_changed"))
+	_selection_manager.connect("selection_reselected", Callable(self, "_on_selection_reselected"))
 
 
 func _process(delta: float) -> void:
@@ -130,7 +130,7 @@ func _process(delta: float) -> void:
 		_camera.add_rotation(_rotate_pressed * delta)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !_camera:
 		return
 	if event.is_pressed():
@@ -227,20 +227,20 @@ func get_camera_view_state() -> Array:
 func _restore_init_state() -> void:
 	_disconnect_camera()
 	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", self, "_on_selection_changed")
+		_selection_manager.disconnect("selection_changed", Callable(self, "_on_selection_changed"))
 		_selection_manager = null
 
 
 func _connect_camera(camera: IVCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
-	_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+	_camera.connect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
 
 
 func _disconnect_camera() -> void:
 	if !_camera:
 		return
-	_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
+	_camera.disconnect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
 	_camera = null
 
 
@@ -283,7 +283,7 @@ func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask
 		_drag_mode = alt_drag
 	elif key_modifier_mask & KEY_MASK_SHIFT:
 		_drag_mode = shift_drag
-	elif button_mask & BUTTON_MASK_RIGHT:
+	elif button_mask & MOUSE_BUTTON_MASK_RIGHT:
 		_drag_mode = right_drag
 	else:
 		_drag_mode = left_drag

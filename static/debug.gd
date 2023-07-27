@@ -46,7 +46,7 @@ static func no_nans(thing) -> bool:
 		TYPE_BASIS:
 			if !no_nans(thing.x) or !no_nans(thing.y) or !no_nans(thing.z):
 				return false
-		TYPE_TRANSFORM:
+		TYPE_TRANSFORM3D:
 			if !no_nans(thing.basis) or !no_nans(thing.origin):
 				return false
 		_:

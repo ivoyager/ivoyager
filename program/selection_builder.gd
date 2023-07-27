@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelectionBuilder
-extends Reference
+extends RefCounted
 
 
 # DEPRECIATE: This can be done in init function.

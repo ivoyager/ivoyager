@@ -24,15 +24,15 @@ extends HBoxContainer
 
 var _selection_manager: IVSelectionManager
 
-onready var _back: Button = $Back
-onready var _forward: Button = $Forward
-onready var _up: Button = $Up
+@onready var _back: Button = $Back
+@onready var _forward: Button = $Forward
+@onready var _up: Button = $Up
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
-	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_connect_selection_manager"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 	_connect_selection_manager()
 
 
@@ -42,10 +42,10 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_buttons")
-	_back.connect("pressed", _selection_manager, "back")
-	_forward.connect("pressed", _selection_manager, "forward")
-	_up.connect("pressed", _selection_manager, "up")
+	_selection_manager.connect("selection_changed", Callable(self, "_update_buttons"))
+	_back.connect("pressed", Callable(_selection_manager, "back"))
+	_forward.connect("pressed", Callable(_selection_manager, "forward"))
+	_up.connect("pressed", Callable(_selection_manager, "up"))
 	_update_buttons()
 
 

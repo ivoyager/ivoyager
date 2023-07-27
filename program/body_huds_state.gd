@@ -32,7 +32,7 @@ signal visibility_changed()
 signal color_changed()
 
 
-const NULL_COLOR := Color.black
+const NULL_COLOR := Color.BLACK
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
@@ -61,13 +61,13 @@ var default_orbit_visible_flags := 0
 var default_orbit_colors := {}
 
 
-onready var _tree := get_tree()
+@onready var _tree := get_tree()
 
 
 
 func _project_init() -> void:
-	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
-	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	IVGlobal.connect("simulator_exited", Callable(self, "_set_current_to_default"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_signal_all_changed"))
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("visual_groups"):
 		var body_flag := table_reader.get_int("visual_groups", "body_flag", row)
@@ -88,7 +88,7 @@ func _project_init() -> void:
 	_set_current_to_default()
 
 
-func _unhandled_key_input(event: InputEventKey):
+func _unhandled_key_input(event: InputEvent):
 	# Only Body HUDs, for now...
 	if event.is_action_pressed("toggle_orbits"):
 		set_all_orbits_visibility(bool(orbit_visible_flags != all_flags))

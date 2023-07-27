@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableReader
-extends Reference
+extends RefCounted
 
 # API here provides constructor methods and table access with protections for
 # missing table fields and values. Alternatively, you can access data directly
@@ -141,7 +141,7 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 		row = _enumerations[row_name]
 	var value = _tables[table][field][row]
 	var type := typeof(value)
-	if type == TYPE_REAL:
+	if type == TYPE_FLOAT:
 		return !is_nan(value)
 	if type == TYPE_INT:
 		return value != -1

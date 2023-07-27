@@ -3,10 +3,10 @@
 [ext_resource path="res://ivoyager/gui_widgets/time_set_button.gd" type="Script" id=1]
 
 [node name="TimeSetButton" type="Button"]
-margin_left = 162.0
-margin_right = 255.0
-margin_bottom = 24.0
-hint_tooltip = "HINT_SET_TIME"
+offset_left = 162.0
+offset_right = 255.0
+offset_bottom = 24.0
+tooltip_text = "HINT_SET_TIME"
 toggle_mode = true
 action_mode = 0
 text = "BUTTON_SET"

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVWikiManager
-extends Reference
+extends RefCounted
 
 # For internal wiki, set IVGlobal.enable_wiki and IVGlobal.use_internal_wiki. You
 # can then either 1) extend this class and override _open_internal_wiki(), or
@@ -33,7 +33,7 @@ var _wiki_url: String
 func _project_init() -> void:
 	if !IVGlobal.enable_wiki:
 		return
-	IVGlobal.connect("open_wiki_requested", self, "_open_wiki")
+	IVGlobal.connect("open_wiki_requested", Callable(self, "_open_wiki"))
 	if !IVGlobal.use_internal_wiki:
 		_wiki_url = "https://" + _wiki + ".org/wiki/"
 

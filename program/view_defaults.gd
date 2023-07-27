@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVViewDefaults
-extends Reference
+extends RefCounted
 
 # Generates 'default' IVView instances that we might want to use. Also moves
 # the camera home at game start, unless move_home_at_start = false.
@@ -40,7 +40,7 @@ var _View_: Script
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
 	_View_ = IVGlobal.script_classes._View_
 	
 	# visibilities & colors only
@@ -149,7 +149,7 @@ func _zoom() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION | IVView.CAMERA_LONGITUDE
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(-INF, deg2rad(18.0), 3.0) # z, radii dist when close
+	view.view_position = Vector3(-INF, deg_to_rad(18.0), 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	views.Zoom = view
 
@@ -159,7 +159,7 @@ func _fortyfive() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(-INF, deg2rad(45.0), 10.0) # z, radii dist when close
+	view.view_position = Vector3(-INF, deg_to_rad(45.0), 10.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	views.Fortyfive = view
 
@@ -169,7 +169,7 @@ func _top() -> void:
 	var view: IVView = _View_.new()
 	view.flags = IVView.CAMERA_ORIENTATION
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(-INF, deg2rad(85.0), 25.0) # z, radii dist when close
+	view.view_position = Vector3(-INF, deg_to_rad(85.0), 25.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	views.Top = view
 
@@ -211,7 +211,7 @@ func _cislunar() -> void:
 	view.flags = IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
 	view.selection_name = "PLANET_EARTH"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
-	view.view_position = Vector3(deg2rad(180.0), deg2rad(15.0), 120.0) # z, radii dist when close
+	view.view_position = Vector3(deg_to_rad(180.0), deg_to_rad(15.0), 120.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
 	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!
@@ -232,7 +232,7 @@ func _system() -> void:
 	view.flags = IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
 	view.selection_name = "STAR_SUN"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ECLIPTIC
-	view.view_position = Vector3(deg2rad(-90.0), deg2rad(15.0), 70.0 * AU) # z, real dist when far
+	view.view_position = Vector3(deg_to_rad(-90.0), deg_to_rad(15.0), 70.0 * AU) # z, real dist when far
 	view.view_rotations = Vector3.ZERO
 	view.orbit_visible_flags = (
 			# Must be from visibility_groups.tsv subset!
@@ -254,7 +254,7 @@ func _asteroids() -> void:
 	view.flags =  IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
 	view.selection_name = "STAR_SUN"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ECLIPTIC
-	view.view_position = Vector3(deg2rad(-90.0), deg2rad(45.0), 15.0 * AU) # z, real dist when far
+	view.view_position = Vector3(deg_to_rad(-90.0), deg_to_rad(45.0), 15.0 * AU) # z, real dist when far
 	view.view_rotations = Vector3.ZERO
 
 	view.orbit_visible_flags = (

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGPoints
-extends MeshInstance
+extends MeshInstance3D
 
 # Visual points for a SmallBodiesGroup instance. Uses points.shader or
 # points_l4_l5.shader. Shaders maintain vertex positions using their own
@@ -52,7 +52,7 @@ var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentI
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _group: IVSmallBodiesGroup
 var _color: Color
-var _vec3ids := PoolVector3Array() # point ids for FragmentIdentifier
+var _vec3ids := PackedVector3Array() # point ids for FragmentIdentifier
 
 # Lagrange point
 var _lp_integer := -1
@@ -65,10 +65,10 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	_lp_integer = _group.lp_integer
 	material_override = ShaderMaterial.new()
 	if _lp_integer == -1: # not trojans
-		material_override.shader = IVGlobal.shared.points_shader
+		material_override.gdshader = IVGlobal.shared.points_shader
 	elif _lp_integer >= 4: # trojans
 		_secondary_orbit = _group.secondary_body.orbit
-		material_override.shader = IVGlobal.shared.points_l4_l5_shader
+		material_override.gdshader = IVGlobal.shared.points_l4_l5_shader
 	else:
 		assert(false)
 	# fragment ids
@@ -84,10 +84,10 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 func _ready() -> void:
 	if _fragment_identifier:
-		pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_sbg_huds_state.connect("points_visibility_changed", self, "_set_visibility")
-	_sbg_huds_state.connect("points_color_changed", self, "_set_color")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+		process_mode = PROCESS_MODE_ALWAYS # FragmentIdentifier still processing
+	_sbg_huds_state.connect("points_visibility_changed", Callable(self, "_set_visibility"))
+	_sbg_huds_state.connect("points_color_changed", Callable(self, "_set_color"))
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	draw_points()
 
@@ -112,13 +112,13 @@ func draw_points() -> void:
 	var half_aabb = _group.max_apoapsis * Vector3.ONE
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
-	material_override.set_shader_param("point_size", float(IVGlobal.settings.point_size))
+	material_override.set_shader_parameter("point_size", float(IVGlobal.settings.point_size))
 	if _fragment_identifier:
-		material_override.set_shader_param("fragment_range", _fragment_targeting[1])
+		material_override.set_shader_parameter("fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
-		material_override.set_shader_param("lp_integer", _lp_integer)
+		material_override.set_shader_parameter("lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_semimajor_axis()
-		material_override.set_shader_param("characteristic_length", characteristic_length)
+		material_override.set_shader_parameter("characteristic_length", characteristic_length)
 	_set_visibility()
 	_set_color()
 
@@ -127,16 +127,16 @@ func _process(_delta: float) -> void:
 	if !visible :
 		return
 	# TODO 4.0: global uniforms!
-	material_override.set_shader_param("time", _times[0])
+	material_override.set_shader_parameter("time", _times[0])
 	if _lp_integer == 4:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
-		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
+		material_override.set_shader_parameter("lp_mean_longitude", lp_mean_longitude)
 	elif _lp_integer == 5:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
-		material_override.set_shader_param("lp_mean_longitude", lp_mean_longitude)
+		material_override.set_shader_parameter("lp_mean_longitude", lp_mean_longitude)
 	if _fragment_identifier:
-		material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
-		material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
+		material_override.set_shader_parameter("mouse_coord", _fragment_targeting[0])
+		material_override.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_visibility() -> void:
@@ -148,9 +148,9 @@ func _set_color() -> void:
 	if _color == color:
 		return
 	_color = color
-	material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+	material_override.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
 
 
 func _settings_listener(setting: String, value) -> void:
 	if setting == "point_size":
-		material_override.set_shader_param("point_size", float(value))
+		material_override.set_shader_parameter("point_size", float(value))

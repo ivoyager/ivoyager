@@ -39,14 +39,14 @@ var _ymd: Array = [0, 0, 0]
 var _hms := [0, 0, 0]
 var _hm := [0, 0]
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_display")
-	_timekeeper.connect("speed_changed", self, "_update_display")
-	set("custom_colors/font_color", forward_color)
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_display"))
+	_timekeeper.connect("speed_changed", Callable(self, "_update_display"))
+	set("theme_override_colors/font_color", forward_color)
 	_update_display()
 
 
@@ -75,4 +75,4 @@ func _update_display() -> void:
 	_show_seconds = _timekeeper.show_seconds
 	if _is_reversed != _timekeeper.is_reversed:
 		_is_reversed = !_is_reversed
-		set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)
+		set("theme_override_colors/font_color", reverse_color if _is_reversed else forward_color)

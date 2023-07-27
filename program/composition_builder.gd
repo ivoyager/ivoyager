@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCompositionBuilder
-extends Reference
+extends RefCounted
 
 
 var _table_reader: IVTableReader

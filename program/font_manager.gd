@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFontManager
-extends Reference
+extends RefCounted
 
 # Maintains IVGlobal.fonts.
 
@@ -35,21 +35,21 @@ var gui_large_sizes := [18, 24, 31]
 # private
 var _fonts: Dictionary = IVGlobal.fonts
 var _settings: Dictionary = IVGlobal.settings
-var _primary_font_data: DynamicFontData
+var _primary_font_data: FontFile
 
 
 func _project_init() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	_primary_font_data = IVGlobal.assets.primary_font_data
 	for key in fixed_sizes:
-		_fonts[key] = DynamicFont.new()
+		_fonts[key] = FontFile.new()
 		_fonts[key].font_data = _primary_font_data
 		_fonts[key].size = fixed_sizes[key]
-	_fonts.gui_main = DynamicFont.new()
-	_fonts.gui_medium = DynamicFont.new()
-	_fonts.gui_large = DynamicFont.new()
-	_fonts.hud_names = DynamicFont.new()
-	_fonts.hud_symbols = DynamicFont.new()
+	_fonts.gui_main = FontFile.new()
+	_fonts.gui_medium = FontFile.new()
+	_fonts.gui_large = FontFile.new()
+	_fonts.hud_names = FontFile.new()
+	_fonts.hud_symbols = FontFile.new()
 	_fonts.gui_main.font_data = _primary_font_data
 	_fonts.gui_medium.font_data = _primary_font_data
 	_fonts.gui_large.font_data = _primary_font_data

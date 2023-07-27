@@ -25,15 +25,15 @@ extends HBoxContainer
 signal time_set(is_close)
 
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	$Set.connect("pressed", self, "_on_set", [false])
-	$SetAndClose.connect("pressed", self, "_on_set", [true])
-	$Year.connect("value_changed", self, "_on_date_changed")
-	$Month.connect("value_changed", self, "_on_date_changed")
-	$Day.connect("value_changed", self, "_on_date_changed")
+	$Set.connect("pressed", Callable(self, "_on_set").bind(false))
+	$SetAndClose.connect("pressed", Callable(self, "_on_set").bind(true))
+	$Year.connect("value_changed", Callable(self, "_on_date_changed"))
+	$Month.connect("value_changed", Callable(self, "_on_date_changed"))
+	$Day.connect("value_changed", Callable(self, "_on_date_changed"))
 
 
 func set_current() -> void:

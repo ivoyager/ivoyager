@@ -29,14 +29,14 @@ var _currently_selected: Button
 var _body_tables := []
 var _button_size := 0.0 # scales with widget height
 
-onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
-onready var _hbox: HBoxContainer = $HBox
+@onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+@onready var _hbox: HBoxContainer = $HBox
 
 
 func _ready() -> void:
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("resized", self, "_on_resized")
+	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	connect("resized", Callable(self, "_on_resized"))
 	if IVGlobal.state.is_system_ready:
 		_on_system_tree_ready()
 
@@ -57,9 +57,9 @@ func add_bodies_from_table(table_name: String) -> void:
 
 func add_body(body: IVBody) -> void:
 	var button := IVNavigationButton.new(body, 10.0, _selection_manager)
-	button.connect("selected", self, "_on_nav_button_selected", [button])
+	button.connect("selected", Callable(self, "_on_nav_button_selected").bind(button))
 	button.size_flags_vertical = SIZE_FILL
-	button.rect_min_size.x = _button_size # button image grows to fit min x
+	button.custom_minimum_size.x = _button_size # button image grows to fit min x
 	_hbox.add_child(button)
 
 
@@ -80,16 +80,16 @@ func _add_bodies_from_table(table_name: String) -> void:
 
 func _on_nav_button_selected(selected: Button) -> void:
 	_currently_selected = selected
-	if !_mouse_only_gui_nav and !get_focus_owner():
+	if !_mouse_only_gui_nav and !get_viewport().gui_get_focus_owner():
 		if selected.focus_mode != FOCUS_NONE:
 			selected.grab_focus()
 
 
 func _on_resized() -> void:
-	var button_size := rect_size.y * 0.7 # 0.7 gives room for scroll bar
+	var button_size := size.y * 0.7 # 0.7 gives room for scroll bar
 	if _button_size == button_size:
 		return
 	_button_size = button_size
 	for child in _hbox.get_children():
-		child.rect_min_size.x = button_size
+		child.custom_minimum_size.x = button_size
 

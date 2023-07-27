@@ -30,7 +30,7 @@ signal orbits_color_changed()
 
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const NULL_COLOR := Color.black
+const NULL_COLOR := Color.BLACK
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
@@ -59,8 +59,8 @@ var default_orbits_colors := {}
 
 
 func _project_init() -> void:
-	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
-	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	IVGlobal.connect("simulator_exited", Callable(self, "_set_current_to_default"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_signal_all_changed"))
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("small_bodies_groups"):
 		if table_reader.get_bool("small_bodies_groups", "skip", row):
@@ -181,12 +181,12 @@ func get_orbits_color(group: String) -> Color:
 
 
 func get_consensus_points_color(groups: Array, is_default := false) -> Color:
-	var has_color := false
+	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
 		var color := get_default_points_color(group) if is_default else get_points_color(group)
-		if !has_color:
-			has_color = true
+		if !has_theme_color:
+			has_theme_color = true
 			consensus_color = color
 		elif color != consensus_color:
 			return NULL_COLOR
@@ -194,12 +194,12 @@ func get_consensus_points_color(groups: Array, is_default := false) -> Color:
 
 
 func get_consensus_orbits_color(groups: Array, is_default := false) -> Color:
-	var has_color := false
+	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
 		var color := get_default_orbits_color(group) if is_default else get_orbits_color(group)
-		if !has_color:
-			has_color = true
+		if !has_theme_color:
+			has_theme_color = true
 			consensus_color = color
 		elif color != consensus_color:
 			return NULL_COLOR

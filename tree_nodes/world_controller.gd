@@ -54,12 +54,12 @@ var _pause_mouse_input := true
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 	_world_targeting.resize(8)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = 0.0
-	_world_targeting[2] = null # Camera maintains
-	_world_targeting[3] = 50.0 # Camera maintains
+	_world_targeting[2] = null # Camera3D maintains
+	_world_targeting[3] = 50.0 # Camera3D maintains
 	_world_targeting[4] = null # potential targets maintain
 	_world_targeting[5] = INF # potential targets maintain
 	_world_targeting[6] = -1 # FragmentIdentifier maintains
@@ -67,13 +67,13 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS # but some functionaly stops if !pause_only_stops_time
+	process_mode = PROCESS_MODE_ALWAYS # but some functionaly stops if !pause_only_stops_time
 	mouse_filter = MOUSE_FILTER_STOP
-	connect("mouse_entered", self, "_on_mouse_entered")
-	connect("mouse_exited", self, "_on_mouse_exited")
-	set_anchors_and_margins_preset(Control.PRESET_WIDE)
+	connect("mouse_entered", Callable(self, "_on_mouse_entered"))
+	connect("mouse_exited", Callable(self, "_on_mouse_exited"))
+	set_anchors_and_offsets_preset(Control.PRESET_WIDE)
 	var viewport := get_viewport()
-	viewport.connect("size_changed", self, "_on_viewport_size_changed")
+	viewport.connect("size_changed", Callable(self, "_on_viewport_size_changed"))
 	_world_targeting[1] = viewport.size.y
 
 
@@ -113,14 +113,14 @@ func _gui_input(input_event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var button_index: int = event.button_index
 		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
-		if button_index == BUTTON_WHEEL_UP:
+		if button_index == MOUSE_BUTTON_WHEEL_UP:
 			emit_signal("mouse_wheel_turned", true)
 			return
-		if button_index == BUTTON_WHEEL_DOWN:
+		if button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			emit_signal("mouse_wheel_turned", false)
 			return
 		# start/stop mouse drag or process a mouse click
-		if button_index == BUTTON_LEFT or button_index == BUTTON_RIGHT:
+		if button_index == MOUSE_BUTTON_LEFT or button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed: # start of drag or button-down for click selection
 				_drag_start = event.position
 				_drag_segment_start = _drag_start

@@ -31,29 +31,29 @@ var add_quick_save_button := true
 var _settings: Dictionary = IVGlobal.settings
 var _blocking_popups: Array = IVGlobal.blocking_popups
 
-onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _project_init() -> void:
 	if !IVGlobal.enable_save_load:
 		return
 	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
-	IVGlobal.connect("save_dialog_requested", self, "_open")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	connect("file_selected", self, "_save_file")
-	connect("popup_hide", self, "_on_hide")
+	IVGlobal.connect("save_dialog_requested", Callable(self, "_open"))
+	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
+	connect("file_selected", Callable(self, "_save_file"))
+	connect("popup_hide", Callable(self, "_on_hide"))
 
 
 func _ready():
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
 	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		hide()
 
 
@@ -70,7 +70,7 @@ func _open() -> void:
 	var date_string: String = _timekeeper.get_current_date_for_file() \
 			if _settings.append_date_to_save else ""
 	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
-	deselect_items()
+	deselect_all()
 
 
 func _save_file(path: String) -> void:

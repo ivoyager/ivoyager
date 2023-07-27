@@ -3,8 +3,8 @@
 [ext_resource path="res://ivoyager/gui_widgets/huds_popup_button.gd" type="Script" id=1]
 
 [node name="HUDsPopupButton" type="Button"]
-margin_right = 12.0
-margin_bottom = 20.0
+offset_right = 12.0
+offset_bottom = 20.0
 toggle_mode = true
 action_mode = 0
 text = "BUTTON_HUDS"
