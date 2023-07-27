@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyBuilder
-extends Reference
+extends RefCounted
 
 # Builds IVBody from data tables.
 

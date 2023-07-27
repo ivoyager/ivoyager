@@ -27,7 +27,7 @@ extends HFlowContainer
 # Call init() to populate the saved view buttons and to init IVViewSaveButton
 # and IVViewSaver.
 
-onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+@onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
 
 
 var default_view_name := "LABEL_CUSTOM1" # will increment if taken
@@ -37,8 +37,8 @@ var show_flags := IVView.ALL
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_build_view_buttons")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_build_view_buttons"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 
 
 func init(view_save_button: IVViewSaveButton, default_view_name_ := "LABEL_CUSTOM1",
@@ -54,7 +54,7 @@ func init(view_save_button: IVViewSaveButton, default_view_name_ := "LABEL_CUSTO
 	show_flags = show_flags_
 	view_save_button.init(default_view_name, set_name, is_cached, show_flags, init_flags,
 			reserved_names)
-	view_save_button.connect("view_saved", self, "_on_view_saved")
+	view_save_button.connect("view_saved", Callable(self, "_on_view_saved"))
 	if IVGlobal.state.is_started_or_about_to_start:
 		_build_view_buttons()
 
@@ -73,8 +73,8 @@ func _build_view_buttons(_dummy := false) -> void:
 
 func _build_view_button(view_name: String) -> void:
 	var button := RemovableViewButton.new(view_name)
-	button.connect("pressed", self, "_on_button_pressed", [button])
-	button.connect("right_clicked", self, "_on_button_right_clicked", [button])
+	button.connect("pressed", Callable(self, "_on_button_pressed").bind(button))
+	button.connect("right_clicked", Callable(self, "_on_button_right_clicked").bind(button))
 	add_child(button)
 
 
@@ -101,6 +101,6 @@ class RemovableViewButton extends Button:
 	
 	func _gui_input(event: InputEvent) -> void:
 		var mouse_button_event := event as InputEventMouseButton
-		if mouse_button_event and mouse_button_event.button_index == BUTTON_RIGHT:
+		if mouse_button_event and mouse_button_event.button_index == MOUSE_BUTTON_RIGHT:
 			emit_signal("right_clicked")
 	

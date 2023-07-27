@@ -29,5 +29,5 @@ extends Button
 func _ready() -> void:
 	var view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 	assert(view_defaults.has_view(name), "No default view with name = " + name)
-	connect("pressed", view_defaults, "set_view", [name])
+	connect("pressed", Callable(view_defaults, "set_view").bind(name))
 

@@ -33,10 +33,10 @@ var _selection_manager: IVSelectionManager
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("meta_clicked", self, "_on_wiki_clicked")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_connect_selection_manager"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_selection"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	connect("meta_clicked", Callable(self, "_on_wiki_clicked"))
 	size_flags_horizontal = SIZE_EXPAND_FILL
 	_connect_selection_manager()
 
@@ -52,9 +52,9 @@ func _connect_selection_manager(_dummy := false) -> void:
 	if !_selection_manager:
 		return
 	if use_selection_as_text:
-		_selection_manager.connect("selection_changed", self, "_update_selection")
+		_selection_manager.connect("selection_changed", Callable(self, "_update_selection"))
 	else:
-		bbcode_text = "[url]" + tr(fallback_text) + "[/url]"
+		text = "[url]" + tr(fallback_text) + "[/url]"
 	_update_selection()
 
 
@@ -62,7 +62,7 @@ func _update_selection(_dummy := false) -> void:
 	if !_selection_manager.has_selection():
 		return
 	var object_name: String = _selection_manager.get_name()
-	bbcode_text = "[url]" + tr(object_name) + "[/url]"
+	text = "[url]" + tr(object_name) + "[/url]"
 
 
 func _on_wiki_clicked(_meta: String) -> void:

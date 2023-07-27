@@ -30,18 +30,18 @@ var is_splash_config := false # splash screen needs to set this
 var _state: Dictionary = IVGlobal.state
 var _is_project_built := false
 
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
-onready var _button_infos: Array = _main_menu_manager.button_infos
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
+@onready var _button_infos: Array = _main_menu_manager.button_infos
 
 
 func _ready() -> void:
 	theme = IVGlobal.themes.main_menu
-	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
-	_main_menu_manager.connect("buttons_changed", self, "_build")
-	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
-	connect("visibility_changed", self, "_grab_button_focus")
+	IVGlobal.connect("project_builder_finished", Callable(self, "_on_project_builder_finished").bind(), CONNECT_ONE_SHOT)
+	IVGlobal.connect("state_manager_inited", Callable(self, "_on_state_manager_inited").bind(), CONNECT_ONE_SHOT)
+	_main_menu_manager.connect("buttons_changed", Callable(self, "_build"))
+	_main_menu_manager.connect("button_state_changed", Callable(self, "_update_button_states"))
+	connect("visibility_changed", Callable(self, "_grab_button_focus"))
 
 
 func _on_project_builder_finished() -> void:
@@ -77,7 +77,7 @@ func _build() -> void:
 		var button_state: int = button_info[7]
 		button.focus_mode = Control.FOCUS_ALL
 		button.text = text
-		button.connect("pressed", target, method, args)
+		button.connect("pressed", Callable(target, method).bind(args))
 		button.visible = button_state != _main_menu_manager.HIDDEN
 		# disabled will be updated at state_manager_inited signal
 		button.disabled = !_state.is_inited or button_state == _main_menu_manager.DISABLED
@@ -104,7 +104,7 @@ func _grab_button_focus() -> void:
 	# Only grabs if no one else has focus
 	if !is_visible_in_tree():
 		return
-	if get_focus_owner():
+	if get_viewport().gui_get_focus_owner():
 		return
 	for child in get_children():
 		var button := child as Button

@@ -29,42 +29,42 @@ var stop_sim := true
 var _blocking_popups: Array = IVGlobal.blocking_popups
 var _state_manager: IVStateManager
 
-onready var _header: Label = $VBox/Header
-onready var _rt_label: RichTextLabel = $VBox/RTLabel
+@onready var _header: Label = $VBox/Header
+@onready var _rt_label: RichTextLabel = $VBox/RTLabel
 
 
 func _project_init() -> void:
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("rich_text_popup_requested", self, "_open")
+	connect("popup_hide", Callable(self, "_on_popup_hide"))
+	IVGlobal.connect("rich_text_popup_requested", Callable(self, "_open"))
 	_state_manager = IVGlobal.program.StateManager
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
-	$VBox/Close.connect("pressed", self, "hide")
+	$VBox/Close.connect("pressed", Callable(self, "hide"))
 	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		hide()
 
 
-func _open(header_text: String, bbcode_text: String) -> void:
+func _open(header_text: String, text: String) -> void:
 	if _is_blocking_popup():
 		return
 	if stop_sim:
 		_state_manager.require_stop(self)
 	_header.text = header_text
-	_rt_label.bbcode_text = tr(bbcode_text)
+	_rt_label.text = tr(text)
 	popup()
-	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
+	set_anchors_and_offsets_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
 
 func _on_popup_hide() -> void:
-	_rt_label.bbcode_text = ""
+	_rt_label.text = ""
 	if stop_sim:
 		_state_manager.allow_run(self)
 

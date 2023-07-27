@@ -2,13 +2,14 @@
 
 importer="csv_translation"
 type="Translation"
+uid="uid://7wui3djfjtk5"
 
 [deps]
 
-files=[ "res://ivoyager/data/text/gui_text.en.translation" ]
+files=["res://ivoyager/data/text/gui_text.en.translation"]
 
 source_file="res://ivoyager/data/text/gui_text.csv"
-dest_files=[ "res://ivoyager/data/text/gui_text.en.translation" ]
+dest_files=["res://ivoyager/data/text/gui_text.en.translation"]
 
 [params]
 

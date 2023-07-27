@@ -25,25 +25,25 @@ extends CheckBox
 
 const Flags := IVEnums.CameraFlags
 
-var _camera: Camera
+var _camera: Camera3D
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
-	connect("pressed", self, "_on_pressed")
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	_connect_camera(get_viewport().get_camera_3d())
+	connect("pressed", Callable(self, "_on_pressed"))
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("up_lock_changed", self, "_update_ckbx")
+		_camera.connect("up_lock_changed", Callable(self, "_update_ckbx"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("up_lock_changed", self, "_update_ckbx")
+		_camera.disconnect("up_lock_changed", Callable(self, "_update_ckbx"))
 	_camera = null
 
 

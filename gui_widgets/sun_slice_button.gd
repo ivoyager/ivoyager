@@ -36,15 +36,15 @@ var _body: IVBody
 var _is_built := false
 var _has_mouse := false
 
-onready var _texture_rect: TextureRect = $TextureRect
+@onready var _texture_rect: TextureRect = $TextureRect
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_build")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("mouse_entered", self, "_on_mouse_entered")
-	connect("mouse_exited", self, "_on_mouse_exited")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_build"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_selection"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	connect("mouse_entered", Callable(self, "_on_mouse_entered"))
+	connect("mouse_exited", Callable(self, "_on_mouse_exited"))
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 	_build()
 
@@ -63,10 +63,10 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	_body = IVGlobal.bodies[body_name]
-	_selection_manager.connect("selection_changed", self, "_update_selection")
-	_selection_manager.connect("selection_reselected", self, "_update_selection")
+	_selection_manager.connect("selection_changed", Callable(self, "_update_selection"))
+	_selection_manager.connect("selection_reselected", Callable(self, "_update_selection"))
 	flat = true
-	hint_tooltip = _body.name
+	tooltip_text = _body.name
 	_texture_rect.texture = _body.texture_slice_2d
 	_update_selection()
 

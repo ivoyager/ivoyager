@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSaveBuilder
-extends Reference
+extends RefCounted
 
 # IVSaveBuilder can persist specified data (which may include nested objects)
 # and rebuild procedurally generated node trees and references on load. It can
@@ -204,7 +204,7 @@ func debug_log(save_root: Node) -> String:
 	# This doesn't work: OS.dump_memory_to_file(mem_dump_path)
 	if debug_print_stray_nodes:
 		print("Stray Nodes:")
-		save_root.print_stray_nodes()
+		save_root.print_orphan_nodes()
 		print("***********************")
 	if debug_print_tree:
 		print("Tree:")
@@ -317,7 +317,7 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 		var object_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
 		var script: Script = scripts[script_id]
-		var reference: Reference = script.new()
+		var reference: RefCounted = script.new()
 		assert(reference)
 		_objects[object_id] = reference
 		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
@@ -367,7 +367,7 @@ func _serialize_node(node: Node):
 	_gs_serialized_nodes.append(serialized_node)
 
 
-func _register_and_serialize_reference(reference: Reference) -> int:
+func _register_and_serialize_reference(reference: RefCounted) -> int:
 	assert(is_procedural_persist(reference)) # must be true for References
 	var object_id := _gs_n_objects
 	_gs_n_objects += 1
@@ -394,7 +394,7 @@ func _get_or_create_script_id(object: Object) -> int:
 
 
 func _serialize_object_data(object: Object, serialized_object: Array) -> void:
-	assert(object is Node or object is Reference)
+	assert(object is Node or object is RefCounted)
 	# serialized_object already has 3 elements (if Node) or 2 (if Reference).
 	# We now append the size of each persist array followed by data.
 	for properties_array in properties_arrays:
@@ -535,7 +535,7 @@ func _get_encoded_object(object: Object) -> Dictionary:
 	assert(is_persist_object(object), "Can't persist a non-persist obj")
 	var object_id: int = _object_ids.get(object, -1)
 	if object_id == -1:
-		assert(object is Reference, "Nodes are already registered")
+		assert(object is RefCounted, "Nodes are already registered")
 		object_id = _register_and_serialize_reference(object)
 	if is_weak_ref:
 		return {_ = -object_id} # negative object_id for WeakRef

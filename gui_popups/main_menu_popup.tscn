@@ -4,10 +4,10 @@
 [ext_resource path="res://ivoyager/gui_widgets/main_menu.tscn" type="PackedScene" id=2]
 
 [node name="MainMenuPopup" type="Popup"]
-pause_mode = 2
+process_mode = 3
 anchor_right = 1.0
 anchor_bottom = 1.0
-popup_exclusive = true
+exclusive = true
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -18,26 +18,26 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -7.0
-margin_top = -7.0
-margin_right = 7.0
-margin_bottom = 7.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
-margin_left = 7.0
-margin_top = 7.0
-margin_right = 57.0
-margin_bottom = 57.0
-custom_constants/margin_right = 15
-custom_constants/margin_top = 15
-custom_constants/margin_left = 15
-custom_constants/margin_bottom = 15
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 57.0
+offset_bottom = 57.0
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_bottom = 15
 
 [node name="MainMenu" parent="PanelContainer/MarginContainer" instance=ExtResource( 2 )]
-margin_left = 15.0
-margin_top = 15.0
-margin_right = 35.0
-margin_bottom = 35.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 35.0
+offset_bottom = 35.0

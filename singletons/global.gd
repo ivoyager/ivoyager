@@ -91,7 +91,7 @@ signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
-signal rich_text_popup_requested(header_text, bbcode_text)
+signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
 
 
@@ -166,20 +166,20 @@ var home_latitude := 0.0
 
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
-	normal = Color.white,
-	good = Color.green,
-	warning = Color.yellow,
+	normal = Color.WHITE,
+	good = Color.GREEN,
+	warning = Color.YELLOW,
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
 var shared := { # more items added by initializers/shared_initializer.gd
 	globe_mesh = SphereMesh.new(), # all ellipsoid models
 	# shaders
-	points_shader = preload("res://ivoyager/shaders/points.shader"),
-	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
-	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
-	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
-	rings_shader = preload("res://ivoyager/shaders/rings.shader"),
+	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
+	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
+	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
+	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
+	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
 #	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
 }
 
@@ -233,10 +233,10 @@ var translations := [
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
 	# be kept. So prepend this array if you want to override ivoyager text keys.
-	"res://ivoyager/data/text/entities_text.en.translation",
-	"res://ivoyager/data/text/gui_text.en.translation",
-	"res://ivoyager/data/text/hints_text.en.translation",
-	"res://ivoyager/data/text/long_text.en.translation",
+	"res://ivoyager/data/text/entities_text.en.position",
+	"res://ivoyager/data/text/gui_text.en.position",
+	"res://ivoyager/data/text/hints_text.en.position",
+	"res://ivoyager/data/text/long_text.en.position",
 ]
 
 var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
@@ -247,7 +247,7 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
-var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
+var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
 func _ready():

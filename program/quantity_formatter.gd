@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVQuantityFormatter
-extends Reference
+extends RefCounted
 
 # Helper for formatting numbers and quanties for GUI. All unit conversions are
 # as defined in IVUnits.
@@ -327,7 +327,7 @@ func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S
 
 func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	x = rad2deg(x)
+	x = rad_to_deg(x)
 	x = wrapf(x, -180.0, 180.0)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
@@ -350,7 +350,7 @@ func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := 
 
 func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	x = rad2deg(x)
+	x = rad_to_deg(x)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
 		x = wrapf(x, -180.0, 180.0)

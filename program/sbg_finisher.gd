@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGFinisher
-extends Reference
+extends RefCounted
 
 # Adds SBGPoints and SBGOrbits for SmallBodiesGroup instances.
 
@@ -28,7 +28,7 @@ var _settings: Dictionary = IVGlobal.settings
 
 
 func _project_init() -> void:
-	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	IVGlobal.get_tree().connect("node_added", Callable(self, "_on_node_added"))
 	_SBGPoints_ = IVGlobal.script_classes._SBGPoints_
 	_SBGOrbits_ = IVGlobal.script_classes._SBGOrbits_
 

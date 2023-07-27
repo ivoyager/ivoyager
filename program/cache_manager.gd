@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCacheManager
-extends Reference
+extends RefCounted
 
 
 # Abstract base class for managing user cached items. Subclasses include
@@ -49,7 +49,7 @@ func _project_init() -> void:
 	_io_manager = IVGlobal.program.IOManager
 	var cache_dir: String = IVGlobal.cache_dir
 	_file_path = cache_dir.plus_file(cache_file_name)
-	var dir = Directory.new()
+	var dir = DirAccess.new()
 	if dir.open(cache_dir) != OK:
 		dir.make_dir(cache_dir)
 	for key in defaults:

@@ -86,7 +86,7 @@ var _settings: Dictionary = IVGlobal.settings
 var _nodes_requiring_stop := []
 var _signal_when_threads_finished := false
 
-onready var _tree: SceneTree = get_tree()
+@onready var _tree: SceneTree = get_tree()
 
 
 # *****************************************************************************
@@ -111,26 +111,26 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
-	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_build_system_tree", self, "_on_about_to_build_system_tree")
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("simulator_exited", self, "_on_simulator_exited")
-	IVGlobal.connect("change_pause_requested", self, "change_pause")
-	IVGlobal.connect("sim_stop_required", self, "require_stop")
-	IVGlobal.connect("sim_run_allowed", self, "allow_run")
-	IVGlobal.connect("quit_requested", self, "quit")
-	IVGlobal.connect("exit_requested", self, "exit")
+	process_mode = PROCESS_MODE_ALWAYS
+	IVGlobal.connect("project_builder_finished", Callable(self, "_on_project_builder_finished").bind(), CONNECT_ONE_SHOT)
+	IVGlobal.connect("about_to_build_system_tree", Callable(self, "_on_about_to_build_system_tree"))
+	IVGlobal.connect("system_tree_built_or_loaded", Callable(self, "_on_system_tree_built_or_loaded"))
+	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
+	IVGlobal.connect("simulator_exited", Callable(self, "_on_simulator_exited"))
+	IVGlobal.connect("change_pause_requested", Callable(self, "change_pause"))
+	IVGlobal.connect("sim_stop_required", Callable(self, "require_stop"))
+	IVGlobal.connect("sim_run_allowed", Callable(self, "allow_run"))
+	IVGlobal.connect("quit_requested", Callable(self, "quit"))
+	IVGlobal.connect("exit_requested", Callable(self, "exit"))
 	_tree.paused = true
 	require_stop(self, -1, true)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	_on_unhandled_key_input(event)
 
 
-func _on_unhandled_key_input(event: InputEventKey) -> void:
+func _on_unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_pause"):
 		change_pause()
 	elif event.is_action_pressed("quit"):
@@ -163,7 +163,7 @@ func remove_blocking_thread(thread: Thread) -> void:
 func signal_threads_finished() -> void:
 	# Generates a delayed "threads_finished" signal if/when there are no
 	# blocking threads. Called by require_stop if not rejected.
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	if !_signal_when_threads_finished:
 		_signal_when_threads_finished = true
 		remove_blocking_thread(null)
@@ -240,13 +240,13 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.is_loaded_game = false
 	_state.last_save_path = ""
 	require_stop(self, NetworkStopSync.EXIT, true)
-	yield(self, "threads_finished")
+	await self.threads_finished
 	IVGlobal.verbose_signal("about_to_exit")
 	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
 	IVGlobal.verbose_signal("close_all_admin_popups_requested")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	_state.is_splash_screen = true
 	IVGlobal.verbose_signal("simulator_exited")
 
@@ -266,9 +266,9 @@ func quit(force_quit := false) -> void:
 	_state.is_quitting = true
 	IVGlobal.verbose_signal("about_to_stop_before_quit")
 	require_stop(self, NetworkStopSync.QUIT, true)
-	yield(self, "threads_finished")
+	await self.threads_finished
 	IVGlobal.verbose_signal("about_to_quit")
-	assert(!print_stray_nodes())
+	assert(!print_orphan_nodes())
 	print("Quitting...")
 	_tree.quit()
 
@@ -277,7 +277,7 @@ func quit(force_quit := false) -> void:
 # private functions
 
 func _on_project_builder_finished() -> void:
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	_state.is_inited = true
 	_state.is_splash_screen = true
 	IVGlobal.verbose_signal("state_manager_inited")
@@ -295,15 +295,15 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	_state.is_system_ready = true
 	print("System tree ready...")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	_state.is_started_or_about_to_start = true
 	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
 	IVGlobal.verbose_signal("close_all_admin_popups_requested")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	allow_run(self)
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	IVGlobal.verbose_signal("update_gui_requested")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	IVGlobal.verbose_signal("simulator_started")
 	if !is_new_game and _settings.pause_on_load:
 		is_user_paused = true

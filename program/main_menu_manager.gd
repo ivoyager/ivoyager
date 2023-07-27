@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuManager
-extends Reference
+extends RefCounted
 
 
 signal buttons_changed()
@@ -50,8 +50,8 @@ var button_infos := []
 
 
 func _project_init() -> void:
-	IVGlobal.connect("project_inited", self, "_init_buttons")
-	IVGlobal.connect("about_to_quit", self, "_clear_for_quit")
+	IVGlobal.connect("project_inited", Callable(self, "_init_buttons"))
+	IVGlobal.connect("about_to_quit", Callable(self, "_clear_for_quit"))
 
 
 func _init_buttons() -> void:
@@ -90,7 +90,7 @@ func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
 		target: Object, method: String, args := [], button_state := ACTIVE) -> void:
 	# Highest priority will be top menu item.
 	button_infos.append([text, priority, is_splash, is_running, target, method, args, button_state])
-	button_infos.sort_custom(self, "_sort_button_infos")
+	button_infos.sort_custom(Callable(self, "_sort_button_infos"))
 	emit_signal("buttons_changed")
 
 

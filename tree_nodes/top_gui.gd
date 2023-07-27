@@ -43,13 +43,13 @@ var selection_manager: IVSelectionManager
 func _init() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
-	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished")
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+	IVGlobal.connect("project_builder_finished", Callable(self, "_on_project_builder_finished"))
+	IVGlobal.connect("system_tree_built_or_loaded", Callable(self, "_on_system_tree_built_or_loaded"))
 
 
 func _ready() -> void:
 	if IVGlobal.pause_only_stops_time:
-		pause_mode = PAUSE_MODE_PROCESS
+		process_mode = PROCESS_MODE_ALWAYS
 
 
 func _on_project_builder_finished() -> void:

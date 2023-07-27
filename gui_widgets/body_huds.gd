@@ -31,7 +31,7 @@ extends GridContainer
 # IMPORTANT! For correct visibility control, BodyFlags used in rows must be a
 # subset of IVBodyHUDsState.all_flags.
 
-const NULL_COLOR := Color.black
+const NULL_COLOR := Color.BLACK
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 
@@ -64,15 +64,15 @@ var _symbols_ckbxs := []
 var _orbits_ckbxs := []
 var _orbits_color_pkrs := []
 
-onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-onready var _n_rows := rows.size()
+@onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+@onready var _n_rows := rows.size()
 
 
 func _ready() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	IVGlobal.connect("update_gui_requested", self, "_update_orbit_color_buttons")
-	_body_huds_state.connect("visibility_changed", self, "_update_ckbxs")
-	_body_huds_state.connect("color_changed", self, "_update_orbit_color_buttons")
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_orbit_color_buttons"))
+	_body_huds_state.connect("visibility_changed", Callable(self, "_update_ckbxs"))
+	_body_huds_state.connect("color_changed", Callable(self, "_update_orbit_color_buttons"))
 
 	# headers
 	if has_headers:
@@ -81,9 +81,9 @@ func _ready() -> void:
 		add_child(empty_cell)
 		for i in 2:
 			var header := Label.new()
-			header.align = Label.ALIGN_CENTER
+			header.align = Label.ALIGNMENT_CENTER
 			header.text = headers[i]
-			header.hint_tooltip = header_hints[i]
+			header.tooltip_text = header_hints[i]
 			header.mouse_filter = MOUSE_FILTER_PASS
 			add_child(header)
 	
@@ -104,13 +104,13 @@ func _ready() -> void:
 		var is_indent: bool = rows[i][2]
 		if enable_wiki and _wiki_titles.has(row_name):
 			var rtlabel := RichTextLabel.new()
-			rtlabel.connect("meta_clicked", self, "_on_meta_clicked", [row_name])
+			rtlabel.connect("meta_clicked", Callable(self, "_on_meta_clicked").bind(row_name))
 			rtlabel.bbcode_enabled = true
 			rtlabel.fit_content_height = true
 			rtlabel.scroll_active = false
 			if is_indent:
-				rtlabel.bbcode_text = indent
-			rtlabel.bbcode_text += "[url]" + tr(row_name) + "[/url]"
+				rtlabel.text = indent
+			rtlabel.text += "[url]" + tr(row_name) + "[/url]"
 			add_child(rtlabel)
 		else:
 			var label := Label.new()
@@ -119,15 +119,15 @@ func _ready() -> void:
 		
 		# names/symbols
 		var hbox := HBoxContainer.new()
-		hbox.alignment = BoxContainer.ALIGN_CENTER
+		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		hbox.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(hbox)
 		var ckbx := _make_checkbox()
-		ckbx.connect("pressed", self, "_show_hide_names", [ckbx, flags])
+		ckbx.connect("pressed", Callable(self, "_show_hide_names").bind(ckbx, flags))
 		_names_ckbxs.append(ckbx)
 		hbox.add_child(ckbx)
 		ckbx = _make_checkbox()
-		ckbx.connect("pressed", self, "_show_hide_symbols", [ckbx, flags])
+		ckbx.connect("pressed", Callable(self, "_show_hide_symbols").bind(ckbx, flags))
 		_symbols_ckbxs.append(ckbx)
 		hbox.add_child(ckbx)
 		
@@ -141,16 +141,16 @@ func _ready() -> void:
 			_orbits_color_pkrs.append(null)
 		else:
 			hbox = HBoxContainer.new()
-			hbox.alignment = BoxContainer.ALIGN_CENTER
+			hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 			hbox.mouse_filter = MOUSE_FILTER_IGNORE
 			add_child(hbox)
 			ckbx = _make_checkbox()
-			ckbx.connect("pressed", self, "_show_hide_orbits", [ckbx, flags])
+			ckbx.connect("pressed", Callable(self, "_show_hide_orbits").bind(ckbx, flags))
 			_orbits_ckbxs.append(ckbx)
 			hbox.add_child(ckbx)
 			var orbit_default_color: Color = _body_huds_state.get_default_orbit_color(flags)
 			var color_button := _make_color_picker_button(orbit_default_color)
-			color_button.connect("color_changed", self, "_change_orbit_color", [flags])
+			color_button.connect("color_changed", Callable(self, "_change_orbit_color").bind(flags))
 			_orbits_color_pkrs.append(color_button)
 			hbox.add_child(color_button)
 	
@@ -158,23 +158,23 @@ func _ready() -> void:
 	if IVGlobal.state.is_started_or_about_to_start:
 		_resize_columns()
 	else:
-		IVGlobal.connect("about_to_start_simulator", self, "_resize_columns", [], CONNECT_ONESHOT)
+		IVGlobal.connect("about_to_start_simulator", Callable(self, "_resize_columns").bind(), CONNECT_ONE_SHOT)
 
 
 func _make_checkbox() -> CheckBox:
 	var ckbx := CheckBox.new()
-	ckbx.align = Button.ALIGN_CENTER
+	ckbx.align = Button.ALIGNMENT_CENTER
 	ckbx.size_flags_horizontal = SIZE_SHRINK_CENTER
 	return ckbx
 
 
 func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	var button := ColorPickerButton.new()
-	button.connect("toggled", self, "_hack_fix_toggle_off", [button])
-	button.rect_min_size.x = 15
-	button.rect_min_size.y = 15
+	button.connect("toggled", Callable(self, "_hack_fix_toggle_off").bind(button))
+	button.custom_minimum_size.x = 15
+	button.custom_minimum_size.y = 15
 	button.size_flags_vertical = SIZE_SHRINK_CENTER
-	button.set("custom_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
+	button.set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
 	button.edit_alpha = false
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	var color_picker := button.get_picker()
@@ -199,10 +199,10 @@ func _show_hide_orbits(ckbx: CheckBox, flags: int) -> void:
 func _update_ckbxs() -> void:
 	for i in _n_rows:
 		var flags: int = rows[i][1]
-		_names_ckbxs[i].pressed = _body_huds_state.is_name_visible(flags, true)
-		_symbols_ckbxs[i].pressed = _body_huds_state.is_symbol_visible(flags, true)
+		_names_ckbxs[i].button_pressed = _body_huds_state.is_name_visible(flags, true)
+		_symbols_ckbxs[i].button_pressed = _body_huds_state.is_symbol_visible(flags, true)
 		if _orbits_ckbxs[i]:
-			_orbits_ckbxs[i].pressed = _body_huds_state.is_orbit_visible(flags, true)
+			_orbits_ckbxs[i].button_pressed = _body_huds_state.is_orbit_visible(flags, true)
 
 
 func _change_orbit_color(color: Color, flags: int) -> void:
@@ -223,13 +223,13 @@ func _hack_fix_toggle_off(is_pressed: bool, button: ColorPickerButton) -> void:
 	# Hack fix to let button toggle off, as it should...
 	# Requres action_mode = ACTION_MODE_BUTTON_PRESS
 	if !is_pressed:
-		yield(get_tree(), "idle_frame")
+		await get_tree().idle_frame
 		button.get_popup().hide()
 
 
 func _resize_columns(_dummy := false) -> void:
 	if column_master:
-		column_master.connect("resized", self, "_resize_columns_to_master")
+		column_master.connect("resized", Callable(self, "_resize_columns_to_master"))
 		_resize_columns_to_master(1)
 	else:
 		_resize_columns_to_en_width(0)
@@ -237,29 +237,29 @@ func _resize_columns(_dummy := false) -> void:
 
 func _resize_columns_to_master(delay_frames := 0) -> void:
 	for i in delay_frames:
-		yield(get_tree(), "idle_frame")
+		await get_tree().idle_frame
 	var n_master_children := column_master.get_child_count()
 	for i in columns:
 		if i == n_master_children:
 			break
-		var master_column_width: float = column_master.get_child(i).rect_size.x
-		get_child(i).rect_min_size.x = master_column_width
-		get_child(i).rect_size.x = master_column_width
+		var master_column_width: float = column_master.get_child(i).size.x
+		get_child(i).custom_minimum_size.x = master_column_width
+		get_child(i).size.x = master_column_width
 
 
 func _resize_columns_to_en_width(delay_frames := 0) -> void:
 	# 1 delay_frames needed for font size change.
 	for i in delay_frames:
-		yield(get_tree(), "idle_frame")
+		await get_tree().idle_frame
 	var font := get_font("normal", "Label")
 	var en_width := font.get_char_size(ord("\u2000")).x
 	var min_width_col0 := en_width * column0_en_width
-	get_child(0).rect_min_size.x = min_width_col0
-	get_child(0).rect_size.x = min_width_col0
+	get_child(0).custom_minimum_size.x = min_width_col0
+	get_child(0).size.x = min_width_col0
 	var min_width := en_width * columns_en_width
 	for i in range(1, columns):
-		get_child(i).rect_min_size.x = min_width
-		get_child(i).rect_size.x = min_width
+		get_child(i).custom_minimum_size.x = min_width
+		get_child(i).size.x = min_width
 
 
 func _on_meta_clicked(_meta: String, row_name: String) -> void:

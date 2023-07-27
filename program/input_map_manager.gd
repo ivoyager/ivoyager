@@ -73,110 +73,110 @@ func _on_init() -> void:
 #			],
 		
 		camera_up = [
-			{event_class = "InputEventKey", scancode = KEY_UP},
-			{event_class = "InputEventKey", scancode = KEY_UP, control = true},
+			{event_class = "InputEventKey", keycode = KEY_UP},
+			{event_class = "InputEventKey", keycode = KEY_UP, control = true},
 			],
 		camera_down = [
-			{event_class = "InputEventKey", scancode = KEY_DOWN},
-			{event_class = "InputEventKey", scancode = KEY_DOWN, control = true},
+			{event_class = "InputEventKey", keycode = KEY_DOWN},
+			{event_class = "InputEventKey", keycode = KEY_DOWN, control = true},
 			],
 		camera_left = [
-			{event_class = "InputEventKey", scancode = KEY_LEFT},
-			{event_class = "InputEventKey", scancode = KEY_LEFT, control = true},
+			{event_class = "InputEventKey", keycode = KEY_LEFT},
+			{event_class = "InputEventKey", keycode = KEY_LEFT, control = true},
 			],
 		camera_right = [
-			{event_class = "InputEventKey", scancode = KEY_RIGHT},
-			{event_class = "InputEventKey", scancode = KEY_RIGHT, control = true},
+			{event_class = "InputEventKey", keycode = KEY_RIGHT},
+			{event_class = "InputEventKey", keycode = KEY_RIGHT, control = true},
 			],
-		camera_in = [{event_class = "InputEventKey", scancode = KEY_PAGEDOWN}],
-		camera_out = [{event_class = "InputEventKey", scancode = KEY_PAGEUP}],
+		camera_in = [{event_class = "InputEventKey", keycode = KEY_PAGEDOWN}],
+		camera_out = [{event_class = "InputEventKey", keycode = KEY_PAGEUP}],
 		
 		recenter = [
-			{event_class = "InputEventKey", scancode = KEY_KP_5},
-			{event_class = "InputEventKey", scancode = KEY_D},
+			{event_class = "InputEventKey", keycode = KEY_KP_5},
+			{event_class = "InputEventKey", keycode = KEY_D},
 			],
 		pitch_up = [
-			{event_class = "InputEventKey", scancode = KEY_KP_8},
-			{event_class = "InputEventKey", scancode = KEY_E},
+			{event_class = "InputEventKey", keycode = KEY_KP_8},
+			{event_class = "InputEventKey", keycode = KEY_E},
 			],
 		pitch_down = [
-			{event_class = "InputEventKey", scancode = KEY_KP_2},
-			{event_class = "InputEventKey", scancode = KEY_C},
+			{event_class = "InputEventKey", keycode = KEY_KP_2},
+			{event_class = "InputEventKey", keycode = KEY_C},
 			],
 		yaw_left = [
-			{event_class = "InputEventKey", scancode = KEY_KP_4},
-			{event_class = "InputEventKey", scancode = KEY_S},
+			{event_class = "InputEventKey", keycode = KEY_KP_4},
+			{event_class = "InputEventKey", keycode = KEY_S},
 			],
 		yaw_right = [
-			{event_class = "InputEventKey", scancode = KEY_KP_6},
-			{event_class = "InputEventKey", scancode = KEY_F},
+			{event_class = "InputEventKey", keycode = KEY_KP_6},
+			{event_class = "InputEventKey", keycode = KEY_F},
 			],
 		roll_left = [
-			{event_class = "InputEventKey", scancode = KEY_KP_1},
-			{event_class = "InputEventKey", scancode = KEY_X},
+			{event_class = "InputEventKey", keycode = KEY_KP_1},
+			{event_class = "InputEventKey", keycode = KEY_X},
 			],
 		roll_right = [
-			{event_class = "InputEventKey", scancode = KEY_KP_3},
-			{event_class = "InputEventKey", scancode = KEY_V},
+			{event_class = "InputEventKey", keycode = KEY_KP_3},
+			{event_class = "InputEventKey", keycode = KEY_V},
 			],
 		
-		select_up = [{event_class = "InputEventKey", scancode = KEY_UP, shift = true}],
-		select_down = [{event_class = "InputEventKey", scancode = KEY_DOWN, shift = true}],
-		select_left = [{event_class = "InputEventKey", scancode = KEY_LEFT, shift = true}],
-		select_right = [{event_class = "InputEventKey", scancode = KEY_RIGHT, shift = true}],
-		select_forward = [{event_class = "InputEventKey", scancode = KEY_PERIOD}],
-		select_back = [{event_class = "InputEventKey", scancode = KEY_COMMA}],
-		next_system = [{event_class = "InputEventKey", scancode = KEY_Y}],
-		previous_system = [{event_class = "InputEventKey", scancode = KEY_Y, shift = true}],
-		next_star = [{event_class = "InputEventKey", scancode = KEY_T}],
-		previous_star = [{event_class = "InputEventKey", scancode = KEY_T, shift = true}],
-		next_planet = [{event_class = "InputEventKey", scancode = KEY_P}],
-		previous_planet = [{event_class = "InputEventKey", scancode = KEY_P, shift = true}],
-		next_nav_moon = [{event_class = "InputEventKey", scancode = KEY_M}],
-		previous_nav_moon = [{event_class = "InputEventKey", scancode = KEY_M, shift = true}],
-		next_moon = [{event_class = "InputEventKey", scancode = KEY_N}],
-		previous_moon = [{event_class = "InputEventKey", scancode = KEY_N, shift = true}],
-		next_asteroid = [{event_class = "InputEventKey", scancode = KEY_H}],
-		previous_asteroid = [{event_class = "InputEventKey", scancode = KEY_H, shift = true}],
-		next_asteroid_group = [{event_class = "InputEventKey", scancode = KEY_G}],
-		previous_asteroid_group = [{event_class = "InputEventKey", scancode = KEY_G, shift = true}],
-		next_comet = [{event_class = "InputEventKey", scancode = KEY_J}],
-		previous_comet = [{event_class = "InputEventKey", scancode = KEY_J, shift = true}],
-		next_spacecraft = [{event_class = "InputEventKey", scancode = KEY_K}],
-		previous_spacecraft = [{event_class = "InputEventKey", scancode = KEY_K, shift = true}],
-		toggle_orbits = [{event_class = "InputEventKey", scancode = KEY_O}],
-		toggle_symbols = [{event_class = "InputEventKey", scancode = KEY_I}],
-		toggle_names = [{event_class = "InputEventKey", scancode = KEY_L}],
-		toggle_all_gui = [{event_class = "InputEventKey", scancode = KEY_G, control = true}],
-		toggle_fullscreen = [{event_class = "InputEventKey", scancode = KEY_F, control = true}],
-		toggle_pause = [{event_class = "InputEventKey", scancode = KEY_SPACE}],
+		select_up = [{event_class = "InputEventKey", keycode = KEY_UP, shift = true}],
+		select_down = [{event_class = "InputEventKey", keycode = KEY_DOWN, shift = true}],
+		select_left = [{event_class = "InputEventKey", keycode = KEY_LEFT, shift = true}],
+		select_right = [{event_class = "InputEventKey", keycode = KEY_RIGHT, shift = true}],
+		select_forward = [{event_class = "InputEventKey", keycode = KEY_PERIOD}],
+		select_back = [{event_class = "InputEventKey", keycode = KEY_COMMA}],
+		next_system = [{event_class = "InputEventKey", keycode = KEY_Y}],
+		previous_system = [{event_class = "InputEventKey", keycode = KEY_Y, shift = true}],
+		next_star = [{event_class = "InputEventKey", keycode = KEY_T}],
+		previous_star = [{event_class = "InputEventKey", keycode = KEY_T, shift = true}],
+		next_planet = [{event_class = "InputEventKey", keycode = KEY_P}],
+		previous_planet = [{event_class = "InputEventKey", keycode = KEY_P, shift = true}],
+		next_nav_moon = [{event_class = "InputEventKey", keycode = KEY_M}],
+		previous_nav_moon = [{event_class = "InputEventKey", keycode = KEY_M, shift = true}],
+		next_moon = [{event_class = "InputEventKey", keycode = KEY_N}],
+		previous_moon = [{event_class = "InputEventKey", keycode = KEY_N, shift = true}],
+		next_asteroid = [{event_class = "InputEventKey", keycode = KEY_H}],
+		previous_asteroid = [{event_class = "InputEventKey", keycode = KEY_H, shift = true}],
+		next_asteroid_group = [{event_class = "InputEventKey", keycode = KEY_G}],
+		previous_asteroid_group = [{event_class = "InputEventKey", keycode = KEY_G, shift = true}],
+		next_comet = [{event_class = "InputEventKey", keycode = KEY_J}],
+		previous_comet = [{event_class = "InputEventKey", keycode = KEY_J, shift = true}],
+		next_spacecraft = [{event_class = "InputEventKey", keycode = KEY_K}],
+		previous_spacecraft = [{event_class = "InputEventKey", keycode = KEY_K, shift = true}],
+		toggle_orbits = [{event_class = "InputEventKey", keycode = KEY_O}],
+		toggle_symbols = [{event_class = "InputEventKey", keycode = KEY_I}],
+		toggle_names = [{event_class = "InputEventKey", keycode = KEY_L}],
+		toggle_all_gui = [{event_class = "InputEventKey", keycode = KEY_G, control = true}],
+		toggle_fullscreen = [{event_class = "InputEventKey", keycode = KEY_F, control = true}],
+		toggle_pause = [{event_class = "InputEventKey", keycode = KEY_SPACE}],
 		incr_speed = [
-			{event_class = "InputEventKey", scancode = KEY_EQUAL},
-			{event_class = "InputEventKey", scancode = KEY_BRACERIGHT},
-			{event_class = "InputEventKey", scancode = KEY_BRACKETRIGHT}, # grrrr. Browsers!
+			{event_class = "InputEventKey", keycode = KEY_EQUAL},
+			{event_class = "InputEventKey", keycode = KEY_BRACERIGHT},
+			{event_class = "InputEventKey", keycode = KEY_BRACKETRIGHT}, # grrrr. Browsers!
 			],
 		decr_speed = [
-			{event_class = "InputEventKey", scancode = KEY_MINUS},
-			{event_class = "InputEventKey", scancode = KEY_BRACELEFT},
-			{event_class = "InputEventKey", scancode = KEY_BRACKETLEFT},
+			{event_class = "InputEventKey", keycode = KEY_MINUS},
+			{event_class = "InputEventKey", keycode = KEY_BRACELEFT},
+			{event_class = "InputEventKey", keycode = KEY_BRACKETLEFT},
 			],
 		reverse_time = [
-			{event_class = "InputEventKey", scancode = KEY_BACKSPACE},
-			{event_class = "InputEventKey", scancode = KEY_BACKSLASH},
+			{event_class = "InputEventKey", keycode = KEY_BACKSPACE},
+			{event_class = "InputEventKey", keycode = KEY_BACKSLASH},
 			],
 			
-		toggle_options = [{event_class = "InputEventKey", scancode = KEY_O, control = true}],
-		toggle_hotkeys = [{event_class = "InputEventKey", scancode = KEY_H, control = true}],
-		load_game = [{event_class = "InputEventKey", scancode = KEY_L, control = true}],
-		quick_load = [{event_class = "InputEventKey", scancode = KEY_L, alt = true}],
-		save_as = [{event_class = "InputEventKey", scancode = KEY_S, control = true}],
-		quick_save = [{event_class = "InputEventKey", scancode = KEY_S, alt = true}],
-		quit = [{event_class = "InputEventKey", scancode = KEY_Q, control = true}],
-		save_quit = [{event_class = "InputEventKey", scancode = KEY_Q, alt = true}],
+		toggle_options = [{event_class = "InputEventKey", keycode = KEY_O, control = true}],
+		toggle_hotkeys = [{event_class = "InputEventKey", keycode = KEY_H, control = true}],
+		load_game = [{event_class = "InputEventKey", keycode = KEY_L, control = true}],
+		quick_load = [{event_class = "InputEventKey", keycode = KEY_L, alt = true}],
+		save_as = [{event_class = "InputEventKey", keycode = KEY_S, control = true}],
+		quick_save = [{event_class = "InputEventKey", keycode = KEY_S, alt = true}],
+		quit = [{event_class = "InputEventKey", keycode = KEY_Q, control = true}],
+		save_quit = [{event_class = "InputEventKey", keycode = KEY_Q, alt = true}],
 		
 		# Used by ProjectCyclablePanels GUI mod (which is used by Planetarium)
-		cycle_next_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT}],
-		cycle_prev_panel = [{event_class = "InputEventKey", scancode = KEY_QUOTELEFT, shift = true}],
+		cycle_next_panel = [{event_class = "InputEventKey", keycode = KEY_QUOTELEFT}],
+		cycle_prev_panel = [{event_class = "InputEventKey", keycode = KEY_QUOTELEFT, shift = true}],
 		
 	}
 	
@@ -184,7 +184,7 @@ func _on_init() -> void:
 
 
 func _project_init() -> void:
-	._project_init()
+	super._project_init()
 	_init_actions()
 
 
@@ -293,41 +293,41 @@ func get_scancodes_w_mods_for_action(action: String) -> Array:
 	var events_array: Array = current[action]
 	for event_dict in events_array:
 		if event_dict.event_class == "InputEventKey":
-			var scancode := get_scancode_w_mods_for_event_dict(event_dict)
-			scancodes.append(scancode)
+			var keycode := get_scancode_w_mods_for_event_dict(event_dict)
+			scancodes.append(keycode)
 	return scancodes
 
 
 static func get_scancode_w_mods_for_event_dict(event_dict: Dictionary) -> int:
 	assert(event_dict.event_class == "InputEventKey")
-	var scancode: int = event_dict.scancode
+	var keycode: int = event_dict.keycode
 	var shift: bool = event_dict.get("shift", false)
 	var control: bool = event_dict.get("control", false)
 	var alt: bool = event_dict.get("alt", false)
 	var meta: bool = event_dict.get("meta", false)
-	return get_scancode_w_mods(scancode, shift, control, alt, meta)
+	return get_scancode_w_mods(keycode, shift, control, alt, meta)
 
 
-static func get_scancode_w_mods(scancode: int, shift := false, control := false,
+static func get_scancode_w_mods(keycode: int, shift := false, control := false,
 		alt := false, meta := false) -> int:
 	if shift:
-		scancode |= KEY_MASK_SHIFT
+		keycode |= KEY_MASK_SHIFT
 	if control:
-		scancode |= KEY_MASK_CTRL
+		keycode |= KEY_MASK_CTRL
 	if alt:
-		scancode |= KEY_MASK_ALT
+		keycode |= KEY_MASK_ALT
 	if meta:
-		scancode |= KEY_MASK_META
-	return scancode
+		keycode |= KEY_MASK_META
+	return keycode
 
 
-static func strip_scancode_mods(scancode: int) -> int:
+static func strip_scancode_mods(keycode: int) -> int:
 	# Note: InputEventKey.scancode is already stripped.
-	scancode &= ~KEY_MASK_SHIFT
-	scancode &= ~KEY_MASK_CTRL
-	scancode &= ~KEY_MASK_ALT
-	scancode &= ~KEY_MASK_META
-	return scancode
+	keycode &= ~KEY_MASK_SHIFT
+	keycode &= ~KEY_MASK_CTRL
+	keycode &= ~KEY_MASK_ALT
+	keycode &= ~KEY_MASK_META
+	return keycode
 
 
 # *****************************************************************************

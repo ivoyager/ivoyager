@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGOrbits
-extends MultiMeshInstance
+extends MultiMeshInstance3D
 
 # Visual orbits for a SmallBodiesGroup instance. If FragmentIdentifier exists,
 # then a shader is used to allow screen identification of the orbit loops.
@@ -33,7 +33,7 @@ var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 
 var _group: IVSmallBodiesGroup
 var _color: Color
-var _vec3ids := PoolVector3Array() # orbit ids for FragmentIdentifier
+var _vec3ids := PackedVector3Array() # orbit ids for FragmentIdentifier
 
 
 
@@ -51,9 +51,9 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_sbg_huds_state.connect("orbits_visibility_changed", self, "_set_visibility")
-	_sbg_huds_state.connect("orbits_color_changed", self, "_set_color")
+	process_mode = PROCESS_MODE_ALWAYS # FragmentIdentifier still processing
+	_sbg_huds_state.connect("orbits_visibility_changed", Callable(self, "_set_visibility"))
+	_sbg_huds_state.connect("orbits_color_changed", Callable(self, "_set_color"))
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = IVGlobal.shared.circle_mesh_low_res
@@ -61,10 +61,10 @@ func _ready() -> void:
 	if _fragment_identifier: # use self-identifying fragment shader
 		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
 		material_override = ShaderMaterial.new()
-		material_override.shader = IVGlobal.shared.orbits_shader
-		material_override.set_shader_param("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
+		material_override.gdshader = IVGlobal.shared.orbits_shader
+		material_override.set_shader_parameter("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 	else:
-		material_override = SpatialMaterial.new()
+		material_override = StandardMaterial3D.new()
 		material_override.flags_unshaded = true
 		set_process(false)
 	_set_transforms_and_ids()
@@ -77,8 +77,8 @@ func _process(_delta: float) -> void:
 	if !visible:
 		return
 	# TODO4.0: These are global uniforms, so we can do this globally!
-	material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
-	material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
+	material_override.set_shader_parameter("mouse_coord", _fragment_targeting[0])
+	material_override.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transforms_and_ids() -> void:
@@ -93,7 +93,7 @@ func _set_transforms_and_ids() -> void:
 		var b: = sqrt(a * a * (1.0 - e * e)) # simi-minor axis
 		var orbit_basis := Basis().scaled(Vector3(a, b, 1.0))
 		orbit_basis = math.get_rotation_matrix(elements) * orbit_basis
-		var orbit_transform := Transform(orbit_basis, -e * orbit_basis.x)
+		var orbit_transform := Transform3D(orbit_basis, -e * orbit_basis.x)
 		multimesh.set_instance_transform(i, orbit_transform)
 		if _fragment_identifier:
 			var vec3id := _vec3ids[i]
@@ -111,7 +111,7 @@ func _set_color() -> void:
 		return
 	_color = color
 	if _fragment_identifier:
-		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		material_override.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
 	else:
 		material_override.albedo_color = color
 

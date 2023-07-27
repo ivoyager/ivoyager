@@ -23,29 +23,29 @@ extends HBoxContainer
 # GUI widget. Expects the camera to have signal "focal_length_changed", member
 # "focal_lengths" and function "increment_focal_length".
 
-var _camera: Camera
+var _camera: Camera3D
 
-onready var _fl_decr: Button = $Minus
-onready var _fl_incr: Button = $Plus
+@onready var _fl_decr: Button = $Minus
+@onready var _fl_incr: Button = $Plus
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_fl_decr.connect("pressed", self, "_increment_focal_length", [-1])
-	_fl_incr.connect("pressed", self, "_increment_focal_length", [1])
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	_fl_decr.connect("pressed", Callable(self, "_increment_focal_length").bind(-1))
+	_fl_incr.connect("pressed", Callable(self, "_increment_focal_length").bind(1))
+	_connect_camera(get_viewport().get_camera_3d())
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("focal_length_changed", self, "_update_focal_length")
+		_camera.connect("focal_length_changed", Callable(self, "_update_focal_length"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
+		_camera.disconnect("focal_length_changed", Callable(self, "_update_focal_length"))
 	_camera = null
 
 

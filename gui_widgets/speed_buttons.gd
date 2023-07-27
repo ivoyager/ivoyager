@@ -26,28 +26,28 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-onready var _minus: Button = $Minus
-onready var _plus: Button = $Plus
-onready var _pause: Button = $Pause
-onready var _reverse: Button = $Reverse
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _minus: Button = $Minus
+@onready var _plus: Button = $Plus
+@onready var _pause: Button = $Pause
+@onready var _reverse: Button = $Reverse
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
-	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
-	IVGlobal.connect("user_pause_changed", self, "_update_buttons")
-	_timekeeper.connect("speed_changed", self, "_update_buttons")
-	_minus.connect("pressed", self, "_increment_speed", [-1])
-	_plus.connect("pressed", self, "_increment_speed", [1])
+	process_mode = PROCESS_MODE_ALWAYS
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
+	IVGlobal.connect("user_pause_changed", Callable(self, "_update_buttons"))
+	_timekeeper.connect("speed_changed", Callable(self, "_update_buttons"))
+	_minus.connect("pressed", Callable(self, "_increment_speed").bind(-1))
+	_plus.connect("pressed", Callable(self, "_increment_speed").bind(1))
 	if !IVGlobal.disable_pause:
-		_pause.connect("pressed", self, "_change_paused")
+		_pause.connect("pressed", Callable(self, "_change_paused"))
 	else:
 		_pause.queue_free()
 		_pause = null
 	if IVGlobal.allow_time_reversal:
-		_reverse.connect("pressed", self, "_change_reversed")
+		_reverse.connect("pressed", Callable(self, "_change_reversed"))
 	else:
 		_reverse.queue_free()
 		_reverse = null
@@ -79,10 +79,10 @@ func _update_buttons(_dummy := false) -> void:
 		return
 	if _pause:
 		_pause.disabled = false
-		_pause.pressed = _state_manager.is_user_paused
+		_pause.button_pressed = _state_manager.is_user_paused
 	if _reverse:
 		_reverse.disabled = false
-		_reverse.pressed = _timekeeper.is_reversed
+		_reverse.button_pressed = _timekeeper.is_reversed
 	_plus.disabled = !_timekeeper.can_incr_speed()
 	_minus.disabled = !_timekeeper.can_decr_speed()
 

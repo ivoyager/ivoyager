@@ -3,8 +3,8 @@
 [ext_resource path="res://ivoyager/gui_widgets/planet_moon_buttons.gd" type="Script" id=1]
 
 [node name="PlanetMoonButtons" type="HBoxContainer"]
-margin_right = 40.0
-margin_bottom = 40.0
+offset_right = 40.0
+offset_bottom = 40.0
 mouse_filter = 2
 script = ExtResource( 1 )
 __meta__ = {

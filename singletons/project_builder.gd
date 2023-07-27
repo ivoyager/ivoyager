@@ -91,7 +91,7 @@ var init_sequence := [
 # IVGlobal.program.Universe and IVGlobal.program.TopGUI (node names don't
 # matter).
 
-var universe: Spatial
+var universe: Node3D
 var top_gui: Control
 var add_top_gui_to_universe := true # happens in add_program_nodes()
 
@@ -288,7 +288,7 @@ func build_project(override := false) -> void:
 		var wait_for_signal: bool = init_array[2]
 		object.call(method)
 		if wait_for_signal:
-			yield(self, "init_step_finished")
+			await self.init_step_finished
 		init_index += 1
 
 
@@ -298,9 +298,8 @@ func _init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
 	# (where <name> != "ivoyager" and does not start with ".") and then calls
 	# their _extension_init() function.
-	var dir := Directory.new()
-	dir.open("res://")
-	dir.list_dir_begin()
+	var dir := DirAccess.open("res://")
+	dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	while true:
 		var dir_name := dir.get_next()
 		if !dir_name:
@@ -348,7 +347,7 @@ func _set_simulator_root() -> void:
 	if universe:
 		return
 	var scenetree_root := get_tree().get_root()
-	universe = scenetree_root.find_node("Universe", true, false)
+	universe = scenetree_root.find_child("Universe", true, false)
 	if universe:
 		return
 	universe = files.make_object_or_scene(IVUniverse)
@@ -413,7 +412,7 @@ func _init_program_objects() -> void:
 			if object.has_method("_project_init"):
 				object._project_init()
 	IVGlobal.verbose_signal("project_inited")
-	yield(get_tree(), "idle_frame")
+	await get_tree().idle_frame
 	emit_signal("init_step_finished")
 
 
@@ -433,7 +432,7 @@ func _add_program_nodes() -> void:
 		var object_key = key.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
 	IVGlobal.verbose_signal("project_nodes_added")
-	yield(get_tree(), "idle_frame")
+	await get_tree().idle_frame
 	emit_signal("init_step_finished")
 
 

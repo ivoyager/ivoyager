@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyOrbit
-extends MeshInstance
+extends MeshInstance3D
 
 # Visual orbit for a Body instance. If FragmentIdentifier exists, then a shader
 # is used to allow screen identification of the orbit loop.
@@ -55,12 +55,12 @@ func _init(body: IVBody) -> void:
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS # FragmentIdentifier still processing
-	_orbit.connect("changed", self, "_set_transform_from_orbit")
-	_body_huds_state.connect("visibility_changed", self, "_on_global_huds_changed")
-	_body_huds_state.connect("color_changed", self, "_set_color")
-	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
-	_body.connect("visibility_changed", self, "_on_body_visibility_changed")
+	process_mode = PROCESS_MODE_ALWAYS # FragmentIdentifier still processing
+	_orbit.connect("changed", Callable(self, "_set_transform_from_orbit"))
+	_body_huds_state.connect("visibility_changed", Callable(self, "_on_global_huds_changed"))
+	_body_huds_state.connect("color_changed", Callable(self, "_set_color"))
+	_body.connect("huds_visibility_changed", Callable(self, "_on_body_huds_changed"))
+	_body.connect("visibility_changed", Callable(self, "_on_body_visibility_changed"))
 #	IVGlobal.connect("setting_changed", self, "_settings_listener")
 	mesh = IVGlobal.shared.circle_mesh
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
@@ -68,11 +68,11 @@ func _ready() -> void:
 		var data := _body.get_fragment_data(FRAGMENT_BODY_ORBIT)
 		var fragment_id := _fragment_identifier.get_new_id_as_vec3(data)
 		material_override = ShaderMaterial.new()
-		material_override.shader = IVGlobal.shared.orbit_shader
-		material_override.set_shader_param("fragment_id", fragment_id)
-		material_override.set_shader_param("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
+		material_override.gdshader = IVGlobal.shared.orbit_shader
+		material_override.set_shader_parameter("fragment_id", fragment_id)
+		material_override.set_shader_parameter("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 	else:
-		material_override = SpatialMaterial.new()
+		material_override = StandardMaterial3D.new()
 		material_override.flags_unshaded = true
 		set_process(false)
 	_set_color()
@@ -86,8 +86,8 @@ func _process(_delta: float) -> void:
 	if !visible:
 		return
 	# TODO4.0: These are global uniforms, so we can do this globally!
-	material_override.set_shader_param("mouse_coord", _fragment_targeting[0])
-	material_override.set_shader_param("fragment_cycler", _fragment_targeting[2])
+	material_override.set_shader_parameter("mouse_coord", _fragment_targeting[0])
+	material_override.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transform_from_orbit(_is_scheduled := false) -> void:
@@ -135,7 +135,7 @@ func _set_color() -> void:
 		return
 	_color = color
 	if _fragment_identifier:
-		material_override.set_shader_param("color", Vector3(color.r, color.g, color.b))
+		material_override.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
 	else:
 		material_override.albedo_color = color
 

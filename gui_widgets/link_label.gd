@@ -26,11 +26,11 @@ var _link_url := "https://www.ivoyager.dev"
 
 
 func _ready() -> void:
-	connect("meta_clicked", self, "_on_meta_clicked")
+	connect("meta_clicked", Callable(self, "_on_meta_clicked"))
 
 
 func set_hyperlink(link_text: String, link_url: String) -> void:
-	bbcode_text = "[url]" + link_text + "[/url]"
+	text = "[url]" + link_text + "[/url]"
 	_link_url = link_url
 
 

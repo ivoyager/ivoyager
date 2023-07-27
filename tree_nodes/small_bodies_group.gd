@@ -59,13 +59,13 @@ var lp_integer := -1 # -1, 4 & 5 are currently supported
 var max_apoapsis := 0.0
 
 # binary import data
-var names := PoolStringArray()
-var magnitudes := PoolRealArray()
-var e_i_Om_w := PoolColorArray() # fixed & precessing (e librates for secular resonance)
-var a_M0_n := PoolVector3Array() # librating in l-point objects
-var s_g := PoolVector2Array() # orbit precessions
-var da_D_f := PoolVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
-var th0_de := PoolVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
+var names := PackedStringArray()
+var magnitudes := PackedFloat32Array()
+var e_i_Om_w := PackedColorArray() # fixed & precessing (e librates for secular resonance)
+var a_M0_n := PackedVector3Array() # librating in l-point objects
+var s_g := PackedVector2Array() # orbit precessions
+var da_D_f := PackedVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
+var th0_de := PackedVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
 
 
 

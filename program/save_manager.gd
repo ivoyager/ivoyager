@@ -58,22 +58,22 @@ var _settings: Dictionary = IVGlobal.settings
 var _enable_save_load: bool = IVGlobal.enable_save_load
 var _has_been_saved := false
 
-onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
-onready var _universe: Spatial = IVGlobal.program.Universe
-onready var _tree := get_tree()
+@onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
+@onready var _universe: Node3D = IVGlobal.program.Universe
+@onready var _tree := get_tree()
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
-	IVGlobal.connect("save_requested", self, "_on_save_requested")
-	IVGlobal.connect("load_requested", self, "_on_load_requested")
-	IVGlobal.connect("save_quit_requested", self, "save_quit")
+	process_mode = PROCESS_MODE_ALWAYS
+	IVGlobal.connect("save_requested", Callable(self, "_on_save_requested"))
+	IVGlobal.connect("load_requested", Callable(self, "_on_load_requested"))
+	IVGlobal.connect("save_quit_requested", Callable(self, "save_quit"))
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("quick_save"):
@@ -97,7 +97,7 @@ func save_quit() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if quick_save():
-		IVGlobal.connect("game_save_finished", _state_manager, "quit", [true])
+		IVGlobal.connect("game_save_finished", Callable(_state_manager, "quit").bind(true))
 
 
 func quick_save() -> bool:
@@ -129,7 +129,7 @@ func save_game(path := "") -> void:
 	print("Saving " + path)
 	_state.last_save_path = path
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
-	yield(_state_manager, "threads_finished")
+	await _state_manager.threads_finished
 	IVGlobal.verbose_signal("game_save_started")
 	assert(IVDebug.dlog("Tree status before save..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
@@ -172,20 +172,20 @@ func load_game(path := "", network_gamesave := []) -> void:
 	_state.is_splash_screen = false
 	_state.is_system_built = false
 	_state_manager.require_stop(_state_manager, NetworkStopSync.LOAD, true)
-	yield(_state_manager, "threads_finished")
+	await _state_manager.threads_finished
 	_state.is_game_loading = true
 	_state.is_loaded_game = true
 	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
 	IVGlobal.verbose_signal("game_load_started")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
 	IVUtils.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
-	yield(_tree, "idle_frame")
+	await _tree.idle_frame
+	await _tree.idle_frame
+	await _tree.idle_frame
+	await _tree.idle_frame
+	await _tree.idle_frame
+	await _tree.idle_frame
 	if !network_gamesave:
 		_io_manager.get_var_from_file(path, self, "_load_callback")
 	else:
@@ -237,7 +237,7 @@ func _load_callback(gamesave: Array, err: int) -> void:
 	IVGlobal.verbose_signal("game_load_finished")
 	_state.is_system_built = true
 	IVGlobal.verbose_signal("system_tree_built_or_loaded", false)
-	IVGlobal.connect("simulator_started", self, "_simulator_started_after_load", [], CONNECT_ONESHOT)
+	IVGlobal.connect("simulator_started", Callable(self, "_simulator_started_after_load").bind(), CONNECT_ONE_SHOT)
 
 
 func _simulator_started_after_load() -> void:

@@ -36,11 +36,11 @@ var _column_master: GridContainer
 
 
 func _enter_tree() -> void:
-	connect("child_entered_tree", self, "_on_child_entered_tree")
+	connect("child_entered_tree", Callable(self, "_on_child_entered_tree"))
 
 
 func _ready() -> void:
-	$"%ViewSaveButton".hint_tooltip = "HINT_SAVE_VISIBILITIES_AND_COLORS"
+	$"%ViewSaveButton".tooltip_text = "HINT_SAVE_VISIBILITIES_AND_COLORS"
 	$ViewSaveFlow.init($"%ViewSaveButton", default_view_name, set_name, is_cached,
 			view_flags, view_flags, reserved_view_names)
 

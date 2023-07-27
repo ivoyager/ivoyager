@@ -36,7 +36,7 @@ var _confirm_changes: Button
 var _restore_defaults: Button
 var _blocking_popups: Array = IVGlobal.blocking_popups
 
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 # virtual & overridable virtual functions
@@ -58,9 +58,9 @@ func _ready():
 
 
 func _on_ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	process_mode = PROCESS_MODE_ALWAYS
+	connect("popup_hide", Callable(self, "_on_popup_hide"))
+	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
 	theme = IVGlobal.themes.main
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
@@ -69,15 +69,15 @@ func _on_ready() -> void:
 	_cancel = $VBox/BottomHBox/Cancel
 	_confirm_changes = $VBox/BottomHBox/ConfirmChanges
 	_restore_defaults = $VBox/BottomHBox/RestoreDefaults
-	_cancel.connect("pressed", self, "_on_cancel")
-	_restore_defaults.connect("pressed", self, "_on_restore_defaults")
-	_confirm_changes.connect("pressed", self, "_on_confirm_changes")
+	_cancel.connect("pressed", Callable(self, "_on_cancel"))
+	_restore_defaults.connect("pressed", Callable(self, "_on_restore_defaults"))
+	_confirm_changes.connect("pressed", Callable(self, "_on_confirm_changes"))
 	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		_on_cancel()
 
 
@@ -162,7 +162,7 @@ func _open() -> void:
 		_state_manager.require_stop(self)
 	_build_content()
 	popup()
-	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
+	set_anchors_and_offsets_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
 
 
 func _build_content() -> void:
@@ -178,7 +178,7 @@ func _build_content() -> void:
 			subpanel_container.add_child(subpanel_vbox)
 			var header_label := Label.new()
 			subpanel_vbox.add_child(header_label)
-			header_label.align = Label.ALIGN_CENTER
+			header_label.align = Label.ALIGNMENT_CENTER
 			header_label.text = subpanel_dict.header
 			for item in subpanel_dict:
 				if item != "header":

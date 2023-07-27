@@ -47,14 +47,14 @@ var max_default_screen_proportions := Vector2(0.45, 0.45) # can override above
 # private
 var _settings: Dictionary = IVGlobal.settings
 
-onready var _viewport := get_viewport()
-onready var _parent: Control = get_parent()
+@onready var _viewport := get_viewport()
+@onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	IVGlobal.connect("simulator_started", self, "resize_and_position_to_anchor")
-	_parent.connect("resized", self, "resize_and_position_to_anchor")
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.connect("simulator_started", Callable(self, "resize_and_position_to_anchor"))
+	_parent.connect("resized", Callable(self, "resize_and_position_to_anchor"))
 	resize_and_position_to_anchor()
 
 
@@ -73,13 +73,13 @@ func resize_and_position_to_anchor() -> void:
 	var default_size := _get_default_size()
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
-	_parent.rect_size = default_size
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	_parent.rect_size = default_size 
-	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
-	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
+	_parent.size = default_size
+	await get_tree().idle_frame
+	await get_tree().idle_frame
+	await get_tree().idle_frame
+	_parent.size = default_size 
+	_parent.position.x = _parent.anchor_left * (_viewport.size.x - _parent.size.x)
+	_parent.position.y = _parent.anchor_top * (_viewport.size.y - _parent.size.y)
 
 
 func _get_default_size() -> Vector2:

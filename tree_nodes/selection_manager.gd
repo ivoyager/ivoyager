@@ -64,14 +64,14 @@ var is_action_listener := true
 var selection: IVSelection
 
 # private
-var _root: Viewport = IVGlobal.get_tree().get_root()
+var _root: SubViewport = IVGlobal.get_tree().get_root()
 var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections: Dictionary = IVGlobal.selections
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
 
-onready var _tree: SceneTree = get_tree()
+@onready var _tree: SceneTree = get_tree()
 
 
 func _init() -> void:
@@ -79,8 +79,8 @@ func _init() -> void:
 	
 
 func _ready() -> void:
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear_selections")
+	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear_selections"))
 	set_process_unhandled_key_input(is_action_listener)
 
 
@@ -92,7 +92,7 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 		_add_history()
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("select_forward"):
@@ -214,7 +214,7 @@ func get_body_name() -> String:
 	return selection.get_body_name() if selection else ""
 	
 
-func get_texture_2d() -> Texture:
+func get_texture_2d() -> Texture2D:
 	return selection.texture_2d if selection else null
 
 

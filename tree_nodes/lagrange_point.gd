@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVLagrangePoint
-extends Spatial
+extends Node3D
 
 # Passive Spatial that exists in the RotatingSpace of a Body. Use Body API to
 # obtain. (Uses lazy init.)

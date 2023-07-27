@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGBuilder
-extends Reference
+extends RefCounted
 
 # Builds SmallBodiesGroup instances from small_bodies_groups.tsv & binary data.
 

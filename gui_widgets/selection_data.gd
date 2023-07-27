@@ -200,16 +200,16 @@ var _body: IVBody
 var _path: String
 var _is_running := false
 
-onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
-onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
-onready var _timer: Timer = $Timer
+@onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+@onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
+@onready var _timer: Timer = $Timer
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_configure")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_configure"))
+	IVGlobal.connect("update_gui_requested", Callable(self, "_update_selection"))
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	IVGlobal.connect("about_to_stop_before_quit", Callable(self, "_clear_recycled"))
 	_configure()
 	_start_timer_coroutine()
 
@@ -220,7 +220,7 @@ func _configure(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_selection_manager.connect("selection_changed", Callable(self, "_update_selection"))
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
@@ -238,7 +238,7 @@ func _configure(_dummy := false) -> void:
 			header_button.flat = true
 			header_button.size_flags_horizontal = 0
 			header_button.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-			header_button.connect("pressed", self, "_process_section", [section, true])
+			header_button.connect("pressed", Callable(self, "_process_section").bind(section, true))
 			_header_buttons.append(header_button)
 			add_child(header_button)
 		else:
@@ -254,7 +254,7 @@ func _configure(_dummy := false) -> void:
 
 func _clear() -> void:
 	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", self, "_update_selection")
+		_selection_manager.disconnect("selection_changed", Callable(self, "_update_selection"))
 		_selection_manager = null
 	_selection = null
 	_body = null
@@ -282,7 +282,7 @@ func _start_timer_coroutine() -> void:
 	_timer.wait_time = interval
 	_timer.start()
 	while true:
-		yield(_timer, "timeout")
+		await _timer.timeout
 		if _state.is_running:
 			_update_selection()
 
@@ -393,7 +393,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 					value_wiki_key = key
 			else:
 				value_txt = str(value)
-		TYPE_REAL:
+		TYPE_FLOAT:
 			if is_inf(value):
 				value_txt = "?"
 			elif is_nan(value):
@@ -469,7 +469,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 	var is_value_link: bool = row_info[3]
 	if is_label_link:
 		var label_cell := _get_rtlabel(false)
-		label_cell.bbcode_text = label_txt
+		label_cell.text = label_txt
 		grid.add_child(label_cell)
 	else:
 		var label_cell := _get_label(false)
@@ -477,7 +477,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 		grid.add_child(label_cell)
 	if is_value_link:
 		var value_cell := _get_rtlabel(true)
-		value_cell.bbcode_text = value_txt
+		value_cell.text = value_txt
 		grid.add_child(value_cell)
 	else:
 		var value_cell := _get_label(true)
@@ -515,7 +515,7 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 		rtlabel = _recycled_rtlabels.pop_back()
 	else:
 		rtlabel = RichTextLabel.new()
-		rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+		rtlabel.connect("meta_clicked", Callable(self, "_on_meta_clicked"))
 		rtlabel.bbcode_enabled = true
 		rtlabel.fit_content_height = true
 		rtlabel.scroll_active = false

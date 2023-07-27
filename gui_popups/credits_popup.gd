@@ -37,19 +37,19 @@ func _project_init() -> void:
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
-	IVGlobal.connect("credits_requested", self, "open")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	connect("popup_hide", self, "_on_hide")
-	find_node("Close").connect("pressed", self, "hide")
-	find_node("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
+	IVGlobal.connect("credits_requested", Callable(self, "open"))
+	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
+	connect("popup_hide", Callable(self, "_on_hide"))
+	find_child("Close").connect("pressed", Callable(self, "hide"))
+	find_child("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
 	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		hide()
 
 
@@ -58,7 +58,7 @@ func open() -> void:
 		return
 	if stop_sim:
 		_state_manager.require_stop(self)
-	popup_centered_minsize()
+	popup_centered_clamped()
 
 
 func _on_hide() -> void:

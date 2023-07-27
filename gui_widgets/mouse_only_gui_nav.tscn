@@ -3,9 +3,9 @@
 [ext_resource path="res://ivoyager/gui_widgets/mouse_only_gui_nav.gd" type="Script" id=1]
 
 [node name="MouseOnlyGUINav" type="CheckBox"]
-margin_right = 24.0
-margin_bottom = 24.0
-hint_tooltip = "HINT_MOUSE_ONLY_GUI_NAV"
+offset_right = 24.0
+offset_bottom = 24.0
+tooltip_text = "HINT_MOUSE_ONLY_GUI_NAV"
 text = "CKBX_MOUSE_ONLY_GUI_NAVIGATION"
 script = ExtResource( 1 )
 __meta__ = {

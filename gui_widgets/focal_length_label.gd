@@ -22,24 +22,24 @@ extends Label
 
 # GUI widget. Expects the camera to have signal "focal_length_changed".
 
-var _camera: Camera
+var _camera: Camera3D
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	_connect_camera(get_viewport().get_camera_3d())
 
 
-func _connect_camera(camera: Camera) -> void:
+func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("focal_length_changed", self, "_update_focal_length")
+		_camera.connect("focal_length_changed", Callable(self, "_update_focal_length"))
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
+		_camera.disconnect("focal_length_changed", Callable(self, "_update_focal_length"))
 	_camera = null
 
 

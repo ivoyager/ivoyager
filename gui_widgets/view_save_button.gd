@@ -34,11 +34,11 @@ var _view_saver: IVViewSaver
 func _ready() -> void:
 	var top_gui: Control = IVGlobal.program.TopGUI
 	_view_save_popup = IVFiles.make_object_or_scene(IVViewSavePopup)
-	_view_saver = _view_save_popup.find_node("ViewSaver")
-	_view_saver.connect("view_saved", self, "_on_view_saved")
+	_view_saver = _view_save_popup.find_child("ViewSaver")
+	_view_saver.connect("view_saved", Callable(self, "_on_view_saved"))
 	top_gui.add_child(_view_save_popup)
-	connect("toggled", self, "_on_toggled")
-	_view_save_popup.connect("visibility_changed", self, "_on_visibility_changed")
+	connect("toggled", Callable(self, "_on_toggled"))
+	_view_save_popup.connect("visibility_changed", Callable(self, "_on_visibility_changed"))
 
 
 func init(default_view_name := "LABEL_CUSTOM1", set_name := "", is_cached := true,
@@ -66,20 +66,20 @@ func _on_toggled(is_pressed) -> void:
 		return
 	if is_pressed:
 		_view_save_popup.popup()
-		yield(get_tree(), "idle_frame") # popup may not know its correct size yet
-		var position := rect_global_position - _view_save_popup.rect_size
-		position.x += rect_size.x / 2.0
+		await get_tree().idle_frame # popup may not know its correct size yet
+		var position := global_position - _view_save_popup.size
+		position.x += size.x / 2.0
 		if position.x < 0.0:
 			position.x = 0.0
 		if position.y < 0.0:
 			position.y = 0.0
-		_view_save_popup.rect_position = position
+		_view_save_popup.position = position
 	else:
 		_view_save_popup.hide()
 
 
 func _on_visibility_changed() -> void:
-	yield(get_tree(), "idle_frame")
+	await get_tree().idle_frame
 	if !_view_save_popup.visible:
 		pressed = false
 

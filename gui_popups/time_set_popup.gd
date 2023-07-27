@@ -25,8 +25,8 @@ const SCENE := "res://ivoyager/gui_popups/time_set_popup.tscn"
 # TimeSetButton.
 
 func _ready() -> void:
-	connect("about_to_show", self, "_on_about_to_show")
-	$"%TimeSetter".connect("time_set", self, "_on_time_set")
+	connect("about_to_popup", Callable(self, "_on_about_to_show"))
+	$"%TimeSetter".connect("time_set", Callable(self, "_on_time_set"))
 
 
 func _on_about_to_show() -> void:

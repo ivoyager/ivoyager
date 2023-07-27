@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVUniverse
-extends Spatial
+extends Node3D
 
 # *****************************************************************************
 #
@@ -55,5 +55,5 @@ var persist := {}
 
 func _project_init():
 	if IVGlobal.pause_only_stops_time:
-		pause_mode = PAUSE_MODE_PROCESS
+		process_mode = PROCESS_MODE_ALWAYS
 

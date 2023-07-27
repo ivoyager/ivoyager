@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVRotatingSpace
-extends Spatial
+extends Node3D
 
 # Created and maintained by IVBody instance only when needed. This is the
 # rotating reference frame in which Lagrange points are embeded. In
@@ -83,7 +83,7 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 		var _LagrangePoint_: Script = IVGlobal.script_classes._LagrangePoint_
 		var lagrange_point: IVLagrangePoint = _LagrangePoint_.new()
 		lagrange_point.init(lp_integer)
-		lagrange_point.translation = lagrange_point_vectors[lp_integer - 1]
+		lagrange_point.position = lagrange_point_vectors[lp_integer - 1]
 		_LagrangePoints[lp_integer] = lagrange_point
 		add_child(lagrange_point)
 	return _LagrangePoints[lp_integer]

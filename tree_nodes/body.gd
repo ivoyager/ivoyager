@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBody
-extends Spatial
+extends Node3D
 
 # Base class for objects that orbit or are orbited. The system tree under
 # Universe is composed of IVBody instances from top to bottom. Other kinds of
@@ -85,7 +85,7 @@ var satellites := [] # IVBody instances
 # public - read-only!
 var huds_visible := false # too far / too close toggle
 var model_visible := false
-var model_space: Spatial # rotation only, not scaled (lazy init)
+var model_space: Node3D # rotation only, not scaled (lazy init)
 var rotating_space: IVRotatingSpace # rotates & translates for L-points (lazy init)
 var rotation_vector := ECLIPTIC_Z # synonymous with 'north'
 var rotation_rate := 0.0
@@ -96,8 +96,8 @@ var model_reference_basis := IDENTITY_BASIS
 var m_radius := NAN # persisted in characteristics
 var orbit: IVOrbit # persisted in components
 
-var texture_2d: Texture
-var texture_slice_2d: Texture # GUI navigator graphic for sun only
+var texture_2d: Texture2D
+var texture_slice_2d: Texture2D # GUI navigator graphic for sun only
 var min_click_radius: float
 var max_hud_dist_orbit_radius_multiplier: float
 var min_hud_dist_radius_multiplier: float
@@ -114,7 +114,7 @@ var _model_visible := false
 var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
-onready var _tree := get_tree()
+@onready var _tree := get_tree()
 
 
 # virtual & overridable virtual-replacement functions
@@ -136,7 +136,7 @@ func _on_enter_tree() -> void:
 	orbit = components.get("orbit") # no orbit for the top body (e.g., the Sun)
 	if orbit:
 		orbit.reset_elements_and_interval_update()
-		orbit.connect("changed", self, "_on_orbit_changed")
+		orbit.connect("changed", Callable(self, "_on_orbit_changed"))
 
 
 func _ready() -> void:
@@ -144,14 +144,14 @@ func _ready() -> void:
 
 
 func _on_ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS # time will stop, but allow pointy finger on mouseover
+	process_mode = PROCESS_MODE_ALWAYS # time will stop, but allow pointy finger on mouseover
 	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [],
-			CONNECT_ONESHOT)
+			CONNECT_ONE_SHOT)
 	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
-			CONNECT_ONESHOT)
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+			CONNECT_ONE_SHOT)
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("time_altered", self, "_on_time_altered")
+	timekeeper.connect("time_altered", Callable(self, "_on_time_altered"))
 	assert(!IVGlobal.bodies.has(name))
 	IVGlobal.bodies[name] = self
 	if flags & BodyFlags.IS_TOP:
@@ -188,7 +188,7 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 
 func _prepare_to_free() -> void:
 	set_process(false)
-	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.disconnect("setting_changed", Callable(self, "_settings_listener"))
 
 
 func _process(delta: float) -> void:
@@ -201,13 +201,13 @@ func _on_process(_delta: float) -> void: # subclass can override
 	# calculated in-function.
 	
 	# get camera distance and check mouse proximity
-	var camera: Camera = _world_targeting[2]
+	var camera: Camera3D = _world_targeting[2]
 	if !camera:
 		return
-	var camera_dist := global_translation.distance_to(camera.global_translation)
+	var camera_dist := global_position.distance_to(camera.global_position)
 	var is_in_mouse_click_radius := false
-	if !camera.is_position_behind(global_translation):
-		var pos2d := camera.unproject_position(global_translation)
+	if !camera.is_position_behind(global_position):
+		var pos2d := camera.unproject_position(global_position)
 		var mouse_dist := pos2d.distance_to(_world_targeting[0])
 		var click_radius := min_click_radius
 		var divisor: float = _world_targeting[3] * camera_dist # fov * dist
@@ -229,14 +229,14 @@ func _on_process(_delta: float) -> void: # subclass can override
 
 	# update translation and reference frame 'spaces'
 	if orbit:
-		translation = orbit.get_position()
+		position = orbit.get_position()
 		if rotating_space:
-			var orbit_dist := translation.length()
-			var x_axis := -translation / orbit_dist
+			var orbit_dist := position.length()
+			var x_axis := -position / orbit_dist
 			var z_axis := orbit.get_normal()
 			var y_axis := z_axis.cross(x_axis)
 			rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
-			rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+			rotating_space.position.x = orbit_dist - rotating_space.characteristic_length
 	if model_space:
 		var rotation_angle := wrapf(_times[0] * rotation_rate, 0.0, TAU)
 		model_space.transform.basis = basis_at_epoch.rotated(rotation_vector, rotation_angle)
@@ -244,7 +244,7 @@ func _on_process(_delta: float) -> void: # subclass can override
 	# check HUD and model visibility
 	var hud_dist_ok := _min_hud_dist < camera_dist # not too close to camera
 	if hud_dist_ok and orbit:
-		var orbit_radius := translation.length()
+		var orbit_radius := position.length()
 		# is body too close to its parent for camera distance?
 		hud_dist_ok = orbit_radius * max_hud_dist_orbit_radius_multiplier > camera_dist
 	if huds_visible != hud_dist_ok:
@@ -484,7 +484,7 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 		return INF
 	var a := get_orbit_semi_major_axis()
 	var mass := get_mass()
-	var parent_mass: float = get_parent_spatial().get_mass()
+	var parent_mass: float = get_parent_node_3d().get_mass()
 	if !a or !mass or !parent_mass:
 		return 0.0
 	return a * (1.0 - eccentricity) * pow(mass / (3.0 * parent_mass), 0.33333333)
@@ -498,7 +498,7 @@ func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
 	max_model_dist = max_dist
 
 
-func add_child_to_model_space(spatial: Spatial) -> void:
+func add_child_to_model_space(spatial: Node3D) -> void:
 	if !model_space:
 		var _ModelSpace_: Script = IVGlobal.script_classes._ModelSpace_
 		model_space = _ModelSpace_.new()
@@ -506,7 +506,7 @@ func add_child_to_model_space(spatial: Spatial) -> void:
 	model_space.add_child(spatial)
 
 
-func remove_child_from_model_space(spatial: Spatial) -> void:
+func remove_child_from_model_space(spatial: Node3D) -> void:
 	model_space.remove_child(spatial)
 	if model_space.get_child_count() == 0:
 		model_space.queue_free()
@@ -522,11 +522,11 @@ func set_orbit(orbit_: IVOrbit) -> void: # null ok
 		return
 	if orbit:
 		orbit.disconnect_interval_update()
-		orbit.disconnect("changed", self, "_on_orbit_changed")
+		orbit.disconnect("changed", Callable(self, "_on_orbit_changed"))
 	orbit = orbit_
 	if orbit_:
 		orbit_.reset_elements_and_interval_update()
-		orbit_.connect("changed", self, "_on_orbit_changed")
+		orbit_.connect("changed", Callable(self, "_on_orbit_changed"))
 
 
 func set_sleep(sleep_: bool) -> void: # called by IVSleepManager
@@ -541,7 +541,7 @@ func set_sleep(sleep_: bool) -> void: # called by IVSleepManager
 			_world_targeting[5] = INF
 	else:
 		sleep = false
-		_process(0.0) # update translation, etc., now; will show()
+		_process(0.0) # update position, etc., now; will show()
 		set_process(true)
 
 
@@ -638,14 +638,14 @@ func reset_orientation_and_rotation() -> void:
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
 	if (flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET
-			or get_parent_spatial().flags & IS_TRUE_PLANET):
+			or get_parent_node_3d().flags & IS_TRUE_PLANET):
 		if ECLIPTIC_Z.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
-	elif get_parent_spatial().flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
+	elif get_parent_node_3d().flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
 		if new_rotation_rate < 0.0:
 			reverse_polarity = true
 	else: # moons of not-true-planet star-orbiters
-		var parent_positive_pole: Vector3 = get_parent_spatial().get_positive_pole()
+		var parent_positive_pole: Vector3 = get_parent_node_3d().get_positive_pole()
 		if parent_positive_pole.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
 	if reverse_polarity:
@@ -670,7 +670,7 @@ func _add_rotating_space() -> void:
 	var m2: float = get_mass()
 	if !m2:
 		return
-	var m1: float = get_parent_spatial().get_mass()
+	var m1: float = get_parent_node_3d().get_mass()
 	if !m1:
 		return
 	var mass_ratio: float = m1 / m2
@@ -685,7 +685,7 @@ func _add_rotating_space() -> void:
 	var z_axis := orbit.get_normal()
 	var y_axis := z_axis.cross(x_axis)
 	rotating_space.transform.basis = Basis(x_axis, y_axis, z_axis)
-	rotating_space.translation.x = orbit_dist - rotating_space.characteristic_length
+	rotating_space.position.x = orbit_dist - rotating_space.characteristic_length
 
 
 func _on_orbit_changed(is_scheduled: bool) -> void:
@@ -697,9 +697,9 @@ func _on_orbit_changed(is_scheduled: bool) -> void:
 				orbit.m_modifiers)
 
 
-remote func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
+@rpc("any_peer") func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
 		element_rates: Array, m_modifiers: Array) -> void: # client-side network game only
-	if _tree.get_rpc_sender_id() != 1:
+	if _tree.get_remote_sender_id() != 1:
 		return # from server only
 	orbit.orbit_sync(reference_normal, elements_at_epoch, element_rates, m_modifiers)
 
