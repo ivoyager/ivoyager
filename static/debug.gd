@@ -20,9 +20,7 @@
 class_name IVDebug
 extends Object
 
-# Static debug print and log functions.
-#
-# All functions return true so they can be wrapped in assert(). E.g.,
+# Print & log functions return true so they can be wrapped in assert(). E.g.,
 #     assert(IVDebug.dlog("something"))
 #     assert(!DPRINT or IVDebug.dprint("something"))
 
@@ -30,8 +28,23 @@ extends Object
 static func dprint(value) -> bool:
 	print(value)
 	return true
-	
-	
+
+
+static func dprint2(value1, value2) -> bool:
+	print(value1, value2)
+	return true
+
+
+static func dprint3(value1, value2, value3) -> bool:
+	print(value1, value2, value3)
+	return true
+
+
+static func dprint4(value1, value2, value3, value4) -> bool:
+	print(value1, value2, value3, value4)
+	return true
+
+
 static func dlog(value) -> bool:
 	var file := IVGlobal.debug_log
 	if !file:
