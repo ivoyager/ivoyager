@@ -55,7 +55,7 @@ enum { # option_type for number_option()
 	MASS_G_KG_T, # g if < 1.0 kg; t if x >= 1000.0 kg 
 	MASS_G_KG_PREFIXED_T, # g, kg, t, kt, Mt, Gt, Tt, Pt etc.
 	# mass rate
-	MASS_RATE_G_KG_PREFIXED_T_PER_D # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
+	MASS_RATE_G_KG_PREFIXED_T_PER_D, # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
 	# time
 	TIME_D_Y, # d if < 1000 d, else y
 	# velocity
@@ -229,7 +229,7 @@ func _project_init():
 
 
 func number_option(x: float, option_type: int, unit := "", precision := 3, num_type := NUM_DYNAMIC,
-		long_form := false, case_type := CASE_MIXED) -> String:
+		long_form := false, case_type := CASE_MIXED, lat_long_type := N_S_E_W) -> String:
 	# wrapper for functions below
 	match option_type:
 		NAMED_NUMBER:
@@ -311,12 +311,12 @@ func number_option(x: float, option_type: int, unit := "", precision := 3, num_t
 				return number_unit(x, "c", precision, num_type, long_form, case_type)
 			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
 		LATITUDE:
-			return latitude(x, precision, long_form, case_type)
+			return latitude(x, precision, lat_long_type, long_form, case_type)
 		LONGITUDE:
-			return longitude(x, precision, long_form, case_type)
+			return longitude(x, precision, lat_long_type, long_form, case_type)
 			
-	assert(false, "Unkknown option_type: " + String(option_type))
-	return String(x)
+	assert(false, "Unkknown option_type: " + str(option_type))
+	return str(x)
 
 
 func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
@@ -379,7 +379,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	# see NUM_ enums for num_type.
 	
 	if precision <= 0:
-		return (String(x))
+		return (str(x))
 		
 	# specified decimal places
 	if num_type == NUM_DECIMAL_PL:
@@ -390,8 +390,8 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	if x == 0.0: # don't do '0.00e0' even if NUM_SCIENTIFIC
 		return "%.*f" % [precision - 1, 0.0] # e.g., '0.00' for precision 3
 		
-	var abs_x := abs(x)
-	var pow10 := floor(log(abs_x) / LOG_OF_10)
+	var abs_x := absf(x)
+	var pow10 := floorf(log(abs_x) / LOG_OF_10)
 	
 	if num_type == NUM_PRECISION:
 		var decimal_pl := precision - int(pow10) - 1
@@ -402,7 +402,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 		else: # remove over-precision
 			var divisor := pow(10.0, -decimal_pl)
 			x = round(x / divisor)
-			return String(x * divisor) # '555000'
+			return str(x * divisor) # '555000'
 	
 	# handle 0.01 - 99999 for NUM_DYNAMIC
 	if num_type == NUM_DYNAMIC and abs_x < 99999.5 and abs_x > 0.01:
@@ -416,7 +416,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	var divisor := pow(10.0, pow10)
 	x = x / divisor if !is_zero_approx(divisor) else 1.0
 	var exp_precision := pow(10.0, precision - 1)
-	var precision_rounded := round(x * exp_precision) / exp_precision
+	var precision_rounded := roundf(x * exp_precision) / exp_precision
 	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
 		x /= 10.0
 		pow10 += 1

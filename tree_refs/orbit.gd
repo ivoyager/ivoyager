@@ -321,7 +321,7 @@ func get_position(time := NAN) -> Vector3:
 	elif time > _end_current or time < _begin_current:
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
-	var R := get_position_from_elements(elements, time)
+	var R := IVOrbit.get_position_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
 		R = math.rotate_vector_z(R, reference_normal)
 	return R
@@ -336,7 +336,7 @@ func get_position_velocity(time := NAN) -> Array:
 	elif time > _end_current or time < _begin_current:
 		elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		_set_elements(time, elements)
-	var RV := get_vectors_from_elements(elements, time)
+	var RV := IVOrbit.get_vectors_from_elements(elements, time)
 	if reference_normal != ECLIPTIC_UP:
 		RV[0] = math.rotate_vector_z(RV[0], reference_normal)
 		RV[1] = math.rotate_vector_z(RV[1], reference_normal)
@@ -533,7 +533,7 @@ func _set_elements(time: float, elements: Array) -> void:
 		return
 	# Create new elements from endogenous perturbations. We clamp time to stay
 	# in the valid 3000 BCE - 3000 CE range for adjustments that are not cyclic.
-	var t_clamped := clamp(time, T_3000BCE, T_3000CE)
+	var t_clamped := clampf(time, T_3000BCE, T_3000CE)
 	var a: float = elements_at_epoch[0] + element_rates[0] * t_clamped
 	var e: float = elements_at_epoch[1] + element_rates[1] * t_clamped
 	var i: float = elements_at_epoch[2] + element_rates[2] * t_clamped
