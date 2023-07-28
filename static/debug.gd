@@ -20,12 +20,20 @@
 class_name IVDebug
 extends Object
 
-# Static debug print functions. Wrap all calls in assert(). E.g.,
-#     assert(IVDebug.dlog("something")).
+# Static debug print and log functions.
+#
+# All functions return true so they can be wrapped in assert(). E.g.,
+#     assert(IVDebug.dlog("something"))
+#     assert(!DPRINT or IVDebug.dprint("something"))
 
 
+static func dprint(value) -> bool:
+	print(value)
+	return true
+	
+	
 static func dlog(value) -> bool:
-	var file: File = IVGlobal.debug_log
+	var file := IVGlobal.debug_log
 	if !file:
 		return true
 	var line := str(value)

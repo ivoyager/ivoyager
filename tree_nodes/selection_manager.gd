@@ -64,7 +64,7 @@ var is_action_listener := true
 var selection: IVSelection
 
 # private
-var _root: SubViewport = IVGlobal.get_tree().get_root()
+var _root: Window = get_tree().get_root()
 var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections: Dictionary = IVGlobal.selections
 var _history := [] # contains weakrefs
@@ -201,10 +201,6 @@ func get_selection() -> IVSelection:
 	return selection
 
 
-func get_name() -> String:
-	return selection.get_name() if selection else ""
-
-
 func get_gui_name() -> String:
 	# return is already translated
 	return selection.get_gui_name() if selection else ""
@@ -287,7 +283,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			iteration_array = up_body.satellites
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
-			 # TODO: code for multistar systems
+			# TODO: code for multistar systems
 			var sun: IVBody = IVGlobal.top_bodies[0]
 			select_body(sun)
 			return
@@ -375,7 +371,7 @@ func _add_history() -> void:
 	_history_index += 1
 	if _history.size() > _history_index:
 		_history.resize(_history_index)
-	var wr := weakref(selection)
+	var wr: WeakRef = weakref(selection) # weakref() is untyped in Godot4.1.1. Open issue? 
 	_history.append(wr)
 
 
