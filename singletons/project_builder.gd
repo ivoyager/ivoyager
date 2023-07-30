@@ -331,7 +331,7 @@ func _init_extensions() -> void:
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
 			extension._extension_init()
-	IVGlobal.verbose_signal("extentions_inited")
+	IVGlobal.extentions_inited.emit()
 
 
 func _set_simulator_root() -> void:
@@ -386,7 +386,7 @@ func _instantiate_and_index_program_objects() -> void:
 				continue
 			assert(!_script_classes.has(key))
 			_script_classes[key] = dict[key]
-	IVGlobal.verbose_signal("project_objects_instantiated")
+	IVGlobal.project_objects_instantiated.emit()
 
 
 func _init_program_objects() -> void:
@@ -411,9 +411,9 @@ func _init_program_objects() -> void:
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
 				object._project_init()
-	IVGlobal.verbose_signal("project_inited")
+	IVGlobal.project_inited.emit()
 	await get_tree().idle_frame
-	emit_signal("init_step_finished")
+	init_step_finished.emit()
 
 
 func _add_program_nodes() -> void:
@@ -431,10 +431,10 @@ func _add_program_nodes() -> void:
 			continue
 		var object_key = key.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
-	IVGlobal.verbose_signal("project_nodes_added")
+	IVGlobal.project_nodes_added.emit()
 	await get_tree().idle_frame
-	emit_signal("init_step_finished")
+	init_step_finished.emit()
 
 
 func _finish() -> void:
-	IVGlobal.verbose_signal("project_builder_finished")
+	IVGlobal.project_builder_finished.emit()

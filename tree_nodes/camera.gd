@@ -172,7 +172,7 @@ func _ready() -> void:
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	IVGlobal.verbose_signal("camera_ready", self)
+	IVGlobal.camera_ready.emit(self)
 	set_process(false) # don't process until sim started
 
 

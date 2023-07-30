@@ -25,23 +25,9 @@ extends Object
 #     assert(!DPRINT or IVDebug.dprint("something"))
 
 
-static func dprint(value) -> bool:
-	print(value)
-	return true
-
-
-static func dprint2(value1, value2) -> bool:
-	print(value1, value2)
-	return true
-
-
-static func dprint3(value1, value2, value3) -> bool:
-	print(value1, value2, value3)
-	return true
-
-
-static func dprint4(value1, value2, value3, value4) -> bool:
-	print(value1, value2, value3, value4)
+static func dprint(arg, arg2 = null, arg3 = null) -> bool:
+	# For >3 items, just use an array.
+	prints(arg, arg2, arg3)
 	return true
 
 
@@ -50,13 +36,28 @@ static func dprint_orphan_nodes() -> bool:
 	return true
 
 
-static func dlog(value) -> bool:
+static func dlog(arg) -> bool:
 	var file := IVGlobal.debug_log
 	if !file:
 		return true
-	var line := str(value)
+	var line := str(arg)
 	file.store_line(line)
 	return true
+
+
+static func signal_verbosely(object: Object, signal_name: String) -> void:
+	# Call before any other signal connections; signal must have <= 8 args.
+	object.connect(signal_name, _on_verbose_signal.bind(signal_name))
+
+
+static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,
+		arg5 = null, arg6 = null, arg7 = null, arg8 = null, arg9 = null) -> void:
+	# Expects signal_name as last bound argument.
+	var args := [arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9]
+	while args[-1] == null:
+		args.pop_back()
+	var signal_name: String = args.pop_back()
+	prints("SIGNAL", signal_name, args)
 
 
 static func no_nans(thing) -> bool:

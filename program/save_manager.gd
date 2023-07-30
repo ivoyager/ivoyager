@@ -106,9 +106,9 @@ func quick_save() -> bool:
 	if _state.network_state == IS_CLIENT:
 		return false
 	if !_has_been_saved or !_settings.save_base_name or !files.is_valid_dir(_settings.save_dir):
-		IVGlobal.verbose_signal("save_dialog_requested")
+		IVGlobal.save_dialog_requested.emit()
 		return false
-	IVGlobal.verbose_signal("close_main_menu_requested")
+	IVGlobal.close_main_menu_requested.emit()
 	var date_string := ""
 	if _settings.append_date_to_save:
 		date_string = _timekeeper.get_current_date_for_file()
@@ -124,18 +124,18 @@ func save_game(path := "") -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if !path:
-		IVGlobal.verbose_signal("save_dialog_requested")
+		IVGlobal.save_dialog_requested.emit()
 		return
 	print("Saving " + path)
 	_state.last_save_path = path
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
 	await _state_manager.threads_finished
-	IVGlobal.verbose_signal("game_save_started")
+	IVGlobal.game_save_started.emit()
 	assert(IVDebug.dlog("Tree status before save..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
 	var gamesave := _save_builder.generate_gamesave(_universe)
 	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
-	IVGlobal.verbose_signal("game_save_finished")
+	IVGlobal.game_save_finished.emit()
 	_has_been_saved = true
 	_state_manager.allow_run(self)
 
@@ -146,10 +146,10 @@ func quick_load() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if _state.last_save_path:
-		IVGlobal.verbose_signal("close_main_menu_requested")
+		IVGlobal.close_main_menu_requested.emit()
 		load_game(_state.last_save_path)
 	else:
-		IVGlobal.verbose_signal("load_dialog_requested")
+		IVGlobal.load_dialog_requested.emit()
 
 
 func load_game(path := "", network_gamesave := []) -> void:
@@ -158,7 +158,7 @@ func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and _state.network_state == IS_CLIENT:
 		return
 	if !network_gamesave and path == "":
-		IVGlobal.verbose_signal("load_dialog_requested")
+		IVGlobal.load_dialog_requested.emit()
 		return
 	var save_file: File
 	if !network_gamesave:
@@ -175,8 +175,8 @@ func load_game(path := "", network_gamesave := []) -> void:
 	await _state_manager.threads_finished
 	_state.is_game_loading = true
 	_state.is_loaded_game = true
-	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
-	IVGlobal.verbose_signal("game_load_started")
+	IVGlobal.about_to_free_procedural_nodes.emit()
+	IVGlobal.game_load_started.emit()
 	await _tree.idle_frame
 	IVUtils.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
@@ -234,9 +234,9 @@ func _load_callback(gamesave: Array, err: int) -> void:
 		return # TODO: Exit and give user feedback
 	_save_builder.build_tree(_universe, gamesave)
 	_test_version()
-	IVGlobal.verbose_signal("game_load_finished")
+	IVGlobal.game_load_finished.emit()
 	_state.is_system_built = true
-	IVGlobal.verbose_signal("system_tree_built_or_loaded", false)
+	IVGlobal.system_tree_built_or_loaded.emit(false)
 	IVGlobal.connect("simulator_started", Callable(self, "_simulator_started_after_load").bind(), CONNECT_ONE_SHOT)
 
 

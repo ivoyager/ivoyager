@@ -36,7 +36,7 @@ func _init():
 	
 func _on_init() -> void:
 	_load_translations()
-	IVGlobal.verbose_signal("translations_imported")
+	IVGlobal.translations_imported.emit()
 	IVGlobal.program.erase("TranslationImporter") # frees self
 
 

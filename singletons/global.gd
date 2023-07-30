@@ -95,6 +95,9 @@ signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
 
 
+const DEBUG_SIGNAL_VERBOSELY := true # print IVGlobal signal emissions in debug builds
+
+
 # containers - write authority indicated; safe to localize container reference
 var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
 var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
@@ -250,24 +253,16 @@ var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", et
 var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
-func _ready():
+func _init() -> void:
+	if OS.is_debug_build and DEBUG_SIGNAL_VERBOSELY:
+		# TEST34: Does get_signal_list() include script or base object signals?
+		# TEST34: First connection always called first?
+		var signal_list := get_signal_list()
+		for signal_dict in signal_list:
+			var signal_name: String = signal_dict.name
+			IVDebug.signal_verbosely(self, signal_name)
+
+
+func _ready() -> void:
 	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
-
-
-func verbose_signal(signal_str: String, arg1 = null, arg2 = null) -> void:
-	# Used mainly for state broadcasts
-	var print_arg1 = "" if typeof(arg1) == TYPE_NIL \
-			else '"' + arg1 + '"' if typeof(arg1) == TYPE_STRING \
-			else arg1
-	var print_arg2 = "" if typeof(arg2) == TYPE_NIL \
-			else '"' + arg2 + '"' if typeof(arg2) == TYPE_STRING \
-			else arg2
-	if verbose:
-		prints("IVGlobal signaling", signal_str, print_arg1, print_arg2)
-	if arg1 == null:
-		emit_signal(signal_str)
-	elif arg2 == null:
-		emit_signal(signal_str, arg1)
-	else:
-		emit_signal(signal_str, arg1, arg2)

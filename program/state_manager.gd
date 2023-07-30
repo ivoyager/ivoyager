@@ -177,7 +177,7 @@ func change_pause(is_toggle := true, is_pause := true) -> void:
 		return
 	is_user_paused = !_tree.paused if is_toggle else is_pause
 	_tree.paused = is_user_paused
-	IVGlobal.verbose_signal("user_pause_changed", is_user_paused)
+	IVGlobal.user_pause_changed.emit(is_user_paused)
 
 
 func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) -> bool:
@@ -199,7 +199,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
 			emit_signal("server_about_to_stop", network_sync_type)
-	assert(!DPRINT or IVDebug.dprint3("require_stop", who, network_sync_type))
+	assert(!DPRINT or IVDebug.dprint("require_stop", who, network_sync_type))
 	if !_nodes_requiring_stop.has(who):
 		_nodes_requiring_stop.append(who)
 	if _state.is_running:
@@ -209,7 +209,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 
 
 func allow_run(who: Object) -> void:
-	assert(!DPRINT or IVDebug.dprint2("allow_run", who))
+	assert(!DPRINT or IVDebug.dprint("allow_run", who))
 	_nodes_requiring_stop.erase(who)
 	if _state.is_running or _nodes_requiring_stop:
 		return
@@ -241,14 +241,14 @@ func exit(force_exit := false, following_server := false) -> void:
 	_state.last_save_path = ""
 	require_stop(self, NetworkStopSync.EXIT, true)
 	await self.threads_finished
-	IVGlobal.verbose_signal("about_to_exit")
-	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
+	IVGlobal.about_to_exit.emit()
+	IVGlobal.about_to_free_procedural_nodes.emit()
 	await _tree.idle_frame
 	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
-	IVGlobal.verbose_signal("close_all_admin_popups_requested")
+	IVGlobal.close_all_admin_popups_requested.emit()
 	await _tree.idle_frame
 	_state.is_splash_screen = true
-	IVGlobal.verbose_signal("simulator_exited")
+	IVGlobal.simulator_exited.emit()
 
 
 func quit(force_quit := false) -> void:
@@ -264,10 +264,10 @@ func quit(force_quit := false) -> void:
 	if _state.network_state == IS_CLIENT:
 		emit_signal("client_is_dropping_out", false)
 	_state.is_quitting = true
-	IVGlobal.verbose_signal("about_to_stop_before_quit")
+	IVGlobal.about_to_stop_before_quit.emit()
 	require_stop(self, NetworkStopSync.QUIT, true)
 	await self.threads_finished
-	IVGlobal.verbose_signal("about_to_quit")
+	IVGlobal.about_to_quit.emit()
 	assert(IVDebug.dprint_orphan_nodes())
 	print("Quitting...")
 	_tree.quit()
@@ -280,7 +280,7 @@ func _on_project_builder_finished() -> void:
 	await _tree.idle_frame
 	_state.is_inited = true
 	_state.is_splash_screen = true
-	IVGlobal.verbose_signal("state_manager_inited")
+	IVGlobal.state_manager_inited.emit()
 
 
 func _on_about_to_build_system_tree() -> void:
@@ -297,14 +297,14 @@ func _on_system_tree_ready(is_new_game: bool) -> void:
 	print("System tree ready...")
 	await _tree.idle_frame
 	_state.is_started_or_about_to_start = true
-	IVGlobal.verbose_signal("about_to_start_simulator", is_new_game)
-	IVGlobal.verbose_signal("close_all_admin_popups_requested")
+	IVGlobal.about_to_start_simulator.emit(is_new_game)
+	IVGlobal.close_all_admin_popups_requested.emit()
 	await _tree.idle_frame
 	allow_run(self)
 	await _tree.idle_frame
-	IVGlobal.verbose_signal("update_gui_requested")
+	IVGlobal.update_gui_requested.emit()
 	await _tree.idle_frame
-	IVGlobal.verbose_signal("simulator_started")
+	IVGlobal.simulator_started.emit()
 	if !is_new_game and _settings.pause_on_load:
 		is_user_paused = true
 
@@ -322,14 +322,14 @@ func _stop_simulator() -> void:
 	emit_signal("run_threads_must_stop")
 	_state.is_running = false
 	_tree.paused = true
-	IVGlobal.verbose_signal("run_state_changed", false)
+	IVGlobal.run_state_changed.emit(false)
 
 
 func _run_simulator() -> void:
 	print("Run simulator")
 	_state.is_running = true
 	_tree.paused = is_user_paused
-	IVGlobal.verbose_signal("run_state_changed", true)
+	IVGlobal.run_state_changed.emit(true)
 	assert(!DPRINT or IVDebug.dprint("signal run_threads_allowed"))
 	allow_threads = true
 	emit_signal("run_threads_allowed")
