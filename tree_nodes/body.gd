@@ -110,7 +110,6 @@ var sleep := false
 var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _model_visible := false
 var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -145,13 +144,11 @@ func _ready() -> void:
 
 func _on_ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS # time will stop, but allow pointy finger on mouseover
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [],
-			CONNECT_ONE_SHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
-			CONNECT_ONE_SHOT)
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.system_tree_built_or_loaded.connect(_on_system_tree_built_or_loaded, CONNECT_ONE_SHOT)
+	IVGlobal.about_to_free_procedural_nodes.connect(_prepare_to_free, CONNECT_ONE_SHOT)
+	IVGlobal.setting_changed.connect(_settings_listener)
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("time_altered", Callable(self, "_on_time_altered"))
+	timekeeper.time_altered.connect(_on_time_altered)
 	assert(!IVGlobal.bodies.has(name))
 	IVGlobal.bodies[name] = self
 	if flags & BodyFlags.IS_TOP:
@@ -657,8 +654,8 @@ func reset_orientation_and_rotation() -> void:
 	rotation_vector = new_rotation_vector
 	rotation_at_epoch = new_rotation_at_epoch
 
-	var basis := math.rotate_basis_z(Basis(), rotation_vector)
-	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch)
+	var basis_ := math.rotate_basis_z(Basis(), rotation_vector)
+	basis_at_epoch = basis_.rotated(rotation_vector, rotation_at_epoch)
 
 
 # private functions
