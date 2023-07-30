@@ -45,6 +45,11 @@ static func dprint4(value1, value2, value3, value4) -> bool:
 	return true
 
 
+static func dprint_orphan_nodes() -> bool:
+	IVGlobal.print_orphan_nodes()
+	return true
+
+
 static func dlog(value) -> bool:
 	var file := IVGlobal.debug_log
 	if !file:

@@ -199,7 +199,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
 			emit_signal("server_about_to_stop", network_sync_type)
-	assert(DPRINT and prints("require_stop", who, network_sync_type) or true)
+	assert(!DPRINT or IVDebug.dprint3("require_stop", who, network_sync_type))
 	if !_nodes_requiring_stop.has(who):
 		_nodes_requiring_stop.append(who)
 	if _state.is_running:
@@ -209,7 +209,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 
 
 func allow_run(who: Object) -> void:
-	assert(DPRINT and prints("allow_run", who) or true)
+	assert(!DPRINT or IVDebug.dprint2("allow_run", who))
 	_nodes_requiring_stop.erase(who)
 	if _state.is_running or _nodes_requiring_stop:
 		return
@@ -268,7 +268,7 @@ func quit(force_quit := false) -> void:
 	require_stop(self, NetworkStopSync.QUIT, true)
 	await self.threads_finished
 	IVGlobal.verbose_signal("about_to_quit")
-	assert(!print_orphan_nodes())
+	assert(IVDebug.dprint_orphan_nodes())
 	print("Quitting...")
 	_tree.quit()
 
@@ -317,7 +317,7 @@ func _stop_simulator() -> void:
 	# Project must ensure that state does not change during stop (in
 	# particular, persist vars during save/load).
 	print("Stop simulator")
-	assert(DPRINT and prints("signal run_threads_must_stop") or true)
+	assert(!DPRINT or IVDebug.dprint("signal run_threads_must_stop"))
 	allow_threads = false
 	emit_signal("run_threads_must_stop")
 	_state.is_running = false
@@ -330,6 +330,6 @@ func _run_simulator() -> void:
 	_state.is_running = true
 	_tree.paused = is_user_paused
 	IVGlobal.verbose_signal("run_state_changed", true)
-	assert(DPRINT and prints("signal run_threads_allowed") or true)
+	assert(!DPRINT or IVDebug.dprint("signal run_threads_allowed"))
 	allow_threads = true
 	emit_signal("run_threads_allowed")
