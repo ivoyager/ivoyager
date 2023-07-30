@@ -163,7 +163,7 @@ func remove_blocking_thread(thread: Thread) -> void:
 func signal_threads_finished() -> void:
 	# Generates a delayed "threads_finished" signal if/when there are no
 	# blocking threads. Called by require_stop if not rejected.
-	await _tree.idle_frame
+	await _tree.process_frame
 	if !_signal_when_threads_finished:
 		_signal_when_threads_finished = true
 		remove_blocking_thread(null)
@@ -243,10 +243,10 @@ func exit(force_exit := false, following_server := false) -> void:
 	await self.threads_finished
 	IVGlobal.about_to_exit.emit()
 	IVGlobal.about_to_free_procedural_nodes.emit()
-	await _tree.idle_frame
+	await _tree.process_frame
 	IVUtils.free_procedural_nodes(IVGlobal.program.Universe)
 	IVGlobal.close_all_admin_popups_requested.emit()
-	await _tree.idle_frame
+	await _tree.process_frame
 	_state.is_splash_screen = true
 	IVGlobal.simulator_exited.emit()
 
@@ -277,7 +277,7 @@ func quit(force_quit := false) -> void:
 # private functions
 
 func _on_project_builder_finished() -> void:
-	await _tree.idle_frame
+	await _tree.process_frame
 	_state.is_inited = true
 	_state.is_splash_screen = true
 	IVGlobal.state_manager_inited.emit()
@@ -295,15 +295,15 @@ func _on_system_tree_built_or_loaded(_is_new_game: bool) -> void:
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	_state.is_system_ready = true
 	print("System tree ready...")
-	await _tree.idle_frame
+	await _tree.process_frame
 	_state.is_started_or_about_to_start = true
 	IVGlobal.about_to_start_simulator.emit(is_new_game)
 	IVGlobal.close_all_admin_popups_requested.emit()
-	await _tree.idle_frame
+	await _tree.process_frame
 	allow_run(self)
-	await _tree.idle_frame
+	await _tree.process_frame
 	IVGlobal.update_gui_requested.emit()
-	await _tree.idle_frame
+	await _tree.process_frame
 	IVGlobal.simulator_started.emit()
 	if !is_new_game and _settings.pause_on_load:
 		is_user_paused = true

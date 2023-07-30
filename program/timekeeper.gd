@@ -223,7 +223,7 @@ func _on_unhandled_key_input(event: InputEvent) -> void:
 		set_time_reversed(!is_reversed)
 	else:
 		return # input NOT handled!
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 func _notification(what: int) -> void:
@@ -508,7 +508,7 @@ func _on_user_pause_changed(_is_paused: bool) -> void:
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_now:
-		await _tree.idle_frame
+		await _tree.process_frame
 		set_now()
 
 

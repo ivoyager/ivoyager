@@ -55,7 +55,6 @@ var is_modded: bool = IVGlobal.is_modded
 # private
 var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
-var _enable_save_load: bool = IVGlobal.enable_save_load
 var _has_been_saved := false
 
 @onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
@@ -63,7 +62,6 @@ var _has_been_saved := false
 @onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 @onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
 @onready var _universe: Node3D = IVGlobal.program.Universe
-@onready var _tree := get_tree()
 
 
 func _ready() -> void:
@@ -88,7 +86,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		save_quit()
 	else:
 		return
-	_tree.set_input_as_handled()
+	get_viewport().set_input_as_handled()
 
 
 func save_quit() -> void:
@@ -160,11 +158,9 @@ func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and path == "":
 		IVGlobal.load_dialog_requested.emit()
 		return
-	var save_file: File
 	if !network_gamesave:
 		print("Loading " + path)
-		save_file = File.new()
-		if !save_file.file_exists(path):
+		if !FileAccess.file_exists(path):
 			print("ERROR: Could not find " + path)
 			return
 	else:
@@ -177,15 +173,15 @@ func load_game(path := "", network_gamesave := []) -> void:
 	_state.is_loaded_game = true
 	IVGlobal.about_to_free_procedural_nodes.emit()
 	IVGlobal.game_load_started.emit()
-	await _tree.idle_frame
+	await get_tree().process_frame
 	IVUtils.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if !network_gamesave:
 		_io_manager.get_var_from_file(path, self, "_load_callback")
 	else:
@@ -241,7 +237,7 @@ func _load_callback(gamesave: Array, err: int) -> void:
 
 
 func _simulator_started_after_load() -> void:
-	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
+	print("Nodes in tree after load & sim started: ", get_tree().get_node_count())
 	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
 	assert(IVDebug.dlog("Tree status after load & simulator started..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))

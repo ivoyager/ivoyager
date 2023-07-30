@@ -151,9 +151,9 @@ func generate_gamesave(save_root: Node) -> Array:
 	assert(is_persist_object(save_root))
 	assert(!is_procedural_persist(save_root))
 	_save_root = save_root
-	assert(DPRINT and print("* Registering tree for gamesave *") or true)
+	assert(!DPRINT or IVDebug.dprint("* Registering tree for gamesave *"))
 	_register_tree(save_root)
-	assert(DPRINT and print("* Serializing tree for gamesave *") or true)
+	assert(!DPRINT or IVDebug.dprint("* Serializing tree for gamesave *"))
 	_serialize_tree(save_root)
 	var gamesave := [
 		_gs_n_objects,
@@ -200,7 +200,6 @@ func debug_log(save_root: Node) -> String:
 	# in assert to compile only in debug builds, e.g.:
 	# assert(print(save_manager.debug_log(get_tree())) or true)
 	_log += "Number tree nodes: %s\n" % save_root.get_tree().get_node_count()
-	_log += "Memory usage: %s\n" % OS.get_dynamic_memory_usage()
 	# This doesn't work: OS.dump_memory_to_file(mem_dump_path)
 	if debug_print_stray_nodes:
 		print("Stray Nodes:")
@@ -294,7 +293,7 @@ func _serialize_tree(node: Node) -> void:
 func _locate_or_instantiate_objects(save_root: Node) -> void:
 	# Instantiates procecural objects (nodes & references) without data.
 	# Indexes root and all persist objects (procedural and non-procedural).
-	assert(DPRINT and print("* Registering(/Instancing) Objects for Load *") or true)
+	assert(!DPRINT or IVDebug.dprint("* Registering(/Instancing) Objects for Load *"))
 	_objects[1] = save_root
 	var scripts := []
 	for script_path in _gs_script_paths:
@@ -306,25 +305,25 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 		if script_id == -1: # non-procedural node; find it
 			var node_path: NodePath = serialized_node[2] # relative
 			node = save_root.get_node(node_path)
-			assert(DPRINT and prints(object_id, node, node.name) or true)
+			assert(!DPRINT or IVDebug.dprint(object_id, node, node.name))
 		else: # this is a procedural node
 			var script: Script = scripts[script_id]
 			node = files.make_object_or_scene(script)
-			assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
+			assert(!DPRINT or IVDebug.dprint(object_id, node, script_id, _gs_script_paths[script_id]))
 		assert(node)
 		_objects[object_id] = node
 	for serialized_reference in _gs_serialized_references:
 		var object_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
 		var script: Script = scripts[script_id]
-		var reference: RefCounted = script.new()
-		assert(reference)
-		_objects[object_id] = reference
-		assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
+		var ref: RefCounted = script.new()
+		assert(ref)
+		_objects[object_id] = ref
+		assert(!DPRINT or IVDebug.dprint(object_id, ref, script_id, _gs_script_paths[script_id]))
 
 
 func _deserialize_all_object_data() -> void:
-	assert(DPRINT and print("* Deserializing Objects for Load *") or true)
+	assert(!DPRINT or IVDebug.dprint("* Deserializing Objects for Load *"))
 	for serialized_node in _gs_serialized_nodes:
 		_deserialize_object_data(serialized_node, true)
 	for serialized_reference in _gs_serialized_references:
@@ -351,9 +350,9 @@ func _serialize_node(node: Node):
 	var is_procedural := is_procedural_persist(node)
 	if is_procedural:
 		script_id = _get_or_create_script_id(node)
-		assert(DPRINT and prints(object_id, node, script_id, _gs_script_paths[script_id]) or true)
+		assert(!DPRINT or IVDebug.dprint(object_id, node, script_id, _gs_script_paths[script_id]))
 	else:
-		assert(DPRINT and prints(object_id, node, node.name) or true)
+		assert(!DPRINT or IVDebug.dprints(object_id, node, node.name))
 	serialized_node.append(script_id) # index 1
 	# index 2 will be parent_save_id *or* non-procedural node path
 	if is_procedural:
@@ -367,17 +366,17 @@ func _serialize_node(node: Node):
 	_gs_serialized_nodes.append(serialized_node)
 
 
-func _register_and_serialize_reference(reference: RefCounted) -> int:
-	assert(is_procedural_persist(reference)) # must be true for References
+func _register_and_serialize_reference(ref: RefCounted) -> int:
+	assert(is_procedural_persist(ref)) # must be true for References
 	var object_id := _gs_n_objects
 	_gs_n_objects += 1
-	_object_ids[reference] = object_id
+	_object_ids[ref] = object_id
 	var serialized_reference := []
 	serialized_reference.append(object_id) # index 0
-	var script_id := _get_or_create_script_id(reference)
-	assert(DPRINT and prints(object_id, reference, script_id, _gs_script_paths[script_id]) or true)
+	var script_id := _get_or_create_script_id(ref)
+	assert(!DPRINT or IVDebug.dprint(object_id, ref, script_id, _gs_script_paths[script_id]))
 	serialized_reference.append(script_id) # index 1
-	_serialize_object_data(reference, serialized_reference)
+	_serialize_object_data(ref, serialized_reference)
 	_gs_serialized_references.append(serialized_reference)
 	return object_id
 
@@ -493,10 +492,10 @@ func _decode_array(encoded_array: Array) -> void:
 		if type == TYPE_ARRAY:
 			_decode_array(item)
 		elif type == TYPE_DICTIONARY:
-			if item.has("_"):
+			if item.has("r"):
 				var object := _get_decoded_object(item)
 				encoded_array[index] = object
-			else: # it's a dictionary!
+			else: # it's a dictionary w/ int keys only
 				encoded_array[index] = _get_decoded_dict(item)
 		else: # other built-in type
 			encoded_array[index] = item
@@ -514,10 +513,10 @@ func _get_decoded_dict(encoded_dict: Dictionary) -> Dictionary:
 			_decode_array(item)
 			dict[key] = item
 		elif type == TYPE_DICTIONARY:
-			if item.has("_"):
+			if item.has("r"):
 				var object := _get_decoded_object(item)
 				dict[key] = object
-			else: # it's a dictionary!
+			else: # it's a dictionary w/ int keys only
 				dict[key] = _get_decoded_dict(item)
 		else: # other built-in type
 			dict[key] = item
@@ -530,7 +529,7 @@ func _get_encoded_object(object: Object) -> Dictionary:
 	if object is WeakRef:
 		object = object.get_ref()
 		if object == null:
-			return {_ = 0} # object_id = 0 represents a weak ref to dead object
+			return {r = 0} # object_id = 0 represents a weak ref to dead object
 		is_weak_ref = true
 	assert(is_persist_object(object), "Can't persist a non-persist obj")
 	var object_id: int = _object_ids.get(object, -1)
@@ -538,12 +537,12 @@ func _get_encoded_object(object: Object) -> Dictionary:
 		assert(object is RefCounted, "Nodes are already registered")
 		object_id = _register_and_serialize_reference(object)
 	if is_weak_ref:
-		return {_ = -object_id} # negative object_id for WeakRef
-	return {_ = object_id}
+		return {r = -object_id} # negative object_id for WeakRef
+	return {r = object_id} # positive object_id for non-WeakRef
 
 
 func _get_decoded_object(encoded_object: Dictionary) -> Object:
-	var object_id: int = encoded_object._
+	var object_id: int = encoded_object.r
 	if object_id == 0:
 		return WeakRef.new() # weak ref to dead object
 	if object_id < 0: # weak ref

@@ -53,7 +53,7 @@ var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture2D
 
 var _io_manager: IVIOManager
-var _main_prog_bar: IVMainProgBar
+#var _main_prog_bar: IVMainProgBar # FIXME34: Use signal
 
 var _settings: Dictionary = IVGlobal.settings
 
@@ -70,7 +70,7 @@ func _project_init() -> void:
 	_table_reader = IVGlobal.program.TableReader
 	_model_manager = IVGlobal.program.ModelManager
 	_io_manager = IVGlobal.program.IOManager
-	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
+#	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
 #	_ModelController_ = IVGlobal.script_classes._ModelController_
 	_BodyLabel_ = IVGlobal.script_classes._BodyLabel_
 	_BodyOrbit_ = IVGlobal.script_classes._BodyOrbit_
@@ -86,8 +86,8 @@ func init_system_build() -> void:
 	_system_build_count = 0
 	_system_finished_count = 0
 	_io_manager.callback(self, "_start_system_build_msec") # after existing I/O jobs
-	if _main_prog_bar:
-		_main_prog_bar.start(self)
+#	if _main_prog_bar:
+#		_main_prog_bar.start(self)
 
 
 func _on_node_added(node: Node) -> void:
@@ -185,6 +185,6 @@ func _finish_system_build() -> void: # Main thread
 		print("Built %s solar system bodies in %s msec" % [_system_build_count, msec])
 		var is_new_game: bool = !IVGlobal.state.is_loaded_game
 		IVGlobal.system_tree_ready.emit(is_new_game)
-		if _main_prog_bar:
-			_main_prog_bar.stop()
+#		if _main_prog_bar:
+#			_main_prog_bar.stop()
 

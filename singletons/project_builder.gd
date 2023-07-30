@@ -412,7 +412,7 @@ func _init_program_objects() -> void:
 			if object.has_method("_project_init"):
 				object._project_init()
 	IVGlobal.project_inited.emit()
-	await get_tree().idle_frame
+	await get_tree().process_frame
 	init_step_finished.emit()
 
 
@@ -432,7 +432,7 @@ func _add_program_nodes() -> void:
 		var object_key = key.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
 	IVGlobal.project_nodes_added.emit()
-	await get_tree().idle_frame
+	await get_tree().process_frame
 	init_step_finished.emit()
 
 

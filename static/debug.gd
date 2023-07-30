@@ -25,9 +25,9 @@ extends Object
 #     assert(!DPRINT or IVDebug.dprint("something"))
 
 
-static func dprint(arg, arg2 = null, arg3 = null) -> bool:
-	# For >3 items, just use an array.
-	prints(arg, arg2, arg3)
+static func dprint(arg, arg2 = null, arg3 = null, arg4 = null) -> bool:
+	# For >4 items, just use an array.
+	prints(arg, arg2, arg3, arg4)
 	return true
 
 
