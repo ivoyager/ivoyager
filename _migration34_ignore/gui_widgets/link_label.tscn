@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/link_label.gd" type="Script" id=1]
+
+[node name="LinkLabel" type="RichTextLabel"]
+offset_top = 4.0
+offset_right = 84.0
+offset_bottom = 19.0
+bbcode_enabled = true
+text = "[url]I, Voyager[/url]"
+text = "I, Voyager"
+fit_content_height = true
+scroll_active = false
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

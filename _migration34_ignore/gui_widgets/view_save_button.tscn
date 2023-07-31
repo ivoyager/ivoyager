@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/view_save_button.gd" type="Script" id=1]
+
+[node name="ViewSaveButton" type="Button"]
+offset_left = 162.0
+offset_right = 255.0
+offset_bottom = 24.0
+tooltip_text = "HINT_SAVE_VIEW"
+toggle_mode = true
+action_mode = 0
+text = "BUTTON_SAVE"
+script = ExtResource( 1 )

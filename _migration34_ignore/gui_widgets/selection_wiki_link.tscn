@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://ivoyager/gui_widgets/selection_wiki_link.gd" type="Script" id=1]
+
+
+[node name="SelectionWikiLink" type="RichTextLabel"]
+offset_top = 275.0
+offset_right = 100.0
+offset_bottom = 305.0
+bbcode_enabled = true
+text = "[url]Wikipedia[/url]"
+text = "Wikipedia"
+fit_content_height = true
+scroll_active = false
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
