@@ -71,16 +71,14 @@ var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
 
-@onready var _tree: SceneTree = get_tree()
-
 
 func _init() -> void:
-	name = "SelectionManager"
+	name = &"SelectionManager"
 	
 
 func _ready() -> void:
-	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear_selections"))
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear_selections)
 	set_process_unhandled_key_input(is_action_listener)
 
 
@@ -127,7 +125,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		next_last(1, SELECTION_SPACECRAFT)
 	else:
 		return # input NOT handled!
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 static func get_or_make_selection(selection_name: String) -> IVSelection:
@@ -174,11 +172,11 @@ static func get_body_at_above_selection_w_flags(selection_: IVSelection, flags: 
 
 func select(selection_: IVSelection, suppress_camera_move := false) -> void:
 	if selection == selection_:
-		emit_signal("selection_reselected", suppress_camera_move)
+		selection_reselected.emit(suppress_camera_move)
 		return
 	selection = selection_
 	_add_history()
-	emit_signal("selection_changed", suppress_camera_move)
+	selection_changed.emit(suppress_camera_move)
 
 
 func select_body(body: IVBody, suppress_camera_move := false) -> void:

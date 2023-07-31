@@ -107,7 +107,7 @@ func init(name_: String, sbg_alias_: String, sbg_class_: int,
 	secondary_body = secondary_body_
 
 
-func read_binary(binary: File) -> void:
+func read_binary(binary: FileAccess) -> void:
 	var binary_data: Array = binary.get_var()
 	names.append_array(binary_data[0])
 	magnitudes.append_array(binary_data[1])
@@ -143,8 +143,8 @@ func finish_binary_import() -> void:
 			index += 1
 
 	# feedback
-	assert(VPRINT and print("%s %s asteroids loaded from binaries"
-			% [names.size(), sbg_alias]) or true)
+	assert(!VPRINT or IVDebug.dprint("%s %s asteroids loaded from binaries"
+			% [names.size(), sbg_alias]))
 
 
 func get_fragment_data(fragment_type: int, index: int) -> Array:

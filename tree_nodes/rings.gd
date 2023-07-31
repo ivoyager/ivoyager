@@ -20,8 +20,8 @@
 class_name IVRings
 extends MeshInstance3D
 
-# Visual planetary rings. Not persisted so added by BodyFinisher.
-# Uses 'rings.shader' or 'rings_gles2.shader'.
+# Visual planetary rings that uses rings.gdshader. Not persisted so added by
+# BodyFinisher.
 
 var _body: IVBody
 var _texture: Texture2D
@@ -44,11 +44,7 @@ func _ready() -> void:
 	scale = Vector3(outer_radius, outer_radius, outer_radius)
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
 	mesh = PlaneMesh.new()
-	_rings_material.gdshader = IVGlobal.shared.rings_shader
-#	if IVGlobal.is_gles2:
-#		_rings_material.shader = IVGlobal.shared.rings_gles2_shader
-#	else:
-#		_rings_material.shader = IVGlobal.shared.rings_shader
+	_rings_material.shader = IVGlobal.shared.rings_shader
 	_rings_material.set_shader_parameter("rings_texture", _texture)
 	_rings_material.set_shader_parameter("inner_fraction", inner_fraction)
 	var width := float(_texture.get_width())
@@ -66,5 +62,3 @@ func _process(_delta: float) -> void:
 		_rings_material.set_shader_parameter("is_sun_above", is_sun_above)
 	# TODO4.0: Make below a global uniform.
 	_rings_material.set_shader_parameter("sun_translation", sun_global_translation)
-
-

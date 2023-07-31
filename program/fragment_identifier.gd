@@ -82,8 +82,8 @@ var _cycle_step := -1
 var _pxl_x_offsets := []
 var _pxl_y_offsets := []
 var _cycle_steps := []
-var _calibration_colors := [] # array of calibration color arrays
-var _value_colors := [] # array of value color arrays
+var _calibration_colors: Array[Array] = [] # array of calibration color arrays
+var _value_colors: Array[Array] = [] # array of value color arrays
 var _current_ids := [] # -1 or valid id
 # common buffers
 var _calibration_r := []
@@ -111,7 +111,7 @@ func _ready() -> void:
 	RenderingServer.connect("frame_post_draw", Callable(self, "_on_frame_post_draw"))
 	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 	_init_rects_and_arrays()
-	usage = USAGE_2D
+#	usage = USAGE_2D # DISABLE34
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
 	
@@ -289,13 +289,12 @@ func _on_frame_post_draw() -> void:
 			emit_signal("fragment_changed", -1)
 		return
 	
-	_node2d.update() # force a draw signal
+	_node2d.update() # force a draw signal; FIXME34: method removed, what do we do now?
 	if !_has_drawn:
 		return
 	
 	_has_drawn = false
-	_picker_image = _picker_texture.get_data() # expensive!
-	false # _picker_image.lock() # TODOConverter3To4, Image no longer requires locking, `false` helps to not break one line if/else, so it can freely be removed
+	_picker_image = _picker_texture.get_image() # expensive!
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
@@ -332,7 +331,7 @@ func _process_pixel(pxl: int):
 	
 	var color := _picker_image.get_pixel(_pxl_x_offsets[pxl], _pxl_y_offsets[pxl])
 	
-	 # black pixel always interupts (common in open space)
+	# black pixel always interupts (common in open space)
 	if !color:
 		_cycle_steps[pxl] = 0
 		_current_ids[pxl] = -1 # reset
@@ -449,7 +448,7 @@ func _debug_residuals(print_all := false) -> float:
 	var max_resid := 0.0
 	for i in 9:
 		var value: float = (_adj_values[i] - 0.25) * 32.0
-		var resid := abs(value - round(value))
+		var resid := absf(value - round(value))
 		if max_resid < resid:
 			max_resid = resid
 	return max_resid

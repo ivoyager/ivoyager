@@ -54,7 +54,7 @@ var _pause_mouse_input := true
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	_world_targeting.resize(8)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = 0.0
@@ -69,12 +69,12 @@ func _project_init() -> void:
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS # but some functionaly stops if !pause_only_stops_time
 	mouse_filter = MOUSE_FILTER_STOP
-	connect("mouse_entered", Callable(self, "_on_mouse_entered"))
-	connect("mouse_exited", Callable(self, "_on_mouse_exited"))
-	set_anchors_and_offsets_preset(Control.PRESET_WIDE)
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var viewport := get_viewport()
-	viewport.connect("size_changed", Callable(self, "_on_viewport_size_changed"))
-	_world_targeting[1] = viewport.size.y
+	viewport.size_changed.connect(_on_viewport_size_changed)
+	_world_targeting[1] = viewport.get_visible_rect().size.y
 
 
 func _process(_delta: float) -> void:
@@ -89,7 +89,7 @@ func _process(_delta: float) -> void:
 	set_default_cursor_shape(cursor_type)
 	if current_target != _world_targeting[4]:
 		current_target = _world_targeting[4]
-		emit_signal("mouse_target_changed", current_target)
+		mouse_target_changed.emit(current_target)
 
 
 func _gui_input(input_event: InputEvent) -> void:
@@ -97,38 +97,40 @@ func _gui_input(input_event: InputEvent) -> void:
 	var event := input_event as InputEventMouse
 	if !event:
 		return # is this possible?
-	if event is InputEventMouseMotion:
-		var mouse_pos: Vector2 = event.position
+	var mouse_motion := event as InputEventMouseMotion
+	if mouse_motion:
+		var mouse_pos: Vector2 = mouse_motion.position
 		_world_targeting[0] = mouse_pos
 		if _pause_mouse_input:
 			return
 		if _drag_segment_start: # accumulated mouse drag motion
 			var drag_vector := mouse_pos - _drag_segment_start
 			_drag_segment_start = mouse_pos
-			emit_signal("mouse_dragged", drag_vector, event.button_mask,
-					_get_key_modifier_mask(event))
+			mouse_dragged.emit(drag_vector, mouse_motion.button_mask,
+					_get_key_modifier_mask(mouse_motion))
 		return
 	if _pause_mouse_input:
 		return
-	if event is InputEventMouseButton:
-		var button_index: int = event.button_index
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button:
+		var button_index: int = mouse_button.button_index
 		# BUTTON_WHEEL_UP & _DOWN always fires twice (pressed then not pressed)
 		if button_index == MOUSE_BUTTON_WHEEL_UP:
-			emit_signal("mouse_wheel_turned", true)
+			mouse_wheel_turned.emit(true)
 			return
 		if button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			emit_signal("mouse_wheel_turned", false)
+			mouse_wheel_turned.emit(false)
 			return
 		# start/stop mouse drag or process a mouse click
 		if button_index == MOUSE_BUTTON_LEFT or button_index == MOUSE_BUTTON_RIGHT:
-			if event.pressed: # start of drag or button-down for click selection
-				_drag_start = event.position
+			if mouse_button.pressed: # start of drag or button-down for click selection
+				_drag_start = mouse_button.position
 				_drag_segment_start = _drag_start
 			else: # end of drag or button-up after click selection
-				if _drag_start == event.position: # was a mouse click!
+				if _drag_start == mouse_button.position: # was a mouse click!
 					if _world_targeting[4]: # mouse_target
-						emit_signal("mouse_target_clicked", _world_targeting[4],
-								event.button_mask, _get_key_modifier_mask(event))
+						mouse_target_clicked.emit(_world_targeting[4], mouse_button.button_mask,
+								_get_key_modifier_mask(mouse_button))
 				_drag_start = Vector2.ZERO
 				_drag_segment_start = Vector2.ZERO
 
@@ -153,21 +155,22 @@ func _clear() -> void:
 
 func _get_key_modifier_mask(event: InputEventMouse) -> int:
 	var mask := 0
-	if event.alt:
+	if event.alt_pressed:
 		mask |= KEY_MASK_ALT
-	if event.shift:
+	if event.shift_pressed:
 		mask |= KEY_MASK_SHIFT
-	if event.control:
+	if event.ctrl_pressed:
 		mask |= KEY_MASK_CTRL
-	if event.meta:
+	if event.meta_pressed:
 		mask |= KEY_MASK_META
-	if event.command:
-		mask |= KEY_MASK_CMD
+	# FIXME34: Mac Command
+#	if event.command:
+#		mask |= KEY_MASK_CMD
 	return mask
 
 
 func _on_viewport_size_changed() -> void:
-	_world_targeting[1] = get_viewport().size.y
+	_world_targeting[1] = get_viewport().get_visible_rect().size.y
 
 
 func _on_mouse_entered() -> void:

@@ -30,20 +30,17 @@ var _fragment_data: Dictionary
 var _object_text := ""
 var _fragment_text := ""
 
-var _is_object := false
-var _fragment_id := -1
-
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	var world_controller: IVWorldController = IVGlobal.program.WorldController
-	world_controller.connect("mouse_target_changed", Callable(self, "_on_mouse_target_changed"))
+	world_controller.mouse_target_changed.connect(_on_mouse_target_changed)
 	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 	if fragment_identifier:
-		fragment_identifier.connect("fragment_changed", Callable(self, "_on_fragment_changed"))
+		fragment_identifier.fragment_changed.connect(_on_fragment_changed)
 		_fragment_data = fragment_identifier.fragment_data
 	set("theme_override_fonts/font", IVGlobal.fonts.hud_names)
-	align = ALIGNMENT_CENTER
+	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	grow_horizontal = GROW_DIRECTION_BOTH
 	size_flags_horizontal = SIZE_SHRINK_CENTER
 	hide()
@@ -68,7 +65,8 @@ func _on_mouse_target_changed(object: Object) -> void:
 	if !object:
 		_object_text = ""
 		return
-	_object_text = object.name # any valid target will have 'name'
+	@warning_ignore("unsafe_property_access") # any valid target will have 'name'
+	_object_text = object.name
 
 
 func _on_fragment_changed(id: int) -> void:
@@ -78,5 +76,6 @@ func _on_fragment_changed(id: int) -> void:
 	var data: Array = _fragment_data[id]
 	var instance_id: int = data[0]
 	var target_object := instance_from_id(instance_id)
+	@warning_ignore("unsafe_method_access") # any valid target will have 'get_fragment_text()'
 	_fragment_text = target_object.get_fragment_text(data)
 

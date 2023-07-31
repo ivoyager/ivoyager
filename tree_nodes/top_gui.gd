@@ -43,8 +43,8 @@ var selection_manager: IVSelectionManager
 func _init() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
-	IVGlobal.connect("project_builder_finished", Callable(self, "_on_project_builder_finished"))
-	IVGlobal.connect("system_tree_built_or_loaded", Callable(self, "_on_system_tree_built_or_loaded"))
+	IVGlobal.project_builder_finished.connect(_on_project_builder_finished)
+	IVGlobal.system_tree_built_or_loaded.connect(_on_system_tree_built_or_loaded)
 
 
 func _ready() -> void:
@@ -59,6 +59,7 @@ func _on_project_builder_finished() -> void:
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 	if is_new_game:
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		@warning_ignore("unsafe_method_access") # Extension can replace base class
 		selection_manager = _SelectionManager_.new()
 		add_child(selection_manager)
 
