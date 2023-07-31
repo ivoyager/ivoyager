@@ -85,11 +85,14 @@ func hide_all() -> void:
 
 
 func set_default_visibilities() -> void:
-	if !deep_equal(points_visibilities, default_points_visibilities):
+	# TEST34
+	if points_visibilities != default_points_visibilities:
+#	if !deep_equal(points_visibilities, default_points_visibilities):
 		points_visibilities.clear()
 		points_visibilities.merge(default_points_visibilities)
 		emit_signal("points_visibility_changed")
-	if !deep_equal(orbits_visibilities, default_orbits_visibilities):
+	if orbits_visibilities != default_orbits_visibilities:
+#	if !deep_equal(orbits_visibilities, default_orbits_visibilities):
 		orbits_visibilities.clear()
 		orbits_visibilities.merge(default_orbits_visibilities)
 		emit_signal("orbits_visibility_changed")
@@ -146,11 +149,14 @@ func set_visible_orbits_groups(array: Array) -> void:
 # color
 
 func set_default_colors() -> void:
-	if !deep_equal(points_colors, default_points_colors):
+	# TEST34
+	if points_colors != default_points_colors:
+#	if !deep_equal(points_colors, default_points_colors):
 		points_colors.clear()
 		points_colors.merge(default_points_colors)
 		emit_signal("points_color_changed")
-	if !deep_equal(orbits_colors, default_orbits_colors):
+	if orbits_colors != default_orbits_colors:
+#	if !deep_equal(orbits_colors, default_orbits_colors):
 		orbits_colors.clear()
 		orbits_colors.merge(default_orbits_colors)
 		emit_signal("orbits_color_changed")

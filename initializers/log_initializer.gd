@@ -29,9 +29,16 @@ func _init() -> void:
 func _on_init() -> void:
 	if !OS.is_debug_build() or !IVGlobal.debug_log_path:
 		return
-	var debug_log := File.new()
-	if debug_log.open(IVGlobal.debug_log_path, File.WRITE) == OK:
-		IVGlobal.debug_log = debug_log
+	# TEST34
+	var debug_log := FileAccess.open(IVGlobal.debug_log_path, FileAccess.WRITE)
+	if !debug_log:
+		print("ERROR! Could not open debug log at ", IVGlobal.debug_log_path)
+		return
+	IVGlobal.debug_log = debug_log
+	
+#	var debug_log := File.new()
+#	if debug_log.open(IVGlobal.debug_log_path, File.WRITE) == OK:
+#		IVGlobal.debug_log = debug_log
 
 
 func _project_init() -> void:

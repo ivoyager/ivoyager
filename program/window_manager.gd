@@ -30,6 +30,7 @@ var _is_fullscreen := false
 var _test_countdown := 0
 
 @onready var _tree := get_tree()
+@onready var _viewport := get_viewport()
 @onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
 
 
@@ -41,13 +42,13 @@ func _ready() -> void:
 		_main_menu_manager.make_button("BUTTON_MINIMIZE", button_priority, false, true, self,
 				"_change_fullscreen", [], _main_menu_manager.HIDDEN)
 		IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
-		_tree.connect("screen_resized", Callable(self, "_extended_test_for_screen_resize"))
+		_viewport.size_changed.connect(_extended_test_for_screen_resize)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_fullscreen"):
 		_change_fullscreen()
-		_tree.set_input_as_handled()
+		_viewport.set_input_as_handled()
 
 
 func _change_fullscreen() -> void:
@@ -77,6 +78,6 @@ func _extended_test_for_screen_resize() -> void:
 	_test_countdown = 20
 	_update_buttons()
 	while _test_countdown:
-		await _tree.idle_frame
+		await _tree.process_frame
 		_update_buttons()
 		_test_countdown -= 1

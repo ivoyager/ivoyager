@@ -20,6 +20,8 @@
 class_name IVOneUseConfirm
 extends ConfirmationDialog
 
+# TODO34: Remove all direct calls and evoke from signal.
+
 var _stop_sim: bool
 
 
@@ -36,7 +38,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 	IVGlobal.program.Universe.add_child(self)
 	theme = IVGlobal.themes.main
 	if window_txt:
-		window_title = window_txt
+		title = window_txt
 	if ok_txt:
 		var ok_button := get_ok_button()
 		ok_button.text = ok_txt
@@ -44,7 +46,7 @@ func _init(text: String, on_confirm_object: Object, on_confirm_method: String,
 		var cancel_button := get_cancel_button()
 		cancel_button.text = cancel_txt
 	var label := get_label()
-	label.align = Label.ALIGNMENT_CENTER
+#	label.align = Label.ALIGNMENT_CENTER # FIXME34
 	popup_centered()
 
 

@@ -22,6 +22,8 @@ extends Object
 
 # Utility static functions for widgets.
 
+# TODO34: DEPRECIATE? Make static func in IVSelectionManager, assuming self reference ok.
+
 static func get_selection_manager(control: Control) -> IVSelectionManager:
 	var ancestor: Node = control.get_parent()
 	while ancestor is Control:

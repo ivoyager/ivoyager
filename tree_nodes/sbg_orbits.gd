@@ -52,20 +52,25 @@ func _init(group: IVSmallBodiesGroup) -> void:
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS # FragmentIdentifier still processing
-	_sbg_huds_state.connect("orbits_visibility_changed", Callable(self, "_set_visibility"))
-	_sbg_huds_state.connect("orbits_color_changed", Callable(self, "_set_color"))
+	_sbg_huds_state.orbits_visibility_changed.connect(_set_visibility)
+	_sbg_huds_state.orbits_color_changed.connect(_set_color)
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = IVGlobal.shared.circle_mesh_low_res
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
-		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
-		material_override = ShaderMaterial.new()
-		material_override.gdshader = IVGlobal.shared.orbits_shader
-		material_override.set_shader_parameter("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
+		
+		# FIXME34: 64-bit is no longer an option? We may need to recode the fragment id system.
+#		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
+		
+		var shader_material := ShaderMaterial.new()
+		shader_material.shader = IVGlobal.shared.orbits_shader
+		shader_material.set_shader_parameter("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
+		material_override = shader_material
 	else:
-		material_override = StandardMaterial3D.new()
-		material_override.flags_unshaded = true
+		var standard_material := StandardMaterial3D.new()
+		standard_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material_override = standard_material
 		set_process(false)
 	_set_transforms_and_ids()
 	_set_visibility()
@@ -76,9 +81,10 @@ func _process(_delta: float) -> void:
 	# Disabled unless we have FragmentIdentifier.
 	if !visible:
 		return
-	# TODO4.0: These are global uniforms, so we can do this globally!
-	material_override.set_shader_parameter("mouse_coord", _fragment_targeting[0])
-	material_override.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
+	# TODO34: Make these global uniforms!
+	var shader_material: ShaderMaterial = material_override
+	shader_material.set_shader_parameter("mouse_coord", _fragment_targeting[0])
+	shader_material.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transforms_and_ids() -> void:
@@ -111,7 +117,9 @@ func _set_color() -> void:
 		return
 	_color = color
 	if _fragment_identifier:
-		material_override.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
+		var shader_material: ShaderMaterial = material_override
+		shader_material.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
 	else:
-		material_override.albedo_color = color
+		var standard_material: StandardMaterial3D = material_override
+		standard_material.albedo_color = color
 

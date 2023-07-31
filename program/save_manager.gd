@@ -55,7 +55,6 @@ var is_modded: bool = IVGlobal.is_modded
 # private
 var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
-var _enable_save_load: bool = IVGlobal.enable_save_load
 var _has_been_saved := false
 
 @onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
@@ -63,7 +62,6 @@ var _has_been_saved := false
 @onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 @onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
 @onready var _universe: Node3D = IVGlobal.program.Universe
-@onready var _tree := get_tree()
 
 
 func _ready() -> void:
@@ -88,7 +86,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		save_quit()
 	else:
 		return
-	_tree.set_input_as_handled()
+	get_viewport().set_input_as_handled()
 
 
 func save_quit() -> void:
@@ -106,9 +104,9 @@ func quick_save() -> bool:
 	if _state.network_state == IS_CLIENT:
 		return false
 	if !_has_been_saved or !_settings.save_base_name or !files.is_valid_dir(_settings.save_dir):
-		IVGlobal.verbose_signal("save_dialog_requested")
+		IVGlobal.save_dialog_requested.emit()
 		return false
-	IVGlobal.verbose_signal("close_main_menu_requested")
+	IVGlobal.close_main_menu_requested.emit()
 	var date_string := ""
 	if _settings.append_date_to_save:
 		date_string = _timekeeper.get_current_date_for_file()
@@ -124,18 +122,18 @@ func save_game(path := "") -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if !path:
-		IVGlobal.verbose_signal("save_dialog_requested")
+		IVGlobal.save_dialog_requested.emit()
 		return
 	print("Saving " + path)
 	_state.last_save_path = path
 	_state_manager.require_stop(self, NetworkStopSync.SAVE, true)
 	await _state_manager.threads_finished
-	IVGlobal.verbose_signal("game_save_started")
+	IVGlobal.game_save_started.emit()
 	assert(IVDebug.dlog("Tree status before save..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
 	var gamesave := _save_builder.generate_gamesave(_universe)
 	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
-	IVGlobal.verbose_signal("game_save_finished")
+	IVGlobal.game_save_finished.emit()
 	_has_been_saved = true
 	_state_manager.allow_run(self)
 
@@ -146,10 +144,10 @@ func quick_load() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if _state.last_save_path:
-		IVGlobal.verbose_signal("close_main_menu_requested")
+		IVGlobal.close_main_menu_requested.emit()
 		load_game(_state.last_save_path)
 	else:
-		IVGlobal.verbose_signal("load_dialog_requested")
+		IVGlobal.load_dialog_requested.emit()
 
 
 func load_game(path := "", network_gamesave := []) -> void:
@@ -158,13 +156,11 @@ func load_game(path := "", network_gamesave := []) -> void:
 	if !network_gamesave and _state.network_state == IS_CLIENT:
 		return
 	if !network_gamesave and path == "":
-		IVGlobal.verbose_signal("load_dialog_requested")
+		IVGlobal.load_dialog_requested.emit()
 		return
-	var save_file: File
 	if !network_gamesave:
 		print("Loading " + path)
-		save_file = File.new()
-		if !save_file.file_exists(path):
+		if !FileAccess.file_exists(path):
 			print("ERROR: Could not find " + path)
 			return
 	else:
@@ -175,17 +171,17 @@ func load_game(path := "", network_gamesave := []) -> void:
 	await _state_manager.threads_finished
 	_state.is_game_loading = true
 	_state.is_loaded_game = true
-	IVGlobal.verbose_signal("about_to_free_procedural_nodes")
-	IVGlobal.verbose_signal("game_load_started")
-	await _tree.idle_frame
+	IVGlobal.about_to_free_procedural_nodes.emit()
+	IVGlobal.game_load_started.emit()
+	await get_tree().process_frame
 	IVUtils.free_procedural_nodes(_universe)
 	# Give freeing procedural nodes time so they won't respond to game signals.
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
-	await _tree.idle_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if !network_gamesave:
 		_io_manager.get_var_from_file(path, self, "_load_callback")
 	else:
@@ -234,14 +230,14 @@ func _load_callback(gamesave: Array, err: int) -> void:
 		return # TODO: Exit and give user feedback
 	_save_builder.build_tree(_universe, gamesave)
 	_test_version()
-	IVGlobal.verbose_signal("game_load_finished")
+	IVGlobal.game_load_finished.emit()
 	_state.is_system_built = true
-	IVGlobal.verbose_signal("system_tree_built_or_loaded", false)
+	IVGlobal.system_tree_built_or_loaded.emit(false)
 	IVGlobal.connect("simulator_started", Callable(self, "_simulator_started_after_load").bind(), CONNECT_ONE_SHOT)
 
 
 func _simulator_started_after_load() -> void:
-	print("Nodes in tree after load & sim started: ", _tree.get_node_count())
+	print("Nodes in tree after load & sim started: ", get_tree().get_node_count())
 	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
 	assert(IVDebug.dlog("Tree status after load & simulator started..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))

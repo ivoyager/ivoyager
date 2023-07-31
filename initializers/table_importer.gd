@@ -108,7 +108,7 @@ func _on_init() -> void:
 	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
 			% [time, _count_rows, _count_cells, _count_non_null])
-	IVGlobal.verbose_signal("data_tables_imported")
+	IVGlobal.data_tables_imported.emit()
 
 
 func _project_init() -> void:
@@ -140,10 +140,11 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 	# is_mod == true means we are importing a 'mod table'; these modify an
 	# existing table and can add columns or rows or overwrite existing values.
 	assert(table_name and path)
-	assert(DPRINT and prints("Reading", path) or true)
-	var file := File.new()
-	if file.open(path, file.READ) != OK:
+	assert(!DPRINT or IVDebug.dprint("Reading " + path))
+	var file := FileAccess.open(path, FileAccess.READ)
+	if !file:
 		assert(false, "Could not open file: " + path)
+		return
 	if !is_mod:
 		assert(!_tables.has(table_name))
 		_tables[table_name] = {}
@@ -489,10 +490,11 @@ func _get_int(raw_value: String) -> int:
 
 
 func _import_wiki_titles(path: String) -> void:
-	assert(DPRINT and prints("Reading", path) or true)
-	var file := File.new()
-	if file.open(path, file.READ) != OK:
-		assert(false, "Could not open file: " +  path)
+	assert(!DPRINT or IVDebug.dprint("Reading " + path))
+	var file := FileAccess.open(path, FileAccess.READ)
+	if !file:
+		assert(false, "Could not open file: " + path)
+		return
 	_column_map.clear()
 	var reading_header := true
 	var reading_fields := true

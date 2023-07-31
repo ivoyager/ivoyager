@@ -61,9 +61,9 @@ const MINUTE := IVUnits.MINUTE
 const HOUR := IVUnits.HOUR
 const DAY := IVUnits.DAY
 const J2000_JDN := 2451545 # Julian Day Number (JDN) of J2000 epoch time
-const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
-const IS_SERVER = IVEnums.NetworkState.IS_SERVER
-const IS_CLIENT = IVEnums.NetworkState.IS_CLIENT
+const NO_NETWORK := IVEnums.NetworkState.NO_NETWORK
+const IS_SERVER := IVEnums.NetworkState.IS_SERVER
+const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
@@ -126,10 +126,10 @@ var date: Array = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
 var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
-var _state: Dictionary = IVGlobal.state
+#var _state: Dictionary = IVGlobal.state
 var _allow_time_setting := IVGlobal.allow_time_setting
 var _allow_time_reversal := IVGlobal.allow_time_reversal
-var _disable_pause: bool = IVGlobal.disable_pause
+#var _disable_pause: bool = IVGlobal.disable_pause
 var _network_state := NO_NETWORK
 var _is_sync := false
 var _sync_engine_time := -INF
@@ -190,18 +190,18 @@ func _on_process(delta: float) -> void: # subclass can override
 	if !_is_sync:
 		time += delta * speed_multiplier
 	solar_day = get_solar_day(time)
-	var whole_solar_day := floor(solar_day)
+	var whole_solar_day := floorf(solar_day)
 	if _prev_whole_solar_day != whole_solar_day:
 		var jdn := get_jdn_for_solar_day(solar_day)
-		set_gregorian_date_array(jdn, date, date_format)
+		IVTimekeeper.set_gregorian_date_array(jdn, date, date_format)
 		is_date_change = true
 		_prev_whole_solar_day = whole_solar_day
-	set_clock_array(solar_day - whole_solar_day, clock)
+	IVTimekeeper.set_clock_array(solar_day - whole_solar_day, clock)
 	times[0] = time
 	times[2] = solar_day
 	# network sync
-	if _network_state == IS_SERVER:
-		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
+#	if _network_state == IS_SERVER:
+#		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
 	_is_sync = false
 	# signal time and date
 	if is_date_change:
@@ -223,7 +223,7 @@ func _on_unhandled_key_input(event: InputEvent) -> void:
 		set_time_reversed(!is_reversed)
 	else:
 		return # input NOT handled!
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 func _notification(what: int) -> void:
@@ -267,15 +267,11 @@ static func is_valid_gregorian_date(Y: int, M: int, D: int) -> bool:
 
 static func gregorian2jdn(Y: int, M: int, D: int) -> int:
 	# Does not test for valid input date!
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var jdn := (1461 * (Y + 4800 + (M - 14) / 12)) / 4
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	jdn += (367 * (M - 2 - 12 * ((M - 14) / 12))) / 12
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	jdn += -(3 * ((Y + 4900 + (M - 14) / 12) / 100)) / 4 + D - 32075
 	return jdn
 
@@ -283,25 +279,23 @@ static func gregorian2jdn(Y: int, M: int, D: int) -> int:
 static func set_gregorian_date_array(jdn: int, date_array: Array,
 		date_format_ := DATE_FORMAT_Y_M_D) -> void:
 	# Expects date_array to be correct size for date_format_
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var f := jdn + 1401 + ((((4 * jdn + 274277) / 146097) * 3) / 4) - 38
 	var e := 4 * f + 3
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var g := (e % 1461) / 4
 	var h := 5 * g + 2
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var m := (((h / 153) + 2) % 12) + 1
-	# warning-ignore:integer_division
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var y := (e / 1461) - 4716 + ((14 - m) / 12)
 	date_array[0] = y
-	# warning-ignore:integer_division
 	date_array[1] = m # month
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	date_array[2] = ((h % 153) / 5) + 1 # day
 	if date_format_ == DATE_FORMAT_Y_M_D:
 		return
+	@warning_ignore("integer_division")
 	var q := (m - 1) / 3 + 1
 	date_array[3] = q
 	if date_format_ == DATE_FORMAT_Y_M_D_Q:
@@ -323,9 +317,9 @@ static func set_clock_array(fractional_day: float, clock_array: Array) -> void:
 	# Expects clock_ of size 3. It's possible to have second > 59 if fractional
 	# day > 1.0 (which can happen when solar day > Julian Day).
 	var total_seconds := int(fractional_day * 86400.0)
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var h := total_seconds / 3600
-	# warning-ignore:integer_division
+	@warning_ignore("integer_division")
 	var m := (total_seconds / 60) % 60
 	clock_array[0] = h
 	clock_array[1] = m
@@ -339,7 +333,7 @@ func get_gregorian_date(sim_time := NAN) -> Array:
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	set_gregorian_date_array(jdn, date_array, date_format)
+	IVTimekeeper.set_gregorian_date_array(jdn, date_array, date_format)
 	return date_array
 
 
@@ -350,9 +344,9 @@ func get_gregorian_date_time(sim_time := NAN) -> Array:
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	set_gregorian_date_array(jdn, date_array, date_format)
+	IVTimekeeper.set_gregorian_date_array(jdn, date_array, date_format)
 	var fractional_day := fposmod(solar_day_, 1.0)
-	var clock_array := get_clock_elements(fractional_day)
+	var clock_array := IVTimekeeper.get_clock_elements(fractional_day)
 	return [date_array, clock_array]
 
 
@@ -370,7 +364,7 @@ func get_time_from_solar_day(solar_day_: float) -> float:
 
 
 func get_jdn_for_solar_day(solar_day_: float) -> int:
-	var solar_day_noon := floor(solar_day_) + 0.5
+	var solar_day_noon := floorf(solar_day_) + 0.5
 	var sim_time := get_time_from_solar_day(solar_day_noon)
 	var j2000day := sim_time / DAY
 	return int(floor(j2000day)) + J2000_JDN
@@ -379,7 +373,10 @@ func get_jdn_for_solar_day(solar_day_: float) -> int:
 func get_time_from_operating_system() -> float:
 	# As of Godot 3.5.2.rc2, Time.get_unix_time_from_system() does not work in
 	# HTML5 export. TODO: Retest and make a godot issue!
-	var sys_msec := OS.get_system_time_msecs() # TODO: Remove if below works in HTML5 export
+	
+	# TEST34: Time.get_unix_time_from_system() now works in HTML5 export?
+	var sys_msec := Time.get_unix_time_from_system()
+#	var sys_msec := OS.get_system_time_msecs()
 	var j2000sec := (sys_msec - 946728000000) * 0.001
 	return j2000sec * SECOND
 
@@ -486,8 +483,8 @@ func _reset_time() -> void:
 	times[0] = time
 	times[2] = solar_day
 	var jdn := get_jdn_for_solar_day(solar_day)
-	set_gregorian_date_array(jdn, date, date_format)
-	set_clock_array(fposmod(solar_day, 1.0), clock)
+	IVTimekeeper.set_gregorian_date_array(jdn, date, date_format)
+	IVTimekeeper.set_clock_array(fposmod(solar_day, 1.0), clock)
 
 
 func _reset_speed() -> void:
@@ -511,11 +508,11 @@ func _on_user_pause_changed(_is_paused: bool) -> void:
 func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_now:
-		await _tree.idle_frame
+		await _tree.process_frame
 		set_now()
 
 
-func _on_network_state_changed(network_state: int) -> void:
+func _on_network_state_changed(network_state: IVEnums.NetworkState) -> void:
 	_network_state = network_state
 
 

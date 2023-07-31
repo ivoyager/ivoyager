@@ -49,7 +49,7 @@ const PERSIST_PROPERTIES := [
 ]
 
 # persisted - read only
-var name: String
+var name: StringName
 var gui_name: String # name for GUI display (already translated)
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
@@ -62,7 +62,7 @@ var texture_2d: Texture2D
 var texture_slice_2d: Texture2D # stars only
 
 # private
-var _times: Array = IVGlobal.times
+#var _times: Array = IVGlobal.times
 
 
 func _init() -> void:
@@ -84,17 +84,13 @@ func _clear() -> void:
 	body = null
 
 
-func get_name() -> String:
-	return name
-
-
 func get_gui_name() -> String:
 	# return is already translated
 	return gui_name
 
 
-func get_body_name() -> String:
-	return body.name if is_body else ""
+func get_body_name() -> StringName:
+	return body.name if is_body else &""
 
 
 func get_real_precision(path: String) -> int:

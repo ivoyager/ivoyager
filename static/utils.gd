@@ -57,7 +57,7 @@ static func get_deep(target, path: String): # untyped return
 	if !path:
 		return target
 	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
+	path_stack.reverse()
 	while path_stack:
 		var item_name: String = path_stack.pop_back()
 		target = target.get(item_name)
@@ -71,7 +71,7 @@ static func get_path_result(target, path: String, args := []): # untyped return
 	if !path:
 		return target
 	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
+	path_stack.reverse()
 	while path_stack:
 		var item_name: String = path_stack.pop_back()
 		if target is Object and target.has_method(item_name):

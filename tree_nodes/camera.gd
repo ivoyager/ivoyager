@@ -122,11 +122,9 @@ var disabled_flags := 0 # IVEnums.CameraDisabledFlags
 
 # private
 var _universe: Node3D = IVGlobal.program.Universe
-var _times: Array = IVGlobal.times
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
-var _user_longitude := -INF
 
 # motions / rotations
 var _motion_accumulator := Vector3.ZERO
@@ -151,7 +149,7 @@ var _gui_range := NAN
 var _gui_latitude_longitude := Vector2(NAN, NAN)
 
 # settings
-@onready var _transfer_time: float = _settings.camera_transfer_time
+var _transfer_time: float = _settings.camera_transfer_time
 
 
 # virtual functions
@@ -159,20 +157,20 @@ var _gui_latitude_longitude := Vector2(NAN, NAN)
 func _ready() -> void:
 	assert(perspective_far_dist > perspective_close_radii * max_perspective_radius)
 	assert(min_perspective_radius > IVUnits.METER)
-	name = "Camera3D"
-	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready").bind(), CONNECT_ONE_SHOT)
-	IVGlobal.connect("simulator_started", Callable(self, "_on_simulator_started").bind(), CONNECT_ONE_SHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_prepare_to_free").bind(), CONNECT_ONE_SHOT)
-	IVGlobal.connect("update_gui_requested", Callable(self, "_send_gui_refresh"))
-	IVGlobal.connect("move_camera_requested", Callable(self, "move_to"))
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	name = &"IVCamera"
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready, CONNECT_ONE_SHOT)
+	IVGlobal.simulator_started.connect(_on_simulator_started, CONNECT_ONE_SHOT)
+	IVGlobal.about_to_free_procedural_nodes.connect(_prepare_to_free, CONNECT_ONE_SHOT)
+	IVGlobal.update_gui_requested.connect(_send_gui_refresh)
+	IVGlobal.move_camera_requested.connect(move_to)
+	IVGlobal.setting_changed.connect(_settings_listener)
 	transform = _transform
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	IVGlobal.verbose_signal("camera_ready", self)
+	IVGlobal.camera_ready.emit(self)
 	set_process(false) # don't process until sim started
 
 
@@ -222,8 +220,8 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	# For this purpose, individual -INF elements in to_view_position and
 	# to_view_rotations are treated as 'null' (ie, we can set 1 or 2 elements).
 	# Note: some flags may override elements of position or rotation.
-	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
-			to_view_rotations, is_instant_move) or true)
+	assert(!DPRINT or IVDebug.dprint("move_to", [to_selection, to_flags, to_view_position,
+			to_view_rotations, is_instant_move]))
 	
 	# overrides
 	if to_flags & Flags.UP_LOCKED:
@@ -374,6 +372,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_from_spatial = parent
 	if !selection: # new game
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		@warning_ignore("unsafe_method_access") # project subclass may override static func
 		selection = _SelectionManager_.get_or_make_selection(parent.name)
 		assert(selection)
 		perspective_radius = selection.get_perspective_radius()
@@ -386,11 +385,11 @@ func _on_simulator_started() -> void:
 
 
 func _prepare_to_free() -> void:
-	# Some deconstruction needed to prevent freeing object signalling errors.
+	# Some deconstruction needed to prevent freeing object signalling errors (Godot3.x)
 	set_process(false)
-	IVGlobal.disconnect("update_gui_requested", Callable(self, "_send_gui_refresh"))
-	IVGlobal.disconnect("move_camera_requested", Callable(self, "move_to"))
-	IVGlobal.disconnect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.update_gui_requested.disconnect(_send_gui_refresh)
+	IVGlobal.move_camera_requested.disconnect(move_to)
+	IVGlobal.setting_changed.disconnect(_settings_listener)
 	selection = null
 	parent = null
 	_to_spatial = null
@@ -432,7 +431,7 @@ func _process_move_to(delta: float) -> void:
 
 
 func _do_handoff() -> void:
-	assert(DPRINT and prints("Camera3D handoff", tr(parent.name), tr(_to_spatial.name)) or true)
+	assert(!DPRINT or IVDebug.dprint("_do_handoff()", tr(parent.name), tr(_to_spatial.name)))
 	parent.remove_child(self)
 	_to_spatial.add_child(self)
 	parent = _to_spatial
@@ -475,10 +474,10 @@ func _interpolate_path(from_transform: Transform3D, to_transform: Transform3D, p
 	var to_global_quat := Quaternion(to_global_basis)
 	var global_quat := from_global_quat.slerp(to_global_quat, progress)
 	var global_basis := Basis(global_quat)
-	var basis := parent.global_transform.basis.inverse() * global_basis
+	var basis_ := parent.global_transform.basis.inverse() * global_basis
 	
 	# set the working transform
-	_transform = Transform3D(basis, translation_)
+	_transform = Transform3D(basis_, translation_)
 
 
 func _process_motions_and_rotations(delta: float) -> void:
@@ -518,7 +517,7 @@ func _process_motion(delta: float) -> void:
 	# Apply x,y as rotation and z as scaler to our origin. Basis is treated
 	# differently for the 'up locked' and 'unlocked' cases.
 	var origin := _transform.origin
-	var basis := _transform.basis
+	var basis_ := _transform.basis
 
 	if bool(flags & Flags.UP_LOCKED):
 		# A pole limiter prevents pole traversal. A spin dampener suppresses
@@ -531,8 +530,8 @@ func _process_motion(delta: float) -> void:
 			move_now.y = POLE_LIMITER - view_position.y
 		elif latitude < -POLE_LIMITER:
 			move_now.y = -POLE_LIMITER -view_position.y
-		origin = origin.rotated(basis.y, move_now.x)
-		origin = origin.rotated(basis.x, -move_now.y)
+		origin = origin.rotated(basis_.y, move_now.x)
+		origin = origin.rotated(basis_.x, -move_now.y)
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
@@ -543,20 +542,20 @@ func _process_motion(delta: float) -> void:
 	else:
 		# 'Free' rotation of origin and basis around target. Allows pole
 		# traversal and camera roll. We need to back-calculate view_rotations.
-		origin = origin.rotated(basis.y, move_now.x)
-		basis = basis.rotated(basis.y, move_now.x)
-		origin = origin.rotated(basis.x, -move_now.y)
-		basis = basis.rotated(basis.x, -move_now.y)
+		origin = origin.rotated(basis_.y, move_now.x)
+		basis_ = basis_.rotated(basis_.y, move_now.x)
+		origin = origin.rotated(basis_.x, -move_now.y)
+		basis_ = basis_.rotated(basis_.x, -move_now.y)
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
 				MIN_DIST_RADII, _max_dist)
-		_transform = Transform3D(basis, origin)
+		_transform = Transform3D(basis_, origin)
 		# back-calculate view_rotations
 		var unrotated_transform := Transform3D(IDENTITY_BASIS, origin).looking_at(
 			-origin, _reference_basis.z)
 		var unrotated_basis := unrotated_transform.basis
-		var rotations_basis := unrotated_basis.inverse() * basis
+		var rotations_basis := unrotated_basis.inverse() * basis_
 		view_rotations = rotations_basis.get_euler()
 
 
@@ -590,7 +589,7 @@ func _process_rotation(delta: float) -> void:
 			_rotation_accumulator.z = 0.0
 	
 	# apply rotation to a view basis, then to _transform
-	var view_basis := Basis(view_rotations) # from Euler angles
+	var view_basis := Basis.from_euler(view_rotations) # TEST34: default order ok?
 	if is_up_locked: # use a pole limiter for pitch, don't roll
 		var pitch = view_rotations.x + rotate_now.x
 		if pitch > POLE_LIMITER:
@@ -619,7 +618,7 @@ func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
 	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
 	var view_transform := Transform3D(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, reference_basis.z)
-	view_transform.basis *= Basis(view_rotations_)
+	view_transform.basis *= Basis.from_euler(view_rotations_) # TEST34: default order ok?
 	return view_transform
 
 

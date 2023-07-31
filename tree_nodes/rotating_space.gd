@@ -43,7 +43,7 @@ const PERSIST_PROPERTIES := [
 var mass_ratio: float
 var characteristic_length: float 
 var characteristic_time: float
-var lagrange_point_vectors := [] # in rotating frame; index = lp_integer - 1
+var lagrange_point_vectors: Array[Vector3] = [] # in rotating frame; index = lp_integer - 1
 
 # private - use API to get LagrangePoint instances
 var _LagrangePoints := [] # index = lp_integer - 1
@@ -80,7 +80,7 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 	if !_LagrangePoints:
 		_LagrangePoints.resize(5)
 	if !_LagrangePoints[lp_integer]:
-		var _LagrangePoint_: Script = IVGlobal.script_classes._LagrangePoint_
+		var _LagrangePoint_: GDScript = IVGlobal.script_classes._LagrangePoint_
 		var lagrange_point: IVLagrangePoint = _LagrangePoint_.new()
 		lagrange_point.init(lp_integer)
 		lagrange_point.position = lagrange_point_vectors[lp_integer - 1]

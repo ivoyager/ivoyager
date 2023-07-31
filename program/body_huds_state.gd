@@ -71,17 +71,17 @@ func _project_init() -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("visual_groups"):
 		var body_flag := table_reader.get_int("visual_groups", "body_flag", row)
-		var is_name_visible := table_reader.get_bool("visual_groups", "default_name_visible", row)
-		var is_symbol_visible := table_reader.get_bool("visual_groups", "default_symbol_visible", row)
-		var is_orbit_visible := table_reader.get_bool("visual_groups", "default_orbit_visible", row)
+		var name_visible := table_reader.get_bool("visual_groups", "default_name_visible", row)
+		var symbol_visible := table_reader.get_bool("visual_groups", "default_symbol_visible", row)
+		var orbit_visible := table_reader.get_bool("visual_groups", "default_orbit_visible", row)
 		var orbit_color_str := table_reader.get_string("visual_groups", "default_orbit_color", row)
 		
 		all_flags |= body_flag
-		if is_name_visible:
+		if name_visible:
 			default_name_visible_flags |= body_flag
-		if is_symbol_visible:
+		if symbol_visible:
 			default_symbol_visible_flags |= body_flag
-		if is_orbit_visible:
+		if orbit_visible:
 			default_orbit_visible_flags |= body_flag
 		default_orbit_colors[body_flag] = Color(orbit_color_str)
 	
@@ -266,7 +266,9 @@ func set_orbit_visible_flags(orbit_visible_flags_: int) -> void:
 # color
 
 func set_default_colors() -> void:
-	if deep_equal(orbit_colors, default_orbit_colors):
+	# TEST34
+	if orbit_colors == default_orbit_colors:
+#	if deep_equal(orbit_colors, default_orbit_colors):
 		return
 	orbit_colors.merge(default_orbit_colors, true)
 	emit_signal("color_changed")
@@ -306,16 +308,16 @@ func set_orbit_color(body_flags: int, color: Color) -> void:
 			orbit_colors[body_flags] = color
 			emit_signal("color_changed")
 		return
-	var color_changed := false
+	var changed := false
 	var flag := 1
 	while body_flags:
 		if body_flags & 1:
 			if orbit_colors[flag] != color:
 				orbit_colors[flag] = color
-				color_changed = true
+				changed = true
 		flag <<= 1
 		body_flags >>= 1
-	if color_changed:
+	if changed:
 		emit_signal("color_changed")
 
 

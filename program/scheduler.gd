@@ -113,10 +113,10 @@ func _make_interval_signal(interval: float, one_shot := false) -> String:
 	var index: int
 	if !_is_reversed:
 		signal_time += interval
-		index = _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_forward")
+		index = _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_forward)
 	else:
 		signal_time -= interval
-		index = _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_reverse")
+		index = _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_reverse)
 	var signal_info := [signal_time, interval, signal_str, one_shot]
 	_ordered_signal_infos.insert(index, signal_info)
 	return signal_str
@@ -127,7 +127,7 @@ func _remove_active_interval_signal(signal_str: String) -> void:
 	var i := 0
 	while i < ordered_size:
 		if signal_str == _ordered_signal_infos[i][2]:
-			_ordered_signal_infos.remove(i)
+			_ordered_signal_infos.remove_at(i)
 			_signal_intervals[i] = 0.0
 			_available_signals.append(signal_str)
 			return
@@ -179,7 +179,7 @@ func _process(_delta: float) -> void:
 					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
-				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_forward")
+				var index := _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_forward)
 				_ordered_signal_infos.insert(index, signal_info)
 			emit_signal(signal_str)
 			if !_ordered_signal_infos:
@@ -200,7 +200,7 @@ func _process(_delta: float) -> void:
 					signal_time = time # will signal next frame
 				signal_info[0] = signal_time
 				# high frequency will be near end, reducing insert cost
-				var index := _ordered_signal_infos.bsearch_custom(signal_time, self, "_bsearch_reverse")
+				var index := _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_reverse)
 				_ordered_signal_infos.insert(index, signal_info)
 			emit_signal(signal_str)
 			if !_ordered_signal_infos:

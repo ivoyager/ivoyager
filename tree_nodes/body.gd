@@ -110,7 +110,6 @@ var sleep := false
 var _times: Array = IVGlobal.times
 var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _model_visible := false
 var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
@@ -136,7 +135,7 @@ func _on_enter_tree() -> void:
 	orbit = components.get("orbit") # no orbit for the top body (e.g., the Sun)
 	if orbit:
 		orbit.reset_elements_and_interval_update()
-		orbit.connect("changed", Callable(self, "_on_orbit_changed"))
+		orbit.changed.connect(_on_orbit_changed)
 
 
 func _ready() -> void:
@@ -145,13 +144,11 @@ func _ready() -> void:
 
 func _on_ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS # time will stop, but allow pointy finger on mouseover
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded", [],
-			CONNECT_ONE_SHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [],
-			CONNECT_ONE_SHOT)
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.system_tree_built_or_loaded.connect(_on_system_tree_built_or_loaded, CONNECT_ONE_SHOT)
+	IVGlobal.about_to_free_procedural_nodes.connect(_prepare_to_free, CONNECT_ONE_SHOT)
+	IVGlobal.setting_changed.connect(_settings_listener)
 	var timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-	timekeeper.connect("time_altered", Callable(self, "_on_time_altered"))
+	timekeeper.time_altered.connect(_on_time_altered)
 	assert(!IVGlobal.bodies.has(name))
 	IVGlobal.bodies[name] = self
 	if flags & BodyFlags.IS_TOP:
@@ -174,6 +171,7 @@ func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 		return
 	var system_radius := m_radius * MIN_SYSTEM_M_RADIUS_MULTIPLIER
 	for satellite in satellites:
+		@warning_ignore("unsafe_method_access") # FIXME34: Can we self-type these now?
 		var a: float = satellite.get_orbit_semi_major_axis()
 		if system_radius < a:
 			system_radius = a
@@ -249,11 +247,11 @@ func _on_process(_delta: float) -> void: # subclass can override
 		hud_dist_ok = orbit_radius * max_hud_dist_orbit_radius_multiplier > camera_dist
 	if huds_visible != hud_dist_ok:
 		huds_visible = hud_dist_ok
-		emit_signal("huds_visibility_changed", huds_visible)
+		huds_visibility_changed.emit(huds_visible)
 		
 	if model_visible != (camera_dist < max_model_dist):
 		model_visible = !model_visible
-		emit_signal("model_visibility_changed", model_visible)
+		model_visibility_changed.emit(model_visible)
 	
 	show()
 
@@ -267,7 +265,8 @@ func get_real_precision(path: String) -> int:
 	# table *.tsv file. Used by Planetarium.
 	if !characteristics.has("real_precisions"):
 		return -1
-	return characteristics.real_precisions.get(path, -1)
+	var real_precisions: Dictionary = characteristics.real_precisions
+	return real_precisions.get(path, -1)
 
 
 func get_hud_name() -> String:
@@ -433,6 +432,7 @@ func get_orbit_inclination_to_equator(time := NAN) -> float:
 	if !orbit or flags & IS_TOP:
 		return NAN
 	var orbit_normal := orbit.get_normal(time)
+	@warning_ignore("unsafe_method_access") # TODO34: Self-type ok now?
 	var positive_pole: Vector3 = get_parent().get_positive_pole(time)
 	return orbit_normal.angle_to(positive_pole)
 
@@ -484,6 +484,7 @@ func get_hill_sphere(eccentricity := 0.0) -> float:
 		return INF
 	var a := get_orbit_semi_major_axis()
 	var mass := get_mass()
+	@warning_ignore("unsafe_method_access") # TODO34: Self-type ok now?
 	var parent_mass: float = get_parent_node_3d().get_mass()
 	if !a or !mass or !parent_mass:
 		return 0.0
@@ -501,6 +502,7 @@ func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
 func add_child_to_model_space(spatial: Node3D) -> void:
 	if !model_space:
 		var _ModelSpace_: Script = IVGlobal.script_classes._ModelSpace_
+		@warning_ignore("unsafe_method_access") # Replacement class possible
 		model_space = _ModelSpace_.new()
 		add_child(model_space)
 	model_space.add_child(spatial)
@@ -522,11 +524,11 @@ func set_orbit(orbit_: IVOrbit) -> void: # null ok
 		return
 	if orbit:
 		orbit.disconnect_interval_update()
-		orbit.disconnect("changed", Callable(self, "_on_orbit_changed"))
+		orbit.changed.disconnect(_on_orbit_changed)
 	orbit = orbit_
 	if orbit_:
 		orbit_.reset_elements_and_interval_update()
-		orbit_.connect("changed", Callable(self, "_on_orbit_changed"))
+		orbit_.changed.connect(_on_orbit_changed)
 
 
 func set_sleep(sleep_: bool) -> void: # called by IVSleepManager
@@ -637,6 +639,7 @@ func reset_orientation_and_rotation() -> void:
 	
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
+	# FIXME34: Self-type ok now? If so, re-code w/out errors.
 	if (flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET
 			or get_parent_node_3d().flags & IS_TRUE_PLANET):
 		if ECLIPTIC_Z.dot(new_rotation_vector) < 0.0:
@@ -657,8 +660,8 @@ func reset_orientation_and_rotation() -> void:
 	rotation_vector = new_rotation_vector
 	rotation_at_epoch = new_rotation_at_epoch
 
-	var basis := math.rotate_basis_z(Basis(), rotation_vector)
-	basis_at_epoch = basis.rotated(rotation_vector, rotation_at_epoch)
+	var basis_ := math.rotate_basis_z(Basis(), rotation_vector)
+	basis_at_epoch = basis_.rotated(rotation_vector, rotation_at_epoch)
 
 
 # private functions
@@ -670,6 +673,8 @@ func _add_rotating_space() -> void:
 	var m2: float = get_mass()
 	if !m2:
 		return
+	
+	# FIXME34: Self-type ok now? If so, re-code w/out errors.
 	var m1: float = get_parent_node_3d().get_mass()
 	if !m1:
 		return
@@ -677,6 +682,7 @@ func _add_rotating_space() -> void:
 	var characteristic_length := orbit.get_semimajor_axis()
 	var characteristic_time := orbit.get_orbit_period()
 	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
+	@warning_ignore("unsafe_method_access") # Replacement class possible
 	rotating_space = _RotatingSpace_.new()
 	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
 	var translation_ := orbit.get_position()
@@ -699,6 +705,7 @@ func _on_orbit_changed(is_scheduled: bool) -> void:
 
 @rpc("any_peer") func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
 		element_rates: Array, m_modifiers: Array) -> void: # client-side network game only
+	# FIXME34: All rpc
 	if _tree.get_remote_sender_id() != 1:
 		return # from server only
 	orbit.orbit_sync(reference_normal, elements_at_epoch, element_rates, m_modifiers)

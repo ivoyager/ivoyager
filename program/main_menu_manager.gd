@@ -98,7 +98,7 @@ func remove_button(text: String) -> void:
 	var i := 0
 	while i < button_infos.size():
 		if button_infos[i][0] == text:
-			button_infos.remove(i)
+			button_infos.remove_at(i)
 			emit_signal("buttons_changed")
 			return
 		i += 1
