@@ -85,21 +85,21 @@ var speeds := [ # sim_units / delta
 		7.0 * IVUnits.DAY,
 		30.4375 * IVUnits.DAY,
 ]
-var speed_names := [
-	"GAME_SPEED_REAL_TIME",
-	"GAME_SPEED_MINUTE_PER_SECOND",
-	"GAME_SPEED_HOUR_PER_SECOND",
-	"GAME_SPEED_DAY_PER_SECOND",
-	"GAME_SPEED_WEEK_PER_SECOND",
-	"GAME_SPEED_MONTH_PER_SECOND",
+var speed_names: Array[StringName] = [
+	&"GAME_SPEED_REAL_TIME",
+	&"GAME_SPEED_MINUTE_PER_SECOND",
+	&"GAME_SPEED_HOUR_PER_SECOND",
+	&"GAME_SPEED_DAY_PER_SECOND",
+	&"GAME_SPEED_WEEK_PER_SECOND",
+	&"GAME_SPEED_MONTH_PER_SECOND",
 ]
-var speed_symbols := [
-	"GAME_SPEED_REAL_TIME",
-	"GAME_SPEED_MINUTE_PER_SECOND",
-	"GAME_SPEED_HOUR_PER_SECOND",
-	"GAME_SPEED_DAY_PER_SECOND",
-	"GAME_SPEED_WEEK_PER_SECOND",
-	"GAME_SPEED_MONTH_PER_SECOND",
+var speed_symbols: Array[StringName] = [
+	&"GAME_SPEED_REAL_TIME",
+	&"GAME_SPEED_MINUTE_PER_SECOND",
+	&"GAME_SPEED_HOUR_PER_SECOND",
+	&"GAME_SPEED_DAY_PER_SECOND",
+	&"GAME_SPEED_WEEK_PER_SECOND",
+	&"GAME_SPEED_MONTH_PER_SECOND",
 ]
 var real_time_speed := 0
 var start_speed := 2
@@ -132,8 +132,8 @@ var _allow_time_reversal := IVGlobal.allow_time_reversal
 #var _disable_pause: bool = IVGlobal.disable_pause
 var _network_state := NO_NETWORK
 var _is_sync := false
-var _sync_engine_time := -INF
-var _adj_sync_tolerance := 0.0
+#var _sync_engine_time := -INF
+#var _adj_sync_tolerance := 0.0
 var _prev_whole_solar_day := NAN
 
 @onready var _tree := get_tree()
@@ -144,15 +144,15 @@ var _prev_whole_solar_day := NAN
 # virtual functions, inits & destructors
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_set_init_state"))
-	IVGlobal.connect("game_load_finished", Callable(self, "_set_ready_state"))
-	IVGlobal.connect("simulator_exited", Callable(self, "_set_ready_state"))
-	IVGlobal.connect("network_state_changed", Callable(self, "_on_network_state_changed"))
-	IVGlobal.connect("run_state_changed", Callable(self, "_on_run_state_changed")) # starts/stops
-	IVGlobal.connect("user_pause_changed", Callable(self, "_on_user_pause_changed"))
-	IVGlobal.connect("update_gui_requested", Callable(self, "_refresh_gui"))
-	connect("speed_changed", Callable(self, "_on_speed_changed"))
+	IVGlobal.about_to_start_simulator.connect(_on_about_to_start_simulator)
+	IVGlobal.about_to_free_procedural_nodes.connect(_set_init_state)
+	IVGlobal.game_load_finished.connect(_set_ready_state)
+	IVGlobal.simulator_exited.connect(_set_ready_state)
+	IVGlobal.network_state_changed.connect(_on_network_state_changed)
+	IVGlobal.run_state_changed.connect(_on_run_state_changed) # starts/stops
+	IVGlobal.user_pause_changed.connect(_on_user_pause_changed)
+	IVGlobal.update_gui_requested.connect(_refresh_gui)
+	speed_changed.connect(_on_speed_changed)
 	times.resize(3)
 	clock.resize(3)
 	match date_format:
@@ -193,10 +193,10 @@ func _on_process(delta: float) -> void: # subclass can override
 	var whole_solar_day := floorf(solar_day)
 	if _prev_whole_solar_day != whole_solar_day:
 		var jdn := get_jdn_for_solar_day(solar_day)
-		IVTimekeeper.set_gregorian_date_array(jdn, date, date_format)
+		set_gregorian_date_array(jdn, date, date_format)
 		is_date_change = true
 		_prev_whole_solar_day = whole_solar_day
-	IVTimekeeper.set_clock_array(solar_day - whole_solar_day, clock)
+	set_clock_array(solar_day - whole_solar_day, clock)
 	times[0] = time
 	times[2] = solar_day
 	# network sync
@@ -205,7 +205,7 @@ func _on_process(delta: float) -> void: # subclass can override
 	_is_sync = false
 	# signal time and date
 	if is_date_change:
-		emit_signal("date_changed")
+		date_changed.emit()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -215,11 +215,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _on_unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
-	if event.is_action_pressed("incr_speed"):
+	if event.is_action_pressed(&"incr_speed"):
 		change_speed(1)
-	elif event.is_action_pressed("decr_speed"):
+	elif event.is_action_pressed(&"decr_speed"):
 		change_speed(-1)
-	elif _allow_time_reversal and event.is_action_pressed("reverse_time"):
+	elif _allow_time_reversal and event.is_action_pressed(&"reverse_time"):
 		set_time_reversed(!is_reversed)
 	else:
 		return # input NOT handled!
@@ -333,7 +333,7 @@ func get_gregorian_date(sim_time := NAN) -> Array:
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	IVTimekeeper.set_gregorian_date_array(jdn, date_array, date_format)
+	set_gregorian_date_array(jdn, date_array, date_format)
 	return date_array
 
 
@@ -344,9 +344,9 @@ func get_gregorian_date_time(sim_time := NAN) -> Array:
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
 	var date_array := [0, 0, 0]
-	IVTimekeeper.set_gregorian_date_array(jdn, date_array, date_format)
+	set_gregorian_date_array(jdn, date_array, date_format)
 	var fractional_day := fposmod(solar_day_, 1.0)
-	var clock_array := IVTimekeeper.get_clock_elements(fractional_day)
+	var clock_array := get_clock_elements(fractional_day)
 	return [date_array, clock_array]
 
 
@@ -394,7 +394,7 @@ func set_time(new_time: float) -> void:
 	time = new_time
 	is_now = false
 	_reset_time()
-	emit_signal("time_altered", previous_time)
+	time_altered.emit(previous_time)
 
 
 func set_now() -> void:
@@ -409,7 +409,7 @@ func set_now() -> void:
 	var previous_time := time
 	time = get_time_from_operating_system()
 	_reset_time()
-	emit_signal("time_altered", previous_time)
+	time_altered.emit(previous_time)
 
 
 func set_time_reversed(new_is_reversed: bool) -> void:
@@ -420,7 +420,7 @@ func set_time_reversed(new_is_reversed: bool) -> void:
 	is_reversed = new_is_reversed
 	speed_multiplier *= -1.0
 	is_now = false
-	emit_signal("speed_changed")
+	speed_changed.emit()
 
 
 func change_speed(delta_index: int, new_index := -1) -> void:
@@ -438,7 +438,7 @@ func change_speed(delta_index: int, new_index := -1) -> void:
 	speed_index = new_index
 	is_now = false
 	_reset_speed()
-	emit_signal("speed_changed")
+	speed_changed.emit()
 
 
 func can_incr_speed() -> bool:
@@ -483,8 +483,8 @@ func _reset_time() -> void:
 	times[0] = time
 	times[2] = solar_day
 	var jdn := get_jdn_for_solar_day(solar_day)
-	IVTimekeeper.set_gregorian_date_array(jdn, date, date_format)
-	IVTimekeeper.set_clock_array(fposmod(solar_day, 1.0), clock)
+	set_gregorian_date_array(jdn, date, date_format)
+	set_clock_array(fposmod(solar_day, 1.0), clock)
 
 
 func _reset_speed() -> void:
@@ -498,7 +498,7 @@ func _reset_speed() -> void:
 
 
 func _refresh_gui() -> void:
-	emit_signal("speed_changed")
+	speed_changed.emit()
 
 
 func _on_user_pause_changed(_is_paused: bool) -> void:
@@ -516,43 +516,43 @@ func _on_network_state_changed(network_state: IVEnums.NetworkState) -> void:
 	_network_state = network_state
 
 
-@rpc("any_peer") func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
-	# client-side network game only
-	if _tree.get_remote_sender_id() != 1:
-		return # from server only
-	if engine_time_ < _sync_engine_time: # out-of-order packet
-		return
-	_sync_engine_time = engine_time_
-	if speed_multiplier != speed_multiplier_:
-		speed_multiplier = speed_multiplier_
-		_adj_sync_tolerance = sync_tolerance * abs(speed_multiplier_)
-	var time_diff := time_ - time
-	if abs(time_diff) < _adj_sync_tolerance:
-		return
-	# <1% in LAN test w/ sync_tolerance = 0.1
-	_is_sync = true
-	# move 1/4 toward the sync value
-	time = time_ - 0.75 * time_diff
-	engine_time = 0.75 * engine_time + 0.25 * engine_time_
+#@rpc("any_peer") func _time_sync(time_: float, engine_time_: float, speed_multiplier_: float) -> void:
+#	# client-side network game only
+#	if _tree.get_remote_sender_id() != 1:
+#		return # from server only
+#	if engine_time_ < _sync_engine_time: # out-of-order packet
+#		return
+#	_sync_engine_time = engine_time_
+#	if speed_multiplier != speed_multiplier_:
+#		speed_multiplier = speed_multiplier_
+#		_adj_sync_tolerance = sync_tolerance * abs(speed_multiplier_)
+#	var time_diff := time_ - time
+#	if abs(time_diff) < _adj_sync_tolerance:
+#		return
+#	# <1% in LAN test w/ sync_tolerance = 0.1
+#	_is_sync = true
+#	# move 1/4 toward the sync value
+#	time = time_ - 0.75 * time_diff
+#	engine_time = 0.75 * engine_time + 0.25 * engine_time_
 
 
-@rpc("any_peer") func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
-		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
-	# client-side network game only
-	if _tree.get_remote_sender_id() != 1:
-		return # from server only
-	speed_index = speed_index_
-	speed_name = speed_names[speed_index_]
-	speed_symbol = speed_symbols[speed_index_]
-	is_reversed = is_reversed_
-	show_clock = show_clock_
-	show_seconds = show_seconds_
-	is_now = is_real_world_time_
-	emit_signal("speed_changed")
+#@rpc("any_peer") func _speed_changed_sync(speed_index_: int, is_reversed_: bool,
+#		show_clock_: bool, show_seconds_: bool, is_real_world_time_: bool) -> void:
+#	# client-side network game only
+#	if _tree.get_remote_sender_id() != 1:
+#		return # from server only
+#	speed_index = speed_index_
+#	speed_name = speed_names[speed_index_]
+#	speed_symbol = speed_symbols[speed_index_]
+#	is_reversed = is_reversed_
+#	show_clock = show_clock_
+#	show_seconds = show_seconds_
+#	is_now = is_real_world_time_
+#	speed_changed.emit()
 
 
 func _on_speed_changed() -> void:
 	if _network_state != IS_SERVER:
 		return
-	rpc("_speed_changed_sync", speed_index, is_reversed, show_clock,
-			show_seconds, is_now)
+#	rpc("_speed_changed_sync", speed_index, is_reversed, show_clock,
+#			show_seconds, is_now)

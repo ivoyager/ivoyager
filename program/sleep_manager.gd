@@ -34,9 +34,9 @@ var _current_star_orbiter: IVBody
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
-	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
+	IVGlobal.about_to_start_simulator.connect(_on_about_to_start_simulator)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	IVGlobal.camera_ready.connect(_connect_camera)
 
 
 func _on_about_to_start_simulator(_is_new_game: bool) -> void:
@@ -53,12 +53,14 @@ func _connect_camera(camera: Camera3D) -> void:
 	if _camera != camera:
 		_disconnect_camera()
 		_camera = camera
-		_camera.connect("parent_changed", Callable(self, "_on_camera_parent_changed"))
+		@warning_ignore("unsafe_property_access", "unsafe_method_access") # possible replacement class
+		_camera.parent_changed.connect(_on_camera_parent_changed)
 
 
 func _disconnect_camera() -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("parent_changed", Callable(self, "_on_camera_parent_changed"))
+		@warning_ignore("unsafe_property_access", "unsafe_method_access") # possible replacement class
+		_camera.parent_changed.disconnect(_on_camera_parent_changed)
 	_camera = null
 
 
@@ -81,7 +83,7 @@ func _get_star_orbiter(body: IVBody) -> IVBody:
 	return body
 
 
-func _change_satellite_sleep_recursive(body: IVBody, sleep: bool) -> void:
+func _change_satellite_sleep_recursive(body: IVBody, is_sleep: bool) -> void:
 	for satellite in body.satellites:
-		satellite.set_sleep(sleep)
-		_change_satellite_sleep_recursive(satellite, sleep)
+		satellite.set_sleep(is_sleep)
+		_change_satellite_sleep_recursive(satellite, is_sleep)

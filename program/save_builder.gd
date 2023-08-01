@@ -121,25 +121,31 @@ var _log := ""
 
 static func get_persist_mode(object: Object) -> int:
 	if "persist_mode_override" in object:
+		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override
 	if not "PERSIST_MODE" in object:
 		return NO_PERSIST
+	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE
 
 
 static func is_persist_object(object: Object) -> bool:
 	if "persist_mode_override" in object:
+		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override != NO_PERSIST
 	if not "PERSIST_MODE" in object:
 		return false
+	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE != NO_PERSIST
 
 
 static func is_procedural_persist(object: Object) -> bool:
 	if "persist_mode_override" in object:
+		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override == PERSIST_PROCEDURAL
 	if not "PERSIST_MODE" in object:
 		return false
+	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE == PERSIST_PROCEDURAL
 
 
@@ -244,6 +250,7 @@ func _log_nodes(node: Node) -> void:
 		_log_count_by_class[class_] = 1
 	var script_identifier := ""
 	if node.get_script():
+		@warning_ignore("unsafe_method_access")
 		var source_code: String = node.get_script().get_source_code()
 		if source_code:
 			var split := source_code.split("\n", false, 1)
@@ -316,6 +323,7 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 		var object_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
 		var script: Script = scripts[script_id]
+		@warning_ignore("unsafe_method_access")
 		var ref: RefCounted = script.new()
 		assert(ref)
 		_objects[object_id] = ref
@@ -352,7 +360,7 @@ func _serialize_node(node: Node):
 		script_id = _get_or_create_script_id(node)
 		assert(!DPRINT or IVDebug.dprint(object_id, node, script_id, _gs_script_paths[script_id]))
 	else:
-		assert(!DPRINT or IVDebug.dprints(object_id, node, node.name))
+		assert(!DPRINT or IVDebug.dprint(object_id, node, node.name))
 	serialized_node.append(script_id) # index 1
 	# index 2 will be parent_save_id *or* non-procedural node path
 	if is_procedural:
@@ -492,11 +500,13 @@ func _decode_array(encoded_array: Array) -> void:
 		if type == TYPE_ARRAY:
 			_decode_array(item)
 		elif type == TYPE_DICTIONARY:
-			if item.has("r"):
-				var object := _get_decoded_object(item)
+			@warning_ignore("unsafe_cast")
+			var item_dict := item as Dictionary
+			if item_dict.has("r"):
+				var object := _get_decoded_object(item_dict)
 				encoded_array[index] = object
 			else: # it's a dictionary w/ int keys only
-				encoded_array[index] = _get_decoded_dict(item)
+				encoded_array[index] = _get_decoded_dict(item_dict)
 		else: # other built-in type
 			encoded_array[index] = item
 		index += 1
@@ -513,11 +523,13 @@ func _get_decoded_dict(encoded_dict: Dictionary) -> Dictionary:
 			_decode_array(item)
 			dict[key] = item
 		elif type == TYPE_DICTIONARY:
-			if item.has("r"):
-				var object := _get_decoded_object(item)
+			@warning_ignore("unsafe_cast")
+			var item_dict := item as Dictionary
+			if item_dict.has("r"):
+				var object := _get_decoded_object(item_dict)
 				dict[key] = object
 			else: # it's a dictionary w/ int keys only
-				dict[key] = _get_decoded_dict(item)
+				dict[key] = _get_decoded_dict(item_dict)
 		else: # other built-in type
 			dict[key] = item
 	return dict
@@ -527,6 +539,7 @@ func _get_encoded_object(object: Object) -> Dictionary:
 	# Encoded object is a dictionary with key "_" = sign-coded object_id.
 	var is_weak_ref := false
 	if object is WeakRef:
+		@warning_ignore("unsafe_method_access")
 		object = object.get_ref()
 		if object == null:
 			return {r = 0} # object_id = 0 represents a weak ref to dead object

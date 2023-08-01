@@ -38,6 +38,7 @@ func _project_init() -> void:
 
 func build_body_selection(body: IVBody) -> IVSelection:
 	var parent_body := body.get_parent() as IVBody
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	var selection: IVSelection = _Selection_.new()
 	selection.is_body = true
 	selection.spatial = body

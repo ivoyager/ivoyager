@@ -112,16 +112,16 @@ func _ready() -> void:
 
 func _on_ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
-	IVGlobal.connect("project_builder_finished", Callable(self, "_on_project_builder_finished").bind(), CONNECT_ONE_SHOT)
-	IVGlobal.connect("about_to_build_system_tree", Callable(self, "_on_about_to_build_system_tree"))
-	IVGlobal.connect("system_tree_built_or_loaded", Callable(self, "_on_system_tree_built_or_loaded"))
-	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
-	IVGlobal.connect("simulator_exited", Callable(self, "_on_simulator_exited"))
-	IVGlobal.connect("change_pause_requested", Callable(self, "change_pause"))
-	IVGlobal.connect("sim_stop_required", Callable(self, "require_stop"))
-	IVGlobal.connect("sim_run_allowed", Callable(self, "allow_run"))
-	IVGlobal.connect("quit_requested", Callable(self, "quit"))
-	IVGlobal.connect("exit_requested", Callable(self, "exit"))
+	IVGlobal.project_builder_finished.connect(_on_project_builder_finished, CONNECT_ONE_SHOT)
+	IVGlobal.about_to_build_system_tree.connect(_on_about_to_build_system_tree)
+	IVGlobal.system_tree_built_or_loaded.connect(_on_system_tree_built_or_loaded)
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
+	IVGlobal.simulator_exited.connect(_on_simulator_exited)
+	IVGlobal.change_pause_requested.connect(change_pause)
+	IVGlobal.sim_stop_required.connect(require_stop)
+	IVGlobal.sim_run_allowed.connect(allow_run)
+	IVGlobal.quit_requested.connect(quit)
+	IVGlobal.exit_requested.connect(exit)
 	_tree.paused = true
 	require_stop(self, -1, true)
 
@@ -137,7 +137,7 @@ func _on_unhandled_key_input(event: InputEvent) -> void:
 		quit(false)
 	else:
 		return
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 # *****************************************************************************
@@ -157,7 +157,7 @@ func remove_blocking_thread(thread: Thread) -> void:
 		blocking_threads.erase(thread)
 	if _signal_when_threads_finished and !blocking_threads:
 		_signal_when_threads_finished = false
-		emit_signal("threads_finished")
+		threads_finished.emit()
 
 
 func signal_threads_finished() -> void:
@@ -198,7 +198,7 @@ func require_stop(who: Object, network_sync_type := -1, bypass_checks := false) 
 				return false
 	if _state.network_state == IS_SERVER:
 		if network_sync_type != NetworkStopSync.DONT_SYNC:
-			emit_signal("server_about_to_stop", network_sync_type)
+			server_about_to_stop.emit(network_sync_type)
 	assert(!DPRINT or IVDebug.dprint("require_stop", who, network_sync_type))
 	if !_nodes_requiring_stop.has(who):
 		_nodes_requiring_stop.append(who)
@@ -214,7 +214,7 @@ func allow_run(who: Object) -> void:
 	if _state.is_running or _nodes_requiring_stop:
 		return
 	if _state.network_state == IS_SERVER:
-		emit_signal("server_about_to_run")
+		server_about_to_run.emit()
 	_run_simulator()
 
 
@@ -231,7 +231,7 @@ func exit(force_exit := false, following_server := false) -> void:
 			return
 	if _state.network_state == IS_CLIENT:
 		if !following_server:
-			emit_signal("client_is_dropping_out", true)
+			client_is_dropping_out.emit(true)
 	_state.is_system_built = false
 	_state.is_system_ready = false
 	_state.is_started_or_about_to_start = false
@@ -262,7 +262,7 @@ func quit(force_quit := false) -> void:
 			IVOneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
 			return
 	if _state.network_state == IS_CLIENT:
-		emit_signal("client_is_dropping_out", false)
+		client_is_dropping_out.emit(false)
 	_state.is_quitting = true
 	IVGlobal.about_to_stop_before_quit.emit()
 	require_stop(self, NetworkStopSync.QUIT, true)
@@ -319,7 +319,7 @@ func _stop_simulator() -> void:
 	print("Stop simulator")
 	assert(!DPRINT or IVDebug.dprint("signal run_threads_must_stop"))
 	allow_threads = false
-	emit_signal("run_threads_must_stop")
+	run_threads_must_stop.emit()
 	_state.is_running = false
 	_tree.paused = true
 	IVGlobal.run_state_changed.emit(false)
@@ -332,4 +332,5 @@ func _run_simulator() -> void:
 	IVGlobal.run_state_changed.emit(true)
 	assert(!DPRINT or IVDebug.dprint("signal run_threads_allowed"))
 	allow_threads = true
-	emit_signal("run_threads_allowed")
+	run_threads_allowed.emit()
+	

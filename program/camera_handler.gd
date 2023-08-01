@@ -47,7 +47,7 @@ var key_roll_adj := 3.0
 var left_drag := DRAG_MOVE
 var right_drag := DRAG_PITCH_YAW_ROLL_HYBRID
 var ctrl_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as right_drag for Mac!
-var cmd_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as above?
+#var cmd_drag := DRAG_PITCH_YAW_ROLL_HYBRID # same as above? FIXME34: Mac cmd?
 var shift_drag := DRAG_PITCH_YAW
 var alt_drag := DRAG_ROLL
 var hybrid_drag_center_zone := 0.2 # for DRAG_PITCH_YAW_ROLL_HYBRID
@@ -66,7 +66,6 @@ var _move_pressed := Vector3.ZERO
 var _rotate_pressed := Vector3.ZERO
 
 @onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
-@onready var _tree := get_tree()
 @onready var _viewport := get_viewport()
 @onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
 @onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
@@ -79,19 +78,19 @@ var _rotate_pressed := Vector3.ZERO
 
 
 func _ready():
-	IVGlobal.connect("system_tree_ready", Callable(self, "_on_system_tree_ready"))
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_restore_init_state"))
-	IVGlobal.connect("camera_ready", Callable(self, "_connect_camera"))
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
-	_world_controller.connect("mouse_target_clicked", Callable(self, "_on_mouse_target_clicked"))
-	_world_controller.connect("mouse_dragged", Callable(self, "_on_mouse_dragged"))
-	_world_controller.connect("mouse_wheel_turned", Callable(self, "_on_mouse_wheel_turned"))
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
+	IVGlobal.about_to_free_procedural_nodes.connect(_restore_init_state)
+	IVGlobal.camera_ready.connect(_connect_camera)
+	IVGlobal.setting_changed.connect(_settings_listener)
+	_world_controller.mouse_target_clicked.connect(_on_mouse_target_clicked)
+	_world_controller.mouse_dragged.connect(_on_mouse_dragged)
+	_world_controller.mouse_wheel_turned.connect(_on_mouse_wheel_turned)
 
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_selection_manager = IVGlobal.program.TopGUI.selection_manager
-	_selection_manager.connect("selection_changed", Callable(self, "_on_selection_changed"))
-	_selection_manager.connect("selection_reselected", Callable(self, "_on_selection_reselected"))
+	_selection_manager.selection_changed.connect(_on_selection_changed)
+	_selection_manager.selection_reselected.connect(_on_selection_reselected)
 
 
 func _process(delta: float) -> void:
@@ -105,18 +104,20 @@ func _process(delta: float) -> void:
 				_camera.add_rotation(Vector3(_drag_vector.y, _drag_vector.x, 0.0))
 			DRAG_ROLL:
 				var mouse_position: Vector2 = _world_targeting[0]
-				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
+				var viewport_rect_size := _viewport.get_visible_rect().size
+				var center_to_mouse := (mouse_position - viewport_rect_size / 2.0).normalized()
 				_drag_vector *= delta * _mouse_roll_rate
 				_camera.add_rotation(Vector3(0.0, 0.0, center_to_mouse.cross(_drag_vector)))
 			DRAG_PITCH_YAW_ROLL_HYBRID:
 				# one or a mix of two above based on mouse position
 				var mouse_position: Vector2 = _world_targeting[0]
 				var mouse_rotate := _drag_vector * delta
-				var z_proportion := (2.0 * mouse_position - _viewport.size).length() / _viewport.size.x
+				var viewport_rect_size := _viewport.get_visible_rect().size
+				var z_proportion := (2.0 * mouse_position - viewport_rect_size).length() / viewport_rect_size.x
 				z_proportion -= hybrid_drag_center_zone
 				z_proportion /= hybrid_drag_outside_zone - hybrid_drag_center_zone
 				z_proportion = clamp(z_proportion, 0.0, 1.0)
-				var center_to_mouse := (mouse_position - _viewport.size / 2.0).normalized()
+				var center_to_mouse := (mouse_position - viewport_rect_size / 2.0).normalized()
 				var z_rotate := center_to_mouse.cross(mouse_rotate) * z_proportion * _mouse_roll_rate
 				mouse_rotate *= (1.0 - z_proportion) * _mouse_pitch_yaw_rate
 				_camera.add_rotation(Vector3(mouse_rotate.y, mouse_rotate.x, z_rotate))
@@ -134,63 +135,63 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !_camera:
 		return
 	if event.is_pressed():
-		if event.is_action_pressed("recenter"):
+		if event.is_action_pressed(&"recenter"):
 			_camera.move_to(null, CameraFlags.UP_LOCKED, NULL_VECTOR3, Vector3.ZERO)
-		elif event.is_action_pressed("camera_left"):
+		elif event.is_action_pressed(&"camera_left"):
 			_move_pressed.x = -_key_move_rate
-		elif event.is_action_pressed("camera_right"):
+		elif event.is_action_pressed(&"camera_right"):
 			_move_pressed.x = _key_move_rate
-		elif event.is_action_pressed("camera_up"):
+		elif event.is_action_pressed(&"camera_up"):
 			_move_pressed.y = _key_move_rate
-		elif event.is_action_pressed("camera_down"):
+		elif event.is_action_pressed(&"camera_down"):
 			_move_pressed.y = -_key_move_rate
-		elif event.is_action_pressed("camera_in"):
+		elif event.is_action_pressed(&"camera_in"):
 			_move_pressed.z = -_key_in_out_rate
-		elif event.is_action_pressed("camera_out"):
+		elif event.is_action_pressed(&"camera_out"):
 			_move_pressed.z = _key_in_out_rate
-		elif event.is_action_pressed("pitch_up"):
+		elif event.is_action_pressed(&"pitch_up"):
 			_rotate_pressed.x = _key_pitch_yaw_rate
-		elif event.is_action_pressed("pitch_down"):
+		elif event.is_action_pressed(&"pitch_down"):
 			_rotate_pressed.x = -_key_pitch_yaw_rate
-		elif event.is_action_pressed("yaw_left"):
+		elif event.is_action_pressed(&"yaw_left"):
 			_rotate_pressed.y = _key_pitch_yaw_rate
-		elif event.is_action_pressed("yaw_right"):
+		elif event.is_action_pressed(&"yaw_right"):
 			_rotate_pressed.y = -_key_pitch_yaw_rate
-		elif event.is_action_pressed("roll_left"):
+		elif event.is_action_pressed(&"roll_left"):
 			_rotate_pressed.z = -_key_roll_rate
-		elif event.is_action_pressed("roll_right"):
+		elif event.is_action_pressed(&"roll_right"):
 			_rotate_pressed.z = _key_roll_rate
 		else:
 			return  # no input handled
-		_tree.set_input_as_handled()
+		get_window().set_input_as_handled()
 	else: # key release
-		if event.is_action_released("camera_left"):
+		if event.is_action_released(&"camera_left"):
 			_move_pressed.x = 0.0
-		elif event.is_action_released("camera_right"):
+		elif event.is_action_released(&"camera_right"):
 			_move_pressed.x = 0.0
-		elif event.is_action_released("camera_up"):
+		elif event.is_action_released(&"camera_up"):
 			_move_pressed.y = 0.0
-		elif event.is_action_released("camera_down"):
+		elif event.is_action_released(&"camera_down"):
 			_move_pressed.y = 0.0
-		elif event.is_action_released("camera_in"):
+		elif event.is_action_released(&"camera_in"):
 			_move_pressed.z = 0.0
-		elif event.is_action_released("camera_out"):
+		elif event.is_action_released(&"camera_out"):
 			_move_pressed.z = 0.0
-		elif event.is_action_released("pitch_up"):
+		elif event.is_action_released(&"pitch_up"):
 			_rotate_pressed.x = 0.0
-		elif event.is_action_released("pitch_down"):
+		elif event.is_action_released(&"pitch_down"):
 			_rotate_pressed.x = 0.0
-		elif event.is_action_released("yaw_left"):
+		elif event.is_action_released(&"yaw_left"):
 			_rotate_pressed.y = 0.0
-		elif event.is_action_released("yaw_right"):
+		elif event.is_action_released(&"yaw_right"):
 			_rotate_pressed.y = 0.0
-		elif event.is_action_released("roll_left"):
+		elif event.is_action_released(&"roll_left"):
 			_rotate_pressed.z = 0.0
-		elif event.is_action_released("roll_right"):
+		elif event.is_action_released(&"roll_right"):
 			_rotate_pressed.z = 0.0
 		else:
 			return  # no input handled
-		_tree.set_input_as_handled()
+		get_window().set_input_as_handled()
 
 
 # public API
@@ -227,20 +228,20 @@ func get_camera_view_state() -> Array:
 func _restore_init_state() -> void:
 	_disconnect_camera()
 	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", Callable(self, "_on_selection_changed"))
+		_selection_manager.selection_changed.disconnect(_on_selection_changed)
 		_selection_manager = null
 
 
 func _connect_camera(camera: IVCamera) -> void:
 	_disconnect_camera()
 	_camera = camera
-	_camera.connect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
+	_camera.camera_lock_changed.connect(_on_camera_lock_changed)
 
 
 func _disconnect_camera() -> void:
 	if !_camera:
 		return
-	_camera.disconnect("camera_lock_changed", Callable(self, "_on_camera_lock_changed"))
+	_camera.camera_lock_changed.disconnect(_on_camera_lock_changed)
 	_camera = null
 
 
@@ -263,6 +264,7 @@ func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_m
 	# We only handle IVBody as target object for now. This could change.
 	if !_camera:
 		return
+	@warning_ignore("unsafe_property_access") # any mouse target must have 'name'
 	var selection := _selection_manager.get_or_make_selection(target.name)
 	if !selection:
 		return
@@ -275,9 +277,10 @@ func _on_mouse_target_clicked(target: Object, _button_mask: int, _key_modifier_m
 
 func _on_mouse_dragged(drag_vector: Vector2, button_mask: int, key_modifier_mask: int) -> void:
 	_drag_vector += drag_vector
-	if key_modifier_mask & KEY_MASK_CMD:
-		_drag_mode = cmd_drag
-	elif key_modifier_mask & KEY_MASK_CTRL:
+	# FIXME34: Mac cmd?
+#	if key_modifier_mask & KEY_MASK_CMD:
+#		_drag_mode = cmd_drag
+	if key_modifier_mask & KEY_MASK_CTRL:
 		_drag_mode = ctrl_drag
 	elif key_modifier_mask & KEY_MASK_ALT:
 		_drag_mode = alt_drag

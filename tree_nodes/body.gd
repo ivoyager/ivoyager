@@ -79,7 +79,7 @@ const PERSIST_PROPERTIES := [
 var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
-var satellites := [] # IVBody instances
+var satellites: Array[IVBody] = []
 
 
 # public - read-only!

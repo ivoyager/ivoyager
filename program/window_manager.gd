@@ -41,7 +41,7 @@ func _ready() -> void:
 				"_change_fullscreen")
 		_main_menu_manager.make_button("BUTTON_MINIMIZE", button_priority, false, true, self,
 				"_change_fullscreen", [], _main_menu_manager.HIDDEN)
-		IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
+		IVGlobal.update_gui_requested.connect(_update_buttons)
 		_viewport.size_changed.connect(_extended_test_for_screen_resize)
 
 

@@ -33,7 +33,7 @@ var _wiki_url: String
 func _project_init() -> void:
 	if !IVGlobal.enable_wiki:
 		return
-	IVGlobal.connect("open_wiki_requested", Callable(self, "_open_wiki"))
+	IVGlobal.open_wiki_requested.connect(_open_wiki)
 	if !IVGlobal.use_internal_wiki:
 		_wiki_url = "https://" + _wiki + ".org/wiki/"
 

@@ -42,6 +42,7 @@ func _project_init() -> void:
 	
 	# Remove border from ColorPickerButton
 	var color_picker_button_stylebox := StyleBoxTexture.new()
+	@warning_ignore("unsafe_method_access")
 	_themes.main.set_stylebox("normal", "ColorPickerButton", color_picker_button_stylebox)
 
 

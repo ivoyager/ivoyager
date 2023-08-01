@@ -48,14 +48,18 @@ func _on_init() -> void: # subclass can override
 func _project_init() -> void:
 	_io_manager = IVGlobal.program.IOManager
 	var cache_dir: String = IVGlobal.cache_dir
-	_file_path = cache_dir.plus_file(cache_file_name)
-	var dir = DirAccess.new()
-	if dir.open(cache_dir) != OK:
-		dir.make_dir(cache_dir)
+	_file_path = cache_dir.path_join(cache_file_name)
+	# TEST34
+	if !DirAccess.dir_exists_absolute(cache_dir):
+		DirAccess.make_dir_recursive_absolute(cache_dir)
+#	var dir = DirAccess.new()
+#	if dir.open(cache_dir) != OK:
+#		dir.make_dir(cache_dir)
 	for key in defaults:
 		var default = defaults[key] # unknown type
 		var type := typeof(default)
 		if type == TYPE_DICTIONARY or type == TYPE_ARRAY:
+			@warning_ignore("unsafe_method_access")
 			current[key] = default.duplicate(true)
 		else:
 			current[key] = default
@@ -69,6 +73,7 @@ func change_current(key: String, value, suppress_caching := false) -> void:
 	_about_to_change_current(key)
 	var type := typeof(value)
 	if type == TYPE_DICTIONARY or type == TYPE_ARRAY:
+		@warning_ignore("unsafe_method_access")
 		current[key] = value.duplicate(true)
 	else:
 		current[key] = value
@@ -82,14 +87,16 @@ func cache_now() -> void:
 
 
 func is_default(key: String) -> bool:
-	return deep_equal(current[key], defaults[key])
+	return current[key] == defaults[key]
 
 
 func is_all_defaults() -> bool:
-	for key in defaults:
-		if !deep_equal(current[key], defaults[key]):
-			return false
-	return true
+	# TEST34
+	return current == defaults
+#	for key in defaults:
+#		if current[key] != defaults[key]:
+#			return false
+#	return true
 
 
 func get_cached_value(key: String, cached_values: Dictionary): # unknown type
@@ -101,8 +108,8 @@ func get_cached_value(key: String, cached_values: Dictionary): # unknown type
 
 func is_cached(key: String, cached_values: Dictionary) -> bool:
 	if cached_values.has(key):
-		return deep_equal(current[key], cached_values[key])
-	return deep_equal(current[key], defaults[key])
+		return current[key] == cached_values[key]
+	return current[key] == defaults[key]
 
 
 func get_cached_values() -> Dictionary:
@@ -152,16 +159,16 @@ func _on_change_current(_item_name: String) -> void:
 func _write_cache() -> void:
 	_cached.clear()
 	for key in defaults:
-		if !deep_equal(current[key], defaults[key]): # cache only non-default values
+		if current[key] != defaults[key]: # cache only non-default values
 			_cached[key] = current[key]
 	_io_manager.store_var_to_file(_cached.duplicate(true), _file_path)
 
 
 func _read_cache() -> void:
-	# This happens on _project_init() only. We want this on Main thread so that
-	# it does block until completed.
-	var file := File.new()
-	if file.open(_file_path, File.READ) != OK:
+	# This happens on _project_init() only. We want this on the Main thread so
+	# it blocks until completed.
+	var file := FileAccess.open(_file_path, FileAccess.READ)
+	if !file:
 		prints("Did not find cache file:", _file_path)
 		return
 	_cached = file.get_var()

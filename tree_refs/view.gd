@@ -38,7 +38,7 @@ enum { # flags
 	
 	# flag sets
 	ALL_CAMERA = (1 << 3) - 1,
-	ALL_HUDS = 1 << 3 | 1 << 4
+	ALL_HUDS = 1 << 3 | 1 << 4,
 	ALL_BUT_TIME = (1 << 5) - 1,
 	ALL = (1 << 7) - 1,
 }

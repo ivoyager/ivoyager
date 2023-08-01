@@ -21,8 +21,9 @@ class_name IVIOManager
 extends RefCounted
 
 # Manages a separate thread for I/O operations including resource loading.
-# As per Godot docs, loading a resource from multiple threads can crash. Thus,
-# you should not mix use of IVIOManager with resource loading on the Main thread.
+# Per Godot docs (3.x), loading a resource from multiple threads can crash.
+# Thus, you should not mix use of IVIOManager with resource loading on the Main
+# thread.
 #
 # The "io_method" supplied in callback() is handy for doing "I/O-adjacent" work
 # such as processing resources or assembling parts of scene trees. However, all
@@ -58,7 +59,7 @@ func _project_init() -> void:
 	_state_manager = IVGlobal.program.StateManager
 	if !_use_threads:
 		return
-	IVGlobal.connect("about_to_stop_before_quit", Callable(self, "_block_quit_until_finished"))
+	IVGlobal.about_to_stop_before_quit.connect(_block_quit_until_finished)
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
@@ -68,17 +69,19 @@ func _project_init() -> void:
 func _block_quit_until_finished() -> void:
 	# Block the quit until we finish the thread; otherwise, we'll have leaks.
 	_stop_thread = true
-	if _thread.is_active():
+	if _thread.is_alive():
 		_state_manager.add_blocking_thread(_thread) # block quit
 		_semaphore.post()
 		_thread.wait_to_finish()
-		_state_manager.call_deferred("remove_blocking_thread", _thread)
+		_state_manager.remove_blocking_thread.call_deferred(_thread)
 
 
 # *****************************************************************************
 # Public. These are NOT thread-safe! Call on Main thread.
 
+
 func callback(object: Object, io_method: String, finish_method := "", array := []) -> void:
+	# TODO34: Use Callable args
 	# Callback to io_method will happen on the I/O thread. Callback to optional
 	# finish_method will happen subsequently on the main thread. The array arg
 	# is optional here but is required in callback methods signatures.
@@ -124,8 +127,11 @@ func _store_var_to_file(array: Array) -> void:
 	var value = array[0]
 	var file_path: String = array[1]
 	var user_callback := array.size() > 2
-	var file := File.new()
-	var err := file.open(file_path, File.WRITE)
+	# TEST34
+	var file := FileAccess.open(file_path, FileAccess.WRITE)
+	var err := FileAccess.get_open_error()
+#	var file := File.new()
+#	var err := file.open(file_path, File.WRITE)
 	if user_callback:
 		array.append(err)
 	if err == OK:
@@ -147,8 +153,11 @@ func _store_var_to_file_finish(array: Array) -> void:
 
 func _get_var_from_file(array: Array) -> void:
 	var file_path: String = array[0]
-	var file := File.new()
-	var err := file.open(file_path, File.READ)
+	# TEST34
+	var file := FileAccess.open(file_path, FileAccess.READ)
+	var err := FileAccess.get_open_error()
+#	var file := File.new()
+#	var err := file.open(file_path, File.READ)
 	array.append(err)
 	if err == OK:
 		array.append(file.get_var())
@@ -178,7 +187,8 @@ func _run_thread(_dummy: int) -> void: # I/O thread
 				_process_stack.append(_callback_queue.pop_back())
 			_is_work = false
 			_mutex.unlock()
-			assert(DPRINT and (_process_stack and print("I/O batch: ", _process_stack.size())) or true)
+			# debug print only if something in _process_stack
+			assert(!DPRINT or (_process_stack and IVDebug.dprint("I/O batch: ", _process_stack.size()) or true))
 			while _process_stack:
 				var args: Array = _process_stack.pop_back()
 				_process_callback(args)
@@ -192,7 +202,7 @@ func _process_callback(args: Array) -> void: # I/O thread, or Main if !_use_thre
 	var array: Array = args[3]
 	if is_instance_valid(object):
 		object.call(io_method, array)
-	call_deferred("_finish", args)
+	_finish.call_deferred(args)
 
 
 func _finish(args: Array) -> void: # Main thread
@@ -204,5 +214,5 @@ func _finish(args: Array) -> void: # Main thread
 			object.call(finish_method, array)
 	_job_count -= 1
 	if _job_count == 0:
-		assert(DPRINT and print("I/O finished!") or true)
-		emit_signal("finished")
+		assert(!DPRINT or IVDebug.dprint("I/O finished!"))
+		finished.emit()
