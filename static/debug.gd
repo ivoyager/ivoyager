@@ -45,9 +45,9 @@ static func dlog(arg) -> bool:
 	return true
 
 
-static func signal_verbosely(object: Object, signal_name: String) -> void:
+static func signal_verbosely(object: Object, signal_name: String, prefix: String) -> void:
 	# Call before any other signal connections; signal must have <= 8 args.
-	object.connect(signal_name, _on_verbose_signal.bind(signal_name))
+	object.connect(signal_name, IVDebug._on_verbose_signal.bind(prefix + " " + signal_name))
 
 
 static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,
@@ -56,8 +56,8 @@ static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,
 	var args := [arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9]
 	while args[-1] == null:
 		args.pop_back()
-	var signal_name: String = args.pop_back()
-	prints("SIGNAL", signal_name, args)
+	var debug_text: String = args.pop_back()
+	prints(debug_text, args)
 
 
 static func no_nans(thing) -> bool:

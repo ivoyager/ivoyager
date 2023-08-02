@@ -211,7 +211,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						var type := _get_type_int(raw_type)
 						field_info[field][0] = type
 						if type == TYPE_FLOAT and !is_mod:
-							precisions[field] = []
+							precisions[field] = [] as Array[int]
 				has_types = true
 			
 			elif cell_0.begins_with("Prefix"):
@@ -276,7 +276,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						table[field] = table_column
 						if type != TYPE_FLOAT:
 							continue
-						var precisions_column := []
+						var precisions_column: Array[int] = []
 						precisions_column.resize(n_rows)
 						precisions_column.fill(1) # ad hoc default
 						precisions[field] = precisions_column

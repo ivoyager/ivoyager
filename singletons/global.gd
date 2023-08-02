@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230724
+const IVOYAGER_YMD := 20230802
 
 
 # simulator state broadcasts
@@ -236,10 +236,10 @@ var translations := [
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
 	# be kept. So prepend this array if you want to override ivoyager text keys.
-	"res://ivoyager/data/text/entities_text.en.position",
-	"res://ivoyager/data/text/gui_text.en.position",
-	"res://ivoyager/data/text/hints_text.en.position",
-	"res://ivoyager/data/text/long_text.en.position",
+	"res://ivoyager/data/text/entities_text.en.translation",
+	"res://ivoyager/data/text/gui_text.en.translation",
+	"res://ivoyager/data/text/hints_text.en.translation",
+	"res://ivoyager/data/text/long_text.en.translation",
 ]
 
 var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
@@ -253,16 +253,15 @@ var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", et
 var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
-func _init() -> void:
+func _ready() -> void:
+	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
+			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
+	
 	if OS.is_debug_build and DEBUG_SIGNAL_VERBOSELY:
 		# TEST34: Does get_signal_list() include script or base object signals?
 		# TEST34: First connection always called first?
 		var signal_list := get_signal_list()
 		for signal_dict in signal_list:
 			var signal_name: String = signal_dict.name
-			IVDebug.signal_verbosely(self, signal_name)
+			IVDebug.signal_verbosely(self, signal_name, "IVGlobal")
 
-
-func _ready() -> void:
-	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
-			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])

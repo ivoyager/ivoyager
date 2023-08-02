@@ -25,7 +25,7 @@ extends Node
 # nodes, references, and class scripts availible in IVGlobal dictionaries. All
 # dictionaries here (except procedural_classes) define "small-s singletons";
 # a single instance of each class is instantiated, and nodes are added to
-# either the top Spatial node (specified by 'universe') or the top Control node
+# either the top Node3D node (specified by 'universe') or the top Control node
 # (specified by 'top_gui'). All object instantiations can be accessed in
 # IVGlobal dictionary 'program' and all class scripts can be accessed in
 # IVGlobal dictionary 'script_classes'.
@@ -75,29 +75,29 @@ var allow_project_build := true # blockable by another autoload singleton
 # extension instantiated at the first step of this sequence.
 var init_sequence := [
 	# [object, method, wait_for_signal]
-#	[self, "_init_extensions", false],
-#	[self, "_set_simulator_root", false],
-#	[self, "_set_simulator_top_gui", false],
-#	[self, "_instantiate_and_index_program_objects", false],
-#	[self, "_init_program_objects", true],
-#	[self, "_add_program_nodes", true],
-#	[self, "_finish", false]
+	[self, "_init_extensions", false],
+	[self, "_set_simulator_root", false],
+	[self, "_set_simulator_top_gui", false],
+	[self, "_instantiate_and_index_program_objects", false],
+	[self, "_init_program_objects", true],
+	[self, "_add_program_nodes", true],
+	[self, "_finish", false]
 ]
 
 # All nodes instatiated here are added to 'universe' or 'top_gui'. Extension
 # can set either or both of these, or let ProjectBuilder assign default nodes
 # from the core ivoyager submodule (or for universe, by tree search).
 # Whatever is assigned to these properties will be accessible from
-# IVGlobal.program.Universe and IVGlobal.program.TopGUI (node names don't
-# matter).
+# IVGlobal.program.Universe and IVGlobal.program.TopGUI (irrespective of node
+# names).
 
 var universe: Node3D
 var top_gui: Control
 var add_top_gui_to_universe := true # happens in add_program_nodes()
 
 # Replace classes in dictionaries below with a subclass of the original unless
-# comment indicates otherwise. E.g., "Spatial ok": replace with a class that
-# extends Spatial. In some cases, elements can be erased for unneeded systems.
+# comment indicates otherwise. E.g., "Node3D ok": replace with a class that
+# extends Node3D. In some cases, elements can be erased for unneeded systems.
 # For example, our Planetarium erases the save/load system and associated GUI:
 # https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
 #
@@ -111,12 +111,12 @@ var initializers := {
 #	# Reference classes. IVProjectBuilder instances these (first!) and adds to
 #	# dictionary IVGlobal.program. They may erase themselves from
 #	# IVGlobal.program when done (thereby freeing themselves).
-#	_LogInitializer_ = IVLogInitializer,
-#	_AssetInitializer_ = IVAssetInitializer,
-#	_SharedInitializer_ = SharedInitializer,
-#	_WikiInitializer_ = IVWikiInitializer,
-#	_TranslationImporter_ = IVTranslationImporter,
-#	_TableImporter_ = IVTableImporter,
+	_LogInitializer_ = IVLogInitializer,
+	_AssetInitializer_ = IVAssetInitializer,
+	_SharedInitializer_ = SharedInitializer,
+	_WikiInitializer_ = IVWikiInitializer,
+	_TranslationImporter_ = IVTranslationImporter,
+	_TableImporter_ = IVTableImporter,
 }
 
 var prog_refs := {
@@ -208,16 +208,16 @@ var procedural_classes := {
 #	# tree_nodes
 #	_Body_ = IVBody, # many dependencies, best to subclass
 #	_Camera_ = IVCamera, # replaceable, but look for dependencies
-#	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
-#	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
-#	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
-#	_SBGOrbits_ = IVSBGOrbits, # replace w/ Spatial
-#	_SBGPoints_ = IVSBGPoints, # replace w/ Spatial
+#	_GlobeModel_ = IVGlobeModel, # replace w/ Node3D
+#	_BodyLabel_ = IVBodyLabel, # replace w/ Node3D
+#	_BodyOrbit_ = IVBodyOrbit, # replace w/ Node3D
+#	_SBGOrbits_ = IVSBGOrbits, # replace w/ Node3D
+#	_SBGPoints_ = IVSBGPoints, # replace w/ Node3D
 #	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-#	_ModelSpace_ = IVModelSpace, # replace w/ Spatial
-#	_Rings_ = IVRings, # replace w/ Spatial
+#	_ModelSpace_ = IVModelSpace, # replace w/ Node3D
+#	_Rings_ = IVRings, # replace w/ Node3D
 #	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
-#	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
+#	_SelectionManager_ = IVSelectionManager, # replace w/ Node3D
 #	# tree_refs
 #	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 #	_Orbit_ = IVOrbit,
