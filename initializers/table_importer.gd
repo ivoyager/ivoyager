@@ -167,7 +167,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 		if line.begins_with("#"):
 			line = file.get_line()
 			continue
-		var line_array := line.split("\t") as Array
+		var line_array := line.split("\t")
 		
 		if reading_header:
 			# we're processing header until we don't recognize cell_0 as header item
@@ -211,7 +211,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						var type := _get_type_int(raw_type)
 						field_info[field][0] = type
 						if type == TYPE_FLOAT and !is_mod:
-							precisions[field] = []
+							precisions[field] = [] as Array[int]
 				has_types = true
 			
 			elif cell_0.begins_with("Prefix"):
@@ -276,7 +276,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						table[field] = table_column
 						if type != TYPE_FLOAT:
 							continue
-						var precisions_column := []
+						var precisions_column: Array[int] = []
 						precisions_column.resize(n_rows)
 						precisions_column.fill(1) # ad hoc default
 						precisions[field] = precisions_column
@@ -319,19 +319,22 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 		elif _enumerations.has(row_name): # modifying existing table item
 			row = _enumerations[row_name]
 		else: # adding row to existing table!
-			row = table.name.size()
+			var name_column: Array[String] = table.name
+			row = name_column.size()
 			_enumerations[row_name] = row
 			_tables["n_" + table_name] += 1
 			# assign row_name and impute defaults (table values will overwrite)
-			table.name.append(row_name)
+			name_column.append(row_name)
 			for field in field_info: # all fields! (not just mod table)
 				if field == "name":
 					continue
 				var default = field_info[field][3] # untyped
-				table[field].append(default)
+				var column_array: Array = table[field]
+				column_array.append(default)
 				var type: int = field_info[field][0]
 				if type == TYPE_FLOAT:
-					precisions[field].append(1) # ad hoc default
+					var prec_column: Array[int] = precisions[field]
+					prec_column.append(1) # ad hoc default
 	
 	for field in _column_map:
 		_count_cells += 1
@@ -352,15 +355,17 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			value = field_info[field][3] # default (already processed)
 		
 		# set table value, precision & wiki
+		var table_column: Array = table[field]
 		if is_mod:
-			table[field][row] = value
+			table_column[row] = value
 		else:
-			table[field].append(value)
+			table_column.append(value)
 		if type == TYPE_FLOAT:
+			var prec_column: Array[int] = precisions[field]
 			if is_mod:
-				precisions[field][row] = precision
+				prec_column[row] = precision
 			else:
-				precisions[field].append(precision)
+				prec_column.append(precision)
 		if _enable_wiki and field == _wiki:
 			assert(row_name)
 			_wiki_titles[row_name] = value
@@ -504,7 +509,7 @@ func _import_wiki_titles(path: String) -> void:
 		if line.begins_with("#"):
 			line = file.get_line()
 			continue
-		var line_array := line.split("\t") as Array
+		var line_array := line.split("\t")
 		if reading_header:
 			if reading_fields: # always 1st line!
 				assert(line_array[0] == "name", "1st field must be 'name'")

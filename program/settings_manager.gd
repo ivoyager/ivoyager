@@ -20,7 +20,7 @@
 class_name IVSettingsManager
 extends IVCacheManager
 
-# Settings are persisted in <cache_dir>/<cache_file_name> (specified below).
+# Settings are persisted on disk at <IVGlobal.cache_dir>/<cache_file_name>.
 #
 # TODO: We could have some settings cached in a user ProjectSettings override
 # for restart engine settings (screen size, rendering, etc.).
@@ -29,7 +29,7 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 
 func _on_init():
-	# project vars - modify on signal project_objects_instantiated
+	# project vars - modify on signal 'IVGlobal.project_objects_instantiated'
 	cache_file_name = "settings.ivbinary"
 	defaults = {
 		# save/load
@@ -76,4 +76,4 @@ func _on_init():
 
 
 func _on_change_current(setting: String) -> void:
-	IVGlobal.emit_signal("setting_changed", setting, current[setting])
+	IVGlobal.setting_changed.emit(setting, current[setting])

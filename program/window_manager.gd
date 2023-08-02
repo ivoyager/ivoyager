@@ -41,7 +41,7 @@ func _ready() -> void:
 				"_change_fullscreen")
 		_main_menu_manager.make_button("BUTTON_MINIMIZE", button_priority, false, true, self,
 				"_change_fullscreen", [], _main_menu_manager.HIDDEN)
-		IVGlobal.connect("update_gui_requested", Callable(self, "_update_buttons"))
+		IVGlobal.update_gui_requested.connect(_update_buttons)
 		_viewport.size_changed.connect(_extended_test_for_screen_resize)
 
 
@@ -54,11 +54,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _change_fullscreen() -> void:
 	if !_allow_fullscreen_toggle:
 		return
-	get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN if (!((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN))) else Window.MODE_WINDOWED
+	var is_fullscreen := ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+			or (get_window().mode == Window.MODE_FULLSCREEN))
+	get_window().mode = (Window.MODE_EXCLUSIVE_FULLSCREEN if !is_fullscreen else Window.MODE_WINDOWED)
 
 
 func _update_buttons() -> void:
-	if _is_fullscreen == ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN)):
+	if _is_fullscreen == ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+			or (get_window().mode == Window.MODE_FULLSCREEN)):
 		return
 	_is_fullscreen = !_is_fullscreen
 	if _is_fullscreen:

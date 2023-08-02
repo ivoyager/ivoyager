@@ -49,13 +49,11 @@ var _Rings_: Script
 
 var _table_reader: IVTableReader
 var _model_manager: IVModelManager
-var _bodies_2d_search: Array = IVGlobal.bodies_2d_search
+var _bodies_2d_search := IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture2D
 
 var _io_manager: IVIOManager
 #var _main_prog_bar: IVMainProgBar # FIXME34: Use signal
-
-var _settings: Dictionary = IVGlobal.settings
 
 var _is_building_system := false
 var _system_build_count: int
@@ -64,9 +62,9 @@ var _system_build_start_msec := 0
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_build_system_tree", Callable(self, "init_system_build"))
-	IVGlobal.connect("game_load_started", Callable(self, "init_system_build"))
-	IVGlobal.get_tree().connect("node_added", Callable(self, "_on_node_added"))
+	IVGlobal.about_to_build_system_tree.connect(init_system_build)
+	IVGlobal.game_load_started.connect(init_system_build)
+	IVGlobal.get_tree().node_added.connect(_on_node_added)
 	_table_reader = IVGlobal.program.TableReader
 	_model_manager = IVGlobal.program.ModelManager
 	_io_manager = IVGlobal.program.IOManager
@@ -120,8 +118,10 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		_table_reader.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
+		@warning_ignore("unsafe_method_access") # possible replacement class
 		var body_orbit: Node3D = _BodyOrbit_.new(body)
 		body.get_parent().add_child(body_orbit)
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	var body_label: Node3D = _BodyLabel_.new(body)
 	body.add_child(body_label)
 	var file_prefix := body.get_file_prefix()
@@ -165,11 +165,12 @@ func _io_finish(array: Array) -> void: # Main thread
 		body.texture_slice_2d = texture_slice_2d
 	if rings_texture:
 		var main_light_source := body.get_parent_node_3d() # assumes no moon rings!
+		@warning_ignore("unsafe_method_access") # possible replacement class
 		var rings: Node3D = _Rings_.new(body, rings_texture, main_light_source)
 		body.add_child_to_model_space(rings)
 	if _is_building_system:
 		_system_finished_count += 1
-		# warning-ignore:integer_division
+		@warning_ignore("integer_division")
 		progress = 100 * _system_finished_count / _system_build_count
 		if _system_finished_count == _system_build_count:
 			_finish_system_build()

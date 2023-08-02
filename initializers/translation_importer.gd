@@ -44,18 +44,18 @@ func _load_translations() -> void:
 	var load_dict := {}
 	var duplications := []
 	for tr_path in IVGlobal.translations:
-		var position: Translation = load(tr_path)
-		if position is OptimizedTranslation:
+		var translation: Translation = load(tr_path)
+		if translation is OptimizedTranslation:
 			# Note: PHashTranslation doesn't work in add_translation in export
 			# project. Godot issue #38935.
 #			var compressed_tr := PHashTranslation.new()
 #			compressed_tr.generate(translation)
 #			TranslationServer.add_translation(compressed_tr)
-			TranslationServer.add_translation(position)
+			TranslationServer.add_translation(translation)
 		else:
-			load_dict[position] = tr_path
-			_process_translation(position, load_dict, duplications)
-			TranslationServer.add_translation(position)
+			load_dict[translation] = tr_path
+			_process_translation(translation, load_dict, duplications)
+			TranslationServer.add_translation(translation)
 	if duplications:
 		print("WARNING! Duplication(s) found in translations; kept 1st:")
 		for duplication in duplications:
@@ -66,17 +66,18 @@ func _load_translations() -> void:
 			prints(" ", key, load_dict[tr2])
 
 
-func _process_translation(position: Translation,	load_dict: Dictionary,
+func _process_translation(translation: Translation, load_dict: Dictionary,
 		duplications: Array) -> void:
-	for txt_key in position.get_message_list():
+	for txt_key in translation.get_message_list():
 		# Duplicate test.
 		if load_dict.has(txt_key):
-			var duplication := [txt_key, load_dict[txt_key], position]
+			var duplication := [txt_key, load_dict[txt_key], translation]
 			duplications.append(duplication)
 			continue
-		load_dict[txt_key] = position
-		var text: String = position.get_message(txt_key)
+		load_dict[txt_key] = translation
+		var text: String = translation.get_message(txt_key)
+		# TODO34: This is fixed now?
 		# Patch for Godot issue #38716 not understanding "\uXXXX".
 		var new_text := IVUtils.c_unescape_patch(text)
 		if new_text != text:
-			position.add_message(txt_key, new_text)
+			translation.add_message(txt_key, new_text)

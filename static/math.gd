@@ -320,20 +320,3 @@ static func quadratic(x: float, coefficients: Array) -> float:
 	var c: float = coefficients[2]
 	return a * x * x + b * x + c
 
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

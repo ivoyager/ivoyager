@@ -34,7 +34,7 @@ const METER := IVUnits.METER
 
 var max_lazy_models := 40
 var model_too_far_radius_multiplier := 3e3
-var map_search_suffixes := [".albedo", ".emission"]
+var map_search_suffixes: Array[String] = [".albedo", ".emission"]
 
 var _times: Array = IVGlobal.times
 var _GlobeModel_: Script
@@ -50,8 +50,8 @@ var _cull_size: int
 
 
 func _project_init() -> void:
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
-	IVGlobal.connect("about_to_stop_before_quit", Callable(self, "_clear"))
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	IVGlobal.about_to_stop_before_quit.connect(_clear)
 	_GlobeModel_ = IVGlobal.script_classes._GlobeModel_
 	_table_reader = IVGlobal.program.TableReader
 	_io_manager = IVGlobal.program.IOManager
@@ -77,7 +77,7 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 	body.set_model_parameters(model_basis, max_dist) # keep w/ Body for lazy init case
 	if lazy_init:
 		assert(!body.model_visible) # Body hasn't processed yet, so has init false
-		body.connect("model_visibility_changed", Callable(self, "_add_lazy_model").bind(body), CONNECT_ONE_SHOT)
+		body.model_visibility_changed.connect(_add_lazy_model.bind(body), CONNECT_ONE_SHOT)
 		return
 	var model_type := body.get_model_type()
 	var array := [body, file_prefix, model_type, model_basis]
@@ -85,7 +85,7 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 
 
 func _add_lazy_model(is_visible: bool, body: IVBody) -> void: # Main thread
-	assert(DPRINT and print("ADD lazy model ", tr(body.name)) or true)
+	assert(!DPRINT or IVDebug.dprint("ADD lazy model ", tr(body.name)))
 	assert(is_visible)
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
@@ -96,10 +96,10 @@ func _add_lazy_model(is_visible: bool, body: IVBody) -> void: # Main thread
 
 func _remove_lazy_model(model: Node3D) -> void: # Main thread
 	var body: IVBody = model.get_parent().get_parent()
-	assert(DPRINT and print("REMOVE lazy model ", tr(body.name)) or true)
-	body.disconnect("model_visibility_changed", Callable(model, "set_visible"))
-	body.disconnect("model_visibility_changed", Callable(self, "_record_visibility_event"))
-	body.connect("model_visibility_changed", Callable(self, "_add_lazy_model").bind(body), CONNECT_ONE_SHOT)
+	assert(!DPRINT or IVDebug.dprint("REMOVE lazy model ", tr(body.name)))
+	body.model_visibility_changed.disconnect(model.set_visible)
+	body.model_visibility_changed.disconnect(_record_visibility_event)
+	body.model_visibility_changed.connect(_add_lazy_model.bind(body), CONNECT_ONE_SHOT)
 	body.remove_child_from_model_space(model)
 	model.queue_free() # it's now up to the Engine what to cache!
 	_lazy_tracker.erase(model)
@@ -130,6 +130,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		albedo_map = load(path)
 	if !albedo_map and !emission_map:
 		albedo_map = _fallback_albedo_map
+	@warning_ignore("unsafe_method_access") # Possible replacement class
 	model = _GlobeModel_.new(model_type, model_basis, albedo_map, emission_map)
 	array[1] = model
 
@@ -139,7 +140,7 @@ func _finish_model(array: Array) -> void: # Main thread
 	var model: Node3D = array[1]
 	body.add_child_to_model_space(model)
 	model.visible = body.model_visible
-	body.connect("model_visibility_changed", Callable(model, "set_visible"))
+	body.model_visibility_changed.connect(model.set_visible)
 
 
 func _finish_lazy_model(array: Array) -> void: # Main thread
@@ -147,8 +148,8 @@ func _finish_lazy_model(array: Array) -> void: # Main thread
 	var model: Node3D = array[1]
 	body.add_child_to_model_space(model)
 	model.visible = body.model_visible
-	body.connect("model_visibility_changed", Callable(model, "set_visible"))
-	body.connect("model_visibility_changed", Callable(self, "_record_visibility_event").bind(model))
+	body.model_visibility_changed.connect(model.set_visible)
+	body.model_visibility_changed.connect(_record_visibility_event.bind(model))
 	if _lazy_tracker.size() > max_lazy_models:
 		_cull_lazy_models()
 	_lazy_tracker[model] = _times[1] # engine time
@@ -167,7 +168,7 @@ func _cull_lazy_models() -> void: # Main thread
 			if _cull_times.size() > _cull_size:
 				_cull_times.pop_back()
 				_cull_models.pop_back()
-	assert(DPRINT and print("CULL ", _cull_times) or true)
+	assert(!DPRINT or IVDebug.dprint("CULL ", _cull_times))
 	for model in _cull_models:
 		_remove_lazy_model(model)
 	_cull_times.clear()
@@ -212,7 +213,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 
 func _preregister_files() -> void:
 	# Do this work once at project init, since file tree won't change.
-	assert(DPRINT and print("ModelBuilder searching for model files...") or true)
+	assert(!DPRINT or IVDebug.dprint("ModelBuilder searching for model files..."))
 	var models_search := IVGlobal.models_search
 	var maps_search := IVGlobal.maps_search
 	for table in IVGlobal.body_tables:
@@ -224,9 +225,9 @@ func _preregister_files() -> void:
 			var path := files.find_resource_file(models_search, file_prefix)
 			if path:
 				_model_paths[file_prefix] = path
-			assert(DPRINT and prints(file_prefix, path if path else "(NOT FOUND)") or true)
+			assert(!DPRINT or IVDebug.dprint(file_prefix, path if path else "(NOT FOUND)"))
 			for suffix in map_search_suffixes:
-				var file_match := file_prefix + (suffix as String)
+				var file_match := file_prefix + suffix
 				path = files.find_resource_file(maps_search, file_match)
 				if path:
 					_map_paths[file_match] = path

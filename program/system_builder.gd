@@ -32,7 +32,7 @@ var _sbg_builder: IVSBGBuilder
 
 
 func _project_init():
-	IVGlobal.connect("state_manager_inited", Callable(self, "_on_state_manager_inited").bind(), CONNECT_ONE_SHOT)
+	IVGlobal.state_manager_inited.connect(_on_state_manager_inited, CONNECT_ONE_SHOT)
 	_table_reader = IVGlobal.program.TableReader
 	_body_builder = IVGlobal.program.BodyBuilder
 	_sbg_builder = IVGlobal.program.SBGBuilder
@@ -77,7 +77,7 @@ func _add_bodies(table_name: String) -> void:
 
 
 func _add_camera() -> void:
-	var camera_script: Script = IVGlobal.script_classes._Camera_
-	var camera: Camera3D = camera_script.new()
+	var _Camera_: GDScript = IVGlobal.script_classes._Camera_
+	var camera: Camera3D = _Camera_.new()
 	var start_body: IVBody = IVGlobal.bodies[IVGlobal.home_name]
 	start_body.add_child(camera)

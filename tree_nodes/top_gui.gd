@@ -53,7 +53,8 @@ func _ready() -> void:
 
 
 func _on_project_builder_finished() -> void:
-	theme = IVGlobal.themes.main
+	if IVGlobal.themes.has("main"):
+		theme = IVGlobal.themes.main
 
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:

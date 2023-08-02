@@ -27,7 +27,7 @@ var fixed_sizes := {
 	two_pt = 2, # hack to allow small button height (e.g., in SystemNavigator)
 	medium = 22,
 	large = 28,
-	}
+}
 var gui_main_sizes := [12, 16, 20] # GUI_SMALL, GUI_MEDIUM, GUI_LARGE
 var gui_medium_sizes := [15, 20, 25]
 var gui_large_sizes := [18, 24, 31] 
@@ -39,7 +39,7 @@ var _primary_font_data: FontFile
 
 
 func _project_init() -> void:
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
+	IVGlobal.setting_changed.connect(_settings_listener)
 	_primary_font_data = IVGlobal.assets.primary_font_data
 	for key in fixed_sizes:
 		_fonts[key] = FontFile.new()

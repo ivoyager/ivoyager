@@ -125,9 +125,13 @@ func get_true_rows(table: String, field: String) -> Array:
 
 
 func has_row_name(table: String, row_name: String) -> bool:
-	return _enumerations.has(row_name) \
-			and _tables[table].has("name") \
-			and _tables[table]["name"].has(row_name)
+	if !_enumerations.has(row_name):
+		return false
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has("name"):
+		return false
+	var name_column: Array[String] = table_dict.name
+	return name_column.has(row_name)
 
 
 func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
@@ -135,11 +139,12 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	# 'null' value: i.e., "", NAN or -1 for STRING, REAL or INT, respectively.
 	# Always true for Type BOOL.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return false
 	if row_name:
 		row = _enumerations[row_name]
-	var value = _tables[table][field][row]
+	var value = table_dict[field][row]
 	var type := typeof(value)
 	if type == TYPE_FLOAT:
 		return !is_nan(value)
@@ -152,71 +157,78 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 
 func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return false
 	if row_name:
 		row = _enumerations[row_name]
-	return !is_nan(_tables[table][field][row])
+	return !is_nan(table_dict[field][row])
 
 
 func get_string(table: String, field: String, row := -1, row_name := "") -> String:
 	# Use for table Type 'STRING'; returns "" if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return ""
 	if row_name:
 		row = _enumerations[row_name]
-	return _tables[table][field][row]
+	return table_dict[field][row]
 
 
 func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
 	# Use for table Type 'BOOL'; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return false
 	if row_name:
 		row = _enumerations[row_name]
-	return _tables[table][field][row]
+	return table_dict[field][row]
 
 
 func get_int(table: String, field: String, row := -1, row_name := "") -> int:
 	# Use for table Type 'INT'; returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return -1
 	if row_name:
 		row = _enumerations[row_name]
-	return _tables[table][field][row]
+	return table_dict[field][row]
 
 
 func get_real(table: String, field: String, row := -1, row_name := "") -> float:
 	# Use for table Type 'REAL'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return NAN
 	if row_name:
 		row = _enumerations[row_name]
-	return _tables[table][field][row]
+	return table_dict[field][row]
 
 
 func get_array(table: String, field: String, row := -1, row_name := "") -> Array:
 	# Use for table Type 'ARRAY:xxxx'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_tables[table].has(field):
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
 		return []
 	if row_name:
 		row = _enumerations[row_name]
-	return _tables[table][field][row]
+	return table_dict[field][row]
 
 
 func get_real_precision(table: String, field: String, row := -1, row_name := "") -> int:
 	# field must be type REAL
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if !_table_precisions[table].has(field):
+	var table_prec_dict: Dictionary = _tables[table]
+	if !table_prec_dict.has(field):
 		return -1
 	if row_name:
 		row = _enumerations[row_name]
-	return _table_precisions[table][field][row]
+	return table_prec_dict[field][row]
 
 
 func get_least_real_precision(table: String, fields: Array, row := -1, row_name := "") -> int:

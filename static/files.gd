@@ -25,16 +25,17 @@ extends Object
 # const files := preload("res://ivoyager/static/files.gd")
 
 
-static func make_object_or_scene(script: Script) -> Object:
+static func make_object_or_scene(script: GDScript) -> Object:
 	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
 		return script.new()
 	# It's a scene if the script or an extended script has member "SCENE" or
 	# "SCENE_OVERRIDE". We create the scene and return the root node.
+	@warning_ignore("unsafe_property_access")
 	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
 	var pkd_scene: PackedScene = load(scene_path)
 	assert(pkd_scene, "Expected scene path at: " + scene_path)
 	var root_node: Node = pkd_scene.instantiate()
-	if root_node.script != script: # root_node.script may be parent class
+	if root_node.get_script() != script: # root_node.script may be parent class
 		root_node.set_script(script)
 	return root_node
 
@@ -160,7 +161,7 @@ static func make_or_clear_dir(dir_path: String) -> void:
 #	return result
 
 
-static func find_resource_file(dir_paths: Array, prefix: String,
+static func find_resource_file(dir_paths: Array[String], prefix: String,
 		search_prefix_subdirectories := true) -> String:
 	# Searches for file in the given directory path that begins with file_prefix
 	# followed by dot. Returns resource path if it exists. We expect to
@@ -185,7 +186,7 @@ static func find_resource_file(dir_paths: Array, prefix: String,
 			if !dir.current_is_dir():
 				if file_name.get_extension() == "import":
 					if file_name.substr(0, match_size).matchn(prefix_dot):
-						return dir_path.plus_file(file_name).get_basename()
+						return dir_path.path_join(file_name).get_basename()
 			elif search_prefix_subdirectories:
 				if file_name.matchn(prefix):
 					var subdir_path: String = dir_path + "/" + file_name
@@ -219,7 +220,7 @@ static func find_resource_file(dir_paths: Array, prefix: String,
 #	return ""
 
 
-static func find_and_load_resource(dir_paths: Array, prefix: String,
+static func find_and_load_resource(dir_paths: Array[String], prefix: String,
 		search_prefix_subdirectories := true) -> Resource:
 	var path := find_resource_file(dir_paths, prefix, search_prefix_subdirectories)
 	if path:
