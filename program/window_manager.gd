@@ -54,11 +54,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _change_fullscreen() -> void:
 	if !_allow_fullscreen_toggle:
 		return
-	get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN if (!((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN))) else Window.MODE_WINDOWED
+	var is_fullscreen := ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+			or (get_window().mode == Window.MODE_FULLSCREEN))
+	get_window().mode = (Window.MODE_EXCLUSIVE_FULLSCREEN if !is_fullscreen else Window.MODE_WINDOWED)
 
 
 func _update_buttons() -> void:
-	if _is_fullscreen == ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN)):
+	if _is_fullscreen == ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+			or (get_window().mode == Window.MODE_FULLSCREEN)):
 		return
 	_is_fullscreen = !_is_fullscreen
 	if _is_fullscreen:

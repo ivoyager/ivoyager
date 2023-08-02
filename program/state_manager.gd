@@ -131,9 +131,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _on_unhandled_key_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_pause"):
+	if event.is_action_pressed(&"toggle_pause"):
 		change_pause()
-	elif event.is_action_pressed("quit"):
+	elif event.is_action_pressed(&"quit"):
 		quit(false)
 	else:
 		return

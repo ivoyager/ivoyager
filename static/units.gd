@@ -207,7 +207,7 @@ const MULTIPLIERS := {
 }
 
 const FUNCTIONS := {
-	# TODO 4.0: this will become a real functions dictionary
+	# TODO34: use lambdas
 	"degC" : "convert_centigrade",
 	"degF" : "convert_fahrenheit",
 }

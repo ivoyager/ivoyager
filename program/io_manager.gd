@@ -63,7 +63,7 @@ func _project_init() -> void:
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
-	_thread.start(Callable(self, "_run_thread").bind(0))
+	_thread.start(_run_thread.bind(0))
 
 
 func _block_quit_until_finished() -> void:

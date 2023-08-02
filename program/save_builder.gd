@@ -95,7 +95,7 @@ var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
 var properties_arrays := [
 	"PERSIST_PROPERTIES",
 	"PERSIST_PROPERTIES2",
-	]
+]
 
 # gamesave contents
 var _gs_n_objects := 1

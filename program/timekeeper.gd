@@ -49,12 +49,14 @@ signal speed_changed()
 signal date_changed() # normal day rollover
 signal time_altered(previous_time) # someone manipulated time!
 
+
 enum { # date_format; first three are alwyas Year, Month, Day
 	DATE_FORMAT_Y_M_D, # Year (2000...), Month (1 to 12), Day (1 to 31)
 	DATE_FORMAT_Y_M_D_Q, # Q, Quarter (1 to 4)
 	DATE_FORMAT_Y_M_D_Q_YQ, # YQ, increasing quarter ticker = Y * 4 + (Q - 1)
 	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM, increasing month ticker = Y * 12 + (M - 1)
 }
+
 
 const SECOND := IVUnits.SECOND # sim_time conversion
 const MINUTE := IVUnits.MINUTE

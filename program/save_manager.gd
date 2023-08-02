@@ -66,23 +66,23 @@ var _has_been_saved := false
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
-	IVGlobal.connect("save_requested", Callable(self, "_on_save_requested"))
-	IVGlobal.connect("load_requested", Callable(self, "_on_load_requested"))
-	IVGlobal.connect("save_quit_requested", Callable(self, "save_quit"))
+	IVGlobal.save_requested.connect(_on_save_requested)
+	IVGlobal.load_requested.connect(_on_load_requested)
+	IVGlobal.save_quit_requested.connect(save_quit)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
-	if event.is_action_pressed("quick_save"):
+	if event.is_action_pressed(&"quick_save"):
 		_on_save_requested("", true)
-	elif event.is_action_pressed("save_as"):
+	elif event.is_action_pressed(&"save_as"):
 		_on_save_requested("", false)
-	elif event.is_action_pressed("quick_load"):
+	elif event.is_action_pressed(&"quick_load"):
 		_on_load_requested("", true)
-	elif event.is_action_pressed("load_game"):
+	elif event.is_action_pressed(&"load_game"):
 		_on_load_requested("", false)
-	elif event.is_action_pressed("save_quit"):
+	elif event.is_action_pressed(&"save_quit"):
 		save_quit()
 	else:
 		return
@@ -95,7 +95,7 @@ func save_quit() -> void:
 	if _state.network_state == IS_CLIENT:
 		return
 	if quick_save():
-		IVGlobal.connect("game_save_finished", Callable(_state_manager, "quit").bind(true))
+		IVGlobal.game_save_finished.connect(_state_manager.quit.bind(true))
 
 
 func quick_save() -> bool:
@@ -233,7 +233,7 @@ func _load_callback(gamesave: Array, err: int) -> void:
 	IVGlobal.game_load_finished.emit()
 	_state.is_system_built = true
 	IVGlobal.system_tree_built_or_loaded.emit(false)
-	IVGlobal.connect("simulator_started", Callable(self, "_simulator_started_after_load").bind(), CONNECT_ONE_SHOT)
+	IVGlobal.simulator_started.connect(_simulator_started_after_load, CONNECT_ONE_SHOT)
 
 
 func _simulator_started_after_load() -> void:

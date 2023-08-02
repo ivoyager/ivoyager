@@ -84,9 +84,10 @@ var prefix_symbols: Array[String] = [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ]
-var large_numbers: Array[StringName] = [&"TXT_MILLION", &"TXT_BILLION", &"TXT_TRILLION",
-	&"TXT_QUADRILLION", &"TXT_QUINTILLION", &"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION",
-	 &"TXT_NONILLION", &"TXT_DECILLION"] # e6, ..., e33; localized in _project_init()
+var large_numbers: Array[StringName] = [
+	&"TXT_MILLION", &"TXT_BILLION", &"TXT_TRILLION", &"TXT_QUADRILLION", &"TXT_QUINTILLION",
+	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
+] # e6, ..., e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
 # or functions dictionaries. (The converse is not true.)
@@ -231,6 +232,9 @@ func _project_init():
 
 func number_option(x: float, option_type: int, unit := "", precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED, lat_long_type := N_S_E_W) -> String:
+	
+	# DEPRECIATE34: Use Callables in GUI instead.
+	
 	# wrapper for functions below
 	match option_type:
 		NAMED_NUMBER:
@@ -507,3 +511,4 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	if prepend_space:
 		return number_str + " " + unit
 	return number_str + unit
+

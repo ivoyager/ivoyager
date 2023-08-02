@@ -28,6 +28,7 @@ static func get_selection_manager(control: Control) -> IVSelectionManager:
 	var ancestor: Node = control.get_parent()
 	while ancestor is Control:
 		if "selection_manager" in ancestor:
+			@warning_ignore("unsafe_property_access")
 			var selection_manager: IVSelectionManager = ancestor.selection_manager
 			if selection_manager:
 				return selection_manager

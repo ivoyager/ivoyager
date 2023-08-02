@@ -694,21 +694,21 @@ func _add_rotating_space() -> void:
 	rotating_space.position.x = orbit_dist - rotating_space.characteristic_length
 
 
-func _on_orbit_changed(is_scheduled: bool) -> void:
+func _on_orbit_changed(_is_scheduled: bool) -> void:
 	if flags & IS_TIDALLY_LOCKED or flags & IS_AXIS_LOCKED:
 		reset_orientation_and_rotation()
-	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
-		# scheduled changes happen on client so don't need sync
-		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
-				orbit.m_modifiers)
+#	if !is_scheduled and _state.network_state == IS_SERVER: # sync clients
+#		# scheduled changes happen on client so don't need sync
+#		rpc("_orbit_sync", orbit.reference_normal, orbit.elements_at_epoch, orbit.element_rates,
+#				orbit.m_modifiers)
 
 
-@rpc("any_peer") func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
-		element_rates: Array, m_modifiers: Array) -> void: # client-side network game only
-	# FIXME34: All rpc
-	if _tree.get_remote_sender_id() != 1:
-		return # from server only
-	orbit.orbit_sync(reference_normal, elements_at_epoch, element_rates, m_modifiers)
+#@rpc("any_peer") func _orbit_sync(reference_normal: Vector3, elements_at_epoch: Array,
+#		element_rates: Array, m_modifiers: Array) -> void: # client-side network game only
+#	# FIXME34: All rpc
+#	if _tree.get_remote_sender_id() != 1:
+#		return # from server only
+#	orbit.orbit_sync(reference_normal, elements_at_epoch, element_rates, m_modifiers)
 
 
 func _on_time_altered(_previous_time: float) -> void:

@@ -38,10 +38,10 @@ var _is_reversed := false
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
-	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
-	_timekeeper.connect("time_altered", Callable(self, "_on_time_altered"))
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	_timekeeper.time_altered.connect(_on_time_altered)
 	if IVGlobal.allow_time_reversal:
-		_timekeeper.connect("speed_changed", Callable(self, "_update_for_time_reversal"))
+		_timekeeper.speed_changed.connect(_update_for_time_reversal)
 
 
 func _clear() -> void:
@@ -146,7 +146,7 @@ func _update_for_time_reversal() -> void:
 		var signal_info: Array = _ordered_signal_infos[i]
 		signal_info[0] += (-signal_info[1] if _is_reversed else signal_info[1])
 		i += 1
-	_ordered_signal_infos.sort_custom(Callable(self, "_sort_reverse" if _is_reversed else "_sort_forward"))
+	_ordered_signal_infos.sort_custom(_sort_reverse if _is_reversed else _sort_forward)
 
 
 func _on_time_altered(previous_time: float) -> void:

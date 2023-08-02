@@ -309,7 +309,7 @@ func _init_extensions() -> void:
 		var path := "res://" + dir_name + "/" + dir_name + ".gd"
 		if !files.exists(path):
 			continue
-		var extension_script: Script = load(path)
+		var extension_script: GDScript = load(path)
 		if (
 				not "EXTENSION_NAME" in extension_script
 				or not "EXTENSION_VERSION" in extension_script

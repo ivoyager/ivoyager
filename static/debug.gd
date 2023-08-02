@@ -65,8 +65,10 @@ static func no_nans(thing) -> bool:
 	var indexes := []
 	match typeof(thing):
 		TYPE_ARRAY:
+			@warning_ignore("unsafe_method_access")
 			indexes = range(thing.size())
 		TYPE_DICTIONARY:
+			@warning_ignore("unsafe_method_access")
 			indexes = thing.keys()
 		TYPE_VECTOR3:
 			indexes = range(3)
