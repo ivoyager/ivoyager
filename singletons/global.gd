@@ -94,8 +94,8 @@ signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
 
-
-const DEBUG_SIGNAL_VERBOSELY := true # print IVGlobal signal emissions in debug builds
+# below can be changed only by autoload
+var signal_verbosely := true # print all IVGlobal signal emissions in debug builds
 
 
 # containers - write authority indicated; safe to localize container reference
@@ -103,9 +103,9 @@ var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
 var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
 var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
 var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
-var program := {} # all objects instantiated by IVProjectBuilder 
-var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
-var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
+var program := {} # IVProjectBuilder instantiated objects (base or override classes)
+var script_classes := {} # IVProjectBuilder defined script classes (base or override)
+var assets := {} # AssetsInitializer loads from dynamic paths specified below
 var settings := {} # IVSettingsManager
 var tables := {} # IVTableImporter; indexed [table_name][field][row_int]
 var enumerations := {} # IVTableImporter; all row names and listed enums (globally unique)
@@ -114,8 +114,8 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
-var world_targeting := [] # IVWorldControl & others; data for 3D world selection
-var fragment_targeting := [] # IVFragmentIdentifier; data for shader fragment id
+var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
+var fragment_targeting := [] # IVFragmentIdentifier; optimized data for shader fragment id
 var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
@@ -257,7 +257,7 @@ func _ready() -> void:
 	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
 	
-	if OS.is_debug_build and DEBUG_SIGNAL_VERBOSELY:
+	if OS.is_debug_build and signal_verbosely:
 		# TEST34: Does get_signal_list() include script or base object signals?
 		# TEST34: First connection always called first?
 		var signal_list := get_signal_list()
