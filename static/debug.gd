@@ -50,6 +50,14 @@ static func signal_verbosely(object: Object, signal_name: String, prefix: String
 	object.connect(signal_name, IVDebug._on_verbose_signal.bind(prefix + " " + signal_name))
 
 
+static func signal_all_verbosely(object: Object, prefix: String) -> void:
+	# All object signals will be printed when emitted. See signal_verbosely().
+	var signal_list := object.get_signal_list()
+	for signal_dict in signal_list:
+		var signal_name: String = signal_dict.name
+		signal_verbosely(object, signal_name, prefix)
+
+
 static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,
 		arg5 = null, arg6 = null, arg7 = null, arg8 = null, arg9 = null) -> void:
 	# Expects signal_name as last bound argument.

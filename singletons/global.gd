@@ -258,10 +258,6 @@ func _ready() -> void:
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
 	
 	if OS.is_debug_build and signal_verbosely:
-		# TEST34: Does get_signal_list() include script or base object signals?
 		# TEST34: First connection always called first?
-		var signal_list := get_signal_list()
-		for signal_dict in signal_list:
-			var signal_name: String = signal_dict.name
-			IVDebug.signal_verbosely(self, signal_name, "IVGlobal")
+		IVDebug.signal_all_verbosely(self, "IVGlobal")
 
