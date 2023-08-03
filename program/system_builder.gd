@@ -23,6 +23,7 @@ extends RefCounted
 # Builds the star system(s) from data tables & binaries.
 
 # project vars
+var add_small_bodies_groups := false
 var add_camera := true
 
 # private
@@ -51,7 +52,8 @@ func build_system_tree() -> void:
 	IVGlobal.about_to_build_system_tree.emit()
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
-	_sbg_builder.build_sbgs()
+	if add_small_bodies_groups:
+		_sbg_builder.build_sbgs()
 	if add_camera:
 		_add_camera()
 	IVGlobal.system_tree_built_or_loaded.emit(true)

@@ -120,37 +120,37 @@ var initializers := {
 }
 
 var program_refcounteds := {
-#	# RefCounted classes. IVProjectBuilder instances one of each and adds to
-#	# dictionary IVGlobal.program. No save/load persistence.
-#
-#	# need first!
+	# RefCounted classes. IVProjectBuilder instances one of each and adds to
+	# dictionary IVGlobal.program. No save/load persistence.
+	
+	# need first!
 	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
-#
-#	# builders (generators, often from table or binary data)
-#	_EnvironmentBuilder_ = IVEnvironmentBuilder,
-#	_SystemBuilder_ = IVSystemBuilder,
-#	_BodyBuilder_ = IVBodyBuilder,
-#	_SBGBuilder_ = IVSBGBuilder,
-#	_OrbitBuilder_ = IVOrbitBuilder,
-#	_SelectionBuilder_ = IVSelectionBuilder,
-#	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
+	
+	# builders (generators, often from table or binary data)
+	_EnvironmentBuilder_ = IVEnvironmentBuilder,
+	_SystemBuilder_ = IVSystemBuilder,
+	_BodyBuilder_ = IVBodyBuilder,
+	_SBGBuilder_ = IVSBGBuilder,
+	_OrbitBuilder_ = IVOrbitBuilder,
+	_SelectionBuilder_ = IVSelectionBuilder,
+	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 #	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
-#
-#	# finishers (modify something on entering tree)
-#	_BodyFinisher_ = IVBodyFinisher,
-#	_SBGFinisher_ = IVSBGFinisher,
-#
-#	# managers
+	
+	# finishers (modify something on entering tree)
+	_BodyFinisher_ = IVBodyFinisher,
+	_SBGFinisher_ = IVSBGFinisher,
+	
+	# managers
 	_IOManager_ = IVIOManager,
 	_InputMapManager_ = IVInputMapManager,
-#	_FontManager_ = IVFontManager, # ok to replace
-#	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
+	_FontManager_ = IVFontManager, # ok to replace
+	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
 	_MainMenuManager_ = IVMainMenuManager,
-#	_SleepManager_ = IVSleepManager,
-#	_WikiManager_ = IVWikiManager,
-#	_ModelManager_ = IVModelManager,
-#
-#	# tools and resources
+	_SleepManager_ = IVSleepManager,
+	_WikiManager_ = IVWikiManager,
+	_ModelManager_ = IVModelManager,
+	
+	# tools and resources
 	_TableReader_ = IVTableReader,
 	_QuantityFormatter_ = IVQuantityFormatter,
 	_ViewDefaults_ = IVViewDefaults,
@@ -163,7 +163,7 @@ var program_nodes := {
 	_Scheduler_ = IVScheduler,
 	_ViewManager_ = IVViewManager,
 #	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
-#
+	
 	# Nodes below are ordered for input handling (last is first). We mainly
 	# need to intercept cntr-something actions (quit, full-screen, etc.) before
 	# CameraHandler. Universe children can be reordered after
@@ -178,12 +178,12 @@ var program_nodes := {
 }
 
 var gui_nodes := {
-#	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
-#	# substitute Control set in 'top_gui') and to dictionary IVGlobal.program.
-#	# Order determines visual 'on top' and input event handling: last added
-#	# is on top and 1st handled. TopGUI children can be reordered after
-#	# 'project_nodes_added' signal using API below.
-#	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
+	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
+	# substitute Control set in 'top_gui') and to dictionary IVGlobal.program.
+	# Order determines visual 'on top' and input event handling: last added
+	# is on top and 1st handled. TopGUI children can be reordered after
+	# 'project_nodes_added' signal using API below.
+	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
 	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
 	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)

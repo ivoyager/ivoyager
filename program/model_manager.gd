@@ -213,7 +213,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 
 func _preregister_files() -> void:
 	# Do this work once at project init, since file tree won't change.
-	assert(!DPRINT or IVDebug.dprint("ModelBuilder searching for model files..."))
+	assert(!DPRINT or IVDebug.dprint("ModelManager searching for model & texture files..."))
 	var models_search := IVGlobal.models_search
 	var maps_search := IVGlobal.maps_search
 	for table in IVGlobal.body_tables:
@@ -225,11 +225,12 @@ func _preregister_files() -> void:
 			var path := files.find_resource_file(models_search, file_prefix)
 			if path:
 				_model_paths[file_prefix] = path
-			assert(!DPRINT or IVDebug.dprint(file_prefix, path if path else "(NOT FOUND)"))
+			assert(!DPRINT or IVDebug.dprint(path if path else "No model matching " + file_prefix))
 			for suffix in map_search_suffixes:
 				var file_match := file_prefix + suffix
 				path = files.find_resource_file(maps_search, file_match)
 				if path:
 					_map_paths[file_match] = path
+				assert(!DPRINT or IVDebug.dprint(path if path else "No texture matching " + file_match))
 			row += 1
 

@@ -97,9 +97,9 @@ signal open_wiki_requested(wiki_title)
 
 # containers - write authority indicated; safe to localize container reference
 var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
-var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
-var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
+var times: Array[float] = [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)]
+var date: Array[int] = [] # IVTimekeeper; Gregorian [year, month, day]
+var clock: Array[int] = [] # IVTimekeeper; UT [hour, minute, second]
 var program := {} # IVProjectBuilder instantiated objects (base or override classes)
 var script_classes := {} # IVProjectBuilder defined script classes (base or override)
 var assets := {} # AssetsInitializer loads from dynamic paths specified below
@@ -113,12 +113,12 @@ var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
 var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
 var fragment_targeting := [] # IVFragmentIdentifier; optimized data for shader fragment id
-var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
+var top_bodies: Array[Node3D] = [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
 var blocking_popups := [] # add popups that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # IVProjectBuilder [[name, version, build, state, ymd], ...]
+var extensions: Array[Array] = [] # IVProjectBuilder [[name, version, build, state, ymd], ...]
 
 # project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""
@@ -199,10 +199,10 @@ var table_import := {
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 
-var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
-var wikipedia_locales := ["en"] # add locales present in data tables
+var wiki_titles_import: Array[String] = ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
+var wikipedia_locales: Array[String] = ["en"] # add locales present in data tables
 
-var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
+var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelManager first looks for an existing
@@ -213,22 +213,22 @@ var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # o
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 
-var models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
-var maps_search := ["res://ivoyager_assets/maps"]
-var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
-var rings_search := ["res://ivoyager_assets/rings"]
+var models_search: Array[String] = ["res://ivoyager_assets/models"] # prepend to prioritize
+var maps_search: Array[String] = ["res://ivoyager_assets/maps"]
+var bodies_2d_search: Array[String] = ["res://ivoyager_assets/bodies_2d"]
+var rings_search: Array[String] = ["res://ivoyager_assets/rings"]
 
 var asset_paths := {
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # loaded into "assets" dict by IVAssetInitializer
-	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
+	primary_font = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 #	fallback_model = "res://ivoyager_assets/models/phobos/Phobos.1_1000.glb", # implement in 0.0.14
 }
-var translations := [
+var translations: Array[String] = [
 	# Added here so extensions can modify. Note that IVTranslationImporter will
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
