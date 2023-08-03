@@ -128,10 +128,15 @@ func _read_cache() -> void:
 	# Populate _cached_views once at project init on main thread.
 	var file := FileAccess.open(file_path, FileAccess.READ)
 	if !file:
-		print("Did not find cache file ", file_path)
+		prints("Did not find cache file", file_path)
 		return
-	var dict: Dictionary = file.get_var()
+	var file_var = file.get_var() # untyped for safety
 	file.close()
+	if typeof(file_var) != TYPE_DICTIONARY:
+		prints("Will overwrite obsolete cache file", file_path)
+		return
+	@warning_ignore("unsafe_cast")
+	var dict := file_var as Dictionary
 	var bad_cache_data := false
 	for key in dict:
 		var data: Array = dict[key]

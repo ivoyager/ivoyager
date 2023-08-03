@@ -266,7 +266,7 @@ func quit(force_quit := false) -> void:
 	_state.is_quitting = true
 	IVGlobal.about_to_stop_before_quit.emit()
 	require_stop(self, NetworkStopSync.QUIT, true)
-	await self.threads_finished
+	await threads_finished
 	IVGlobal.about_to_quit.emit()
 	assert(IVDebug.dprint_orphan_nodes())
 	print("Quitting...")

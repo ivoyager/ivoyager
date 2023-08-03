@@ -235,7 +235,7 @@ func _notification(what: int) -> void:
 func _on_notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		if is_now:
-			set_now()
+			set_now_from_operating_system()
 
 
 
@@ -399,7 +399,7 @@ func set_time(new_time: float) -> void:
 	time_altered.emit(previous_time)
 
 
-func set_now() -> void:
+func set_now_from_operating_system() -> void:
 	if !_allow_time_setting:
 		return
 	if _network_state == IS_CLIENT:
@@ -411,6 +411,7 @@ func set_now() -> void:
 	var previous_time := time
 	time = get_time_from_operating_system()
 	_reset_time()
+	print("[date ints][clock ints] from operating system: ", date, clock)
 	time_altered.emit(previous_time)
 
 
@@ -461,7 +462,7 @@ func can_decr_speed() -> bool:
 func _on_about_to_start_simulator(is_new_game: bool) -> void:
 	if is_new_game:
 		if start_real_world_time:
-			set_now()
+			set_now_from_operating_system()
 
 
 func _set_init_state() -> void:
@@ -511,7 +512,7 @@ func _on_run_state_changed(is_running: bool) -> void:
 	set_process(is_running)
 	if is_running and is_now:
 		await _tree.process_frame
-		set_now()
+		set_now_from_operating_system()
 
 
 func _on_network_state_changed(network_state: IVEnums.NetworkState) -> void:

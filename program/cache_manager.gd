@@ -171,18 +171,18 @@ func _read_cache() -> void:
 	# it blocks until completed.
 	var file := FileAccess.open(_file_path, FileAccess.READ)
 	if !file:
-		prints("Did not find cache file:", _file_path)
+		prints("Did not find cache file", _file_path)
 		return
 	var file_var = file.get_var() # untyped for safety
 	# test for version and type consistency (no longer used items are ok)
 	@warning_ignore("unsafe_method_access")
 	if typeof(file_var) != TYPE_DICTIONARY or file_var.get("__version__", -1) != cache_file_version:
-		prints("Found obsolete cache file (will overwrite):", _file_path)
+		prints("Will overwrite obsolete cache file", _file_path)
 		return
 	for key in file_var:
 		if current.has(key):
 			if typeof(current[key]) != typeof(file_var[key]):
-				prints("Found obsolete cache file (will overwrite):", _file_path)
+				prints("Will overwrite obsolete cache file:", _file_path)
 				return
 	# file cache ok
 	_cached = file_var

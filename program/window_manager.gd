@@ -22,6 +22,8 @@ extends Node
 
 # Handles Full Screen toggles. Optionally adds a menu button.
 
+# TODO34: This node should signal changes and NOT reference IVMainMenuManager.
+
 var add_menu_button := false
 var button_priority := 1001
 
@@ -46,7 +48,7 @@ func _ready() -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_fullscreen"):
+	if event.is_action_pressed(&"toggle_fullscreen"):
 		_change_fullscreen()
 		_viewport.set_input_as_handled()
 
