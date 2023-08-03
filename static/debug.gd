@@ -51,7 +51,7 @@ static func signal_verbosely(object: Object, signal_name: String, prefix: String
 
 
 static func signal_all_verbosely(object: Object, prefix: String) -> void:
-	# All object signals will be printed when emitted. See signal_verbosely().
+	# See signal_verbosely. Prints all emitted signals from object.
 	var signal_list := object.get_signal_list()
 	for signal_dict in signal_list:
 		var signal_name: String = signal_dict.name

@@ -94,9 +94,6 @@ signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
 
-# below can be changed only by autoload
-var signal_verbosely := true # print all IVGlobal signal emissions in debug builds
-
 
 # containers - write authority indicated; safe to localize container reference
 var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
@@ -256,8 +253,4 @@ var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_p
 func _ready() -> void:
 	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
-	
-	if OS.is_debug_build and signal_verbosely:
-		# TEST34: First connection always called first?
-		IVDebug.signal_all_verbosely(self, "IVGlobal")
 

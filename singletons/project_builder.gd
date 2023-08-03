@@ -124,7 +124,7 @@ var prog_refs := {
 #	# dictionary IVGlobal.program. No save/load persistence.
 #
 #	# need first!
-#	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
+	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
 #
 #	# builders (generators, often from table or binary data)
 #	_EnvironmentBuilder_ = IVEnvironmentBuilder,
@@ -141,8 +141,8 @@ var prog_refs := {
 #	_SBGFinisher_ = IVSBGFinisher,
 #
 #	# managers
+	_IOManager_ = IVIOManager,
 #	_InputMapManager_ = IVInputMapManager,
-#	_IOManager_ = IVIOManager,
 #	_FontManager_ = IVFontManager, # ok to replace
 #	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
 #	_MainMenuManager_ = IVMainMenuManager,
