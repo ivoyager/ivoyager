@@ -50,6 +50,3 @@ func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
 	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(sbg_orbits)
 
-
-
-

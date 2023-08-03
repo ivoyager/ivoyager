@@ -35,7 +35,6 @@ extends RefCounted
 #    enumerations[row_name] -> row_int (globally unique!)
 #       -this dictionary also enumerates enums listed in 'data_table_enums'
 
-
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 const math := preload("res://ivoyager/static/math.gd")

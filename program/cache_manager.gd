@@ -26,6 +26,7 @@ extends RefCounted
 
 # project vars - set in subclass _init(); project can modify at init
 var cache_file_name := "generic_item.ivbinary" # change in subclass
+var cache_file_version := 1 # change in subclass; non-current is overwritten
 var defaults: Dictionary # subclass defines in _init()
 var current: Dictionary # subclass makes or references an existing dict
 
@@ -161,6 +162,7 @@ func _write_cache() -> void:
 	for key in defaults:
 		if current[key] != defaults[key]: # cache only non-default values
 			_cached[key] = current[key]
+	_cached["__version__"] = cache_file_version
 	_io_manager.store_var_to_file(_cached.duplicate(true), _file_path)
 
 
@@ -169,9 +171,22 @@ func _read_cache() -> void:
 	# it blocks until completed.
 	var file := FileAccess.open(_file_path, FileAccess.READ)
 	if !file:
-		prints("Did not find cache file:", _file_path)
+		prints("Did not find cache file", _file_path)
 		return
-	_cached = file.get_var()
+	var file_var = file.get_var() # untyped for safety
+	# test for version and type consistency (no longer used items are ok)
+	@warning_ignore("unsafe_method_access")
+	if typeof(file_var) != TYPE_DICTIONARY or file_var.get("__version__", -1) != cache_file_version:
+		prints("Will overwrite obsolete cache file", _file_path)
+		return
+	for key in file_var:
+		if current.has(key):
+			if typeof(current[key]) != typeof(file_var[key]):
+				prints("Will overwrite obsolete cache file:", _file_path)
+				return
+	# file cache ok
+	_cached = file_var
 	for key in _cached:
 		if current.has(key): # possibly old verson obsoleted key
-			current[key] = _cached[key] # reference ok
+			current[key] = _cached[key]
+

@@ -41,6 +41,7 @@ var selection_manager: IVSelectionManager
 
 
 func _init() -> void:
+	name = &"TopGUI"
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 	IVGlobal.project_builder_finished.connect(_on_project_builder_finished)
@@ -60,7 +61,7 @@ func _on_project_builder_finished() -> void:
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 	if is_new_game:
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
-		@warning_ignore("unsafe_method_access") # Extension can replace base class
+		@warning_ignore("unsafe_method_access") # possible replacement class
 		selection_manager = _SelectionManager_.new()
 		add_child(selection_manager)
 

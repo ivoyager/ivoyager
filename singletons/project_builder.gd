@@ -49,7 +49,7 @@ extends Node
 #     (Above happens before anything else is instantiated!)
 # 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
 #    init values of instantiated Nodes (before they are added to tree) or
-#    References (before they are used). Nodes and References can be
+#    RefCounteds (before they are used). Nodes and RefCounteds can be
 #    accessed after instantiation in the IVGlobal.program dictionary.
 # 4. Build your project GUI using the many widgets in ivoyager/gui_widgets.
 #
@@ -108,7 +108,7 @@ var add_top_gui_to_universe := true # happens in add_program_nodes()
 # and the 'name' property in the case of nodes.
 
 var initializers := {
-#	# Reference classes. IVProjectBuilder instances these (first!) and adds to
+#	# RefCounted classes. IVProjectBuilder instances these (first!) and adds to
 #	# dictionary IVGlobal.program. They may erase themselves from
 #	# IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
@@ -119,77 +119,75 @@ var initializers := {
 	_TableImporter_ = IVTableImporter,
 }
 
-var prog_refs := {
-#	# Reference classes. IVProjectBuilder instances one of each and adds to
-#	# dictionary IVGlobal.program. No save/load persistence.
-#
-#	# need first!
-#	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
-#
-#	# builders (generators, often from table or binary data)
-#	_EnvironmentBuilder_ = IVEnvironmentBuilder,
-#	_SystemBuilder_ = IVSystemBuilder,
-#	_BodyBuilder_ = IVBodyBuilder,
-#	_SBGBuilder_ = IVSBGBuilder,
-#	_OrbitBuilder_ = IVOrbitBuilder,
-#	_SelectionBuilder_ = IVSelectionBuilder,
-#	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
+var program_refcounteds := {
+	# RefCounted classes. IVProjectBuilder instances one of each and adds to
+	# dictionary IVGlobal.program. No save/load persistence.
+	
+	# need first!
+	_SettingsManager_ = IVSettingsManager, # 1st so IVGlobal.settings are valid
+	
+	# builders (generators, often from table or binary data)
+	_EnvironmentBuilder_ = IVEnvironmentBuilder,
+	_SystemBuilder_ = IVSystemBuilder,
+	_BodyBuilder_ = IVBodyBuilder,
+	_SBGBuilder_ = IVSBGBuilder,
+	_OrbitBuilder_ = IVOrbitBuilder,
+	_SelectionBuilder_ = IVSelectionBuilder,
+	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
 #	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
-#
-#	# finishers (modify something on entering tree)
-#	_BodyFinisher_ = IVBodyFinisher,
-#	_SBGFinisher_ = IVSBGFinisher,
-#
-#	# managers
-#	_InputMapManager_ = IVInputMapManager,
-#	_IOManager_ = IVIOManager,
-#	_FontManager_ = IVFontManager, # ok to replace
-#	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
-#	_MainMenuManager_ = IVMainMenuManager,
-#	_SleepManager_ = IVSleepManager,
-#	_WikiManager_ = IVWikiManager,
-#	_ModelManager_ = IVModelManager,
-#
-#	# tools and resources
-#	_TableReader_ = IVTableReader,
-#	_QuantityFormatter_ = IVQuantityFormatter,
-#	_ViewDefaults_ = IVViewDefaults,
+	
+	# finishers (modify something on entering tree)
+	_BodyFinisher_ = IVBodyFinisher,
+	_SBGFinisher_ = IVSBGFinisher,
+	
+	# managers
+	_IOManager_ = IVIOManager,
+	_InputMapManager_ = IVInputMapManager,
+	_FontManager_ = IVFontManager, # ok to replace
+	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
+	_MainMenuManager_ = IVMainMenuManager,
+	_SleepManager_ = IVSleepManager,
+	_WikiManager_ = IVWikiManager,
+	_ModelManager_ = IVModelManager,
+	
+	# tools and resources
+	_TableReader_ = IVTableReader,
+	_QuantityFormatter_ = IVQuantityFormatter,
+	_ViewDefaults_ = IVViewDefaults,
 }
 
-var prog_nodes := {
-#	# IVProjectBuilder instances one of each and adds as child to Universe
-#	# (after TopGUI) and to dictionary IVGlobal.program.
-#	# Order determines input event handling (last child is 1st input handled).
-#	# Universe children can be reordered after 'project_nodes_added' signal
-#	# using API below.
-#	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
-#	_Scheduler_ = IVScheduler,
-#	_SBGHUDsState_ = IVSBGHUDsState,
-#	_ViewManager_ = IVViewManager,
+var program_nodes := {
+	# IVProjectBuilder instances one of each and adds as child to Universe
+	# (after TopGUI) and to dictionary IVGlobal.program.
+	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
+	_Scheduler_ = IVScheduler,
+	_ViewManager_ = IVViewManager,
 #	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
-#
-#	# Nodes below are ordered for input handling. We mainly need to intercept
-#	# cntr-something actions (quit, full-screen, etc.) before CameraHandler.
-#	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
-#	_Timekeeper_ = IVTimekeeper,
-#	_WindowManager_ = IVWindowManager,
-#	_BodyHUDsState_ = IVBodyHUDsState,
+	
+	# Nodes below are ordered for input handling (last is first). We mainly
+	# need to intercept cntr-something actions (quit, full-screen, etc.) before
+	# CameraHandler. Universe children can be reordered after
+	# 'project_nodes_added' signal using API below.
+	_CameraHandler_ = IVCameraHandler, # remove or replace if not using IVCamera
+	_Timekeeper_ = IVTimekeeper,
+	_WindowManager_ = IVWindowManager,
+	_SBGHUDsState_ = IVSBGHUDsState, # (likely to have input in future)
+	_BodyHUDsState_ = IVBodyHUDsState,
 #	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
-#	_StateManager_ = IVStateManager,
+	_StateManager_ = IVStateManager,
 }
 
 var gui_nodes := {
-#	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
-#	# whatever substitute Control is set in 'top_gui') and to dictionary
-#	# IVGlobal.program.
-#	# Order determines visual 'on top' and input event handling (last in list
-#	# is on top and 1st handled). TopGUI children can be reordered after
-#	# 'project_nodes_added' signal using API below.
-#	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
-#	_WorldController_ = IVWorldController, # Control ok
-#	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
-#	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
-#	_SplashScreen_ = null, # assign here if convenient (below popups)
+	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
+	# substitute Control set in 'top_gui') and to dictionary IVGlobal.program.
+	# Order determines visual 'on top' and input event handling: last added
+	# is on top and 1st handled. TopGUI children can be reordered after
+	# 'project_nodes_added' signal using API below.
+	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
+	_WorldController_ = IVWorldController, # Control ok
+	_MouseTargetLabel_ = IVMouseTargetLabel, # safe to replace or remove
+	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
+	_SplashScreen_ = null, # assign here if convenient (below popups)
 #	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 #	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 #	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
@@ -202,28 +200,28 @@ var gui_nodes := {
 }
 
 var procedural_classes := {
-#	# Nodes and references NOT instantiated by IVProjectBuilder. These class
-#	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
-#	# have underscores). 
-#	# tree_nodes
-#	_Body_ = IVBody, # many dependencies, best to subclass
-#	_Camera_ = IVCamera, # replaceable, but look for dependencies
-#	_GlobeModel_ = IVGlobeModel, # replace w/ Node3D
-#	_BodyLabel_ = IVBodyLabel, # replace w/ Node3D
-#	_BodyOrbit_ = IVBodyOrbit, # replace w/ Node3D
-#	_SBGOrbits_ = IVSBGOrbits, # replace w/ Node3D
-#	_SBGPoints_ = IVSBGPoints, # replace w/ Node3D
-#	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-#	_ModelSpace_ = IVModelSpace, # replace w/ Node3D
-#	_Rings_ = IVRings, # replace w/ Node3D
-#	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
-#	_SelectionManager_ = IVSelectionManager, # replace w/ Node3D
-#	# tree_refs
-#	_SmallBodiesGroup_ = IVSmallBodiesGroup,
-#	_Orbit_ = IVOrbit,
-#	_Selection_ = IVSelection,
-#	_View_ = IVView,
-#	_Composition_ = IVComposition, # replaceable, but look for dependencies
+	# Nodes and references NOT instantiated by IVProjectBuilder. These class
+	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
+	# have underscores). 
+	# tree_nodes
+	_Body_ = IVBody, # many dependencies, best to subclass
+	_Camera_ = IVCamera, # replaceable, but look for dependencies
+	_GlobeModel_ = IVGlobeModel, # replace w/ Node3D
+	_BodyLabel_ = IVBodyLabel, # replace w/ Node3D
+	_BodyOrbit_ = IVBodyOrbit, # replace w/ Node3D
+	_SBGOrbits_ = IVSBGOrbits, # replace w/ Node3D
+	_SBGPoints_ = IVSBGPoints, # replace w/ Node3D
+	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
+	_ModelSpace_ = IVModelSpace, # replace w/ Node3D
+	_Rings_ = IVRings, # replace w/ Node3D
+	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
+	_SelectionManager_ = IVSelectionManager, # replace w/ Node3D
+	# tree_refs
+	_SmallBodiesGroup_ = IVSmallBodiesGroup,
+	_Orbit_ = IVOrbit,
+	_Selection_ = IVSelection,
+	_View_ = IVView,
+	_Composition_ = IVComposition, # replaceable, but look for dependencies
 }
 
 
@@ -369,7 +367,7 @@ func _instantiate_and_index_program_objects() -> void:
 	_program.Global = IVGlobal
 	_program.Universe = universe
 	_program.TopGUI = top_gui
-	for dict in [initializers, prog_refs, prog_nodes, gui_nodes]:
+	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
 			if !dict[key]:
 				continue
@@ -379,7 +377,7 @@ func _instantiate_and_index_program_objects() -> void:
 			_program[object_key] = object
 			if object is Node:
 				object.name = object_key
-	for dict in [initializers, prog_refs, prog_nodes, gui_nodes,
+	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes,
 			procedural_classes]:
 		for key in dict:
 			if !dict[key]:
@@ -403,7 +401,7 @@ func _init_program_objects() -> void:
 		universe._project_init()
 	if top_gui.has_method("_project_init"):
 		top_gui._project_init()
-	for dict in [prog_refs, prog_nodes, gui_nodes]:
+	for dict in [program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
 			if !dict[key]:
 				continue
@@ -417,12 +415,12 @@ func _init_program_objects() -> void:
 
 
 func _add_program_nodes() -> void:
-	# TopGUI added before prog_nodes, so prog_nodes will recieve input events
-	# first.
+	# TopGUI added before program_nodes, so program_nodes will recieve input
+	# events first.
 	if add_top_gui_to_universe:
 		universe.add_child(top_gui)
-	for key in prog_nodes:
-		if !prog_nodes[key]:
+	for key in program_nodes:
+		if !program_nodes[key]:
 			continue
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
@@ -438,3 +436,4 @@ func _add_program_nodes() -> void:
 
 func _finish() -> void:
 	IVGlobal.project_builder_finished.emit()
+

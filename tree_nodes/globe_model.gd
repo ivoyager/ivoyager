@@ -20,6 +20,8 @@
 class_name IVGlobeModel
 extends MeshInstance3D
 
+# TODO34: Rename IVSpheroidModel to not interfere with "IVGlobal" autocompletion
+
 # A generic ellipsoid model that uses a shared sphere mesh.
 #
 # If _is_dynamic_star, the model will grow with great distances to stay visible.

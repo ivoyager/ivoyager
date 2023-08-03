@@ -25,7 +25,7 @@ extends Object
 #     assert(!DPRINT or IVDebug.dprint("something"))
 
 
-static func dprint(arg, arg2 = null, arg3 = null, arg4 = null) -> bool:
+static func dprint(arg, arg2 = "", arg3 = "", arg4 = "") -> bool:
 	# For >4 items, just use an array.
 	prints(arg, arg2, arg3, arg4)
 	return true
@@ -48,6 +48,14 @@ static func dlog(arg) -> bool:
 static func signal_verbosely(object: Object, signal_name: String, prefix: String) -> void:
 	# Call before any other signal connections; signal must have <= 8 args.
 	object.connect(signal_name, IVDebug._on_verbose_signal.bind(prefix + " " + signal_name))
+
+
+static func signal_all_verbosely(object: Object, prefix: String) -> void:
+	# See signal_verbosely. Prints all emitted signals from object.
+	var signal_list := object.get_signal_list()
+	for signal_dict in signal_list:
+		var signal_name: String = signal_dict.name
+		signal_verbosely(object, signal_name, prefix)
 
 
 static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,

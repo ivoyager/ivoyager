@@ -31,6 +31,7 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 func _on_init():
 	# project vars - modify on signal 'IVGlobal.project_objects_instantiated'
 	cache_file_name = "settings.ivbinary"
+	cache_file_version = 1
 	defaults = {
 		# save/load
 		save_base_name = "I Voyager",
