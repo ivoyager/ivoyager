@@ -414,7 +414,7 @@ func set_now_from_operating_system() -> void:
 	var previous_time := time
 	time = get_time_from_operating_system()
 	_reset_time()
-	print("Date and time set from operating system: ", date, clock)
+	prints("Setting date and time from operating system:", date, clock)
 	time_altered.emit(previous_time)
 
 
