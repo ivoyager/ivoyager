@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230802
+const IVOYAGER_YMD := 20230804
 
 
 # simulator state broadcasts
@@ -49,6 +49,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
+signal pause_changed(is_paused)
 signal user_pause_changed(is_paused) # ignores pause from sim stop
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()

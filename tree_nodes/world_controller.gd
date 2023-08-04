@@ -50,7 +50,7 @@ var _pause_only_stops_time = IVGlobal.pause_only_stops_time
 var _drag_start := Vector2.ZERO
 var _drag_segment_start := Vector2.ZERO
 var _has_mouse := true
-var _pause_mouse_input := true
+var _suppress_mouse_control := true # blocks signals EXCEPT 'mouse_target_changed'
 
 
 func _project_init() -> void:
@@ -69,6 +69,7 @@ func _project_init() -> void:
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS # but some functionaly stops if !pause_only_stops_time
 	mouse_filter = MOUSE_FILTER_STOP
+	IVGlobal.pause_changed.connect(_on_pause_changed)
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -101,7 +102,7 @@ func _gui_input(input_event: InputEvent) -> void:
 	if mouse_motion:
 		var mouse_pos: Vector2 = mouse_motion.position
 		_world_targeting[0] = mouse_pos
-		if _pause_mouse_input:
+		if _suppress_mouse_control:
 			return
 		if _drag_segment_start: # accumulated mouse drag motion
 			var drag_vector := mouse_pos - _drag_segment_start
@@ -109,7 +110,7 @@ func _gui_input(input_event: InputEvent) -> void:
 			mouse_dragged.emit(drag_vector, mouse_motion.button_mask,
 					_get_key_modifier_mask(mouse_motion))
 		return
-	if _pause_mouse_input:
+	if _suppress_mouse_control:
 		return
 	var mouse_button := event as InputEventMouseButton
 	if mouse_button:
@@ -135,16 +136,6 @@ func _gui_input(input_event: InputEvent) -> void:
 				_drag_segment_start = Vector2.ZERO
 
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_PAUSED:
-		if !_pause_only_stops_time:
-			_pause_mouse_input = true
-			_drag_start = Vector2.ZERO
-			_drag_segment_start = Vector2.ZERO
-	elif what == NOTIFICATION_UNPAUSED:
-		_pause_mouse_input = false
-
-
 func _clear() -> void:
 	_world_targeting[2] = null
 	_world_targeting[4] = null
@@ -167,6 +158,16 @@ func _get_key_modifier_mask(event: InputEventMouse) -> int:
 #	if event.command:
 #		mask |= KEY_MASK_CMD
 	return mask
+
+
+func _on_pause_changed(is_paused: bool) -> void:
+	if is_paused:
+		if !_pause_only_stops_time:
+			_suppress_mouse_control = true
+			_drag_start = Vector2.ZERO
+			_drag_segment_start = Vector2.ZERO
+	else:
+		_suppress_mouse_control = false
 
 
 func _on_viewport_size_changed() -> void:
