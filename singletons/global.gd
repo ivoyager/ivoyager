@@ -173,15 +173,14 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := { # more items added by initializers/shared_initializer.gd
-	globe_mesh = SphereMesh.new(), # all ellipsoid models
+var shared := {
 	# shaders
 	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
 	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
 	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
 	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
-#	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
+	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 
 # Data table import
@@ -208,9 +207,8 @@ var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spa
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelManager first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
-# a premade generic mesh (e.g., globe_mesh) and search for map textures in
-# maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will
-# use fallback_albedo_map.
+# the generic IVSpheroidModel and search for map textures in maps_search. If it
+# can't find "<file_prifix>.albedo" in maps_search, it will use fallback_albedo_map.
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 

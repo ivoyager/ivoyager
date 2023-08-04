@@ -37,7 +37,7 @@ var model_too_far_radius_multiplier := 3e3
 var map_search_suffixes: Array[String] = [".albedo", ".emission"]
 
 var _times: Array = IVGlobal.times
-var _GlobeModel_: Script
+var _SpheroidModel_: Script
 var _table_reader: IVTableReader
 var _io_manager: IVIOManager
 var _fallback_albedo_map: Texture2D
@@ -52,7 +52,7 @@ var _cull_size: int
 func _project_init() -> void:
 	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	IVGlobal.about_to_stop_before_quit.connect(_clear)
-	_GlobeModel_ = IVGlobal.script_classes._GlobeModel_
+	_SpheroidModel_ = IVGlobal.script_classes._SpheroidModel_
 	_table_reader = IVGlobal.program.TableReader
 	_io_manager = IVGlobal.program.IOManager
 	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
@@ -131,7 +131,7 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 	if !albedo_map and !emission_map:
 		albedo_map = _fallback_albedo_map
 	@warning_ignore("unsafe_method_access") # Possible replacement class
-	model = _GlobeModel_.new(model_type, model_basis, albedo_map, emission_map)
+	model = _SpheroidModel_.new(model_type, model_basis, albedo_map, emission_map)
 	array[1] = model
 
 
