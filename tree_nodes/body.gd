@@ -108,12 +108,12 @@ var sleep := false
 
 # private
 var _times: Array = IVGlobal.times
-var _state: Dictionary = IVGlobal.state
+#var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _min_hud_dist: float
 
 var _world_targeting: Array = IVGlobal.world_targeting
-@onready var _tree := get_tree()
+#@onready var _tree := get_tree()
 
 
 # virtual & overridable virtual-replacement functions

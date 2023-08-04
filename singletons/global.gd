@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230802
+const IVOYAGER_YMD := 20230804
 
 
 # simulator state broadcasts
@@ -49,6 +49,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
+signal pause_changed(is_paused)
 signal user_pause_changed(is_paused) # ignores pause from sim stop
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
@@ -172,15 +173,14 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := { # more items added by initializers/shared_initializer.gd
-	globe_mesh = SphereMesh.new(), # all ellipsoid models
+var shared := {
 	# shaders
 	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
 	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
 	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
 	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
 	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
-#	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
+	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 
 # Data table import
@@ -207,9 +207,8 @@ var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spa
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelManager first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
-# a premade generic mesh (e.g., globe_mesh) and search for map textures in
-# maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will
-# use fallback_albedo_map.
+# the generic IVSpheroidModel and search for map textures in maps_search. If it
+# can't find "<file_prifix>.albedo" in maps_search, it will use fallback_albedo_map.
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 

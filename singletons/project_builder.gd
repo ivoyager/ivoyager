@@ -206,15 +206,15 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = IVBody, # many dependencies, best to subclass
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
-	_GlobeModel_ = IVGlobeModel, # replace w/ Node3D
 	_BodyLabel_ = IVBodyLabel, # replace w/ Node3D
 	_BodyOrbit_ = IVBodyOrbit, # replace w/ Node3D
 	_SBGOrbits_ = IVSBGOrbits, # replace w/ Node3D
 	_SBGPoints_ = IVSBGPoints, # replace w/ Node3D
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
 	_ModelSpace_ = IVModelSpace, # replace w/ Node3D
-	_Rings_ = IVRings, # replace w/ Node3D
 	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
+	_Rings_ = IVRings, # replace w/ Node3D
+	_SpheroidModel_ = IVSpheroidModel, # replace w/ Node3D
 	_SelectionManager_ = IVSelectionManager, # replace w/ Node3D
 	# tree_refs
 	_SmallBodiesGroup_ = IVSmallBodiesGroup,

@@ -32,8 +32,16 @@ func _project_init() -> void:
 
 
 func _make_shared_resources() -> void:
+	IVGlobal.shared.sphere_mesh = _make_sphere_mesh()
 	IVGlobal.shared.circle_mesh = _make_circle_mesh(IVGlobal.vertecies_per_orbit)
 	IVGlobal.shared.circle_mesh_low_res = _make_circle_mesh(IVGlobal.vertecies_per_orbit_low_res)
+
+
+func _make_sphere_mesh() -> SphereMesh:
+	var sphere_mesh := SphereMesh.new()
+	sphere_mesh.radius = 1.0
+	sphere_mesh.height = 2.0
+	return sphere_mesh
 
 
 func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
@@ -53,5 +61,4 @@ func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
 	circle_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_STRIP, mesh_arrays, [], {},
 			ArrayMesh.ARRAY_FORMAT_VERTEX)
 	return circle_mesh
-
 

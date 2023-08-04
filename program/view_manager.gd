@@ -33,9 +33,9 @@ var file_path := IVGlobal.cache_dir.path_join("views.ivbinary")
 
 var _gamesave_views := {}
 var _cached_views := {}
-
 var _View_: Script
 var _io_manager: IVIOManager
+var _missing_or_bad_cache_file := true
 
 
 func _project_init() -> void:
@@ -43,6 +43,8 @@ func _project_init() -> void:
 	_io_manager = IVGlobal.program.IOManager
 	files.make_dir_if_doesnt_exist(IVGlobal.cache_dir)
 	_read_cache()
+	if _missing_or_bad_cache_file:
+		_write_cache()
 
 
 # public
@@ -128,12 +130,12 @@ func _read_cache() -> void:
 	# Populate _cached_views once at project init on main thread.
 	var file := FileAccess.open(file_path, FileAccess.READ)
 	if !file:
-		prints("Did not find cache file", file_path)
+		prints("Creating new cache file", file_path)
 		return
 	var file_var = file.get_var() # untyped for safety
 	file.close()
 	if typeof(file_var) != TYPE_DICTIONARY:
-		prints("Will overwrite obsolete cache file", file_path)
+		prints("Overwriting obsolete cache file", file_path)
 		return
 	@warning_ignore("unsafe_cast")
 	var dict := file_var as Dictionary
@@ -146,8 +148,8 @@ func _read_cache() -> void:
 			bad_cache_data = true
 			continue
 		_cached_views[key] = view
-	if bad_cache_data:
-		_write_cache() # removes all prior-version views
+	if !bad_cache_data:
+		_missing_or_bad_cache_file = false
 
 
 func _write_cache(allow_threaded_cache_write := true) -> void:

@@ -34,6 +34,7 @@ var current: Dictionary # subclass makes or references an existing dict
 var _io_manager: IVIOManager
 var _file_path: String
 var _cached := {} # exact replica of disk cache notwithstanding I/O delay
+var _missing_or_bad_cache_file := true
 
 
 # *****************************************************************************
@@ -65,6 +66,8 @@ func _project_init() -> void:
 		else:
 			current[key] = default
 	_read_cache()
+	if _missing_or_bad_cache_file:
+		_write_cache()
 
 
 # *****************************************************************************
@@ -171,22 +174,23 @@ func _read_cache() -> void:
 	# it blocks until completed.
 	var file := FileAccess.open(_file_path, FileAccess.READ)
 	if !file:
-		prints("Did not find cache file", _file_path)
+		prints("Creating new cache file", _file_path)
 		return
 	var file_var = file.get_var() # untyped for safety
 	# test for version and type consistency (no longer used items are ok)
 	@warning_ignore("unsafe_method_access")
 	if typeof(file_var) != TYPE_DICTIONARY or file_var.get("__version__", -1) != cache_file_version:
-		prints("Will overwrite obsolete cache file", _file_path)
+		prints("Overwriting obsolete cache file", _file_path)
 		return
 	for key in file_var:
 		if current.has(key):
 			if typeof(current[key]) != typeof(file_var[key]):
-				prints("Will overwrite obsolete cache file:", _file_path)
+				prints("Overwriting obsolete cache file:", _file_path)
 				return
 	# file cache ok
 	_cached = file_var
 	for key in _cached:
 		if current.has(key): # possibly old verson obsoleted key
 			current[key] = _cached[key]
+	_missing_or_bad_cache_file = false
 
