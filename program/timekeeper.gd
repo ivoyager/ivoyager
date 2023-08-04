@@ -376,13 +376,13 @@ func get_jdn_for_solar_day(solar_day_: float) -> int:
 
 
 func get_time_from_operating_system() -> float:
-	# As of Godot 3.5.2.rc2, Time.get_unix_time_from_system() does not work in
-	# HTML5 export. TODO: Retest and make a godot issue!
 	
-	# TEST34: Time.get_unix_time_from_system() now works in HTML5 export?
-	var sys_msec := Time.get_unix_time_from_system()
-#	var sys_msec := OS.get_system_time_msecs()
-	var j2000sec := (sys_msec - 946728000000) * 0.001
+	# TEST34: Time.get_unix_time_from_system() did not previously work in
+	# HTML5 export, so we used OS.get_system_time_msecs(). This needs testing.
+	
+	var unix_time := Time.get_unix_time_from_system()
+
+	var j2000sec := unix_time - 946728000.0
 	return j2000sec * SECOND
 
 
@@ -414,7 +414,7 @@ func set_now_from_operating_system() -> void:
 	var previous_time := time
 	time = get_time_from_operating_system()
 	_reset_time()
-	print("[date ints][clock ints] from operating system: ", date, clock)
+	print("Date and time set from operating system: ", date, clock)
 	time_altered.emit(previous_time)
 
 
@@ -463,9 +463,10 @@ func can_decr_speed() -> bool:
 # private functions
 
 func _on_about_to_start_simulator(is_new_game: bool) -> void:
-	if is_new_game:
-		if start_real_world_time:
-			set_now_from_operating_system()
+	pass
+#	if is_new_game:
+#		if start_real_world_time:
+#			set_now_from_operating_system()
 
 
 func _set_init_state() -> void:
