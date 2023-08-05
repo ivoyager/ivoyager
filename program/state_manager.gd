@@ -224,10 +224,10 @@ func exit(force_exit := false, following_server := false) -> void:
 		return
 	if !force_exit:
 		if _state.network_state == IS_CLIENT:
-			IVOneUseConfirm.new("Disconnect from multiplayer game?", self, "exit", [true]) # TODO: text key
+			IVGlobal.confirmation_requested.emit("Disconnect from multiplayer game?", exit.bind(true))
 			return
 		elif IVGlobal.enable_save_load: # single player or network server
-			IVOneUseConfirm.new("LABEL_EXIT_WITHOUT_SAVING", self, "exit", [true])
+			IVGlobal.confirmation_requested.emit("LABEL_EXIT_WITHOUT_SAVING", exit.bind(true))
 			return
 	if _state.network_state == IS_CLIENT:
 		if !following_server:
@@ -256,10 +256,10 @@ func quit(force_quit := false) -> void:
 		return
 	if !force_quit:
 		if _state.network_state == IS_CLIENT:
-			IVOneUseConfirm.new("Disconnect from multiplayer game?", self, "quit", [true]) # TODO: text key
+			IVGlobal.confirmation_requested.emit("Disconnect from multiplayer game?", exit.bind(true))
 			return
 		elif IVGlobal.enable_save_load and !_state.is_splash_screen:
-			IVOneUseConfirm.new("LABEL_QUIT_WITHOUT_SAVING", self, "quit", [true])
+			IVGlobal.confirmation_requested.emit("LABEL_QUIT_WITHOUT_SAVING", quit.bind(true))
 			return
 	if _state.network_state == IS_CLIENT:
 		client_is_dropping_out.emit(false)

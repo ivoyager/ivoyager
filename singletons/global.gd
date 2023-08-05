@@ -84,7 +84,7 @@ signal move_camera_requested(selection, camera_flags, view_position, view_rotati
 # requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
-signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
+signal confirmation_requested(text, confirm_action, stop_sim, title_txt, ok_txt, cancel_txt)
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
@@ -94,6 +94,7 @@ signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
 signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
+signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
 
 
 # containers - write authority indicated; safe to localize container reference

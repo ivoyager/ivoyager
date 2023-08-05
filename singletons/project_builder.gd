@@ -195,7 +195,7 @@ var gui_nodes := {
 #	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 #	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
 #	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
-##	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
+	_Confirmation_ = IVConfirmation, # safe to replace or remove
 #	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
