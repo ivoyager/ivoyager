@@ -158,7 +158,7 @@ var program_refcounteds := {
 
 var program_nodes := {
 	# IVProjectBuilder instances one of each and adds as child to Universe
-	# (after TopGUI) and to dictionary IVGlobal.program.
+	# (before/"below" TopGUI) and to dictionary IVGlobal.program.
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
 	_ViewManager_ = IVViewManager,
@@ -173,6 +173,7 @@ var program_nodes := {
 	_WindowManager_ = IVWindowManager,
 	_SBGHUDsState_ = IVSBGHUDsState, # (likely to have input in future)
 	_BodyHUDsState_ = IVBodyHUDsState,
+	_InputHandler_ = IVInputHandler,
 #	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_StateManager_ = IVStateManager,
 }
@@ -191,7 +192,7 @@ var gui_nodes := {
 #	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
 #	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 #	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
-#	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
+	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
 #	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 #	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
 #	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
@@ -415,15 +416,15 @@ func _init_program_objects() -> void:
 
 
 func _add_program_nodes() -> void:
-	# TopGUI added before program_nodes, so program_nodes will recieve input
-	# events first.
-	if add_top_gui_to_universe:
-		universe.add_child(top_gui)
+	# TopGUI added after program_nodes, so gui_nodes will recieve input first
+	# and then program_nodes.
 	for key in program_nodes:
 		if !program_nodes[key]:
 			continue
 		var object_key = key.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
+	if add_top_gui_to_universe:
+		universe.add_child(top_gui)
 	for key in gui_nodes:
 		if !gui_nodes[key]:
 			continue

@@ -127,7 +127,7 @@ func restore_default(key: String, suppress_caching := false) -> void:
 
 func restore_all_defaults(suppress_caching := false) -> void:
 	for key in defaults:
-		change_current(key, defaults[key], true)
+		restore_default(key, true)
 	if !suppress_caching:
 		cache_now()
 

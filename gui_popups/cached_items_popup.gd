@@ -25,7 +25,8 @@ const SCENE := "res://ivoyager/gui_popups/cached_items_popup.tscn"
 # subclasses: IVOptionsPopup, IVHotkeysPopup.
 
 var stop_sim := true
-var layout: Array # subclass sets in _init()
+var is_exclusive := false
+var layout: Array[Array] # subclass sets in _init()
 
 var _header_left: MarginContainer
 var _header_label: Label
@@ -35,6 +36,7 @@ var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
 var _blocking_popups: Array = IVGlobal.blocking_popups
+
 
 @onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
@@ -58,10 +60,11 @@ func _ready():
 
 
 func _on_ready() -> void:
-	process_mode = PROCESS_MODE_ALWAYS
-	connect("popup_hide", Callable(self, "_on_popup_hide"))
-	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
-	theme = IVGlobal.themes.main
+	IVGlobal.close_all_admin_popups_requested.connect(hide)
+	close_requested.connect(_on_close_requested)
+	popup_hide.connect(_on_popup_hide)
+	exclusive = is_exclusive
+#	theme = IVGlobal.themes.main
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
 	_header_right = $VBox/TopHBox/HeaderRight
@@ -69,16 +72,10 @@ func _on_ready() -> void:
 	_cancel = $VBox/BottomHBox/Cancel
 	_confirm_changes = $VBox/BottomHBox/ConfirmChanges
 	_restore_defaults = $VBox/BottomHBox/RestoreDefaults
-	_cancel.connect("pressed", Callable(self, "_on_cancel"))
-	_restore_defaults.connect("pressed", Callable(self, "_on_restore_defaults"))
-	_confirm_changes.connect("pressed", Callable(self, "_on_confirm_changes"))
+	_cancel.pressed.connect(_on_cancel)
+	_restore_defaults.pressed.connect(_on_restore_defaults)
+	_confirm_changes.pressed.connect(_on_confirm_changes)
 	_blocking_popups.append(self)
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		_on_cancel()
 
 
 # public
@@ -101,7 +98,7 @@ func remove_subpanel(header: String) -> Dictionary:
 		while dict_index < column_array.size():
 			var subpanel_dict: Dictionary = column_array[dict_index]
 			if subpanel_dict.header == header:
-				column_array.remove(dict_index)
+				column_array.remove_at(dict_index)
 				return subpanel_dict
 			dict_index += 1
 	print("Could not find subpanel with header ", header)
@@ -148,7 +145,7 @@ func remove_item(item: String) -> void:
 			var subpanel_dict: Dictionary = column_array[dict_index]
 			subpanel_dict.erase(item)
 			if subpanel_dict.size() == 1: # only header remains
-				column_array.remove(dict_index)
+				column_array.remove_at(dict_index)
 				dict_index -= 1
 			dict_index += 1
 
@@ -161,8 +158,8 @@ func _open() -> void:
 	if stop_sim:
 		_state_manager.require_stop(self)
 	_build_content()
-	popup()
-	set_anchors_and_offsets_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
+	size = Vector2i.ZERO
+	popup_centered()
 
 
 func _build_content() -> void:
@@ -178,7 +175,7 @@ func _build_content() -> void:
 			subpanel_container.add_child(subpanel_vbox)
 			var header_label := Label.new()
 			subpanel_vbox.add_child(header_label)
-			header_label.align = Label.ALIGNMENT_CENTER
+			header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			header_label.text = subpanel_dict.header
 			for item in subpanel_dict:
 				if item != "header":
@@ -213,10 +210,7 @@ func _on_cancel_changes() -> void:
 
 
 func _on_cancel() -> void:
-	if _confirm_changes.disabled:
-		hide()
-	else:
-		IVOneUseConfirm.new("LABEL_DISCARD_CHANGES", self, "_on_cancel_changes")
+	hide()
 
 
 func _on_popup_hide() -> void:
@@ -226,8 +220,14 @@ func _on_popup_hide() -> void:
 		_state_manager.allow_run(self)
 
 
+func _on_close_requested() -> void:
+	# TODO Godot 4.1.1 ISSUE: This is never called!
+	print("close_requested signal works now! It wasn't working in Godot 4.1.1")
+
+
 func _is_blocking_popup() -> bool:
-	for popup in _blocking_popups:
-		if popup.visible:
+	for blocking_popup in _blocking_popups:
+		if blocking_popup.visible:
 			return true
 	return false
+
