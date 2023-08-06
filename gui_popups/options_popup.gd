@@ -44,42 +44,44 @@ var _suppress_restore := false
 
 func _on_init():
 	# Edit layout directly or use parent class functions at project init.
-	layout = [
-		[ # column 1; each dict is a subpanel
-			{
-				header = "LABEL_SAVE_LOAD",
-				save_base_name = "LABEL_BASE_NAME",
-				append_date_to_save = "LABEL_APPEND_DATE",
-				pause_on_load = "LABEL_PAUSE_ON_LOAD",
-			},
-			{
-				header = "LABEL_CAMERA",
-				camera_transfer_time = "LABEL_TRANSFER_TIME",
-				camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
-				camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
-				camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",
-				camera_mouse_roll_rate = "LABEL_MOUSE_RATE_ROLL",
-				camera_key_in_out_rate = "LABEL_KEY_RATE_IN_OUT",
-				camera_key_move_rate = "LABEL_KEY_RATE_TANGENTIAL",
-				camera_key_pitch_yaw_rate = "LABEL_KEY_RATE_PITCH_YAW",
-				camera_key_roll_rate = "LABEL_KEY_RATE_ROLL",
-			},
-		],
-		[ # column 2
-			{
-				header = "LABEL_GUI_AND_HUD",
-				gui_size = "LABEL_GUI_SIZE",
-				viewport_names_size = "LABEL_NAMES_SIZE",
-				viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
-				point_size = "LABEL_POINT_SIZE",
-				hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
-			},
-			{
-				header = "LABEL_GRAPHICS_PERFORMANCE",
-				starmap = "LABEL_STARMAP",
-			},
-		],
+	
+	var column1: Array[Dictionary] = [ # each dict is a subpanel
+		{
+			header = "LABEL_SAVE_LOAD",
+			save_base_name = "LABEL_BASE_NAME",
+			append_date_to_save = "LABEL_APPEND_DATE",
+			pause_on_load = "LABEL_PAUSE_ON_LOAD",
+		},
+		{
+			header = "LABEL_CAMERA",
+			camera_transfer_time = "LABEL_TRANSFER_TIME",
+			camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
+			camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
+			camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",
+			camera_mouse_roll_rate = "LABEL_MOUSE_RATE_ROLL",
+			camera_key_in_out_rate = "LABEL_KEY_RATE_IN_OUT",
+			camera_key_move_rate = "LABEL_KEY_RATE_TANGENTIAL",
+			camera_key_pitch_yaw_rate = "LABEL_KEY_RATE_PITCH_YAW",
+			camera_key_roll_rate = "LABEL_KEY_RATE_ROLL",
+		},
 	]
+	
+	var column2: Array[Dictionary] = [
+		{
+			header = "LABEL_GUI_AND_HUD",
+			gui_size = "LABEL_GUI_SIZE",
+			viewport_names_size = "LABEL_NAMES_SIZE",
+			viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
+			point_size = "LABEL_POINT_SIZE",
+			hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
+		},
+		{
+			header = "LABEL_GRAPHICS_PERFORMANCE",
+			starmap = "LABEL_STARMAP",
+		},
+	]
+	
+	layout = [column1, column2]
 
 
 func _project_init() -> void:

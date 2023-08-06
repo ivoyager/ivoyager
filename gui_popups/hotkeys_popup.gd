@@ -23,104 +23,104 @@ extends IVCachedItemsPopup
 # Parent class provides public methods for adding, removing and moving
 # subpanels and individual items within the panel.
 
-const DPRINT := true
-
 var key_box_min_size_x := 300
 
 var _hotkey_dialog: IVHotkeyDialog
 
 @onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
-#@onready var _actions: Dictionary = _input_map_manager.current
 
 
 func _on_init():
 	# Edit layout directly or use IVCachedItemsPopup functions at project init.
-	layout = [
-		[ # column 1; each dict is a subpanel
-			{
-				header = "LABEL_ADMIN",
-				toggle_fullscreen = "LABEL_TOGGLE_FULLSCREEN",
-				toggle_options = "LABEL_OPTIONS",
-				toggle_hotkeys = "LABEL_HOTKEYS",
-				load_game = "LABEL_LOAD_FILE",
-				quick_load = "LABEL_QUICK_LOAD",
-				save_as = "LABEL_SAVE_AS",
-				quick_save = "LABEL_QUICK_SAVE",
-				quit = "LABEL_QUIT",
-				save_quit = "LABEL_SAVE_AND_QUIT",
-			},
-			{
-				header = "LABEL_GUI",
-				toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
-				toggle_orbits = "LABEL_SHOW_HIDE_ORBITS",
-				toggle_names = "LABEL_SHOW_HIDE_NAMES",
-				toggle_symbols = "LABEL_SHOW_HIDE_SYMBOLS",
-				
-				# Below two should be added by extension add_item(), if used.
-				# See Planetarim project (planetarium/planetarium.gd).
+	
+	var column1: Array[Dictionary] = [ # each dict is a subpanel
+		{
+			header = "LABEL_ADMIN",
+			toggle_fullscreen = "LABEL_TOGGLE_FULLSCREEN",
+			toggle_options = "LABEL_OPTIONS",
+			toggle_hotkeys = "LABEL_HOTKEYS",
+			load_game = "LABEL_LOAD_FILE",
+			quick_load = "LABEL_QUICK_LOAD",
+			save_as = "LABEL_SAVE_AS",
+			quick_save = "LABEL_QUICK_SAVE",
+			quit = "LABEL_QUIT",
+			save_quit = "LABEL_SAVE_AND_QUIT",
+		},
+		{
+			header = "LABEL_GUI",
+			toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
+			toggle_orbits = "LABEL_SHOW_HIDE_ORBITS",
+			toggle_names = "LABEL_SHOW_HIDE_NAMES",
+			toggle_symbols = "LABEL_SHOW_HIDE_SYMBOLS",
+			
+			# Below two should be added by extension add_item(), if used.
+			# See Planetarim project (planetarium/planetarium.gd).
 #				cycle_next_panel = "LABEL_CYCLE_NEXT_PANEL",
 #				cycle_prev_panel = "LABEL_CYCLE_LAST_PANEL",
-				
-				# Below UI controls have some engine hardcoding as of
-				# Godot 3.2.2, so can't be user defined.
+			
+			# Below UI controls have some engine hardcoding as of
+			# Godot 3.2.2, so can't be user defined.
 #				ui_up = "LABEL_GUI_UP",
 #				ui_down = "LABEL_GUI_DOWN",
 #				ui_left = "LABEL_GUI_LEFT",
 #				ui_right = "LABEL_GUI_RIGHT",
-			},
-			{
-				header = "LABEL_TIME",
-				incr_speed = "LABEL_SPEED_UP",
-				decr_speed = "LABEL_SLOW_DOWN",
-				reverse_time = "LABEL_REVERSE_TIME",
-				toggle_pause = "LABEL_TOGGLE_PAUSE",
-			},
-		],
-		[ # column 2
-			{
-				header = "LABEL_SELECTION",
-				select_up = "LABEL_UP",
-				select_down = "LABEL_DOWN",
-				select_left = "LABEL_LAST",
-				select_right = "LABEL_NEXT",
-				select_forward = "LABEL_FORWARD",
-				select_back = "LABEL_BACK",
-				next_star = "LABEL_SELECT_SUN",
-				next_planet = "LABEL_NEXT_PLANET",
-				previous_planet = "LABEL_LAST_PLANET",
-				next_nav_moon = "LABEL_NEXT_NAV_MOON",
-				previous_nav_moon = "LABEL_LAST_NAV_MOON",
-				next_moon = "LABEL_NEXT_ANY_MOON",
-				previous_moon = "LABEL_LAST_ANY_MOON",
-				# Below waiting for new code features
-#				next_system = "Select System",
-#				next_asteroid = "Next Asteroid",
-#				previous_asteroid = "Last Asteroid",
-#				next_comet = "Next Comet",
-#				previous_comet = "Last Comet",
-#				next_spacecraft = "Next Spacecraft",
-#				previous_spacecraft = "Last Spacecraft",
-			},
-		],
-		[ # column 3
-			{
-				header = "LABEL_CAMERA",
-				camera_up = "LABEL_MOVE_UP",
-				camera_down = "LABEL_MOVE_DOWN",
-				camera_left = "LABEL_MOVE_LEFT",
-				camera_right = "LABEL_MOVE_RIGHT",
-				camera_in = "LABEL_MOVE_IN",
-				camera_out = "LABEL_MOVE_OUT",
-				recenter = "LABEL_RECENTER",
-				pitch_up = "LABEL_PITCH_UP",
-				pitch_down = "LABEL_PITCH_DOWN",
-				yaw_left = "LABEL_YAW_LEFT",
-				yaw_right = "LABEL_YAW_RIGHT",
-				roll_left = "LABEL_ROLL_LEFT",
-				roll_right = "LABEL_ROLL_RIGHT",
-			},
-		],
+		},
+		{
+			header = "LABEL_TIME",
+			incr_speed = "LABEL_SPEED_UP",
+			decr_speed = "LABEL_SLOW_DOWN",
+			reverse_time = "LABEL_REVERSE_TIME",
+			toggle_pause = "LABEL_TOGGLE_PAUSE",
+		},
 	]
+	
+	var column2: Array[Dictionary] = [
+		{
+			header = "LABEL_SELECTION",
+			select_up = "LABEL_UP",
+			select_down = "LABEL_DOWN",
+			select_left = "LABEL_LAST",
+			select_right = "LABEL_NEXT",
+			select_forward = "LABEL_FORWARD",
+			select_back = "LABEL_BACK",
+			next_star = "LABEL_SELECT_SUN",
+			next_planet = "LABEL_NEXT_PLANET",
+			previous_planet = "LABEL_LAST_PLANET",
+			next_nav_moon = "LABEL_NEXT_NAV_MOON",
+			previous_nav_moon = "LABEL_LAST_NAV_MOON",
+			next_moon = "LABEL_NEXT_ANY_MOON",
+			previous_moon = "LABEL_LAST_ANY_MOON",
+			# Below waiting for new code features
+#			next_system = "Select System",
+#			next_asteroid = "Next Asteroid",
+#			previous_asteroid = "Last Asteroid",
+#			next_comet = "Next Comet",
+#			previous_comet = "Last Comet",
+#			next_spacecraft = "Next Spacecraft",
+#			previous_spacecraft = "Last Spacecraft",
+		},
+	]
+	
+	var column3: Array[Dictionary] = [
+		{
+			header = "LABEL_CAMERA",
+			camera_up = "LABEL_MOVE_UP",
+			camera_down = "LABEL_MOVE_DOWN",
+			camera_left = "LABEL_MOVE_LEFT",
+			camera_right = "LABEL_MOVE_RIGHT",
+			camera_in = "LABEL_MOVE_IN",
+			camera_out = "LABEL_MOVE_OUT",
+			recenter = "LABEL_RECENTER",
+			pitch_up = "LABEL_PITCH_UP",
+			pitch_down = "LABEL_PITCH_DOWN",
+			yaw_left = "LABEL_YAW_LEFT",
+			yaw_right = "LABEL_YAW_RIGHT",
+			roll_left = "LABEL_ROLL_LEFT",
+			roll_right = "LABEL_ROLL_RIGHT",
+		},
+	]
+	
+	layout = [column1, column2, column3]
 
 
 func _project_init() -> void:
