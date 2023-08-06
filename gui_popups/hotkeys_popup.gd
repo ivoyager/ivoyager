@@ -30,7 +30,7 @@ var key_box_min_size_x := 300
 var _hotkey_dialog: IVHotkeyDialog
 
 @onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
-@onready var _actions: Dictionary = _input_map_manager.current
+#@onready var _actions: Dictionary = _input_map_manager.current
 
 
 func _on_init():
@@ -126,8 +126,8 @@ func _on_init():
 func _project_init() -> void:
 	super._project_init()
 	_hotkey_dialog = IVGlobal.program.HotkeyDialog
-	_hotkey_dialog.connect("hotkey_confirmed", Callable(self, "_on_hotkey_confirmed"))
-	IVGlobal.connect("hotkeys_requested", Callable(self, "open"))
+	_hotkey_dialog.hotkey_confirmed.connect(_on_hotkey_confirmed)
+	IVGlobal.hotkeys_requested.connect(_open)
 	if IVGlobal.disable_pause:
 		remove_item("toggle_pause")
 	if !IVGlobal.allow_time_reversal:
@@ -147,34 +147,34 @@ func _on_ready():
 	_header_label.text = "LABEL_HOTKEYS"
 	# Options button
 	var options_button := Button.new()
-	options_button.size_flags_horizontal = SIZE_SHRINK_END
+	options_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	options_button.text = "BUTTON_OPTIONS"
-	options_button.connect("pressed", Callable(self, "_open_options"))
+	options_button.pressed.connect(_open_options)
 	_header_right.add_child(options_button)
 	# Mouse-only GUI Nav checkbox
-	var checkbox_res := preload("res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn")
-	var checkbox: CheckBox = checkbox_res.instantiate()
-	_header_left.add_child(checkbox)
+#	var checkbox_res := preload("res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn")
+#	var checkbox: CheckBox = checkbox_res.instantiate()
+#	_header_left.add_child(checkbox)
 	# comment text below header
-	var note_label := Label.new()
-	note_label.autowrap = true
-	note_label.anchor_left = 0
-	note_label.anchor_right = 1
-	note_label.text = "TXT_GUI_HOTKEY_NOTE"
-	$VBox.add_sibling($VBox/TopHBox, note_label)
+#	var note_label := Label.new()
+#	note_label.autowrap = true
+#	note_label.anchor_left = 0
+#	note_label.anchor_right = 1
+#	note_label.text = "TXT_GUI_HOTKEY_NOTE"
+#	$VBox.add_sibling($VBox/TopHBox, note_label)
 
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_hotkeys"):
-		get_viewport().set_input_as_handled()
-		if visible:
-			_on_cancel()
-		else:
-			_open()
+#func _unhandled_key_input(event: InputEvent) -> void:
+#	if event.is_action_pressed("toggle_hotkeys"):
+#		get_viewport().set_input_as_handled()
+#		if visible:
+#			_on_cancel()
+#		else:
+#			_open()
 
 
-func open() -> void:
-	super._open()
+#func open() -> void:
+#	super._open()
 
 
 func _on_content_built() -> void:
@@ -195,40 +195,41 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 		var key_button := Button.new()
 		action_hbox.add_child(key_button)
 		key_button.text = OS.get_keycode_string(keycode)
-		key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str,
-				key_button.text, layout])
+		key_button.pressed.connect(_hotkey_dialog.open.bind(action, index, action_label_str,
+				key_button.text, layout))
 		index += 1
-	var empty_key_button := Button.new()
-	action_hbox.add_child(empty_key_button)
-	empty_key_button.connect("pressed", _hotkey_dialog, "open", [action, index, action_label_str,
-			"", layout])
+	var add_key_button := Button.new()
+	action_hbox.add_child(add_key_button)
+	add_key_button.text = "+"
+	add_key_button.pressed.connect(_hotkey_dialog.open.bind(action, index, action_label_str,
+			"", layout))
 	var default_button := Button.new()
 	action_hbox.add_child(default_button)
 	default_button.text = "!"
 	default_button.disabled = _input_map_manager.is_default(action)
-	default_button.connect("pressed", Callable(self, "_restore_default").bind(action))
+	default_button.pressed.connect(_restore_default.bind(action))
 	return action_hbox
 
 
 func _restore_default(action: String) -> void:
 	_input_map_manager.restore_default(action, true)
-	call_deferred("_build_content")
+	_build_content.call_deferred()
 
 
 func _on_hotkey_confirmed(action: String, index: int, keycode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
 	if keycode == -1:
-		_input_map_manager.remove_event_dict_by_index(action, "InputEventKey", index, true)
+		_input_map_manager.remove_event_dict_by_index(action, &"InputEventKey", index, true)
 	else:
-		var event_dict := {event_class = "InputEventKey", keycode = keycode}
+		var event_dict := {event_class = &"InputEventKey", keycode = keycode}
 		if control:
-			event_dict.control = true
+			event_dict.ctrl_pressed = true
 		if alt:
-			event_dict.alt = true
+			event_dict.alt_pressed = true
 		if shift:
-			event_dict.shift = true
+			event_dict.shift_pressed = true
 		if meta:
-			event_dict.meta = true
+			event_dict.meta_pressed = true
 		print("Set ", action, ": ", event_dict)
 		_input_map_manager.set_action_event_dict(action, event_dict, index, true)
 	_build_content()
@@ -236,7 +237,7 @@ func _on_hotkey_confirmed(action: String, index: int, keycode: int,
 
 func _on_restore_defaults() -> void:
 	_input_map_manager.restore_all_defaults(true)
-	call_deferred("_build_content")
+	_build_content.call_deferred()
 
 
 func _on_confirm_changes() -> void:
@@ -250,6 +251,7 @@ func _on_cancel_changes() -> void:
 
 
 func _open_options() -> void:
-	if !is_connected("popup_hide", Callable(IVGlobal, "emit_signal")):
-		connect("popup_hide", Callable(IVGlobal, "emit_signal").bind("options_requested"), CONNECT_ONE_SHOT)
+	if !popup_hide.is_connected(IVGlobal.emit_signal):
+		popup_hide.connect(IVGlobal.emit_signal.bind("options_requested"), CONNECT_ONE_SHOT)
 	_on_cancel()
+

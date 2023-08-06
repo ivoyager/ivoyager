@@ -157,6 +157,9 @@ func _open() -> void:
 		return
 	if stop_sim:
 		_state_manager.require_stop(self)
+	
+	print("Opening ", name)
+	
 	_build_content()
 	size = Vector2i.ZERO
 	popup_centered()
