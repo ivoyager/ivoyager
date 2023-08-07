@@ -36,7 +36,7 @@ extends Node
 # For draggable and user resizable windows, use ControlDynamic instead.
 
 # project vars
-var min_sizes := [
+var min_sizes: Array[Vector2] = [
 	# Use init_min_size() to set.
 	Vector2(435.0, 291.0), # GUI_SMALL
 	Vector2(575.0, 354.0), # GUI_MEDIUM
@@ -52,9 +52,9 @@ var _settings: Dictionary = IVGlobal.settings
 
 
 func _ready() -> void:
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
-	IVGlobal.connect("simulator_started", Callable(self, "resize_and_position_to_anchor"))
-	_parent.connect("resized", Callable(self, "resize_and_position_to_anchor"))
+	IVGlobal.setting_changed.connect(_settings_listener)
+	IVGlobal.simulator_started.connect(resize_and_position_to_anchor)
+	_parent.resized.connect(resize_and_position_to_anchor)
 	resize_and_position_to_anchor()
 
 
@@ -74,19 +74,21 @@ func resize_and_position_to_anchor() -> void:
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
 	_parent.size = default_size
-	await get_tree().idle_frame
-	await get_tree().idle_frame
-	await get_tree().idle_frame
-	_parent.size = default_size 
-	_parent.position.x = _parent.anchor_left * (_viewport.size.x - _parent.size.x)
-	_parent.position.y = _parent.anchor_top * (_viewport.size.y - _parent.size.y)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_parent.size = default_size
+	var viewport_size := _viewport.get_visible_rect().size
+	_parent.position.x = _parent.anchor_left * (viewport_size.x - _parent.size.x)
+	_parent.position.y = _parent.anchor_top * (viewport_size.y - _parent.size.y)
 
 
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = min_sizes[gui_size]
-	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
-	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
+	var viewport_size := _viewport.get_visible_rect().size
+	var max_x := roundf(viewport_size.x * max_default_screen_proportions.x)
+	var max_y := roundf(viewport_size.y * max_default_screen_proportions.y)
 	if default_size.x > max_x:
 		default_size.x = max_x
 	if default_size.y > max_y:
@@ -97,3 +99,4 @@ func _get_default_size() -> Vector2:
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
 		resize_and_position_to_anchor()
+

@@ -1,4 +1,4 @@
-# control_draggable.gd
+# control_dynamic.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,23 +17,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVControlDraggable
-extends Node
+class_name IVControlDynamic
+extends Control
 
 # Use only one of the Control mods:
 #    ControlSized - resizes with Options/GUI Size
 #    ControlDraggable - above plus user draggable
 #    ControlDynamic - above plus user resizing margins
 #
-# Add to Control (eg, a PanelContainer or PopupPanel) for draggablity. Assumes
-# parent Control is NOT in a Container and has anchor_left == anchor_right and
-# anchor_top == anchor_bottom (ie, panels aren't intended to strech if viewport
-# stretches).
+# Add to Control (eg, a PanelContainer or PopupPanel) for draggablity and window
+# resizing margins. This should be the last child so margin controls are on
+# top.  Assumes parent Control is NOT in a Container and has anchor_left ==
+# anchor_right and anchor_top == anchor_bottom (ie, panels aren't intended to
+# strech if viewport stretches).
 #
 # Modify default sizes and snap values from _ready() in the parent Control.
-#
-# This mod is used in the Planetarium.
 
+enum {TL, T, TR, R, BR, B, BL, L}
 enum {UP, DOWN, LEFT, RIGHT}
 
 # project vars
@@ -50,31 +50,39 @@ var max_default_screen_proportions := Vector2(0.45, 0.45) # can override above
 
 # private
 var _settings: Dictionary = IVGlobal.settings
+var _margin_drag_x := 0.0
+var _margin_drag_y := 0.0
 var _drag_point := Vector2.ZERO
+var _custom_size := Vector2.ZERO
 
 @onready var _viewport := get_viewport()
 @onready var _parent: Control = get_parent()
 
 
-func _ready() -> void:
-	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
-	IVGlobal.connect("simulator_started", Callable(self, "resize_and_position_to_anchor"))
-	_parent.connect("resized", Callable(self, "resize_and_position_to_anchor"))
-	_parent.connect("gui_input", Callable(self, "_on_parent_input"))
+func _ready():
+	IVGlobal.setting_changed.connect(_settings_listener)
+	_parent.gui_input.connect(_on_parent_input)
+	($TL as Control).gui_input.connect(_on_margin_input.bind(TL))
+	($T as Control).gui_input.connect(_on_margin_input.bind(T))
+	($TR as Control).gui_input.connect(_on_margin_input.bind(TR))
+	($R as Control).gui_input.connect(_on_margin_input.bind(R))
+	($BR as Control).gui_input.connect(_on_margin_input.bind(BR))
+	($B as Control).gui_input.connect(_on_margin_input.bind(B))
+	($BL as Control).gui_input.connect(_on_margin_input.bind(BL))
+	($L as Control).gui_input.connect(_on_margin_input.bind(L))
 	set_process_input(false) # only during drag
-	resize_and_position_to_anchor()
 
 
-func _input(event: InputEvent) -> void:
+func _input(event):
 	# We process input only during drag. It is posible for the parent control
 	# to never get the button-up event (happens in HTML5 builds).
 	if event is InputEventMouseButton:
 		if !event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			finish_move()
-			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)
+			_parent.set_default_cursor_shape(CURSOR_ARROW)
 
 
-func init_min_size(gui_size: int, size: Vector2) -> void:
+func init_min_size(gui_size: int, size_: Vector2) -> void:
 	# 'gui_size' is one of IVEnums.GUISize, or use -1 to set all.
 	# Set x or y or both to zero for shrink to content.
 	# Args [-1, Vector2.ZERO] sets all GUI sizes to shrink to content. 
@@ -82,7 +90,7 @@ func init_min_size(gui_size: int, size: Vector2) -> void:
 		min_sizes[gui_size] = size
 	else:
 		for i in min_sizes.size():
-			min_sizes[i] = size
+			min_sizes[i] = size_
 
 
 func resize_and_position_to_anchor() -> void:
@@ -90,12 +98,13 @@ func resize_and_position_to_anchor() -> void:
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
 	_parent.size = default_size
-	await get_tree().idle_frame
-	await get_tree().idle_frame
-	await get_tree().idle_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	_parent.size = default_size
-	_parent.position.x = _parent.anchor_left * (_viewport.size.x - _parent.size.x)
-	_parent.position.y = _parent.anchor_top * (_viewport.size.y - _parent.size.y)
+	var viewport_size := _viewport.get_visible_rect().size
+	_parent.position.x = _parent.anchor_left * (viewport_size.x - _parent.size.x)
+	_parent.position.y = _parent.anchor_top * (viewport_size.y - _parent.size.y)
 
 
 func finish_move() -> void:
@@ -111,12 +120,48 @@ func finish_move() -> void:
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			_drag_point = _parent.get_global_mouse_position() - _parent.position
+		var mouse_button_event: InputEventMouseButton = event
+		if mouse_button_event.pressed and mouse_button_event.button_index == MOUSE_BUTTON_LEFT:
+			_drag_point = get_global_mouse_position() - _parent.position
 			set_process_input(true)
-			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
+			_parent.set_default_cursor_shape(CURSOR_MOVE)
 	elif event is InputEventMouseMotion and _drag_point:
-		_parent.position = _parent.get_global_mouse_position() - _drag_point
+		_parent.position = get_global_mouse_position() - _drag_point
+
+
+func _on_margin_input(event: InputEvent, location: int) -> void:
+	if event is InputEventMouseButton:
+		var mouse_button_event: InputEventMouseButton = event
+		if mouse_button_event.button_index == MOUSE_BUTTON_LEFT:
+			var mouse_pos := get_global_mouse_position()
+			if mouse_button_event.pressed:
+				match location:
+					TL, T, TR:
+						_margin_drag_y = mouse_pos.y - _parent.offset_top
+					BL, B, BR:
+						_margin_drag_y = mouse_pos.y - _parent.offset_bottom
+				match location:
+					TL, L, BL:
+						_margin_drag_x = mouse_pos.x - _parent.offset_left
+					TR, R, BR:
+						_margin_drag_x = mouse_pos.x - _parent.offset_right
+			else:
+				_margin_drag_x = 0.0
+				_margin_drag_y = 0.0
+				_update_custom_size()
+				finish_move()
+	elif event is InputEventMouseMotion and (_margin_drag_x or _margin_drag_y):
+		var mouse_pos := get_global_mouse_position()
+		match location:
+			TL, T, TR:
+				_parent.offset_top = mouse_pos.y - _margin_drag_y
+			BL, B, BR:
+				_parent.offset_bottom = mouse_pos.y - _margin_drag_y
+		match location:
+			TL, L, BL:
+				_parent.offset_left = mouse_pos.x - _margin_drag_x
+			TR, R, BR:
+				_parent.offset_right = mouse_pos.x - _margin_drag_x
 
 
 func _snap_horizontal() -> void:
@@ -125,7 +170,7 @@ func _snap_horizontal() -> void:
 		_parent.position.x = 0.0
 		return
 	var right := left + _parent.size.x
-	var screen_right := _viewport.size.x
+	var screen_right := _viewport.get_visible_rect().size.x
 	if right > screen_right - screen_edge_snap:
 		_parent.position.x = screen_right - right + left
 		return
@@ -157,7 +202,7 @@ func _snap_vertical() -> void:
 		_parent.position.y = 0.0
 		return
 	var bottom := top + _parent.size.y
-	var screen_bottom := _viewport.size.y
+	var screen_bottom := _viewport.get_visible_rect().size.y
 	if bottom > screen_bottom - screen_edge_snap:
 		_parent.position.y = screen_bottom - bottom + top
 		return
@@ -182,7 +227,7 @@ func _snap_vertical() -> void:
 
 func _fix_offscreen() -> void:
 	var rect := _parent.get_rect()
-	var screen_rect := _parent.get_viewport_rect()
+	var screen_rect := get_viewport_rect()
 	if screen_rect.encloses(rect):
 		return
 	if rect.position.x < 0.0:
@@ -232,12 +277,12 @@ func _try_directions(rect: Rect2, overlap: Array, diagonals: bool) -> bool:
 					orthogonal.append(overlap2[LEFT])
 					orthogonal.append(overlap2[RIGHT])
 					if abs(overlap2[LEFT]) > abs(overlap2[RIGHT]):
-						orthogonal.invert()
+						orthogonal.reverse()
 				RIGHT, LEFT:
 					orthogonal.append(overlap2[UP])
 					orthogonal.append(overlap2[DOWN])
 					if abs(overlap2[UP]) > abs(overlap2[DOWN]):
-						orthogonal.invert()
+						orthogonal.reverse()
 			if _try_diagonal_offset(rect, smallest_direction, smallest_offset, orthogonal):
 				return true # success
 		overlap[smallest_direction] = INF
@@ -290,7 +335,7 @@ func _try_diagonal_offset(rect: Rect2, direction: int, offset: float, orthogonal
 
 func _get_overlap(rect: Rect2) -> Array:
 	for child in _parent.get_parent().get_children():
-		var other := child as PanelContainer
+		var other := child as Control
 		if !other or other == _parent:
 			continue
 		var other_rect := other.get_rect()
@@ -307,40 +352,54 @@ func _get_overlap(rect: Rect2) -> Array:
 			if up_left.y > 0:
 				overlap[UP] = -up_left.y # move up to fix
 			return overlap
-	var screen_rect := _parent.get_viewport_rect()
+	var screen_rect := get_viewport_rect()
 	if screen_rect.encloses(rect):
 		return [] # good position
 	return [INF, INF, INF, INF] # bad position
 
 
 func _set_anchors_to_position() -> void:
-	var position := _parent.position
-	var size := _parent.size
-	var extra_x := _viewport.size.x - size.x
+	var parent_position := _parent.position
+	var parent_size := _parent.size
+	var viewport_size := _viewport.get_visible_rect().size
+	var extra_x := viewport_size.x - parent_size.x
 	var horizontal_anchor := 1.0
 	if extra_x > 0.0:
-		horizontal_anchor = clamp(position.x / extra_x, 0.0, 1.0)
-	var extra_y := _viewport.size.y - size.y
+		horizontal_anchor = clamp(parent_position.x / extra_x, 0.0, 1.0)
+	var extra_y := viewport_size.y - parent_size.y
 	var vertical_anchor := 1.0
 	if extra_y > 0.0:
-		vertical_anchor = clamp(position.y / extra_y, 0.0, 1.0)
+		vertical_anchor = clamp(parent_position.y / extra_y, 0.0, 1.0)
 	_parent.anchor_left = horizontal_anchor
 	_parent.anchor_right = horizontal_anchor
 	_parent.anchor_top = vertical_anchor
 	_parent.anchor_bottom = vertical_anchor
-	_parent.position = position # setting anchors screws up position (Godot bug?)
+	_parent.position = parent_position # setting anchors screws up position (Godot bug?)
 
 
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = min_sizes[gui_size]
-	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
-	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
+	var viewport_size := _viewport.get_visible_rect().size
+	var max_x := roundf(viewport_size.x * max_default_screen_proportions.x)
+	var max_y := roundf(viewport_size.y * max_default_screen_proportions.y)
 	if default_size.x > max_x:
 		default_size.x = max_x
 	if default_size.y > max_y:
 		default_size.y = max_y
 	return default_size
+
+
+func _update_custom_size() -> void:
+	# If user resized to (or near) minimum in either dimension, we assume
+	# they want default sizing (so it can shrink again on settings change).
+	_custom_size = _parent.size
+	var default_size := _get_default_size()
+	prints(default_size, _custom_size) # test whether defaults need y expansion
+	if _custom_size.x < default_size.x + 5.0:
+		_custom_size.x = 0.0
+	if _custom_size.y < default_size.y + 5.0:
+		_custom_size.y = 0.0
 
 
 func _settings_listener(setting: String, _value) -> void:
