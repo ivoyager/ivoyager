@@ -73,7 +73,7 @@ var allow_project_build := true # blockable by another autoload singleton
 
 # init_sequence can be modified (even after started) by singleton or by an
 # extension instantiated at the first step of this sequence.
-var init_sequence := [
+var init_sequence: Array[Array] = [
 	# [object, method, wait_for_signal]
 	[self, "_init_extensions", false],
 	[self, "_set_simulator_root", false],
@@ -228,7 +228,7 @@ var procedural_classes := {
 
 # ***************************** PRIVATE VARS **********************************
 
-var _project_extensions := [] # we keep reference so they don't self-free
+var _project_extensions: Array[Object] = [] # we keep reference so they don't self-free
 var _program: Dictionary = IVGlobal.program
 var _script_classes: Dictionary = IVGlobal.script_classes
 
@@ -321,14 +321,15 @@ func _init_extensions() -> void:
 		var extension: Object = extension_script.new()
 		_project_extensions.append(extension)
 		IVGlobal.extensions.append([
-			extension.EXTENSION_NAME,
-			extension.EXTENSION_VERSION,
-			extension.EXTENSION_BUILD,
-			extension.EXTENSION_STATE,
-			extension.EXTENSION_YMD
-			])
+			extension.get("EXTENSION_NAME"),
+			extension.get("EXTENSION_VERSION"),
+			extension.get("EXTENSION_BUILD"),
+			extension.get("EXTENSION_STATE"),
+			extension.get("EXTENSION_YMD"),
+		])
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
+			@warning_ignore("unsafe_method_access")
 			extension._extension_init()
 	IVGlobal.extentions_inited.emit()
 
@@ -370,16 +371,17 @@ func _instantiate_and_index_program_objects() -> void:
 	_program.TopGUI = top_gui
 	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
-			if !dict[key]:
+			var key_str: String = key
+			if !dict[key_str]:
 				continue
-			var object_key: String = key.rstrip("_").lstrip("_")
+			var object_key: String = key_str.rstrip("_").lstrip("_")
 			assert(!_program.has(object_key))
-			var object: Object = files.make_object_or_scene(dict[key])
+			var object: Object = files.make_object_or_scene(dict[key_str])
 			_program[object_key] = object
 			if object is Node:
+				@warning_ignore("unsafe_property_access")
 				object.name = object_key
-	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes,
-			procedural_classes]:
+	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes, procedural_classes]:
 		for key in dict:
 			if !dict[key]:
 				continue
@@ -390,25 +392,31 @@ func _instantiate_and_index_program_objects() -> void:
 
 func _init_program_objects() -> void:
 	for key in initializers:
-		if !initializers[key]:
+		var key_str: String = key
+		if !initializers[key_str]:
 			continue
-		var object_key: String = key.rstrip("_").lstrip("_")
+		var object_key: String = key_str.rstrip("_").lstrip("_")
 		if !_program.has(object_key): # might have removed itself already
 			continue
 		var object: Object = _program[object_key]
 		if object.has_method("_project_init"):
+			@warning_ignore("unsafe_method_access")
 			object._project_init()
 	if universe.has_method("_project_init"):
+		@warning_ignore("unsafe_method_access")
 		universe._project_init()
 	if top_gui.has_method("_project_init"):
+		@warning_ignore("unsafe_method_access")
 		top_gui._project_init()
 	for dict in [program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
-			if !dict[key]:
+			var key_str: String = key
+			if !dict[key_str]:
 				continue
-			var object_key: String = key.rstrip("_").lstrip("_")
+			var object_key: String = key_str.rstrip("_").lstrip("_")
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
+				@warning_ignore("unsafe_method_access")
 				object._project_init()
 	IVGlobal.project_inited.emit()
 	await get_tree().process_frame
@@ -419,16 +427,18 @@ func _add_program_nodes() -> void:
 	# TopGUI added after program_nodes, so gui_nodes will recieve input first
 	# and then program_nodes.
 	for key in program_nodes:
-		if !program_nodes[key]:
+		var key_str: String = key
+		if !program_nodes[key_str]:
 			continue
-		var object_key = key.rstrip("_").lstrip("_")
+		var object_key = key_str.rstrip("_").lstrip("_")
 		universe.add_child(_program[object_key])
 	if add_top_gui_to_universe:
 		universe.add_child(top_gui)
 	for key in gui_nodes:
-		if !gui_nodes[key]:
+		var key_str: String = key
+		if !gui_nodes[key_str]:
 			continue
-		var object_key = key.rstrip("_").lstrip("_")
+		var object_key = key_str.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
 	IVGlobal.project_nodes_added.emit()
 	await get_tree().process_frame

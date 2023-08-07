@@ -289,7 +289,11 @@ func _on_frame_post_draw() -> void:
 			fragment_changed.emit(-1)
 		return
 	
-	_node2d.update() # force a draw signal; FIXME34: method removed, what do we do now?
+	
+	# FIXME34: method removed, what do we do now?
+#	_node2d.update() # force a draw signal; 
+	
+	
 	if !_has_drawn:
 		return
 	

@@ -151,17 +151,18 @@ func set_data_from_cache(data) -> bool:
 	# Tests data integrity and returns false on failure.
 	if typeof(data) != TYPE_ARRAY:
 		return false
-	if !data:
+	var data_array: Array = data
+	if !data_array:
 		return false
-	var version_hash = data[-1] # untyped for safety
+	var version_hash = data_array[-1] # untyped for safety
 	if typeof(version_hash) != TYPE_INT:
 		return false
 	if version_hash != _version_hash:
 		return false
-	if data.size() != PERSIST_PROPERTIES.size() + 1:
+	if data_array.size() != PERSIST_PROPERTIES.size() + 1:
 		return false
 	for i in PERSIST_PROPERTIES.size():
-		set(PERSIST_PROPERTIES[i], data[i])
+		set(PERSIST_PROPERTIES[i], data_array[i])
 	return true
 
 

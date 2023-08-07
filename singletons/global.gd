@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230804
+const IVOYAGER_YMD := 20230807
 
 
 # simulator state broadcasts

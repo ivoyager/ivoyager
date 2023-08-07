@@ -30,14 +30,12 @@ extends Object
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:
-	@warning_ignore("unsafe_property_access")
-	if node.PERSIST_MODE == IVEnums.PERSIST_PROCEDURAL:
+	if node.get("PERSIST_MODE") == IVEnums.PERSIST_PROCEDURAL:
 		node.queue_free() # children will also be freed!
 		return
 	for child in node.get_children():
 		if "PERSIST_MODE" in child:
-			@warning_ignore("unsafe_property_access")
-			if child.PERSIST_MODE != IVEnums.NO_PERSIST:
+			if child.get("PERSIST_MODE") != IVEnums.NO_PERSIST:
 				free_procedural_nodes(child)
 
 
@@ -77,9 +75,13 @@ static func get_path_result(target, path: String, args := []): # untyped return
 	path_stack.reverse()
 	while path_stack:
 		var item_name: String = path_stack.pop_back()
-		@warning_ignore("unsafe_method_access")
-		if target is Object and target.has_method(item_name):
-			target = target.callv(item_name, args)
+		if target is Object:
+			@warning_ignore("unsafe_cast")
+			var object := target as Object
+			if object.has_method(item_name):
+				target = object.callv(item_name, args)
+			else:
+				target = object.get(item_name)
 		else:
 			@warning_ignore("unsafe_method_access")
 			target = target.get(item_name)

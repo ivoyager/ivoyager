@@ -639,16 +639,16 @@ func reset_orientation_and_rotation() -> void:
 	
 	# possible polarity reversal; see comments under get_north_pole()
 	var reverse_polarity := false
-	# FIXME34: Self-type ok now? If so, re-code w/out errors.
+	var parent := get_parent_node_3d() as IVBody
 	if (flags & IS_TOP or flags & IS_STAR or flags & IS_TRUE_PLANET
-			or get_parent_node_3d().flags & IS_TRUE_PLANET):
+			or parent.flags & IS_TRUE_PLANET):
 		if ECLIPTIC_Z.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
-	elif get_parent_node_3d().flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
+	elif parent.flags & IS_STAR: # any other star-orbiter (dwarf planets, asteroids, etc.)
 		if new_rotation_rate < 0.0:
 			reverse_polarity = true
 	else: # moons of not-true-planet star-orbiters
-		var parent_positive_pole: Vector3 = get_parent_node_3d().get_positive_pole()
+		var parent_positive_pole: Vector3 = parent.get_positive_pole()
 		if parent_positive_pole.dot(new_rotation_vector) < 0.0:
 			reverse_polarity = true
 	if reverse_polarity:
@@ -670,19 +670,18 @@ func _add_rotating_space() -> void:
 	# bail out if we don't have requried parameters
 	if !orbit:
 		return
-	var m2: float = get_mass()
+	var m2 := get_mass()
 	if !m2:
 		return
-	
-	# FIXME34: Self-type ok now? If so, re-code w/out errors.
-	var m1: float = get_parent_node_3d().get_mass()
+	var parent := get_parent_node_3d() as IVBody
+	var m1 := parent.get_mass()
 	if !m1:
 		return
-	var mass_ratio: float = m1 / m2
+	var mass_ratio := m1 / m2
 	var characteristic_length := orbit.get_semimajor_axis()
 	var characteristic_time := orbit.get_orbit_period()
 	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
-	@warning_ignore("unsafe_method_access") # Replacement class possible
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	rotating_space = _RotatingSpace_.new()
 	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
 	var translation_ := orbit.get_position()

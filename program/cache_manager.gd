@@ -178,17 +178,20 @@ func _read_cache() -> void:
 		return
 	var file_var = file.get_var() # untyped for safety
 	# test for version and type consistency (no longer used items are ok)
-	@warning_ignore("unsafe_method_access")
-	if typeof(file_var) != TYPE_DICTIONARY or file_var.get("__version__", -1) != cache_file_version:
+	if typeof(file_var) != TYPE_DICTIONARY:
 		prints("Overwriting obsolete cache file", _file_path)
 		return
-	for key in file_var:
+	var file_dict: Dictionary = file_var
+	if file_dict.get("__version__", -1) != cache_file_version:
+		prints("Overwriting obsolete cache file", _file_path)
+		return
+	for key in file_dict:
 		if current.has(key):
-			if typeof(current[key]) != typeof(file_var[key]):
+			if typeof(current[key]) != typeof(file_dict[key]):
 				prints("Overwriting obsolete cache file:", _file_path)
 				return
 	# file cache ok
-	_cached = file_var
+	_cached = file_dict
 	for key in _cached:
 		if current.has(key): # possibly old verson obsoleted key
 			current[key] = _cached[key]
