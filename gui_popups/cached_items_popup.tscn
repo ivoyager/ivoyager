@@ -1,0 +1,57 @@
+[gd_scene load_steps=2 format=3 uid="uid://bgy7irkvth4l1"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_popups/cached_items_popup.gd" id="1"]
+
+[node name="CachedItemsPopup" type="PopupPanel"]
+process_mode = 3
+size = Vector2i(426, 100)
+exclusive = true
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 422.0
+offset_bottom = 96.0
+
+[node name="TopHBox" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="HeaderLeft" type="MarginContainer" parent="VBox/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeaderLabel" type="Label" parent="VBox/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="HeaderRight" type="MarginContainer" parent="VBox/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Content" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="BottomHBox" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="RestoreDefaults" type="Button" parent="VBox/BottomHBox"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Restore Defaults"
+
+[node name="ConfirmChanges" type="Button" parent="VBox/BottomHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "Confirm Changes"
+
+[node name="Cancel" type="Button" parent="VBox/BottomHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "Cancel"

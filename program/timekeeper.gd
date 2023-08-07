@@ -462,7 +462,7 @@ func can_decr_speed() -> bool:
 # *****************************************************************************
 # private functions
 
-func _on_about_to_start_simulator(is_new_game: bool) -> void:
+func _on_about_to_start_simulator(_is_new_game: bool) -> void:
 	pass
 #	if is_new_game:
 #		if start_real_world_time:
