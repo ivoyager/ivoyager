@@ -23,8 +23,6 @@ const SCENE := "res://ivoyager/gui_popups/confirmation.tscn"
 
 # Call using IVGlobal.confirmation_requested.emit(args).
 
-var is_exclusive := true
-
 var _stop_sim: bool
 var _confirm_action: Callable
 
@@ -33,10 +31,18 @@ func _ready() -> void:
 	IVGlobal.confirmation_requested.connect(_on_confirmation_requested)
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
-	exclusive = is_exclusive
-	process_mode = PROCESS_MODE_ALWAYS
+	focus_exited.connect(_keep_focus)
+	#popup_hide.connect(_on_popup_hide)
+	exclusive = true
+	transient = false
+	always_on_top = true
 	theme = IVGlobal.themes.main
 	get_label().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
 
 
 func _on_confirmation_requested(text: String, confirm_action: Callable, stop_sim := true,
@@ -52,6 +58,7 @@ func _on_confirmation_requested(text: String, confirm_action: Callable, stop_sim
 	if _stop_sim:
 		IVGlobal.sim_stop_required.emit(self)
 	popup_centered()
+	_keep_focus()
 
 
 func _on_confirmed() -> void:
@@ -63,4 +70,10 @@ func _on_confirmed() -> void:
 func _on_canceled() -> void:
 	if _stop_sim:
 		IVGlobal.sim_run_allowed.emit(self)
+
+
+func _keep_focus() -> void:
+	await get_tree().process_frame
+	if !has_focus():
+		grab_focus()
 

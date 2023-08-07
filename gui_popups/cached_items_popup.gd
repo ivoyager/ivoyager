@@ -25,7 +25,6 @@ const SCENE := "res://ivoyager/gui_popups/cached_items_popup.tscn"
 # subclasses: IVOptionsPopup, IVHotkeysPopup.
 
 var stop_sim := true
-var is_exclusive := false
 var layout: Array[Array] # subclass sets in _init()
 
 var _header_left: MarginContainer
@@ -36,6 +35,7 @@ var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
 var _blocking_popups: Array = IVGlobal.blocking_popups
+var _allow_close := false
 
 
 @onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
@@ -63,7 +63,8 @@ func _on_ready() -> void:
 	IVGlobal.close_all_admin_popups_requested.connect(hide)
 	close_requested.connect(_on_close_requested)
 	popup_hide.connect(_on_popup_hide)
-	exclusive = is_exclusive
+	exclusive = false
+	transient = false
 #	theme = IVGlobal.themes.main
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
@@ -76,6 +77,16 @@ func _on_ready() -> void:
 	_restore_defaults.pressed.connect(_on_restore_defaults)
 	_confirm_changes.pressed.connect(_on_confirm_changes)
 	_blocking_popups.append(self)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	_on_unhandled_key_input(event)
+
+
+func _on_unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
+		_on_cancel()
 
 
 # public
@@ -157,9 +168,6 @@ func _open() -> void:
 		return
 	if stop_sim:
 		_state_manager.require_stop(self)
-	
-	print("Opening ", name)
-	
 	_build_content()
 	size = Vector2i.ZERO
 	popup_centered()
@@ -167,7 +175,8 @@ func _open() -> void:
 
 func _build_content() -> void:
 	for child in _content_container.get_children():
-		child.free()
+		_content_container.remove_child(child)
+		child.queue_free()
 	for column_array in layout:
 		var column_vbox := VBoxContainer.new()
 		_content_container.add_child(column_vbox)
@@ -199,33 +208,40 @@ func _on_content_built() -> void:
 
 func _on_restore_defaults() -> void:
 	# subclass logic
-	call_deferred("_build_content")
+	_build_content.call_deferred()
 
 
 func _on_confirm_changes() -> void:
 	# subclass logic
-	hide()
-
-
-func _on_cancel_changes() -> void:
-	# subclass logic
+	_allow_close = true
 	hide()
 
 
 func _on_cancel() -> void:
+	# subclass logic
+	_allow_close = true
 	hide()
 
 
 func _on_popup_hide() -> void:
+	if !_allow_close:
+		show.call_deferred()
+		return
+	_allow_close = false
 	for child in _content_container.get_children():
-		child.free()
+		_content_container.remove_child(child)
+		child.queue_free()
 	if stop_sim:
 		_state_manager.allow_run(self)
 
 
 func _on_close_requested() -> void:
-	# TODO Godot 4.1.1 ISSUE: This is never called!
-	print("close_requested signal works now! It wasn't working in Godot 4.1.1")
+	# TODO Godot 4.1.1 ISSUE: This is basically useless. It is only called if
+	# exclusive == false and root viewport gui_embed_subwindows == false.
+	# But we want to keep gui_embed_subwindows == true.
+	# Also, hide() is done by the engine, contrary to docs.
+	# If this is fixed we can remove the '_allow_close' hack.
+	print("close_requested signal works now! Use requirements were prohibitive in Godot 4.1.1")
 
 
 func _is_blocking_popup() -> bool:
