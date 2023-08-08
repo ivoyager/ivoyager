@@ -20,6 +20,8 @@
 class_name IVMouseOnlyGUINav
 extends CheckBox
 
+# DEPRECIATE?
+
 # GUI widget. This exist due to current Godot Engine hard-coding of GUI
 # navigation hotkeys, specifically arrow keys (w/out mods). See issue #43663;
 # hopefully will be fixed in 4.0. This checkbox widget allows the user to

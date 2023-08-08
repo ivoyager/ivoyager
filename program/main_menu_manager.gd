@@ -46,7 +46,7 @@ var button_inits: Array[Array] = [
 ] 
 
 # read-only!
-var button_infos := []
+var button_infos: Array[Array] = []
 
 
 func _project_init() -> void:

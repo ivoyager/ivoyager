@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://b58glkdlp7x1i"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/selection_data.gd" id="1"]
+
+[node name="SelectionData" type="VBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+script = ExtResource("1")
+
+[node name="Timer" type="Timer" parent="."]

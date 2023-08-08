@@ -144,7 +144,7 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 				
 				# FIXME34
 #				spin_box.horizontal_alignment # missing?
-##				spin_box.align = LineEdit.ALIGNMENT_CENTER # ALIGN_RIGHT is buggy w/ big fonts
+##				spin_box.align = LineEdit.HORIZONTAL_ALIGNMENT_CENTER # ALIGN_RIGHT is buggy w/ big fonts
 
 				spin_box.step = 1.0 if is_int else 0.1
 				spin_box.rounded = is_int

@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://cv3oc6jmc4nmo"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_popups/view_save_popup.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://ccm8cp7kb55s4" path="res://ivoyager/gui_widgets/view_saver.tscn" id="2"]
+
+[node name="ViewSavePopup" type="PopupPanel"]
+size = Vector2i(202, 329)
+visible = true
+script = ExtResource("1")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 198.0
+offset_bottom = 325.0
+mouse_filter = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="ViewSaver" parent="MarginContainer" instance=ExtResource("2")]
+unique_name_in_owner = true
+layout_mode = 2
