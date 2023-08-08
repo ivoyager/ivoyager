@@ -117,7 +117,7 @@ func change_orbits_visibility(group: String, is_show: bool) -> void:
 
 
 func get_visible_points_groups() -> Array[String]:
-	var array := []
+	var array: Array[String] = []
 	for key in points_visibilities:
 		if points_visibilities[key]:
 			array.append(key)
@@ -125,7 +125,7 @@ func get_visible_points_groups() -> Array[String]:
 
 
 func get_visible_orbits_groups() -> Array[String]:
-	var array := []
+	var array: Array[String] = []
 	for key in orbits_visibilities:
 		if orbits_visibilities[key]:
 			array.append(key)

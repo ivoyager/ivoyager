@@ -197,7 +197,7 @@ var gui_nodes := {
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
 	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
 	_Confirmation_ = IVConfirmation, # safe to replace or remove
-#	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
+	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
 var procedural_classes := {

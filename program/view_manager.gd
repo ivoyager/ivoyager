@@ -113,7 +113,7 @@ func remove_view(view_name: String, group_name: String, is_cached: bool) -> void
 	
 
 func get_view_names_in_group(group_name: String, is_cached: bool) -> Array[String]:
-	var group := []
+	var group: Array[String] = []
 	var suffix := "." + group_name
 	var dict := _cached_views if is_cached else _gamesave_views
 	for key in dict:

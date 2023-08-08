@@ -96,16 +96,16 @@ func _on_child_entered_tree(control: Control) -> void:
 			&"AsteroidsHUDs":
 				sbg_huds.column_master = _column_master
 				sbg_huds.rows = [
-					["LABEL_ASTEROIDS",
-						["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5", "CE", "TN"], false],
-					["SBG_NEAR_EARTH", ["NE"], true],
-					["SBG_MARS_CROSSERS", ["MC"], true],
-					["SBG_INNER_MAIN_BELT", ["IMB"], true],
-					["SBG_MIDDLE_MAIN_BELT", ["MMB"], true],
-					["SBG_OUTER_MAIN_BELT", ["OMB"], true],
-					["SBG_HILDAS", ["HI"], true],
-					["LABEL_JUPITER_TROJANS", ["JT4", "JT5"], true],
-					["SBG_CENTAURS", ["CE"], true],
-					["SBG_TRANS_NEPTUNE", ["TN"], true],
+					["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5",
+							"CE", "TN"] as Array[String], false],
+					["SBG_NEAR_EARTH", ["NE"] as Array[String], true],
+					["SBG_MARS_CROSSERS", ["MC"] as Array[String], true],
+					["SBG_INNER_MAIN_BELT", ["IMB"] as Array[String], true],
+					["SBG_MIDDLE_MAIN_BELT", ["MMB"] as Array[String], true],
+					["SBG_OUTER_MAIN_BELT", ["OMB"] as Array[String], true],
+					["SBG_HILDAS", ["HI"] as Array[String], true],
+					["LABEL_JUPITER_TROJANS", ["JT4", "JT5"] as Array[String], true],
+					["SBG_CENTAURS", ["CE"] as Array[String], true],
+					["SBG_TRANS_NEPTUNE", ["TN"] as Array[String], true],
 				]
 

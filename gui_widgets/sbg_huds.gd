@@ -41,7 +41,7 @@ var indent := "  "
 
 var rows: Array[Array] = [
 	# [row_name, sbg_aliases, is_indent]
-	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"], false], # example row
+	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"] as Array[String], false], # example row
 ]
 
 var headers: Array[String] = ["LABEL_POINTS", "LABEL_ORBITS"]
