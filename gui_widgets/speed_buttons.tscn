@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://drl4tb0hbqhl"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/speed_buttons.gd" id="1"]
+
+[node name="SpeedButtons" type="HBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Minus" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "HINT_TIME_SLOW"
+text = "-"
+
+[node name="Plus" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "HINT_TIME_SPEED"
+text = "+"
+
+[node name="Pause" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "HINT_TIME_PAUSE"
+toggle_mode = true
+text = "||"
+
+[node name="Reverse" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "HINT_TIME_REVERSE"
+toggle_mode = true
+text = "<"

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://bkokwngymmnyk"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/version_label.gd" id="1"]
+
+[node name="VersionLabel" type="Label"]
+offset_right = 99.0
+offset_bottom = 14.0
+text = "v0.0.0"
+script = ExtResource("1")

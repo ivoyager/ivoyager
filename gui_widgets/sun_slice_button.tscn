@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://wcxctits85co"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/sun_slice_button.gd" id="1"]
+
+[node name="SunSliceButton" type="Button"]
+offset_right = 40.0
+offset_bottom = 40.0
+toggle_mode = true
+action_mode = 0
+script = ExtResource("1")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 7

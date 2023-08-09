@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://welwpw4boyv8"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/lat_long_label.gd" id="1"]
+
+[node name="LatLongLabel" type="Label"]
+offset_right = 40.0
+offset_bottom = 14.0
+text = "0.0 N 0.0 E"
+script = ExtResource("1")

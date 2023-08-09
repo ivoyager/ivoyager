@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://bgk3lju7s35t"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/time_set_button.gd" id="1"]
+
+[node name="TimeSetButton" type="Button"]
+offset_left = 162.0
+offset_right = 255.0
+offset_bottom = 24.0
+tooltip_text = "HINT_SET_TIME"
+toggle_mode = true
+action_mode = 0
+text = "BUTTON_SET"
+script = ExtResource("1")

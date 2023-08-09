@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://cjnmkmscbt4jl"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/sbg_huds.gd" id="1"]
+
+[node name="SBGHUDs" type="GridContainer"]
+offset_right = 242.0
+offset_bottom = 210.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = -2
+columns = 3
+script = ExtResource("1")

@@ -102,7 +102,7 @@ var _transform := Transform3D(Basis(), Vector3(0, 0, KM)) # working value
 # *****************************************************************************
 
 # public - project init vars
-var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
+var focal_lengths: Array[float] = [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0 # DEPRECIATE: Make dynamic for distance / size
 var gui_ecliptic_coordinates_dist := 1e6 * KM

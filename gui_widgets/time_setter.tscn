@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://bh7hd3sdaohjd"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/time_setter.gd" id="1"]
+
+[node name="TimeSetter" type="HBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Year" type="SpinBox" parent="."]
+layout_mode = 2
+min_value = -3000.0
+max_value = 3000.0
+value = 2021.0
+
+[node name="Slash1" type="Label" parent="."]
+layout_mode = 2
+text = "/"
+
+[node name="Month" type="SpinBox" parent="."]
+layout_mode = 2
+min_value = 1.0
+max_value = 12.0
+value = 2.0
+
+[node name="Slash2" type="Label" parent="."]
+layout_mode = 2
+text = "/"
+
+[node name="Day" type="SpinBox" parent="."]
+layout_mode = 2
+min_value = 1.0
+max_value = 31.0
+value = 14.0
+
+[node name="Spacer" type="Control" parent="."]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Hour" type="SpinBox" parent="."]
+layout_mode = 2
+max_value = 23.0
+value = 12.0
+
+[node name="Colon1" type="Label" parent="."]
+layout_mode = 2
+text = ":"
+
+[node name="Minute" type="SpinBox" parent="."]
+layout_mode = 2
+max_value = 59.0
+
+[node name="Colon2" type="Label" parent="."]
+layout_mode = 2
+text = ":"
+
+[node name="Second" type="SpinBox" parent="."]
+layout_mode = 2
+max_value = 59.0
+
+[node name="UT" type="Label" parent="."]
+layout_mode = 2
+text = "UT  "
+
+[node name="Set" type="Button" parent="."]
+layout_mode = 2
+text = "BUTTON_SET"
+
+[node name="SetAndClose" type="Button" parent="."]
+layout_mode = 2
+text = "BUTTON_SET_AND_CLOSE"

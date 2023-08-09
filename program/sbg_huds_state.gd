@@ -116,30 +116,30 @@ func change_orbits_visibility(group: String, is_show: bool) -> void:
 	orbits_visibility_changed.emit()
 
 
-func get_visible_points_groups() -> Array:
-	var array := []
+func get_visible_points_groups() -> Array[String]:
+	var array: Array[String] = []
 	for key in points_visibilities:
 		if points_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func get_visible_orbits_groups() -> Array:
-	var array := []
+func get_visible_orbits_groups() -> Array[String]:
+	var array: Array[String] = []
 	for key in orbits_visibilities:
 		if orbits_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func set_visible_points_groups(array: Array) -> void:
+func set_visible_points_groups(array: Array[String]) -> void:
 	points_visibilities.clear()
 	for key in array:
 		points_visibilities[key] = true
 	points_visibility_changed.emit()
 
 
-func set_visible_orbits_groups(array: Array) -> void:
+func set_visible_orbits_groups(array: Array[String]) -> void:
 	orbits_visibilities.clear()
 	for key in array:
 		orbits_visibilities[key] = true
@@ -186,7 +186,7 @@ func get_orbits_color(group: String) -> Color:
 	return fallback_orbits_color
 
 
-func get_consensus_points_color(groups: Array, is_default := false) -> Color:
+func get_consensus_points_color(groups: Array[String], is_default := false) -> Color:
 	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
@@ -199,7 +199,7 @@ func get_consensus_points_color(groups: Array, is_default := false) -> Color:
 	return consensus_color
 
 
-func get_consensus_orbits_color(groups: Array, is_default := false) -> Color:
+func get_consensus_orbits_color(groups: Array[String], is_default := false) -> Color:
 	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:

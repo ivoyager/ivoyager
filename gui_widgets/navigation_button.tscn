@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2knp7r6n1qy0"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/navigation_button.gd" id="1"]
+
+[node name="NavigationButton" type="Button"]
+offset_right = 12.0
+offset_bottom = 20.0
+toggle_mode = true
+action_mode = 0
+flat = true
+script = ExtResource("1")
