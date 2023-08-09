@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5afahau0g63j"]
+
+[ext_resource type="Script" path="res://ivoyager/gui_popups/save_dialog.gd" id="1"]
+
+[node name="SaveDialog" type="FileDialog"]
+process_mode = 3
+script = ExtResource("1")

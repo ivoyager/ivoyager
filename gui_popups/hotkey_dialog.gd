@@ -43,6 +43,7 @@ func _ready():
 	confirmed.connect(_on_confirmed)
 	_key_delete.pressed.connect(_on_key_delete)
 	focus_exited.connect(_keep_focus)
+	process_mode = PROCESS_MODE_ALWAYS
 	transient = false
 	always_on_top = true
 	_ok_button.disabled = true

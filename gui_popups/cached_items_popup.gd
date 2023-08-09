@@ -34,7 +34,7 @@ var _content_container: HBoxContainer
 var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
-var _blocking_popups: Array = IVGlobal.blocking_popups
+var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 var _allow_close := false
 
 
@@ -63,6 +63,7 @@ func _on_ready() -> void:
 	IVGlobal.close_all_admin_popups_requested.connect(hide)
 	close_requested.connect(_on_close_requested)
 	popup_hide.connect(_on_popup_hide)
+	process_mode = PROCESS_MODE_ALWAYS
 	exclusive = false
 	transient = false
 #	theme = IVGlobal.themes.main
@@ -76,7 +77,7 @@ func _on_ready() -> void:
 	_cancel.pressed.connect(_on_cancel)
 	_restore_defaults.pressed.connect(_on_restore_defaults)
 	_confirm_changes.pressed.connect(_on_confirm_changes)
-	_blocking_popups.append(self)
+	_blocking_windows.append(self)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -245,8 +246,8 @@ func _on_close_requested() -> void:
 
 
 func _is_blocking_popup() -> bool:
-	for blocking_popup in _blocking_popups:
-		if blocking_popup.visible:
+	for window in _blocking_windows:
+		if window.visible:
 			return true
 	return false
 
