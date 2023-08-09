@@ -8,5 +8,6 @@ offset_right = 100.0
 offset_bottom = 305.0
 bbcode_enabled = true
 text = "Wikipedia"
+fit_content = true
 scroll_active = false
 script = ExtResource("1")

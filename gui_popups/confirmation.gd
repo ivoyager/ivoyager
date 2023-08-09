@@ -36,7 +36,7 @@ func _ready() -> void:
 	exclusive = true
 	transient = false
 	always_on_top = true
-	theme = IVGlobal.themes.main
+#	theme = IVGlobal.themes.main
 	get_label().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 

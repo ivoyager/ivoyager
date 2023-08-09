@@ -86,7 +86,7 @@ func _on_init():
 
 func _project_init() -> void:
 	super._project_init()
-	IVGlobal.options_requested.connect(_open)
+	IVGlobal.options_requested.connect(open)
 	IVGlobal.setting_changed.connect(_settings_listener)
 	if !IVGlobal.enable_save_load:
 		remove_subpanel("LABEL_SAVE_LOAD")

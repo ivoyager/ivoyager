@@ -91,6 +91,16 @@ func _on_unhandled_key_input(event: InputEvent) -> void:
 
 # public
 
+func open() -> void:
+	if _is_blocking_popup():
+		return
+	if stop_sim:
+		_state_manager.require_stop(self)
+	_build_content()
+	size = Vector2i.ZERO
+	popup_centered()
+
+
 func add_subpanel(subpanel_dict: Dictionary, to_column: int, to_row := 999) -> void:
 	# See example subpanel_dict formats in IVOptionsPopup or IVHotkeysPopup.
 	# Set to_column and/or to_row arbitrarily large to move to end.
@@ -162,16 +172,6 @@ func remove_item(item: String) -> void:
 
 
 # private
-
-func _open() -> void:
-	if _is_blocking_popup():
-		return
-	if stop_sim:
-		_state_manager.require_stop(self)
-	_build_content()
-	size = Vector2i.ZERO
-	popup_centered()
-
 
 func _build_content() -> void:
 	for child in _content_container.get_children():

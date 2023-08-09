@@ -38,7 +38,6 @@ func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManage
 	custom_minimum_size = Vector2(image_size, image_size)
 	var texture_box := TextureRect.new()
 	texture_box.set_anchors_and_offsets_preset(PRESET_FULL_RECT, PRESET_MODE_KEEP_SIZE, 0)
-	# TEST34
 	texture_box.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_box.texture = body.texture_2d

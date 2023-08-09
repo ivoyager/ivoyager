@@ -89,7 +89,7 @@ func _on_nav_button_selected(selected: Button) -> void:
 
 
 func _on_resized() -> void:
-	var button_size := size.y * 0.7 # 0.7 gives room for scroll bar
+	var button_size := size.y # * 0.7 # 0.7 gives room for scroll bar
 	if _button_size == button_size:
 		return
 	_button_size = button_size

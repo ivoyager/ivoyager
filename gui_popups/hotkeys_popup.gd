@@ -128,7 +128,7 @@ func _project_init() -> void:
 	super._project_init()
 	_hotkey_dialog = IVGlobal.program.HotkeyDialog
 	_hotkey_dialog.hotkey_confirmed.connect(_on_hotkey_confirmed)
-	IVGlobal.hotkeys_requested.connect(_open)
+	IVGlobal.hotkeys_requested.connect(open)
 	if IVGlobal.disable_pause:
 		remove_item("toggle_pause")
 	if !IVGlobal.allow_time_reversal:
