@@ -27,6 +27,7 @@ const SCENE := "res://ivoyager/gui_popups/cached_items_popup.tscn"
 var stop_sim := true
 var layout: Array[Array] # subclass sets in _init()
 
+var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 var _header_left: MarginContainer
 var _header_label: Label
 var _header_right: MarginContainer
@@ -34,7 +35,6 @@ var _content_container: HBoxContainer
 var _cancel: Button
 var _confirm_changes: Button
 var _restore_defaults: Button
-var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 var _allow_close := false
 
 
@@ -63,10 +63,7 @@ func _on_ready() -> void:
 	IVGlobal.close_all_admin_popups_requested.connect(hide)
 	close_requested.connect(_on_close_requested)
 	popup_hide.connect(_on_popup_hide)
-	process_mode = PROCESS_MODE_ALWAYS
-	exclusive = false
-	transient = false
-#	theme = IVGlobal.themes.main
+	exclusive = false # Godot ISSUE? not editable in scene?
 	_header_left = $VBox/TopHBox/HeaderLeft
 	_header_label = $VBox/TopHBox/HeaderLabel
 	_header_right = $VBox/TopHBox/HeaderRight

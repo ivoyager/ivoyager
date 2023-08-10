@@ -26,7 +26,6 @@ extends IVCachedItemsPopup
 var key_box_min_size_x := 300
 
 var _hotkey_dialog: IVHotkeyDialog
-var _options_button: Button
 
 @onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
 
@@ -126,8 +125,6 @@ func _on_init():
 
 func _project_init() -> void:
 	super._project_init()
-	_hotkey_dialog = IVGlobal.program.HotkeyDialog
-	_hotkey_dialog.hotkey_confirmed.connect(_on_hotkey_confirmed)
 	IVGlobal.hotkeys_requested.connect(open)
 	if IVGlobal.disable_pause:
 		remove_item("toggle_pause")
@@ -146,30 +143,14 @@ func _project_init() -> void:
 func _on_ready():
 	super._on_ready()
 	_header_label.text = "LABEL_HOTKEYS"
-	# Options button
-	_options_button = Button.new()
-	_options_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_options_button.text = "BUTTON_OPTIONS"
-	_options_button.pressed.connect(_open_options)
-	_header_right.add_child(_options_button)
-	# Mouse-only GUI Nav checkbox
-#	var checkbox_res := preload("res://ivoyager/gui_widgets/mouse_only_gui_nav.tscn")
-#	var checkbox: CheckBox = checkbox_res.instantiate()
-#	_header_left.add_child(checkbox)
-	# comment text below header
-#	var note_label := Label.new()
-#	note_label.autowrap = true
-#	note_label.anchor_left = 0
-#	note_label.anchor_right = 1
-#	note_label.text = "TXT_GUI_HOTKEY_NOTE"
-#	$VBox.add_sibling($VBox/TopHBox, note_label)
+	_hotkey_dialog = IVFiles.make_object_or_scene(IVHotkeyDialog)
+	_hotkey_dialog.hotkey_confirmed.connect(_on_hotkey_confirmed)
+	add_child(_hotkey_dialog)
 
 
 func _on_content_built() -> void:
 	_restore_defaults.disabled = _input_map_manager.is_all_defaults()
-	var is_cache_current := _input_map_manager.is_cache_current()
-	_confirm_changes.disabled = is_cache_current
-	_options_button.disabled = !is_cache_current
+	_confirm_changes.disabled = _input_map_manager.is_cache_current()
 
 
 func _build_item(action: String, action_label_str: String) -> HBoxContainer:
@@ -214,6 +195,9 @@ func _cancel_changes() -> void:
 
 func _on_hotkey_confirmed(action: String, index: int, keycode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
+	
+	print("_on_hotkey_confirmed")
+	
 	if keycode == -1:
 		_input_map_manager.remove_event_dict_by_index(action, &"InputEventKey", index, true)
 	else:
@@ -247,14 +231,6 @@ func _on_cancel() -> void:
 		_allow_close = true
 		hide()
 		return
-	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_HOTKEYS_CHANGES", _cancel_changes, true,
+	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_HOTKEY_CHANGES", _cancel_changes, true,
 			"LABEL_PLEASE_CONFIRM", "BUTTON_CANCEL_CHANGES", "BUTTON_BACK")
-
-
-func _open_options() -> void:
-	if !_input_map_manager.is_cache_current(): # safety test (should be disabled)
-		return
-	_allow_close = true
-	hide()
-	IVGlobal.options_requested.emit()
 

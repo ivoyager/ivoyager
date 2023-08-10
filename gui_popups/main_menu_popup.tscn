@@ -1,30 +1,21 @@
-[gd_scene load_steps=3 format=3 uid="uid://btip0uoxyu3yx"]
+[gd_scene load_steps=3 format=3 uid="uid://bdd3fo7rp5x1v"]
 
-[ext_resource type="Script" path="res://ivoyager/gui_popups/main_menu_popup.gd" id="1"]
+[ext_resource type="Script" path="res://ivoyager/gui_popups/main_menu_popup.gd" id="1_0l6c3"]
 [ext_resource type="PackedScene" uid="uid://dl2ymdlh1ak58" path="res://ivoyager/gui_widgets/main_menu.tscn" id="2"]
 
-[node name="MainMenuPopup" type="Popup"]
+[node name="MainMenuPopup" type="PopupPanel"]
 process_mode = 3
-exclusive = true
-script = ExtResource("1")
+script = ExtResource("1_0l6c3")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -7.0
-offset_top = -7.0
-offset_right = 7.0
-offset_bottom = 7.0
+[node name="MarginContainer" type="MarginContainer" parent="."]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 96.0
+offset_bottom = 96.0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="MainMenu" parent="PanelContainer/MarginContainer" instance=ExtResource("2")]
+[node name="MainMenu" parent="MarginContainer" instance=ExtResource("2")]
 layout_mode = 2

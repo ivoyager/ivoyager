@@ -193,9 +193,7 @@ var gui_nodes := {
 #	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 #	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
 	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
-#	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
-	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
 	_Confirmation_ = IVConfirmation, # safe to replace or remove
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
@@ -222,7 +220,7 @@ var procedural_classes := {
 	_Orbit_ = IVOrbit,
 	_Selection_ = IVSelection,
 	_View_ = IVView,
-	_Composition_ = IVComposition, # replaceable, but look for dependencies
+	_Composition_ = IVComposition, # replaceable, but look for dependencies	
 }
 
 

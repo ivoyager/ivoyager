@@ -18,12 +18,9 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuPopup
-extends Popup
+extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/main_menu_popup.tscn"
 
-# Unlike all other popups, this one is always listening for "ui_cancel". Other
-# popups listen only when open and process before IVMainMenuPopup (due to order
-# in IVProjectBuilder).
 
 var center := true # if false, set $PanelContainer margins
 var stop_sim := true
@@ -42,13 +39,7 @@ func _project_init():
 
 
 func _ready() -> void:
-	process_mode = PROCESS_MODE_ALWAYS
-	transient = false
 	theme = IVGlobal.themes.main_menu
-#	if center:
-#		$PanelContainer.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-#		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
-#		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
