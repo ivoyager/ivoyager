@@ -134,7 +134,7 @@ var program_refcounteds := {
 	_OrbitBuilder_ = IVOrbitBuilder,
 	_SelectionBuilder_ = IVSelectionBuilder,
 	_CompositionBuilder_ = IVCompositionBuilder, # remove or subclass
-#	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
+	_SaveBuilder_ = IVSaveBuilder, # ok to remove if you don't need game save
 	
 	# finishers (modify something on entering tree)
 	_BodyFinisher_ = IVBodyFinisher,
@@ -174,7 +174,7 @@ var program_nodes := {
 	_SBGHUDsState_ = IVSBGHUDsState, # (likely to have input in future)
 	_BodyHUDsState_ = IVBodyHUDsState,
 	_InputHandler_ = IVInputHandler,
-#	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
+	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_StateManager_ = IVStateManager,
 }
 
@@ -190,8 +190,8 @@ var gui_nodes := {
 	_GameGUI_ = null, # assign here if convenient (above MouseTargetLabel, below SplashScreen)
 	_SplashScreen_ = null, # assign here if convenient (below popups)
 	_MainMenuPopup_ = IVMainMenuPopup, # safe to replace or remove
-#	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
-#	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
+	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
+	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
 	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
 	_Confirmation_ = IVConfirmation, # safe to replace or remove

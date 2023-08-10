@@ -20,13 +20,17 @@
 class_name IVInputHandler
 extends Node
 
-# Handles input for classes that don't handle their own. This is mainly for
-# Windows (Popups & Dialogs) that don't recieve input passed in the root
-# Window.
+# Handles input not handled in class files. This is mainly for closed Popups
+# and Dialogs that don't recieve input passed in the root Window.
+
+
+func _ready() -> void:
+	process_mode = PROCESS_MODE_ALWAYS
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	
+	if !event.is_action_type() or !event.is_pressed():
+		return
 	if event.is_action_pressed(&"ui_cancel"):
 		IVGlobal.open_main_menu_requested.emit()
 	elif event.is_action_pressed(&"toggle_options"):
@@ -34,6 +38,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"toggle_hotkeys"):
 		IVGlobal.hotkeys_requested.emit()
 	else:
-		return
+		return # input not handled
 	get_viewport().set_input_as_handled()
 

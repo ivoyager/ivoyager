@@ -387,7 +387,8 @@ func get_time_from_operating_system() -> float:
 
 
 func get_current_date_for_file() -> String:
-	return date_format_for_file % date.slice(0, 2)
+	print()
+	return date_format_for_file % date.slice(0, 3)
 
 
 func set_time(new_time: float) -> void:

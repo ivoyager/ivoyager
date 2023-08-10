@@ -38,9 +38,6 @@ var _restore_defaults: Button
 var _allow_close := false
 
 
-@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-
-
 # virtual & overridable virtual functions
 
 func _init():
@@ -90,10 +87,12 @@ func _on_unhandled_key_input(event: InputEvent) -> void:
 # public
 
 func open() -> void:
+	if visible:
+		return
 	if _is_blocking_popup():
 		return
 	if stop_sim:
-		_state_manager.require_stop(self)
+		IVGlobal.sim_stop_required.emit(self)
 	_build_content()
 	size = Vector2i.ZERO
 	popup_centered()
@@ -230,7 +229,7 @@ func _on_popup_hide() -> void:
 		_content_container.remove_child(child)
 		child.queue_free()
 	if stop_sim:
-		_state_manager.allow_run(self)
+		IVGlobal.sim_run_allowed.emit(self)
 
 
 func _on_close_requested() -> void:

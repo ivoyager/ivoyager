@@ -39,14 +39,13 @@ func _project_init() -> void:
 	if !IVGlobal.enable_save_load:
 		return
 	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
-	IVGlobal.save_dialog_requested.connect(_open)
-	IVGlobal.close_all_admin_popups_requested.connect(hide)
-	file_selected.connect(_save_file)
-	canceled.connect(_on_canceled)
 
 
 func _ready():
-	process_mode = PROCESS_MODE_ALWAYS
+	IVGlobal.save_dialog_requested.connect(_open)
+	IVGlobal.close_all_admin_popups_requested.connect(_close)
+	file_selected.connect(_save_file)
+	canceled.connect(_on_canceled)
 	theme = IVGlobal.themes.main
 	_blocking_windows.append(self)
 
@@ -58,7 +57,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _open() -> void:
 	if visible:
-		hide()
+		return
+	if !IVGlobal.state.is_started_or_about_to_start:
 		return
 	if _is_blocking_popup():
 		return
@@ -70,6 +70,11 @@ func _open() -> void:
 			if _settings.append_date_to_save else "")
 	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_all()
+
+
+func _close() -> void:
+	hide()
+	_on_canceled()
 
 
 func _save_file(path: String) -> void:
@@ -85,6 +90,7 @@ func _save_file(path: String) -> void:
 		_settings_manager.cache_now()
 	IVGlobal.close_main_menu_requested.emit()
 	IVGlobal.save_requested.emit(path, false)
+	IVGlobal.sim_run_allowed.emit(self)
 
 
 func _on_canceled() -> void:

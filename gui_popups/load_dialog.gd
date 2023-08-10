@@ -41,7 +41,7 @@ func _project_init():
 	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
 	IVGlobal.load_dialog_requested.connect(_open)
 	IVGlobal.game_save_finished.connect(_update_quick_load_button)
-	IVGlobal.close_all_admin_popups_requested.connect(hide)
+	IVGlobal.close_all_admin_popups_requested.connect(_close)
 	file_selected.connect(_load_file)
 	canceled.connect(_on_canceled)
 
@@ -63,7 +63,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _open() -> void:
 	if visible:
-		hide()
 		return
 	if _is_blocking_popup():
 		return
@@ -75,6 +74,11 @@ func _open() -> void:
 	if _state.last_save_path:
 		current_path = _state.last_save_path
 		deselect_all()
+
+
+func _close() -> void:
+	hide()
+	_on_canceled()
 
 
 func _load_file(path: String) -> void:
