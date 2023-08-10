@@ -39,12 +39,12 @@ var _is_project_built := false
 
 func _ready() -> void:
 	# FIXME: Below needs to support scenetree add at any time.
-	theme = IVGlobal.themes.main_menu
 	IVGlobal.project_builder_finished.connect(_on_project_builder_finished, CONNECT_ONE_SHOT)
 	IVGlobal.state_manager_inited.connect(_on_state_manager_inited, CONNECT_ONE_SHOT)
 	_main_menu_manager.buttons_changed.connect(_build)
 	_main_menu_manager.button_state_changed.connect(_update_button_states)
 	visibility_changed.connect(_grab_button_focus)
+	theme = IVGlobal.themes.main_menu
 
 
 func _on_project_builder_finished() -> void:
@@ -80,7 +80,7 @@ func _build() -> void:
 		var button_state: int = button_info[7]
 		button.focus_mode = Control.FOCUS_ALL
 		button.text = text
-		button.pressed.connect(Callable(target, method).bind(args))
+		button.pressed.connect(Callable(target, method).bindv(args))
 		button.visible = button_state != _main_menu_manager.HIDDEN
 		# disabled will be updated at state_manager_inited signal
 		button.disabled = !_state.is_inited or button_state == _main_menu_manager.DISABLED

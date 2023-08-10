@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230808
+const IVOYAGER_YMD := 20230809
 
 
 # simulator state broadcasts
@@ -117,7 +117,7 @@ var world_targeting := [] # IVWorldControl & others; optimized data for 3D world
 var fragment_targeting := [] # IVFragmentIdentifier; optimized data for shader fragment id
 var top_bodies: Array[Node3D] = [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
-var blocking_popups := [] # add popups that want & test for exclusivity
+var blocking_windows: Array[Window] = [] # add Windows that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
 var extensions: Array[Array] = [] # IVProjectBuilder [[name, version, build, state, ymd], ...]

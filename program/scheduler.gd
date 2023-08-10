@@ -56,10 +56,10 @@ func _clear() -> void:
 		var connection_list := get_signal_connection_list(signal_str)
 		if connection_list:
 			assert(connection_list.size() == 1)
-			var connection_dict: Dictionary = connection_list[0] # never >1
-			var target: Object = connection_dict.target
-			var method: String = connection_dict.method
-			disconnect(signal_str, Callable(target, method))
+			var dict: Dictionary = connection_list[0] # never >1
+			var signal_: Signal = dict.signal
+			var callable: Callable = dict.callable
+			signal_.disconnect(callable)
 		i += 1
 
 

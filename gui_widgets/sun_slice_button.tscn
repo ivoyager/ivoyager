@@ -14,5 +14,5 @@ layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-expand_mode = 1
-stretch_mode = 7
+expand_mode = 3
+stretch_mode = 5

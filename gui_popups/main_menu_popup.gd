@@ -28,45 +28,54 @@ const SCENE := "res://ivoyager/gui_popups/main_menu_popup.tscn"
 var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
-var _state: Dictionary = IVGlobal.state
+#var _state: Dictionary = IVGlobal.state
+var _allow_close := false
 
 @onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _project_init():
-	connect("popup_hide", Callable(self, "_on_popup_hide"))
-	IVGlobal.connect("open_main_menu_requested", Callable(self, "_open"))
-	IVGlobal.connect("close_main_menu_requested", Callable(self, "hide"))
-	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
+	IVGlobal.open_main_menu_requested.connect(open)
+	IVGlobal.close_main_menu_requested.connect(close)
+	IVGlobal.close_all_admin_popups_requested.connect(close)
+	popup_hide.connect(_on_popup_hide)
 
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
+	transient = false
 	theme = IVGlobal.themes.main_menu
-	if center:
-		$PanelContainer.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
-		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
+#	if center:
+#		$PanelContainer.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+#		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
+#		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if !_state.is_system_built:
-		# bypass; the splash screen should have its own MainMenu widget!
-		return
-	if event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		if visible:
-			hide()
-		else:
-			_open()
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
+		_allow_close = true
 
 
-func _open() -> void:
+func open() -> void:
 	if stop_sim:
 		_state_manager.require_stop(self)
-	popup()
+	if center:
+		popup_centered()
+	else:
+		popup()
+
+
+func close() -> void:
+	_allow_close = true
+	hide()
 
 
 func _on_popup_hide() -> void:
+	if !_allow_close:
+		show.call_deferred()
+		return
+	_allow_close = false
 	if stop_sim:
 		_state_manager.allow_run(self)
+

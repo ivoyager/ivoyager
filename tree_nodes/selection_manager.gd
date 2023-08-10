@@ -204,9 +204,13 @@ func get_gui_name() -> String:
 	return selection.get_gui_name() if selection else ""
 
 
+func get_selection_name() -> StringName:
+	return selection.name if selection else &""
+
+
 func get_body_name() -> StringName:
 	return selection.get_body_name() if selection else &""
-	
+
 
 func get_texture_2d() -> Texture2D:
 	return selection.texture_2d if selection else null

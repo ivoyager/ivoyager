@@ -29,7 +29,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var add_quick_save_button := true
 
 var _settings: Dictionary = IVGlobal.settings
-var _blocking_popups: Array = IVGlobal.blocking_popups
+var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 
 @onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 @onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
@@ -39,22 +39,21 @@ func _project_init() -> void:
 	if !IVGlobal.enable_save_load:
 		return
 	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
-	IVGlobal.connect("save_dialog_requested", Callable(self, "_open"))
-	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
-	connect("file_selected", Callable(self, "_save_file"))
-	connect("popup_hide", Callable(self, "_on_hide"))
+	IVGlobal.save_dialog_requested.connect(_open)
+	IVGlobal.close_all_admin_popups_requested.connect(hide)
+	file_selected.connect(_save_file)
+	canceled.connect(_on_canceled)
 
 
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
-	_blocking_popups.append(self)
+	_blocking_windows.append(self)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		hide()
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
 
 
 func _open() -> void:
@@ -63,12 +62,12 @@ func _open() -> void:
 		return
 	if _is_blocking_popup():
 		return
-	IVGlobal.emit_signal("sim_stop_required", self)
+	IVGlobal.sim_stop_required.emit(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
 	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
-	var date_string: String = _timekeeper.get_current_date_for_file() \
-			if _settings.append_date_to_save else ""
+	var date_string: String = (_timekeeper.get_current_date_for_file()
+			if _settings.append_date_to_save else "")
 	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
 	deselect_all()
 
@@ -84,16 +83,17 @@ func _save_file(path: String) -> void:
 		cache_settings = true
 	if cache_settings:
 		_settings_manager.cache_now()
-	IVGlobal.emit_signal("close_main_menu_requested")
-	IVGlobal.emit_signal("save_requested", path, false)
+	IVGlobal.close_main_menu_requested.emit()
+	IVGlobal.save_requested.emit(path, false)
 
 
-func _on_hide() -> void:
-	IVGlobal.emit_signal("sim_run_allowed", self)
+func _on_canceled() -> void:
+	IVGlobal.sim_run_allowed.emit(self)
 
 
 func _is_blocking_popup() -> bool:
-	for popup in _blocking_popups:
-		if popup.visible:
+	for window in _blocking_windows:
+		if window.visible:
 			return true
 	return false
+

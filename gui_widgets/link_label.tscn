@@ -8,5 +8,6 @@ offset_right = 84.0
 offset_bottom = 19.0
 bbcode_enabled = true
 text = "I, Voyager"
+fit_content = true
 scroll_active = false
 script = ExtResource("1")

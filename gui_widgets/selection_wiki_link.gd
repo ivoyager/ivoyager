@@ -65,12 +65,12 @@ func _connect_selection_manager(_dummy := false) -> void:
 func _update_selection(_dummy := false) -> void:
 	if !_selection_manager.has_selection():
 		return
-	var object_name: String = _selection_manager.get_name()
+	var object_name: String = _selection_manager.get_gui_name()
 	text = "[url]" + tr(object_name) + "[/url]"
 
 
 func _on_wiki_clicked(_meta: String) -> void:
-	var object_name: String = _selection_manager.get_name()
+	var object_name: String = _selection_manager.get_selection_name()
 	if !_wiki_titles.has(object_name):
 		return
 	var wiki_title: String = _wiki_titles[object_name]

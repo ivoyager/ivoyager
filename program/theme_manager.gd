@@ -33,16 +33,19 @@ var _fonts: Dictionary = IVGlobal.fonts
 
 
 func _project_init() -> void:
-	_themes.main = Theme.new()
-	_themes.main_menu = Theme.new()
-	_themes.splash_screen = Theme.new()
-	_themes.main.default_font = _fonts[global_font]
-	_themes.main_menu.default_font = _fonts[main_menu_font]
-	_themes.splash_screen.default_font = _fonts[splash_screen_font]
+	# Make themes available in IVGlobal dictionary
 	
-	# Remove border from ColorPickerButton
+	var main := Theme.new()
+	_themes.main = main
+	main.default_font = _fonts[global_font]
 	var color_picker_button_stylebox := StyleBoxTexture.new()
-	@warning_ignore("unsafe_method_access")
-	_themes.main.set_stylebox("normal", "ColorPickerButton", color_picker_button_stylebox)
-
+	main.set_stylebox("normal", "ColorPickerButton", color_picker_button_stylebox) # remove border
+	
+	var main_menu := Theme.new()
+	_themes.main_menu = main_menu
+	main_menu.default_font = _fonts[main_menu_font]
+	
+	var splash_screen := Theme.new()
+	_themes.splash_screen = splash_screen
+	splash_screen.default_font = _fonts[splash_screen_font]
 

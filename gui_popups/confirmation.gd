@@ -32,11 +32,10 @@ func _ready() -> void:
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
 	focus_exited.connect(_keep_focus)
-	#popup_hide.connect(_on_popup_hide)
-	exclusive = true
+	process_mode = PROCESS_MODE_ALWAYS
 	transient = false
 	always_on_top = true
-	theme = IVGlobal.themes.main
+#	theme = IVGlobal.themes.main
 	get_label().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 
