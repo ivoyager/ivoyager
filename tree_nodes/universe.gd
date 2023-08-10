@@ -49,11 +49,21 @@ extends Node3D
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
-const PERSIST_PROPERTIES := ["persist"]
+const PERSIST_PROPERTIES := ["persist", "test"]
 
 var persist := {}
+var test: Array[Node] = []
 
 func _project_init() -> void:
 	if IVGlobal.pause_only_stops_time:
 		process_mode = PROCESS_MODE_ALWAYS
+
+
+#func _ready() -> void:
+#	var d1 := {&"test" : 1}
+#	var d2 := {"test" : 1}
+#	print(d1 == d2)
+#	print(d1["test"])
+#	print(d2[&"test"])
+
 

@@ -79,7 +79,7 @@ const PERSIST_PROPERTIES := [
 var flags := 0 # see IVEnums.BodyFlags
 var characteristics := {} # non-object values
 var components := {} # objects (persisted only)
-var satellites: Array = [] # FIXME: SaveBuilder needs to handle content-typed arrays!
+var satellites: Array[IVBody] = []
 
 
 # public - read-only!

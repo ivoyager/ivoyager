@@ -79,10 +79,6 @@ func _build(_dummy := false) -> void:
 	set("theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size
 	var star: IVBody = IVGlobal.top_bodies[0]
-	
-	print("star ", star.name)
-	print(star.satellites)
-	
 	var min_body_size := roundf(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
 	var base_size := 0.0
@@ -91,9 +87,6 @@ func _build(_dummy := false) -> void:
 	var planet_sizes: Array[float] = []
 	var n_planets := 0
 	for planet in star.satellites:
-		
-		
-		
 		if not planet.flags & IS_PLANET:
 			continue
 		base_size = planet.get_mean_radius() ** size_exponent
