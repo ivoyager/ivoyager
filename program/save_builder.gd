@@ -68,6 +68,13 @@ extends RefCounted
 #       same object. The old (pre-load) object will still be there in the non-
 #       persist reference after load.
 #
+# Godot 4.x changes:
+#    1. Any dict keys that are type String will be converted on save (and then
+#       loaded) as StringName. This was necessary (and *should* be ok) because
+#       the two are interchangable for dictionary indexing and the '=='
+#       operation.
+#    2. Array-typing is supported.
+#
 # TODO 4.0: Godot proposal #874 will add Array.id() and Dictionary.id().
 # This will allow us to handle multiple references to the same arrays and 
 # dicts as we do now for objects. (This will remove warning #1 above.)
@@ -111,6 +118,7 @@ var _object_ids := {} # indexed by objects
 var _key_ids := {} # indexed by dict keys
 
 # load processing
+var _scripts := [] # indexed by script_id
 var _objects := [null] # indexed by object_id (0 has a special meaning)
 
 # logging
@@ -190,7 +198,7 @@ func build_tree(save_root: Node, gamesave: Array) -> void:
 	_gs_serialized_references = gamesave[2]
 	_gs_script_paths = gamesave[3]
 	_gs_dict_keys = gamesave[4]
-	_objects.resize(_gs_n_objects)
+	_load_scripts()
 	_locate_or_instantiate_objects(save_root)
 	_deserialize_all_object_data()
 	_build_procedural_tree()
@@ -274,6 +282,7 @@ func _reset():
 	_object_ids.clear()
 	_key_ids.clear()
 	_objects.resize(1) # 1st element is always null
+	_scripts.clear()
 
 
 # Procedural save
@@ -297,14 +306,20 @@ func _serialize_tree(node: Node) -> void:
 
 # Procedural load
 
+func _load_scripts() -> void:
+	for script_path in _gs_script_paths:
+		_scripts.append(load(script_path)) # indexed by script_id
+
+
 func _locate_or_instantiate_objects(save_root: Node) -> void:
 	# Instantiates procecural objects (nodes & references) without data.
 	# Indexes root and all persist objects (procedural and non-procedural).
 	assert(!DPRINT or IVDebug.dprint("* Registering(/Instancing) Objects for Load *"))
+	_objects.resize(_gs_n_objects)
 	_objects[1] = save_root
-	var scripts := []
-	for script_path in _gs_script_paths:
-		scripts.append(load(script_path))
+#	var scripts := []
+#	for script_path in _gs_script_paths:
+#		scripts.append(load(script_path))
 	for serialized_node in _gs_serialized_nodes:
 		var object_id: int = serialized_node[0]
 		var script_id: int = serialized_node[1]
@@ -314,7 +329,7 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 			node = save_root.get_node(node_path)
 			assert(!DPRINT or IVDebug.dprint(object_id, node, node.name))
 		else: # this is a procedural node
-			var script: Script = scripts[script_id]
+			var script: Script = _scripts[script_id]
 			node = files.make_object_or_scene(script)
 			assert(!DPRINT or IVDebug.dprint(object_id, node, script_id, _gs_script_paths[script_id]))
 		assert(node)
@@ -322,7 +337,7 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 	for serialized_reference in _gs_serialized_references:
 		var object_id: int = serialized_reference[0]
 		var script_id: int = serialized_reference[1]
-		var script: Script = scripts[script_id]
+		var script: Script = _scripts[script_id]
 		@warning_ignore("unsafe_method_access")
 		var ref: RefCounted = script.new()
 		assert(ref)
@@ -357,7 +372,7 @@ func _serialize_node(node: Node):
 	var script_id := -1
 	var is_procedural := is_procedural_persist(node)
 	if is_procedural:
-		script_id = _get_or_create_script_id(node)
+		script_id = _get_script_id(node.get_script())
 		assert(!DPRINT or IVDebug.dprint(object_id, node, script_id, _gs_script_paths[script_id]))
 	else:
 		assert(!DPRINT or IVDebug.dprint(object_id, node, node.name))
@@ -381,7 +396,7 @@ func _register_and_serialize_reference(ref: RefCounted) -> int:
 	_object_ids[ref] = object_id
 	var serialized_reference := []
 	serialized_reference.append(object_id) # index 0
-	var script_id := _get_or_create_script_id(ref)
+	var script_id := _get_script_id(ref.get_script())
 	assert(!DPRINT or IVDebug.dprint(object_id, ref, script_id, _gs_script_paths[script_id]))
 	serialized_reference.append(script_id) # index 1
 	_serialize_object_data(ref, serialized_reference)
@@ -389,8 +404,8 @@ func _register_and_serialize_reference(ref: RefCounted) -> int:
 	return object_id
 
 
-func _get_or_create_script_id(object: Object) -> int:
-	var script_path: String = object.get_script().resource_path
+func _get_script_id(script: Script) -> int:
+	var script_path := script.resource_path
 	assert(script_path)
 	var script_id: int = _path_ids.get(script_path, -1)
 	if script_id == -1:
@@ -438,12 +453,12 @@ func _deserialize_object_data(serialized_object: Array, is_node: bool) -> void:
 		if n_properties > 0:
 			var array: Array = serialized_object[index]
 			index += 1
-			_decode_array(array)
+			var decoded_array = _get_decoded_array(array) # may or may not have content-type
 			var properties: Array = object.get(properties_array)
 			var property_index := 0
 			while property_index < n_properties:
 				var property: String = properties[property_index]
-				object.set(property, array[property_index])
+				object.set(property, decoded_array[property_index])
 				property_index += 1
 
 
@@ -464,14 +479,28 @@ func _get_encoded_array(array: Array) -> Array:
 		else: # built-in type
 			encoded_array[index] = item
 		index += 1
+	
+	# append array type to the encoded array
+	if array.is_typed():
+		var script: Script = array.get_typed_script()
+		var script_id := _get_script_id(script) if script else -1
+		encoded_array.append(script_id)
+		encoded_array.append(array.get_typed_class_name())
+		encoded_array.append(array.get_typed_builtin()) # last element
+	else:
+		encoded_array.append(-1) # last element
+
 	return encoded_array
 
 
 func _get_encoded_dict(dict: Dictionary) -> Dictionary:
 	# Very many dicts will have shared keys, so we index these rather than
 	# packing the gamesave with many redundant key strings.
+	# All keys of type String are converted to StringName!
 	var encoded_dict := {}
 	for key in dict:
+		if typeof(key) == TYPE_STRING:
+			key = StringName(key)
 		var key_id: int = _key_ids.get(key, -1)
 		if key_id == -1:
 			key_id = _key_ids.size()
@@ -490,38 +519,50 @@ func _get_encoded_dict(dict: Dictionary) -> Dictionary:
 	return encoded_dict
 
 
-func _decode_array(encoded_array: Array) -> void:
-	# decode in place; encoded_array will become decoded
+func _get_decoded_array(encoded_array: Array): # return array may or may not be content-typed
+	var array = []
+	
+	# pop array type from the encoded array
+	var typed_builtin: int = encoded_array.pop_back()
+	if typed_builtin != -1:
+		var typed_class_name: StringName = encoded_array.pop_back()
+		var script_id: int = encoded_array.pop_back()
+		var script: Script
+		if script_id != -1:
+			script = _scripts[script_id]
+		array = Array(array, typed_builtin, typed_class_name, script)
+	
 	var n_items := encoded_array.size()
+	array.resize(n_items)
 	var index := 0
 	while index < n_items:
 		var item = encoded_array[index] # untyped
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_decode_array(item)
+			array[index] = _get_decoded_array(item)
 		elif type == TYPE_DICTIONARY:
 			@warning_ignore("unsafe_cast")
 			var item_dict := item as Dictionary
 			if item_dict.has("r"):
 				var object := _get_decoded_object(item_dict)
-				encoded_array[index] = object
+				array[index] = object
 			else: # it's a dictionary w/ int keys only
-				encoded_array[index] = _get_decoded_dict(item_dict)
+				array[index] = _get_decoded_dict(item_dict)
 		else: # other built-in type
-			encoded_array[index] = item
+			array[index] = item
 		index += 1
+	return array
 
 
 func _get_decoded_dict(encoded_dict: Dictionary) -> Dictionary:
 	# encoded_dict keys are all integers
 	var dict := {}
 	for key_id in encoded_dict:
-		var key = _gs_dict_keys[key_id]
-		var item = encoded_dict[key_id] # dynamic type!
+		var key = _gs_dict_keys[key_id] # untyped (any String was converted to StringName)
+		var item = encoded_dict[key_id] # untyped
 		var type := typeof(item)
 		if type == TYPE_ARRAY:
-			_decode_array(item)
-			dict[key] = item
+			dict[key] = _get_decoded_array(item)
 		elif type == TYPE_DICTIONARY:
 			@warning_ignore("unsafe_cast")
 			var item_dict := item as Dictionary

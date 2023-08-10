@@ -32,10 +32,6 @@ func _ready() -> void:
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
 	focus_exited.connect(_keep_focus)
-	process_mode = PROCESS_MODE_ALWAYS
-	transient = false
-	always_on_top = true
-#	theme = IVGlobal.themes.main
 	get_label().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 

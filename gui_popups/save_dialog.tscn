@@ -4,4 +4,6 @@
 
 [node name="SaveDialog" type="FileDialog"]
 process_mode = 3
+size = Vector2i(800, 600)
+access = 2
 script = ExtResource("1")

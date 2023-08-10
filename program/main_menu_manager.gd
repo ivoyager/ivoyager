@@ -42,7 +42,7 @@ var button_inits: Array[Array] = [
 	[&"BUTTON_CREDITS", 400, true, true, "CreditsPopup", "open"],
 	[&"BUTTON_EXIT", 300, false, true, "StateManager", "exit"],
 	[&"BUTTON_QUIT", 200, true, true, "StateManager", "quit"],
-	[&"BUTTON_RESUME", 100, false, true, "MainMenuPopup", "hide"],
+	[&"BUTTON_RESUME", 100, false, true, "MainMenuPopup", "close"],
 ] 
 
 # read-only!

@@ -23,10 +23,10 @@ extends Node
 # To remove save/load functionality, set IVGlobal.enable_save_load = false. You
 # can then (optionally) delete these from IVProjectBuilder:
 #
-#   - SaveManager
-#   - SaveBuilder
-#   - SaveDialog
-#   - LoadDialog
+#   - _SaveManager_
+#   - _SaveBuilder_
+#   - _SaveDialog_
+#   - _LoadDialog_
 
 const files := preload("res://ivoyager/static/files.gd")
 const NO_NETWORK = IVEnums.NetworkState.NO_NETWORK
@@ -241,3 +241,4 @@ func _simulator_started_after_load() -> void:
 	print("If differant than pre-save, set debug in save_builder.gd and check debug.log")
 	assert(IVDebug.dlog("Tree status after load & simulator started..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
+

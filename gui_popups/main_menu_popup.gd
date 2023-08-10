@@ -18,20 +18,15 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuPopup
-extends Popup
+extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/main_menu_popup.tscn"
 
-# Unlike all other popups, this one is always listening for "ui_cancel". Other
-# popups listen only when open and process before IVMainMenuPopup (due to order
-# in IVProjectBuilder).
 
 var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
 #var _state: Dictionary = IVGlobal.state
 var _allow_close := false
-
-@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _project_init():
@@ -42,13 +37,7 @@ func _project_init():
 
 
 func _ready() -> void:
-	process_mode = PROCESS_MODE_ALWAYS
-	transient = false
 	theme = IVGlobal.themes.main_menu
-#	if center:
-#		$PanelContainer.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-#		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
-#		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -58,8 +47,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func open() -> void:
+	if visible:
+		return
+	if !IVGlobal.state.is_started_or_about_to_start: # splash has its own menu
+		return
 	if stop_sim:
-		_state_manager.require_stop(self)
+		IVGlobal.sim_stop_required.emit(self)
 	if center:
 		popup_centered()
 	else:
@@ -77,5 +70,5 @@ func _on_popup_hide() -> void:
 		return
 	_allow_close = false
 	if stop_sim:
-		_state_manager.allow_run(self)
+		IVGlobal.sim_run_allowed.emit(self)
 

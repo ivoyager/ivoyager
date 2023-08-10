@@ -37,7 +37,6 @@ var format_overrides := {
 }
 
 var _settings: Dictionary = IVGlobal.settings
-var _hotkeys_button: Button
 
 @onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
 
@@ -95,11 +94,6 @@ func _project_init() -> void:
 func _on_ready() -> void:
 	super._on_ready()
 	_header_label.text = "LABEL_OPTIONS"
-	_hotkeys_button = Button.new()
-	_hotkeys_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_hotkeys_button.text = "BUTTON_HOTKEYS"
-	_hotkeys_button.pressed.connect(_open_hotkeys)
-	_header_right.add_child(_hotkeys_button)
 
 
 func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
@@ -141,11 +135,6 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 				# SpinBox
 				var spin_box := SpinBox.new()
 				setting_hbox.add_child(spin_box)
-				
-				# FIXME34
-#				spin_box.horizontal_alignment # missing?
-##				spin_box.align = LineEdit.HORIZONTAL_ALIGNMENT_CENTER # ALIGN_RIGHT is buggy w/ big fonts
-
 				spin_box.step = 1.0 if is_int else 0.1
 				spin_box.rounded = is_int
 				spin_box.min_value = 0.0
@@ -189,9 +178,7 @@ func _set_overrides(control: Control, setting: String) -> void:
 
 func _on_content_built() -> void:
 	_restore_defaults.disabled = _settings_manager.is_all_defaults()
-	var is_cache_current := _settings_manager.is_cache_current()
-	_confirm_changes.disabled = is_cache_current
-	_hotkeys_button.disabled = !is_cache_current
+	_confirm_changes.disabled = _settings_manager.is_cache_current()
 
 
 func _restore_default(setting: String) -> void:
@@ -212,9 +199,7 @@ func _on_change(value, setting: String, default_button: Button, convert_to_int :
 	_settings_manager.change_current(setting, value, true)
 	default_button.disabled = _settings_manager.is_default(setting)
 	_restore_defaults.disabled = _settings_manager.is_all_defaults()
-	var is_cache_current := _settings_manager.is_cache_current()
-	_confirm_changes.disabled = is_cache_current
-	_hotkeys_button.disabled = !is_cache_current
+	_confirm_changes.disabled = _settings_manager.is_cache_current()
 
 
 func _on_restore_defaults() -> void:
@@ -233,21 +218,15 @@ func _on_cancel() -> void:
 		_allow_close = true
 		hide()
 		return
-	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_OPTIONS_CHANGES", _cancel_changes, true,
+	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_OPTION_CHANGES", _cancel_changes, true,
 			"LABEL_PLEASE_CONFIRM", "BUTTON_CANCEL_CHANGES", "BUTTON_BACK")
-
-
-func _open_hotkeys() -> void:
-	if !_settings_manager.is_cache_current(): # safety test (should be disabled)
-		return
-	_allow_close = true
-	hide()
-	IVGlobal.hotkeys_requested.emit()
 
 
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
+		var center := position + size / 2
 		await get_tree().process_frame
 		#child_controls_changed() # Godot ISSUE4.2.dev2: does not resize
 		size = Vector2i.ZERO # hack fix above
+		position = center - size / 2
 
