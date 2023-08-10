@@ -30,8 +30,8 @@ enum CompositionType {
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"type",
-	"components",
+	&"type",
+	&"components",
 ]
 
 # persisted

@@ -66,10 +66,10 @@ const UPDATE_LIMITER := IVUnits.HOUR # up to -10% to avoid schedular clumping
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"reference_normal",
-	"elements_at_epoch",
-	"element_rates",
-	"m_modifiers",
+	&"reference_normal",
+	&"elements_at_epoch",
+	&"element_rates",
+	&"m_modifiers",
 ]
 
 # persisted

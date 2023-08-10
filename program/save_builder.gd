@@ -100,11 +100,12 @@ var debug_print_tree := false
 var progress_multiplier := 95 # so prog bar doesn't sit for a while at 100%
 
 var properties_arrays := [
-	"PERSIST_PROPERTIES",
-	"PERSIST_PROPERTIES2",
+	&"PERSIST_PROPERTIES",
+	&"PERSIST_PROPERTIES2",
 ]
 
 # gamesave contents
+# (As of Godot 4.1.1, FileAccess.store_var() & get_var() don't save array types!)
 var _gs_n_objects := 1
 var _gs_serialized_nodes := []
 var _gs_serialized_references := []
@@ -118,8 +119,8 @@ var _object_ids := {} # indexed by objects
 var _key_ids := {} # indexed by dict keys
 
 # load processing
-var _scripts := [] # indexed by script_id
-var _objects := [null] # indexed by object_id (0 has a special meaning)
+var _scripts: Array[Script] = [] # indexed by script_id
+var _objects: Array[Object] = [null] # indexed by object_id (0 has a special meaning)
 
 # logging
 var _log_count := 0
@@ -128,30 +129,30 @@ var _log := ""
 
 
 static func get_persist_mode(object: Object) -> int:
-	if "persist_mode_override" in object:
+	if &"persist_mode_override" in object:
 		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override
-	if not "PERSIST_MODE" in object:
+	if not &"PERSIST_MODE" in object:
 		return NO_PERSIST
 	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE
 
 
 static func is_persist_object(object: Object) -> bool:
-	if "persist_mode_override" in object:
+	if &"persist_mode_override" in object:
 		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override != NO_PERSIST
-	if not "PERSIST_MODE" in object:
+	if not &"PERSIST_MODE" in object:
 		return false
 	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE != NO_PERSIST
 
 
 static func is_procedural_persist(object: Object) -> bool:
-	if "persist_mode_override" in object:
+	if &"persist_mode_override" in object:
 		@warning_ignore("unsafe_property_access")
 		return object.persist_mode_override == PERSIST_PROCEDURAL
-	if not "PERSIST_MODE" in object:
+	if not &"PERSIST_MODE" in object:
 		return false
 	@warning_ignore("unsafe_property_access")
 	return object.PERSIST_MODE == PERSIST_PROCEDURAL
@@ -317,9 +318,6 @@ func _locate_or_instantiate_objects(save_root: Node) -> void:
 	assert(!DPRINT or IVDebug.dprint("* Registering(/Instancing) Objects for Load *"))
 	_objects.resize(_gs_n_objects)
 	_objects[1] = save_root
-#	var scripts := []
-#	for script_path in _gs_script_paths:
-#		scripts.append(load(script_path))
 	for serialized_node in _gs_serialized_nodes:
 		var object_id: int = serialized_node[0]
 		var script_id: int = serialized_node[1]

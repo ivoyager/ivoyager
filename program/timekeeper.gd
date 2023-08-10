@@ -69,10 +69,10 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"time",
-	"solar_day",
-	"speed_index",
-	"is_reversed",
+	&"time",
+	&"solar_day",
+	&"speed_index",
+	&"is_reversed",
 ]
 
 # project vars
