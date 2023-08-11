@@ -95,7 +95,7 @@ func _ready() -> void:
 
 func draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
-	var arrays: Array[Array] = []
+	var arrays := [] # various packed array types
 	arrays.resize(Mesh.ARRAY_MAX)
 	if _lp_integer == -1: # not trojans
 		arrays[Mesh.ARRAY_VERTEX] = _vec3ids

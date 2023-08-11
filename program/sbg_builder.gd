@@ -101,3 +101,4 @@ func _load_group_binary(sbg: IVSmallBodiesGroup, mag_str: String) -> void:
 	assert(!DPRINT or IVDebug.dprint("Reading binary %s" % path))
 	sbg.read_binary(binary)
 	binary.close()
+

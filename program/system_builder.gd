@@ -23,7 +23,7 @@ extends RefCounted
 # Builds the star system(s) from data tables & binaries.
 
 # project vars
-var add_small_bodies_groups := false
+var add_small_bodies_groups := true
 var add_camera := true
 
 # private
@@ -83,3 +83,4 @@ func _add_camera() -> void:
 	var camera: Camera3D = _Camera_.new()
 	var start_body: IVBody = IVGlobal.bodies[IVGlobal.home_name]
 	start_body.add_child(camera)
+
