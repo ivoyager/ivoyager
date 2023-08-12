@@ -47,13 +47,14 @@ func _make_sphere_mesh() -> SphereMesh:
 func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
 	# All orbits (e < 1.0) are shared circle mesh with modified basis.
 	var verteces := PackedVector3Array()
-	verteces.resize(n_vertecies)
+	verteces.resize(n_vertecies + 1)
 	var angle_increment := TAU / n_vertecies
 	var i := 0
 	while i < n_vertecies:
 		var angle: float = i * angle_increment
 		verteces[i] = Vector3(sin(angle), cos(angle), 0.0) # radius = 1.0
 		i += 1
+	verteces[i] = verteces[0] # complete the loop
 	var mesh_arrays := []
 	mesh_arrays.resize(ArrayMesh.ARRAY_MAX)
 	mesh_arrays[ArrayMesh.ARRAY_VERTEX] = verteces
