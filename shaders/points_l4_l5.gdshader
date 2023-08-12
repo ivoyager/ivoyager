@@ -86,6 +86,7 @@ void vertex() {
 
 // ****************************************************************************
 // Entire file below is an exact copy of points.shader!!!
+// TODO34: Use #include preprocessor for shared code!
 // ****************************************************************************
 
 	float EA = M + e * sin(M); // eccentric anomaly
@@ -122,7 +123,8 @@ void vertex() {
 	// We skip VERTEX which is used to encode point_id.
 	// But this is how we would get VERTEX and then POSITION...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
-	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);	
+	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
+	
 	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
 
 	POINT_SIZE = point_size;
@@ -160,7 +162,10 @@ bool is_id_signaling_pixel(vec2 offset){
 
 
 void fragment() {
-	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
+//	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
+	
+	// debug disable for now...
+	if (false) {
 		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
 		if (fragment_cycler < 1.0) {
 			ALBEDO = vec3(fragment_cycler); // calibration color
