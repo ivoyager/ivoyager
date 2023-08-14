@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSelection
-extends Reference
+extends RefCounted
 
 # Wrapper for whatever you want selected, which could be anything or just a
 # text string. We wrap selection so all API expects the same type.
@@ -40,34 +40,34 @@ const VECTOR2_ZERO := Vector2.ZERO
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"gui_name",
-	"is_body",
-	"up_selection_name",
-	"spatial",
-	"body",
+	&"name",
+	&"gui_name",
+	&"is_body",
+	&"up_selection_name",
+	&"spatial",
+	&"body",
 ]
 
 # persisted - read only
-var name: String
+var name: StringName
 var gui_name: String # name for GUI display (already translated)
 var is_body: bool
 var up_selection_name := "" # top selection (only) doesn't have one
 
-var spatial: Spatial # for camera; same as 'body' if is_body
+var spatial: Node3D # for camera; same as 'body' if is_body
 var body: IVBody # = spatial if is_body else null
 
 # read-only
-var texture_2d: Texture
-var texture_slice_2d: Texture # stars only
+var texture_2d: Texture2D
+var texture_slice_2d: Texture2D # stars only
 
 # private
-var _times: Array = IVGlobal.times
+#var _times: Array = IVGlobal.times
 
 
 func _init() -> void:
-	IVGlobal.connect("system_tree_ready", self, "_init_after_system", [], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.connect("system_tree_ready", Callable(self, "_init_after_system").bind(), CONNECT_ONE_SHOT)
+	IVGlobal.connect("about_to_free_procedural_nodes", Callable(self, "_clear"))
 
 
 func _init_after_system(_dummy: bool) -> void:
@@ -78,14 +78,10 @@ func _init_after_system(_dummy: bool) -> void:
 
 
 func _clear() -> void:
-	if IVGlobal.is_connected("system_tree_ready", self, "_init_after_system"):
-		IVGlobal.disconnect("system_tree_ready", self, "_init_after_system")
+	if IVGlobal.is_connected("system_tree_ready", Callable(self, "_init_after_system")):
+		IVGlobal.disconnect("system_tree_ready", Callable(self, "_init_after_system"))
 	spatial = null
 	body = null
-
-
-func get_name() -> String:
-	return name
 
 
 func get_gui_name() -> String:
@@ -93,8 +89,8 @@ func get_gui_name() -> String:
 	return gui_name
 
 
-func get_body_name() -> String:
-	return body.name if is_body else ""
+func get_body_name() -> StringName:
+	return body.name if is_body else &""
 
 
 func get_real_precision(path: String) -> int:
@@ -124,7 +120,7 @@ func get_latitude_longitude(at_translation: Vector3, time := NAN) -> Vector2:
 func get_global_origin() -> Vector3:
 	if !spatial:
 		return Vector3.ZERO
-	return spatial.global_translation
+	return spatial.global_position
 
 
 func get_flags() -> int:

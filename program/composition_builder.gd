@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCompositionBuilder
-extends Reference
+extends RefCounted
 
 
 var _table_reader: IVTableReader
@@ -51,6 +51,7 @@ func add_compositions_from_table(body: IVBody, table_name: String, row: int) -> 
 
 func make_composition_from_string(string: String) -> IVComposition:
 	# "item 0.0%, item2 0.0%"
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	var composition: IVComposition = _Composition_.new()
 	var list := string.split(", ")
 	var dict := {}

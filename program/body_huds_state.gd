@@ -32,15 +32,15 @@ signal visibility_changed()
 signal color_changed()
 
 
-const NULL_COLOR := Color.black
+const NULL_COLOR := Color.BLACK
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"name_visible_flags",
-	"symbol_visible_flags",
-	"orbit_visible_flags",
-	"orbit_colors",
+	&"name_visible_flags",
+	&"symbol_visible_flags",
+	&"orbit_visible_flags",
+	&"orbit_colors",
 ]
 
 
@@ -61,44 +61,40 @@ var default_orbit_visible_flags := 0
 var default_orbit_colors := {}
 
 
-onready var _tree := get_tree()
-
-
-
 func _project_init() -> void:
-	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
-	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	IVGlobal.simulator_exited.connect(_set_current_to_default)
+	IVGlobal.update_gui_requested.connect(_signal_all_changed)
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("visual_groups"):
 		var body_flag := table_reader.get_int("visual_groups", "body_flag", row)
-		var is_name_visible := table_reader.get_bool("visual_groups", "default_name_visible", row)
-		var is_symbol_visible := table_reader.get_bool("visual_groups", "default_symbol_visible", row)
-		var is_orbit_visible := table_reader.get_bool("visual_groups", "default_orbit_visible", row)
+		var name_visible := table_reader.get_bool("visual_groups", "default_name_visible", row)
+		var symbol_visible := table_reader.get_bool("visual_groups", "default_symbol_visible", row)
+		var orbit_visible := table_reader.get_bool("visual_groups", "default_orbit_visible", row)
 		var orbit_color_str := table_reader.get_string("visual_groups", "default_orbit_color", row)
 		
 		all_flags |= body_flag
-		if is_name_visible:
+		if name_visible:
 			default_name_visible_flags |= body_flag
-		if is_symbol_visible:
+		if symbol_visible:
 			default_symbol_visible_flags |= body_flag
-		if is_orbit_visible:
+		if orbit_visible:
 			default_orbit_visible_flags |= body_flag
 		default_orbit_colors[body_flag] = Color(orbit_color_str)
 	
 	_set_current_to_default()
 
 
-func _unhandled_key_input(event: InputEventKey):
+func _unhandled_key_input(event: InputEvent):
 	# Only Body HUDs, for now...
-	if event.is_action_pressed("toggle_orbits"):
+	if event.is_action_pressed(&"toggle_orbits"):
 		set_all_orbits_visibility(bool(orbit_visible_flags != all_flags))
-	elif event.is_action_pressed("toggle_symbols"):
+	elif event.is_action_pressed(&"toggle_symbols"):
 		set_all_symbols_visibility(bool(symbol_visible_flags != all_flags))
-	elif event.is_action_pressed("toggle_names"):
+	elif event.is_action_pressed(&"toggle_names"):
 		set_all_names_visibility(bool(name_visible_flags != all_flags))
 	else:
 		return # input NOT handled!
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 
@@ -110,7 +106,7 @@ func hide_all() -> void:
 	orbit_visible_flags = 0
 	name_visible_flags = 0
 	symbol_visible_flags = 0
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_default_visibilities() -> void:
@@ -121,7 +117,7 @@ func set_default_visibilities() -> void:
 	name_visible_flags = default_name_visible_flags
 	symbol_visible_flags = default_symbol_visible_flags
 	orbit_visible_flags = default_orbit_visible_flags
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func is_name_visible(body_flags: int, match_all := false) -> bool:
@@ -164,12 +160,12 @@ func set_name_visibility(body_flags: int, is_show: bool) -> void:
 			return
 		name_visible_flags |= body_flags
 		symbol_visible_flags &= ~body_flags # exclusive
-		emit_signal("visibility_changed")
+		visibility_changed.emit()
 	else:
 		if name_visible_flags & body_flags == 0:
 			return
 		name_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
+		visibility_changed.emit()
 
 
 func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
@@ -179,12 +175,12 @@ func set_symbol_visibility(body_flags: int, is_show: bool) -> void:
 			return
 		symbol_visible_flags |= body_flags
 		name_visible_flags &= ~body_flags # exclusive
-		emit_signal("visibility_changed")
+		visibility_changed.emit()
 	else:
 		if symbol_visible_flags & body_flags == 0:
 			return
 		symbol_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
+		visibility_changed.emit()
 
 
 func set_orbit_visibility(body_flags: int, is_show: bool) -> void:
@@ -193,13 +189,13 @@ func set_orbit_visibility(body_flags: int, is_show: bool) -> void:
 		if orbit_visible_flags & body_flags == body_flags:
 			return
 		orbit_visible_flags |= body_flags
-		emit_signal("visibility_changed")
+		visibility_changed.emit()
 	else:
 		if orbit_visible_flags & body_flags == 0:
 			return
 		orbit_visible_flags &= ~body_flags
-		emit_signal("visibility_changed")
-	emit_signal("visibility_changed")
+		visibility_changed.emit()
+	visibility_changed.emit()
 
 
 func set_all_names_visibility(is_show: bool) -> void:
@@ -212,7 +208,7 @@ func set_all_names_visibility(is_show: bool) -> void:
 		if name_visible_flags == 0:
 			return
 		name_visible_flags = 0
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_all_symbols_visibility(is_show: bool) -> void:
@@ -225,7 +221,7 @@ func set_all_symbols_visibility(is_show: bool) -> void:
 		if symbol_visible_flags == 0:
 			return
 		symbol_visible_flags = 0
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_all_orbits_visibility(is_show: bool) -> void:
@@ -237,7 +233,7 @@ func set_all_orbits_visibility(is_show: bool) -> void:
 		if orbit_visible_flags == 0:
 			return
 		orbit_visible_flags = 0
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_name_visible_flags(name_visible_flags_: int) -> void:
@@ -245,7 +241,7 @@ func set_name_visible_flags(name_visible_flags_: int) -> void:
 		return
 	name_visible_flags = name_visible_flags_
 	symbol_visible_flags &= ~name_visible_flags_ # exclusive
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_symbol_visible_flags(symbol_visible_flags_: int) -> void:
@@ -253,23 +249,25 @@ func set_symbol_visible_flags(symbol_visible_flags_: int) -> void:
 		return
 	symbol_visible_flags = symbol_visible_flags_
 	name_visible_flags &= ~symbol_visible_flags_ # exclusive
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 func set_orbit_visible_flags(orbit_visible_flags_: int) -> void:
 	if orbit_visible_flags == orbit_visible_flags_:
 		return
 	orbit_visible_flags = orbit_visible_flags_
-	emit_signal("visibility_changed")
+	visibility_changed.emit()
 
 
 # color
 
 func set_default_colors() -> void:
-	if deep_equal(orbit_colors, default_orbit_colors):
+	# TEST34
+	if orbit_colors == default_orbit_colors:
+#	if deep_equal(orbit_colors, default_orbit_colors):
 		return
 	orbit_colors.merge(default_orbit_colors, true)
-	emit_signal("color_changed")
+	color_changed.emit()
 
 
 func get_default_orbit_color(body_flags: int) -> Color:
@@ -304,19 +302,19 @@ func set_orbit_color(body_flags: int, color: Color) -> void:
 	if body_flags and !(body_flags & (body_flags - 1)): # single bit test
 		if orbit_colors[body_flags] != color:
 			orbit_colors[body_flags] = color
-			emit_signal("color_changed")
+			color_changed.emit()
 		return
-	var color_changed := false
+	var changed := false
 	var flag := 1
 	while body_flags:
 		if body_flags & 1:
 			if orbit_colors[flag] != color:
 				orbit_colors[flag] = color
-				color_changed = true
+				changed = true
 		flag <<= 1
 		body_flags >>= 1
-	if color_changed:
-		emit_signal("color_changed")
+	if changed:
+		color_changed.emit()
 
 
 func get_non_default_orbit_colors() -> Dictionary:
@@ -341,7 +339,7 @@ func set_all_orbit_colors(dict: Dictionary) -> void:
 				is_change = true
 				orbit_colors[key] = default_orbit_colors[key]
 	if is_change:
-		emit_signal("color_changed")
+		color_changed.emit()
 
 
 # private
@@ -352,8 +350,6 @@ func _set_current_to_default() -> void:
 
 
 func _signal_all_changed() -> void:
-	emit_signal("visibility_changed")
-	emit_signal("color_changed")
-
-
+	visibility_changed.emit()
+	color_changed.emit()
 

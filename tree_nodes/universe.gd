@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVUniverse
-extends Spatial
+extends Node3D
 
 # *****************************************************************************
 #
@@ -47,13 +47,13 @@ extends Spatial
 # responsve to camera) and user can interact with the world. In this mode, only
 # IVTimekeeper pauses to stop time.
 
-
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
-const PERSIST_PROPERTIES := ["persist"]
+const PERSIST_PROPERTIES := [&"persist"]
 
 var persist := {}
 
-func _project_init():
+
+func _project_init() -> void:
 	if IVGlobal.pause_only_stops_time:
-		pause_mode = PAUSE_MODE_PROCESS
+		process_mode = PROCESS_MODE_ALWAYS
 

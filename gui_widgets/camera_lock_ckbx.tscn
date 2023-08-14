@@ -1,13 +1,10 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://crmkiyfceanog"]
 
-[ext_resource path="res://ivoyager/gui_widgets/camera_lock_ckbx.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/camera_lock_ckbx.gd" id="1"]
 
 [node name="CameraLockCkbx" type="CheckBox"]
-margin_right = 24.0
-margin_bottom = 24.0
-hint_tooltip = "HINT_CAMERA_LOCK"
+offset_right = 24.0
+offset_bottom = 24.0
+tooltip_text = "HINT_CAMERA_LOCK"
 text = "CKBX_LOCK_CAMERA"
-script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
+script = ExtResource("1")

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVEnvironmentBuilder
-extends Reference
+extends RefCounted
 
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.
@@ -27,8 +27,8 @@ var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
 
 
 func _project_init() -> void:
-	IVGlobal.connect("project_objects_instantiated", self, "_check_starmap_availability")
-	IVGlobal.connect("project_inited", self, "add_world_environment")
+	IVGlobal.project_objects_instantiated.connect(_check_starmap_availability)
+	IVGlobal.project_inited.connect(add_world_environment)
 
 
 func _check_starmap_availability() -> void:
@@ -53,17 +53,17 @@ func _io_callback(array: Array) -> void: # I/O thread!
 func _io_finish(array: Array) -> void: # Main thread
 	var world_environment: WorldEnvironment = array[0]
 	var start_time: int = array[1]
-	IVGlobal.program.Universe.add_child(world_environment) # this hangs a while!
+	var universe: Node3D = IVGlobal.program.Universe
+	universe.add_child(world_environment) # this hangs a while!
 	var time := Time.get_ticks_msec() - start_time
 	print("Added WorldEnvironment in ", time, " msec")
-	IVGlobal.verbose_signal("world_environment_added")
+	IVGlobal.world_environment_added.emit()
 
 
 func _get_environment() -> Environment: # I/O thread!
 	# TODO: Read env settings from data table!
 	var settings: Dictionary = IVGlobal.settings
 	var asset_paths: Dictionary = IVGlobal.asset_paths
-	var panorama_sky := PanoramaSky.new()
 	var starmap_file: String
 	match settings.starmap:
 		IVEnums.StarmapSize.STARMAP_8K:
@@ -72,13 +72,16 @@ func _get_environment() -> Environment: # I/O thread!
 			starmap_file = asset_paths.starmap_16k
 	if !IVFiles.exists(starmap_file):
 		starmap_file = asset_paths[fallback_starmap]
-	var starmap: Texture = load(starmap_file)
-	panorama_sky.panorama = starmap
-	var env = Environment.new()
+	var starmap: Texture2D = load(starmap_file)
+	var sky_material := PanoramaSkyMaterial.new()
+	sky_material.panorama = starmap
+	var sky := Sky.new()
+	sky.sky_material = sky_material
+	var env := Environment.new()
+	env.sky = sky
 	env.background_mode = Environment.BG_SKY
-	env.background_sky = panorama_sky
-	env.background_energy = 1.0
-	env.ambient_light_color = Color.white
+	env.background_energy_multiplier = 1.0
+	env.ambient_light_color = Color.WHITE
 	env.ambient_light_sky_contribution = 0.0
 	env.ambient_light_energy = 0.03
 	env.glow_enabled = true
@@ -92,19 +95,21 @@ func _get_environment() -> Environment: # I/O thread!
 	env.set_glow_level(4, false)
 	env.set_glow_level(5, true)
 	env.set_glow_level(6, true)
-	if IVGlobal.is_gles2: # GLES2 lighting is different than GLES3!
-		env.ambient_light_energy = 0.15
-		env.glow_hdr_threshold = 0.9
-		env.glow_intensity = 0.8
-		env.glow_bloom = 0.5
-	elif IVGlobal.auto_exposure_enabled:
-		env.auto_exposure_enabled = true
-		env.auto_exposure_speed = 5.0
-		env.auto_exposure_scale = 0.4
-		env.auto_exposure_min_luma = 0.165 # 0.18 # bigger reduces overexposure blowout
-		env.auto_exposure_max_luma = 8.0 # small values increase overexp blowout (no auto corr)
-		env.glow_hdr_luminance_cap = 12.0 # can't see any effect
-		env.glow_hdr_scale = 2.0 # can't see any effect
-#		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-		env.tonemap_exposure = 0.4 # adjust w/ auto_exposure_scale
+	# FIXME34
+#	if IVGlobal.is_gles2: # GLES2 lighting is different than GLES3!
+#		env.ambient_light_energy = 0.15
+#		env.glow_hdr_threshold = 0.9
+#		env.glow_intensity = 0.8
+#		env.glow_bloom = 0.5
+#	elif IVGlobal.auto_exposure_enabled:
+#		env.auto_exposure_enabled = true
+#		env.auto_exposure_speed = 5.0
+#		env.auto_exposure_scale = 0.4
+#		env.auto_exposure_min_luma = 0.165 # 0.18 # bigger reduces overexposure blowout
+#		env.auto_exposure_max_luma = 8.0 # small values increase overexp blowout (no auto corr)
+#		env.glow_hdr_luminance_cap = 12.0 # can't see any effect
+#		env.glow_hdr_scale = 2.0 # can't see any effect
+##		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+#		env.tonemap_exposure = 0.4 # adjust w/ auto_exposure_scale
 	return env
+

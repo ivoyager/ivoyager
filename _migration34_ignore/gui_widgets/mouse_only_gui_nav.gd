@@ -20,6 +20,8 @@
 class_name IVMouseOnlyGUINav
 extends CheckBox
 
+# DEPRECIATE?
+
 # GUI widget. This exist due to current Godot Engine hard-coding of GUI
 # navigation hotkeys, specifically arrow keys (w/out mods). See issue #43663;
 # hopefully will be fixed in 4.0. This checkbox widget allows the user to
@@ -31,13 +33,13 @@ extends CheckBox
 var _settings: Dictionary = IVGlobal.settings
 var _init_focus_mode_by_class := {} # if not FOCUS_NONE
 
-onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-onready var _top_gui: Control = IVGlobal.program.TopGUI
+@onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+@onready var _top_gui: Control = IVGlobal.program.TopGUI
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_on_about_to_start_simulator")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.connect("about_to_start_simulator", Callable(self, "_on_about_to_start_simulator"))
+	IVGlobal.connect("setting_changed", Callable(self, "_settings_listener"))
 	_remember_focus_mode_recursive(_top_gui)
 	var mouse_only_gui_nav: bool = _settings.mouse_only_gui_nav
 	if pressed == mouse_only_gui_nav:

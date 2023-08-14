@@ -21,10 +21,17 @@ class_name IVMainProgBar
 extends ProgressBar
 const SCENE := "res://ivoyager/gui_widgets/main_prog_bar.tscn"
 
-# Target object must have property "progress" w/ integer value 0 - 100. This
-# node updates when the main thread is idle, so the target object needs to be
-# operating on another thread to see progress. delay_start_frames can be useful
-# to allow target object to reset it's progress when called on another thread.
+# TODO: Clarify usage: Is this a widget or a program object? (It's currently
+# added in IVProjectBuilder as a program object.)
+#
+# Target object must have property "progress" w/ integer value 0 - 100.
+#
+# Note: This will not visually update if the main thread is hung up on a
+# multi-frame task. It is mainly usefull if the target object is operating
+# on another thread.
+#
+# delay_start_frames can be useful to allow target object to reset it's
+# progress when called on another thread.
 
 var delay_start_frames := 0
 
@@ -40,6 +47,7 @@ func _process(_delta: float) -> void:
 	if _delay_count < delay_start_frames:
 		_delay_count += 1
 		return
+	@warning_ignore("unsafe_property_access")
 	value = _object.progress
 
 
@@ -54,3 +62,4 @@ func stop() -> void:
 	hide()
 	set_process(false)
 	_delay_count = 0
+

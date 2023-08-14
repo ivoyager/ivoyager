@@ -1,4 +1,4 @@
-# rich_text_popup.gd
+# credits_popup.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,54 +17,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVRichTextPopup
+class_name IVCreditsPopup
 extends PopupPanel
-const SCENE := "res://ivoyager/gui_popups/rich_text_popup.tscn"
+const SCENE := "res://ivoyager/gui_popups/credits_popup.tscn"
 
-# Generic PopupPanel with RichTextLabel using BBCode.
-# BBCode is really limited, but I think improvements are coming in Godot 3.2.
+# WIP - I'm not super happy with the credits appearance right now. Needs work!
+# This was narrowly coded to parse ivoyager/CREDITS.md or file with identical
+# markup. Someone can generalize if they want.
 
+# project vars - modify on project_objects_instantiated signal
 var stop_sim := true
+var file_path := "res://ivoyager/CREDITS.md" # change to "res://CREDITS.md"
 
 var _blocking_popups: Array = IVGlobal.blocking_popups
 var _state_manager: IVStateManager
 
-onready var _header: Label = $VBox/Header
-onready var _rt_label: RichTextLabel = $VBox/RTLabel
-
-
 func _project_init() -> void:
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("rich_text_popup_requested", self, "_open")
 	_state_manager = IVGlobal.program.StateManager
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
-	$VBox/Close.connect("pressed", self, "hide")
+	IVGlobal.connect("credits_requested", Callable(self, "open"))
+	IVGlobal.connect("close_all_admin_popups_requested", Callable(self, "hide"))
+	connect("popup_hide", Callable(self, "_on_hide"))
+	find_child("Close").connect("pressed", Callable(self, "hide"))
+	find_child("MDFileLabel").read_file("res://ivoyager/CREDITS.md")
 	_blocking_popups.append(self)
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		hide()
 
 
-func _open(header_text: String, bbcode_text: String) -> void:
+func open() -> void:
 	if _is_blocking_popup():
 		return
 	if stop_sim:
 		_state_manager.require_stop(self)
-	_header.text = header_text
-	_rt_label.bbcode_text = tr(bbcode_text)
-	popup()
-	set_anchors_and_margins_preset(PRESET_CENTER, PRESET_MODE_MINSIZE)
+	popup_centered_clamped()
 
 
-func _on_popup_hide() -> void:
-	_rt_label.bbcode_text = ""
+func _on_hide() -> void:
 	if stop_sim:
 		_state_manager.allow_run(self)
 

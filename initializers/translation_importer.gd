@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTranslationImporter
-extends Reference
+extends RefCounted
 
 # We report key duplicates and process text under the following conditions:
 #
@@ -36,7 +36,7 @@ func _init():
 	
 func _on_init() -> void:
 	_load_translations()
-	IVGlobal.verbose_signal("translations_imported")
+	IVGlobal.translations_imported.emit()
 	IVGlobal.program.erase("TranslationImporter") # frees self
 
 
@@ -45,7 +45,7 @@ func _load_translations() -> void:
 	var duplications := []
 	for tr_path in IVGlobal.translations:
 		var translation: Translation = load(tr_path)
-		if translation is PHashTranslation:
+		if translation is OptimizedTranslation:
 			# Note: PHashTranslation doesn't work in add_translation in export
 			# project. Godot issue #38935.
 #			var compressed_tr := PHashTranslation.new()
@@ -66,7 +66,7 @@ func _load_translations() -> void:
 			prints(" ", key, load_dict[tr2])
 
 
-func _process_translation(translation: Translation,	load_dict: Dictionary,
+func _process_translation(translation: Translation, load_dict: Dictionary,
 		duplications: Array) -> void:
 	for txt_key in translation.get_message_list():
 		# Duplicate test.
@@ -76,6 +76,7 @@ func _process_translation(translation: Translation,	load_dict: Dictionary,
 			continue
 		load_dict[txt_key] = translation
 		var text: String = translation.get_message(txt_key)
+		# TODO34: This is fixed now?
 		# Patch for Godot issue #38716 not understanding "\uXXXX".
 		var new_text := IVUtils.c_unescape_patch(text)
 		if new_text != text:

@@ -20,51 +20,61 @@
 class_name IVTimeSetter
 extends HBoxContainer
 
-# GUI widget. For usage in a setter popup, see gui_widgets/time_set_popup.tscn.
+# GUI widget. Requires IVTimekeeper.
+#
+# For usage in a setter popup, see IVTimeSetPopup.
 
 signal time_set(is_close)
 
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _year: SpinBox = $Year
+@onready var _month: SpinBox = $Month
+@onready var _day: SpinBox = $Day
+@onready var _hour: SpinBox = $Hour
+@onready var _minute: SpinBox = $Minute
+@onready var _second: SpinBox = $Second
+
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	$Set.connect("pressed", self, "_on_set", [false])
-	$SetAndClose.connect("pressed", self, "_on_set", [true])
-	$Year.connect("value_changed", self, "_on_date_changed")
-	$Month.connect("value_changed", self, "_on_date_changed")
-	$Day.connect("value_changed", self, "_on_date_changed")
+	($Set as Button).pressed.connect(_on_set.bind(false))
+	($SetAndClose as Button).pressed.connect(_on_set.bind(true))
+	_year.value_changed.connect(_on_date_changed)
+	_month.value_changed.connect(_on_date_changed)
+	_day.value_changed.connect(_on_date_changed)
 
 
 func set_current() -> void:
 	var date_time := _timekeeper.get_gregorian_date_time()
 	var date_array: Array = date_time[0]
 	var time_array: Array = date_time[1]
-	$Year.value = date_array[0]
-	$Month.value = date_array[1]
-	$Day.value = date_array[2]
-	$Hour.value = time_array[0]
-	$Minute.value = time_array[1]
-	$Second.value = time_array[2]
+	_year.value = date_array[0]
+	_month.value = date_array[1]
+	_day.value = date_array[2]
+	_hour.value = time_array[0]
+	_minute.value = time_array[1]
+	_second.value = time_array[2]
 
 
 func _on_set(is_close: bool) -> void:
-	var year := int($Year.value)
-	var month := int($Month.value)
-	var day := int($Day.value)
-	var hour := int($Hour.value)
-	var minute := int($Minute.value)
-	var second := int($Second.value)
+	var year := int(_year.value)
+	var month := int(_month.value)
+	var day := int(_day.value)
+	var hour := int(_hour.value)
+	var minute := int(_minute.value)
+	var second := int(_second.value)
 	var new_time := _timekeeper.get_sim_time(year, month, day, hour, minute, second)
 	_timekeeper.set_time(new_time)
-	emit_signal("time_set", is_close)
+	time_set.emit(is_close)
 
 
 func _on_date_changed(_value: float) -> void:
-	var day := int($Day.value)
+	var day := int(_day.value)
 	if day < 29:
 		return
-	var year := int($Year.value)
-	var month := int($Month.value)
+	var year := int(_year.value)
+	var month := int(_month.value)
 	if !_timekeeper.is_valid_gregorian_date(year, month, day):
-		$Day.value = day - 1
+		_day.value = day - 1
+

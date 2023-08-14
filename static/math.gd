@@ -169,12 +169,12 @@ static func get_euler_rotation_matrix(Om: float, i: float, w: float) -> Basis:
 
 
 # Spherical
-static func get_spherical2(translation: Vector3) -> Vector2:
-	var r := translation.length()
+static func get_spherical2(position: Vector3) -> Vector2:
+	var r := position.length()
 	if r == 0.0:
 		return VECTOR2_ZERO
-	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU) # 0,0 safe
-	var declination := asin(translation.z / r)
+	var right_ascension := fposmod(atan2(position.y, position.x), TAU) # 0,0 safe
+	var declination := asin(position.z / r)
 	return Vector2(right_ascension, declination)
 
 
@@ -188,12 +188,12 @@ static func convert_spherical2(right_ascension: float, declination: float) -> Ve
 	)
 
 
-static func get_spherical3(translation: Vector3) -> Vector3:
-	var r := translation.length()
+static func get_spherical3(position: Vector3) -> Vector3:
+	var r := position.length()
 	if r == 0.0:
 		return VECTOR3_ZERO
-	var right_ascension := fposmod(atan2(translation.y, translation.x), TAU)
-	var declination := asin(translation.z / r)
+	var right_ascension := fposmod(atan2(position.y, position.x), TAU)
+	var declination := asin(position.z / r)
 	return Vector3(right_ascension, declination, r)
 
 
@@ -209,14 +209,14 @@ static func convert_spherical3(spherical3: Vector3) -> Vector3:
 	)
 
 
-static func get_rotated_spherical3(translation: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
-	translation = rotation.xform_inv(translation)
-	return get_spherical3(translation)
+static func get_rotated_spherical3(position: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
+	position = (position) * rotation
+	return get_spherical3(position)
 
 
 static func convert_rotated_spherical3(spherical3: Vector3, rotation := IDENTITY_BASIS) -> Vector3:
-	var translation := convert_spherical3(spherical3)
-	return rotation.xform(translation)
+	var position := convert_spherical3(spherical3)
+	return rotation * (position)
 
 
 static func wrap_spherical3(spherical3: Vector3) -> Vector3:
@@ -235,9 +235,9 @@ static func wrap_spherical3(spherical3: Vector3) -> Vector3:
 	return spherical3
 
 
-static func get_latitude_longitude(translation: Vector3) -> Vector2:
+static func get_latitude_longitude(position: Vector3) -> Vector2:
 	# Convinience function; order & wrapping differ from spherical2 
-	var spherical := get_spherical2(translation)
+	var spherical := get_spherical2(position)
 	return Vector2(spherical[1], wrapf(spherical[0], -PI, PI))
 
 
@@ -253,11 +253,11 @@ static func get_fov_from_focal_length(focal_length: float) -> float:
 	# sensor) rather than fov. Godot sets fov to fit horizonal screen height by
 	# default, so we use horizonal height of a full-frame sensor (11.67mm)
 	# to calculate: fov = 2 * arctan(sensor_size / focal_length).
-	return rad2deg(2.0 * atan(11.67 / focal_length))
+	return rad_to_deg(2.0 * atan(11.67 / focal_length))
 
 
 static func get_focal_length_from_fov(fov: float) -> float:
-	return 11.67 / tan(deg2rad(fov) / 2.0)
+	return 11.67 / tan(deg_to_rad(fov) / 2.0)
 
 
 static func get_fov_scaling_factor(fov: float) -> float:
@@ -319,21 +319,4 @@ static func quadratic(x: float, coefficients: Array) -> float:
 	var b: float = coefficients[1]
 	var c: float = coefficients[2]
 	return a * x * x + b * x + c
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

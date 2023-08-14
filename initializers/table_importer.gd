@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVTableImporter
-extends Reference
+extends RefCounted
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for REAL) results to IVGlobal dictionaries. Data can be
@@ -108,7 +108,7 @@ func _on_init() -> void:
 	var time := Time.get_ticks_msec() - start_time
 	print("Imported data tables in %s msec; %s rows, %s cells, %s non-null cells" \
 			% [time, _count_rows, _count_cells, _count_non_null])
-	IVGlobal.verbose_signal("data_tables_imported")
+	IVGlobal.data_tables_imported.emit()
 
 
 func _project_init() -> void:
@@ -140,10 +140,11 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 	# is_mod == true means we are importing a 'mod table'; these modify an
 	# existing table and can add columns or rows or overwrite existing values.
 	assert(table_name and path)
-	assert(DPRINT and prints("Reading", path) or true)
-	var file := File.new()
-	if file.open(path, file.READ) != OK:
+	assert(!DPRINT or IVDebug.dprint("Reading " + path))
+	var file := FileAccess.open(path, FileAccess.READ)
+	if !file:
 		assert(false, "Could not open file: " + path)
+		return
 	if !is_mod:
 		assert(!_tables.has(table_name))
 		_tables[table_name] = {}
@@ -166,7 +167,7 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 		if line.begins_with("#"):
 			line = file.get_line()
 			continue
-		var line_array := line.split("\t") as Array
+		var line_array := line.split("\t")
 		
 		if reading_header:
 			# we're processing header until we don't recognize cell_0 as header item
@@ -209,8 +210,8 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						var raw_type: String = line_array[column]
 						var type := _get_type_int(raw_type)
 						field_info[field][0] = type
-						if type == TYPE_REAL and !is_mod:
-							precisions[field] = []
+						if type == TYPE_FLOAT and !is_mod:
+							precisions[field] = [] as Array[int]
 				has_types = true
 			
 			elif cell_0.begins_with("Prefix"):
@@ -273,9 +274,9 @@ func _import_table(table_name: String, path: String, is_mod := false) -> void:
 						table_column.resize(n_rows)
 						table_column.fill(default) # mod table will overwrite
 						table[field] = table_column
-						if type != TYPE_REAL:
+						if type != TYPE_FLOAT:
 							continue
-						var precisions_column := []
+						var precisions_column: Array[int] = []
 						precisions_column.resize(n_rows)
 						precisions_column.fill(1) # ad hoc default
 						precisions[field] = precisions_column
@@ -318,19 +319,22 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 		elif _enumerations.has(row_name): # modifying existing table item
 			row = _enumerations[row_name]
 		else: # adding row to existing table!
-			row = table.name.size()
+			var name_column: Array[String] = table.name
+			row = name_column.size()
 			_enumerations[row_name] = row
 			_tables["n_" + table_name] += 1
 			# assign row_name and impute defaults (table values will overwrite)
-			table.name.append(row_name)
+			name_column.append(row_name)
 			for field in field_info: # all fields! (not just mod table)
 				if field == "name":
 					continue
 				var default = field_info[field][3] # untyped
-				table[field].append(default)
+				var column_array: Array = table[field]
+				column_array.append(default)
 				var type: int = field_info[field][0]
-				if type == TYPE_REAL:
-					precisions[field].append(1) # ad hoc default
+				if type == TYPE_FLOAT:
+					var prec_column: Array[int] = precisions[field]
+					prec_column.append(1) # ad hoc default
 	
 	for field in _column_map:
 		_count_cells += 1
@@ -344,22 +348,24 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 			var prefix: String = field_info[field][1]
 			var unit: String = field_info[field][2]
 			value = _get_processed_value(raw_value, type, prefix, unit, true) # untyped
-			if type == TYPE_REAL: # function return is array [value, precision]
+			if type == TYPE_FLOAT: # function return is array [value, precision]
 				precision = value[1]
 				value = value[0]
 		else: # blank cell
 			value = field_info[field][3] # default (already processed)
 		
 		# set table value, precision & wiki
+		var table_column: Array = table[field]
 		if is_mod:
-			table[field][row] = value
+			table_column[row] = value
 		else:
-			table[field].append(value)
-		if type == TYPE_REAL:
+			table_column.append(value)
+		if type == TYPE_FLOAT:
+			var prec_column: Array[int] = precisions[field]
 			if is_mod:
-				precisions[field][row] = precision
+				prec_column[row] = precision
 			else:
-				precisions[field].append(precision)
+				prec_column.append(precision)
 		if _enable_wiki and field == _wiki:
 			assert(row_name)
 			_wiki_titles[row_name] = value
@@ -367,7 +373,7 @@ func _read_line(table_name: String, row: int, line_array: Array, has_row_names: 
 
 func _get_type_int(raw_type: String) -> int:
 	if raw_type == "REAL":
-		return TYPE_REAL
+		return TYPE_FLOAT
 	if raw_type == "BOOL":
 		return TYPE_BOOL
 	if raw_type == "INT":
@@ -415,7 +421,7 @@ func _get_processed_value(raw_value: String, type: int, prefix: String, unit: St
 			if prefix:
 				return prefix + raw_value
 			return raw_value
-		TYPE_REAL:
+		TYPE_FLOAT:
 			var value: float
 			var precision := -1
 			if !raw_value:
@@ -482,17 +488,18 @@ func _postprocess_ints() -> void:
 func _get_int(raw_value: String) -> int:
 	if !raw_value:
 		return -1
-	if raw_value.is_valid_integer():
+	if raw_value.is_valid_int():
 		return int(raw_value)
 	assert(_enumerations.has(raw_value), "Unknown enumeration '%s'" % raw_value)
 	return _enumerations[raw_value]
 
 
 func _import_wiki_titles(path: String) -> void:
-	assert(DPRINT and prints("Reading", path) or true)
-	var file := File.new()
-	if file.open(path, file.READ) != OK:
-		assert(false, "Could not open file: " +  path)
+	assert(!DPRINT or IVDebug.dprint("Reading " + path))
+	var file := FileAccess.open(path, FileAccess.READ)
+	if !file:
+		assert(false, "Could not open file: " + path)
+		return
 	_column_map.clear()
 	var reading_header := true
 	var reading_fields := true
@@ -502,7 +509,7 @@ func _import_wiki_titles(path: String) -> void:
 		if line.begins_with("#"):
 			line = file.get_line()
 			continue
-		var line_array := line.split("\t") as Array
+		var line_array := line.split("\t")
 		if reading_header:
 			if reading_fields: # always 1st line!
 				assert(line_array[0] == "name", "1st field must be 'name'")

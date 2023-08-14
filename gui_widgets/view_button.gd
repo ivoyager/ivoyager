@@ -20,8 +20,9 @@
 class_name IVViewButton
 extends Button
 
-# GUI button widget for 'default' views in IVViewDefaults. This button name
-# must be changed to a valid key in IVViewDefaults.views.
+# GUI widget. Requires IVViewDefaults.
+#
+# The instance name must be changed to a valid key in IVViewDefaults.views.
 #
 # See IVViewSaveFlow for saved/removable view buttons.
 
@@ -29,5 +30,5 @@ extends Button
 func _ready() -> void:
 	var view_defaults: IVViewDefaults = IVGlobal.program.ViewDefaults
 	assert(view_defaults.has_view(name), "No default view with name = " + name)
-	connect("pressed", view_defaults, "set_view", [name])
+	pressed.connect(view_defaults.set_view.bind(name))
 

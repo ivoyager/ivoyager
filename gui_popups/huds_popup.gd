@@ -21,14 +21,14 @@ class_name IVHUDsPopup
 extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/huds_popup.tscn"
 
-
+# Instanced by IVHUDsPopupButton. (Not added in IVProjectBuilder.)
 
 func _ready() -> void:
-	var view_save_flow: IVViewSaveFlow = $AllHUDs.find_node("ViewSaveFlow")
-	view_save_flow.connect("resized", self, "_reset_size")
+	var view_save_flow: IVViewSaveFlow = $AllHUDs.find_child("ViewSaveFlow")
+	view_save_flow.resized.connect(_reset_size)
 
 
 func _reset_size() -> void:
 	# Needed when FlowContainer loses a row (as of Godot 3.5.2).
-	rect_size = Vector2.ZERO
+	size = Vector2.ZERO
 

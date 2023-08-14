@@ -20,28 +20,31 @@
 class_name IVMainMenu
 extends VBoxContainer
 
-# GUI widget. Parent control should modify is_splash_config, if appropriate.
-# To add buttons, use IVMainMenuManager (prog_refs/main_menu_manager.gd).
-# The menu is built on project_builder_finished signal with all buttons
-# disabled. Button state is updated on state_manager_inited signal.
+# GUI widget. Requires IVMainMenuManager.
+#
+# Parent control should modify is_splash_config, if appropriate.
+#
+# To add buttons, use IVMainMenuManager. The menu is built on signal
+# 'IVGlobal.project_builder_finished' with all buttons disabled. Button state
+# is updated on signal 'IVGlobal.state_manager_inited'.
 
-var is_splash_config := false # splash screen needs to set this
+var is_splash_config := false # parent or someone else needs to set this
 
 var _state: Dictionary = IVGlobal.state
 var _is_project_built := false
 
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
-onready var _button_infos: Array = _main_menu_manager.button_infos
+@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
+@onready var _button_infos := _main_menu_manager.button_infos
 
 
 func _ready() -> void:
+	# FIXME: Below needs to support scenetree add at any time.
+	IVGlobal.project_builder_finished.connect(_on_project_builder_finished, CONNECT_ONE_SHOT)
+	IVGlobal.state_manager_inited.connect(_on_state_manager_inited, CONNECT_ONE_SHOT)
+	_main_menu_manager.buttons_changed.connect(_build)
+	_main_menu_manager.button_state_changed.connect(_update_button_states)
+	visibility_changed.connect(_grab_button_focus)
 	theme = IVGlobal.themes.main_menu
-	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished", [], CONNECT_ONESHOT)
-	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
-	_main_menu_manager.connect("buttons_changed", self, "_build")
-	_main_menu_manager.connect("button_state_changed", self, "_update_button_states")
-	connect("visibility_changed", self, "_grab_button_focus")
 
 
 func _on_project_builder_finished() -> void:
@@ -77,7 +80,7 @@ func _build() -> void:
 		var button_state: int = button_info[7]
 		button.focus_mode = Control.FOCUS_ALL
 		button.text = text
-		button.connect("pressed", target, method, args)
+		button.pressed.connect(Callable(target, method).bindv(args))
 		button.visible = button_state != _main_menu_manager.HIDDEN
 		# disabled will be updated at state_manager_inited signal
 		button.disabled = !_state.is_inited or button_state == _main_menu_manager.DISABLED
@@ -104,7 +107,7 @@ func _grab_button_focus() -> void:
 	# Only grabs if no one else has focus
 	if !is_visible_in_tree():
 		return
-	if get_focus_owner():
+	if get_viewport().gui_get_focus_owner():
 		return
 	for child in get_children():
 		var button := child as Button
@@ -113,3 +116,4 @@ func _grab_button_focus() -> void:
 		if button.visible and !button.disabled and button.focus_mode != Control.FOCUS_NONE:
 			button.grab_focus() # top menu button that is not disabled
 			return
+

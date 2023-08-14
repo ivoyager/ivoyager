@@ -20,27 +20,30 @@
 class_name IVNowCkbx
 extends CheckBox
 
-# UI widget. Used in Planetarium to select real-world present time.
+# UI widget. Requires IVTimekeeper.
+#
+# Used (e.g., in Planetarium) to set present time from user operating system.
 
 const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
 
 
 func _ready() -> void:
-	IVGlobal.connect("user_pause_changed", self, "_update_ckbx")
-	_timekeeper.connect("speed_changed", self, "_update_ckbx")
-	_timekeeper.connect("time_altered", self, "_update_ckbx")
-	connect("pressed", self, "_set_real_world")
+	IVGlobal.user_pause_changed.connect(_update_ckbx)
+	_timekeeper.speed_changed.connect(_update_ckbx)
+	_timekeeper.time_altered.connect(_update_ckbx)
+	pressed.connect(_set_real_world)
 
 
 func _update_ckbx(_dummy = false) -> void:
-	pressed = _timekeeper.is_now
+	button_pressed = _timekeeper.is_now
 
 
 func _set_real_world() -> void:
 	if _state.network_state != IS_CLIENT:
-		_timekeeper.set_now()
-		pressed = true
+		_timekeeper.set_now_from_operating_system()
+		button_pressed = true
+

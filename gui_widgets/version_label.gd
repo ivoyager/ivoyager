@@ -34,7 +34,7 @@ var add_ymd := false
 var add_ymd_if_dev := true
 
 
-func _ready():
+func _ready() -> void:
 	set_label()
 
 

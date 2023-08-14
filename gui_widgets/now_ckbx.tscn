@@ -1,10 +1,10 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://b7a02wvmqua4q"]
 
-[ext_resource path="res://ivoyager/gui_widgets/now_ckbx.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/now_ckbx.gd" id="1"]
 
 [node name="NowCkbx" type="CheckBox"]
-margin_right = 24.0
-margin_bottom = 24.0
-hint_tooltip = "HINT_TIME_REAL"
+offset_right = 24.0
+offset_bottom = 24.0
+tooltip_text = "HINT_TIME_REAL"
 text = "CKBX_LOCK_NOW"
-script = ExtResource( 1 )
+script = ExtResource("1")

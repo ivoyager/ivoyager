@@ -1,23 +1,12 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://8vqmd07h6kmk"]
 
-[ext_resource path="res://ivoyager/gui_popups/load_dialog.gd" type="Script" id=1]
-
+[ext_resource type="Script" path="res://ivoyager/gui_popups/load_dialog.gd" id="1"]
 
 [node name="LoadDialog" type="FileDialog"]
-pause_mode = 2
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -300.0
-margin_top = -200.0
-margin_right = 300.0
-margin_bottom = 200.0
-rect_min_size = Vector2( 600, 400 )
-size_flags_horizontal = 0
-size_flags_vertical = 0
-popup_exclusive = true
-window_title = "Open a File"
-resizable = true
-mode = 0
-script = ExtResource( 1 )
+process_mode = 3
+title = "Open a File"
+size = Vector2i(800, 600)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+script = ExtResource("1")

@@ -20,11 +20,16 @@
 class_name IVPlanetMoonButtons
 extends HBoxContainer
 
-# GUI widget. Builds itself from an existing solar system!
+# GUI widget. An ancestor Control node must have property 'selection_manager'
+# set to an IVSelectionManager before signal IVGlobal.system_tree_ready.
+#
+# This widget builds itself from an existing solar system!
 #
 # To use in conjuction with SunSliceButton, make both SIZE_FILL_EXPAND and give
 # strech ratios: 1.0 (SunSliceButton) and 10.0 (this widget or container that
 # contains this widget).
+
+# TODO: This class needs to provide a 'widget_resized' signal for parent useage.
 
 const IS_PLANET := IVEnums.BodyFlags.IS_PLANET
 const IS_MOON := IVEnums.BodyFlags.IS_MOON
@@ -44,17 +49,17 @@ var column_separation_ratio := 0.007143 # proportion of widget width, rounded
 # private
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _currently_selected: Button
-var _resize_control_multipliers := {}
+var _resize_multipliers := {} # indexed by Control, holds Vector2
 var _is_built := false
 
-onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+@onready var _mouse_only_gui_nav: bool = false # IVGlobal.settings.mouse_only_gui_nav
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_build")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("resized", self, "_resize")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	IVGlobal.about_to_start_simulator.connect(_build)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	resized.connect(_resize)
+	IVGlobal.setting_changed.connect(_settings_listener)
 	_build()
 
 
@@ -67,36 +72,39 @@ func _build(_dummy := false) -> void:
 	if !_selection_manager:
 		return
 	_is_built = true
+	
+	print("****** Building nav buttons ******")
+	
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
-	set("custom_constants/separation", column_separation)
+	set("theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size
 	var star: IVBody = IVGlobal.top_bodies[0]
-	var min_body_size := round(INIT_WIDTH * min_body_size_ratio)
+	var min_body_size := roundf(INIT_WIDTH * min_body_size_ratio)
 	# count & calcultate planet relative sizes
-	var size := 0.0
+	var base_size := 0.0
 	var total_width := 0.0
-	var column_widths := [] # index 0, 1, 2,... will be planet/moon columns
-	var planet_sizes := []
+	var column_widths: Array[float] = [] # index 0, 1, 2,... will be planet/moon columns
+	var planet_sizes: Array[float] = []
 	var n_planets := 0
 	for planet in star.satellites:
 		if not planet.flags & IS_PLANET:
 			continue
-		size = pow(planet.get_mean_radius(), size_exponent)
-		planet_sizes.append(size)
-		column_widths.append(size)
-		total_width += size
+		base_size = planet.get_mean_radius() ** size_exponent
+		planet_sizes.append(base_size)
+		column_widths.append(base_size)
+		total_width += base_size
 		n_planets += 1
 	var min_width := min_button_width_proportion * total_width
-	for column in range(n_planets):
+	for column in n_planets:
 		if column_widths[column] < min_width:
 			total_width += min_width - column_widths[column]
 			column_widths[column] = min_width
 	# scale everything to fit specified widget width
-	var scale: float = (INIT_WIDTH - (column_separation * n_planets)) / total_width
+	var widget_scale: float = (INIT_WIDTH - (column_separation * n_planets)) / total_width
 	var max_planet_size := 0.0
-	for column in range(n_planets):
-		column_widths[column] = round(column_widths[column] * scale)
-		planet_sizes[column] = round(planet_sizes[column] * scale)
+	for column in n_planets:
+		column_widths[column] = roundf(column_widths[column] * widget_scale)
+		planet_sizes[column] = roundf(planet_sizes[column] * widget_scale)
 		if planet_sizes[column] < min_body_size:
 			planet_sizes[column] = min_body_size
 		if max_planet_size < planet_sizes[column]:
@@ -114,19 +122,19 @@ func _build(_dummy := false) -> void:
 		planet_vbox.size_flags_stretch_ratio = column_widths[column]
 		add_child(planet_vbox)
 		var spacer := Control.new()
-		var spacer_height := round((max_planet_size - planet_sizes[column]) / 2.0)
-		spacer.rect_min_size.y = spacer_height
+		var spacer_height := roundf((max_planet_size - planet_sizes[column]) / 2.0)
+		spacer.custom_minimum_size.y = spacer_height
 		spacer.mouse_filter = MOUSE_FILTER_IGNORE
-		_resize_control_multipliers[spacer] = Vector2(0.0, spacer_height / INIT_WIDTH)
+		_resize_multipliers[spacer] = Vector2(0.0, spacer_height / INIT_WIDTH)
 		planet_vbox.add_child(spacer)
 		_add_nav_button(planet_vbox, planet, planet_sizes[column])
 		for moon in planet.satellites:
 			if not moon.flags & IS_MOON or not moon.flags & SHOW_IN_NAV_PANEL:
 				continue
-			size = round(pow(moon.get_mean_radius(), size_exponent) * scale)
-			if size < min_body_size:
-				size = min_body_size
-			_add_nav_button(planet_vbox, moon, size)
+			base_size = roundf(pow(moon.get_mean_radius(), size_exponent) * widget_scale)
+			if base_size < min_body_size:
+				base_size = min_body_size
+			_add_nav_button(planet_vbox, moon, base_size)
 		column += 1
 
 
@@ -134,18 +142,18 @@ func _clear() -> void:
 	_is_built = false
 	_selection_manager = null
 	_currently_selected = null
-	_resize_control_multipliers.clear()
+	_resize_multipliers.clear()
 	for child in get_children():
 		child.queue_free()
 
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var button := IVNavigationButton.new(body, image_size, _selection_manager)
-	button.connect("selected", self, "_on_nav_button_selected", [button])
+	button.connect("selected", Callable(self, "_on_nav_button_selected").bind(button))
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
-	_resize_control_multipliers[button] = Vector2(size_multiplier, size_multiplier)
+	_resize_multipliers[button] = Vector2(size_multiplier, size_multiplier)
 
 
 func _resize() -> void:
@@ -157,33 +165,33 @@ func _resize() -> void:
 	# iffy. We have a few images already smaller than their bounding buttons
 	# (Ceres & Pluto, depending on min_button_width_proportion) and this is why
 	# it is possible to shrink the widget before image resizing.
-	var widget_width := rect_size.x
+	var widget_width := size.x
 	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-	set("custom_constants/separation", column_separation)
-	for key in _resize_control_multipliers:
-		var control := key as Control
-		var multipliers: Vector2 = _resize_control_multipliers[control]
-		control.rect_min_size = multipliers * widget_width
+	set("theme_override_constants/separation", column_separation)
+	for key in _resize_multipliers:
+		var control: Control = key
+		var multipliers: Vector2 = _resize_multipliers[control]
+		control.custom_minimum_size = multipliers * widget_width
 
 
 func _on_nav_button_selected(selected: Button) -> void:
 	_currently_selected = selected
-	if !_mouse_only_gui_nav and !get_focus_owner():
+	if !_mouse_only_gui_nav and !get_viewport().gui_get_focus_owner():
 		if selected.focus_mode != FOCUS_NONE:
 			selected.grab_focus()
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: String, _value) -> void:
 	match setting:
 		"gui_size":
 			if IVGlobal.state.is_system_built:
 				_settings_resize()
-		"mouse_only_gui_nav":
-			_mouse_only_gui_nav = value
-			if !_mouse_only_gui_nav and _currently_selected:
-				yield(get_tree(), "idle_frame") # wait for _mouse_only_gui_nav.gd
-				if _currently_selected.focus_mode != FOCUS_NONE:
-					_currently_selected.grab_focus()
+#		"mouse_only_gui_nav":
+#			_mouse_only_gui_nav = value
+#			if !_mouse_only_gui_nav and _currently_selected:
+#				await get_tree().process_frame # wait for _mouse_only_gui_nav.gd
+#				if _currently_selected.focus_mode != FOCUS_NONE:
+#					_currently_selected.grab_focus()
 
 
 func _settings_resize() -> void:
@@ -191,9 +199,9 @@ func _settings_resize() -> void:
 	# its bounding container. The _resize() function then resizes images to fit
 	# the widget.
 	for child in get_children():
-		child.hide()
-	yield(get_tree(), "idle_frame")
+		(child as Control).hide()
+	await get_tree().process_frame
 	_resize()
 	for child in get_children():
-		child.show()
+		(child as Control).show()
 

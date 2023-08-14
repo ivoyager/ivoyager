@@ -20,15 +20,16 @@
 class_name IVSelectionLabel
 extends Label
 
-# GUI widget. An ancestor Control must have member selection_manager.
+# GUI widget. An ancestor Control node must have property 'selection_manager'
+# set to an IVSelectionManager before signal IVGlobal.about_to_start_simulator.
 
 var _selection_manager: IVSelectionManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.about_to_start_simulator.connect(_connect_selection_manager)
+	IVGlobal.update_gui_requested.connect(_update_selection)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	_connect_selection_manager()
 
 
@@ -42,7 +43,7 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_selection_manager.selection_changed.connect(_update_selection)
 	_update_selection()
 
 
@@ -50,3 +51,4 @@ func _update_selection(_dummy := false) -> void:
 	if !_selection_manager.has_selection():
 		return
 	text = _selection_manager.get_gui_name()
+

@@ -20,19 +20,20 @@
 class_name IVSelectionButtons
 extends HBoxContainer
 
-# GUI widget.
+# GUI widget. An ancestor Control node must have property 'selection_manager'
+# set to an IVSelectionManager before signal IVGlobal.about_to_start_simulator.
 
 var _selection_manager: IVSelectionManager
 
-onready var _back: Button = $Back
-onready var _forward: Button = $Forward
-onready var _up: Button = $Up
+@onready var _back: Button = $Back
+@onready var _forward: Button = $Forward
+@onready var _up: Button = $Up
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_connect_selection_manager")
-	IVGlobal.connect("update_gui_requested", self, "_update_buttons")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	IVGlobal.about_to_start_simulator.connect(_connect_selection_manager)
+	IVGlobal.update_gui_requested.connect(_update_buttons)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	_connect_selection_manager()
 
 
@@ -42,10 +43,10 @@ func _connect_selection_manager(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_buttons")
-	_back.connect("pressed", _selection_manager, "back")
-	_forward.connect("pressed", _selection_manager, "forward")
-	_up.connect("pressed", _selection_manager, "up")
+	_selection_manager.selection_changed.connect(_update_buttons)
+	_back.pressed.connect(_selection_manager.back)
+	_forward.pressed.connect(_selection_manager.forward)
+	_up.pressed.connect(_selection_manager.up)
 	_update_buttons()
 
 
@@ -57,3 +58,4 @@ func _update_buttons(_dummy := false) -> void:
 
 func _clear() -> void:
 	_selection_manager = null
+

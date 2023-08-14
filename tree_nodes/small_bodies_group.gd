@@ -30,24 +30,23 @@ extends Node
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const VPRINT = false # print verbose asteroid summary on load
-const DPRINT = false
+const VPRINT = true # print verbose asteroid summary on load
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"sbg_alias",
-	"sbg_class",
-	"secondary_body",
-	"lp_integer",
-	"max_apoapsis",
-	"names",
-	"magnitudes",
-	"e_i_Om_w",
-	"a_M0_n",
-	"s_g",
-	"da_D_f",
-	"th0_de",
+	&"name",
+	&"sbg_alias",
+	&"sbg_class",
+	&"secondary_body",
+	&"lp_integer",
+	&"max_apoapsis",
+	&"names",
+	&"magnitudes",
+	&"e_i_Om_w",
+	&"a_M0_n",
+	&"s_g",
+	&"da_D_f",
+	&"th0_de",
 ]
 
 # persisted
@@ -59,13 +58,13 @@ var lp_integer := -1 # -1, 4 & 5 are currently supported
 var max_apoapsis := 0.0
 
 # binary import data
-var names := PoolStringArray()
-var magnitudes := PoolRealArray()
-var e_i_Om_w := PoolColorArray() # fixed & precessing (e librates for secular resonance)
-var a_M0_n := PoolVector3Array() # librating in l-point objects
-var s_g := PoolVector2Array() # orbit precessions
-var da_D_f := PoolVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
-var th0_de := PoolVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
+var names := PackedStringArray()
+var magnitudes := PackedFloat32Array()
+var e_i_Om_w := PackedColorArray() # fixed & precessing (e librates for secular resonance)
+var a_M0_n := PackedVector3Array() # librating in l-point objects
+var s_g := PackedVector2Array() # orbit precessions
+var da_D_f := PackedVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
+var th0_de := PackedVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
 
 
 
@@ -107,7 +106,7 @@ func init(name_: String, sbg_alias_: String, sbg_class_: int,
 	secondary_body = secondary_body_
 
 
-func read_binary(binary: File) -> void:
+func read_binary(binary: FileAccess) -> void:
 	var binary_data: Array = binary.get_var()
 	names.append_array(binary_data[0])
 	magnitudes.append_array(binary_data[1])
@@ -143,8 +142,8 @@ func finish_binary_import() -> void:
 			index += 1
 
 	# feedback
-	assert(VPRINT and print("%s %s asteroids loaded from binaries"
-			% [names.size(), sbg_alias]) or true)
+	assert(!VPRINT or IVDebug.dprint("%s %s asteroids loaded from binaries"
+			% [names.size(), sbg_alias]))
 
 
 func get_fragment_data(fragment_type: int, index: int) -> Array:

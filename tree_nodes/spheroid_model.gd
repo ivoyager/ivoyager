@@ -1,4 +1,4 @@
-# globe_model.gd
+# spheroid_model.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,34 +17,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVGlobeModel
-extends MeshInstance
+class_name IVSpheroidModel
+extends MeshInstance3D
 
-# A generic ellipsoid model that uses a shared sphere mesh.
+# A generic spheroid model that uses a shared sphere mesh. IVModelBuilder will
+# scale instances for appropriate oblateness.
 #
-# If _is_dynamic_star, the model will grow with great distances to stay visible.
-# For example, we use this to keep the Sun reasonably prominant from Jupiter
-# and just barely visible from Pluto.
+# If is_dynamic_star, the model will grow with great distances to stay visible
+# and appropriately prominent relative to the star field. The grow settings are
+# currently subjective.
 
 # TODO: materials.tsv to use all fields
 const MATERIAL_FIELDS := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
 const DYNAMIC_STAR_GROW_DIST := 2.0 * IVUnits.AU
 const DYNAMIC_STAR_GROW_FACTOR := 0.5
 
+var is_dynamic_star := false
 
 var _world_targeting: Array = IVGlobal.world_targeting
 var _reference_basis: Basis
-var _is_dynamic_star := false
 
 
-func _init(model_type: int, reference_basis: Basis, albedo_map: Texture,
-		emission_map: Texture) -> void:
+func _init(model_type: int, reference_basis: Basis, albedo_map: Texture2D,
+		emission_map: Texture2D) -> void:
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	_reference_basis = reference_basis
 	transform.basis = _reference_basis # z up, possibly oblate
-	mesh = IVGlobal.shared.globe_mesh
-	var surface := SpatialMaterial.new()
-	set_surface_material(0, surface)
+	mesh = IVGlobal.shared.sphere_mesh
+	var surface := StandardMaterial3D.new()
+	set_surface_override_material(0, surface)
 	table_reader.build_object(surface, MATERIAL_FIELDS, "models", model_type)
 	if albedo_map:
 		surface.albedo_texture = albedo_map
@@ -52,26 +53,25 @@ func _init(model_type: int, reference_basis: Basis, albedo_map: Texture,
 		surface.emission_enabled = true
 		surface.emission_texture = emission_map
 	if table_reader.get_bool("models", "starlight", model_type):
-		cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_OFF
-		_is_dynamic_star = true
+		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		is_dynamic_star = true
 	else:
-		cast_shadow = GeometryInstance.SHADOW_CASTING_SETTING_ON
+		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
 
 func _ready() -> void:
-	set_process(_is_dynamic_star)
+	set_process(is_dynamic_star)
 
 
 func _process(_delta: float) -> void:
-	var camera: Camera = _world_targeting[2]
+	var camera: Camera3D = _world_targeting[2]
 	if !camera:
 		return
-	var camera_dist := global_translation.distance_to(camera.global_translation)
+	var camera_dist := global_position.distance_to(camera.global_position)
 	if camera_dist < DYNAMIC_STAR_GROW_DIST:
 		transform.basis = _reference_basis
 		return
 	var excess := camera_dist / DYNAMIC_STAR_GROW_DIST - 1.0
 	var factor := DYNAMIC_STAR_GROW_FACTOR * excess + 1.0
 	transform.basis = _reference_basis.scaled(Vector3(factor, factor, factor))
-	
 

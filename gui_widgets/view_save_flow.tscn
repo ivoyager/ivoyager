@@ -1,10 +1,10 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://bvs2mb8bj8gfn"]
 
-[ext_resource path="res://ivoyager/gui_widgets/view_save_flow.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/view_save_flow.gd" id="1"]
 
 [node name="ViewSaveFlow" type="HFlowContainer"]
-margin_top = 44.0
-margin_right = 511.0
-margin_bottom = 64.0
+offset_top = 44.0
+offset_right = 511.0
+offset_bottom = 64.0
 mouse_filter = 2
-script = ExtResource( 1 )
+script = ExtResource("1")

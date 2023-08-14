@@ -52,15 +52,15 @@ var max_default_screen_proportions := Vector2(0.45, 0.45) # can override above
 var _settings: Dictionary = IVGlobal.settings
 var _drag_point := Vector2.ZERO
 
-onready var _viewport := get_viewport()
-onready var _parent: Control = get_parent()
+@onready var _viewport := get_viewport()
+@onready var _parent: Control = get_parent()
 
 
 func _ready() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	IVGlobal.connect("simulator_started", self, "resize_and_position_to_anchor")
-	_parent.connect("resized", self, "resize_and_position_to_anchor")
-	_parent.connect("gui_input", self, "_on_parent_input")
+	IVGlobal.setting_changed.connect(_settings_listener)
+	IVGlobal.simulator_started.connect(resize_and_position_to_anchor)
+	_parent.resized.connect(resize_and_position_to_anchor)
+	_parent.gui_input.connect(_on_parent_input)
 	set_process_input(false) # only during drag
 	resize_and_position_to_anchor()
 
@@ -69,7 +69,8 @@ func _input(event: InputEvent) -> void:
 	# We process input only during drag. It is posible for the parent control
 	# to never get the button-up event (happens in HTML5 builds).
 	if event is InputEventMouseButton:
-		if !event.pressed and event.button_index == BUTTON_LEFT:
+		var mouse_button_event: InputEventMouseButton = event
+		if !mouse_button_event.pressed and mouse_button_event.button_index == MOUSE_BUTTON_LEFT:
 			finish_move()
 			_parent.set_default_cursor_shape(Control.CURSOR_ARROW)
 
@@ -89,13 +90,14 @@ func resize_and_position_to_anchor() -> void:
 	var default_size := _get_default_size()
 	# Some content needs immediate resize (eg, PlanetMoonButtons so it can
 	# conform to its parent container). Other content needs delayed resize.
-	_parent.rect_size = default_size
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	yield(get_tree(), "idle_frame")
-	_parent.rect_size = default_size
-	_parent.rect_position.x = _parent.anchor_left * (_viewport.size.x - _parent.rect_size.x)
-	_parent.rect_position.y = _parent.anchor_top * (_viewport.size.y - _parent.rect_size.y)
+	_parent.size = default_size
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_parent.size = default_size
+	var viewport_size := _viewport.get_visible_rect().size
+	_parent.position.x = _parent.anchor_left * (viewport_size.x - _parent.size.x)
+	_parent.position.y = _parent.anchor_top * (viewport_size.y - _parent.size.y)
 
 
 func finish_move() -> void:
@@ -111,72 +113,73 @@ func finish_move() -> void:
 
 func _on_parent_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == BUTTON_LEFT:
-			_drag_point = _parent.get_global_mouse_position() - _parent.rect_position
+		var mouse_button_event: InputEventMouseButton = event
+		if mouse_button_event.pressed and mouse_button_event.button_index == MOUSE_BUTTON_LEFT:
+			_drag_point = _parent.get_global_mouse_position() - _parent.position
 			set_process_input(true)
 			_parent.set_default_cursor_shape(Control.CURSOR_MOVE)
 	elif event is InputEventMouseMotion and _drag_point:
-		_parent.rect_position = _parent.get_global_mouse_position() - _drag_point
+		_parent.position = _parent.get_global_mouse_position() - _drag_point
 
 
 func _snap_horizontal() -> void:
-	var left := _parent.rect_position.x
+	var left := _parent.position.x
 	if left < screen_edge_snap:
-		_parent.rect_position.x = 0.0
+		_parent.position.x = 0.0
 		return
-	var right := left + _parent.rect_size.x
-	var screen_right := _viewport.size.x
+	var right := left + _parent.size.x
+	var screen_right := _viewport.get_visible_rect().size.x
 	if right > screen_right - screen_edge_snap:
-		_parent.rect_position.x = screen_right - right + left
+		_parent.position.x = screen_right - right + left
 		return
-	var top := _parent.rect_position.y
-	var bottom := top + _parent.rect_size.y
+	var top := _parent.position.y
+	var bottom := top + _parent.size.y
 	for child in _parent.get_parent().get_children():
 		var test_panel := child as PanelContainer
 		if !test_panel or test_panel == _parent:
 			continue
-		var panel_top := test_panel.rect_position.y
+		var panel_top := test_panel.position.y
 		if bottom < panel_top:
 			continue
-		var panel_bottom := panel_top + test_panel.rect_size.y
+		var panel_bottom := panel_top + test_panel.size.y
 		if top > panel_bottom:
 			continue
-		var panel_left := test_panel.rect_position.x
+		var panel_left := test_panel.position.x
 		if abs(right - panel_left) < panel_edge_snap:
-			_parent.rect_position.x = panel_left - right + left
+			_parent.position.x = panel_left - right + left
 			return
-		var panel_right := panel_left + test_panel.rect_size.x
+		var panel_right := panel_left + test_panel.size.x
 		if abs(left - panel_right) < panel_edge_snap:
-			_parent.rect_position.x = panel_right
+			_parent.position.x = panel_right
 			return
 
 
 func _snap_vertical() -> void:
-	var top := _parent.rect_position.y
+	var top := _parent.position.y
 	if top < screen_edge_snap:
-		_parent.rect_position.y = 0.0
+		_parent.position.y = 0.0
 		return
-	var bottom := top + _parent.rect_size.y
-	var screen_bottom := _viewport.size.y
+	var bottom := top + _parent.size.y
+	var screen_bottom := _viewport.get_visible_rect().size.y
 	if bottom > screen_bottom - screen_edge_snap:
-		_parent.rect_position.y = screen_bottom - bottom + top
+		_parent.position.y = screen_bottom - bottom + top
 		return
-	var left := _parent.rect_position.x
-	var right := left + _parent.rect_size.x
+	var left := _parent.position.x
+	var right := left + _parent.size.x
 	for child in _parent.get_parent().get_children():
 		var test_panel := child as PanelContainer
 		if !test_panel or test_panel == _parent:
 			continue
-		var panel_left := test_panel.rect_position.x
+		var panel_left := test_panel.position.x
 		if right < panel_left:
 			continue
-		var panel_top := test_panel.rect_position.y
+		var panel_top := test_panel.position.y
 		if abs(bottom - panel_top) < panel_edge_snap:
-			_parent.rect_position.y = panel_top - bottom + top
+			_parent.position.y = panel_top - bottom + top
 			return
-		var panel_bottom := panel_top + test_panel.rect_size.y
+		var panel_bottom := panel_top + test_panel.size.y
 		if abs(top - panel_bottom) < panel_edge_snap:
-			_parent.rect_position.y = panel_bottom
+			_parent.position.y = panel_bottom
 			return
 
 
@@ -186,13 +189,13 @@ func _fix_offscreen() -> void:
 	if screen_rect.encloses(rect):
 		return
 	if rect.position.x < 0.0:
-		_parent.rect_position.x = 0.0
+		_parent.position.x = 0.0
 	elif rect.end.x > screen_rect.end.x:
-		_parent.rect_position.x = screen_rect.end.x - rect.size.x
+		_parent.position.x = screen_rect.end.x - rect.size.x
 	if rect.position.y < 0.0:
-		_parent.rect_position.y = 0.0
+		_parent.position.y = 0.0
 	elif rect.end.y > screen_rect.end.y:
-		_parent.rect_position.y = screen_rect.end.y - rect.size.y
+		_parent.position.y = screen_rect.end.y - rect.size.y
 
 
 func _fix_overlap() -> void:
@@ -232,12 +235,12 @@ func _try_directions(rect: Rect2, overlap: Array, diagonals: bool) -> bool:
 					orthogonal.append(overlap2[LEFT])
 					orthogonal.append(overlap2[RIGHT])
 					if abs(overlap2[LEFT]) > abs(overlap2[RIGHT]):
-						orthogonal.invert()
+						orthogonal.reverse()
 				RIGHT, LEFT:
 					orthogonal.append(overlap2[UP])
 					orthogonal.append(overlap2[DOWN])
 					if abs(overlap2[UP]) > abs(overlap2[DOWN]):
-						orthogonal.invert()
+						orthogonal.reverse()
 			if _try_diagonal_offset(rect, smallest_direction, smallest_offset, orthogonal):
 				return true # success
 		overlap[smallest_direction] = INF
@@ -250,12 +253,12 @@ func _try_cardinal_offset(rect: Rect2, direction: int, offset: float) -> bool:
 			rect.position.y += offset
 			if _get_overlap(rect):
 				return false
-			_parent.rect_position.y += offset
+			_parent.position.y += offset
 		LEFT, RIGHT:
 			rect.position.x += offset
 			if _get_overlap(rect):
 				return false
-			_parent.rect_position.x += offset
+			_parent.position.x += offset
 	return true
 
 
@@ -265,25 +268,25 @@ func _try_diagonal_offset(rect: Rect2, direction: int, offset: float, orthogonal
 			rect.position.y += offset
 			rect.position.x += orthogonal[0]
 			if !_get_overlap(rect):
-				_parent.rect_position.y += offset
-				_parent.rect_position.x += orthogonal[0]
+				_parent.position.y += offset
+				_parent.position.x += orthogonal[0]
 				return true
 			rect.position.x += orthogonal[1] - orthogonal[0]
 			if !_get_overlap(rect):
-				_parent.rect_position.y += offset
-				_parent.rect_position.x += orthogonal[1]
+				_parent.position.y += offset
+				_parent.position.x += orthogonal[1]
 				return true
 		LEFT, RIGHT:
 			rect.position.x += offset
 			rect.position.y += orthogonal[0]
 			if !_get_overlap(rect):
-				_parent.rect_position.x += offset
-				_parent.rect_position.y += orthogonal[0]
+				_parent.position.x += offset
+				_parent.position.y += orthogonal[0]
 				return true
 			rect.position.y += orthogonal[1] - orthogonal[0]
 			if !_get_overlap(rect):
-				_parent.rect_position.x += offset
-				_parent.rect_position.y += orthogonal[1]
+				_parent.position.x += offset
+				_parent.position.y += orthogonal[1]
 				return true
 	return false
 
@@ -314,28 +317,30 @@ func _get_overlap(rect: Rect2) -> Array:
 
 
 func _set_anchors_to_position() -> void:
-	var position := _parent.rect_position
-	var size := _parent.rect_size
-	var extra_x := _viewport.size.x - size.x
+	var position := _parent.position
+	var size := _parent.size
+	var viewport_size := _viewport.get_visible_rect().size
+	var extra_x := viewport_size.x - size.x
 	var horizontal_anchor := 1.0
 	if extra_x > 0.0:
-		horizontal_anchor = clamp(position.x / extra_x, 0.0, 1.0)
-	var extra_y := _viewport.size.y - size.y
+		horizontal_anchor = clampf(position.x / extra_x, 0.0, 1.0)
+	var extra_y := viewport_size.y - size.y
 	var vertical_anchor := 1.0
 	if extra_y > 0.0:
-		vertical_anchor = clamp(position.y / extra_y, 0.0, 1.0)
+		vertical_anchor = clampf(position.y / extra_y, 0.0, 1.0)
 	_parent.anchor_left = horizontal_anchor
 	_parent.anchor_right = horizontal_anchor
 	_parent.anchor_top = vertical_anchor
 	_parent.anchor_bottom = vertical_anchor
-	_parent.rect_position = position # setting anchors screws up position (Godot bug?)
+	_parent.position = position # setting anchors screws up position (Godot bug?)
 
 
 func _get_default_size() -> Vector2:
 	var gui_size: int = _settings.gui_size
 	var default_size: Vector2 = min_sizes[gui_size]
-	var max_x := round(_viewport.size.x * max_default_screen_proportions.x)
-	var max_y := round(_viewport.size.y * max_default_screen_proportions.y)
+	var viewport_size := _viewport.get_visible_rect().size
+	var max_x := roundf(viewport_size.x * max_default_screen_proportions.x)
+	var max_y := roundf(viewport_size.y * max_default_screen_proportions.y)
 	if default_size.x > max_x:
 		default_size.x = max_x
 	if default_size.y > max_y:
@@ -346,3 +351,4 @@ func _get_default_size() -> Vector2:
 func _settings_listener(setting: String, _value) -> void:
 	if setting == "gui_size":
 		resize_and_position_to_anchor()
+

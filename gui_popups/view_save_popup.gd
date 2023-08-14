@@ -21,6 +21,5 @@ class_name IVViewSavePopup
 extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/view_save_popup.tscn"
 
-# Not added in base IVProjectBuilder. A unique instance is made by widget
-# ViewSaveButton.
+# Instanced by IVViewSaveButton. (Not added in IVProjectBuilder.)
 

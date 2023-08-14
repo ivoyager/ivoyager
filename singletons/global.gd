@@ -27,10 +27,10 @@ extends Node
 # Containers (arrays and dictionaries) are never replaced, so it is safe and
 # good practice to keep a local reference in class files.
 
-const IVOYAGER_VERSION := "0.0.15"
+const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
-const IVOYAGER_STATE := "" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230724
+const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
+const IVOYAGER_YMD := 20230814
 
 
 # simulator state broadcasts
@@ -49,6 +49,7 @@ signal system_tree_ready(is_new_game) # I/O thread has finished!
 signal about_to_start_simulator(is_new_game) # delayed 1 frame after above
 signal update_gui_requested() # send signals with GUI info now!
 signal simulator_started()
+signal pause_changed(is_paused)
 signal user_pause_changed(is_paused) # ignores pause from sim stop
 signal about_to_free_procedural_nodes() # on exit and game load
 signal about_to_stop_before_quit()
@@ -83,7 +84,7 @@ signal move_camera_requested(selection, camera_flags, view_position, view_rotati
 # requests for GUI
 signal open_main_menu_requested()
 signal close_main_menu_requested()
-signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
+signal confirmation_requested(text, confirm_action, stop_sim, title_txt, ok_txt, cancel_txt)
 signal options_requested()
 signal hotkeys_requested()
 signal credits_requested()
@@ -91,18 +92,19 @@ signal help_requested() # hooked up in Planetarium
 signal save_dialog_requested()
 signal load_dialog_requested()
 signal close_all_admin_popups_requested() # main menu, options, etc.
-signal rich_text_popup_requested(header_text, bbcode_text)
+signal rich_text_popup_requested(header_text, text)
 signal open_wiki_requested(wiki_title)
+signal show_hide_gui_requested(is_toggle, is_show) # 2nd arg ignored if is_toggle
 
 
 # containers - write authority indicated; safe to localize container reference
 var state := {} # IVStateManager & IVSaveManager; is_inited, is_running, etc.
-var times := [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)] (floats)
-var date := [] # IVTimekeeper; Gregorian [year, month, day] (ints)
-var clock := [] # IVTimekeeper; UT [hour, minute, second] (ints)
-var program := {} # all objects instantiated by IVProjectBuilder 
-var script_classes := {} # IVProjectBuilder; script classes (possibly overriden)
-var assets := {} # AssetsInitializer; loaded from dynamic paths specified here
+var times: Array[float] = [] # IVTimekeeper [time (s, J2000), engine_time (s), solar_day (d)]
+var date: Array[int] = [] # IVTimekeeper; Gregorian [year, month, day]
+var clock: Array[int] = [] # IVTimekeeper; UT [hour, minute, second]
+var program := {} # IVProjectBuilder instantiated objects (base or override classes)
+var script_classes := {} # IVProjectBuilder defined script classes (base or override)
+var assets := {} # AssetsInitializer loads from dynamic paths specified below
 var settings := {} # IVSettingsManager
 var tables := {} # IVTableImporter; indexed [table_name][field][row_int]
 var enumerations := {} # IVTableImporter; all row names and listed enums (globally unique)
@@ -111,14 +113,14 @@ var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
-var world_targeting := [] # IVWorldControl & others; data for 3D world selection
-var fragment_targeting := [] # IVFragmentIdentifier; data for shader fragment id
-var top_bodies := [] # IVBody instances add/remove themselves; just STAR_SUN for us
+var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
+var fragment_targeting := [] # IVFragmentIdentifier; optimized data for shader fragment id
+var top_bodies: Array[Node3D] = [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
-var blocking_popups := [] # add popups that want & test for exclusivity
+var blocking_windows: Array[Window] = [] # add Windows that want & test for exclusivity
 var project := {} # available for extension "project"
 var addons := {} # available for extension "addons"
-var extensions := [] # IVProjectBuilder [[name, version, build, state, ymd], ...]
+var extensions: Array[Array] = [] # IVProjectBuilder [[name, version, build, state, ymd], ...]
 
 # project vars - extensions modify via _extension_init(); see IVProjectBuilder
 var project_name := ""
@@ -166,21 +168,20 @@ var home_latitude := 0.0
 
 
 var colors := { # user settable colors in program_refs/settings_manager.gd
-	normal = Color.white,
-	good = Color.green,
-	warning = Color.yellow,
+	normal = Color.WHITE,
+	good = Color.GREEN,
+	warning = Color.YELLOW,
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := { # more items added by initializers/shared_initializer.gd
-	globe_mesh = SphereMesh.new(), # all ellipsoid models
+var shared := {
 	# shaders
-	points_shader = preload("res://ivoyager/shaders/points.shader"),
-	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.shader"),
-	orbit_shader = preload("res://ivoyager/shaders/orbit.shader"),
-	orbits_shader = preload("res://ivoyager/shaders/orbits.shader"),
-	rings_shader = preload("res://ivoyager/shaders/rings.shader"),
-#	rings_gles2_shader = preload("res://ivoyager/shaders/rings_gles2.shader"),
+	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
+	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
+	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
+	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
+	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
+	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 
 # Data table import
@@ -199,36 +200,35 @@ var table_import := {
 }
 var table_import_mods := {} # add columns or rows or modify cells in table_import tables
 
-var wiki_titles_import := ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
-var wikipedia_locales := ["en"] # add locales present in data tables
+var wiki_titles_import: Array[String] = ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
+var wikipedia_locales: Array[String] = ["en"] # add locales present in data tables
 
-var body_tables := ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
+var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelManager first looks for an existing
 # model in models_search (1st path element to last). Failing that, it will use
-# a premade generic mesh (e.g., globe_mesh) and search for map textures in
-# maps_search. If it can't find "<file_prifix>.albedo" in maps_search, it will
-# use fallback_albedo_map.
+# the generic IVSpheroidModel and search for map textures in maps_search. If it
+# can't find "<file_prifix>.albedo" in maps_search, it will use fallback_albedo_map.
 
 var asset_replacement_dir := ""  # replaces all "ivoyager_assets" below
 
-var models_search := ["res://ivoyager_assets/models"] # prepend to prioritize
-var maps_search := ["res://ivoyager_assets/maps"]
-var bodies_2d_search := ["res://ivoyager_assets/bodies_2d"]
-var rings_search := ["res://ivoyager_assets/rings"]
+var models_search: Array[String] = ["res://ivoyager_assets/models"] # prepend to prioritize
+var maps_search: Array[String] = ["res://ivoyager_assets/maps"]
+var bodies_2d_search: Array[String] = ["res://ivoyager_assets/bodies_2d"]
+var rings_search: Array[String] = ["res://ivoyager_assets/rings"]
 
 var asset_paths := {
 	starmap_8k = "res://ivoyager_assets/starmaps/starmap_8k.jpg",
 	starmap_16k = "res://ivoyager_assets/starmaps/starmap_16k.jpg",
 }
 var asset_paths_for_load := { # loaded into "assets" dict by IVAssetInitializer
-	primary_font_data = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
+	primary_font = "res://ivoyager_assets/fonts/Roboto-NotoSansSymbols-merged.ttf",
 	fallback_albedo_map = "res://ivoyager_assets/fallbacks/blank_grid.jpg",
 	fallback_body_2d = "res://ivoyager_assets/fallbacks/blank_grid_2d_globe.256.png",
 #	fallback_model = "res://ivoyager_assets/models/phobos/Phobos.1_1000.glb", # implement in 0.0.14
 }
-var translations := [
+var translations: Array[String] = [
 	# Added here so extensions can modify. Note that IVTranslationImporter will
 	# process text (eg, interpret \uXXXX) and report duplicate keys only if
 	# import file has compress=false. For duplicates, 1st in array below will
@@ -247,27 +247,10 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
-var debug_log: File # IVLogInitializer sets if debug build and debug_log_path
+var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
-func _ready():
+func _ready() -> void:
 	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
 
-
-func verbose_signal(signal_str: String, arg1 = null, arg2 = null) -> void:
-	# Used mainly for state broadcasts
-	var print_arg1 = "" if typeof(arg1) == TYPE_NIL \
-			else '"' + arg1 + '"' if typeof(arg1) == TYPE_STRING \
-			else arg1
-	var print_arg2 = "" if typeof(arg2) == TYPE_NIL \
-			else '"' + arg2 + '"' if typeof(arg2) == TYPE_STRING \
-			else arg2
-	if verbose:
-		prints("IVGlobal signaling", signal_str, print_arg1, print_arg2)
-	if arg1 == null:
-		emit_signal(signal_str)
-	elif arg2 == null:
-		emit_signal(signal_str, arg1)
-	else:
-		emit_signal(signal_str, arg1, arg2)

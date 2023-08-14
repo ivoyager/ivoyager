@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVComposition
-extends Reference
+extends RefCounted
 
 # This object is designed for simple display. It could be extended to do more.
 # For I, Voyager, we keep amounts as strings to preserve significant digits.
@@ -30,8 +30,8 @@ enum CompositionType {
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"type",
-	"components",
+	&"type",
+	&"components",
 ]
 
 # persisted

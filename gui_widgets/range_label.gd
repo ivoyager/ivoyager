@@ -20,37 +20,33 @@
 class_name IVRangeLabel
 extends Label
 
-# GUI widget. Visible when camera "locked". Expects camera signals
-# "range_changed" and "camera_lock_changed".
+# GUI widget. Requires IVCamera and IVQuantityFormatter.
 
-var _camera: Camera
+var _camera: IVCamera
 
-onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+@onready var _qf: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.camera_ready.connect(_connect_camera)
+	_connect_camera(get_viewport().get_camera_3d() as IVCamera) # null ok
 
 
-func _connect_camera(camera: Camera) -> void:
-	if _camera != camera:
-		_disconnect_camera()
-		_camera = camera
-		_camera.connect("range_changed", self, "_on_range_changed")
-		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
-
-
-func _disconnect_camera() -> void:
+func _connect_camera(camera: IVCamera) -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("range_changed", self, "_on_range_changed")
-		_camera.disconnect("camera_lock_changed", self, "_update_camera_lock")
-	_camera = null
+		_camera.range_changed.disconnect(_on_range_changed)
+		_camera.camera_lock_changed.disconnect(_on_camera_lock_changed)
+	_camera = camera
+	if camera:
+		camera.range_changed.connect(_on_range_changed)
+		camera.camera_lock_changed.connect(_on_camera_lock_changed)
+		visible = camera.is_camera_lock
 
 
 func _on_range_changed(new_range: float) -> void:
-	text = _quantity_formatter.number_option(new_range, _quantity_formatter.LENGTH_M_KM_AU, "", 3)
+	text = _qf.number_option(new_range, _qf.LENGTH_M_KM_AU, "", 3)
 
 
-func _on_camera_lock_changed(is_locked: bool) -> void:
-	visible = is_locked
+func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+	visible = is_camera_lock
+

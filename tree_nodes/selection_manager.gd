@@ -55,8 +55,8 @@ const BodyFlags := IVEnums.BodyFlags
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"is_action_listener",
-	"selection",
+	&"is_action_listener",
+	&"selection",
 ]
 
 # persisted
@@ -64,35 +64,33 @@ var is_action_listener := true
 var selection: IVSelection
 
 # private
-var _root: Viewport = IVGlobal.get_tree().get_root()
-var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
+#var _root: Window = get_tree().get_root()
+#var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections: Dictionary = IVGlobal.selections
 var _history := [] # contains weakrefs
 var _history_index := -1
 var _supress_history := false
 
-onready var _tree: SceneTree = get_tree()
-
 
 func _init() -> void:
-	name = "SelectionManager"
+	name = &"SelectionManager"
 	
 
 func _ready() -> void:
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear_selections")
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear_selections)
 	set_process_unhandled_key_input(is_action_listener)
 
 
 func _on_system_tree_ready(is_new_game: bool) -> void:
 	if is_new_game:
-		var selection_ := get_or_make_selection(IVGlobal.home_name)
+		var selection_ := IVSelectionManager.get_or_make_selection(IVGlobal.home_name)
 		select(selection_, true)
 	else:
 		_add_history()
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	if !event.is_action_type() or !event.is_pressed():
 		return
 	if event.is_action_pressed("select_forward"):
@@ -127,7 +125,7 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 		next_last(1, SELECTION_SPACECRAFT)
 	else:
 		return # input NOT handled!
-	_tree.set_input_as_handled()
+	get_window().set_input_as_handled()
 
 
 static func get_or_make_selection(selection_name: String) -> IVSelection:
@@ -174,21 +172,21 @@ static func get_body_at_above_selection_w_flags(selection_: IVSelection, flags: 
 
 func select(selection_: IVSelection, suppress_camera_move := false) -> void:
 	if selection == selection_:
-		emit_signal("selection_reselected", suppress_camera_move)
+		selection_reselected.emit(suppress_camera_move)
 		return
 	selection = selection_
 	_add_history()
-	emit_signal("selection_changed", suppress_camera_move)
+	selection_changed.emit(suppress_camera_move)
 
 
 func select_body(body: IVBody, suppress_camera_move := false) -> void:
-	var selection_ := get_or_make_selection(body.name)
+	var selection_ := IVSelectionManager.get_or_make_selection(body.name)
 	if selection_:
 		select(selection_, suppress_camera_move)
 
 
 func select_by_name(selection_name: String, suppress_camera_move := false) -> void:
-	var selection_ := get_or_make_selection(selection_name)
+	var selection_ := IVSelectionManager.get_or_make_selection(selection_name)
 	if selection_:
 		select(selection_, suppress_camera_move)
 
@@ -201,20 +199,20 @@ func get_selection() -> IVSelection:
 	return selection
 
 
-func get_name() -> String:
-	return selection.get_name() if selection else ""
-
-
 func get_gui_name() -> String:
 	# return is already translated
 	return selection.get_gui_name() if selection else ""
 
 
-func get_body_name() -> String:
-	return selection.get_body_name() if selection else ""
-	
+func get_selection_name() -> StringName:
+	return selection.name if selection else &""
 
-func get_texture_2d() -> Texture:
+
+func get_body_name() -> StringName:
+	return selection.get_body_name() if selection else &""
+
+
+func get_texture_2d() -> Texture2D:
 	return selection.texture_2d if selection else null
 
 
@@ -255,7 +253,7 @@ func forward() -> void:
 func up() -> void:
 	var up_name := selection.up_selection_name
 	if up_name:
-		var new_selection := get_or_make_selection(up_name)
+		var new_selection := IVSelectionManager.get_or_make_selection(up_name)
 		select(new_selection)
 
 
@@ -283,30 +281,30 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 	var index := -1
 	match selection_type:
 		-1:
-			var up_body := get_body_above_selection(selection)
+			var up_body := IVSelectionManager.get_body_above_selection(selection)
 			iteration_array = up_body.satellites
 			index = iteration_array.find(current_body)
 		SELECTION_STAR:
-			 # TODO: code for multistar systems
+			# TODO: code for multistar systems
 			var sun: IVBody = IVGlobal.top_bodies[0]
 			select_body(sun)
 			return
 		SELECTION_PLANET:
-			var star := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_STAR)
+			var star := IVSelectionManager.get_body_at_above_selection_w_flags(selection, BodyFlags.IS_STAR)
 			if !star:
 				return
 			iteration_array = star.satellites
-			var planet := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
+			var planet := IVSelectionManager.get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
 			if planet:
 				index = iteration_array.find(planet)
 				if planet != current_body and incr == 1:
 					index -= 1
 		SELECTION_NAVIGATOR_MOON, SELECTION_MOON:
-			var planet := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
+			var planet := IVSelectionManager.get_body_at_above_selection_w_flags(selection, BodyFlags.IS_PLANET)
 			if !planet:
 				return
 			iteration_array = planet.satellites
-			var moon := get_body_at_above_selection_w_flags(selection, BodyFlags.IS_MOON)
+			var moon := IVSelectionManager.get_body_at_above_selection_w_flags(selection, BodyFlags.IS_MOON)
 			if moon:
 				index = iteration_array.find(moon)
 				if moon != current_body and incr == 1:
@@ -315,7 +313,7 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 			if current_body:
 				iteration_array = current_body.satellites
 			else:
-				var up_body := get_body_above_selection(selection)
+				var up_body := IVSelectionManager.get_body_above_selection(selection)
 				iteration_array = up_body.satellites
 	if !iteration_array:
 		return
@@ -328,21 +326,21 @@ func next_last(incr: int, selection_type := -1, _alt_selection_type := -1) -> vo
 		elif index >= array_size:
 			index = 0
 		var body: IVBody = iteration_array[index]
-		var select := false
+		var do_selection := false
 		match selection_type:
 			-1:
-				select = true
+				do_selection = true
 			SELECTION_STAR:
-				select = bool(body.flags & BodyFlags.IS_STAR)
+				do_selection = bool(body.flags & BodyFlags.IS_STAR)
 			SELECTION_PLANET:
-				select = bool(body.flags & BodyFlags.IS_PLANET)
+				do_selection = bool(body.flags & BodyFlags.IS_PLANET)
 			SELECTION_NAVIGATOR_MOON:
-				select = bool(body.flags & BodyFlags.IS_NAVIGATOR_MOON)
+				do_selection = bool(body.flags & BodyFlags.IS_NAVIGATOR_MOON)
 			SELECTION_MOON:
-				select = bool(body.flags & BodyFlags.IS_MOON)
+				do_selection = bool(body.flags & BodyFlags.IS_MOON)
 			SELECTION_SPACECRAFT:
-				select = bool(body.flags & BodyFlags.IS_SPACECRAFT)
-		if select:
+				do_selection = bool(body.flags & BodyFlags.IS_SPACECRAFT)
+		if do_selection:
 			select_body(body)
 			return
 		count += 1
@@ -375,7 +373,7 @@ func _add_history() -> void:
 	_history_index += 1
 	if _history.size() > _history_index:
 		_history.resize(_history_index)
-	var wr := weakref(selection)
+	var wr: WeakRef = weakref(selection) # weakref() is untyped in Godot4.1.1. Open issue? 
 	_history.append(wr)
 
 

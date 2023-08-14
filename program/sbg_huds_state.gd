@@ -30,14 +30,14 @@ signal orbits_color_changed()
 
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const NULL_COLOR := Color.black
+const NULL_COLOR := Color.BLACK
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"points_visibilities",
-	"orbits_visibilities",
-	"points_colors",
-	"orbits_colors",
+	&"points_visibilities",
+	&"orbits_visibilities",
+	&"points_colors",
+	&"orbits_colors",
 ]
 
 # persisted - read-only!
@@ -59,8 +59,8 @@ var default_orbits_colors := {}
 
 
 func _project_init() -> void:
-	IVGlobal.connect("simulator_exited", self, "_set_current_to_default")
-	IVGlobal.connect("update_gui_requested", self, "_signal_all_changed")
+	IVGlobal.simulator_exited.connect(_set_current_to_default)
+	IVGlobal.update_gui_requested.connect(_signal_all_changed)
 	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	for row in table_reader.get_n_rows("small_bodies_groups"):
 		if table_reader.get_bool("small_bodies_groups", "skip", row):
@@ -80,19 +80,22 @@ func hide_all() -> void:
 		points_visibilities[key] = false
 	for key in orbits_visibilities:
 		orbits_visibilities[key] = false
-	emit_signal("points_visibility_changed")
-	emit_signal("orbits_visibility_changed")
+	points_visibility_changed.emit()
+	orbits_visibility_changed.emit()
 
 
 func set_default_visibilities() -> void:
-	if !deep_equal(points_visibilities, default_points_visibilities):
+	# TEST34
+	if points_visibilities != default_points_visibilities:
+#	if !deep_equal(points_visibilities, default_points_visibilities):
 		points_visibilities.clear()
 		points_visibilities.merge(default_points_visibilities)
-		emit_signal("points_visibility_changed")
-	if !deep_equal(orbits_visibilities, default_orbits_visibilities):
+		points_visibility_changed.emit()
+	if orbits_visibilities != default_orbits_visibilities:
+#	if !deep_equal(orbits_visibilities, default_orbits_visibilities):
 		orbits_visibilities.clear()
 		orbits_visibilities.merge(default_orbits_visibilities)
-		emit_signal("orbits_visibility_changed")
+		orbits_visibility_changed.emit()
 
 
 func is_points_visible(group: String) -> bool:
@@ -101,7 +104,7 @@ func is_points_visible(group: String) -> bool:
 
 func change_points_visibility(group: String, is_show: bool) -> void:
 	points_visibilities[group] = is_show
-	emit_signal("points_visibility_changed")
+	points_visibility_changed.emit()
 
 
 func is_orbits_visible(group: String) -> bool:
@@ -110,50 +113,53 @@ func is_orbits_visible(group: String) -> bool:
 
 func change_orbits_visibility(group: String, is_show: bool) -> void:
 	orbits_visibilities[group] = is_show
-	emit_signal("orbits_visibility_changed")
+	orbits_visibility_changed.emit()
 
 
-func get_visible_points_groups() -> Array:
-	var array := []
+func get_visible_points_groups() -> Array[String]:
+	var array: Array[String] = []
 	for key in points_visibilities:
 		if points_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func get_visible_orbits_groups() -> Array:
-	var array := []
+func get_visible_orbits_groups() -> Array[String]:
+	var array: Array[String] = []
 	for key in orbits_visibilities:
 		if orbits_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func set_visible_points_groups(array: Array) -> void:
+func set_visible_points_groups(array: Array[String]) -> void:
 	points_visibilities.clear()
 	for key in array:
 		points_visibilities[key] = true
-	emit_signal("points_visibility_changed")
+	points_visibility_changed.emit()
 
 
-func set_visible_orbits_groups(array: Array) -> void:
+func set_visible_orbits_groups(array: Array[String]) -> void:
 	orbits_visibilities.clear()
 	for key in array:
 		orbits_visibilities[key] = true
-	emit_signal("orbits_visibility_changed")
+	orbits_visibility_changed.emit()
 
 
 # color
 
 func set_default_colors() -> void:
-	if !deep_equal(points_colors, default_points_colors):
+	# TEST34
+	if points_colors != default_points_colors:
+#	if !deep_equal(points_colors, default_points_colors):
 		points_colors.clear()
 		points_colors.merge(default_points_colors)
-		emit_signal("points_color_changed")
-	if !deep_equal(orbits_colors, default_orbits_colors):
+		points_color_changed.emit()
+	if orbits_colors != default_orbits_colors:
+#	if !deep_equal(orbits_colors, default_orbits_colors):
 		orbits_colors.clear()
 		orbits_colors.merge(default_orbits_colors)
-		emit_signal("orbits_color_changed")
+		orbits_color_changed.emit()
 
 
 func get_default_points_color(group: String) -> Color:
@@ -180,26 +186,26 @@ func get_orbits_color(group: String) -> Color:
 	return fallback_orbits_color
 
 
-func get_consensus_points_color(groups: Array, is_default := false) -> Color:
-	var has_color := false
+func get_consensus_points_color(groups: Array[String], is_default := false) -> Color:
+	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
 		var color := get_default_points_color(group) if is_default else get_points_color(group)
-		if !has_color:
-			has_color = true
+		if !has_theme_color:
+			has_theme_color = true
 			consensus_color = color
 		elif color != consensus_color:
 			return NULL_COLOR
 	return consensus_color
 
 
-func get_consensus_orbits_color(groups: Array, is_default := false) -> Color:
-	var has_color := false
+func get_consensus_orbits_color(groups: Array[String], is_default := false) -> Color:
+	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
 		var color := get_default_orbits_color(group) if is_default else get_orbits_color(group)
-		if !has_color:
-			has_color = true
+		if !has_theme_color:
+			has_theme_color = true
 			consensus_color = color
 		elif color != consensus_color:
 			return NULL_COLOR
@@ -213,7 +219,7 @@ func set_points_color(group: String, color: Color) -> void:
 	elif color == fallback_points_color:
 		return
 	points_colors[group] = color
-	emit_signal("points_color_changed")
+	points_color_changed.emit()
 
 
 func set_orbits_color(group: String, color: Color) -> void:
@@ -223,7 +229,7 @@ func set_orbits_color(group: String, color: Color) -> void:
 	elif color == fallback_orbits_color:
 		return
 	orbits_colors[group] = color
-	emit_signal("orbits_color_changed")
+	orbits_color_changed.emit()
 
 
 func get_non_default_points_colors() -> Dictionary:
@@ -257,7 +263,7 @@ func set_all_points_colors(dict: Dictionary) -> void:
 				is_change = true
 				points_colors[key] = default_points_colors[key]
 	if is_change:
-		emit_signal("points_color_changed")
+		points_color_changed.emit()
 
 
 func set_all_orbits_colors(dict: Dictionary) -> void:
@@ -273,7 +279,7 @@ func set_all_orbits_colors(dict: Dictionary) -> void:
 				is_change = true
 				orbits_colors[key] = default_orbits_colors[key]
 	if is_change:
-		emit_signal("orbits_color_changed")
+		orbits_color_changed.emit()
 
 
 # private
@@ -284,8 +290,8 @@ func _set_current_to_default() -> void:
 
 
 func _signal_all_changed() -> void:
-	emit_signal("points_visibility_changed")
-	emit_signal("orbits_visibility_changed")
-	emit_signal("points_color_changed")
-	emit_signal("orbits_color_changed")
+	points_visibility_changed.emit()
+	orbits_visibility_changed.emit()
+	points_color_changed.emit()
+	orbits_color_changed.emit()
 

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVQuantityFormatter
-extends Reference
+extends RefCounted
 
 # Helper for formatting numbers and quanties for GUI. All unit conversions are
 # as defined in IVUnits.
@@ -55,7 +55,7 @@ enum { # option_type for number_option()
 	MASS_G_KG_T, # g if < 1.0 kg; t if x >= 1000.0 kg 
 	MASS_G_KG_PREFIXED_T, # g, kg, t, kt, Mt, Gt, Tt, Pt etc.
 	# mass rate
-	MASS_RATE_G_KG_PREFIXED_T_PER_D # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
+	MASS_RATE_G_KG_PREFIXED_T_PER_D, # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
 	# time
 	TIME_D_Y, # d if < 1000 d, else y
 	# velocity
@@ -76,17 +76,18 @@ const LOG_OF_10 := log(10.0)
 
 # project vars
 var exp_str := "e" # e.g., set to "E", "x10^", " x 10^"
-var prefix_names := [ # e-24, ..., e24
+var prefix_names: Array[String] = [ # e-24, ..., e24
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
 ]
-var prefix_symbols := [ # e-24, ..., e24
+var prefix_symbols: Array[String] = [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ]
-var large_numbers := ["TXT_MILLION", "TXT_BILLION", "TXT_TRILLION", "TXT_QUADRILLION",
-	"TXT_QUINTILLION", "TXT_SEXTILLION", "TXT_SEPTILLION", "TXT_OCTILLION",
-	 "TXT_NONILLION", "TXT_DECILLION"] # e6, ..., e33; localized in _project_init()
+var large_numbers: Array[StringName] = [
+	&"TXT_MILLION", &"TXT_BILLION", &"TXT_TRILLION", &"TXT_QUADRILLION", &"TXT_QUINTILLION",
+	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
+] # e6, ..., e33; localized in _project_init()
 
 # Unit symbols in the next two dictionaries must also be present in multipliers
 # or functions dictionaries. (The converse is not true.)
@@ -95,8 +96,8 @@ var short_forms := {
 	# the desired short form. Asterisk before TXT_KEY means no space before
 	# unit.
 	"deg" : "*TXT_DEG",
-	"degC" : "TXT_DEG_C",
-	"degF" : "TXT_DEG_F",
+	"degC" : &"TXT_DEG_C",
+	"degF" : &"TXT_DEG_F",
 	"deg/d" : "*TXT_DEG_PER_DAY",
 	"deg/a" : "*TXT_DEG_PER_YEAR",
 	"deg/Cy" : "*TXT_DEG_PER_CENTURY",
@@ -108,96 +109,96 @@ var long_forms := {
 	# using number_prefixed_unit(). We have commonly used already-prefixed here
 	# because it is common to want to display quantities such as: "3.00e9 km".
 	# time
-	"s" : "TXT_SECONDS",
-	"min" : "TXT_MINUTES",
-	"h" : "TXT_HOURS",
-	"d" : "TXT_DAYS",
-	"a" : "TXT_YEARS",
-	"y" : "TXT_YEARS",
-	"yr" : "TXT_YEARS",
-	"Cy" : "TXT_CENTURIES",
+	"s" : &"TXT_SECONDS",
+	"min" : &"TXT_MINUTES",
+	"h" : &"TXT_HOURS",
+	"d" : &"TXT_DAYS",
+	"a" : &"TXT_YEARS",
+	"y" : &"TXT_YEARS",
+	"yr" : &"TXT_YEARS",
+	"Cy" : &"TXT_CENTURIES",
 	# length
-	"mm" : "TXT_MILIMETERS",
-	"cm" : "TXT_CENTIMETERS",
-	"m" : "TXT_METERS",
-	"km" : "TXT_KILOMETERS",
-	"au" : "TXT_ASTRONOMICAL_UNITS",
-	"ly" : "TXT_LIGHT_YEARS",
-	"pc" : "TXT_PARSECS",
-	"Mpc" : "TXT_MEGAPARSECS",
+	"mm" : &"TXT_MILIMETERS",
+	"cm" : &"TXT_CENTIMETERS",
+	"m" : &"TXT_METERS",
+	"km" : &"TXT_KILOMETERS",
+	"au" : &"TXT_ASTRONOMICAL_UNITS",
+	"ly" : &"TXT_LIGHT_YEARS",
+	"pc" : &"TXT_PARSECS",
+	"Mpc" : &"TXT_MEGAPARSECS",
 	# mass
-	"g" : "TXT_GRAMS",
-	"kg" : "TXT_KILOGRAMS",
-	"t" : "TXT_TONNES",
+	"g" : &"TXT_GRAMS",
+	"kg" : &"TXT_KILOGRAMS",
+	"t" : &"TXT_TONNES",
 	# angle
-	"rad" : "TXT_RADIANS",
-	"deg" : "TXT_DEGREES",
+	"rad" : &"TXT_RADIANS",
+	"deg" : &"TXT_DEGREES",
 	# temperature
-	"K" : "TXT_KELVIN",
-	"degC" : "TXT_CENTIGRADE",
-	"degF" : "TXT_FAHRENHEIT",
+	"K" : &"TXT_KELVIN",
+	"degC" : &"TXT_CENTIGRADE",
+	"degF" : &"TXT_FAHRENHEIT",
 	# frequency
-	"Hz" : "TXT_HERTZ",
-	"d^-1" : "TXT_PER_DAY",
-	"a^-1" : "TXT_PER_YEAR",
-	"y^-1" : "TXT_PER_YEAR",
-	"yr^-1" : "TXT_PER_YEAR",
+	"Hz" : &"TXT_HERTZ",
+	"d^-1" : &"TXT_PER_DAY",
+	"a^-1" : &"TXT_PER_YEAR",
+	"y^-1" : &"TXT_PER_YEAR",
+	"yr^-1" : &"TXT_PER_YEAR",
 	# area
-	"m^2" : "TXT_SQUARE_METERS",
-	"km^2" : "TXT_SQUARE_KILOMETERS",
-	"ha" : "TXT_HECTARES",
+	"m^2" : &"TXT_SQUARE_METERS",
+	"km^2" : &"TXT_SQUARE_KILOMETERS",
+	"ha" : &"TXT_HECTARES",
 	# volume
-	"l" : "TXT_LITER",
-	"L" : "TXT_LITER",
-	"m^3" : "TXT_CUBIC_METERS",
-	"km^3" : "TXT_CUBIC_KILOMETERS",
+	"l" : &"TXT_LITER",
+	"L" : &"TXT_LITER",
+	"m^3" : &"TXT_CUBIC_METERS",
+	"km^3" : &"TXT_CUBIC_KILOMETERS",
 	# velocity
-	"m/s" : "TXT_METERS_PER_SECOND",
-	"km/s" : "TXT_KILOMETERS_PER_SECOND",
-	"km/h" : "TXT_KILOMETERS_PER_HOUR",
-	"c" : "TXT_SPEED_OF_LIGHT",
+	"m/s" : &"TXT_METERS_PER_SECOND",
+	"km/s" : &"TXT_KILOMETERS_PER_SECOND",
+	"km/h" : &"TXT_KILOMETERS_PER_HOUR",
+	"c" : &"TXT_SPEED_OF_LIGHT",
 	# acceleration/gravity
-	"m/s^2" : "TXT_METERS_PER_SECOND_SQUARED",
-	"_g" : "TXT_STANDARD_GRAVITIES",
+	"m/s^2" : &"TXT_METERS_PER_SECOND_SQUARED",
+	"_g" : &"TXT_STANDARD_GRAVITIES",
 	# angular velocity
-	"deg/d" : "TXT_DEGREES_PER_DAY",
-	"deg/a" : "TXT_DEGREES_PER_YEAR",
-	"deg/Cy" : "DEGREES_PER_CENTURY",
+	"deg/d" : &"TXT_DEGREES_PER_DAY",
+	"deg/a" : &"TXT_DEGREES_PER_YEAR",
+	"deg/Cy" : &"TXT_DEGREES_PER_CENTURY",
 	# particle density
-	"m^-3" : "TXT_PER_CUBIC_METER",
+	"m^-3" : &"TXT_PER_CUBIC_METER",
 	# mass density
-	"g/cm^3" : "TXT_GRAMS_PER_CUBIC_CENTIMETER",
+	"g/cm^3" : &"TXT_GRAMS_PER_CUBIC_CENTIMETER",
 	# mass rate
-	"kg/d" : "TXT_KILOGRAMS_PER_DAY",
-	"t/d" : "TXT_TONNES_PER_DAY",
+	"kg/d" : &"TXT_KILOGRAMS_PER_DAY",
+	"t/d" : &"TXT_TONNES_PER_DAY",
 	# force
-	"N" : "TXT_NEWTONS",
+	"N" : &"TXT_NEWTONS",
 	# pressure
-	"Pa" : "TXT_PASCALS",
-	"atm" : "TXT_ATMOSPHERES",
+	"Pa" : &"TXT_PASCALS",
+	"atm" : &"TXT_ATMOSPHERES",
 	# energy
-	"J" : "TXT_JOULES",
-	"Wh" : "TXT_WATT_HOURS",
-	"kWh" : "TXT_KILOWATT_HOURS",
-	"MWh" : "TXT_MEGAWATT_HOURS",
-	"eV" : "TXT_ELECTRONVOLTS",
+	"J" : &"TXT_JOULES",
+	"Wh" : &"TXT_WATT_HOURS",
+	"kWh" : &"TXT_KILOWATT_HOURS",
+	"MWh" : &"TXT_MEGAWATT_HOURS",
+	"eV" : &"TXT_ELECTRONVOLTS",
 	# power
-	"W" : "TXT_WATTS",
-	"kW" : "TXT_KILOWATTS",
-	"MW" : "TXT_MEGAWATTS",
+	"W" : &"TXT_WATTS",
+	"kW" : &"TXT_KILOWATTS",
+	"MW" : &"TXT_MEGAWATTS",
 	# luminous intensity / luminous flux
-	"cd" : "TXT_CANDELAS",
-	"lm" : "TXT_LUMENS",
+	"cd" : &"TXT_CANDELAS",
+	"lm" : &"TXT_LUMENS",
 	# luminance
-	"cd/m^2" : "TXT_CANDELAS_PER_SQUARE_METER",
+	"cd/m^2" : &"TXT_CANDELAS_PER_SQUARE_METER",
 	# electric potential
-	"V" : "TXT_VOLTS",
+	"V" : &"TXT_VOLTS",
 	# electric charge
-	"C" :  "TXT_COULOMBS",
+	"C" :  &"TXT_COULOMBS",
 	# magnetic flux
-	"Wb" : "TXT_WEBERS",
+	"Wb" : &"TXT_WEBERS",
 	# magnetic flux density
-	"T" : "TXT_TESLAS",
+	"T" : &"TXT_TESLAS",
 }
 
 # private
@@ -221,6 +222,7 @@ func _project_init():
 	for unit in short_forms:
 		var txt_key: String = short_forms[unit]
 		if txt_key.begins_with("*"):
+			@warning_ignore("unsafe_method_access")
 			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
 		else:
 			short_forms[unit] = " " + tr(short_forms[unit])
@@ -229,7 +231,10 @@ func _project_init():
 
 
 func number_option(x: float, option_type: int, unit := "", precision := 3, num_type := NUM_DYNAMIC,
-		long_form := false, case_type := CASE_MIXED) -> String:
+		long_form := false, case_type := CASE_MIXED, lat_long_type := N_S_E_W) -> String:
+	
+	# DEPRECIATE34: Use Callables in GUI instead.
+	
 	# wrapper for functions below
 	match option_type:
 		NAMED_NUMBER:
@@ -311,12 +316,12 @@ func number_option(x: float, option_type: int, unit := "", precision := 3, num_t
 				return number_unit(x, "c", precision, num_type, long_form, case_type)
 			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
 		LATITUDE:
-			return latitude(x, precision, long_form, case_type)
+			return latitude(x, precision, lat_long_type, long_form, case_type)
 		LONGITUDE:
-			return longitude(x, precision, long_form, case_type)
+			return longitude(x, precision, lat_long_type, long_form, case_type)
 			
-	assert(false, "Unkknown option_type: " + String(option_type))
-	return String(x)
+	assert(false, "Unkknown option_type: " + str(option_type))
+	return str(x)
 
 
 func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
@@ -327,7 +332,7 @@ func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S
 
 func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	x = rad2deg(x)
+	x = rad_to_deg(x)
 	x = wrapf(x, -180.0, 180.0)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
@@ -350,7 +355,7 @@ func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := 
 
 func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
-	x = rad2deg(x)
+	x = rad_to_deg(x)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
 		x = wrapf(x, -180.0, 180.0)
@@ -379,7 +384,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	# see NUM_ enums for num_type.
 	
 	if precision <= 0:
-		return (String(x))
+		return (str(x))
 		
 	# specified decimal places
 	if num_type == NUM_DECIMAL_PL:
@@ -390,8 +395,8 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	if x == 0.0: # don't do '0.00e0' even if NUM_SCIENTIFIC
 		return "%.*f" % [precision - 1, 0.0] # e.g., '0.00' for precision 3
 		
-	var abs_x := abs(x)
-	var pow10 := floor(log(abs_x) / LOG_OF_10)
+	var abs_x := absf(x)
+	var pow10 := floorf(log(abs_x) / LOG_OF_10)
 	
 	if num_type == NUM_PRECISION:
 		var decimal_pl := precision - int(pow10) - 1
@@ -402,7 +407,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 		else: # remove over-precision
 			var divisor := pow(10.0, -decimal_pl)
 			x = round(x / divisor)
-			return String(x * divisor) # '555000'
+			return str(x * divisor) # '555000'
 	
 	# handle 0.01 - 99999 for NUM_DYNAMIC
 	if num_type == NUM_DYNAMIC and abs_x < 99999.5 and abs_x > 0.01:
@@ -416,7 +421,7 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	var divisor := pow(10.0, pow10)
 	x = x / divisor if !is_zero_approx(divisor) else 1.0
 	var exp_precision := pow(10.0, precision - 1)
-	var precision_rounded := round(x * exp_precision) / exp_precision
+	var precision_rounded := roundf(x * exp_precision) / exp_precision
 	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
 		x /= 10.0
 		pow10 += 1
@@ -487,6 +492,7 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	var number_str := number(x, precision, num_type)
 	var prepend_space := true
 	if long_form and long_forms.has(unit):
+		@warning_ignore("unsafe_method_access")
 		unit = long_forms[unit].lstrip(" ")
 	elif short_forms.has(unit):
 		unit = short_forms[unit]
@@ -505,3 +511,4 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 	if prepend_space:
 		return number_str + " " + unit
 	return number_str + unit
+

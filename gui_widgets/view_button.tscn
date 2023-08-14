@@ -1,9 +1,9 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://bcl70ysl6yces"]
 
-[ext_resource path="res://ivoyager/gui_widgets/view_button.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/view_button.gd" id="1"]
 
 [node name="ViewButton" type="Button"]
-margin_right = 12.0
-margin_bottom = 20.0
+offset_right = 12.0
+offset_bottom = 20.0
 text = "ReplaceMe"
-script = ExtResource( 1 )
+script = ExtResource("1")

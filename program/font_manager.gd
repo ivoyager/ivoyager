@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFontManager
-extends Reference
+extends RefCounted
 
 # Maintains IVGlobal.fonts.
 
@@ -27,48 +27,42 @@ var fixed_sizes := {
 	two_pt = 2, # hack to allow small button height (e.g., in SystemNavigator)
 	medium = 22,
 	large = 28,
-	}
-var gui_main_sizes := [12, 16, 20] # GUI_SMALL, GUI_MEDIUM, GUI_LARGE
-var gui_medium_sizes := [15, 20, 25]
-var gui_large_sizes := [18, 24, 31] 
+}
+var gui_main_sizes: Array[int] = [12, 16, 20] # GUI_SMALL, GUI_MEDIUM, GUI_LARGE
+var gui_medium_sizes: Array[int] = [15, 20, 25]
+var gui_large_sizes: Array[int] = [18, 24, 31] 
 
 # private
 var _fonts: Dictionary = IVGlobal.fonts
 var _settings: Dictionary = IVGlobal.settings
-var _primary_font_data: DynamicFontData
+var _primary_font: FontFile
 
 
 func _project_init() -> void:
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
-	_primary_font_data = IVGlobal.assets.primary_font_data
+	IVGlobal.setting_changed.connect(_settings_listener)
+	_primary_font = IVGlobal.assets.primary_font
 	for key in fixed_sizes:
-		_fonts[key] = DynamicFont.new()
-		_fonts[key].font_data = _primary_font_data
-		_fonts[key].size = fixed_sizes[key]
-	_fonts.gui_main = DynamicFont.new()
-	_fonts.gui_medium = DynamicFont.new()
-	_fonts.gui_large = DynamicFont.new()
-	_fonts.hud_names = DynamicFont.new()
-	_fonts.hud_symbols = DynamicFont.new()
-	_fonts.gui_main.font_data = _primary_font_data
-	_fonts.gui_medium.font_data = _primary_font_data
-	_fonts.gui_large.font_data = _primary_font_data
-	_fonts.hud_names.font_data = _primary_font_data
-	_fonts.hud_symbols.font_data = _primary_font_data
-	_fonts.gui_main.size = gui_main_sizes[_settings.gui_size]
-	_fonts.gui_medium.size = gui_medium_sizes[_settings.gui_size]
-	_fonts.gui_large.size = gui_large_sizes[_settings.gui_size]
-	_fonts.hud_names.size = _settings.viewport_names_size
-	_fonts.hud_symbols.size = _settings.viewport_symbols_size
+		_fonts[key] = _primary_font.duplicate()
+		_fonts[key].fixed_size = fixed_sizes[key]
+	_fonts.gui_main = _primary_font.duplicate()
+	_fonts.gui_medium = _primary_font.duplicate()
+	_fonts.gui_large = _primary_font.duplicate()
+	_fonts.hud_names = _primary_font.duplicate()
+	_fonts.hud_symbols = _primary_font.duplicate()
+	_fonts.gui_main.fixed_size = gui_main_sizes[_settings.gui_size]
+	_fonts.gui_medium.fixed_size = gui_medium_sizes[_settings.gui_size]
+	_fonts.gui_large.fixed_size = gui_large_sizes[_settings.gui_size]
+	_fonts.hud_names.fixed_size = _settings.viewport_names_size
+	_fonts.hud_symbols.fixed_size = _settings.viewport_symbols_size
 
 
 func _settings_listener(setting: String, value) -> void:
 	match setting:
 		"viewport_names_size":
-			_fonts.hud_names.size = value
+			_fonts.hud_names.fixed_size = value
 		"viewport_symbols_size":
-			_fonts.hud_symbols.size = value
+			_fonts.hud_symbols.fixed_size = value
 		"gui_size":
-			_fonts.gui_main.size = gui_main_sizes[value]
-			_fonts.gui_medium.size = gui_medium_sizes[value]
-			_fonts.gui_large.size = gui_large_sizes[value]
+			_fonts.gui_main.fixed_size = gui_main_sizes[value]
+			_fonts.gui_medium.fixed_size = gui_medium_sizes[value]
+			_fonts.gui_large.fixed_size = gui_large_sizes[value]

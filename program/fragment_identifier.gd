@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVFragmentIdentifier
-extends Viewport
+extends SubViewport
 
 # Remove from ProjectBuilder.gui_nodes if not used.
 #
@@ -82,8 +82,8 @@ var _cycle_step := -1
 var _pxl_x_offsets := []
 var _pxl_y_offsets := []
 var _cycle_steps := []
-var _calibration_colors := [] # array of calibration color arrays
-var _value_colors := [] # array of value color arrays
+var _calibration_colors: Array[Array] = [] # array of calibration color arrays
+var _value_colors: Array[Array] = [] # array of value color arrays
 var _current_ids := [] # -1 or valid id
 # common buffers
 var _calibration_r := []
@@ -91,8 +91,8 @@ var _calibration_g := []
 var _calibration_b := []
 var _adj_values := []
 
-onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
-onready var _picker_texture: ViewportTexture = get_texture()
+@onready var _root_texture: ViewportTexture = get_tree().root.get_texture()
+@onready var _picker_texture: ViewportTexture = get_texture()
 
 
 func _project_init() -> void:
@@ -104,14 +104,14 @@ func _project_init() -> void:
 	
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	assert(fragment_range % 3 == 0)
 	add_child(_node2d)
-	_node2d.connect("draw", self, "_on_node2d_draw")
-	VisualServer.connect("frame_post_draw", self, "_on_frame_post_draw")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
+	_node2d.draw.connect(_on_node2d_draw)
+	RenderingServer.frame_post_draw.connect(_on_frame_post_draw)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	_init_rects_and_arrays()
-	usage = USAGE_2D
+#	usage = USAGE_2D # DISABLE34
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
 	
@@ -243,7 +243,7 @@ func _init_rects_and_arrays() -> void:
 	for x in pxl_center_offsets:
 		for y in pxl_center_offsets:
 			pxl_center_xy_offsets.append([x, y])
-	pxl_center_xy_offsets.sort_custom(self, "_sort_pxl_offsets") # prioritize center
+	pxl_center_xy_offsets.sort_custom(_sort_pxl_offsets) # prioritize center
 	_n_pxls = pxl_center_xy_offsets.size()
 	_pxl_x_offsets.resize(_n_pxls)
 	_pxl_y_offsets.resize(_n_pxls)
@@ -286,16 +286,19 @@ func _on_frame_post_draw() -> void:
 		if current_id != -1:
 			current_id = -1
 			_world_targeting[6] = -1
-			emit_signal("fragment_changed", -1)
+			fragment_changed.emit(-1)
 		return
 	
-	_node2d.update() # force a draw signal
+	
+	# FIXME34: method removed, what do we do now?
+#	_node2d.update() # force a draw signal; 
+	
+	
 	if !_has_drawn:
 		return
 	
 	_has_drawn = false
-	_picker_image = _picker_texture.get_data() # expensive!
-	_picker_image.lock()
+	_picker_image = _picker_texture.get_image() # expensive!
 	var id := -1
 	for pxl in _n_pxls:
 		_process_pixel(pxl) # process all, don't break!
@@ -305,7 +308,7 @@ func _on_frame_post_draw() -> void:
 		if current_id != id: # gained or changed valid id
 			current_id = id
 			_world_targeting[6] = id
-			emit_signal("fragment_changed", id)
+			fragment_changed.emit(id)
 		_drop_frame_counter = 0
 		_drop_mouse_coord = _fragment_targeting[0]
 		return
@@ -317,7 +320,7 @@ func _on_frame_post_draw() -> void:
 			_drop_mouse_coord.distance_to(_fragment_targeting[0]) > drop_id_mouse_movement):
 		current_id = -1
 		_world_targeting[6] = -1
-		emit_signal("fragment_changed", -1)
+		fragment_changed.emit(-1)
 		return
 	
 	# We've lost id signal, but don't reset current_id yet
@@ -332,7 +335,7 @@ func _process_pixel(pxl: int):
 	
 	var color := _picker_image.get_pixel(_pxl_x_offsets[pxl], _pxl_y_offsets[pxl])
 	
-	 # black pixel always interupts (common in open space)
+	# black pixel always interupts (common in open space)
 	if !color:
 		_cycle_steps[pxl] = 0
 		_current_ids[pxl] = -1 # reset
@@ -449,7 +452,7 @@ func _debug_residuals(print_all := false) -> float:
 	var max_resid := 0.0
 	for i in 9:
 		var value: float = (_adj_values[i] - 0.25) * 32.0
-		var resid := abs(value - round(value))
+		var resid := absf(value - round(value))
 		if max_resid < resid:
 			max_resid = resid
 	return max_resid

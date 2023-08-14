@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGBuilder
-extends Reference
+extends RefCounted
 
 # Builds SmallBodiesGroup instances from small_bodies_groups.tsv & binary data.
 
@@ -76,6 +76,7 @@ func build_sbg(row: int) -> void:
 		assert(secondary, "Secondary body missing for Lagrange point SmallBodiesGroup")
 	
 	# init
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	var sbg: IVSmallBodiesGroup = _SmallBodiesGroup_.new()
 	sbg.init(name, sbg_alias, sbg_class, lp_integer, secondary)
 	
@@ -93,10 +94,11 @@ func build_sbg(row: int) -> void:
 
 func _load_group_binary(sbg: IVSmallBodiesGroup, mag_str: String) -> void:
 	var binary_name: String = sbg.sbg_alias + "." + mag_str + "." + BINARY_EXTENSION
-	var path: String = _binary_dir.plus_file(binary_name)
-	var binary := File.new()
-	if binary.open(path, File.READ) != OK: # skip quietly if file doesn't exist
+	var path: String = _binary_dir.path_join(binary_name)
+	var binary := FileAccess.open(path, FileAccess.READ)
+	if !binary: # skip quietly if file doesn't exist
 		return
-	assert(DPRINT and print("Reading binary %s" % path) or true)
+	assert(!DPRINT or IVDebug.dprint("Reading binary %s" % path))
 	sbg.read_binary(binary)
 	binary.close()
+

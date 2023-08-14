@@ -1,14 +1,14 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://b3hiqf4h71d6p"]
 
-[ext_resource path="res://ivoyager/gui_widgets/body_huds.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/body_huds.gd" id="1"]
 
 [node name="BodyHUDs" type="GridContainer"]
-margin_right = 40.0
-margin_bottom = 40.0
-mouse_filter = 2
+offset_right = 40.0
+offset_bottom = 40.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
-custom_constants/vseparation = -2
-custom_constants/hseparation = 15
+mouse_filter = 2
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = -2
 columns = 3
-script = ExtResource( 1 )
+script = ExtResource("1")

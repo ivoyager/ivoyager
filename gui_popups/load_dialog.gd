@@ -29,7 +29,7 @@ const files := preload("res://ivoyager/static/files.gd")
 var add_quick_load_button := true
 
 var _state: Dictionary = IVGlobal.state
-var _blocking_popups: Array = IVGlobal.blocking_popups
+var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 var _main_menu_manager: IVMainMenuManager
 
 
@@ -38,49 +38,52 @@ func _project_init():
 		return
 	_main_menu_manager = IVGlobal.program.MainMenuManager
 	add_filter("*." + IVGlobal.save_file_extension + ";" + IVGlobal.save_file_extension_name)
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready")
-	IVGlobal.connect("load_dialog_requested", self, "_open")
-	IVGlobal.connect("game_save_finished", self, "_update_quick_load_button")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
-	connect("file_selected", self, "_load_file")
-	connect("popup_hide", self, "_on_hide")
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready)
+	IVGlobal.load_dialog_requested.connect(_open)
+	IVGlobal.game_save_finished.connect(_update_quick_load_button)
+	IVGlobal.close_all_admin_popups_requested.connect(_close)
+	file_selected.connect(_load_file)
+	canceled.connect(_on_canceled)
 
 
 func _ready():
-	pause_mode = PAUSE_MODE_PROCESS
+	process_mode = PROCESS_MODE_ALWAYS
 	theme = IVGlobal.themes.main
-	_blocking_popups.append(self)
+	_blocking_windows.append(self)
 
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_update_quick_load_button()
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		hide()
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
 
 
 func _open() -> void:
 	if visible:
-		hide()
 		return
 	if _is_blocking_popup():
 		return
-	IVGlobal.emit_signal("sim_stop_required", self)
+	IVGlobal.sim_stop_required.emit(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
 	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, IVGlobal.settings.save_dir)
 	current_dir = save_dir
 	if _state.last_save_path:
 		current_path = _state.last_save_path
-		deselect_items()
+		deselect_all()
+
+
+func _close() -> void:
+	hide()
+	_on_canceled()
 
 
 func _load_file(path: String) -> void:
-	IVGlobal.emit_signal("close_main_menu_requested")
-	IVGlobal.emit_signal("load_requested", path, false)
+	IVGlobal.close_main_menu_requested.emit()
+	IVGlobal.load_requested.emit(path, false)
 
 
 func _update_quick_load_button() -> void:
@@ -91,12 +94,13 @@ func _update_quick_load_button() -> void:
 		_main_menu_manager.change_button_state("BUTTON_QUICK_LOAD", button_state)
 
 
-func _on_hide() -> void:
-	IVGlobal.emit_signal("sim_run_allowed", self)
+func _on_canceled() -> void:
+	IVGlobal.sim_run_allowed.emit(self)
 
 
 func _is_blocking_popup() -> bool:
-	for popup in _blocking_popups:
-		if popup.visible:
+	for window in _blocking_windows:
+		if window.visible:
 			return true
 	return false
+

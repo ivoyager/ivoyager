@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVOrbitBuilder
-extends Reference
+extends RefCounted
 
 
 const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #37529 fixed
@@ -26,7 +26,7 @@ const math := preload("res://ivoyager/static/math.gd") # =IVMath when issue #375
 const DPRINT := false
 const PIdiv2 := PI / 2.0
 const MIN_E_FOR_APSIDAL_PRECESSION := 0.0001
-const MIN_I_FOR_NODAL_PRECESSION := deg2rad(0.1)
+const MIN_I_FOR_NODAL_PRECESSION := deg_to_rad(0.1)
 const DAY := IVUnits.DAY
 
 var _dynamic_orbits: bool = IVGlobal.dynamic_orbits
@@ -128,6 +128,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 		M0 = wrapf(M0, 0.0, TAU)
 	
 	var elements := [a, e, i, Om, w, M0, n]
+	@warning_ignore("unsafe_method_access") # Possible replacement class
 	var orbit: IVOrbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements
 	
@@ -172,7 +173,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 				_d.Pnode = 0.0
 			if e < MIN_E_FOR_APSIDAL_PRECESSION:
 				_d.Pw = 0.0
-			var orbit_sign := sign(PIdiv2 - i) # prograde +1; retrograde -1
+			var orbit_sign := signf(PIdiv2 - i) # prograde +1.0; retrograde -1.0
 			Om_rate = 0.0
 			w_rate = 0.0
 			if _d.Pnode != 0.0:

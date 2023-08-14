@@ -18,55 +18,57 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuPopup
-extends Popup
+extends PopupPanel
 const SCENE := "res://ivoyager/gui_popups/main_menu_popup.tscn"
 
-# Unlike all other popups, this one is always listening for "ui_cancel". Other
-# popups listen only when open and process before IVMainMenuPopup (due to order
-# in IVProjectBuilder).
 
 var center := true # if false, set $PanelContainer margins
 var stop_sim := true
 
-var _state: Dictionary = IVGlobal.state
-
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+#var _state: Dictionary = IVGlobal.state
+var _allow_close := false
 
 
 func _project_init():
-	connect("popup_hide", self, "_on_popup_hide")
-	IVGlobal.connect("open_main_menu_requested", self, "_open")
-	IVGlobal.connect("close_main_menu_requested", self, "hide")
-	IVGlobal.connect("close_all_admin_popups_requested", self, "hide")
+	IVGlobal.open_main_menu_requested.connect(open)
+	IVGlobal.close_main_menu_requested.connect(close)
+	IVGlobal.close_all_admin_popups_requested.connect(close)
+	popup_hide.connect(_on_popup_hide)
 
 
 func _ready() -> void:
-	pause_mode = PAUSE_MODE_PROCESS
 	theme = IVGlobal.themes.main_menu
-	if center:
-		$PanelContainer.set_anchors_and_margins_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-		$PanelContainer.grow_horizontal = GROW_DIRECTION_BOTH
-		$PanelContainer.grow_vertical = GROW_DIRECTION_BOTH
 
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	if !_state.is_system_built:
-		# bypass; the splash screen should have its own MainMenu widget!
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel"):
+		set_input_as_handled()
+		_allow_close = true
+
+
+func open() -> void:
+	if visible:
 		return
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().set_input_as_handled()
-		if visible:
-			hide()
-		else:
-			_open()
-
-
-func _open() -> void:
+	if !IVGlobal.state.is_started_or_about_to_start: # splash has its own menu
+		return
 	if stop_sim:
-		_state_manager.require_stop(self)
-	popup()
+		IVGlobal.sim_stop_required.emit(self)
+	if center:
+		popup_centered()
+	else:
+		popup()
+
+
+func close() -> void:
+	_allow_close = true
+	hide()
 
 
 func _on_popup_hide() -> void:
+	if !_allow_close:
+		show.call_deferred()
+		return
+	_allow_close = false
 	if stop_sim:
-		_state_manager.allow_run(self)
+		IVGlobal.sim_run_allowed.emit(self)
+

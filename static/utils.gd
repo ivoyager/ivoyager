@@ -30,16 +30,16 @@ extends Object
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:
-	if node.PERSIST_MODE == IVEnums.PERSIST_PROCEDURAL:
+	if node.get("PERSIST_MODE") == IVEnums.PERSIST_PROCEDURAL:
 		node.queue_free() # children will also be freed!
 		return
 	for child in node.get_children():
 		if "PERSIST_MODE" in child:
-			if child.PERSIST_MODE != IVEnums.NO_PERSIST:
+			if child.get("PERSIST_MODE") != IVEnums.NO_PERSIST:
 				free_procedural_nodes(child)
 
 
-static func get_ancestor_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatial:
+static func get_ancestor_spatial(spatial1: Node3D, spatial2: Node3D) -> Node3D:
 	# Returns parent spatial or common spatial ancestor. Assumes no non-Spatial
 	# nodes in the ancestor tree.
 	while spatial1:
@@ -47,8 +47,8 @@ static func get_ancestor_spatial(spatial1: Spatial, spatial2: Spatial) -> Spatia
 		while loop_spatial2:
 			if spatial1 == loop_spatial2:
 				return loop_spatial2
-			loop_spatial2 = loop_spatial2.get_parent_spatial()
-		spatial1 = spatial1.get_parent_spatial()
+			loop_spatial2 = loop_spatial2.get_parent_node_3d()
+		spatial1 = spatial1.get_parent_node_3d()
 	return null
 
 
@@ -57,9 +57,10 @@ static func get_deep(target, path: String): # untyped return
 	if !path:
 		return target
 	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
+	path_stack.reverse()
 	while path_stack:
 		var item_name: String = path_stack.pop_back()
+		@warning_ignore("unsafe_method_access")
 		target = target.get(item_name)
 		if target == null:
 			return null
@@ -71,12 +72,18 @@ static func get_path_result(target, path: String, args := []): # untyped return
 	if !path:
 		return target
 	var path_stack := Array(path.split("/", false))
-	path_stack.invert()
+	path_stack.reverse()
 	while path_stack:
 		var item_name: String = path_stack.pop_back()
-		if target is Object and target.has_method(item_name):
-			target = target.callv(item_name, args)
+		if target is Object:
+			@warning_ignore("unsafe_cast")
+			var object := target as Object
+			if object.has_method(item_name):
+				target = object.callv(item_name, args)
+			else:
+				target = object.get(item_name)
 		else:
+			@warning_ignore("unsafe_method_access")
 			target = target.get(item_name)
 		if target == null:
 			return null
@@ -165,7 +172,7 @@ static func get_real_str_precision(real_str: String) -> int:
 				if deduct_zeroes:
 					n_unsig_zeros += 1
 		elif chr != "-":
-			assert(chr.is_valid_integer(), "Unknown REAL character: " + chr)
+			assert(chr.is_valid_int(), "Unknown REAL character: " + chr)
 			started = true
 			n_digits += 1
 			n_unsig_zeros = 0

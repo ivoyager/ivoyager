@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVCamera
-extends Camera
+extends Camera3D
 
 # This camera works with the IVSelection object, which is a wrapper that can
 # potentially hold anything (in ivoyaber, IVBody and [TODO:] IVLagrangePoint
@@ -56,7 +56,7 @@ const METER := IVUnits.METER
 const KM := IVUnits.KM
 
 const DPRINT := false
-const UNIVERSE_SHIFTING := true # prevents "shakes" at high global translation
+const UNIVERSE_SHIFTING := true # prevents "shakes" at high global position
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
 const POLE_LIMITER := PI / 2.1
@@ -70,16 +70,16 @@ const MIN_DIST_RADII := 1.5
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"flags",
-	"is_camera_lock",
-	"selection",
-	"perspective_radius",
-	"view_position",
-	"view_rotations",
-	"focal_length",
-	"focal_length_index",
-	"_transform",
+	&"name",
+	&"flags",
+	&"is_camera_lock",
+	&"selection",
+	&"perspective_radius",
+	&"view_position",
+	&"view_rotations",
+	&"focal_length",
+	&"focal_length_index",
+	&"_transform",
 ]
 
 # ******************************* PERSISTED ***********************************
@@ -97,12 +97,12 @@ var focal_length: float
 var focal_length_index: int # use init_focal_length_index below
 
 # private
-var _transform := Transform(Basis(), Vector3(0, 0, KM)) # working value
+var _transform := Transform3D(Basis(), Vector3(0, 0, KM)) # working value
 
 # *****************************************************************************
 
 # public - project init vars
-var focal_lengths := [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
+var focal_lengths: Array[float] = [6.0, 15.0, 24.0, 35.0, 50.0] # ~fov 125.6, 75.8, 51.9, 36.9, 26.3
 var init_focal_length_index := 2
 var ease_exponent := 5.0 # DEPRECIATE: Make dynamic for distance / size
 var gui_ecliptic_coordinates_dist := 1e6 * KM
@@ -116,17 +116,15 @@ var max_perspective_radius := 1e6 * KM # >sun
 var min_perspective_radius := 2.0 * METER
 
 # public read-only
-var parent: Spatial # actual Spatial parent at this time
+var parent: Node3D # actual Node3D parent at this time
 var is_moving := false # body to body move in progress
 var disabled_flags := 0 # IVEnums.CameraDisabledFlags
 
 # private
-var _universe: Spatial = IVGlobal.program.Universe
-var _times: Array = IVGlobal.times
+var _universe: Node3D = IVGlobal.program.Universe
 var _settings: Dictionary = IVGlobal.settings
 var _world_targeting: Array = IVGlobal.world_targeting
 var _max_dist: float = IVGlobal.max_camera_distance
-var _user_longitude := -INF
 
 # motions / rotations
 var _motion_accumulator := Vector3.ZERO
@@ -135,11 +133,11 @@ var _rotation_accumulator := Vector3.ZERO
 # move_to
 var _move_time: float
 var _is_interupted_move := false
-var _interupted_transform: Transform
+var _interupted_transform: Transform3D
 var _reference_basis: Basis
-var _to_spatial: Spatial
-var _trasfer_spatial: Spatial
-var _from_spatial: Spatial
+var _to_spatial: Node3D
+var _trasfer_spatial: Node3D
+var _from_spatial: Node3D
 var _from_selection: IVSelection
 var _from_flags := flags
 var _from_perspective_radius := KM
@@ -151,7 +149,7 @@ var _gui_range := NAN
 var _gui_latitude_longitude := Vector2(NAN, NAN)
 
 # settings
-onready var _transfer_time: float = _settings.camera_transfer_time
+var _transfer_time: float = _settings.camera_transfer_time
 
 
 # virtual functions
@@ -159,20 +157,20 @@ onready var _transfer_time: float = _settings.camera_transfer_time
 func _ready() -> void:
 	assert(perspective_far_dist > perspective_close_radii * max_perspective_radius)
 	assert(min_perspective_radius > IVUnits.METER)
-	name = "Camera"
-	IVGlobal.connect("system_tree_ready", self, "_on_system_tree_ready", [], CONNECT_ONESHOT)
-	IVGlobal.connect("simulator_started", self, "_on_simulator_started", [], CONNECT_ONESHOT)
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_prepare_to_free", [], CONNECT_ONESHOT)
-	IVGlobal.connect("update_gui_requested", self, "_send_gui_refresh")
-	IVGlobal.connect("move_camera_requested", self, "move_to")
-	IVGlobal.connect("setting_changed", self, "_settings_listener")
+	name = &"IVCamera"
+	IVGlobal.system_tree_ready.connect(_on_system_tree_ready, CONNECT_ONE_SHOT)
+	IVGlobal.simulator_started.connect(_on_simulator_started, CONNECT_ONE_SHOT)
+	IVGlobal.about_to_free_procedural_nodes.connect(_prepare_to_free, CONNECT_ONE_SHOT)
+	IVGlobal.update_gui_requested.connect(_send_gui_refresh)
+	IVGlobal.move_camera_requested.connect(move_to)
+	IVGlobal.setting_changed.connect(_settings_listener)
 	transform = _transform
 	focal_length_index = init_focal_length_index
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[2] = self
 	_world_targeting[3] = fov
-	IVGlobal.verbose_signal("camera_ready", self)
+	IVGlobal.camera_ready.emit(self)
 	set_process(false) # don't process until sim started
 
 
@@ -188,7 +186,7 @@ func _process(delta: float) -> void:
 		# The -= operator works because current Universe translation is part
 		# of global_translation, so we are removing old shift at the same time
 		# we add our new shift.
-		_universe.translation -= global_translation
+		_universe.position -= global_position
 	transform = _transform
 	_signal_range_latitude_longitude()
 	
@@ -197,7 +195,7 @@ func _process(delta: float) -> void:
 	# limiting far causes distant objects (e.g., orbit lines) to disappear when
 	# zoomed in to small objects. The allowed orders of magnitude between near
 	# and far has changed over Godot development, so experimentation is good.
-	var dist := translation.length()
+	var dist := position.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
 
@@ -222,8 +220,8 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	# For this purpose, individual -INF elements in to_view_position and
 	# to_view_rotations are treated as 'null' (ie, we can set 1 or 2 elements).
 	# Note: some flags may override elements of position or rotation.
-	assert(DPRINT and prints("move_to", to_selection, to_flags, to_view_position,
-			to_view_rotations, is_instant_move) or true)
+	assert(!DPRINT or IVDebug.dprint("move_to", [to_selection, to_flags, to_view_position,
+			to_view_rotations, is_instant_move]))
 	
 	# overrides
 	if to_flags & Flags.UP_LOCKED:
@@ -285,7 +283,7 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	# if track change w/out specified longitude, go to current longitude in new reference frame
 	if is_track_change and to_view_position.x == -INF:
 		var current_basis := _get_reference_basis(selection, flags)
-		var current_view_position = math.get_rotated_spherical3(translation, current_basis)
+		var current_view_position = math.get_rotated_spherical3(position, current_basis)
 		to_view_position.x = current_view_position.x
 	
 	# set position & rotaion
@@ -374,6 +372,7 @@ func _on_system_tree_ready(_is_new_game: bool) -> void:
 	_from_spatial = parent
 	if !selection: # new game
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		@warning_ignore("unsafe_method_access") # project subclass may override static func
 		selection = _SelectionManager_.get_or_make_selection(parent.name)
 		assert(selection)
 		perspective_radius = selection.get_perspective_radius()
@@ -386,11 +385,11 @@ func _on_simulator_started() -> void:
 
 
 func _prepare_to_free() -> void:
-	# Some deconstruction needed to prevent freeing object signalling errors.
+	# Some deconstruction needed to prevent freeing object signalling errors (Godot3.x)
 	set_process(false)
-	IVGlobal.disconnect("update_gui_requested", self, "_send_gui_refresh")
-	IVGlobal.disconnect("move_camera_requested", self, "move_to")
-	IVGlobal.disconnect("setting_changed", self, "_settings_listener")
+	IVGlobal.update_gui_requested.disconnect(_send_gui_refresh)
+	IVGlobal.move_camera_requested.disconnect(move_to)
+	IVGlobal.setting_changed.disconnect(_settings_listener)
 	selection = null
 	parent = null
 	_to_spatial = null
@@ -414,7 +413,7 @@ func _process_move_to(delta: float) -> void:
 	# Interpolate from where we would be (if move hadn't happened) to where
 	# we are going. We continue to calculate were we would be so there isn't
 	# an abrupt velocity change (although that happens in an interupted move).
-	var from_transform: Transform
+	var from_transform: Transform3D
 	if _is_interupted_move:
 		from_transform = _interupted_transform
 	else:
@@ -432,14 +431,14 @@ func _process_move_to(delta: float) -> void:
 
 
 func _do_handoff() -> void:
-	assert(DPRINT and prints("Camera handoff", tr(parent.name), tr(_to_spatial.name)) or true)
+	assert(!DPRINT or IVDebug.dprint("_do_handoff()", tr(parent.name), tr(_to_spatial.name)))
 	parent.remove_child(self)
 	_to_spatial.add_child(self)
 	parent = _to_spatial
 	emit_signal("parent_changed", parent)
 
 
-func _interpolate_path(from_transform: Transform, to_transform: Transform, progress: float) -> void:
+func _interpolate_path(from_transform: Transform3D, to_transform: Transform3D, progress: float) -> void:
 	# Interpolate spherical coordinates around a reference Spatial. Reference
 	# 'xfer' is either the parent (if 'from' or 'to' is child of the other) or
 	# common ancestor. This is likely the dominant view object during
@@ -451,9 +450,9 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 	# suppress that.
 	
 	# translation
-	var xfer_global_translation := _trasfer_spatial.global_translation
-	var from_global_translation := _from_spatial.global_translation + from_transform.origin
-	var to_global_translation := _to_spatial.global_translation + to_transform.origin
+	var xfer_global_translation := _trasfer_spatial.global_position
+	var from_global_translation := _from_spatial.global_position + from_transform.origin
+	var to_global_translation := _to_spatial.global_position + to_transform.origin
 	var from_xfer_translation := from_global_translation - xfer_global_translation
 	var to_xfer_translation := to_global_translation - xfer_global_translation
 	# Godot 3.5.2 BUG? angle_to() seems to break with large vectors. Needs testing.
@@ -466,19 +465,19 @@ func _interpolate_path(from_transform: Transform, to_transform: Transform, progr
 	var path_angle := from_xfer_direction.angle_to(to_xfer_direction) # < PI
 	var xfer_translation := from_xfer_direction.rotated(rotation_axis, path_angle * progress)
 	xfer_translation *= lerp(from_xfer_translation.length(), to_xfer_translation.length(), progress)
-	var translation_ := xfer_translation + xfer_global_translation - parent.global_translation
+	var translation_ := xfer_translation + xfer_global_translation - parent.global_position
 
 	# basis
 	var from_global_basis := _from_spatial.global_transform.basis * from_transform.basis
 	var to_global_basis := _to_spatial.global_transform.basis * to_transform.basis
-	var from_global_quat := Quat(from_global_basis)
-	var to_global_quat := Quat(to_global_basis)
+	var from_global_quat := Quaternion(from_global_basis)
+	var to_global_quat := Quaternion(to_global_basis)
 	var global_quat := from_global_quat.slerp(to_global_quat, progress)
 	var global_basis := Basis(global_quat)
-	var basis := parent.global_transform.basis.inverse() * global_basis
+	var basis_ := parent.global_transform.basis.inverse() * global_basis
 	
 	# set the working transform
-	_transform = Transform(basis, translation_)
+	_transform = Transform3D(basis_, translation_)
 
 
 func _process_motions_and_rotations(delta: float) -> void:
@@ -518,7 +517,7 @@ func _process_motion(delta: float) -> void:
 	# Apply x,y as rotation and z as scaler to our origin. Basis is treated
 	# differently for the 'up locked' and 'unlocked' cases.
 	var origin := _transform.origin
-	var basis := _transform.basis
+	var basis_ := _transform.basis
 
 	if bool(flags & Flags.UP_LOCKED):
 		# A pole limiter prevents pole traversal. A spin dampener suppresses
@@ -531,8 +530,8 @@ func _process_motion(delta: float) -> void:
 			move_now.y = POLE_LIMITER - view_position.y
 		elif latitude < -POLE_LIMITER:
 			move_now.y = -POLE_LIMITER -view_position.y
-		origin = origin.rotated(basis.y, move_now.x)
-		origin = origin.rotated(basis.x, -move_now.y)
+		origin = origin.rotated(basis_.y, move_now.x)
+		origin = origin.rotated(basis_.x, -move_now.y)
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
@@ -543,20 +542,20 @@ func _process_motion(delta: float) -> void:
 	else:
 		# 'Free' rotation of origin and basis around target. Allows pole
 		# traversal and camera roll. We need to back-calculate view_rotations.
-		origin = origin.rotated(basis.y, move_now.x)
-		basis = basis.rotated(basis.y, move_now.x)
-		origin = origin.rotated(basis.x, -move_now.y)
-		basis = basis.rotated(basis.x, -move_now.y)
+		origin = origin.rotated(basis_.y, move_now.x)
+		basis_ = basis_.rotated(basis_.y, move_now.x)
+		origin = origin.rotated(basis_.x, -move_now.y)
+		basis_ = basis_.rotated(basis_.x, -move_now.y)
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
 				MIN_DIST_RADII, _max_dist)
-		_transform = Transform(basis, origin)
+		_transform = Transform3D(basis_, origin)
 		# back-calculate view_rotations
-		var unrotated_transform := Transform(IDENTITY_BASIS, origin).looking_at(
+		var unrotated_transform := Transform3D(IDENTITY_BASIS, origin).looking_at(
 			-origin, _reference_basis.z)
 		var unrotated_basis := unrotated_transform.basis
-		var rotations_basis := unrotated_basis.inverse() * basis
+		var rotations_basis := unrotated_basis.inverse() * basis_
 		view_rotations = rotations_basis.get_euler()
 
 
@@ -590,7 +589,7 @@ func _process_rotation(delta: float) -> void:
 			_rotation_accumulator.z = 0.0
 	
 	# apply rotation to a view basis, then to _transform
-	var view_basis := Basis(view_rotations) # from Euler angles
+	var view_basis := Basis.from_euler(view_rotations) # TEST34: default order ok?
 	if is_up_locked: # use a pole limiter for pitch, don't roll
 		var pitch = view_rotations.x + rotate_now.x
 		if pitch > POLE_LIMITER:
@@ -613,13 +612,13 @@ func _process_rotation(delta: float) -> void:
 
 
 func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
-		reference_basis: Basis, perspective_radius_: float) -> Transform:
+		reference_basis: Basis, perspective_radius_: float) -> Transform3D:
 	view_position_.z = clamp(_convert_perspective_dist(view_position_.z, perspective_radius_),
 			MIN_DIST_RADII, _max_dist)
 	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
-	var view_transform := Transform(IDENTITY_BASIS, view_translation).looking_at(
+	var view_transform := Transform3D(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, reference_basis.z)
-	view_transform.basis *= Basis(view_rotations_)
+	view_transform.basis *= Basis.from_euler(view_rotations_) # TEST34: default order ok?
 	return view_transform
 
 
@@ -674,9 +673,9 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 		_gui_latitude_longitude = Vector2(NAN, NAN)
 	var gui_translation: Vector3
 	if _to_spatial == parent:
-		gui_translation = translation
+		gui_translation = position
 	else: # move in progress: GUI is showing _to_spatial, not current parent
-		gui_translation = global_translation - _to_spatial.global_translation
+		gui_translation = global_position - _to_spatial.global_position
 	var dist := gui_translation.length()
 	if _gui_range != dist:
 		_gui_range = dist
@@ -692,7 +691,7 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 	var is_ecliptic := dist > gui_ecliptic_coordinates_dist
 	var lat_long: Vector2
 	if is_ecliptic:
-		var ecliptic_translation = global_translation - _universe.translation
+		var ecliptic_translation = global_position - _universe.position
 		lat_long = math.get_latitude_longitude(ecliptic_translation)
 	else:
 		lat_long = selection.get_latitude_longitude(gui_translation)

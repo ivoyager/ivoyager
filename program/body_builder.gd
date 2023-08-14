@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVBodyBuilder
-extends Reference
+extends RefCounted
 
 # Builds IVBody from data tables.
 
@@ -112,8 +112,6 @@ var _Body_: Script
 var _orbit_builder: IVOrbitBuilder
 var _composition_builder: IVCompositionBuilder
 var _table_reader: IVTableReader
-var _times: Array = IVGlobal.times
-var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _table_name: String
 var _row: int
 var _real_precisions := {}
@@ -129,6 +127,7 @@ func _project_init() -> void:
 func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
 	_table_name = table_name
 	_row = row
+	@warning_ignore("unsafe_method_access") # possible replacement class
 	var body: IVBody = _Body_.new()
 	body.name = _table_reader.get_string(table_name, "name", row)
 	_set_flags_from_table(body, parent)

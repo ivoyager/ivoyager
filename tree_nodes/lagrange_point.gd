@@ -18,14 +18,14 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVLagrangePoint
-extends Spatial
+extends Node3D
 
-# Passive Spatial that exists in the RotatingSpace of a Body. Use Body API to
-# obtain. (Uses lazy init.)
+# Passive Node3D that exists in the RotatingSpace of a Body. Use Body API to
+# obtain (Body uses lazy init).
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
-const PERSIST_PROPERTIES := ["lp_integer"]
+const PERSIST_PROPERTIES := [&"lp_integer"]
 
 
 var lp_integer: int # 1, 2, 3, 4, 5

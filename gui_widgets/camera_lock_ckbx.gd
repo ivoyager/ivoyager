@@ -20,35 +20,30 @@
 class_name IVCameraLockCkbx
 extends CheckBox
 
-# GUI widget. Expects the camera to have signal "camera_lock_changed" and
-# function "change_camera_lock".
+# GUI widget. Requires IVCamera.
 
-var _camera: Camera
+var _camera: IVCamera
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
-	pressed = true
+	IVGlobal.camera_ready.connect(_connect_camera)
+	_connect_camera(get_viewport().get_camera_3d() as IVCamera) # null ok
 
 
 func _pressed() -> void:
 	if _camera:
-		_camera.change_camera_lock(pressed)
+		_camera.change_camera_lock(button_pressed)
 
 
-func _connect_camera(camera: Camera) -> void:
-	if _camera != camera:
-		_disconnect_camera()
-		_camera = camera
-		_camera.connect("camera_lock_changed", self, "_on_camera_lock_changed")
+func _connect_camera(camera: IVCamera) -> void:
+	if _camera and is_instance_valid(_camera): # disconnect previous
+		_camera.camera_lock_changed.disconnect(_on_camera_lock_changed)
+	_camera = camera
+	if camera:
+		camera.camera_lock_changed.connect(_on_camera_lock_changed)
+		button_pressed = camera.is_camera_lock
 
 
-func _disconnect_camera() -> void:
-	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("camera_lock_changed", self, "_on_camera_lock_changed")
-	_camera = null
+func _on_camera_lock_changed(is_camera_lock: bool) -> void:
+	button_pressed = is_camera_lock
 
-
-func _on_camera_lock_changed(is_locked: bool) -> void:
-	pressed = is_locked

@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVView
-extends Reference
+extends RefCounted
 
 # Optionally keeps state related to camera, HUDs, and/or time. The object can
 # be persisted via gamesave or cache.
@@ -38,7 +38,7 @@ enum { # flags
 	
 	# flag sets
 	ALL_CAMERA = (1 << 3) - 1,
-	ALL_HUDS = 1 << 3 | 1 << 4
+	ALL_HUDS = 1 << 3 | 1 << 4,
 	ALL_BUT_TIME = (1 << 5) - 1,
 	ALL = (1 << 7) - 1,
 }
@@ -48,25 +48,25 @@ const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"flags",
+	&"flags",
 	
-	"selection_name",
-	"camera_flags",
-	"view_position",
-	"view_rotations",
+	&"selection_name",
+	&"camera_flags",
+	&"view_position",
+	&"view_rotations",
 	
-	"name_visible_flags",
-	"symbol_visible_flags",
-	"orbit_visible_flags",
-	"visible_points_groups",
-	"visible_orbits_groups",
-	"body_orbit_colors",
-	"sbg_points_colors",
-	"sbg_orbits_colors",
+	&"name_visible_flags",
+	&"symbol_visible_flags",
+	&"orbit_visible_flags",
+	&"visible_points_groups",
+	&"visible_orbits_groups",
+	&"body_orbit_colors",
+	&"sbg_points_colors",
+	&"sbg_orbits_colors",
 	
-	"time",
-	"speed_index",
-	"is_reversed",
+	&"time",
+	&"speed_index",
+	&"is_reversed",
 ]
 
 # persisted
@@ -80,8 +80,8 @@ var view_rotations := NULL_VECTOR3
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var orbit_visible_flags := 0
-var visible_points_groups := []
-var visible_orbits_groups := []
+var visible_points_groups: Array[String] = []
+var visible_orbits_groups: Array[String] = []
 var body_orbit_colors := {} # has non-default only
 var sbg_points_colors := {} # has non-default only
 var sbg_orbits_colors := {} # has non-default only
@@ -151,17 +151,18 @@ func set_data_from_cache(data) -> bool:
 	# Tests data integrity and returns false on failure.
 	if typeof(data) != TYPE_ARRAY:
 		return false
-	if !data:
+	var data_array: Array = data
+	if !data_array:
 		return false
-	var version_hash = data[-1] # untyped for safety
+	var version_hash = data_array[-1] # untyped for safety
 	if typeof(version_hash) != TYPE_INT:
 		return false
 	if version_hash != _version_hash:
 		return false
-	if data.size() != PERSIST_PROPERTIES.size() + 1:
+	if data_array.size() != PERSIST_PROPERTIES.size() + 1:
 		return false
 	for i in PERSIST_PROPERTIES.size():
-		set(PERSIST_PROPERTIES[i], data[i])
+		set(PERSIST_PROPERTIES[i], data_array[i])
 	return true
 
 
@@ -238,6 +239,6 @@ func _set_time_state() -> void:
 		_timekeeper.change_speed(0, speed_index)
 		_timekeeper.set_time_reversed(is_reversed)
 	elif flags & IS_NOW:
-		_timekeeper.set_now()
+		_timekeeper.set_now_from_operating_system()
 
 

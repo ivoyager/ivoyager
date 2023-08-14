@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVMainMenuManager
-extends Reference
+extends RefCounted
 
 
 signal buttons_changed()
@@ -27,48 +27,48 @@ signal button_state_changed()
 enum {ACTIVE, DISABLED, HIDDEN} # button_state
 
 # project var
-var button_inits := [
+var button_inits: Array[Array] = [
 	# External project can modify this array at _project_init() or use API
 	# below. "target" here must be a key in IVGlobal.program. Core buttons here
 	# may be excluded depending on IVGlobal project settings.
 	# [text, priority, is_splash, is_running, target_name, method, args]
-	["BUTTON_START", 1100, true, false, "SystemBuilder", "build_system_tree"],
-	["BUTTON_SAVE_AS", 1000, false, true, "SaveManager", "save_game"],
-	["BUTTON_QUICK_SAVE", 900, false, true, "SaveManager", "quick_save"],
-	["BUTTON_LOAD_FILE", 800, true, true, "SaveManager", "load_game"],
-	["BUTTON_QUICK_LOAD", 700, false, true, "SaveManager", "quick_load"],
-	["BUTTON_OPTIONS", 600, true, true, "OptionsPopup", "open"],
-	["BUTTON_HOTKEYS", 500, true, true, "HotkeysPopup", "open"],
-	["BUTTON_CREDITS", 400, true, true, "CreditsPopup", "open"],
-	["BUTTON_EXIT", 300, false, true, "StateManager", "exit"],
-	["BUTTON_QUIT", 200, true, true, "StateManager", "quit"],
-	["BUTTON_RESUME", 100, false, true, "MainMenuPopup", "hide"],
+	[&"BUTTON_START", 1100, true, false, "SystemBuilder", "build_system_tree"],
+	[&"BUTTON_SAVE_AS", 1000, false, true, "SaveManager", "save_game"],
+	[&"BUTTON_QUICK_SAVE", 900, false, true, "SaveManager", "quick_save"],
+	[&"BUTTON_LOAD_FILE", 800, true, true, "SaveManager", "load_game"],
+	[&"BUTTON_QUICK_LOAD", 700, false, true, "SaveManager", "quick_load"],
+	[&"BUTTON_OPTIONS", 600, true, true, "OptionsPopup", "open"],
+	[&"BUTTON_HOTKEYS", 500, true, true, "HotkeysPopup", "open"],
+	[&"BUTTON_CREDITS", 400, true, true, "CreditsPopup", "open"],
+	[&"BUTTON_EXIT", 300, false, true, "StateManager", "exit"],
+	[&"BUTTON_QUIT", 200, true, true, "StateManager", "quit"],
+	[&"BUTTON_RESUME", 100, false, true, "MainMenuPopup", "close"],
 ] 
 
 # read-only!
-var button_infos := []
+var button_infos: Array[Array] = []
 
 
 func _project_init() -> void:
-	IVGlobal.connect("project_inited", self, "_init_buttons")
-	IVGlobal.connect("about_to_quit", self, "_clear_for_quit")
+	IVGlobal.project_inited.connect(_init_buttons)
+	IVGlobal.about_to_quit.connect(_clear_for_quit)
 
 
 func _init_buttons() -> void:
 	for init_info in button_inits:
-		var text: String = init_info[0]
+		var text: StringName = init_info[0]
 		var target_name: String = init_info[4]
 		if !IVGlobal.program.has(target_name):
 			continue
 		var skip := false
 		match text:
-			"BUTTON_START":
+			&"BUTTON_START":
 				skip = IVGlobal.skip_splash_screen
-			"BUTTON_SAVE_AS", "BUTTON_QUICK_SAVE", "BUTTON_LOAD_FILE", "BUTTON_QUICK_LOAD":
+			&"BUTTON_SAVE_AS", &"BUTTON_QUICK_SAVE", &"BUTTON_LOAD_FILE", &"BUTTON_QUICK_LOAD":
 				skip = !IVGlobal.enable_save_load
-			"BUTTON_EXIT":
+			&"BUTTON_EXIT":
 				skip = IVGlobal.disable_exit or IVGlobal.skip_splash_screen
-			"BUTTON_QUIT":
+			&"BUTTON_QUIT":
 				skip = IVGlobal.disable_quit
 		if skip:
 			continue
@@ -90,16 +90,16 @@ func make_button(text: String, priority: int, is_splash: bool, is_running: bool,
 		target: Object, method: String, args := [], button_state := ACTIVE) -> void:
 	# Highest priority will be top menu item.
 	button_infos.append([text, priority, is_splash, is_running, target, method, args, button_state])
-	button_infos.sort_custom(self, "_sort_button_infos")
-	emit_signal("buttons_changed")
+	button_infos.sort_custom(_sort_button_infos)
+	buttons_changed.emit()
 
 
 func remove_button(text: String) -> void:
 	var i := 0
 	while i < button_infos.size():
 		if button_infos[i][0] == text:
-			button_infos.remove(i)
-			emit_signal("buttons_changed")
+			button_infos.remove_at(i)
+			buttons_changed.emit()
 			return
 		i += 1
 
@@ -109,7 +109,7 @@ func change_button_state(text: String, button_state: int) -> void:
 		if text == button_info[0]:
 			button_info[7] = button_state
 			break
-	emit_signal("button_state_changed")
+	button_state_changed.emit()
 
 
 func _sort_button_infos(a: Array, b: Array) -> bool:

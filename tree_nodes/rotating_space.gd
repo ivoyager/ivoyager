@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVRotatingSpace
-extends Spatial
+extends Node3D
 
 # Created and maintained by IVBody instance only when needed. This is the
 # rotating reference frame in which Lagrange points are embeded. In
@@ -32,18 +32,18 @@ extends Spatial
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 const PERSIST_PROPERTIES := [
-	"mass_ratio",
-	"characteristic_length",
-	"characteristic_time",
-	"lagrange_point_vectors",
-	"_LagrangePoints",
+	&"mass_ratio",
+	&"characteristic_length",
+	&"characteristic_time",
+	&"lagrange_point_vectors",
+	&"_LagrangePoints",
 ]
 
 # lagrange parameters
 var mass_ratio: float
 var characteristic_length: float 
 var characteristic_time: float
-var lagrange_point_vectors := [] # in rotating frame; index = lp_integer - 1
+var lagrange_point_vectors: Array[Vector3] = [] # in rotating frame; index = lp_integer - 1
 
 # private - use API to get LagrangePoint instances
 var _LagrangePoints := [] # index = lp_integer - 1
@@ -80,10 +80,10 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 	if !_LagrangePoints:
 		_LagrangePoints.resize(5)
 	if !_LagrangePoints[lp_integer]:
-		var _LagrangePoint_: Script = IVGlobal.script_classes._LagrangePoint_
+		var _LagrangePoint_: GDScript = IVGlobal.script_classes._LagrangePoint_
 		var lagrange_point: IVLagrangePoint = _LagrangePoint_.new()
 		lagrange_point.init(lp_integer)
-		lagrange_point.translation = lagrange_point_vectors[lp_integer - 1]
+		lagrange_point.position = lagrange_point_vectors[lp_integer - 1]
 		_LagrangePoints[lp_integer] = lagrange_point
 		add_child(lagrange_point)
 	return _LagrangePoints[lp_integer]

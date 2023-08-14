@@ -2,13 +2,14 @@
 
 importer="csv_translation"
 type="Translation"
+uid="uid://dvug56bg0l0pl"
 
 [deps]
 
-files=[ "res://ivoyager/data/text/hints_text.en.translation" ]
+files=["res://ivoyager/data/text/hints_text.en.translation"]
 
 source_file="res://ivoyager/data/text/hints_text.csv"
-dest_files=[ "res://ivoyager/data/text/hints_text.en.translation" ]
+dest_files=["res://ivoyager/data/text/hints_text.en.translation"]
 
 [params]
 

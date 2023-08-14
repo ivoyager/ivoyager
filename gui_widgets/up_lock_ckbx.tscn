@@ -1,10 +1,10 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://cwnvxi44ijkr4"]
 
-[ext_resource path="res://ivoyager/gui_widgets/up_lock_ckbx.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/up_lock_ckbx.gd" id="1"]
 
 [node name="UpLockCkbx" type="CheckBox"]
-margin_right = 24.0
-margin_bottom = 24.0
-hint_tooltip = "HINT_UP_LOCK"
+offset_right = 24.0
+offset_bottom = 24.0
+tooltip_text = "HINT_UP_LOCK"
 text = "BUTTON_UP"
-script = ExtResource( 1 )
+script = ExtResource("1")

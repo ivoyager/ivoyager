@@ -20,7 +20,9 @@
 class_name IVSelectionData
 extends VBoxContainer
 
-# GUI widget. Requires Control ancestor with member "selection_manager".
+# GUI widget. Requires IVQuantityFormatter and IVTableReader.
+# An ancestor Control node must have property 'selection_manager'
+# set to an IVSelectionManager before signal IVGlobal.about_to_start_simulator.
 #
 # Typed values interpreted as n/a; widget skips row and doesn't display:
 #   NAN
@@ -58,9 +60,9 @@ var interval := 0.0 # seconds; set 0.0 for no periodic updates
 var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
 	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
 	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
-var subsection_of := [-1, -1, -1, 2, 2, -1]
-var section_open := [true, true, true, true, true, true]
-var section_data := [ # one array element per header
+var subsection_of: Array[int] = [-1, -1, -1, 2, 2, -1]
+var section_open: Array[bool] = [true, true, true, true, true, true]
+var section_data: Array[Array] = [ # one array element per header
 	# In each section array, we have an array for each data line containing:
 	# [0] display label [1] path to property or method [2] method_args
 	# [3] data_type [4] arg or args specific for data_type
@@ -189,27 +191,27 @@ var special_processing := {
 
 var _state: Dictionary = IVGlobal.state
 var _wiki_titles: Dictionary = IVGlobal.wiki_titles
-var _header_buttons := []
-var _grids := []
+var _header_buttons: Array[Button] = []
+var _grids: Array[GridContainer] = []
 var _meta_lookup := {} # translate link text to wiki key
-var _recycled_labels := []
-var _recycled_rtlabels := []
+var _recycled_labels: Array[Label] = []
+var _recycled_rtlabels: Array[RichTextLabel] = []
 var _selection_manager: IVSelectionManager
 var _selection: IVSelection
 var _body: IVBody
 var _path: String
 var _is_running := false
 
-onready var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
-onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
-onready var _timer: Timer = $Timer
+@onready var _qf: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+@onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
+@onready var _timer: Timer = $Timer
 
 
 func _ready() -> void:
-	IVGlobal.connect("about_to_start_simulator", self, "_configure")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	IVGlobal.connect("about_to_stop_before_quit", self, "_clear_recycled")
+	IVGlobal.about_to_start_simulator.connect(_configure)
+	IVGlobal.update_gui_requested.connect(_update_selection)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	IVGlobal.about_to_stop_before_quit.connect(_clear_recycled)
 	_configure()
 	_start_timer_coroutine()
 
@@ -220,7 +222,7 @@ func _configure(_dummy := false) -> void:
 	_selection_manager = IVWidgets.get_selection_manager(self)
 	if !_selection_manager:
 		return
-	_selection_manager.connect("selection_changed", self, "_update_selection")
+	_selection_manager.selection_changed.connect(_update_selection)
 	assert(section_headers.size() == subsection_of.size())
 	assert(section_headers.size() == section_data.size())
 	assert(section_headers.size() == section_open.size())
@@ -238,7 +240,7 @@ func _configure(_dummy := false) -> void:
 			header_button.flat = true
 			header_button.size_flags_horizontal = 0
 			header_button.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-			header_button.connect("pressed", self, "_process_section", [section, true])
+			header_button.pressed.connect(_process_section.bind(section, true))
 			_header_buttons.append(header_button)
 			add_child(header_button)
 		else:
@@ -254,7 +256,7 @@ func _configure(_dummy := false) -> void:
 
 func _clear() -> void:
 	if _selection_manager:
-		_selection_manager.disconnect("selection_changed", self, "_update_selection")
+		_selection_manager.selection_changed.disconnect(_update_selection)
 		_selection_manager = null
 	_selection = null
 	_body = null
@@ -268,9 +270,11 @@ func _clear() -> void:
 
 func _clear_recycled() -> void:
 	while _recycled_labels:
-		_recycled_labels.pop_back().queue_free()
+		var label: Label = _recycled_labels.pop_back()
+		label.queue_free()
 	while _recycled_rtlabels:
-		_recycled_rtlabels.pop_back().queue_free()
+		var rtlabel: RichTextLabel = _recycled_rtlabels.pop_back()
+		rtlabel.queue_free()
 
 
 func _start_timer_coroutine() -> void:
@@ -282,7 +286,7 @@ func _start_timer_coroutine() -> void:
 	_timer.wait_time = interval
 	_timer.start()
 	while true:
-		yield(_timer, "timeout")
+		await _timer.timeout
 		if _state.is_running:
 			_update_selection()
 
@@ -393,7 +397,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 					value_wiki_key = key
 			else:
 				value_txt = str(value)
-		TYPE_REAL:
+		TYPE_FLOAT:
 			if is_inf(value):
 				value_txt = "?"
 			elif is_nan(value):
@@ -413,7 +417,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var num_type: int = args[3] if n_args > 3 else IVQuantityFormatter.NUM_DYNAMIC
 				var long_form: bool = args[4] if n_args > 4 else false
 				var case_type: int = args[5] if n_args > 5 else IVQuantityFormatter.CASE_MIXED
-				value_txt = _quantity_formatter.number_option(value, option_type, unit, precision,
+				value_txt = _qf.number_option(value, option_type, unit, precision,
 						num_type, long_form, case_type)
 				if precision == 0:
 					value_txt = "~" + value_txt
@@ -423,6 +427,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				value_wiki_key = value
 		TYPE_OBJECT:
 			if data_type == OBJECT_LABELS_VALUES:
+				@warning_ignore("unsafe_method_access")
 				var labels_values = value.get_labels_values_display(prespace)
 				return [labels_values[0], labels_values[1], false, false]
 	if !value_txt:
@@ -469,7 +474,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 	var is_value_link: bool = row_info[3]
 	if is_label_link:
 		var label_cell := _get_rtlabel(false)
-		label_cell.bbcode_text = label_txt
+		label_cell.text = label_txt
 		grid.add_child(label_cell)
 	else:
 		var label_cell := _get_label(false)
@@ -477,7 +482,7 @@ func _add_row(grid: GridContainer, row_info: Array) -> void:
 		grid.add_child(label_cell)
 	if is_value_link:
 		var value_cell := _get_rtlabel(true)
-		value_cell.bbcode_text = value_txt
+		value_cell.text = value_txt
 		grid.add_child(value_cell)
 	else:
 		var value_cell := _get_label(true)
@@ -489,7 +494,7 @@ func _clear_grid(grid: GridContainer) -> void:
 	if grid.get_child_count() == 0:
 		return
 	var children := grid.get_children()
-	children.invert()
+	children.reverse()
 	for child in children:
 		grid.remove_child(child)
 		if child is Label:
@@ -515,9 +520,9 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 		rtlabel = _recycled_rtlabels.pop_back()
 	else:
 		rtlabel = RichTextLabel.new()
-		rtlabel.connect("meta_clicked", self, "_on_meta_clicked")
+		rtlabel.meta_clicked.connect(_on_meta_clicked)
 		rtlabel.bbcode_enabled = true
-		rtlabel.fit_content_height = true
+		rtlabel.fit_content = true
 		rtlabel.scroll_active = false
 		rtlabel.size_flags_horizontal = SIZE_EXPAND_FILL
 	rtlabel.size_flags_stretch_ratio = values_stretch_ratio if is_value else labels_stretch_ratio
@@ -527,10 +532,11 @@ func _get_rtlabel(is_value: bool) -> RichTextLabel:
 func _on_meta_clicked(meta: String) -> void:
 	var wiki_key: String = _meta_lookup[meta]
 	var wiki_title: String = _wiki_titles[wiki_key]
-	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
+	IVGlobal.open_wiki_requested.emit(wiki_title)
 
 
 # special processing functions
+# TODO34: Make these table lambdas.
 
 func _mod_rotation_period(value_txt: String, value: float) -> String:
 	if _body:
@@ -563,3 +569,4 @@ func _mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
 
 func _mod_n_kn_dwf_planets(value_txt: String, _value: float) -> String:
 	return "%s (%s)" % [value_txt, tr("TXT_POSSIBLE").to_lower()]
+

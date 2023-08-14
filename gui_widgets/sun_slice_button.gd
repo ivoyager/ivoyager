@@ -20,7 +20,8 @@
 class_name IVSunSliceButton
 extends Button
 
-# GUI widget.
+# GUI widget. An ancestor Control node must have property 'selection_manager'
+# set to an IVSelectionManager before signal IVGlobal.system_tree_ready.
 #
 # To use in conjuction with PlanetMoonButtons, make both SIZE_FILL_EXPAND and
 # give strech ratios: 1.0 (this widget) and 10.0 (PlanetMoonButtons or
@@ -36,15 +37,15 @@ var _body: IVBody
 var _is_built := false
 var _has_mouse := false
 
-onready var _texture_rect: TextureRect = $TextureRect
+@onready var _texture_rect: TextureRect = $TextureRect
 
 
 func _ready():
-	IVGlobal.connect("about_to_start_simulator", self, "_build")
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	IVGlobal.connect("about_to_free_procedural_nodes", self, "_clear")
-	connect("mouse_entered", self, "_on_mouse_entered")
-	connect("mouse_exited", self, "_on_mouse_exited")
+	IVGlobal.about_to_start_simulator.connect(_build)
+	IVGlobal.update_gui_requested.connect(_update_selection)
+	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 	_build()
 
@@ -63,10 +64,10 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	_body = IVGlobal.bodies[body_name]
-	_selection_manager.connect("selection_changed", self, "_update_selection")
-	_selection_manager.connect("selection_reselected", self, "_update_selection")
+	_selection_manager.selection_changed.connect(_update_selection)
+	_selection_manager.selection_reselected.connect(_update_selection)
 	flat = true
-	hint_tooltip = _body.name
+	tooltip_text = _body.name
 	_texture_rect.texture = _body.texture_slice_2d
 	_update_selection()
 
@@ -80,7 +81,7 @@ func _clear() -> void:
 
 func _update_selection(_dummy := false) -> void:
 	var is_selected := _selection_manager.get_body() == _body
-	pressed = is_selected
+	button_pressed = is_selected
 	flat = !is_selected and !_has_mouse
 
 
@@ -92,3 +93,4 @@ func _on_mouse_entered() -> void:
 func _on_mouse_exited() -> void:
 	_has_mouse = false
 	flat = !pressed
+

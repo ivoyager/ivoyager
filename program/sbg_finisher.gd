@@ -18,17 +18,16 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSBGFinisher
-extends Reference
+extends RefCounted
 
 # Adds SBGPoints and SBGOrbits for SmallBodiesGroup instances.
 
-var _SBGPoints_: Script
-var _SBGOrbits_: Script
-var _settings: Dictionary = IVGlobal.settings
+var _SBGPoints_: GDScript
+var _SBGOrbits_: GDScript
 
 
 func _project_init() -> void:
-	IVGlobal.get_tree().connect("node_added", self, "_on_node_added")
+	IVGlobal.get_tree().node_added.connect(_on_node_added)
 	_SBGPoints_ = IVGlobal.script_classes._SBGPoints_
 	_SBGOrbits_ = IVGlobal.script_classes._SBGOrbits_
 
@@ -50,7 +49,4 @@ func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
 	var sbg_orbits: IVSBGOrbits = _SBGOrbits_.new(sbg)
 	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(sbg_orbits)
-
-
-
 

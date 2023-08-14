@@ -20,39 +20,33 @@
 class_name IVUpLockCkbx
 extends CheckBox
 
-
-# GUI Widget.
+# GUI Widget. Requires IVCamera.
 
 const Flags := IVEnums.CameraFlags
 
-var _camera: Camera
+var _camera: IVCamera
 
 
-func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_connect_camera(get_viewport().get_camera())
-	connect("pressed", self, "_on_pressed")
+func _ready() -> void:
+	IVGlobal.camera_ready.connect(_connect_camera)
+	_connect_camera(get_viewport().get_camera_3d() as IVCamera)
+	pressed.connect(_on_pressed)
 
 
-func _connect_camera(camera: Camera) -> void:
-	if _camera != camera:
-		_disconnect_camera()
-		_camera = camera
-		_camera.connect("up_lock_changed", self, "_update_ckbx")
-
-
-func _disconnect_camera() -> void:
+func _connect_camera(camera: IVCamera) -> void:
 	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("up_lock_changed", self, "_update_ckbx")
-	_camera = null
+		_camera.up_lock_changed.disconnect(_update_ckbx)
+	_camera = camera
+	if camera:
+		camera.up_lock_changed.connect(_update_ckbx)
 
 
 func _update_ckbx(flags: int, _disable_flags: int) -> void:
-	pressed = bool(flags & Flags.UP_LOCKED)
+	button_pressed = bool(flags & Flags.UP_LOCKED)
 
 
 func _on_pressed() -> void:
 	if !_camera:
 		return
-	_camera.set_up_lock(pressed)
+	_camera.set_up_lock(button_pressed)
 

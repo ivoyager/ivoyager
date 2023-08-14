@@ -20,7 +20,11 @@
 class_name IVMDFileLabel
 extends RichTextLabel
 
-# GUI widget. Reads an extermal .md file and converts to BB code with links.
+# DEPRECIATE: Not worth supporting. It's way easier to code a custom Credits page.
+#
+# GUI widget.
+#
+# Reads an extermal .md file and converts to BB code with links.
 # This is narrowly coded to read ivoyager/credits.md. Someone should expand
 # its function to additional md features.
 
@@ -34,7 +38,7 @@ var _urls := {}
 
 
 func _ready():
-	connect("meta_clicked", self, "_on_meta_clicked")
+	connect("meta_clicked", Callable(self, "_on_meta_clicked"))
 	for regex_array in regexes:
 		var regular_expression = regex_array[1]
 		var regex := RegEx.new()
@@ -43,8 +47,8 @@ func _ready():
 
 
 func read_file(path: String, skip_header := true) -> void:
-	var file := File.new()
-	if file.open(path, File.READ) != OK:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if !file:
 		print("ERROR: Could not open for read: ", path)
 		return
 	var converted_text := ""
@@ -58,7 +62,7 @@ func read_file(path: String, skip_header := true) -> void:
 			skip_header = false
 			continue
 		converted_text += convert_line(line)
-	bbcode_text = converted_text
+	text = converted_text
 
 
 func convert_line(line: String) -> String:

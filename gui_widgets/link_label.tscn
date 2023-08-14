@@ -1,17 +1,13 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://dqwafuo72wscj"]
 
-[ext_resource path="res://ivoyager/gui_widgets/link_label.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://ivoyager/gui_widgets/link_label.gd" id="1"]
 
 [node name="LinkLabel" type="RichTextLabel"]
-margin_top = 4.0
-margin_right = 84.0
-margin_bottom = 19.0
+offset_top = 4.0
+offset_right = 84.0
+offset_bottom = 19.0
 bbcode_enabled = true
-bbcode_text = "[url]I, Voyager[/url]"
 text = "I, Voyager"
-fit_content_height = true
+fit_content = true
 scroll_active = false
-script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
+script = ExtResource("1")

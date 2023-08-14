@@ -20,37 +20,31 @@
 class_name IVFocalLengthButtons
 extends HBoxContainer
 
-# GUI widget. Expects the camera to have signal "focal_length_changed", member
-# "focal_lengths" and function "increment_focal_length".
+# GUI widget. Requires IVCamera.
 
-var _camera: Camera
+var _camera: IVCamera
 
-onready var _fl_decr: Button = $Minus
-onready var _fl_incr: Button = $Plus
+@onready var _fl_decr: Button = $Minus
+@onready var _fl_incr: Button = $Plus
 
 
 func _ready():
-	IVGlobal.connect("camera_ready", self, "_connect_camera")
-	_fl_decr.connect("pressed", self, "_increment_focal_length", [-1])
-	_fl_incr.connect("pressed", self, "_increment_focal_length", [1])
-	_connect_camera(get_viewport().get_camera())
+	IVGlobal.camera_ready.connect(_connect_camera)
+	_fl_decr.pressed.connect(_increment_focal_length.bind(-1))
+	_fl_incr.pressed.connect(_increment_focal_length.bind(1))
+	_connect_camera(get_viewport().get_camera_3d() as IVCamera) # null ok
 
 
-func _connect_camera(camera: Camera) -> void:
-	if _camera != camera:
-		_disconnect_camera()
-		_camera = camera
-		_camera.connect("focal_length_changed", self, "_update_focal_length")
-
-
-func _disconnect_camera() -> void:
-	if _camera and is_instance_valid(_camera):
-		_camera.disconnect("focal_length_changed", self, "_update_focal_length")
-	_camera = null
+func _connect_camera(camera: IVCamera) -> void:
+	if _camera and is_instance_valid(_camera): # disconnect previous
+		_camera.focal_length_changed.disconnect(_update_focal_length)
+	_camera = camera
+	if camera:
+		camera.focal_length_changed.connect(_update_focal_length)
 
 
 func _update_focal_length(focal_length: float) -> void:
-	var focal_lengths: Array = _camera.focal_lengths
+	var focal_lengths := _camera.focal_lengths
 	_fl_decr.disabled = focal_length <= focal_lengths[0]
 	_fl_incr.disabled = focal_length >= focal_lengths[-1]
 
@@ -58,3 +52,4 @@ func _update_focal_length(focal_length: float) -> void:
 func _increment_focal_length(increment: int) -> void:
 	if _camera:
 		_camera.increment_focal_length(increment)
+

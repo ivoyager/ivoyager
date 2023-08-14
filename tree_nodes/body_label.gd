@@ -44,11 +44,11 @@ func _init(body: IVBody) -> void:
 
 
 func _ready() -> void:
-	_body_huds_state.connect("visibility_changed", self, "_on_global_huds_changed")
-	_body.connect("huds_visibility_changed", self, "_on_body_huds_changed")
-	horizontal_alignment = ALIGN_CENTER
-	vertical_alignment = VALIGN_CENTER
-	billboard = SpatialMaterial.BILLBOARD_ENABLED
+	_body_huds_state.visibility_changed.connect(_on_global_huds_changed)
+	_body.huds_visibility_changed.connect(_on_body_huds_changed)
+	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	billboard = StandardMaterial3D.BILLBOARD_ENABLED
 	
 	fixed_size = true
 	pixel_size = 0.0006 # FIXME: Check this!
@@ -63,8 +63,9 @@ func _on_global_huds_changed() -> void:
 	_set_visual_state()
 
 
-func _on_body_huds_changed(is_visible: bool) -> void:
-	_body_huds_visible = is_visible
+func _on_body_huds_changed(is_visible_: bool) -> void:
+	_body_huds_visible = is_visible_
+	# ISSUE34?: 'is_visible' generates shadow error
 	_set_visual_state()
 
 

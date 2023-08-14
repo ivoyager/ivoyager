@@ -18,11 +18,12 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVSystemBuilder
-extends Reference
+extends RefCounted
 
 # Builds the star system(s) from data tables & binaries.
 
 # project vars
+var add_small_bodies_groups := true
 var add_camera := true
 
 # private
@@ -32,7 +33,7 @@ var _sbg_builder: IVSBGBuilder
 
 
 func _project_init():
-	IVGlobal.connect("state_manager_inited", self, "_on_state_manager_inited", [], CONNECT_ONESHOT)
+	IVGlobal.state_manager_inited.connect(_on_state_manager_inited, CONNECT_ONE_SHOT)
 	_table_reader = IVGlobal.program.TableReader
 	_body_builder = IVGlobal.program.BodyBuilder
 	_sbg_builder = IVGlobal.program.SBGBuilder
@@ -48,13 +49,14 @@ func build_system_tree() -> void:
 		return
 	var state_manager: IVStateManager = IVGlobal.program.StateManager
 	state_manager.require_stop(state_manager, IVEnums.NetworkStopSync.BUILD_SYSTEM, true)
-	IVGlobal.verbose_signal("about_to_build_system_tree")
+	IVGlobal.about_to_build_system_tree.emit()
 	for table_name in IVGlobal.body_tables:
 		_add_bodies(table_name)
-	_sbg_builder.build_sbgs()
+	if add_small_bodies_groups:
+		_sbg_builder.build_sbgs()
 	if add_camera:
 		_add_camera()
-	IVGlobal.verbose_signal("system_tree_built_or_loaded", true)
+	IVGlobal.system_tree_built_or_loaded.emit(true)
 
 
 func _add_bodies(table_name: String) -> void:
@@ -71,13 +73,14 @@ func _add_bodies(table_name: String) -> void:
 			parent.add_child(body)
 			parent.satellites.append(body)
 		else: # top body
-			var universe: Spatial = IVGlobal.program.Universe
+			var universe: Node3D = IVGlobal.program.Universe
 			universe.add_child(body)
 		row += 1
 
 
 func _add_camera() -> void:
-	var camera_script: Script = IVGlobal.script_classes._Camera_
-	var camera: Camera = camera_script.new()
+	var _Camera_: GDScript = IVGlobal.script_classes._Camera_
+	var camera: Camera3D = _Camera_.new()
 	var start_body: IVBody = IVGlobal.bodies[IVGlobal.home_name]
 	start_body.add_child(camera)
+

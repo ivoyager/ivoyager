@@ -20,7 +20,7 @@
 class_name IVNavigationButton
 extends Button
 
-# This widget must be instantiated and added by code. See planet_moon_buttons.gd.
+# This widget must be instantiated and added by code. See IVPlanetMoonButtons.
 
 signal selected()
 
@@ -33,24 +33,24 @@ func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManage
 	assert(body and selection_manager)
 	_body = body
 	_selection_manager = selection_manager
-	hint_tooltip = body.name
-	set("custom_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
-	rect_min_size = Vector2(image_size, image_size)
+	tooltip_text = body.name
+	set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
+	custom_minimum_size = Vector2(image_size, image_size)
 	var texture_box := TextureRect.new()
-	texture_box.set_anchors_and_margins_preset(PRESET_WIDE, PRESET_MODE_KEEP_SIZE, 0)
-	texture_box.expand = true
+	texture_box.set_anchors_and_offsets_preset(PRESET_FULL_RECT, PRESET_MODE_KEEP_SIZE, 0)
+	texture_box.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	texture_box.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_box.texture = body.texture_2d
 	texture_box.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(texture_box)
-	connect("mouse_entered", self, "_on_mouse_entered")
-	connect("mouse_exited", self, "_on_mouse_exited")
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 
 
 func _ready():
-	IVGlobal.connect("update_gui_requested", self, "_update_selection")
-	_selection_manager.connect("selection_changed", self, "_update_selection")
-	_selection_manager.connect("selection_reselected", self, "_update_selection")
+	IVGlobal.update_gui_requested.connect(_update_selection)
+	_selection_manager.selection_changed.connect(_update_selection)
+	_selection_manager.selection_reselected.connect(_update_selection)
 	set_default_cursor_shape(CURSOR_POINTING_HAND)
 
 
@@ -60,9 +60,9 @@ func _pressed() -> void:
 
 func _update_selection(_dummy := false) -> void:
 	var is_selected := _selection_manager.get_body() == _body
-	pressed = is_selected
+	button_pressed = is_selected
 	if is_selected:
-		emit_signal("selected")
+		selected.emit()
 	flat = !is_selected and !_has_mouse
 
 

@@ -25,7 +25,7 @@ extends Node
 # nodes, references, and class scripts availible in IVGlobal dictionaries. All
 # dictionaries here (except procedural_classes) define "small-s singletons";
 # a single instance of each class is instantiated, and nodes are added to
-# either the top Spatial node (specified by 'universe') or the top Control node
+# either the top Node3D node (specified by 'universe') or the top Control node
 # (specified by 'top_gui'). All object instantiations can be accessed in
 # IVGlobal dictionary 'program' and all class scripts can be accessed in
 # IVGlobal dictionary 'script_classes'.
@@ -49,7 +49,7 @@ extends Node
 #     (Above happens before anything else is instantiated!)
 # 3. Hook up to IVGlobal 'project_objects_instantiated' signal to modify
 #    init values of instantiated Nodes (before they are added to tree) or
-#    References (before they are used). Nodes and References can be
+#    RefCounteds (before they are used). Nodes and RefCounteds can be
 #    accessed after instantiation in the IVGlobal.program dictionary.
 # 4. Build your project GUI using the many widgets in ivoyager/gui_widgets.
 #
@@ -73,7 +73,7 @@ var allow_project_build := true # blockable by another autoload singleton
 
 # init_sequence can be modified (even after started) by singleton or by an
 # extension instantiated at the first step of this sequence.
-var init_sequence := [
+var init_sequence: Array[Array] = [
 	# [object, method, wait_for_signal]
 	[self, "_init_extensions", false],
 	[self, "_set_simulator_root", false],
@@ -88,16 +88,16 @@ var init_sequence := [
 # can set either or both of these, or let ProjectBuilder assign default nodes
 # from the core ivoyager submodule (or for universe, by tree search).
 # Whatever is assigned to these properties will be accessible from
-# IVGlobal.program.Universe and IVGlobal.program.TopGUI (node names don't
-# matter).
+# IVGlobal.program.Universe and IVGlobal.program.TopGUI (irrespective of node
+# names).
 
-var universe: Spatial
+var universe: Node3D
 var top_gui: Control
 var add_top_gui_to_universe := true # happens in add_program_nodes()
 
 # Replace classes in dictionaries below with a subclass of the original unless
-# comment indicates otherwise. E.g., "Spatial ok": replace with a class that
-# extends Spatial. In some cases, elements can be erased for unneeded systems.
+# comment indicates otherwise. E.g., "Node3D ok": replace with a class that
+# extends Node3D. In some cases, elements can be erased for unneeded systems.
 # For example, our Planetarium erases the save/load system and associated GUI:
 # https://github.com/ivoyager/planetarium/blob/master/planetarium/planetarium.gd
 #
@@ -108,9 +108,9 @@ var add_top_gui_to_universe := true # happens in add_program_nodes()
 # and the 'name' property in the case of nodes.
 
 var initializers := {
-	# Reference classes. IVProjectBuilder instances these (first!) and adds to
-	# dictionary IVGlobal.program. They may erase themselves from
-	# IVGlobal.program when done (thereby freeing themselves).
+#	# RefCounted classes. IVProjectBuilder instances these (first!) and adds to
+#	# dictionary IVGlobal.program. They may erase themselves from
+#	# IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
 	_SharedInitializer_ = SharedInitializer,
@@ -119,8 +119,8 @@ var initializers := {
 	_TableImporter_ = IVTableImporter,
 }
 
-var prog_refs := {
-	# Reference classes. IVProjectBuilder instances one of each and adds to
+var program_refcounteds := {
+	# RefCounted classes. IVProjectBuilder instances one of each and adds to
 	# dictionary IVGlobal.program. No save/load persistence.
 	
 	# need first!
@@ -141,8 +141,8 @@ var prog_refs := {
 	_SBGFinisher_ = IVSBGFinisher,
 	
 	# managers
-	_InputMapManager_ = IVInputMapManager,
 	_IOManager_ = IVIOManager,
+	_InputMapManager_ = IVInputMapManager,
 	_FontManager_ = IVFontManager, # ok to replace
 	_ThemeManager_ = IVThemeManager, # after IVFontManager; ok to replace
 	_MainMenuManager_ = IVMainMenuManager,
@@ -156,34 +156,33 @@ var prog_refs := {
 	_ViewDefaults_ = IVViewDefaults,
 }
 
-var prog_nodes := {
+var program_nodes := {
 	# IVProjectBuilder instances one of each and adds as child to Universe
-	# (after TopGUI) and to dictionary IVGlobal.program.
-	# Order determines input event handling (last child is 1st input handled).
-	# Universe children can be reordered after 'project_nodes_added' signal
-	# using API below.
+	# (before/"below" TopGUI) and to dictionary IVGlobal.program.
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
-	_SBGHUDsState_ = IVSBGHUDsState,
 	_ViewManager_ = IVViewManager,
-	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
+#	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
 	
-	# Nodes below are ordered for input handling. We mainly need to intercept
-	# cntr-something actions (quit, full-screen, etc.) before CameraHandler.
-	_CameraHandler_ = IVCameraHandler, # replace if not using IVCamera
+	# Nodes below are ordered for input handling (last is first). We mainly
+	# need to intercept cntr-something actions (quit, full-screen, etc.) before
+	# CameraHandler. Universe children can be reordered after
+	# 'project_nodes_added' signal using API below.
+	_CameraHandler_ = IVCameraHandler, # remove or replace if not using IVCamera
 	_Timekeeper_ = IVTimekeeper,
 	_WindowManager_ = IVWindowManager,
+	_SBGHUDsState_ = IVSBGHUDsState, # (likely to have input in future)
 	_BodyHUDsState_ = IVBodyHUDsState,
+	_InputHandler_ = IVInputHandler,
 	_SaveManager_ = IVSaveManager, # remove if you don't need game saves
 	_StateManager_ = IVStateManager,
 }
 
 var gui_nodes := {
 	# IVProjectBuilder instances one of each and adds as child to TopGUI (or
-	# whatever substitute Control is set in 'top_gui') and to dictionary
-	# IVGlobal.program.
-	# Order determines visual 'on top' and input event handling (last in list
-	# is on top and 1st handled). TopGUI children can be reordered after
+	# substitute Control set in 'top_gui') and to dictionary IVGlobal.program.
+	# Order determines visual 'on top' and input event handling: last added
+	# is on top and 1st handled. TopGUI children can be reordered after
 	# 'project_nodes_added' signal using API below.
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY for save/load persistence.
 	_WorldController_ = IVWorldController, # Control ok
@@ -194,10 +193,8 @@ var gui_nodes := {
 	_LoadDialog_ = IVLoadDialog, # safe to replace or remove
 	_SaveDialog_ = IVSaveDialog, # safe to replace or remove
 	_OptionsPopup_ = IVOptionsPopup, # safe to replace or remove
-	_CreditsPopup_ = IVCreditsPopup, # safe to replace or remove
 	_HotkeysPopup_ = IVHotkeysPopup, # safe to replace or remove
-	_HotkeyDialog_ = IVHotkeyDialog, # safe to replace or remove
-#	_RichTextPopup_ = IVRichTextPopup, # safe to replace or remove
+	_Confirmation_ = IVConfirmation, # safe to replace or remove
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
@@ -208,28 +205,28 @@ var procedural_classes := {
 	# tree_nodes
 	_Body_ = IVBody, # many dependencies, best to subclass
 	_Camera_ = IVCamera, # replaceable, but look for dependencies
-	_GlobeModel_ = IVGlobeModel, # replace w/ Spatial
-	_BodyLabel_ = IVBodyLabel, # replace w/ Spatial
-	_BodyOrbit_ = IVBodyOrbit, # replace w/ Spatial
-	_SBGOrbits_ = IVSBGOrbits, # replace w/ Spatial
-	_SBGPoints_ = IVSBGPoints, # replace w/ Spatial
+	_BodyLabel_ = IVBodyLabel, # replace w/ Node3D
+	_BodyOrbit_ = IVBodyOrbit, # replace w/ Node3D
+	_SBGOrbits_ = IVSBGOrbits, # replace w/ Node3D
+	_SBGPoints_ = IVSBGPoints, # replace w/ Node3D
 	_LagrangePoint_ = IVLagrangePoint, # replace w/ subclass
-	_ModelSpace_ = IVModelSpace, # replace w/ Spatial
-	_Rings_ = IVRings, # replace w/ Spatial
+	_ModelSpace_ = IVModelSpace, # replace w/ Node3D
 	_RotatingSpace_ = IVRotatingSpace, # replace w/ subclass
-	_SelectionManager_ = IVSelectionManager, # replace w/ Spatial
+	_Rings_ = IVRings, # replace w/ Node3D
+	_SpheroidModel_ = IVSpheroidModel, # replace w/ Node3D
+	_SelectionManager_ = IVSelectionManager, # replace w/ Node3D
 	# tree_refs
 	_SmallBodiesGroup_ = IVSmallBodiesGroup,
 	_Orbit_ = IVOrbit,
 	_Selection_ = IVSelection,
 	_View_ = IVView,
-	_Composition_ = IVComposition, # replaceable, but look for dependencies
+	_Composition_ = IVComposition, # replaceable, but look for dependencies	
 }
 
 
 # ***************************** PRIVATE VARS **********************************
 
-var _project_extensions := [] # we keep reference so they don't self-free
+var _project_extensions: Array[Object] = [] # we keep reference so they don't self-free
 var _program: Dictionary = IVGlobal.program
 var _script_classes: Dictionary = IVGlobal.script_classes
 
@@ -288,7 +285,7 @@ func build_project(override := false) -> void:
 		var wait_for_signal: bool = init_array[2]
 		object.call(method)
 		if wait_for_signal:
-			yield(self, "init_step_finished")
+			await self.init_step_finished
 		init_index += 1
 
 
@@ -298,9 +295,8 @@ func _init_extensions() -> void:
 	# Instantiates objects or scenes from files matching "res://<name>/<name>.gd"
 	# (where <name> != "ivoyager" and does not start with ".") and then calls
 	# their _extension_init() function.
-	var dir := Directory.new()
-	dir.open("res://")
-	dir.list_dir_begin()
+	var dir := DirAccess.open("res://")
+	dir.list_dir_begin() # TODOConverter3To4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	while true:
 		var dir_name := dir.get_next()
 		if !dir_name:
@@ -310,7 +306,7 @@ func _init_extensions() -> void:
 		var path := "res://" + dir_name + "/" + dir_name + ".gd"
 		if !files.exists(path):
 			continue
-		var extension_script: Script = load(path)
+		var extension_script: GDScript = load(path)
 		if (
 				not "EXTENSION_NAME" in extension_script
 				or not "EXTENSION_VERSION" in extension_script
@@ -323,16 +319,17 @@ func _init_extensions() -> void:
 		var extension: Object = extension_script.new()
 		_project_extensions.append(extension)
 		IVGlobal.extensions.append([
-			extension.EXTENSION_NAME,
-			extension.EXTENSION_VERSION,
-			extension.EXTENSION_BUILD,
-			extension.EXTENSION_STATE,
-			extension.EXTENSION_YMD
-			])
+			extension.get("EXTENSION_NAME"),
+			extension.get("EXTENSION_VERSION"),
+			extension.get("EXTENSION_BUILD"),
+			extension.get("EXTENSION_STATE"),
+			extension.get("EXTENSION_YMD"),
+		])
 	for extension in _project_extensions:
 		if extension.has_method("_extension_init"):
+			@warning_ignore("unsafe_method_access")
 			extension._extension_init()
-	IVGlobal.verbose_signal("extentions_inited")
+	IVGlobal.extentions_inited.emit()
 
 
 func _set_simulator_root() -> void:
@@ -348,7 +345,7 @@ func _set_simulator_root() -> void:
 	if universe:
 		return
 	var scenetree_root := get_tree().get_root()
-	universe = scenetree_root.find_node("Universe", true, false)
+	universe = scenetree_root.find_child("Universe", true, false)
 	if universe:
 		return
 	universe = files.make_object_or_scene(IVUniverse)
@@ -370,72 +367,82 @@ func _instantiate_and_index_program_objects() -> void:
 	_program.Global = IVGlobal
 	_program.Universe = universe
 	_program.TopGUI = top_gui
-	for dict in [initializers, prog_refs, prog_nodes, gui_nodes]:
+	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
-			if !dict[key]:
+			var key_str: String = key
+			if !dict[key_str]:
 				continue
-			var object_key: String = key.rstrip("_").lstrip("_")
+			var object_key: String = key_str.rstrip("_").lstrip("_")
 			assert(!_program.has(object_key))
-			var object: Object = files.make_object_or_scene(dict[key])
+			var object: Object = files.make_object_or_scene(dict[key_str])
 			_program[object_key] = object
 			if object is Node:
+				@warning_ignore("unsafe_property_access")
 				object.name = object_key
-	for dict in [initializers, prog_refs, prog_nodes, gui_nodes,
-			procedural_classes]:
+	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes, procedural_classes]:
 		for key in dict:
 			if !dict[key]:
 				continue
 			assert(!_script_classes.has(key))
 			_script_classes[key] = dict[key]
-	IVGlobal.verbose_signal("project_objects_instantiated")
+	IVGlobal.project_objects_instantiated.emit()
 
 
 func _init_program_objects() -> void:
 	for key in initializers:
-		if !initializers[key]:
+		var key_str: String = key
+		if !initializers[key_str]:
 			continue
-		var object_key: String = key.rstrip("_").lstrip("_")
+		var object_key: String = key_str.rstrip("_").lstrip("_")
 		if !_program.has(object_key): # might have removed itself already
 			continue
 		var object: Object = _program[object_key]
 		if object.has_method("_project_init"):
+			@warning_ignore("unsafe_method_access")
 			object._project_init()
 	if universe.has_method("_project_init"):
+		@warning_ignore("unsafe_method_access")
 		universe._project_init()
 	if top_gui.has_method("_project_init"):
+		@warning_ignore("unsafe_method_access")
 		top_gui._project_init()
-	for dict in [prog_refs, prog_nodes, gui_nodes]:
+	for dict in [program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
-			if !dict[key]:
+			var key_str: String = key
+			if !dict[key_str]:
 				continue
-			var object_key: String = key.rstrip("_").lstrip("_")
+			var object_key: String = key_str.rstrip("_").lstrip("_")
 			var object: Object = _program[object_key]
 			if object.has_method("_project_init"):
+				@warning_ignore("unsafe_method_access")
 				object._project_init()
-	IVGlobal.verbose_signal("project_inited")
-	yield(get_tree(), "idle_frame")
-	emit_signal("init_step_finished")
+	IVGlobal.project_inited.emit()
+	await get_tree().process_frame
+	init_step_finished.emit()
 
 
 func _add_program_nodes() -> void:
-	# TopGUI added before prog_nodes, so prog_nodes will recieve input events
-	# first.
+	# TopGUI added after program_nodes, so gui_nodes will recieve input first
+	# and then program_nodes.
+	for key in program_nodes:
+		var key_str: String = key
+		if !program_nodes[key_str]:
+			continue
+		var object_key = key_str.rstrip("_").lstrip("_")
+		universe.add_child(_program[object_key])
 	if add_top_gui_to_universe:
 		universe.add_child(top_gui)
-	for key in prog_nodes:
-		if !prog_nodes[key]:
-			continue
-		var object_key = key.rstrip("_").lstrip("_")
-		universe.add_child(_program[object_key])
 	for key in gui_nodes:
-		if !gui_nodes[key]:
+		var key_str: String = key
+		if !gui_nodes[key_str]:
 			continue
-		var object_key = key.rstrip("_").lstrip("_")
+		var object_key = key_str.rstrip("_").lstrip("_")
 		top_gui.add_child(_program[object_key])
-	IVGlobal.verbose_signal("project_nodes_added")
-	yield(get_tree(), "idle_frame")
-	emit_signal("init_step_finished")
+	IVGlobal.project_nodes_added.emit()
+	await get_tree().process_frame
+	init_step_finished.emit()
 
 
 func _finish() -> void:
-	IVGlobal.verbose_signal("project_builder_finished")
+	IVGlobal.project_builder_finished.emit()
+

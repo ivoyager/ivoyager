@@ -35,30 +35,33 @@ extends Control
 # proper GUI widget appearance.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
-const PERSIST_PROPERTIES := ["selection_manager"]
+const PERSIST_PROPERTIES := [&"selection_manager"]
 
 var selection_manager: IVSelectionManager
 
 
 func _init() -> void:
+	name = &"TopGUI"
 	anchor_right = 1.0
 	anchor_bottom = 1.0
-	IVGlobal.connect("project_builder_finished", self, "_on_project_builder_finished")
-	IVGlobal.connect("system_tree_built_or_loaded", self, "_on_system_tree_built_or_loaded")
+	IVGlobal.project_builder_finished.connect(_on_project_builder_finished)
+	IVGlobal.system_tree_built_or_loaded.connect(_on_system_tree_built_or_loaded)
 
 
 func _ready() -> void:
 	if IVGlobal.pause_only_stops_time:
-		pause_mode = PAUSE_MODE_PROCESS
+		process_mode = PROCESS_MODE_ALWAYS
 
 
 func _on_project_builder_finished() -> void:
-	theme = IVGlobal.themes.main
+	if IVGlobal.themes.has("main"):
+		theme = IVGlobal.themes.main
 
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 	if is_new_game:
 		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		@warning_ignore("unsafe_method_access") # possible replacement class
 		selection_manager = _SelectionManager_.new()
 		add_child(selection_manager)
 

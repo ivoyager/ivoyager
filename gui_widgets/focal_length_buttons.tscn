@@ -3,9 +3,9 @@
 [ext_resource path="res://ivoyager/gui_widgets/focal_length_buttons.gd" type="Script" id=1]
 
 [node name="FocalLengthButtons" type="HBoxContainer"]
-margin_top = 18.0
-margin_right = 41.0
-margin_bottom = 38.0
+offset_top = 18.0
+offset_right = 41.0
+offset_bottom = 38.0
 mouse_filter = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -15,18 +15,18 @@ __meta__ = {
 }
 
 [node name="Minus" type="Button" parent="."]
-margin_right = 17.0
-margin_bottom = 20.0
-hint_tooltip = "HINT_DECREASE_FOCAL_LENGTH"
+offset_right = 17.0
+offset_bottom = 20.0
+tooltip_text = "HINT_DECREASE_FOCAL_LENGTH"
 shortcut_in_tooltip = false
 action_mode = 0
 text = "-"
 
 [node name="Plus" type="Button" parent="."]
-margin_left = 21.0
-margin_right = 41.0
-margin_bottom = 20.0
-hint_tooltip = "HINT_INCREASE_FOCAL_LENGTH"
+offset_left = 21.0
+offset_right = 41.0
+offset_bottom = 20.0
+tooltip_text = "HINT_INCREASE_FOCAL_LENGTH"
 shortcut_in_tooltip = false
 action_mode = 0
 text = "+"

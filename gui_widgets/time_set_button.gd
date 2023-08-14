@@ -29,28 +29,27 @@ func _ready() -> void:
 	var top_gui: Control = IVGlobal.program.TopGUI
 	_time_set_popup = IVFiles.make_object_or_scene(IVTimeSetPopup)
 	top_gui.add_child(_time_set_popup)
-	connect("toggled", self, "_on_toggled")
-	_time_set_popup.connect("visibility_changed", self, "_on_visibility_changed")
+	toggled.connect(_on_toggled)
+	_time_set_popup.visibility_changed.connect(_on_visibility_changed)
 
 
-func _on_toggled(is_pressed) -> void:
-	if is_pressed:
+func _on_toggled(toggle_pressed) -> void:
+	if toggle_pressed:
 		_time_set_popup.popup()
-		yield(get_tree(), "idle_frame") # popup may not know its correct size yet
-		var position := rect_global_position - _time_set_popup.rect_size
-		position.x += rect_size.x / 2.0
-		if position.x < 0.0:
-			position.x = 0.0
-		if position.y < 0.0:
-			position.y = 0.0
-		_time_set_popup.rect_position = position
+		await get_tree().process_frame # popup may not know its correct size yet
+		var popup_position := global_position - Vector2(_time_set_popup.size)
+		popup_position.x += size.x / 2.0
+		if popup_position.x < 0.0:
+			popup_position.x = 0.0
+		if popup_position.y < 0.0:
+			popup_position.y = 0.0
+		_time_set_popup.position = popup_position
 	else:
 		_time_set_popup.hide()
 
 
 func _on_visibility_changed() -> void:
-	yield(get_tree(), "idle_frame")
+	await get_tree().process_frame
 	if !_time_set_popup.visible:
-		pressed = false
-
+		button_pressed = false
 

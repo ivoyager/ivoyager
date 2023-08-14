@@ -18,22 +18,22 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVAssetInitializer
-extends Reference
+extends RefCounted
 
 # Loads assets specified in IVGlobal.
 
 var _asset_replacement_dir: String = IVGlobal.asset_replacement_dir
 var _asset_paths_for_load: Dictionary = IVGlobal.asset_paths_for_load
 var _assets: Dictionary = IVGlobal.assets
-var _asset_path_arrays := [
+var _asset_path_arrays: Array[Array] = [
 	IVGlobal.models_search,
 	IVGlobal.maps_search,
 	IVGlobal.bodies_2d_search,
-	IVGlobal.rings_search
+	IVGlobal.rings_search,
 ]
-var _asset_path_dicts := [
+var _asset_path_dicts: Array[Dictionary] = [
 	IVGlobal.asset_paths,
-	IVGlobal.asset_paths_for_load
+	IVGlobal.asset_paths_for_load,
 ]
 
 

@@ -20,7 +20,7 @@
 class_name IVDateTimeLabel
 extends Label
 
-# GUI widget. pause_mode = Process.
+# GUI widget. Requires IVTimekeeper and IVStateManager.
 
 var show_pause := !IVGlobal.disable_pause
 var date_format := "%02d/%02d/%02d"
@@ -35,18 +35,18 @@ var _clock: Array = IVGlobal.clock
 var _show_clock := false
 var _show_seconds := false
 var _is_reversed := false
-var _ymd: Array = [0, 0, 0]
-var _hms := [0, 0, 0]
-var _hm := [0, 0]
+var _ymd: Array[int] = [0, 0, 0]
+var _hms: Array[int] = [0, 0, 0]
+var _hm: Array[int] = [0, 0]
 
-onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
 
 
 func _ready() -> void:
-	IVGlobal.connect("update_gui_requested", self, "_update_display")
-	_timekeeper.connect("speed_changed", self, "_update_display")
-	set("custom_colors/font_color", forward_color)
+	IVGlobal.update_gui_requested.connect(_update_display)
+	_timekeeper.speed_changed.connect(_update_display)
+	set("theme_override_colors/font_color", forward_color)
 	_update_display()
 
 
@@ -75,4 +75,5 @@ func _update_display() -> void:
 	_show_seconds = _timekeeper.show_seconds
 	if _is_reversed != _timekeeper.is_reversed:
 		_is_reversed = !_is_reversed
-		set("custom_colors/font_color", reverse_color if _is_reversed else forward_color)
+		set("theme_override_colors/font_color", reverse_color if _is_reversed else forward_color)
+

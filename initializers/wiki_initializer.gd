@@ -18,7 +18,7 @@
 # limitations under the License.
 # *****************************************************************************
 class_name IVWikiInitializer
-extends Reference
+extends RefCounted
 
 
 func _init() -> void:

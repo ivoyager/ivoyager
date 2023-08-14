@@ -20,17 +20,52 @@
 class_name IVDebug
 extends Object
 
-# Static debug print functions. Wrap all calls in assert(). E.g.,
-#     assert(IVDebug.dlog("something")).
+# Print & log functions return true so they can be wrapped in assert(). E.g.,
+#     assert(IVDebug.dlog("something"))
+#     assert(!DPRINT or IVDebug.dprint("something"))
 
 
-static func dlog(value) -> bool:
-	var file: File = IVGlobal.debug_log
+static func dprint(arg, arg2 = "", arg3 = "", arg4 = "") -> bool:
+	# For >4 items, just use an array.
+	prints(arg, arg2, arg3, arg4)
+	return true
+
+
+static func dprint_orphan_nodes() -> bool:
+	IVGlobal.print_orphan_nodes()
+	return true
+
+
+static func dlog(arg) -> bool:
+	var file := IVGlobal.debug_log
 	if !file:
 		return true
-	var line := str(value)
+	var line := str(arg)
 	file.store_line(line)
 	return true
+
+
+static func signal_verbosely(object: Object, signal_name: String, prefix: String) -> void:
+	# Call before any other signal connections; signal must have <= 8 args.
+	object.connect(signal_name, IVDebug._on_verbose_signal.bind(prefix + " " + signal_name))
+
+
+static func signal_verbosely_all(object: Object, prefix: String) -> void:
+	# See signal_verbosely. Prints all emitted signals from object.
+	var signal_list := object.get_signal_list()
+	for signal_dict in signal_list:
+		var signal_name: String = signal_dict.name
+		signal_verbosely(object, signal_name, prefix)
+
+
+static func _on_verbose_signal(arg, arg2 = null, arg3 = null, arg4 = null,
+		arg5 = null, arg6 = null, arg7 = null, arg8 = null, arg9 = null) -> void:
+	# Expects signal_name as last bound argument.
+	var args := [arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9]
+	while args[-1] == null:
+		args.pop_back()
+	var debug_text: String = args.pop_back()
+	prints(debug_text, args)
 
 
 static func no_nans(thing) -> bool:
@@ -38,15 +73,17 @@ static func no_nans(thing) -> bool:
 	var indexes := []
 	match typeof(thing):
 		TYPE_ARRAY:
+			@warning_ignore("unsafe_method_access")
 			indexes = range(thing.size())
 		TYPE_DICTIONARY:
+			@warning_ignore("unsafe_method_access")
 			indexes = thing.keys()
 		TYPE_VECTOR3:
 			indexes = range(3)
 		TYPE_BASIS:
 			if !no_nans(thing.x) or !no_nans(thing.y) or !no_nans(thing.z):
 				return false
-		TYPE_TRANSFORM:
+		TYPE_TRANSFORM3D:
 			if !no_nans(thing.basis) or !no_nans(thing.origin):
 				return false
 		_:
