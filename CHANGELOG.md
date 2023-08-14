@@ -6,7 +6,7 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
-## [v0.0.16] - TBD
+## [v0.0.16] - Not Released
 
 **We're migrating to Godot 4!** The _master_ branch will have serious regressions (broken features) for a while yet. For a fully functional build, use release v0.0.15.
 
@@ -17,7 +17,8 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 ### Changes
 * [Migration] Implement new Godot4 signal syntax using Signal and Callable objects.
 * [Migration - WIP] Type arrays where possible.
-* [Migration- WIP] Re-type String as StringName, where appropriate.
+* [Migration- WIP] Re-type String as StringName where appropriate.
+* Many unlisted migration changes.
 
 ### Known Migration Regressions
 * The Sun is not illuminating anything. We only have ambient light.
