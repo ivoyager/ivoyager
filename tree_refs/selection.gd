@@ -40,12 +40,12 @@ const VECTOR2_ZERO := Vector2.ZERO
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"gui_name",
-	"is_body",
-	"up_selection_name",
-	"spatial",
-	"body",
+	&"name",
+	&"gui_name",
+	&"is_body",
+	&"up_selection_name",
+	&"spatial",
+	&"body",
 ]
 
 # persisted - read only

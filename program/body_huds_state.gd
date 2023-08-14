@@ -37,10 +37,10 @@ const BodyFlags: Dictionary = IVEnums.BodyFlags
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"name_visible_flags",
-	"symbol_visible_flags",
-	"orbit_visible_flags",
-	"orbit_colors",
+	&"name_visible_flags",
+	&"symbol_visible_flags",
+	&"orbit_visible_flags",
+	&"orbit_colors",
 ]
 
 

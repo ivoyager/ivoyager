@@ -127,7 +127,10 @@ bool is_id_signaling_pixel(vec2 offset){
 
 
 void fragment() {
-	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
+//	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
+	
+	// debug disable for now...
+	if (false) {
 		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
 		if (fragment_cycler < 1.0) {
 			ALBEDO = vec3(fragment_cycler); // calibration color

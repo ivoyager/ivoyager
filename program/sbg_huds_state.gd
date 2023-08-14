@@ -34,10 +34,10 @@ const NULL_COLOR := Color.BLACK
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"points_visibilities",
-	"orbits_visibilities",
-	"points_colors",
-	"orbits_colors",
+	&"points_visibilities",
+	&"orbits_visibilities",
+	&"points_colors",
+	&"orbits_colors",
 ]
 
 # persisted - read-only!

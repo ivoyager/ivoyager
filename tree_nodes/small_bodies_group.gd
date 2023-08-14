@@ -30,24 +30,23 @@ extends Node
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
 
-const VPRINT = false # print verbose asteroid summary on load
-const DPRINT = false
+const VPRINT = true # print verbose asteroid summary on load
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"sbg_alias",
-	"sbg_class",
-	"secondary_body",
-	"lp_integer",
-	"max_apoapsis",
-	"names",
-	"magnitudes",
-	"e_i_Om_w",
-	"a_M0_n",
-	"s_g",
-	"da_D_f",
-	"th0_de",
+	&"name",
+	&"sbg_alias",
+	&"sbg_class",
+	&"secondary_body",
+	&"lp_integer",
+	&"max_apoapsis",
+	&"names",
+	&"magnitudes",
+	&"e_i_Om_w",
+	&"a_M0_n",
+	&"s_g",
+	&"da_D_f",
+	&"th0_de",
 ]
 
 # persisted

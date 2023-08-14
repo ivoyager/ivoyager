@@ -48,25 +48,25 @@ const NULL_VECTOR3 := Vector3(-INF, -INF, -INF)
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"flags",
+	&"flags",
 	
-	"selection_name",
-	"camera_flags",
-	"view_position",
-	"view_rotations",
+	&"selection_name",
+	&"camera_flags",
+	&"view_position",
+	&"view_rotations",
 	
-	"name_visible_flags",
-	"symbol_visible_flags",
-	"orbit_visible_flags",
-	"visible_points_groups",
-	"visible_orbits_groups",
-	"body_orbit_colors",
-	"sbg_points_colors",
-	"sbg_orbits_colors",
+	&"name_visible_flags",
+	&"symbol_visible_flags",
+	&"orbit_visible_flags",
+	&"visible_points_groups",
+	&"visible_orbits_groups",
+	&"body_orbit_colors",
+	&"sbg_points_colors",
+	&"sbg_orbits_colors",
 	
-	"time",
-	"speed_index",
-	"is_reversed",
+	&"time",
+	&"speed_index",
+	&"is_reversed",
 ]
 
 # persisted

@@ -70,16 +70,16 @@ const MIN_DIST_RADII := 1.5
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"name",
-	"flags",
-	"is_camera_lock",
-	"selection",
-	"perspective_radius",
-	"view_position",
-	"view_rotations",
-	"focal_length",
-	"focal_length_index",
-	"_transform",
+	&"name",
+	&"flags",
+	&"is_camera_lock",
+	&"selection",
+	&"perspective_radius",
+	&"view_position",
+	&"view_rotations",
+	&"focal_length",
+	&"focal_length_index",
+	&"_transform",
 ]
 
 # ******************************* PERSISTED ***********************************

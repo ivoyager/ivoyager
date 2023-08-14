@@ -55,8 +55,8 @@ const BodyFlags := IVEnums.BodyFlags
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
-	"is_action_listener",
-	"selection",
+	&"is_action_listener",
+	&"selection",
 ]
 
 # persisted

@@ -47,23 +47,13 @@ extends Node3D
 # responsve to camera) and user can interact with the world. In this mode, only
 # IVTimekeeper pauses to stop time.
 
-
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
-const PERSIST_PROPERTIES := ["persist", "test"]
+const PERSIST_PROPERTIES := [&"persist"]
 
 var persist := {}
-var test: Array[Node] = []
+
 
 func _project_init() -> void:
 	if IVGlobal.pause_only_stops_time:
 		process_mode = PROCESS_MODE_ALWAYS
-
-
-#func _ready() -> void:
-#	var d1 := {&"test" : 1}
-#	var d2 := {"test" : 1}
-#	print(d1 == d2)
-#	print(d1["test"])
-#	print(d2[&"test"])
-
 

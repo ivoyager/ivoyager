@@ -32,11 +32,11 @@ extends Node3D
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
 const PERSIST_PROPERTIES := [
-	"mass_ratio",
-	"characteristic_length",
-	"characteristic_time",
-	"lagrange_point_vectors",
-	"_LagrangePoints",
+	&"mass_ratio",
+	&"characteristic_length",
+	&"characteristic_time",
+	&"lagrange_point_vectors",
+	&"_LagrangePoints",
 ]
 
 # lagrange parameters

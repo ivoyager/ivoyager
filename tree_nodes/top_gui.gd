@@ -35,7 +35,7 @@ extends Control
 # proper GUI widget appearance.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY # don't free on load
-const PERSIST_PROPERTIES := ["selection_manager"]
+const PERSIST_PROPERTIES := [&"selection_manager"]
 
 var selection_manager: IVSelectionManager
 

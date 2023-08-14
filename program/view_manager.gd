@@ -26,7 +26,7 @@ const files := preload("res://ivoyager/static/files.gd")
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"_gamesave_views",
+	&"_gamesave_views",
 ]
 
 var file_path := IVGlobal.cache_dir.path_join("views.ivbinary")

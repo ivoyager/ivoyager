@@ -141,3 +141,4 @@ func _set_color() -> void:
 	else:
 		var standard_material: StandardMaterial3D = material_override
 		standard_material.albedo_color = color
+

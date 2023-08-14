@@ -71,7 +71,7 @@ const NetworkStopSync = IVEnums.NetworkStopSync
 const DPRINT := false
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
-const PERSIST_PROPERTIES := ["is_user_paused"]
+const PERSIST_PROPERTIES := [&"is_user_paused"]
 
 # persisted - read-only!
 var is_user_paused := false # ignores pause from sim stop

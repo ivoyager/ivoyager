@@ -38,11 +38,11 @@ const DPRINT := false
 
 const PERSIST_MODE := IVEnums.PERSIST_PROPERTIES_ONLY
 const PERSIST_PROPERTIES := [
-	"project_version",
-	"project_ymd",
-	"ivoyager_version",
-	"ivoyager_ymd",
-	"is_modded"
+	&"project_version",
+	&"project_ymd",
+	&"ivoyager_version",
+	&"ivoyager_ymd",
+	&"is_modded"
 ]
 	
 # persisted - values will be replaced by file values on game load!

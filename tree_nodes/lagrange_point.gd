@@ -25,7 +25,7 @@ extends Node3D
 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
-const PERSIST_PROPERTIES := ["lp_integer"]
+const PERSIST_PROPERTIES := [&"lp_integer"]
 
 
 var lp_integer: int # 1, 2, 3, 4, 5
