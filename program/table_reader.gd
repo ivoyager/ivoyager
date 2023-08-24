@@ -57,26 +57,26 @@ func _project_init() -> void:
 # accept either row_int or row_name (not both!).
 
 
-func get_n_rows(table: String) -> int:
+func get_n_rows(table: StringName) -> int:
 	return _tables["n_" + table]
 
 
-func get_names_prefix(table: String) -> int:
+func get_names_prefix(table: StringName) -> int:
 	# E.g., 'PLANET_' in planets.tsv.
 	# Prefix must be specified for the table's 'name' column.
 	return _tables["prefix_" + table]
 
 
-func get_row_name(table: String, row: int) -> String:
+func get_row_name(table: StringName, row: int) -> StringName:
 	return _tables[table]["name"][row]
 
 
-func get_row(row_name: String) -> int:
+func get_row(row_name: StringName) -> int:
 	# Returns -1 if missing. All row_name's are globally unique.
 	return _enumerations.get(row_name, -1)
 
 
-func get_names_enumeration(table: String) -> Dictionary:
+func get_names_enumeration(table: StringName) -> Dictionary:
 	# Returns an enum-like dict of row numbers keyed by row names.
 	var dict := {}
 	for row_name in _tables[table]["name"]:
@@ -84,19 +84,19 @@ func get_names_enumeration(table: String) -> Dictionary:
 	return dict
 
 
-func get_column_array(table: String, field: String) -> Array:
+func get_column_array(table: StringName, field: StringName) -> Array:
 	# Returns internal array reference - DON'T MODIFY!
 	return _tables[table][field]
 
 
-func get_n_matching(table: String, field: String, match_value) -> int:
+func get_n_matching(table: StringName, field: StringName, match_value) -> int:
 	# field must exist in specified table
 	# match_value type must mach column type
 	var column_array: Array = _tables[table][field]
 	return column_array.count(match_value)
 
 
-func get_matching_rows(table: String, field: String, match_value) -> Array:
+func get_matching_rows(table: StringName, field: StringName, match_value) -> Array:
 	# field must exist in specified table
 	# match_value type must mach column type
 	var column_array: Array = _tables[table][field]
@@ -110,7 +110,7 @@ func get_matching_rows(table: String, field: String, match_value) -> Array:
 	return result
 
 
-func get_true_rows(table: String, field: String) -> Array:
+func get_true_rows(table: StringName, field: StringName) -> Array:
 	# field must exist in specified table
 	var column_array: Array = _tables[table][field]
 	var size := column_array.size()
@@ -123,17 +123,17 @@ func get_true_rows(table: String, field: String) -> Array:
 	return result
 
 
-func has_row_name(table: String, row_name: String) -> bool:
+func has_row_name(table: StringName, row_name: StringName) -> bool:
 	if !_enumerations.has(row_name):
 		return false
 	var table_dict: Dictionary = _tables[table]
 	if !table_dict.has("name"):
 		return false
-	var name_column: Array[String] = table_dict.name
+	var name_column: Array[StringName] = table_dict.name
 	return name_column.has(row_name)
 
 
-func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
+func has_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
 	# Evaluates true if table has field and does not contain type-specific
 	# 'null' value: i.e., "", NAN or -1 for STRING, REAL or INT, respectively.
 	# Always true for Type BOOL.
@@ -154,7 +154,7 @@ func has_value(table: String, field: String, row := -1, row_name := "") -> bool:
 	return true # BOOL
 
 
-func has_real_value(table: String, field: String, row := -1, row_name := "") -> bool:
+func has_real_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
 	if !table_dict.has(field):
@@ -164,7 +164,7 @@ func has_real_value(table: String, field: String, row := -1, row_name := "") -> 
 	return !is_nan(table_dict[field][row])
 
 
-func get_string(table: String, field: String, row := -1, row_name := "") -> String:
+func get_string(table: StringName, field: StringName, row := -1, row_name := "") -> String:
 	# Use for table Type 'STRING'; returns "" if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -175,7 +175,18 @@ func get_string(table: String, field: String, row := -1, row_name := "") -> Stri
 	return table_dict[field][row]
 
 
-func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
+func get_string_name(table: StringName, field: StringName, row := -1, row_name := "") -> StringName:
+	# Use for table Type 'STRING_NAME'; returns &"" if missing
+	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	var table_dict: Dictionary = _tables[table]
+	if !table_dict.has(field):
+		return &""
+	if row_name:
+		row = _enumerations[row_name]
+	return table_dict[field][row]
+
+
+func get_bool(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
 	# Use for table Type 'BOOL'; returns false if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -186,7 +197,7 @@ func get_bool(table: String, field: String, row := -1, row_name := "") -> bool:
 	return table_dict[field][row]
 
 
-func get_int(table: String, field: String, row := -1, row_name := "") -> int:
+func get_int(table: StringName, field: StringName, row := -1, row_name := "") -> int:
 	# Use for table Type 'INT'; returns -1 if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -197,7 +208,7 @@ func get_int(table: String, field: String, row := -1, row_name := "") -> int:
 	return table_dict[field][row]
 
 
-func get_real(table: String, field: String, row := -1, row_name := "") -> float:
+func get_real(table: StringName, field: StringName, row := -1, row_name := "") -> float:
 	# Use for table Type 'REAL'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -208,7 +219,7 @@ func get_real(table: String, field: String, row := -1, row_name := "") -> float:
 	return table_dict[field][row]
 
 
-func get_array(table: String, field: String, row := -1, row_name := "") -> Array:
+func get_array(table: StringName, field: StringName, row := -1, row_name := "") -> Array:
 	# Use for table Type 'ARRAY:xxxx'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -219,7 +230,7 @@ func get_array(table: String, field: String, row := -1, row_name := "") -> Array
 	return table_dict[field][row]
 
 
-func get_real_precision(table: String, field: String, row := -1, row_name := "") -> int:
+func get_real_precision(table: StringName, field: StringName, row := -1, row_name := "") -> int:
 	# field must be type REAL
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_prec_dict: Dictionary = _tables[table]
@@ -230,7 +241,8 @@ func get_real_precision(table: String, field: String, row := -1, row_name := "")
 	return table_prec_dict[field][row]
 
 
-func get_least_real_precision(table: String, fields: Array, row := -1, row_name := "") -> int:
+func get_least_real_precision(table: StringName, fields: Array[StringName], row := -1,
+		row_name := "") -> int:
 	# All fields must be type REAL
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if row_name:
@@ -243,46 +255,47 @@ func get_least_real_precision(table: String, fields: Array, row := -1, row_name 
 	return min_precision
 
 
-func get_real_precisions(fields: Array, table: String, row: int) -> Array:
+func get_real_precisions(fields: Array[StringName], table: StringName, row: int) -> Array:
 	# Missing or non-REAL values will have precision -1.
 	var this_table_precisions: Dictionary = _table_precisions[table]
 	var n_fields := fields.size()
 	var result := utils.init_array(n_fields, -1)
 	var i := 0
 	while i < n_fields:
-		var field: String = fields[i]
+		var field: StringName = fields[i]
 		if this_table_precisions.has(field):
 			result[i] = this_table_precisions[field][row]
 		i += 1
 	return result
 
 
-func get_row_data_array(fields: Array, table: String, row: int) -> Array:
+func get_row_data_array(fields: Array[StringName], table: StringName, row: int) -> Array:
 	# Returns an array with value for each field; all fields must exist.
 	var n_fields := fields.size()
 	var data := []
 	data.resize(n_fields)
 	var i := 0
 	while i < n_fields:
-		var field: String = fields[i]
+		var field: StringName = fields[i]
 		data[i] = _tables[table][field][row]
 		i += 1
 	return data
 
 
-func build_dictionary(dict: Dictionary, fields: Array, table: String, row: int) -> void:
+func build_dictionary(dict: Dictionary, fields: Array[StringName], table: StringName, row: int
+		) -> void:
 	# Sets dict value for each field that exactly matches a field in table.
 	# Missing value in table without default will not be set.
 	var n_fields := fields.size()
 	var i := 0
 	while i < n_fields:
-		var field: String = fields[i]
+		var field: StringName = fields[i]
 		if has_value(table, field, row):
 			dict[field] = _tables[table][field][row]
 		i += 1
 
 
-func build_dictionary_from_keys(dict: Dictionary, table: String, row: int) -> void:
+func build_dictionary_from_keys(dict: Dictionary, table: StringName, row: int) -> void:
 	# Sets dict value for each existing dict key that exactly matches a column
 	# field in table. Missing value in table without default will not be set.
 	for field in dict:
@@ -290,19 +303,19 @@ func build_dictionary_from_keys(dict: Dictionary, table: String, row: int) -> vo
 			dict[field] = _tables[table][field][row]
 
 
-func build_object(object: Object, fields: Array, table: String, row: int) -> void:
+func build_object(object: Object, fields: Array[StringName], table: StringName, row: int) -> void:
 	# Sets object property for each field that exactly matches a field in table.
 	# Missing value in table without default will not be set.
 	var n_fields := fields.size()
 	var i := 0
 	while i < n_fields:
-		var field: String = fields[i]
+		var field: StringName = fields[i]
 		if has_value(table, field, row):
 			object.set(field, _tables[table][field][row])
 		i += 1
 
 
-func build_object_all_fields(object: Object, table: String, row: int) -> void:
+func build_object_all_fields(object: Object, table: StringName, row: int) -> void:
 	# Sets object property for each field that exactly matches a field in table.
 	# Missing value in table without default will not be set.
 	for field in _tables[table]:
@@ -310,11 +323,11 @@ func build_object_all_fields(object: Object, table: String, row: int) -> void:
 			object.set(field, _tables[table][field][row])
 
 
-func get_flags(flag_fields: Dictionary, table: String, row: int, flags := 0) -> int:
+func get_flags(flag_fields: Dictionary, table: StringName, row: int, flags := 0) -> int:
 	# Sets flag if table value exists and would evaluate true in get_bool(),
 	# i.e., is true or x. Does not unset.
 	for flag in flag_fields:
-		var field: String = flag_fields[flag]
+		var field: StringName = flag_fields[flag]
 		if get_bool(table, field, row):
 			flags |= flag
 	return flags
