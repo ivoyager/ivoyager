@@ -45,8 +45,8 @@ extends RefCounted
 #    Use 'Prefix/PLANET_' to prefix name column (eg, in 'planets' table).
 #  Default (optional): Use this value if blank cell.
 #  Units (optional; FLOAT only): Reals will be converted from provided units
-#    symbol. The symbol must be present in IVUnits.MULTIPLIERS or FUNCTIONS or
-#    replacement dicts specified in IVGlobal.unit_multipliers, .unit_functions.
+#    symbol. The symbol must be present in IVUnits.multipliers or lambdas or
+#    replacement dicts specified in IVGlobal.unit_multipliers, .unit_lambdas.
 #
 # A table with 'name' column only (not counting #comment columns) is an
 # "enumeration". These do not require a 'Type' header.
@@ -83,7 +83,7 @@ var _enumerations: Dictionary = IVGlobal.enumerations # IVGlobal shared
 var _enable_wiki: bool = IVGlobal.enable_wiki
 var _wiki: String = IVGlobal.wiki # wiki column header
 var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
-var _unit_functions: Dictionary = IVGlobal.unit_functions
+var _unit_lambdas: Dictionary = IVGlobal.unit_lambdas
 
 # processing
 var _field_infos := {} # [table_name][field] = [processed_type, prefix, unit, default] 
@@ -480,8 +480,8 @@ func _get_import_value(raw_value: String, processed_type: int, prefix: String, u
 					precision = utils.get_float_str_precision(raw_value)
 				value = float(raw_value)
 				if unit:
-					value = ivunits.convert_quantity(value, unit, true, true,
-							_unit_multipliers, _unit_functions)
+					value = ivunits.convert_quantity(value, unit, true,
+							_unit_multipliers, _unit_lambdas, true)
 			if include_precision:
 				return [value, precision]
 			return value

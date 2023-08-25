@@ -89,116 +89,129 @@ var large_numbers: Array[StringName] = [
 	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
 ] # e6, ..., e33; localized in _project_init()
 
-# Unit symbols in the next two dictionaries must also be present in multipliers
-# or functions dictionaries. (The converse is not true.)
-var short_forms := {
-	# If missing here, we fallback to the unit string itself, which is usually
-	# the desired short form. Asterisk before TXT_KEY means no space before
-	# unit.
-	"deg" : "*TXT_DEG",
-	"degC" : &"TXT_DEG_C",
-	"degF" : &"TXT_DEG_F",
-	"deg/d" : "*TXT_DEG_PER_DAY",
-	"deg/a" : "*TXT_DEG_PER_YEAR",
-	"deg/Cy" : "*TXT_DEG_PER_CENTURY",
-	"_g" : "g", # reused symbol ("_g" in function call; "g" in GUI)
-}
+# Unit symbols in the three dictionaries below must be present in
+# multipliers or lambdas dictionaries. (The converse is not true.)
+
 var long_forms := {
-	# If missing here, we fallback to short_forms, then the unit string itself.
+	# If missing here, we fallback to 'short_forms', then 'short_forms_no_space',
+	# then the unit string itself.
+	#
 	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
 	# using number_prefixed_unit(). We have commonly used already-prefixed here
 	# because it is common to want to display quantities such as: "3.00e9 km".
+	
 	# time
-	"s" : &"TXT_SECONDS",
-	"min" : &"TXT_MINUTES",
-	"h" : &"TXT_HOURS",
-	"d" : &"TXT_DAYS",
-	"a" : &"TXT_YEARS",
-	"y" : &"TXT_YEARS",
-	"yr" : &"TXT_YEARS",
-	"Cy" : &"TXT_CENTURIES",
+	&"s" : &"TXT_SECONDS",
+	&"min" : &"TXT_MINUTES",
+	&"h" : &"TXT_HOURS",
+	&"d" : &"TXT_DAYS",
+	&"a" : &"TXT_YEARS",
+	&"y" : &"TXT_YEARS",
+	&"yr" : &"TXT_YEARS",
+	&"Cy" : &"TXT_CENTURIES",
 	# length
-	"mm" : &"TXT_MILIMETERS",
-	"cm" : &"TXT_CENTIMETERS",
-	"m" : &"TXT_METERS",
-	"km" : &"TXT_KILOMETERS",
-	"au" : &"TXT_ASTRONOMICAL_UNITS",
-	"ly" : &"TXT_LIGHT_YEARS",
-	"pc" : &"TXT_PARSECS",
-	"Mpc" : &"TXT_MEGAPARSECS",
+	&"mm" : &"TXT_MILIMETERS",
+	&"cm" : &"TXT_CENTIMETERS",
+	&"m" : &"TXT_METERS",
+	&"km" : &"TXT_KILOMETERS",
+	&"au" : &"TXT_ASTRONOMICAL_UNITS",
+	&"ly" : &"TXT_LIGHT_YEARS",
+	&"pc" : &"TXT_PARSECS",
+	&"Mpc" : &"TXT_MEGAPARSECS",
 	# mass
-	"g" : &"TXT_GRAMS",
-	"kg" : &"TXT_KILOGRAMS",
-	"t" : &"TXT_TONNES",
+	&"g" : &"TXT_GRAMS",
+	&"kg" : &"TXT_KILOGRAMS",
+	&"t" : &"TXT_TONNES",
 	# angle
-	"rad" : &"TXT_RADIANS",
-	"deg" : &"TXT_DEGREES",
+	&"rad" : &"TXT_RADIANS",
+	&"deg" : &"TXT_DEGREES",
 	# temperature
-	"K" : &"TXT_KELVIN",
-	"degC" : &"TXT_CENTIGRADE",
-	"degF" : &"TXT_FAHRENHEIT",
+	&"K" : &"TXT_KELVIN",
+	&"degC" : &"TXT_CENTIGRADE",
+	&"degF" : &"TXT_FAHRENHEIT",
 	# frequency
-	"Hz" : &"TXT_HERTZ",
-	"d^-1" : &"TXT_PER_DAY",
-	"a^-1" : &"TXT_PER_YEAR",
-	"y^-1" : &"TXT_PER_YEAR",
-	"yr^-1" : &"TXT_PER_YEAR",
+	&"Hz" : &"TXT_HERTZ",
+	&"d^-1" : &"TXT_PER_DAY",
+	&"a^-1" : &"TXT_PER_YEAR",
+	&"y^-1" : &"TXT_PER_YEAR",
+	&"yr^-1" : &"TXT_PER_YEAR",
 	# area
-	"m^2" : &"TXT_SQUARE_METERS",
-	"km^2" : &"TXT_SQUARE_KILOMETERS",
-	"ha" : &"TXT_HECTARES",
+	&"m^2" : &"TXT_SQUARE_METERS",
+	&"km^2" : &"TXT_SQUARE_KILOMETERS",
+	&"ha" : &"TXT_HECTARES",
 	# volume
-	"l" : &"TXT_LITER",
-	"L" : &"TXT_LITER",
-	"m^3" : &"TXT_CUBIC_METERS",
-	"km^3" : &"TXT_CUBIC_KILOMETERS",
+	&"l" : &"TXT_LITER",
+	&"L" : &"TXT_LITER",
+	&"m^3" : &"TXT_CUBIC_METERS",
+	&"km^3" : &"TXT_CUBIC_KILOMETERS",
 	# velocity
-	"m/s" : &"TXT_METERS_PER_SECOND",
-	"km/s" : &"TXT_KILOMETERS_PER_SECOND",
-	"km/h" : &"TXT_KILOMETERS_PER_HOUR",
-	"c" : &"TXT_SPEED_OF_LIGHT",
+	&"m/s" : &"TXT_METERS_PER_SECOND",
+	&"km/s" : &"TXT_KILOMETERS_PER_SECOND",
+	&"km/h" : &"TXT_KILOMETERS_PER_HOUR",
+	&"c" : &"TXT_SPEED_OF_LIGHT",
 	# acceleration/gravity
-	"m/s^2" : &"TXT_METERS_PER_SECOND_SQUARED",
-	"_g" : &"TXT_STANDARD_GRAVITIES",
+	&"m/s^2" : &"TXT_METERS_PER_SECOND_SQUARED",
+	&"_g" : &"TXT_STANDARD_GRAVITIES",
 	# angular velocity
-	"deg/d" : &"TXT_DEGREES_PER_DAY",
-	"deg/a" : &"TXT_DEGREES_PER_YEAR",
-	"deg/Cy" : &"TXT_DEGREES_PER_CENTURY",
+	&"deg/d" : &"TXT_DEGREES_PER_DAY",
+	&"deg/a" : &"TXT_DEGREES_PER_YEAR",
+	&"deg/Cy" : &"TXT_DEGREES_PER_CENTURY",
 	# particle density
-	"m^-3" : &"TXT_PER_CUBIC_METER",
+	&"m^-3" : &"TXT_PER_CUBIC_METER",
 	# mass density
-	"g/cm^3" : &"TXT_GRAMS_PER_CUBIC_CENTIMETER",
+	&"g/cm^3" : &"TXT_GRAMS_PER_CUBIC_CENTIMETER",
 	# mass rate
-	"kg/d" : &"TXT_KILOGRAMS_PER_DAY",
-	"t/d" : &"TXT_TONNES_PER_DAY",
+	&"kg/d" : &"TXT_KILOGRAMS_PER_DAY",
+	&"t/d" : &"TXT_TONNES_PER_DAY",
 	# force
-	"N" : &"TXT_NEWTONS",
+	&"N" : &"TXT_NEWTONS",
 	# pressure
-	"Pa" : &"TXT_PASCALS",
-	"atm" : &"TXT_ATMOSPHERES",
+	&"Pa" : &"TXT_PASCALS",
+	&"atm" : &"TXT_ATMOSPHERES",
 	# energy
-	"J" : &"TXT_JOULES",
-	"Wh" : &"TXT_WATT_HOURS",
-	"kWh" : &"TXT_KILOWATT_HOURS",
-	"MWh" : &"TXT_MEGAWATT_HOURS",
-	"eV" : &"TXT_ELECTRONVOLTS",
+	&"J" : &"TXT_JOULES",
+	&"Wh" : &"TXT_WATT_HOURS",
+	&"kWh" : &"TXT_KILOWATT_HOURS",
+	&"MWh" : &"TXT_MEGAWATT_HOURS",
+	&"eV" : &"TXT_ELECTRONVOLTS",
 	# power
-	"W" : &"TXT_WATTS",
-	"kW" : &"TXT_KILOWATTS",
-	"MW" : &"TXT_MEGAWATTS",
+	&"W" : &"TXT_WATTS",
+	&"kW" : &"TXT_KILOWATTS",
+	&"MW" : &"TXT_MEGAWATTS",
 	# luminous intensity / luminous flux
-	"cd" : &"TXT_CANDELAS",
-	"lm" : &"TXT_LUMENS",
+	&"cd" : &"TXT_CANDELAS",
+	&"lm" : &"TXT_LUMENS",
 	# luminance
-	"cd/m^2" : &"TXT_CANDELAS_PER_SQUARE_METER",
+	&"cd/m^2" : &"TXT_CANDELAS_PER_SQUARE_METER",
 	# electric potential
-	"V" : &"TXT_VOLTS",
+	&"V" : &"TXT_VOLTS",
 	# electric charge
-	"C" :  &"TXT_COULOMBS",
+	&"C" :  &"TXT_COULOMBS",
 	# magnetic flux
-	"Wb" : &"TXT_WEBERS",
+	&"Wb" : &"TXT_WEBERS",
 	# magnetic flux density
-	"T" : &"TXT_TESLAS",
+	&"T" : &"TXT_TESLAS",
+}
+
+var short_forms := {
+	# If missing here, we fallback to the unit string itself (usually the case).
+	&"deg" : &"TXT_DEG",
+	&"degC" : &"TXT_DEG_C",
+	&"degF" : &"TXT_DEG_F",
+	&"deg/d" : &"TXT_DEG_PER_DAY",
+	&"deg/a" : &"TXT_DEG_PER_YEAR",
+	&"deg/Cy" : &"TXT_DEG_PER_CENTURY",
+	&"_g" : &"g", # reused symbol ("_g" in function call; "g" in GUI)
+}
+
+var skip_space := {
+	# No space before short form or raw symbol (e.g., degrees symbol).
+	&"deg" : true,
+	&"degC" : true,
+	&"degF" : true,
+	&"deg/d" : true,
+	&"deg/a" : true,
+	&"deg/Cy" : true,
 }
 
 # private
@@ -206,34 +219,25 @@ var _n_prefixes: int
 var _prefix_offset: int
 var _n_lg_numbers: int
 var _multipliers: Dictionary
-var _functions: Dictionary
+var _lambdas: Dictionary
 
 
 func _project_init():
 	_multipliers = IVGlobal.unit_multipliers
-	_functions = IVGlobal.unit_functions
+	_lambdas = IVGlobal.unit_lambdas
 	_n_prefixes = prefix_symbols.size()
 	assert(_n_prefixes == prefix_names.size())
 	_prefix_offset = prefix_symbols.find("")
 	assert(_prefix_offset == prefix_names.find(""))
 	_n_lg_numbers = large_numbers.size()
-	for i in range(_n_lg_numbers):
-		large_numbers[i] = tr(large_numbers[i])
-	for unit in short_forms:
-		var txt_key: String = short_forms[unit]
-		if txt_key.begins_with("*"):
-			@warning_ignore("unsafe_method_access")
-			short_forms[unit] = tr(short_forms[unit].lstrip("*"))
-		else:
-			short_forms[unit] = " " + tr(short_forms[unit])
-	for unit in long_forms:
-		long_forms[unit] = " " + tr(long_forms[unit])
 
 
-func number_option(x: float, option_type: int, unit := "", precision := 3, num_type := NUM_DYNAMIC,
+func number_option(x: float, option_type: int, unit := &"", precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED, lat_long_type := N_S_E_W) -> String:
 	
-	# DEPRECIATE34: Use Callables in GUI instead.
+	# TODO: We can use Callables in GUI so we don't need *every* case here.
+	# But we still want unit rules like "'m' if < 1.0 km else 'km'", etc., which
+	# we can wrap up in a dictionary of lambdas.
 	
 	# wrapper for functions below
 	match option_type:
@@ -440,7 +444,7 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 		lg_num_index = _n_lg_numbers - 1
 		exp_3s_index = lg_num_index + 2
 	x /= pow(10.0, exp_3s_index * 3)
-	var lg_number_str: String = large_numbers[lg_num_index]
+	var lg_number_str: String = tr(large_numbers[lg_num_index])
 	if case_type == CASE_LOWER:
 		lg_number_str = lg_number_str.to_lower()
 	elif case_type == CASE_UPPER:
@@ -448,36 +452,42 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
 
 
-func number_unit(x: float, unit: String, precision := 3, num_type := NUM_DYNAMIC,
+func number_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
-	# unit must be in multipliers or functions dicts (by default these are
-	# MULTIPLIERS and FUNCTIONS in ivoyager/static/units.gd)
-	x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
+	# unit must be in multipliers or lambdas dicts (by default these are
+	# multipliers and lambdas in ivoyager/static/units.gd)
+	x = units.convert_quantity(x, unit, false, _multipliers, _lambdas, false)
 	var number_str := number(x, precision, num_type)
+	
+	var unit_str: String
+	var is_space := true
 	if long_form and long_forms.has(unit):
-		unit = long_forms[unit]
-	elif short_forms.has(unit):
-		unit = short_forms[unit]
+		unit_str = tr(long_forms[unit])
 	else:
-		unit = " " + unit
+		is_space = !skip_space.has(unit)
+		unit_str = tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
+	
 	if case_type == CASE_LOWER:
-		unit = unit.to_lower()
+		unit_str = unit_str.to_lower()
 	elif case_type == CASE_UPPER:
-		unit = unit.to_upper()
-	return number_str + unit
+		unit_str = unit_str.to_upper()
+	
+	if is_space:
+		return number_str + " " + unit_str
+	return number_str + unit_str
 
 
-func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := NUM_DYNAMIC,
+func number_prefixed_unit(x: float, unit: StringName, precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
-	# long_form = false or true, repspectively). You won't see scientific
+	# long_form = false or true, respectively). You won't see scientific
 	# notation unless the internal value falls outside of the prefixes range.
 	# WARNING: Don't try to prefix an already-prefixed unit (eg, km) or any
 	# composite unit where the first unit has a power other than 1 (eg, m^3).
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
-	# unit = "" ok; otherwise, unit must be in multipliers or functions dicts.
+	# unit == &"" ok; otherwise, unit must be in multipliers or lamdas dicts.
 	if unit:
-		x = units.convert_quantity(x, unit, false, false, _multipliers, _functions)
+		x = units.convert_quantity(x, unit, false, _multipliers, _lambdas, false)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
@@ -490,25 +500,26 @@ func number_prefixed_unit(x: float, unit: String, precision := -1, num_type := N
 		exp_3s_index = si_index - _prefix_offset
 	x /= pow(10.0, exp_3s_index * 3)
 	var number_str := number(x, precision, num_type)
-	var prepend_space := true
+
+	var unit_str: String
+	var is_space := true
 	if long_form and long_forms.has(unit):
-		@warning_ignore("unsafe_method_access")
-		unit = long_forms[unit].lstrip(" ")
-	elif short_forms.has(unit):
-		unit = short_forms[unit]
-		if unit.begins_with(" "):
-			unit = unit.lstrip(" ")
-		else:
-			prepend_space = false
-	if long_form:
-		unit = prefix_names[si_index] + unit
+		unit_str = tr(long_forms[unit])
 	else:
-		unit = prefix_symbols[si_index] + unit
+		is_space = !skip_space.has(unit)
+		unit_str = tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
+	
+	if long_form:
+		unit_str = prefix_names[si_index] + unit_str
+	else:
+		unit_str = prefix_symbols[si_index] + unit_str
+		
 	if case_type == CASE_LOWER:
-		unit = unit.to_lower()
+		unit_str = unit_str.to_lower()
 	elif case_type == CASE_UPPER:
-		unit = unit.to_upper()
-	if prepend_space:
-		return number_str + " " + unit
-	return number_str + unit
+		unit_str = unit_str.to_upper()
+	
+	if is_space:
+		return number_str + " " + unit_str
+	return number_str + unit_str
 
