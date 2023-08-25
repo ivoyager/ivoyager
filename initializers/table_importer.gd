@@ -162,7 +162,8 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 	var reading_fields := true
 	var line := file.get_line()
 	var has_types := false
-	var has_row_names: bool
+	var has_row_names := false
+	var has_no_row_names := false
 	while !file.eof_reached():
 		if line.begins_with("#"):
 			line = file.get_line()
@@ -170,17 +171,15 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 		
 		var line_split := line.split("\t")
 		var line_array: Array[String] = Array(Array(line_split), TYPE_STRING, &"", null)
+		var cell_0 := line_array[0]
 		
 		if reading_header:
 			# we're processing header until we don't recognize cell_0 as header item
-			var cell_0 := line_array[0]
-			
 			if reading_fields: # always 1st line!
-				assert(cell_0 == "name" or cell_0 == "nil", "1st field must be 'name' or 'nil'")
-				has_row_names = cell_0 == "name"
-				assert(has_row_names or !is_mod)
+				assert(cell_0 == "", "1st header cell must be blank")
+				line_array[0] = "name"
 				for field_str in line_array:
-					if field_str.begins_with("#") or field_str == "nil":
+					if field_str.begins_with("#"):
 						_field_map.append(&"") # skip this column at line read
 					else:
 						var field := StringName(field_str)
@@ -189,7 +188,6 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 						_field_map.append(field)
 						if !is_mod:
 							field_info[field] = [-1, "", "", ""] # processed_type, prefix, unit, default
-#							table[field] = []
 						elif !table.has(field): # mod table has added a new field
 							field_info[field] = [-1, "", "", ""]
 							_add_mod_fields.append(field)
@@ -197,12 +195,13 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 							assert(field_info.has(field))
 					n_columns += 1
 				
-				var n_data_columns := _column_map.size() # does not include 'nil' or #comments
+				var n_data_columns := _column_map.size() # does not include #comments
 				assert(n_data_columns > 0)
 				if n_data_columns == 1:
-					# enumeration-only table is allowed to skip Type header
+					# enumeration-only table is allowed to skip Type header, but must have row names
 					field_info[&"name"][0] = TYPE_STRING_NAME
 					table[&"name"] = Array([], TYPE_STRING_NAME, &"", null) # typed array
+					has_row_names = true
 					has_types = true
 				
 				reading_fields = false
@@ -215,7 +214,7 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 						continue
 					var processed_type: int
 					if column == 0:
-						processed_type = TYPE_STRING_NAME # always 'name' field (if 'nil' we skipped)
+						processed_type = TYPE_STRING_NAME # always 'name' field
 					else:
 						var type_str := line_array[column]
 						processed_type = _get_processed_type(type_str)
@@ -305,6 +304,17 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 		# data line
 		if !reading_header:
 			_count_rows += 1
+			if !has_row_names and !has_no_row_names:
+				# First data row. We are going to test consistency in subsequent rows.
+				has_row_names = cell_0 != ""
+				has_no_row_names = !has_row_names
+				if has_no_row_names:
+					_column_map.erase(&"name")
+			if cell_0: # row name
+				assert(!has_no_row_names, "Either all rows or no rows can have row name")
+			else:
+				assert(!is_mod, "Mod tables must have row names")
+				assert(!has_row_names, "Either all rows or no rows can have row name")
 			_read_line(table_name, row, line_array, has_row_names, is_mod)
 			row += 1
 		line = file.get_line()
@@ -326,6 +336,7 @@ func _read_line(table_name: StringName, row: int, line_array: Array[String], has
 	var table: Dictionary = _tables[table_name]
 	var precisions: Dictionary = _table_precisions[table_name]
 	var field_info: Dictionary = _field_infos[table_name]
+	
 	var row_name := ""
 	if has_row_names: # always if is_mod
 		var name_prefix: String = field_info.name[1]

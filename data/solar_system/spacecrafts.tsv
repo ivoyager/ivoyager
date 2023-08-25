@@ -1,4 +1,4 @@
-name	spacecraft	file_prefix	en.wikipedia	hud_name	symbol	show_in_nav_panel	parent	body_class	model_type	#epoch_text	epoch_jd	a	e	i	Om	w	M0	n	P	Pw	Pnode	ref_plane	orbit_RA	orbit_dec	tidally_locked	axis_locked	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo
+	spacecraft	file_prefix	en.wikipedia	hud_name	symbol	show_in_nav_panel	parent	body_class	model_type	#epoch_text	epoch_jd	a	e	i	Om	w	M0	n	P	Pw	Pnode	ref_plane	orbit_RA	orbit_dec	tidally_locked	axis_locked	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo
 Type	BOOL	STRING	STRING	STRING	STRING	BOOL	STRING	INT	INT		FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING	FLOAT	FLOAT	BOOL	BOOL	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT
 Default	TRUE				\u25CC			SPACECRAFT	SPACECRAFT		2451545.0																	0	0	0	0	0	0	0
 Unit												km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg			d	deg	deg	km^3/s^2	m	g/cm^3		

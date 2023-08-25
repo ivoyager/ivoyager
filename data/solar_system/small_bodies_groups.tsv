@@ -1,4 +1,4 @@
-name	en.wikipedia	sbg_alias	sbg_class	binary_dir	mag_cutoff	skip	points_color	orbits_color	primary	secondary	lp_integer	min_q	max_q	min_a	max_a	max_e	max_i	#comments
+	en.wikipedia	sbg_alias	sbg_class	binary_dir	mag_cutoff	skip	points_color	orbits_color	primary	secondary	lp_integer	min_q	max_q	min_a	max_a	max_e	max_i	#comments
 Type	STRING	STRING	INT	STRING	FLOAT	BOOL	STRING	STRING	STRING	STRING	INT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	
 Default							26FF26	FF46FF										
 Unit												au	au	au	au		deg	

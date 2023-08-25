@@ -1,4 +1,4 @@
-name	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
+	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
 Type	BOOL	FLOAT	FLOAT	FLOAT	FLOAT
 Unit		au			
 Default	TRUE				

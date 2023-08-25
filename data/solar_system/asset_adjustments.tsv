@@ -1,4 +1,4 @@
-name	longitude_offset	model_scale
+	longitude_offset	model_scale
 Type	FLOAT	FLOAT
 Unit	deg	
 # hard-coded defaults:	0	1
