@@ -23,14 +23,14 @@ extends RefCounted
 # API here provides constructor methods and table access with protections for
 # missing table fields and values. Alternatively, you can access data directly
 # from IVGlobal dictionaries. Each table is structured as a dictionary of
-# column arrays containing typed (and unit-converted for REAL) values. Data can
+# column arrays containing typed (and unit-converted for FLOAT) values. Data can
 # be accessed directly by indexing:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
 #    tables["n_" + table_name] -> number of rows in table
 #    tables["prefix_" + table_name] -> 'name' column Prefix, if exists
 #    tables[<PREFIX_>] -> table_name; eg, tables["PLANET_"] = "planets"
-#    precisions[][][] indexed as tables w/ REAL fields only -> sig digits
+#    precisions[][][] indexed as tables w/ FLOAT fields only -> sig digits
 #    wiki_titles[row_name] -> title string for wiki target resolution
 #    enumerations[row_name] -> row_int (globally unique!)
 #       -this dictionary also enumerates enums listed in 'data_table_enums'
@@ -41,7 +41,7 @@ const math := preload("res://ivoyager/static/math.gd")
 
 var _tables: Dictionary = IVGlobal.tables # indexed [table][field][row_name or row_int]
 var _enumerations: Dictionary = IVGlobal.enumerations # indexed by ALL table row names
-var _table_precisions: Dictionary = IVGlobal.precisions # as _tables for REAL fields
+var _table_precisions: Dictionary = IVGlobal.precisions # as _tables for FLOAT fields
 
 
 # *****************************************************************************
@@ -135,7 +135,7 @@ func has_row_name(table: StringName, row_name: StringName) -> bool:
 
 func has_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
 	# Evaluates true if table has field and does not contain type-specific
-	# 'null' value: i.e., "", NAN or -1 for STRING, REAL or INT, respectively.
+	# 'null' value: i.e., "", NAN or -1 for STRING, FLOAT or INT, respectively.
 	# Always true for Type BOOL.
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
@@ -154,7 +154,7 @@ func has_value(table: StringName, field: StringName, row := -1, row_name := "") 
 	return true # BOOL
 
 
-func has_real_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
+func has_float_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
 	if !table_dict.has(field):
@@ -208,8 +208,8 @@ func get_int(table: StringName, field: StringName, row := -1, row_name := "") ->
 	return table_dict[field][row]
 
 
-func get_real(table: StringName, field: StringName, row := -1, row_name := "") -> float:
-	# Use for table Type 'REAL'; returns NAN if missing
+func get_float(table: StringName, field: StringName, row := -1, row_name := "") -> float:
+	# Use for table Type 'FLOAT'; returns NAN if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
 	if !table_dict.has(field):
@@ -219,8 +219,8 @@ func get_real(table: StringName, field: StringName, row := -1, row_name := "") -
 	return table_dict[field][row]
 
 
-func get_array(table: StringName, field: StringName, row := -1, row_name := "") -> Array:
-	# Use for table Type 'ARRAY:xxxx'; returns NAN if missing
+func get_array(table: StringName, field: StringName, row := -1, row_name := ""): # returns typed array
+	# Use for table Type 'ARRAY:xxxx'; returns [] if missing
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_dict: Dictionary = _tables[table]
 	if !table_dict.has(field):
@@ -230,8 +230,8 @@ func get_array(table: StringName, field: StringName, row := -1, row_name := "") 
 	return table_dict[field][row]
 
 
-func get_real_precision(table: StringName, field: StringName, row := -1, row_name := "") -> int:
-	# field must be type REAL
+func get_float_precision(table: StringName, field: StringName, row := -1, row_name := "") -> int:
+	# field must be type FLOAT
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	var table_prec_dict: Dictionary = _tables[table]
 	if !table_prec_dict.has(field):
@@ -241,9 +241,9 @@ func get_real_precision(table: StringName, field: StringName, row := -1, row_nam
 	return table_prec_dict[field][row]
 
 
-func get_least_real_precision(table: StringName, fields: Array[StringName], row := -1,
+func get_least_float_precision(table: StringName, fields: Array[StringName], row := -1,
 		row_name := "") -> int:
-	# All fields must be type REAL
+	# All fields must be type FLOAT
 	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
 	if row_name:
 		row = _enumerations[row_name]
@@ -255,8 +255,8 @@ func get_least_real_precision(table: StringName, fields: Array[StringName], row 
 	return min_precision
 
 
-func get_real_precisions(fields: Array[StringName], table: StringName, row: int) -> Array:
-	# Missing or non-REAL values will have precision -1.
+func get_float_precisions(fields: Array[StringName], table: StringName, row: int) -> Array:
+	# Missing or non-FLOAT values will have precision -1.
 	var this_table_precisions: Dictionary = _table_precisions[table]
 	var n_fields := fields.size()
 	var result := utils.init_array(n_fields, -1)

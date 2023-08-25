@@ -1,5 +1,5 @@
 name	parent	parent_level	counterbalanced_body	counterbalanced_by	show_counterbalanced_orbit	a	e	i	L	w_hat	Om	esc_vel	GM
-Type	STRING	STRING	STRING	STRING	BOOL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL
+Type	STRING	STRING	STRING	STRING	BOOL	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT
 Default					FALSE								
 Unit						au		deg	deg	deg	deg	km/s	
 #													

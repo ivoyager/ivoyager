@@ -259,7 +259,7 @@ func _on_process(_delta: float) -> void: # subclass can override
 
 # public functions
 
-func get_real_precision(path: String) -> int:
+func get_float_precision(path: String) -> int:
 	# Available only if IVBodyBuilder.keep_real_precisions = true. Gets the
 	# precision (significant digits) of a real value as it was entered in the
 	# table *.tsv file. Used by Planetarium.

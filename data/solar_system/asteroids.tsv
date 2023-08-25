@@ -1,5 +1,5 @@
 name	asteroid	file_prefix	en.wikipedia	hud_name	symbol	show_in_nav_panel	parent	body_class	model_type	#epoch_text	epoch_jd	a	e	i	Om	w	M0	n	P	Pw	Pnode	rotation_period	right_ascension	declination	GM	m_radius	mean_density	magnitude	albedo	#B-V	#U-B	#I-R	#tholen_spectral_type	#smassii_spectral_type
-Type	BOOL	STRING	STRING	STRING	STRING	BOOL	STRING	INT	INT		REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	REAL	STRING	STRING
+Type	BOOL	STRING	STRING	STRING	STRING	BOOL	STRING	INT	INT		FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING	STRING
 Default	TRUE				\u25CC		SUN	C_ASTEROID	SMALL_C_BODY		2451545.0						0								0	0	0	0	0					
 Unit												au		deg	deg	deg	deg	deg/d	d	a	a	h	deg	deg	km^3/s^2	km	g/cm^3							
 Prefix/ASTEROID_							STAR_	BODY_CLASS_	MODEL_																									

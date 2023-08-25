@@ -93,10 +93,10 @@ func get_body_name() -> StringName:
 	return body.name if is_body else &""
 
 
-func get_real_precision(path: String) -> int:
+func get_float_precision(path: String) -> int:
 	if !is_body:
 		return -1
-	return body.get_real_precision(path)
+	return body.get_float_precision(path)
 
 
 func get_system_radius() -> float:

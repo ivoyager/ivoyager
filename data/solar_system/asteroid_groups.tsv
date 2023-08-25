@@ -1,7 +1,7 @@
 name	group	mag_cutoff	skip_import	binary_dir	star	trojan_of	min_q	max_q	min_a	max_a	max_e	max_i	#comments
 # DEPRECIATE !!!!													
 # replaced by small_bodies_groups.tsv													
-Type	STRING	REAL	BOOL	STRING	INT	STRING	REAL	REAL	REAL	REAL	REAL	REAL	
+Type	STRING	FLOAT	BOOL	STRING	INT	STRING	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	
 Default				res://ivoyager_assets/asteroid_binaries									
 Unit							au	au	au	au		deg	
 Prefix/ASTEROID_GROUP_					STAR_								

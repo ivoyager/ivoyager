@@ -187,7 +187,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		var model_scale := METER
 		var asset_row := _table_reader.get_row(path.get_file())
 		if asset_row != -1:
-			model_scale = _table_reader.get_real("asset_adjustments", "model_scale", asset_row)
+			model_scale = _table_reader.get_float("asset_adjustments", "model_scale", asset_row)
 			model_scale *= METER
 		basis = basis.scaled(model_scale * Vector3.ONE)
 	else: # constructed ellipsoid model
@@ -202,7 +202,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		if path:
 			var asset_row := _table_reader.get_row(path.get_file())
 			if asset_row != -1:
-				var longitude_offset := _table_reader.get_real("asset_adjustments",
+				var longitude_offset := _table_reader.get_float("asset_adjustments",
 						"longitude_offset", asset_row)
 				if !is_nan(longitude_offset):
 					basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -longitude_offset)
