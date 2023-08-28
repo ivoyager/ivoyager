@@ -31,7 +31,6 @@ const DAY := IVUnits.DAY
 
 var _dynamic_orbits: bool = IVGlobal.dynamic_orbits
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
-var _table_reader: IVTableReader
 var _Orbit_: Script
 var _d := {
 	a = NAN,
@@ -62,7 +61,6 @@ var _d := {
 
 
 func _project_init() -> void:
-	_table_reader = IVGlobal.program.TableReader
 	_Orbit_ = IVGlobal.script_classes._Orbit_
 
 
@@ -96,7 +94,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 	
 	var mu := parent.get_std_gravitational_parameter()
 	assert(mu)
-	_table_reader.build_dictionary_from_keys(_d, table_name, table_row)
+	IVTableData.build_dictionary_from_keys(_d, table_name, table_row)
 
 	# convert to standardized orbital elements [a, e, i, Om, w, M0, n]
 	var a : float = _d.a
@@ -193,8 +191,8 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 	if _d.ref_plane == "Equatorial":
 		orbit.reference_normal = parent.get_positive_pole()
 	elif _d.ref_plane == "Laplace":
-		var orbit_ra: float = _table_reader.get_float(table_name, "orbit_RA", table_row)
-		var orbit_dec: float = _table_reader.get_float(table_name, "orbit_dec", table_row)
+		var orbit_ra: float = IVTableData.get_float(table_name, "orbit_RA", table_row)
+		var orbit_dec: float = IVTableData.get_float(table_name, "orbit_dec", table_row)
 		orbit.reference_normal = math.convert_spherical2(orbit_ra, orbit_dec)
 		orbit.reference_normal = _ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()

@@ -48,7 +48,7 @@ var headers: Array[String] = ["LABEL_POINTS", "LABEL_ORBITS"]
 var header_hints: Array[String] = ["HINT_POINTS_CKBX_COLOR", "HINT_ORBITS_CKBX_COLOR"]
 
 
-var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki_titles: Dictionary = IVTableData.wiki_lookup
 var _points_ckbxs: Array[CheckBox] = []
 var _orbits_ckbxs: Array[CheckBox] = []
 var _points_color_pkrs: Array[ColorPickerButton] = []
@@ -60,6 +60,10 @@ var _suppress_update := false
 
 
 func _ready() -> void:
+	
+	print(_wiki_titles)
+	
+	
 	IVGlobal.setting_changed.connect(_settings_listener)
 	_sbg_huds_state.points_visibility_changed.connect(_update_points_ckbxs)
 	_sbg_huds_state.orbits_visibility_changed.connect(_update_orbits_ckbxs)

@@ -25,7 +25,7 @@ extends RefCounted
 # 2) hook up directly to IVGlobal signal "open_wiki_requested". If the latter,
 # you can safely erase this class from IVProjectBuilder.prog_refs.
 
-#var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+#var _wiki_titles: Dictionary = IVTableData.wiki_lookup
 var _wiki: String = IVGlobal.wiki # "wiki" (internal), "en.wikipedia", etc.
 var _wiki_url: String 
 

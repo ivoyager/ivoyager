@@ -122,14 +122,13 @@ func _asteroids1() -> void:
 	
 	# Set asteroid point visibilities from table.
 	var visible_points_groups := view.visible_points_groups
-	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
-	for row in table_reader.get_n_rows("small_bodies_groups"):
-		if table_reader.get_bool("small_bodies_groups", "skip", row):
+	for row in IVTableData.get_n_rows("small_bodies_groups"):
+		if IVTableData.get_bool("small_bodies_groups", "skip", row):
 			continue
-		if table_reader.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
+		if IVTableData.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue
-		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
+		var sbg_alias := IVTableData.get_string("small_bodies_groups", "sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
 	
 	views.Asteroids1 = view
@@ -269,14 +268,13 @@ func _asteroids() -> void:
 	
 	# Set asteroid point visibilities from table.
 	var visible_points_groups := view.visible_points_groups
-	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
-	for row in table_reader.get_n_rows("small_bodies_groups"):
-		if table_reader.get_bool("small_bodies_groups", "skip", row):
+	for row in IVTableData.get_n_rows("small_bodies_groups"):
+		if IVTableData.get_bool("small_bodies_groups", "skip", row):
 			continue
-		if table_reader.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
+		if IVTableData.get_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue
-		var sbg_alias := table_reader.get_string("small_bodies_groups", "sbg_alias", row)
+		var sbg_alias := IVTableData.get_string("small_bodies_groups", "sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
 	
 	views.Asteroids = view

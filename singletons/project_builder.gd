@@ -116,7 +116,6 @@ var initializers := {
 	_SharedInitializer_ = SharedInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
-	_TableImporter_ = IVTableImporter,
 }
 
 var program_refcounteds := {
@@ -151,7 +150,6 @@ var program_refcounteds := {
 	_ModelManager_ = IVModelManager,
 	
 	# tools and resources
-	_TableReader_ = IVTableReader,
 	_QuantityFormatter_ = IVQuantityFormatter,
 	_ViewDefaults_ = IVViewDefaults,
 }

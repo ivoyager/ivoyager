@@ -21,13 +21,11 @@ class_name IVCompositionBuilder
 extends RefCounted
 
 
-var _table_reader: IVTableReader
 var _Composition_: Script
 var _regex: RegEx
 
 
 func _project_init() -> void:
-	_table_reader = IVGlobal.program.TableReader
 	_Composition_ = IVGlobal.script_classes._Composition_
 	_regex = RegEx.new()
 	_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
@@ -35,15 +33,15 @@ func _project_init() -> void:
 
 func add_compositions_from_table(body: IVBody, table_name: String, row: int) -> void:
 	var components := body.components
-	var atmosphere_composition_str := _table_reader.get_string(table_name, "atmosphere_composition", row)
+	var atmosphere_composition_str := IVTableData.get_string(table_name, "atmosphere_composition", row)
 	if atmosphere_composition_str:
 		var atmosphere_composition := make_composition_from_string(atmosphere_composition_str)
 		components.atmosphere = atmosphere_composition
-	var trace_atmosphere_composition_str := _table_reader.get_string(table_name, "trace_atmosphere_composition", row)
+	var trace_atmosphere_composition_str := IVTableData.get_string(table_name, "trace_atmosphere_composition", row)
 	if trace_atmosphere_composition_str:
 		var trace_atmosphere_composition := make_composition_from_string(trace_atmosphere_composition_str)
 		components.trace_atmosphere = trace_atmosphere_composition
-	var photosphere_composition_str := _table_reader.get_string(table_name, "photosphere_composition", row)
+	var photosphere_composition_str := IVTableData.get_string(table_name, "photosphere_composition", row)
 	if photosphere_composition_str:
 		var photosphere_composition := make_composition_from_string(photosphere_composition_str)
 		components.photosphere = photosphere_composition

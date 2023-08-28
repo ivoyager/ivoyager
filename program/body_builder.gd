@@ -111,7 +111,6 @@ var flag_fields := {
 var _Body_: Script
 var _orbit_builder: IVOrbitBuilder
 var _composition_builder: IVCompositionBuilder
-var _table_reader: IVTableReader
 var _table_name: StringName
 var _row: int
 var _real_precisions := {}
@@ -121,7 +120,6 @@ func _project_init() -> void:
 	_Body_ = IVGlobal.script_classes._Body_
 	_orbit_builder = IVGlobal.program.OrbitBuilder
 	_composition_builder = IVGlobal.program.get("CompositionBuilder")
-	_table_reader = IVGlobal.program.TableReader
 
 
 func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
@@ -129,7 +127,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_row = row
 	@warning_ignore("unsafe_method_access") # possible replacement class
 	var body: IVBody = _Body_.new()
-	body.name = _table_reader.get_string(table_name, "name", row)
+	body.name = IVTableData.get_string(table_name, "name", row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
@@ -143,7 +141,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 
 func _set_flags_from_table(body: IVBody, parent: IVBody) -> void:
 	# flags
-	var flags := _table_reader.get_flags(flag_fields, _table_name, _row)
+	var flags := IVTableData.get_flags(flag_fields, _table_name, _row)
 	# All below are constructed (non-table) flags.
 	if !parent:
 		flags |= BodyFlags.IS_TOP # will add self to IVGlobal.top_bodies
@@ -181,10 +179,10 @@ func _set_orbit_from_table(body: IVBody, parent: IVBody) -> void:
 
 func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
-	_table_reader.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
+	IVTableData.build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
 	if keep_real_precisions:
-		var precisions := _table_reader.get_float_precisions(characteristics_fields, _table_name, _row)
+		var precisions := IVTableData.get_float_precisions(characteristics_fields, _table_name, _row)
 		var n_fields := characteristics_fields.size()
 		var i := 0
 		while i < n_fields:
@@ -198,35 +196,35 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 	if characteristics.has("e_radius"):
 		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
 		if keep_real_precisions:
-			var precision := _table_reader.get_least_float_precision(_table_name, ["m_radius", "e_radius"], _row)
+			var precision := IVTableData.get_least_float_precision(_table_name, ["m_radius", "e_radius"], _row)
 			_real_precisions["body/characteristics/p_radius"] = precision
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
 	if !characteristics.has("mass"): # moons.tsv has GM but not mass
-		assert(_table_reader.has_float_value(_table_name, "GM", _row)) # table test
+		assert(IVTableData.has_float_value(_table_name, "GM", _row)) # table test
 		# We could in principle calculate mass from GM, but small moon GM is poor
 		# estimator. Instead use mean_density if we have it; otherwise, assign INF
 		# for unknown mass.
 		if characteristics.has("mean_density"):
 			characteristics.mass = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
 			if keep_real_precisions:
-				var precision := _table_reader.get_least_float_precision(_table_name, ["m_radius", "mean_density"], _row)
+				var precision := IVTableData.get_least_float_precision(_table_name, ["m_radius", "mean_density"], _row)
 				_real_precisions["body/characteristics/mass"] = precision
 		else:
 			characteristics.mass = INF # displays "?"
 	if !characteristics.has("GM"): # planets.tsv has mass, not GM
-		assert(_table_reader.has_float_value(_table_name, "mass", _row))
+		assert(IVTableData.has_float_value(_table_name, "mass", _row))
 		characteristics.GM = G * characteristics.mass
 		if keep_real_precisions:
-			var precision := _table_reader.get_float_precision(_table_name, "mass", _row)
+			var precision := IVTableData.get_float_precision(_table_name, "mass", _row)
 			if precision > 6:
 				precision = 6 # limited by G
 			_real_precisions["body/characteristics/GM"] = precision
 	if !characteristics.has("esc_vel") or !characteristics.has("surface_gravity"):
-		if _table_reader.has_float_value(_table_name, "GM", _row):
+		if IVTableData.has_float_value(_table_name, "GM", _row):
 			# Use GM to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
-			var precision := _table_reader.get_least_float_precision(_table_name, ["GM", "m_radius"], _row)
+			var precision := IVTableData.get_least_float_precision(_table_name, ["GM", "m_radius"], _row)
 			if precision > 1:
 				if !characteristics.has("esc_vel"):
 					characteristics.esc_vel = sqrt(2.0 * characteristics.GM / characteristics.m_radius)
@@ -239,7 +237,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 		else: # planet w/ mass
 			# Use mass to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
-			var precision := _table_reader.get_least_float_precision(_table_name, ["mass", "m_radius"], _row)
+			var precision := IVTableData.get_least_float_precision(_table_name, ["mass", "m_radius"], _row)
 			if precision > 1:
 				if precision > 6:
 					precision = 6 # limited by G

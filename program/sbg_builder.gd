@@ -32,46 +32,44 @@ const BINARY_FILE_MAGNITUDES := ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 var _sbg_mag_cutoff_override: float = IVGlobal.sbg_mag_cutoff_override
 var _SmallBodiesGroup_: Script
-var _table_reader: IVTableReader
 var _asteroid_count := 0
 var _binary_dir: String
 
 
 func _project_init() -> void:
 	_SmallBodiesGroup_ = IVGlobal.script_classes._SmallBodiesGroup_
-	_table_reader = IVGlobal.program.TableReader
 
 
 func build_sbgs() -> void:
 	_asteroid_count = 0
-	var n_groups := _table_reader.get_n_rows("small_bodies_groups")
+	var n_groups := IVTableData.get_n_rows("small_bodies_groups")
 	for row in n_groups:
 		build_sbg(row)
 	print("Added orbital data for ", _asteroid_count, " small bodies (asteroids, etc.)")
 
 
 func build_sbg(row: int) -> void:
-	if _table_reader.get_bool("small_bodies_groups", "skip", row):
+	if IVTableData.get_bool("small_bodies_groups", "skip", row):
 		return
 	
 	# get table data (default colors are read by SBGHUDsState)
-	var name := _table_reader.get_string("small_bodies_groups", "name", row)
-	var sbg_alias := _table_reader.get_string("small_bodies_groups", "sbg_alias", row)
-	var sbg_class := _table_reader.get_int("small_bodies_groups", "sbg_class", row)
-	_binary_dir = _table_reader.get_string("small_bodies_groups", "binary_dir", row)
+	var name := IVTableData.get_string("small_bodies_groups", "name", row)
+	var sbg_alias := IVTableData.get_string("small_bodies_groups", "sbg_alias", row)
+	var sbg_class := IVTableData.get_int("small_bodies_groups", "sbg_class", row)
+	_binary_dir = IVTableData.get_string("small_bodies_groups", "binary_dir", row)
 	var mag_cutoff := 100.0
 	if _sbg_mag_cutoff_override != INF:
 		mag_cutoff = _sbg_mag_cutoff_override
 	else:
-		mag_cutoff = _table_reader.get_float("small_bodies_groups", "mag_cutoff", row)
-	var primary_name := _table_reader.get_string("small_bodies_groups", "primary", row)
+		mag_cutoff = IVTableData.get_float("small_bodies_groups", "mag_cutoff", row)
+	var primary_name := IVTableData.get_string("small_bodies_groups", "primary", row)
 	var primary: IVBody = IVGlobal.bodies.get(primary_name)
 	assert(primary, "Primary body missing for SmallBodiesGroup")
-	var lp_integer := _table_reader.get_int("small_bodies_groups", "lp_integer", row)
+	var lp_integer := IVTableData.get_int("small_bodies_groups", "lp_integer", row)
 	var secondary: IVBody
 	if lp_integer != -1:
 		assert(lp_integer == 4 or lp_integer == 5, "Only L4, L5 supported at this time!")
-		var secondary_name := _table_reader.get_string("small_bodies_groups", "secondary", row)
+		var secondary_name := IVTableData.get_string("small_bodies_groups", "secondary", row)
 		secondary = IVGlobal.bodies.get(secondary_name)
 		assert(secondary, "Secondary body missing for Lagrange point SmallBodiesGroup")
 	

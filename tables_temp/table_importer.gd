@@ -22,7 +22,7 @@ extends RefCounted
 
 # Reads external data tables (.tsv files) and adds typed and processed (e.g.,
 # unit-converted for FLOAT) results to IVGlobal dictionaries. Data can be
-# accessed directly or using IVTableReader API. IVGlobal dictionaries are
+# accessed directly or using IVTableData API. IVGlobal dictionaries are
 # structured as follows:
 #
 #    tables[table_name][column_field][row_int] -> typed_value
@@ -73,15 +73,19 @@ var _table_import: Dictionary = IVGlobal.table_import
 var _table_import_mods: Dictionary = IVGlobal.table_import_mods
 var _wiki_titles_import: Array[String] = IVGlobal.wiki_titles_import
 
-# global dicts
-var _tables: Dictionary = IVGlobal.tables # IVGlobal shared
-var _table_precisions: Dictionary = IVGlobal.precisions # as _tables for FLOAT fields
-var _wiki_titles: Dictionary = IVGlobal.wiki_titles # IVGlobal shared
-var _enumerations: Dictionary = IVGlobal.enumerations # IVGlobal shared
 
-# localization
-var _enable_wiki: bool = IVGlobal.enable_wiki
-var _wiki: String = IVGlobal.wiki # wiki column header
+# temp
+var tables: Dictionary
+var enumerations: Dictionary
+var wiki_lookup: Dictionary
+var precisions: Dictionary
+
+
+
+# move to IVTableData
+var _enable_wiki: bool = true
+var _wiki: String = "en.wikipedia"
+
 var _unit_multipliers: Dictionary = IVGlobal.unit_multipliers
 var _unit_lambdas: Dictionary = IVGlobal.unit_lambdas
 
@@ -97,11 +101,13 @@ var _count_cells := 0
 var _count_non_null := 0
 
 
-func _init():
-	_on_init()
-
-
-func _on_init() -> void:
+func _init(tables_: Dictionary, enumerations_: Dictionary, wiki_lookup_: Dictionary,
+		precisions_: Dictionary) -> void:
+	tables = tables_
+	enumerations = enumerations_
+	wiki_lookup = wiki_lookup_
+	precisions = precisions_
+	
 	var start_time := Time.get_ticks_msec()
 	_add_data_table_enums()
 	_import()
@@ -111,15 +117,15 @@ func _on_init() -> void:
 	IVGlobal.data_tables_imported.emit()
 
 
-func _project_init() -> void:
-	IVGlobal.program.erase("TableImporter") # frees self
+#func _project_init() -> void:
+#	IVGlobal.program.erase("TableImporter") # frees self
 
 
 func _add_data_table_enums() -> void:
 	for enum_ in data_table_enums:
 		for key in enum_:
-			assert(!_enumerations.has(key))
-			_enumerations[key] = enum_[key]
+			assert(!enumerations.has(key))
+			enumerations[key] = enum_[key]
 
 
 func _import() -> void:
@@ -146,12 +152,12 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 		assert(false, "Could not open file: " + path)
 		return
 	if !is_mod:
-		assert(!_tables.has(table_name))
-		_tables[table_name] = {}
-		_table_precisions[table_name] = {}
+		assert(!tables.has(table_name))
+		tables[table_name] = {}
+		precisions[table_name] = {}
 		_field_infos[table_name] = {}
-	var table: Dictionary = _tables[table_name]
-	var precisions: Dictionary = _table_precisions[table_name]
+	var table: Dictionary = tables[table_name]
+	var table_precisions: Dictionary = precisions[table_name]
 	var field_info: Dictionary = _field_infos[table_name]
 	_field_map.clear()
 	_column_map.clear()
@@ -223,7 +229,7 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 						var import_type := _get_import_type(processed_type)
 						table[field] = Array([], import_type, &"", null) # typed array
 						if processed_type == TYPE_FLOAT:
-							precisions[field] = [] as Array[int]
+							table_precisions[field] = [] as Array[int]
 					elif !table.has(field): # mod table has added a new field
 						field_info[field][0] = processed_type
 						# data filled and imputed below
@@ -280,7 +286,7 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 				
 				# process defaults & impute data for new fields (mod table only)
 				if _add_mod_fields:
-					var n_rows: int = _tables["n_" + table_name] # base table
+					var n_rows: int = tables["n_" + table_name] # base table
 					while _add_mod_fields:
 						var field: StringName = _add_mod_fields.pop_back()
 						var processed_type: int = field_info[field][0]
@@ -299,7 +305,7 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 						var precisions_column := [] as Array[int]
 						precisions_column.resize(n_rows)
 						precisions_column.fill(1) # ad hoc default
-						precisions[field] = precisions_column
+						table_precisions[field] = precisions_column
 		
 		# data line
 		if !reading_header:
@@ -319,22 +325,22 @@ func _import_table(table_name: StringName, path: String, is_mod := false) -> voi
 			row += 1
 		line = file.get_line()
 	
-	# We add constructed indexes to IVGlobal.tables with useful table info
+	# We add constructed indexes to IVTableData.tables with useful table info
 	if !is_mod:
-		assert(!_tables.has("n_" + table_name))
-		_tables["n_" + table_name] = row # eg, tables.n_planets is number of rows in planets.tsv
+		assert(!tables.has("n_" + table_name))
+		tables["n_" + table_name] = row # eg, tables.n_planets is number of rows in planets.tsv
 		if has_row_names and field_info.name[1]: # e.g., 'PLANET_' in table 'planets'
 			var name_prefix: String = field_info.name[1]
-			assert(!_tables.has("prefix_" + table_name))
-			_tables["prefix_" + table_name] = name_prefix # eg, tables.prefix_planets = "PLAENT_"
-			assert(!_tables.has(name_prefix))
-			_tables[name_prefix] = table_name # eg, tables.PLANET_ = "planets"
+			assert(!tables.has("prefix_" + table_name))
+			tables["prefix_" + table_name] = name_prefix # eg, tables.prefix_planets = "PLAENT_"
+			assert(!tables.has(name_prefix))
+			tables[name_prefix] = table_name # eg, tables.PLANET_ = "planets"
 
 
 func _read_line(table_name: StringName, row: int, line_array: Array[String], has_row_names: bool,
 		is_mod: bool) -> void:
-	var table: Dictionary = _tables[table_name]
-	var precisions: Dictionary = _table_precisions[table_name]
+	var table: Dictionary = tables[table_name]
+	var table_precisions: Dictionary = precisions[table_name]
 	var field_info: Dictionary = _field_infos[table_name]
 	
 	var row_name := ""
@@ -346,15 +352,15 @@ func _read_line(table_name: StringName, row: int, line_array: Array[String], has
 			row_name = line_array[0]
 		assert(row_name, "Name cell is blank!")
 		if !is_mod:
-			assert(!_enumerations.has(row_name))
-			_enumerations[row_name] = row
-		elif _enumerations.has(row_name): # modifying existing table item
-			row = _enumerations[row_name]
+			assert(!enumerations.has(row_name))
+			enumerations[row_name] = row
+		elif enumerations.has(row_name): # modifying existing table item
+			row = enumerations[row_name]
 		else: # adding row to existing table!
 			var name_column: Array[String] = table.name
 			row = name_column.size()
-			_enumerations[row_name] = row
-			_tables["n_" + table_name] += 1
+			enumerations[row_name] = row
+			tables["n_" + table_name] += 1
 			# assign row_name and impute defaults (table values will overwrite)
 			name_column.append(row_name)
 			for field in field_info: # all fields! (not just mod table)
@@ -365,7 +371,7 @@ func _read_line(table_name: StringName, row: int, line_array: Array[String], has
 				column_array.append(default)
 				var processed_type: int = field_info[field][0]
 				if processed_type == TYPE_FLOAT:
-					var prec_column: Array[int] = precisions[field]
+					var prec_column: Array[int] = table_precisions[field]
 					prec_column.append(1) # ad hoc default
 	
 	for field in _column_map:
@@ -393,14 +399,14 @@ func _read_line(table_name: StringName, row: int, line_array: Array[String], has
 		else:
 			table_column.append(value)
 		if processed_type == TYPE_FLOAT:
-			var prec_column: Array[int] = precisions[field]
+			var prec_column: Array[int] = table_precisions[field]
 			if is_mod:
 				prec_column[row] = precision
 			else:
 				prec_column.append(precision)
 		if _enable_wiki and field == _wiki:
 			assert(row_name)
-			_wiki_titles[row_name] = value
+			wiki_lookup[row_name] = value
 
 
 func _get_processed_type(type_str: String) -> int:
@@ -511,7 +517,7 @@ func _postprocess_ints() -> void:
 	# Replaces typed arrays.
 	for table_name in _field_infos:
 		var field_info: Dictionary = _field_infos[table_name]
-		var table: Dictionary = _tables[table_name]
+		var table: Dictionary = tables[table_name]
 		for field in field_info:
 			var processed_type: int = field_info[field][0]
 			if processed_type == TYPE_INT:
@@ -544,8 +550,8 @@ func _get_int_from_string_name(int_name: StringName) -> int:
 		return -1
 	if int_name.is_valid_int():
 		return int_name.to_int()
-	assert(_enumerations.has(int_name), "Unknown enumeration '%s'" % int_name)
-	return _enumerations[int_name]
+	assert(enumerations.has(int_name), "Unknown enumeration '%s'" % int_name)
+	return enumerations[int_name]
 
 
 func _import_wiki_titles(path: String) -> void:
@@ -589,6 +595,6 @@ func _import_wiki_titles(path: String) -> void:
 				_count_cells += 1
 				var column: int = _column_map[field]
 				var wiki_title := StringName(line_array[column])
-				_wiki_titles[row_name] = wiki_title
+				wiki_lookup[row_name] = wiki_title
 		line = file.get_line()
 

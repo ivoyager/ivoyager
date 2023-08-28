@@ -20,7 +20,7 @@
 class_name IVSelectionData
 extends VBoxContainer
 
-# GUI widget. Requires IVQuantityFormatter and IVTableReader.
+# GUI widget. Requires IVQuantityFormatter.
 # An ancestor Control node must have property 'selection_manager'
 # set to an IVSelectionManager before signal IVGlobal.about_to_start_simulator.
 #
@@ -190,7 +190,7 @@ var special_processing := {
 }
 
 var _state: Dictionary = IVGlobal.state
-var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki_titles: Dictionary = IVTableData.wiki_lookup
 var _header_buttons: Array[Button] = []
 var _grids: Array[GridContainer] = []
 var _meta_lookup := {} # translate link text to wiki key
@@ -203,7 +203,6 @@ var _path: String
 var _is_running := false
 
 @onready var _qf: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
-@onready var _table_reader: IVTableReader = IVGlobal.program.TableReader
 @onready var _timer: Timer = $Timer
 
 
@@ -384,7 +383,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				pass # don't display
 			elif data_type == TABLE_ROW:
 				var table_name: String = line_data[4]
-				key = _table_reader.get_row_name(table_name, value)
+				key = IVTableData.get_row_name(table_name, value)
 				value_txt = tr(key)
 				if enable_wiki_values and _wiki_titles.has(key):
 					value_wiki_key = key

@@ -20,49 +20,37 @@
 extends Node
 
 # This can be added as an autoload at project level for easy access.
+# (ivoyager code currently references this node as singleton 'IVTableData'.)
 #
 # In all but very specific cases, users should interface only with this node.
 
 const TableImporter = preload("res://ivoyager/tables_temp/table_importer.gd")
 const TableProcessor = preload("res://ivoyager/tables_temp/table_processor.gd")
 
-const units := preload("res://ivoyager/static/units.gd")
-const utils := preload("res://ivoyager/static/utils.gd")
-const math := preload("res://ivoyager/static/math.gd")
 
 
-# API here provides constructor methods and table access with protections for
-# missing table fields and values. Alternatively, you can access data directly
-# from dictionaries. Each table is structured as a dictionary of
-# column arrays containing typed (and unit-converted for FLOAT) values. Data can
-# be accessed directly by indexing:
-#
-#    tables[table_name][column_field][row_int] -> typed_value
-#    tables["n_" + table_name] -> number of rows in table
-#    tables["prefix_" + table_name] -> 'name' column Prefix, if exists
-#    tables[<PREFIX_>] -> table_name; eg, tables["PLANET_"] = "planets"
-#    precisions[][][] indexed as tables w/ FLOAT fields only -> sig digits
-#    wiki_titles[row_name] -> title string for wiki target resolution
-#    enumerations[row_name] -> row_int (globally unique!)
-#       -this dictionary also enumerates enums listed in 'data_table_enums'
+
+var tables := {} # indexed [table][field][row]
+var enumerations := {} # indexed by ALL entity names
+var wiki_lookup := {}
+var precisions := {} # indexed as tables for FLOAT fields only (if keep_precisions == true)
 
 
-var tables: Dictionary = IVGlobal.tables # indexed [table][field][row]
-var enumerations: Dictionary = IVGlobal.enumerations # indexed by ALL entity names
-var precisions: Dictionary = IVGlobal.precisions # as tables for FLOAT fields
+
+func _ready() -> void:
+	
+	var table_importer: TableImporter = TableImporter.new(tables, enumerations, wiki_lookup, precisions)
+
+	
 
 
-# *****************************************************************************
-# init
-
-func _project_init() -> void:
-	pass
+# init & data processing methods
 
 
-# *****************************************************************************
-# public functions
-# For get functions, table is "planets", "moons", etc. Many get functions will
-# accept either row_int or row_name (not both!).
+
+
+# For get functions, table is "planets", "moons", etc. Most get functions
+# accept either row or entity (not both!).
 
 
 func get_n_rows(table: StringName) -> int:
@@ -79,16 +67,16 @@ func get_row_name(table: StringName, row: int) -> StringName:
 	return tables[table]["name"][row]
 
 
-func get_row(row_name: StringName) -> int:
-	# Returns -1 if missing. All row_name's are globally unique.
-	return enumerations.get(row_name, -1)
+func get_row(entity: StringName) -> int:
+	# Returns -1 if missing. All entity's are globally unique.
+	return enumerations.get(entity, -1)
 
 
 func get_names_enumeration(table: StringName) -> Dictionary:
 	# Returns an enum-like dict of row numbers keyed by row names.
 	var dict := {}
-	for row_name in tables[table]["name"]:
-		dict[row_name] = enumerations[row_name]
+	for entity in tables[table]["name"]:
+		dict[entity] = enumerations[entity]
 	return dict
 
 
@@ -131,26 +119,26 @@ func get_true_rows(table: StringName, field: StringName) -> Array:
 	return result
 
 
-func has_row_name(table: StringName, row_name: StringName) -> bool:
-	if !enumerations.has(row_name):
+func has_row_name(table: StringName, entity: StringName) -> bool:
+	if !enumerations.has(entity):
 		return false
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has("name"):
 		return false
 	var name_column: Array[StringName] = table_dict.name
-	return name_column.has(row_name)
+	return name_column.has(entity)
 
 
-func has_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
+func has_value(table: StringName, field: StringName, row := -1, entity := &"") -> bool:
 	# Evaluates true if table has field and does not contain type-specific
 	# 'null' value: i.e., "", NAN or -1 for STRING, FLOAT or INT, respectively.
 	# Always true for Type BOOL.
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return false
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	var value = table_dict[field][row]
 	var type := typeof(value)
 	if type == TYPE_FLOAT:
@@ -162,99 +150,99 @@ func has_value(table: StringName, field: StringName, row := -1, row_name := "") 
 	return true # BOOL
 
 
-func has_float_value(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+func has_float_value(table: StringName, field: StringName, row := -1, entity := &"") -> bool:
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return false
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return !is_nan(table_dict[field][row])
 
 
-func get_string(table: StringName, field: StringName, row := -1, row_name := "") -> String:
+func get_string(table: StringName, field: StringName, row := -1, entity := &"") -> String:
 	# Use for table Type 'STRING'; returns "" if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return ""
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_string_name(table: StringName, field: StringName, row := -1, row_name := "") -> StringName:
+func get_string_name(table: StringName, field: StringName, row := -1, entity := &"") -> StringName:
 	# Use for table Type 'STRING_NAME'; returns &"" if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return &""
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_bool(table: StringName, field: StringName, row := -1, row_name := "") -> bool:
+func get_bool(table: StringName, field: StringName, row := -1, entity := &"") -> bool:
 	# Use for table Type 'BOOL'; returns false if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return false
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_int(table: StringName, field: StringName, row := -1, row_name := "") -> int:
+func get_int(table: StringName, field: StringName, row := -1, entity := &"") -> int:
 	# Use for table Type 'INT'; returns -1 if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return -1
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_float(table: StringName, field: StringName, row := -1, row_name := "") -> float:
+func get_float(table: StringName, field: StringName, row := -1, entity := &"") -> float:
 	# Use for table Type 'FLOAT'; returns NAN if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return NAN
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_array(table: StringName, field: StringName, row := -1, row_name := ""): # returns typed array
+func get_array(table: StringName, field: StringName, row := -1, entity := &""): # returns typed array
 	# Use for table Type 'ARRAY:xxxx'; returns [] if missing
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_dict: Dictionary = tables[table]
 	if !table_dict.has(field):
 		return []
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_dict[field][row]
 
 
-func get_float_precision(table: StringName, field: StringName, row := -1, row_name := "") -> int:
+func get_float_precision(table: StringName, field: StringName, row := -1, entity := &"") -> int:
 	# field must be type FLOAT
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
 	var table_prec_dict: Dictionary = tables[table]
 	if !table_prec_dict.has(field):
 		return -1
-	if row_name:
-		row = enumerations[row_name]
+	if entity:
+		row = enumerations[entity]
 	return table_prec_dict[field][row]
 
 
 func get_least_float_precision(table: StringName, fields: Array[StringName], row := -1,
-		row_name := "") -> int:
+		entity := &"") -> int:
 	# All fields must be type FLOAT
-	assert((row == -1) != (row_name == ""), "Requires either row or row_name (not both)")
-	if row_name:
-		row = enumerations[row_name]
+	assert((row == -1) != (entity == ""), "Requires either row or entity (not both)")
+	if entity:
+		row = enumerations[entity]
 	var min_precision := 9999
 	for field in fields:
 		var precission: int = precisions[table][field][row]
@@ -267,7 +255,9 @@ func get_float_precisions(fields: Array[StringName], table: StringName, row: int
 	# Missing or non-FLOAT values will have precision -1.
 	var this_table_precisions: Dictionary = precisions[table]
 	var n_fields := fields.size()
-	var result := utils.init_array(n_fields, -1)
+	var result := []
+	result.resize(n_fields)
+	result.fill(-1)
 	var i := 0
 	while i < n_fields:
 		var field: StringName = fields[i]

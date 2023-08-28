@@ -47,7 +47,6 @@ var _BodyLabel_: Script
 var _BodyOrbit_: Script
 var _Rings_: Script
 
-var _table_reader: IVTableReader
 var _model_manager: IVModelManager
 var _bodies_2d_search := IVGlobal.bodies_2d_search
 var _fallback_body_2d: Texture2D
@@ -65,7 +64,6 @@ func _project_init() -> void:
 	IVGlobal.about_to_build_system_tree.connect(init_system_build)
 	IVGlobal.game_load_started.connect(init_system_build)
 	IVGlobal.get_tree().node_added.connect(_on_node_added)
-	_table_reader = IVGlobal.program.TableReader
 	_model_manager = IVGlobal.program.ModelManager
 	_io_manager = IVGlobal.program.IOManager
 #	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
@@ -115,7 +113,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
 		var omni_light := OmniLight3D.new()
 		# set properties entirely from table
-		_table_reader.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
+		IVTableData.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
 		@warning_ignore("unsafe_method_access") # possible replacement class
