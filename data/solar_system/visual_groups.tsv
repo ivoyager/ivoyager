@@ -1,4 +1,4 @@
-name	body_flag	default_name_visible	default_symbol_visible	default_orbit_visible	default_orbit_color
+	body_flag	default_name_visible	default_symbol_visible	default_orbit_visible	default_orbit_color
 Type	INT	BOOL	BOOL	BOOL	STRING
 Default					
 Unit					

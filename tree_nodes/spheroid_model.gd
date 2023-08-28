@@ -28,7 +28,13 @@ extends MeshInstance3D
 # currently subjective.
 
 # TODO: materials.tsv to use all fields
-const MATERIAL_FIELDS := ["metallic", "roughness", "rim_enabled", "rim", "rim_tint"]
+const MATERIAL_FIELDS: Array[StringName] = [
+	&"metallic",
+	&"roughness",
+	&"rim_enabled",
+	&"rim",
+	&"rim_tint"
+]
 const DYNAMIC_STAR_GROW_DIST := 2.0 * IVUnits.AU
 const DYNAMIC_STAR_GROW_FACTOR := 0.5
 

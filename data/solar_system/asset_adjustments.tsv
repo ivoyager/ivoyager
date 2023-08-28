@@ -1,5 +1,5 @@
-name	longitude_offset	model_scale
-Type	REAL	REAL
+	longitude_offset	model_scale
+Type	FLOAT	FLOAT
 Unit	deg	
 # hard-coded defaults:	0	1
 Mars.albedo.noaa.CWreprocessed.4096.jpg	180	

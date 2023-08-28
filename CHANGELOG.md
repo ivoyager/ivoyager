@@ -18,7 +18,8 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 * [Migration] Implement new Godot4 signal syntax using Signal and Callable objects.
 * [Migration - WIP] Type arrays where possible.
 * [Migration- WIP] Re-type String as StringName where appropriate.
-* Many unlisted migration changes.
+* [Migration] Implement lambdas in IVUnits for non-multiplier unit conversions.
+* [Migration] Many unlisted migration changes!
 
 ### Known Migration Regressions
 * The Sun is not illuminating anything. We only have ambient light.

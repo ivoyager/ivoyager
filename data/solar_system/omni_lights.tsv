@@ -1,5 +1,5 @@
-name	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
-Type	BOOL	REAL	REAL	REAL	REAL
+	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
+Type	BOOL	FLOAT	FLOAT	FLOAT	FLOAT
 Unit		au			
 Default	TRUE				
 Prefix/OMNI_LIGHT_					

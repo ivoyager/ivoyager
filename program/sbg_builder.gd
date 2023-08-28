@@ -63,7 +63,7 @@ func build_sbg(row: int) -> void:
 	if _sbg_mag_cutoff_override != INF:
 		mag_cutoff = _sbg_mag_cutoff_override
 	else:
-		mag_cutoff = _table_reader.get_real("small_bodies_groups", "mag_cutoff", row)
+		mag_cutoff = _table_reader.get_float("small_bodies_groups", "mag_cutoff", row)
 	var primary_name := _table_reader.get_string("small_bodies_groups", "primary", row)
 	var primary: IVBody = IVGlobal.bodies.get(primary_name)
 	assert(primary, "Primary body missing for SmallBodiesGroup")

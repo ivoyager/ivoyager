@@ -144,8 +144,8 @@ static func binary_str(flags: int) -> String:
 	return result
 
 
-static func get_real_str_precision(real_str: String) -> int:
-	# See table REAL format rules in solar_system/planets.tsv.
+static func get_float_str_precision(real_str: String) -> int:
+	# See table FLOAT format rules in solar_system/planets.tsv.
 	# IVTableImporter has stripped leading "_" and converted "E" to "e".
 	# We ignore leading zeroes before the decimal place.
 	# We count trailing zeroes IF there is a decimal place.
@@ -172,7 +172,7 @@ static func get_real_str_precision(real_str: String) -> int:
 				if deduct_zeroes:
 					n_unsig_zeros += 1
 		elif chr != "-":
-			assert(chr.is_valid_int(), "Unknown REAL character: " + chr)
+			assert(chr.is_valid_int(), "Unknown FLOAT character: " + chr)
 			started = true
 			n_digits += 1
 			n_unsig_zeros = 0
