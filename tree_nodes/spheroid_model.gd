@@ -46,19 +46,18 @@ var _reference_basis: Basis
 
 func _init(model_type: int, reference_basis: Basis, albedo_map: Texture2D,
 		emission_map: Texture2D) -> void:
-	var table_reader: IVTableReader = IVGlobal.program.TableReader
 	_reference_basis = reference_basis
 	transform.basis = _reference_basis # z up, possibly oblate
 	mesh = IVGlobal.shared.sphere_mesh
 	var surface := StandardMaterial3D.new()
 	set_surface_override_material(0, surface)
-	table_reader.build_object(surface, MATERIAL_FIELDS, "models", model_type)
+	IVTableData.build_object(surface, MATERIAL_FIELDS, "models", model_type)
 	if albedo_map:
 		surface.albedo_texture = albedo_map
 	if emission_map:
 		surface.emission_enabled = true
 		surface.emission_texture = emission_map
-	if table_reader.get_bool("models", "starlight", model_type):
+	if IVTableData.get_bool("models", "starlight", model_type):
 		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		is_dynamic_star = true
 	else:

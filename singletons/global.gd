@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230828
+const IVOYAGER_YMD := 20230902
 
 
 # simulator state broadcasts
@@ -106,10 +106,6 @@ var program := {} # IVProjectBuilder instantiated objects (base or override clas
 var script_classes := {} # IVProjectBuilder defined script classes (base or override)
 var assets := {} # AssetsInitializer loads from dynamic paths specified below
 var settings := {} # IVSettingsManager
-var tables := {} # IVTableImporter; indexed [table_name][field][row_int]
-var enumerations := {} # IVTableImporter; all row names and listed enums (globally unique)
-var precisions := {} # IVTableImporter; indexed as tables but only FLOAT fields
-var wiki_titles := {} # IVTableImporter; en.wikipedia; TODO: non-en & internal
 var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
@@ -141,8 +137,11 @@ var pause_only_stops_time := false # if true, Universe & TopGUI are set to proce
 var disable_pause := false
 var disable_exit := false
 var disable_quit := false
-var enable_wiki := false
+
+# FIXME: These will be in IVTableData
+var enable_wiki := true
 var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
+
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_time_setting := false
 var allow_time_reversal := false
@@ -250,7 +249,7 @@ var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", et
 var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
 
 
-func _ready() -> void:
+func _init() -> void:
 	print("I, Voyager %s%s-%s %s - https://www.ivoyager.dev"
 			% [IVOYAGER_VERSION, IVOYAGER_BUILD, IVOYAGER_STATE, str(IVOYAGER_YMD)])
 

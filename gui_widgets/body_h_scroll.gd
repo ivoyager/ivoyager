@@ -72,7 +72,7 @@ func _clear() -> void:
 
 
 func _add_bodies_from_table(table_name: String) -> void:
-	var table: Dictionary = IVGlobal.tables[table_name]
+	var table: Dictionary = IVTableData.tables[table_name]
 	var body_names: Array = table.name
 	for i in body_names.size():
 		var body_name: String = body_names[i]

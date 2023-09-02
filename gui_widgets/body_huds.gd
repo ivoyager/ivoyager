@@ -57,7 +57,7 @@ var headers: Array[String] = ["LABEL_NAMES_SLASH_SYMBOLS_SHORT", "LABEL_ORBITS"]
 var header_hints: Array[String] = ["HINT_NAMES_SYMBOLS_CKBXS", "HINT_ORBITS_CKBX_COLOR"]
 
 
-var _wiki_titles: Dictionary = IVGlobal.wiki_titles
+var _wiki_titles: Dictionary = IVTableData.wiki_lookup
 var _all_flags := 0 # generated from all rows
 var _names_ckbxs: Array[CheckBox] = []
 var _symbols_ckbxs: Array[CheckBox] = []
