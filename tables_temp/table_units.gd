@@ -1,4 +1,4 @@
-# table_units_temp.gd
+# table_units.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -19,18 +19,18 @@
 # *****************************************************************************
 extends Object
 
-# This static class defines derived units from base SI units. You should need
-# it only when converting to and from internal values: i.e., specifying
-# quantities in tables or code (TO internal) and GUI display (FROM internal).
+# This static class defines default units and dictionaries for converting table
+# float values to internal base SI units.
+#
+# It may be convenient to create a 'Units' object in your project with static
+# vars below as constants, and then create your own 'multipliers' and 'lambdas'
+# dictionaries. This way you can code unit quantities in your files as
+# constants (e.g., 'const SOME_TIME_CONSTANT = 4.0 * Units.DAY'). If you do
+# this, be sure to provide your conversion dictionaries when calling
+# IVTableData.process_table_data().
 #
 # For GUI unit display, feel free to use our open-source IVQuantityFormatter:
 # https://github.com/ivoyager/ivoyager/blob/master/program/quantity_formatter.gd
-#
-# It may be convenient to create a 'Units' object in your project with static
-# vars below as constants. This way you can code unit quantities in your files
-# as constants (e.g., 'const SOME_TIME_CONSTANT = 4.0 * Units.DAY'). If you do,
-# be sure to set 'multipliers' and 'lambdas' here from your constant values so
-# that there is only one source for all of your unit conversions. 
 
 # SI base units
 static var second := 1.0

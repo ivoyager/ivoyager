@@ -60,10 +60,6 @@ var _suppress_update := false
 
 
 func _ready() -> void:
-	
-	print(_wiki_titles)
-	
-	
 	IVGlobal.setting_changed.connect(_settings_listener)
 	_sbg_huds_state.points_visibility_changed.connect(_update_points_ckbxs)
 	_sbg_huds_state.orbits_visibility_changed.connect(_update_orbits_ckbxs)

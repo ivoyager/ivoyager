@@ -116,6 +116,7 @@ var initializers := {
 	_SharedInitializer_ = SharedInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
+	_TableInitializer_ = IVTableInitializer,
 }
 
 var program_refcounteds := {

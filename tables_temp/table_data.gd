@@ -19,51 +19,93 @@
 # *****************************************************************************
 extends Node
 
-# This can be added as an autoload at project level for easy access.
-# (ivoyager code currently references this node as singleton 'IVTableData'.)
+# ADDON CONVERSION NOTES:
+# This class is intended to be an autoload singleton nameed 'IVTableData'.
+# Everything a user might need is here!
 #
-# In all but very specific cases, users should interface only with this node.
+# Some methods here recast argument Array as Array[<type>]. We prefer typing
+# everything in ivoyager, but users shouldn't get an error if they supply
+# an untyped Array.
 
-const TableImporter = preload("res://ivoyager/tables_temp/table_importer.gd")
-const TableProcessor = preload("res://ivoyager/tables_temp/table_processor.gd")
-
-
-
-
-var tables := {} # indexed [table][field][row]
-var enumerations := {} # indexed by ALL entity names
-var wiki_lookup := {}
-var precisions := {} # indexed as tables for FLOAT fields only (if keep_precisions == true)
+const TableImporter := preload("res://ivoyager/tables_temp/table_importer.gd")
+const TablePostprocessor := preload("res://ivoyager/tables_temp/table_postprocessor.gd")
+const TableUnits := preload("res://ivoyager/tables_temp/table_units.gd")
 
 
 
-func _ready() -> void:
+
+# Table data dictionaries are populated only after process_table_data().
+# 'tables' is indexed by table_name, 'n_<table_name>' or 'prefix_<table_name>'
+# to get the table, number rows, or table entity prefix (if applicable). For
+# DB_ENTITIES tables, the table is a dictionary indexed [field_name][row_int].
+
+var tables := {} # postprocessed data
+var enumerations := {} # indexed by ALL entity names (which are globally unique)
+var enumeration_dicts := {} # use table name or ANY entity name to get entity enumeration dict
+var wiki_lookup := {} # populated if enable_wiki
+var precisions := {} # populated if enable_precisions (indexed as tables for FLOAT fields)
+
+#var table_n_rows := {}
+#var table_entity_prefixes := {} # only if header contains 'Prefix/<entity_prefix>'
+
+# 'table_resources' is cleared after process_table_data(). We don't need them anymore!
+var table_resources: Dictionary
+
+
+# import & process methods
+
+func import_tables(table_paths: Array) -> void:
+	# ADDON CONVERSION NOTES:
+	# We won't need an explicit call when we have an editor importer.
+	# The importer can populate 'table_resources' and this node need not know
+	# about TableImporter.
+	var table_paths_: Array[String] = Array(table_paths, TYPE_STRING, &"", null)
 	
-	var table_importer: TableImporter = TableImporter.new(tables, enumerations, wiki_lookup, precisions)
-
+	var table_importer := TableImporter.new()
+#	tables = table_importer.tables
+#	enumerations = table_importer.enumerations
+#	wiki_lookup = table_importer.wiki_lookup
+#	precisions = table_importer.precisions
 	
+	table_importer.import_tables(table_paths_, table_resources)
 
 
-# init & data processing methods
-
-
+func process_table_data(table_names: Array, project_enums := [], unit_multipliers := {},
+		unit_lambdas := {}, enable_wiki := false, enable_precisions := false) -> void:
+	# See table_units.gd for default unit conversion to SI base units.
+	var table_names_: Array[StringName] = Array(table_names, TYPE_STRING_NAME, &"", null)
+	var project_enums_: Array[Dictionary] = Array(project_enums, TYPE_DICTIONARY, &"", null)
+	
+	if unit_multipliers:
+		TableUnits.multipliers = unit_multipliers
+	if unit_lambdas:
+		TableUnits.lambdas = unit_lambdas
+	
+	var table_postprocessor := TablePostprocessor.new()
+	table_postprocessor.postprocess(table_resources, table_names_, project_enums_, tables,
+			enumerations, enumeration_dicts, wiki_lookup, precisions,
+			enable_wiki, enable_precisions)
+	
+	table_resources.clear() # no need to keep these in memory
+	
+	
 
 
 # For get functions, table is "planets", "moons", etc. Most get functions
-# accept either row or entity (not both!).
+# accept either row (int) or entity (StringName), but not both!
 
 
 func get_n_rows(table: StringName) -> int:
 	return tables["n_" + table]
 
 
-func get_names_prefix(table: StringName) -> int:
+func get_entity_prefix(table: StringName) -> int:
 	# E.g., 'PLANET_' in planets.tsv.
 	# Prefix must be specified for the table's 'name' column.
 	return tables["prefix_" + table]
 
 
-func get_row_name(table: StringName, row: int) -> StringName:
+func get_entity_name(table: StringName, row: int) -> StringName:
 	return tables[table]["name"][row]
 
 
