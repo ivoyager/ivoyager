@@ -24,7 +24,7 @@ const TableResource := preload("res://ivoyager/tables_temp/table_resource.gd")
 
 
 
-func import_tables(table_paths: Array[String], table_resources: Dictionary) -> void:
+func import(table_paths: Array[String], table_resources: Dictionary) -> void:
 	# DEPRECIATE: This is needed until we have a real editor importer.
 
 	for path in table_paths:

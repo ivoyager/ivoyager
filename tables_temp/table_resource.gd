@@ -20,12 +20,10 @@
 extends Resource
 
 # ADDON CONVERSION NOTES:
-# The resourse only needs to be loaded for data processing by
-# table_preprocessor.gd. After that, all processed table data is available in the
-# 'IVTableData' singleton (table_data.gd).
-#
-# Users should not need to access this resource directly, although it's
-# possible if they really want to (perhaps for debugging).
+# The resourse only needs to be loaded for data postprocessing by
+# table_postprocessor.gd. After that, all processed table data is available in
+# the 'IVTableData' singleton (table_data.gd). The resourses should be
+# de-referenced so they free themselves and go out of memory.
 
 enum TableDirectives {
 	# table formats
@@ -35,12 +33,12 @@ enum TableDirectives {
 	WIKI_LOOKUP,
 	ENUM_X_ENUM,
 	N_TABLE_FORMATS,
-	# format-specific directives
-	MODIFIES,
-	TABLE_TYPE,
-	TABLE_DEFAULT,
-	TABLE_UNIT,
-	TRANSPOSE,
+	# specific directives
+	MODIFIES, # DB_ENTITIES_MOD only
+	TABLE_TYPE, # ENUM_X_ENUM only
+	TABLE_DEFAULT, # ENUM_X_ENUM only
+	TABLE_UNIT, # ENUM_X_ENUM only
+	TRANSPOSE, # ENUM_X_ENUM only
 }
 
 var table_format := -1
@@ -121,15 +119,17 @@ func import_table(path: String) -> void:
 				specific_directive_args.append(directive_arg)
 			continue
 		
-		# add data cells skiping comment columns
-		if !cells: # 1st non-comment, non-directive line is always fields header
+		# identify comment columns in 1st non-comment, non-directive row (fields, if we have them)
+		if !cells:
 			n_data_columns = line_array.size()
 			for column in line_array.size():
 				if line_array[column].begins_with("#"):
 					comment_columns.append(column)
 					n_data_columns -= 1
-			comment_columns.reverse()
-		for comment_column in comment_columns: # reversed so back to front
+			comment_columns.reverse() # we'll remove from back
+		
+		# remove comment columns in all rows
+		for comment_column in comment_columns: # back to front
 			line_array.remove_at(comment_column)
 		assert(line_array.size() == n_data_columns)
 		cells.append(line_array)
@@ -145,15 +145,24 @@ func import_table(path: String) -> void:
 	if !table_name:
 		table_name = StringName(path.get_file().get_basename())
 	
-	# send cells for preprocessing
+	# do some error checks and send cells for preprocessing
 	match table_format:
 		TableDirectives.DB_ENTITIES:
+			assert(!specific_directives,
+					"DB_ENTITIES format does not allow any specific directives")
 			_preprocess_db_style(cells, false, false, false)
 		TableDirectives.DB_ENTITIES_MOD:
+			assert(specific_directives == [TableDirectives.MODIFIES],
+					"DB_ENTITIES_MOD format must have (and can only have) @MODIFIES directive")
+			assert(specific_directive_args[0], "@MODIFIES needs a table name in the next cell")
 			_preprocess_db_style(cells, true, false, false)
 		TableDirectives.ENUMERATION:
+			assert(!specific_directives,
+					"ENUMERATION format does not allow any specific directives")
 			_preprocess_db_style(cells, false, true, false)
 		TableDirectives.WIKI_LOOKUP:
+			assert(!specific_directives,
+					"WIKI_LOOKUP format does not allow any specific directives")
 			_preprocess_db_style(cells, false, false, true)
 		TableDirectives.ENUM_X_ENUM:
 			_preprocess_enum_x_enum(cells)
@@ -165,7 +174,6 @@ func _preprocess_db_style(cells: Array[Array], is_mod: bool, is_enumeration: boo
 	# specific directives
 	var modifies_pos := specific_directives.find(TableDirectives.MODIFIES)
 	if modifies_pos >= 0:
-		assert(is_mod, "@MODIFIES not allowed")
 		modifies_table_name = StringName(specific_directive_args[modifies_pos])
 	
 	# dictionaries we'll populate
@@ -199,7 +207,7 @@ func _preprocess_db_style(cells: Array[Array], is_mod: bool, is_enumeration: boo
 			var field := StringName(line_array[column])
 			assert(!column_names.has(field), "Duplicate field name " + field)
 			if is_wiki_lookup:
-				assert(field.ends_with(".wikipedia")) # TODO: Cange to en.wiki, etc.
+				assert(field.ends_with(".wiki"), "WIKI_LOOKUP fields must be 'en.wiki', etc.")
 			column_names.append(field)
 		row += 1
 	
@@ -347,9 +355,6 @@ func _preprocess_db_style(cells: Array[Array], is_mod: bool, is_enumeration: boo
 		dict_of_field_arrays.erase(&"name")
 	
 	n_columns = 0 if is_enumeration else dict_of_field_arrays.size()
-	
-	# debug
-#	assert(table_name != &"asteroids")
 
 
 func _preprocess_enum_x_enum(cells: Array[Array]) -> void:
@@ -469,14 +474,13 @@ func _get_preprocess_value(raw_value: String, postprocess_type: int, prefix: Str
 		TYPE_BOOL:
 			if raw_value == "x" or raw_value.matchn("true"):
 				return true
-			assert(!raw_value or raw_value.matchn("false"), "Unknown BOOL cell content")
+			assert(!raw_value or raw_value.matchn("false"), "Unknown BOOL content '%s'" % raw_value)
 			return false
 		TYPE_STRING:
 			if !raw_value:
 				return ""
-			raw_value = raw_value.c_unescape()
-			# Does not work for "\uXXXX"? Is Godot issue #38716 fixed?
-#			raw_value = utils.c_unescape_patch(raw_value) # handles "\uXXXX"
+			raw_value = raw_value.c_unescape() # does not process '\uXXXX'
+			raw_value = IVTableUtils.c_unescape_patch(raw_value)
 			if prefix:
 				return prefix + raw_value
 			return raw_value

@@ -20,7 +20,7 @@
 extends RefCounted
 
 
-enum TableDirectives {
+enum TableDirectives { # copy from table_resource.gd
 	# table formats
 	DB_ENTITIES,
 	DB_ENTITIES_MOD,
@@ -28,19 +28,19 @@ enum TableDirectives {
 	WIKI_LOOKUP,
 	ENUM_X_ENUM,
 	N_TABLE_FORMATS,
-	# format-specific directives
-	MODIFIES,
-	TABLE_TYPE,
-	TABLE_DEFAULT,
-	TABLE_UNIT,
-	TRANSPOSE,
+	# specific directives
+	MODIFIES, # DB_ENTITIES_MOD only
+	TABLE_TYPE, # ENUM_X_ENUM only
+	TABLE_DEFAULT, # ENUM_X_ENUM only
+	TABLE_UNIT, # ENUM_X_ENUM only
+	TRANSPOSE, # ENUM_X_ENUM only
 }
 
 const TableResource := preload("res://ivoyager/tables_temp/table_resource.gd")
-const TableUnits := preload("res://ivoyager/tables_temp/table_units.gd")
 
-
-var localized_wiki := &"en.wikipedia" # TODO: Make this changable; 'wikipedia' -> 'wiki'
+# TODO: Proper localization. I'm not sure if we're supposed to use get_locale()
+# from OS or TranslationServer, or how to do fallbacks for missing translations.
+var localized_wiki := &"en.wiki"
 
 var _tables: Dictionary # postprocessed data indexed [table_name][field_name][row_int]
 var _enumerations: Dictionary # indexed by ALL entity names (which are globally unique)
@@ -386,7 +386,7 @@ func _get_postprocess_value(import_value: Variant, type: int, unit: StringName) 
 			return NAN
 		if !unit:
 			return import_float
-		return TableUnits.convert_quantity(import_float, unit, true, true)
+		return IVTableUtils.convert_quantity(import_float, unit, true, true)
 	
 	if type == TYPE_INT: # imported as StringName for enumerations
 		if import_value == null:

@@ -383,7 +383,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				pass # don't display
 			elif data_type == TABLE_ROW:
 				var table_name: String = line_data[4]
-				key = IVTableData.get_entity_name(table_name, value)
+				key = IVTableData.get_row_name(table_name, value)
 				value_txt = tr(key)
 				if enable_wiki_values and _wiki_titles.has(key):
 					value_wiki_key = key

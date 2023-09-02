@@ -29,12 +29,8 @@ extends Node
 
 const TableImporter := preload("res://ivoyager/tables_temp/table_importer.gd")
 const TablePostprocessor := preload("res://ivoyager/tables_temp/table_postprocessor.gd")
-const TableUnits := preload("res://ivoyager/tables_temp/table_units.gd")
 
-
-
-
-# Table data dictionaries are populated only after process_table_data().
+# Table data dictionaries are populated only after postprocess_tables().
 # 'tables' is indexed by table_name, 'n_<table_name>' or 'prefix_<table_name>'
 # to get the table, number rows, or table entity prefix (if applicable). For
 # DB_ENTITIES tables, the table is a dictionary indexed [field_name][row_int].
@@ -45,14 +41,11 @@ var enumeration_dicts := {} # use table name or ANY entity name to get entity en
 var wiki_lookup := {} # populated if enable_wiki
 var precisions := {} # populated if enable_precisions (indexed as tables for FLOAT fields)
 
-#var table_n_rows := {}
-#var table_entity_prefixes := {} # only if header contains 'Prefix/<entity_prefix>'
-
-# 'table_resources' is cleared after process_table_data(). We don't need them anymore!
+# cleared after postprocess_tables()
 var table_resources: Dictionary
 
 
-# import & process methods
+# import & postprocess methods
 
 func import_tables(table_paths: Array) -> void:
 	# ADDON CONVERSION NOTES:
@@ -60,26 +53,32 @@ func import_tables(table_paths: Array) -> void:
 	# The importer can populate 'table_resources' and this node need not know
 	# about TableImporter.
 	var table_paths_: Array[String] = Array(table_paths, TYPE_STRING, &"", null)
-	
 	var table_importer := TableImporter.new()
-#	tables = table_importer.tables
-#	enumerations = table_importer.enumerations
-#	wiki_lookup = table_importer.wiki_lookup
-#	precisions = table_importer.precisions
-	
-	table_importer.import_tables(table_paths_, table_resources)
+	table_importer.import(table_paths_, table_resources)
 
 
-func process_table_data(table_names: Array, project_enums := [], unit_multipliers := {},
+func postprocess_tables(table_names: Array, project_enums := [], unit_multipliers := {},
 		unit_lambdas := {}, enable_wiki := false, enable_precisions := false) -> void:
-	# See table_units.gd for default unit conversion to SI base units.
+	# See table_unit_defaults.gd for default unit conversion to SI base units.
 	var table_names_: Array[StringName] = Array(table_names, TYPE_STRING_NAME, &"", null)
 	var project_enums_: Array[Dictionary] = Array(project_enums, TYPE_DICTIONARY, &"", null)
 	
+	# Set IVTableUtils conversion dictionaries here, or verify set, or set to defaults.
 	if unit_multipliers:
-		TableUnits.multipliers = unit_multipliers
+		assert(!IVTableUtils.unit_multipliers or IVTableUtils.unit_multipliers == unit_multipliers,
+				"A different 'unit_multipliers' was already set in IVTableUtils")
+		IVTableUtils.unit_multipliers = unit_multipliers
 	if unit_lambdas:
-		TableUnits.lambdas = unit_lambdas
+		assert(!IVTableUtils.unit_lambdas or IVTableUtils.unit_lambdas == unit_lambdas,
+				"A different 'unit_lambdas' was already set in IVTableUtils")
+		IVTableUtils.unit_lambdas = unit_lambdas
+	if !IVTableUtils.unit_multipliers or !IVTableUtils.unit_lambdas:
+		# TableUnitDefaults will unload itself after this; we won't need it anymore
+		var TableUnitDefaults := preload("res://ivoyager/tables_temp/table_unit_defaults.gd")
+		if !IVTableUtils.unit_multipliers:
+			IVTableUtils.unit_multipliers = TableUnitDefaults.unit_multipliers
+		if !IVTableUtils.unit_lambdas:
+			IVTableUtils.unit_lambdas = TableUnitDefaults.unit_lambdas
 	
 	var table_postprocessor := TablePostprocessor.new()
 	table_postprocessor.postprocess(table_resources, table_names_, project_enums_, tables,
@@ -87,26 +86,38 @@ func process_table_data(table_names: Array, project_enums := [], unit_multiplier
 			enable_wiki, enable_precisions)
 	
 	table_resources.clear() # no need to keep these in memory
-	
-	
 
 
 # For get functions, table is "planets", "moons", etc. Most get functions
 # accept either row (int) or entity (StringName), but not both!
+#
+# Methods are mostly safe for nonexistent tables, missing fields, etc.,
+# returning null-equivalent results (e.g., -1 for int) rather than causing an
+# error. (Not all have been made safe yet.)
 
 
 func get_n_rows(table: StringName) -> int:
-	return tables["n_" + table]
+	var key := StringName("n_" + table)
+	return tables.get(key, -1)
 
 
-func get_entity_prefix(table: StringName) -> int:
+func get_entity_prefix(table: StringName) -> String:
 	# E.g., 'PLANET_' in planets.tsv.
 	# Prefix must be specified for the table's 'name' column.
-	return tables["prefix_" + table]
+	var key := StringName("prefix_" + table)
+	return tables.get(key, "")
 
 
-func get_entity_name(table: StringName, row: int) -> StringName:
-	return tables[table]["name"][row]
+func get_row_name(table: StringName, row: int) -> StringName:
+	if !tables.has(table):
+		return &""
+	var table_dict: Dictionary = tables[table]
+	if !table_dict.has(&"name"):
+		return &""
+	var name_array: Array[StringName] = table_dict[&"name"]
+	if row < 0 or row >= name_array.size():
+		return &""
+	return name_array[row]
 
 
 func get_row(entity: StringName) -> int:
@@ -116,10 +127,7 @@ func get_row(entity: StringName) -> int:
 
 func get_names_enumeration(table: StringName) -> Dictionary:
 	# Returns an enum-like dict of row numbers keyed by row names.
-	var dict := {}
-	for entity in tables[table]["name"]:
-		dict[entity] = enumerations[entity]
-	return dict
+	return enumeration_dicts.get(table, {})
 
 
 func get_column_array(table: StringName, field: StringName) -> Array:

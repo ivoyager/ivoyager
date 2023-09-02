@@ -1,4 +1,4 @@
-	en.wikipedia
+	en.wiki
 Type	STRING
 Prefix/BODY_CLASS_	
 G_STAR	G-type_main-sequence_star
@@ -14,4 +14,3 @@ M_ASTEROID	M-type_asteroid
 V_ASTEROID	V-type_asteroid
 COMET	Comet
 SPACECRAFT	Spacecraft
-#	

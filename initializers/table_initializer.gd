@@ -29,32 +29,27 @@ func _init() -> void:
 
 func _on_init() -> void:
 	
-	# temp import
+	# WIP - The table system is being removed from 'ivoyager' and added as an
+	# editor addon. We'll still need to call postprocess_tables() here.
+	
+	# import
 	var table_import := IVGlobal.table_import
 	var table_array := table_import.values()
 	table_array.append("res://ivoyager/data/solar_system/wiki_extras.tsv")
-	table_array.append("res://ivoyager/data/solar_system/test_enumeration.tsv")
-	table_array.append("res://ivoyager/data/solar_system/test_mod.tsv")
-	table_array.append("res://ivoyager/data/solar_system/test_enum_x_enum.tsv")
-	
-	
 	IVTableData.import_tables(table_array)
 	
-	# temp process
+	# postprocess
 	var table_names := table_import.keys()
 	table_names.append("wiki_extras")
-	table_names.append("test_enumeration")
-	table_names.append("test_mod")
-	table_names.append("test_enum_x_enum")
 	var table_enums := [
 		IVEnums.SBGClass,
 		IVEnums.Confidence,
 		IVEnums.BodyFlags,
 	]
-	IVTableData.process_table_data(table_names, table_enums, IVUnits.multipliers, IVUnits.lambdas,
-			true, true)
+	IVTableData.postprocess_tables(table_names, table_enums, IVUnits.multipliers,
+			IVUnits.lambdas, true, true)
 	
-	
+	# signal done
 	IVGlobal.data_tables_imported.emit()
 
 
