@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://ca4wdltvaxliv"
+path="res://.godot/imported/moons.tsv-c517184d61fdfbb7d59eb24c79499f3c.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/moons.tsv"
+dest_files=["res://.godot/imported/moons.tsv-c517184d61fdfbb7d59eb24c79499f3c.tres"]
+
+[params]
+

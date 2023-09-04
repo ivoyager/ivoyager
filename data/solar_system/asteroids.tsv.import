@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://cb6eu722fv276"
+path="res://.godot/imported/asteroids.tsv-02561e40d9897c7c235c0e8173a9af3f.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/asteroids.tsv"
+dest_files=["res://.godot/imported/asteroids.tsv-02561e40d9897c7c235c0e8173a9af3f.tres"]
+
+[params]
+
