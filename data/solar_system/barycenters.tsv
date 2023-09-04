@@ -1,8 +1,0 @@
-	parent	parent_level	counterbalanced_body	counterbalanced_by	show_counterbalanced_orbit	a	e	i	L	w_hat	Om	esc_vel	GM
-Type	STRING	STRING	STRING	STRING	BOOL	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT
-Default					FALSE								
-Unit						au		deg	deg	deg	deg	km/s	
-#													
-# NOT IMPLEMENTED YET!!!													
-# A counterbalanced_object doesn't have its own orbit (kep = null). Instead, it's placed relative to counterbalanced_by based on body masses.													
-# Counterbalanced_by can be a single object or multiple in array format [Body1,Body2] with no spaces.													

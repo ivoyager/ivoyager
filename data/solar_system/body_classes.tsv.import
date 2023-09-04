@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://dp7qxbk4incv2"
+path="res://.godot/imported/body_classes.tsv-c4e15457f3bf4056df2fd5d3f5043f7f.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/body_classes.tsv"
+dest_files=["res://.godot/imported/body_classes.tsv-c4e15457f3bf4056df2fd5d3f5043f7f.tres"]
+
+[params]
+

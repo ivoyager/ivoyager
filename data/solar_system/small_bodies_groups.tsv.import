@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://bbkpe4cp5ctkx"
+path="res://.godot/imported/small_bodies_groups.tsv-6fbdfb41934faa28196b27c4f8f709e3.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/small_bodies_groups.tsv"
+dest_files=["res://.godot/imported/small_bodies_groups.tsv-6fbdfb41934faa28196b27c4f8f709e3.tres"]
+
+[params]
+

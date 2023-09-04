@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://bcpcipfudqc45"
+path="res://.godot/imported/planets.tsv-19d4c6ddd004348b606395c8c687b311.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/planets.tsv"
+dest_files=["res://.godot/imported/planets.tsv-19d4c6ddd004348b606395c8c687b311.tres"]
+
+[params]
+

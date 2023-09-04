@@ -1,0 +1,14 @@
+[remap]
+
+importer="ivoyager.table_importer"
+type="IVTableResource"
+uid="uid://l0k6cdy7oihj"
+path="res://.godot/imported/models.tsv-e20fa4fa49cedbcf4566f7ac53dfd953.tres"
+
+[deps]
+
+source_file="res://ivoyager/data/solar_system/models.tsv"
+dest_files=["res://.godot/imported/models.tsv-e20fa4fa49cedbcf4566f7ac53dfd953.tres"]
+
+[params]
+
