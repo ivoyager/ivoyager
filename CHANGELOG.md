@@ -15,7 +15,7 @@ Currently under development using Godot 4.1.1.
 Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-08-14).
 
 ### Changes
-* Table import/postprocess code has been fully decoupled from 'ivoyager' and moved to directory 'ivoyager/tables_temp'. This is in preparation for moving the system to the new [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master) repository as an editor addon.
+* The table read, process and access system has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
 * [Migration] Implement new Godot4 signal syntax using Signal and Callable objects.
 * [Migration - WIP] Type arrays where possible.
 * [Migration- WIP] Re-type String as StringName where appropriate.
