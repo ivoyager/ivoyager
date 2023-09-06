@@ -113,7 +113,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
 		var omni_light := OmniLight3D.new()
 		# set properties entirely from table
-		IVTableData.build_object_all_fields(omni_light, "omni_lights", omni_light_type)
+		IVTableData.db_build_object_all_fields(omni_light, "omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
 		@warning_ignore("unsafe_method_access") # possible replacement class
