@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230904
+const IVOYAGER_YMD := 20230907
 
 
 # simulator state broadcasts
@@ -138,9 +138,9 @@ var disable_pause := false
 var disable_exit := false
 var disable_quit := false
 
-# FIXME: These will be in IVTableData
-var enable_wiki := true
-var use_internal_wiki := false # skip data column en.wikipedia, etc., use wiki
+var enable_wiki := false
+var enable_precisions := false
+var use_internal_wiki := false # FIXME: WikiManager doesn't do anything yet
 
 var start_time: float = 22.0 * IVUnits.YEAR # from J2000 epoch
 var allow_time_setting := false
@@ -183,26 +183,30 @@ var shared := {
 	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 
-# Data table import
-var table_import := {
-	asset_adjustments = "res://ivoyager/data/solar_system/asset_adjustments.tsv",
-	asteroids = "res://ivoyager/data/solar_system/asteroids.tsv",
-	body_classes = "res://ivoyager/data/solar_system/body_classes.tsv",
-	omni_lights = "res://ivoyager/data/solar_system/omni_lights.tsv",
-	models = "res://ivoyager/data/solar_system/models.tsv",
-	moons = "res://ivoyager/data/solar_system/moons.tsv",
-	planets = "res://ivoyager/data/solar_system/planets.tsv",
-	small_bodies_groups = "res://ivoyager/data/solar_system/small_bodies_groups.tsv",
-	spacecrafts = "res://ivoyager/data/solar_system/spacecrafts.tsv",
-	stars = "res://ivoyager/data/solar_system/stars.tsv",
-	visual_groups = "res://ivoyager/data/solar_system/visual_groups.tsv",
-}
-var table_import_mods := {} # add columns or rows or modify cells in table_import tables
+var postprocess_tables: Array[String] = [
+	"res://ivoyager/data/solar_system/asset_adjustments.tsv",
+	"res://ivoyager/data/solar_system/asteroids.tsv",
+	"res://ivoyager/data/solar_system/body_classes.tsv",
+	"res://ivoyager/data/solar_system/omni_lights.tsv",
+	"res://ivoyager/data/solar_system/models.tsv",
+	"res://ivoyager/data/solar_system/moons.tsv",
+	"res://ivoyager/data/solar_system/planets.tsv",
+	"res://ivoyager/data/solar_system/small_bodies_groups.tsv",
+	"res://ivoyager/data/solar_system/spacecrafts.tsv",
+	"res://ivoyager/data/solar_system/stars.tsv",
+	"res://ivoyager/data/solar_system/visual_groups.tsv",
+	"res://ivoyager/data/solar_system/wiki_extras.tsv"
+]
 
-var wiki_titles_import: Array[String] = ["res://ivoyager/data/solar_system/wiki_extras.tsv"]
+var table_project_enums := [
+	IVEnums.SBGClass,
+	IVEnums.Confidence,
+	IVEnums.BodyFlags,
+]
+
 var wikipedia_locales: Array[String] = ["en"] # add locales present in data tables
 
-var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spacecrafts"] # order matters!
+var body_tables: Array[String] = ["stars", "planets", "asteroids", "moons", "spacecrafts"] # ordered!
 
 # We search for assets based on "file_prefix" and sometimes other name elements
 # like "albedo". To build a model, IVModelManager first looks for an existing

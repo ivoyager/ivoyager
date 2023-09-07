@@ -42,34 +42,34 @@ func _project_init() -> void:
 
 func build_sbgs() -> void:
 	_asteroid_count = 0
-	var n_groups := IVTableData.get_n_rows("small_bodies_groups")
+	var n_groups := IVTableData.get_db_n_rows("small_bodies_groups")
 	for row in n_groups:
 		build_sbg(row)
 	print("Added orbital data for ", _asteroid_count, " small bodies (asteroids, etc.)")
 
 
 func build_sbg(row: int) -> void:
-	if IVTableData.get_bool("small_bodies_groups", "skip", row):
+	if IVTableData.get_db_bool("small_bodies_groups", "skip", row):
 		return
 	
 	# get table data (default colors are read by SBGHUDsState)
-	var name := IVTableData.get_string("small_bodies_groups", "name", row)
-	var sbg_alias := IVTableData.get_string("small_bodies_groups", "sbg_alias", row)
-	var sbg_class := IVTableData.get_int("small_bodies_groups", "sbg_class", row)
-	_binary_dir = IVTableData.get_string("small_bodies_groups", "binary_dir", row)
+	var name := IVTableData.get_db_string("small_bodies_groups", "name", row)
+	var sbg_alias := IVTableData.get_db_string("small_bodies_groups", "sbg_alias", row)
+	var sbg_class := IVTableData.get_db_int("small_bodies_groups", "sbg_class", row)
+	_binary_dir = IVTableData.get_db_string("small_bodies_groups", "binary_dir", row)
 	var mag_cutoff := 100.0
 	if _sbg_mag_cutoff_override != INF:
 		mag_cutoff = _sbg_mag_cutoff_override
 	else:
-		mag_cutoff = IVTableData.get_float("small_bodies_groups", "mag_cutoff", row)
-	var primary_name := IVTableData.get_string("small_bodies_groups", "primary", row)
+		mag_cutoff = IVTableData.get_db_float("small_bodies_groups", "mag_cutoff", row)
+	var primary_name := IVTableData.get_db_string("small_bodies_groups", "primary", row)
 	var primary: IVBody = IVGlobal.bodies.get(primary_name)
 	assert(primary, "Primary body missing for SmallBodiesGroup")
-	var lp_integer := IVTableData.get_int("small_bodies_groups", "lp_integer", row)
+	var lp_integer := IVTableData.get_db_int("small_bodies_groups", "lp_integer", row)
 	var secondary: IVBody
 	if lp_integer != -1:
 		assert(lp_integer == 4 or lp_integer == 5, "Only L4, L5 supported at this time!")
-		var secondary_name := IVTableData.get_string("small_bodies_groups", "secondary", row)
+		var secondary_name := IVTableData.get_db_string("small_bodies_groups", "secondary", row)
 		secondary = IVGlobal.bodies.get(secondary_name)
 		assert(secondary, "Secondary body missing for Lagrange point SmallBodiesGroup")
 	

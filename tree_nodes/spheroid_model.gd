@@ -51,13 +51,13 @@ func _init(model_type: int, reference_basis: Basis, albedo_map: Texture2D,
 	mesh = IVGlobal.shared.sphere_mesh
 	var surface := StandardMaterial3D.new()
 	set_surface_override_material(0, surface)
-	IVTableData.build_object(surface, MATERIAL_FIELDS, "models", model_type)
+	IVTableData.db_build_object(surface, MATERIAL_FIELDS, "models", model_type)
 	if albedo_map:
 		surface.albedo_texture = albedo_map
 	if emission_map:
 		surface.emission_enabled = true
 		surface.emission_texture = emission_map
-	if IVTableData.get_bool("models", "starlight", model_type):
+	if IVTableData.get_db_bool("models", "starlight", model_type):
 		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		is_dynamic_star = true
 	else:

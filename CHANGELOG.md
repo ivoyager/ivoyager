@@ -8,7 +8,7 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.16] - Not Released
 
-**We're migrating to Godot 4!** The _master_ branch will have serious regressions (broken features) for a while yet. For a fully functional build, use release v0.0.15.
+**We're migrating to Godot 4!** The _master_ branch will have serious regressions (broken features) for a while yet. For a fully functional build, use release v0.0.15 developed for Godot 3.5.2.
 
 Currently under development using Godot 4.1.1.
 

@@ -58,11 +58,11 @@ func build_system_tree() -> void:
 
 
 func _add_bodies(table_name: String) -> void:
-	var n_rows := IVTableData.get_n_rows(table_name)
+	var n_rows := IVTableData.get_db_n_rows(table_name)
 	var row := 0
 	while row < n_rows:
 		var parent: IVBody
-		var parent_name := IVTableData.get_string(table_name, "parent", row) # "" top
+		var parent_name := IVTableData.get_db_string(table_name, "parent", row) # "" top
 		if parent_name:
 			parent = IVGlobal.bodies[parent_name]
 		var body := _body_builder.build_from_table(table_name, row, parent)

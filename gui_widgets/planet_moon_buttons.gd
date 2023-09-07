@@ -72,9 +72,6 @@ func _build(_dummy := false) -> void:
 	if !_selection_manager:
 		return
 	_is_built = true
-	
-	print("****** Building nav buttons ******")
-	
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
 	set("theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size

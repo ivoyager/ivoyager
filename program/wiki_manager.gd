@@ -20,6 +20,8 @@
 class_name IVWikiManager
 extends RefCounted
 
+# FIXME: Many loose ends after shift to Table Importer plugin...
+
 # For internal wiki, set IVGlobal.enable_wiki and IVGlobal.use_internal_wiki. You
 # can then either 1) extend this class and override _open_internal_wiki(), or
 # 2) hook up directly to IVGlobal signal "open_wiki_requested". If the latter,
