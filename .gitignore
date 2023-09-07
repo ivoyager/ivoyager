@@ -1,4 +1,10 @@
-# Ignore
+# I, Voyager submodule/plugin ignores:
 
-~*
+# Godot
 *.translation
+
+# GitHub
+/.github/
+
+# Misc
+~*
