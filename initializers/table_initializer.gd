@@ -20,30 +20,15 @@
 class_name IVTableInitializer
 extends RefCounted
 
-# Loads tables specified in IVGlobal.
+# Postprocess tables specified in IVGlobal using Table Reader plugin.
+# Table data will be ready to use after 'data_tables_imported' signal, which
+# will happen while 'initializers' are added in ProjectBuilder.
 
 
 func _init() -> void:
-	_on_init()
-
-
-func _on_init() -> void:
 	
-	# WIP - The table system is being removed from 'ivoyager' and added as an
-	# editor addon. We'll still need to call postprocess_tables() here.
-	
-
-	var table_import := IVGlobal.table_import
-	var table_array := table_import.values()
-	table_array.append("res://ivoyager/data/solar_system/wiki_extras.tsv")
-
-	var table_enums := [
-		IVEnums.SBGClass,
-		IVEnums.Confidence,
-		IVEnums.BodyFlags,
-	]
-	IVTableData.postprocess_tables(table_array, table_enums, IVUnits.multipliers,
-			IVUnits.lambdas, true, true)
+	IVTableData.postprocess_tables(IVGlobal.postprocess_tables, IVGlobal.table_project_enums,
+			IVUnits.multipliers, IVUnits.lambdas, IVGlobal.enable_wiki, IVGlobal.enable_precisions)
 	
 	# signal done
 	IVGlobal.data_tables_imported.emit()

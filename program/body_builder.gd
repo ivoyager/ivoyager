@@ -28,8 +28,7 @@ const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const G := IVUnits.GRAVITATIONAL_CONSTANT
 const BodyFlags := IVEnums.BodyFlags
 
-# project vars
-var keep_real_precisions := true # remember table sig. digits (probably don't need for games)
+var enable_precisions := IVGlobal.enable_precisions
 
 var characteristics_fields: Array[StringName] = [ # only added if exists
 	&"symbol",
@@ -133,7 +132,7 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_set_characteristics_from_table(body)
 	if _composition_builder:
 		_composition_builder.add_compositions_from_table(body, table_name, row)
-	if keep_real_precisions:
+	if enable_precisions:
 		body.characteristics.real_precisions = _real_precisions
 		_real_precisions = {}
 	return body
@@ -181,7 +180,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
 	IVTableData.db_build_dictionary(characteristics, characteristics_fields, _table_name, _row)
 	assert(characteristics.has("m_radius"))
-	if keep_real_precisions:
+	if enable_precisions:
 		var precisions := IVTableData.get_db_float_precisions(characteristics_fields, _table_name, _row)
 		var n_fields := characteristics_fields.size()
 		var i := 0
@@ -195,7 +194,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 	# Assign missing characteristics where we can
 	if characteristics.has("e_radius"):
 		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
-		if keep_real_precisions:
+		if enable_precisions:
 			var precision := IVTableData.get_db_least_float_precision(_table_name, ["m_radius", "e_radius"], _row)
 			_real_precisions["body/characteristics/p_radius"] = precision
 	else:
@@ -207,7 +206,7 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 		# for unknown mass.
 		if characteristics.has("mean_density"):
 			characteristics.mass = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
-			if keep_real_precisions:
+			if enable_precisions:
 				var precision := IVTableData.get_db_least_float_precision(_table_name, ["m_radius", "mean_density"], _row)
 				_real_precisions["body/characteristics/mass"] = precision
 		else:
@@ -215,12 +214,14 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 	if !characteristics.has("GM"): # planets.tsv has mass, not GM
 		assert(IVTableData.db_has_float_value(_table_name, "mass", _row))
 		characteristics.GM = G * characteristics.mass
-		if keep_real_precisions:
+		if enable_precisions:
 			var precision := IVTableData.get_db_float_precision(_table_name, "mass", _row)
 			if precision > 6:
 				precision = 6 # limited by G
 			_real_precisions["body/characteristics/GM"] = precision
-	if !characteristics.has("esc_vel") or !characteristics.has("surface_gravity"):
+	
+	# Calculate some missing characteristics, but only if we have sufficient precisions
+	if enable_precisions and (!characteristics.has("esc_vel") or !characteristics.has("surface_gravity")):
 		if IVTableData.db_has_float_value(_table_name, "GM", _row):
 			# Use GM to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
@@ -228,12 +229,13 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 			if precision > 1:
 				if !characteristics.has("esc_vel"):
 					characteristics.esc_vel = sqrt(2.0 * characteristics.GM / characteristics.m_radius)
-					if keep_real_precisions:
+					if enable_precisions:
 						_real_precisions["body/characteristics/esc_vel"] = precision
 				if !characteristics.has("surface_gravity"):
 					characteristics.surface_gravity = characteristics.GM / pow(characteristics.m_radius, 2.0)
-					if keep_real_precisions:
+					if enable_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
+		
 		else: # planet w/ mass
 			# Use mass to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
@@ -243,10 +245,10 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 					precision = 6 # limited by G
 				if !characteristics.has("esc_vel"):
 					characteristics.esc_vel = sqrt(2.0 * G * characteristics.mass / characteristics.m_radius)
-					if keep_real_precisions:
+					if enable_precisions:
 						_real_precisions["body/characteristics/esc_vel"] = precision
 				if !characteristics.has("surface_gravity"):
 					characteristics.surface_gravity = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
-					if keep_real_precisions:
+					if enable_precisions:
 						_real_precisions["body/characteristics/surface_gravity"] = precision
 

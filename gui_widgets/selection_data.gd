@@ -53,7 +53,7 @@ const NO_ARGS := []
 # project vars
 var enable_wiki_labels: bool = IVGlobal.enable_wiki # can override to false if needed
 var enable_wiki_values: bool = IVGlobal.enable_wiki # can override to false if needed
-var use_kept_precisions := true # set same as IVBodyBuilder.keep_real_precisions
+var enable_precisions := IVGlobal.enable_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var interval := 0.0 # seconds; set 0.0 for no periodic updates
@@ -409,7 +409,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 				var option_type: int = args[0]
 				var unit: String = args[1] if n_args > 1 else ""
 				var precision: int = args[2] if n_args > 2 else -1
-				if use_kept_precisions and data_type == QTY_TXT_W_PRECISION:
+				if enable_precisions and data_type == QTY_TXT_W_PRECISION:
 					var kept_precision: int = _selection.get_float_precision(_path)
 					if kept_precision != -1:
 						precision = kept_precision

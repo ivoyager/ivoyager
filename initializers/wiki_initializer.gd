@@ -20,6 +20,9 @@
 class_name IVWikiInitializer
 extends RefCounted
 
+# FIXME or DEPRECIATE: IVGlobal 'wiki' settings don't do anything now. We need
+# to figure out how to do localization.
+# Many loose ends after shift to Table Importer plugin...
 
 func _init() -> void:
 	_on_init()
