@@ -20,18 +20,19 @@
 class_name IVLatLongLabel
 extends Label
 
-# GUI widget. Requires IVCamera and IVQuantityFormatter.
+# GUI widget. Requires IVCamera.
 
-const CASE_LOWER := IVQuantityFormatter.CASE_LOWER
-const N_S_E_W := IVQuantityFormatter.N_S_E_W
-const LAT_LONG := IVQuantityFormatter.LAT_LONG
-const PITCH_YAW := IVQuantityFormatter.PITCH_YAW
+const CASE_LOWER := IVQFormat.CASE_LOWER
+const N_S_E_W := IVQFormat.N_S_E_W
+const LAT_LONG := IVQFormat.LAT_LONG
+const PITCH_YAW := IVQFormat.PITCH_YAW
 const USE_CARDINAL_DIRECTIONS := IVEnums.BodyFlags.USE_CARDINAL_DIRECTIONS
 const USE_PITCH_YAW := IVEnums.BodyFlags.USE_PITCH_YAW
 
-var _camera: IVCamera
 
-@onready var _qf: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
+var qformat := IVQFormat # TODO: Change to const when Godot allows
+
+var _camera: IVCamera
 
 
 func _ready():
@@ -61,7 +62,7 @@ func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool, select
 			lat_long_type = PITCH_YAW
 		else:
 			lat_long_type = LAT_LONG
-	var new_text := _qf.latitude_longitude(lat_long, 1, lat_long_type) # , false, CASE_LOWER)
+	var new_text := qformat.latitude_longitude(lat_long, 1, lat_long_type) # , false, CASE_LOWER)
 	if is_ecliptic:
 		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
 	text = new_text

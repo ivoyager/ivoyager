@@ -27,7 +27,12 @@ extends Object
 #
 # WE SHOULD NEVER NEED TO CONVERT UNITS IN OUR INTERNAL PROCESSING!
 #
-# See program/quantity_formatter.gd for display unit strings.
+# See static/qformat.gd for display unit strings.
+#
+# You can modify dictionaries 'multipliers' & 'lambdas' BUT DON'T REPLACE THEM!
+# (These are referenced throughout ivoyager code.) It's ok to clear them
+# and fill with your own project conversions. You will need to create your own
+# static 'Units' class if you need different unit constants.
 
 
 # SI base units - all sim units derived from these!

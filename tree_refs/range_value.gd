@@ -24,30 +24,34 @@ extends RefCounted
 # Holds and creates display string for value that may have min, mean, max.
 # Use NAN for not applicable (i.e., don't show). Use INF for ?.
 
+var qformat := IVQFormat # TODO: Change to const when Godot allows
+
 var mean := NAN
 var minimum := NAN
 var maximum := NAN
 
-var _quantity_formatter: IVQuantityFormatter = IVGlobal.program.QuantityFormatter
 
 
-func get_one_liner(option_type: int, unit := "", precision := -1, num_type := IVQuantityFormatter.NUM_DYNAMIC,
-		long_form := false, case_type := IVQuantityFormatter.CASE_MIXED) -> String:
+func get_text(dynamic_unit_type: int, precision := -1, num_type := IVQFormat.NUM_DYNAMIC,
+		long_form := false, case_type := IVQFormat.CASE_MIXED) -> String:
 	var mean_str := ""
 	var min_str := ""
 	var max_str := ""
 	if is_inf(mean):
 		mean_str = "?"
 	elif !is_nan(mean):
-		mean_str = _quantity_formatter.number_option(mean, option_type, unit, precision, num_type, long_form, case_type)
+		mean_str = qformat.dynamic_unit(mean, dynamic_unit_type, precision, num_type,
+				long_form, case_type)
 	if is_inf(minimum):
 		mean_str = "?"
 	elif !is_nan(minimum):
-		min_str = _quantity_formatter.number_option(minimum, option_type, unit, precision, num_type, long_form, case_type)
+		min_str = qformat.dynamic_unit(minimum, dynamic_unit_type, precision, num_type,
+				long_form, case_type)
 	if is_inf(maximum):
 		mean_str = "?"
 	elif !is_nan(maximum):
-		max_str = _quantity_formatter.number_option(maximum, option_type, unit, precision, num_type, long_form, case_type)
+		max_str = qformat.dynamic_unit(maximum, dynamic_unit_type, precision, num_type,
+				long_form, case_type)
 	
 	var result_str := ""
 	if min_str:
@@ -57,3 +61,4 @@ func get_one_liner(option_type: int, unit := "", precision := -1, num_type := IV
 	if max_str:
 		result_str += "; " + tr("MAX") + ": " + max_str
 	return result_str
+

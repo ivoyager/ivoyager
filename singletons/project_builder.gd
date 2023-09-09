@@ -151,7 +151,6 @@ var program_refcounteds := {
 	_ModelManager_ = IVModelManager,
 	
 	# tools and resources
-	_QuantityFormatter_ = IVQuantityFormatter,
 	_ViewDefaults_ = IVViewDefaults,
 }
 

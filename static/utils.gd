@@ -67,7 +67,7 @@ static func get_deep(target, path: String): # untyped return
 	return target
 
 
-static func get_path_result(target, path: String, args := []): # untyped return
+static func get_path_result(target: Variant, path: String, args := []): # untyped return
 	# as above but path could include methods
 	if !path:
 		return target

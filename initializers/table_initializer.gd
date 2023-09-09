@@ -30,8 +30,8 @@ func _init() -> void:
 	IVTableData.postprocess_tables(
 			IVGlobal.postprocess_tables,
 			IVGlobal.table_project_enums,
-			IVGlobal.multipliers,
-			IVGlobal.lambdas,
+			IVUnits.multipliers,
+			IVUnits.lambdas,
 			IVGlobal.enable_wiki,
 			IVGlobal.enable_precisions
 	)
