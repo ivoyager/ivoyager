@@ -14,12 +14,13 @@ Currently under development using Godot 4.1.1.
 
 Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-08-14).
 
-### Changes
-* The table read, process and access system has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
+### Changed
+* [Breaking] Added static class IVQFormat to replace previous IVQuantityFormatter (w/ similar but modified API).
+* [Breaking] The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
 * [Migration] Implement new Godot4 signal syntax using Signal and Callable objects.
-* [Migration - WIP] Type arrays where possible.
-* [Migration- WIP] Re-type String as StringName where appropriate.
-* [Migration] Implement lambdas in IVUnits for non-multiplier unit conversions.
+* [Migration] Type arrays where possible.
+* [Migration] Re-type String as StringName where appropriate.
+* [Migration] Implement lambdas in many classes.
 * [Migration] Many unlisted migration changes!
 
 ### Known Migration Regressions
