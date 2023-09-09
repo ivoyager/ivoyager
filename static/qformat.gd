@@ -1,4 +1,4 @@
-# quantity_formatter.gd
+# qformat.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,19 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVQuantityFormatter
-extends RefCounted
+class_name IVQFormat
+extends Object
 
-# Helper for formatting numbers and quanties for GUI. All unit conversions are
-# as defined in IVUnits.
-
-const units := preload("res://ivoyager/static/units.gd")
-const math := preload("res://ivoyager/static/math.gd")
 
 enum { # case_type
 	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 Kilohertz", "1.00 Megahertz"
-	CASE_LOWER, # does not modify exp_str, unit symbols, N, S, E, W (maybe others)
-	CASE_UPPER, # does not modify exp_str or unit symbols (maybe others)
+	CASE_LOWER, # does not modify exponent_str, unit symbols, N, S, E, W (maybe others)
+	CASE_UPPER, # does not modify exponent_str or unit symbols (maybe others)
 }
 
 enum { # num_type
@@ -39,11 +34,7 @@ enum { # num_type
 	NUM_DECIMAL_PL, # treat precision as number of decimal places
 }
 
-enum { # option_type for number_option()
-	NAMED_NUMBER, # "99999", then "1.00 Million", etc.
-	NUMBER,
-	UNIT,
-	PREFIXED_UNIT,
+enum { # dynamic_unit_type
 	# length
 	LENGTH_M_KM, # m if x < 1.0 km
 	LENGTH_KM_AU, # au if x > 0.1 au
@@ -61,9 +52,6 @@ enum { # option_type for number_option()
 	# velocity
 	VELOCITY_MPS_KMPS, # km/s if >= 1.0 km/s
 	VELOCITY_MPS_KMPS_C, # km/s if >= 1.0 km/s; c if >= 0.1 c
-	# misc
-	LATITUDE,
-	LONGITUDE,
 }
 
 enum { # lat_long_type
@@ -72,19 +60,30 @@ enum { # lat_long_type
 	PITCH_YAW,
 }
 
+
+const units := preload("units.gd")
 const LOG_OF_10 := log(10.0)
 
+
 # project vars
-var exp_str := "e" # e.g., set to "E", "x10^", " x 10^"
-var prefix_names: Array[String] = [ # e-24, ..., e24
+static var multipliers := units.multipliers # same as table import, etc.
+static var lambdas := units.lambdas
+
+static var exponent_str := "e" # e.g., set to "E", "x10^" or " x 10^"
+
+# The next three vars MUST be updated together!
+static var prefix_names: Array[String] = [ # e-24, ..., e24
 	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
 	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
 ]
-var prefix_symbols: Array[String] = [ # e-24, ..., e24
+static var prefix_symbols: Array[String] = [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ]
-var large_numbers: Array[StringName] = [
+static var prefix_offset := prefix_symbols.find("") # UPDATE THIS if prefix_symbols changed!
+
+
+static var large_numbers: Array[StringName] = [
 	&"TXT_MILLION", &"TXT_BILLION", &"TXT_TRILLION", &"TXT_QUADRILLION", &"TXT_QUINTILLION",
 	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
 ] # e6, ..., e33; localized in _project_init()
@@ -92,12 +91,12 @@ var large_numbers: Array[StringName] = [
 # Unit symbols in the three dictionaries below must be present in
 # multipliers or lambdas dictionaries. (The converse is not true.)
 
-var long_forms := {
+static var long_forms := {
 	# If missing here, we fallback to 'short_forms', then 'short_forms_no_space',
 	# then the unit string itself.
 	#
 	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
-	# using number_prefixed_unit(). We have commonly used already-prefixed here
+	# using prefixed_unit(). We have commonly used already-prefixed here
 	# because it is common to want to display quantities such as: "3.00e9 km".
 	
 	# time
@@ -193,7 +192,7 @@ var long_forms := {
 	&"T" : &"TXT_TESLAS",
 }
 
-var short_forms := {
+static var short_forms := {
 	# If missing here, we fallback to the unit string itself (usually the case).
 	&"deg" : &"TXT_DEG",
 	&"degC" : &"TXT_DEG_C",
@@ -204,7 +203,7 @@ var short_forms := {
 	&"_g" : &"g", # reused symbol ("_g" in function call; "g" in GUI)
 }
 
-var skip_space := {
+static var skip_space := {
 	# No space before short form or raw symbol (e.g., degrees symbol).
 	&"deg" : true,
 	&"degC" : true,
@@ -214,141 +213,105 @@ var skip_space := {
 	&"deg/Cy" : true,
 }
 
-# private
-var _n_prefixes: int
-var _prefix_offset: int
-var _n_lg_numbers: int
-var _multipliers: Dictionary
-var _lambdas: Dictionary
 
 
-func _project_init():
-	_multipliers = IVGlobal.unit_multipliers
-	_lambdas = IVGlobal.unit_lambdas
-	_n_prefixes = prefix_symbols.size()
-	assert(_n_prefixes == prefix_names.size())
-	_prefix_offset = prefix_symbols.find("")
-	assert(_prefix_offset == prefix_names.find(""))
-	_n_lg_numbers = large_numbers.size()
-
-
-func number_option(x: float, option_type: int, unit := &"", precision := 3, num_type := NUM_DYNAMIC,
-		long_form := false, case_type := CASE_MIXED, lat_long_type := N_S_E_W) -> String:
+static func dynamic_unit(x: float, dynamic_unit_type: int, precision := 3,
+		num_type := NUM_DYNAMIC, long_form := false, case_type := CASE_MIXED) -> String:
 	
-	# TODO: We can use Callables in GUI so we don't need *every* case here.
-	# But we still want unit rules like "'m' if < 1.0 km else 'km'", etc., which
-	# we can wrap up in a dictionary of lambdas.
-	
-	# wrapper for functions below
-	match option_type:
-		NAMED_NUMBER:
-			return named_number(x, precision, case_type)
-		NUMBER:
-			if unit:
-				return number(x, precision, num_type) + " " + unit
-			else:
-				return number(x, precision, num_type)
-		UNIT:
-			return number_unit(x, unit, precision, num_type, long_form, case_type)
-		PREFIXED_UNIT:
-			return number_prefixed_unit(x, unit, precision, num_type, long_form, case_type)
+	match dynamic_unit_type:
 		LENGTH_M_KM: # m if x < 1.0 km
 			if x < units.KM:
-				return number_unit(x, "m", precision, num_type, long_form, case_type)
-			return number_unit(x, "km", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "km", precision, num_type, long_form, case_type)
 		LENGTH_KM_AU: # au if x > 0.1 au
 			if x < 0.1 * units.AU:
-				return number_unit(x, "km", precision, num_type, long_form, case_type)
-			return number_unit(x, "au", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "km", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "au", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU:
 			if x < units.KM:
-				return number_unit(x, "m", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.AU:
-				return number_unit(x, "km", precision, num_type, long_form, case_type)
-			return number_unit(x, "au", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "km", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "au", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU_LY:
 			if x < units.KM:
-				return number_unit(x, "m", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.AU:
-				return number_unit(x, "km", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "km", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.LIGHT_YEAR:
-				return number_unit(x, "au", precision, num_type, long_form, case_type)
-			return number_unit(x, "ly", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "au", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "ly", precision, num_type, long_form, case_type)
 		LENGTH_M_KM_AU_PREFIXED_PARSEC:
 			if x < units.KM:
-				return number_unit(x, "m", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.AU:
-				return number_unit(x, "km", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "km", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.PARSEC:
-				return number_unit(x, "au", precision, num_type, long_form, case_type)
-			return number_prefixed_unit(x, "pc", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "au", precision, num_type, long_form, case_type)
+			return prefixed_unit(x, "pc", precision, num_type, long_form, case_type)
 		MASS_G_KG: # g if < 1.0 kg
 			if x < units.KG:
-				return number_unit(x, "g", precision, num_type, long_form, case_type)
-			return number_unit(x, "kg", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "g", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "kg", precision, num_type, long_form, case_type)
 		MASS_G_KG_T: # g if < 1.0 kg; t if x >= 1000.0 kg 
 			if x < units.KG:
-				return number_unit(x, "g", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "g", precision, num_type, long_form, case_type)
 			elif x < units.TONNE:
-				return number_unit(x, "kg", precision, num_type, long_form, case_type)
-			return number_unit(x, "t", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "kg", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "t", precision, num_type, long_form, case_type)
 		MASS_G_KG_PREFIXED_T: # g, kg, t, kt, Mt, Gt, Tt, etc.
 			if x < units.KG:
-				return number_unit(x, "g", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "g", precision, num_type, long_form, case_type)
 			elif x < units.TONNE:
-				return number_unit(x, "kg", precision, num_type, long_form, case_type)
-			return number_prefixed_unit(x, "t", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "kg", precision, num_type, long_form, case_type)
+			return prefixed_unit(x, "t", precision, num_type, long_form, case_type)
 		MASS_RATE_G_KG_PREFIXED_T_PER_D: # g/d, kg/d, t/d, kt/d, Mt/d, Gt/d, etc.
 			if x < units.KG / units.DAY:
-				return number_unit(x, "g/d", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "g/d", precision, num_type, long_form, case_type)
 			elif x < units.TONNE / units.DAY:
-				return number_unit(x, "kg/d", precision, num_type, long_form, case_type)
-			return number_prefixed_unit(x, "t/d", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "kg/d", precision, num_type, long_form, case_type)
+			return prefixed_unit(x, "t/d", precision, num_type, long_form, case_type)
 		TIME_D_Y:
 			if x <= 1000.0 * units.DAY:
-				return number_unit(x, "d", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "d", precision, num_type, long_form, case_type)
 			else:
-				return number_unit(x, "y", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "y", precision, num_type, long_form, case_type)
 		VELOCITY_MPS_KMPS: # km/s if >= 1.0 km/s
 			if x < units.KM / units.SECOND:
-				return number_unit(x, "m/s", precision, num_type, long_form, case_type)
-			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m/s", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "km/s", precision, num_type, long_form, case_type)
 		VELOCITY_MPS_KMPS_C: # c if >= 0.1 c
 			if x < units.KM / units.SECOND:
-				return number_unit(x, "m/s", precision, num_type, long_form, case_type)
+				return fixed_unit(x, "m/s", precision, num_type, long_form, case_type)
 			elif x < 0.1 * units.SPEED_OF_LIGHT:
-				return number_unit(x, "c", precision, num_type, long_form, case_type)
-			return number_unit(x, "km/s", precision, num_type, long_form, case_type)
-		LATITUDE:
-			return latitude(x, precision, lat_long_type, long_form, case_type)
-		LONGITUDE:
-			return longitude(x, precision, lat_long_type, long_form, case_type)
+				return fixed_unit(x, "c", precision, num_type, long_form, case_type)
+			return fixed_unit(x, "km/s", precision, num_type, long_form, case_type)
 			
-	assert(false, "Unkknown option_type: " + str(option_type))
+	assert(false, "Unknown dynamic_unit_type: %s" % dynamic_unit_type)
 	return str(x)
 
 
-func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
+static func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	return latitude(lat_long[0], decimal_pl, lat_long_type, long_form, case_type) + " " \
 			+ longitude(lat_long[1], decimal_pl, lat_long_type, long_form, case_type)
 
 
-func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
+static func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
 	x = rad_to_deg(x)
 	x = wrapf(x, -180.0, 180.0)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
 		if x > -0.0001: # prefer N if nearly 0 after conversion
-			suffix = tr("TXT_NORTH") if long_form else tr("TXT_NORTH_SHORT")
+			suffix = IVGlobal.tr("TXT_NORTH") if long_form else IVGlobal.tr("TXT_NORTH_SHORT")
 		else:
-			suffix = tr("TXT_SOUTH") if long_form else tr("TXT_SOUTH_SHORT")
+			suffix = IVGlobal.tr("TXT_SOUTH") if long_form else IVGlobal.tr("TXT_SOUTH_SHORT")
 		x = abs(x)
 	elif lat_long_type == LAT_LONG:
-		suffix = tr("TXT_LATITUDE") if long_form else tr("TXT_LATITUDE_SHORT")
+		suffix = IVGlobal.tr("TXT_LATITUDE") if long_form else IVGlobal.tr("TXT_LATITUDE_SHORT")
 	else: # PITCH_YAW
-		suffix = tr("TXT_PITCH")
+		suffix = IVGlobal.tr("TXT_PITCH")
 	if lat_long_type != N_S_E_W or long_form: # don't lower case N, S
 		if case_type == CASE_LOWER:
 			suffix = suffix.to_lower()
@@ -357,23 +320,23 @@ func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := 
 	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
 
 
-func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
+static func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
 		case_type := CASE_MIXED) -> String:
 	x = rad_to_deg(x)
 	var suffix: String
 	if lat_long_type == N_S_E_W:
 		x = wrapf(x, -180.0, 180.0)
 		if x > -0.0001 and x < 179.9999: # nearly 0 is E; nearly 180 is W
-			suffix = tr("TXT_EAST") if long_form else tr("TXT_EAST_SHORT")
+			suffix = IVGlobal.tr("TXT_EAST") if long_form else IVGlobal.tr("TXT_EAST_SHORT")
 		else:
-			suffix = tr("TXT_WEST") if long_form else tr("TXT_WEST_SHORT")
+			suffix = IVGlobal.tr("TXT_WEST") if long_form else IVGlobal.tr("TXT_WEST_SHORT")
 		x = abs(x)
 	elif lat_long_type == LAT_LONG:
 		x = wrapf(x, 0.0, 360.0)
-		suffix = tr("TXT_LONGITUDE") if long_form else tr("TXT_LONGITUDE_SHORT")
+		suffix = IVGlobal.tr("TXT_LONGITUDE") if long_form else IVGlobal.tr("TXT_LONGITUDE_SHORT")
 	else: # PITCH_YAW
 		x = wrapf(x, -180.0, 180.0)
-		suffix = tr("TXT_YAW")
+		suffix = IVGlobal.tr("TXT_YAW")
 	if lat_long_type != N_S_E_W or long_form: # don't lower case E, W
 		if case_type == CASE_LOWER:
 			suffix = suffix.to_lower()
@@ -382,7 +345,7 @@ func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form :=
 	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
 
 
-func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
+static func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	# precision <= 0 displays "as is" regardless of num_type. This will often
 	# show inappropriately large precision if there have been unit conversions.
 	# see NUM_ enums for num_type.
@@ -429,10 +392,10 @@ func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	if precision_rounded == 10.0: # prevent '10.00e3' after rounding
 		x /= 10.0
 		pow10 += 1
-	return "%.*f%s%s" % [precision - 1, x, exp_str, pow10] # e.g., '5.55e5'
+	return "%.*f%s%s" % [precision - 1, x, exponent_str, pow10] # e.g., '5.55e5'
 
 
-func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
+static func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	# returns integer string up to "999999", then "1.00 Million", etc.;
 	if abs(x) < 1e6:
 		return "%.f" % x
@@ -440,11 +403,11 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	var lg_num_index := exp_3s_index - 2
 	if lg_num_index < 0: # shouldn't happen but just in case
 		return "%.f" % x
-	if lg_num_index >= _n_lg_numbers:
-		lg_num_index = _n_lg_numbers - 1
+	if lg_num_index >= large_numbers.size():
+		lg_num_index = large_numbers.size() - 1
 		exp_3s_index = lg_num_index + 2
 	x /= pow(10.0, exp_3s_index * 3)
-	var lg_number_str: String = tr(large_numbers[lg_num_index])
+	var lg_number_str: String = IVGlobal.tr(large_numbers[lg_num_index])
 	if case_type == CASE_LOWER:
 		lg_number_str = lg_number_str.to_lower()
 	elif case_type == CASE_UPPER:
@@ -452,20 +415,20 @@ func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
 
 
-func number_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
+static func fixed_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# unit must be in multipliers or lambdas dicts (by default these are
 	# multipliers and lambdas in ivoyager/static/units.gd)
-	x = units.convert_quantity(x, unit, false, _multipliers, _lambdas, false)
+	x = units.convert_quantity(x, unit, false, multipliers, lambdas, false)
 	var number_str := number(x, precision, num_type)
 	
 	var unit_str: String
 	var is_space := true
 	if long_form and long_forms.has(unit):
-		unit_str = tr(long_forms[unit])
+		unit_str = IVGlobal.tr(long_forms[unit])
 	else:
 		is_space = !skip_space.has(unit)
-		unit_str = tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
+		unit_str = IVGlobal.tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
 	
 	if case_type == CASE_LOWER:
 		unit_str = unit_str.to_lower()
@@ -477,7 +440,7 @@ func number_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYN
 	return number_str + unit_str
 
 
-func number_prefixed_unit(x: float, unit: StringName, precision := -1, num_type := NUM_DYNAMIC,
+static func prefixed_unit(x: float, unit: StringName, precision := -1, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
 	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
 	# long_form = false or true, respectively). You won't see scientific
@@ -487,27 +450,27 @@ func number_prefixed_unit(x: float, unit: StringName, precision := -1, num_type 
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
 	# unit == &"" ok; otherwise, unit must be in multipliers or lamdas dicts.
 	if unit:
-		x = units.convert_quantity(x, unit, false, _multipliers, _lambdas, false)
+		x = units.convert_quantity(x, unit, false, multipliers, lambdas, false)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
-	var si_index := exp_3s_index + _prefix_offset
+	var si_index := exp_3s_index + prefix_offset
 	if si_index < 0:
 		si_index = 0
-		exp_3s_index = -_prefix_offset
-	elif si_index >= _n_prefixes:
-		si_index = _n_prefixes - 1
-		exp_3s_index = si_index - _prefix_offset
+		exp_3s_index = -prefix_offset
+	elif si_index >= prefix_symbols.size():
+		si_index = prefix_symbols.size() - 1
+		exp_3s_index = si_index - prefix_offset
 	x /= pow(10.0, exp_3s_index * 3)
 	var number_str := number(x, precision, num_type)
 
 	var unit_str: String
 	var is_space := true
 	if long_form and long_forms.has(unit):
-		unit_str = tr(long_forms[unit])
+		unit_str = IVGlobal.tr(long_forms[unit])
 	else:
 		is_space = !skip_space.has(unit)
-		unit_str = tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
+		unit_str = IVGlobal.tr(short_forms[unit]) if short_forms.has(unit) else String(unit)
 	
 	if long_form:
 		unit_str = prefix_names[si_index] + unit_str
@@ -522,4 +485,6 @@ func number_prefixed_unit(x: float, unit: StringName, precision := -1, num_type 
 	if is_space:
 		return number_str + " " + unit_str
 	return number_str + unit_str
+
+
 

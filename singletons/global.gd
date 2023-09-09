@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230907
+const IVOYAGER_YMD := 20230909
 
 
 # simulator state broadcasts
@@ -156,8 +156,6 @@ var vertecies_per_orbit_low_res: int = 100 # for small bodies like asteroids
 var max_camera_distance: float = 5e3 * IVUnits.AU
 var obliquity_of_the_ecliptic := 23.439 * IVUnits.DEG
 var ecliptic_rotation := IVMath.get_x_rotation_matrix(obliquity_of_the_ecliptic)
-var unit_multipliers := IVUnits.multipliers
-var unit_lambdas := IVUnits.lambdas
 var cache_dir := "user://cache"
 
 # theses could be modified during gameplay
