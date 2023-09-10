@@ -21,6 +21,10 @@ class_name IVQFormat
 extends Object
 
 
+# Provides functions for formatting numbers or unit quantities. Requires static
+# class 'units.gd' in the same directory.
+
+
 enum { # case_type
 	CASE_MIXED, # "1.00 Million", "1.00 kHz", "1.00 Kilohertz", "1.00 Megahertz"
 	CASE_LOWER, # does not modify exponent_str, unit symbols, N, S, E, W (maybe others)
@@ -29,9 +33,9 @@ enum { # case_type
 
 enum { # num_type
 	NUM_DYNAMIC, # 0.01 to 99999 as non-scientific, otherwise scientific
-	NUM_SCIENTIFIC, # pure scientific
-	NUM_PRECISION, # eg, precision = 3 -> "12300", "1.23", "0.0000123"
-	NUM_DECIMAL_PL, # treat precision as number of decimal places
+	NUM_SCIENTIFIC, # always scientific using precision as significant digits
+	NUM_PRECISION, # e.g., precision = 3 -> "12300" (forces zeros), "1.23", "0.0000123"
+	NUM_DECIMAL_PL, # treat 'precision' as number of decimal places
 }
 
 enum { # dynamic_unit_type
@@ -80,24 +84,23 @@ static var prefix_symbols: Array[String] = [ # e-24, ..., e24
 	"y", "z", "a", "f", "p", "n", char(181), "m",
 	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
 ]
-static var prefix_offset := prefix_symbols.find("") # UPDATE THIS if prefix_symbols changed!
+static var prefix_offset := prefix_symbols.find("") # UPDATE if prefix_symbols changed!
 
 
 static var large_numbers: Array[StringName] = [
 	&"TXT_MILLION", &"TXT_BILLION", &"TXT_TRILLION", &"TXT_QUADRILLION", &"TXT_QUINTILLION",
 	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
-] # e6, ..., e33; localized in _project_init()
+] # e6, ..., e33
 
 # Unit symbols in the three dictionaries below must be present in
 # multipliers or lambdas dictionaries. (The converse is not true.)
 
 static var long_forms := {
-	# If missing here, we fallback to 'short_forms', then 'short_forms_no_space',
-	# then the unit string itself.
+	# If missing here, we fallback to 'short_forms', then the unit name itself.
 	#
 	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
 	# using prefixed_unit(). We have commonly used already-prefixed here
-	# because it is common to want to display quantities such as: "3.00e9 km".
+	# because it is common to want to display fixed units such as: "3.00e9 km".
 	
 	# time
 	&"s" : &"TXT_SECONDS",
@@ -193,14 +196,15 @@ static var long_forms := {
 }
 
 static var short_forms := {
-	# If missing here, we fallback to the unit string itself (usually the case).
+	# If missing here, we fallback to the unit name itself. (Usually we do want
+	# the unit name: 'km', 'km/s', etc.)
 	&"deg" : &"TXT_DEG",
 	&"degC" : &"TXT_DEG_C",
 	&"degF" : &"TXT_DEG_F",
 	&"deg/d" : &"TXT_DEG_PER_DAY",
 	&"deg/a" : &"TXT_DEG_PER_YEAR",
 	&"deg/Cy" : &"TXT_DEG_PER_CENTURY",
-	&"_g" : &"g", # reused symbol ("_g" in function call; "g" in GUI)
+	&"_g" : &"g", # reused symbol ('_g' is the unit name; 'g' is GUI display)
 }
 
 static var skip_space := {
@@ -291,60 +295,6 @@ static func dynamic_unit(x: float, dynamic_unit_type: int, precision := 3,
 	return str(x)
 
 
-static func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
-		long_form := false, case_type := CASE_MIXED) -> String:
-	return latitude(lat_long[0], decimal_pl, lat_long_type, long_form, case_type) + " " \
-			+ longitude(lat_long[1], decimal_pl, lat_long_type, long_form, case_type)
-
-
-static func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
-		case_type := CASE_MIXED) -> String:
-	x = rad_to_deg(x)
-	x = wrapf(x, -180.0, 180.0)
-	var suffix: String
-	if lat_long_type == N_S_E_W:
-		if x > -0.0001: # prefer N if nearly 0 after conversion
-			suffix = IVGlobal.tr("TXT_NORTH") if long_form else IVGlobal.tr("TXT_NORTH_SHORT")
-		else:
-			suffix = IVGlobal.tr("TXT_SOUTH") if long_form else IVGlobal.tr("TXT_SOUTH_SHORT")
-		x = abs(x)
-	elif lat_long_type == LAT_LONG:
-		suffix = IVGlobal.tr("TXT_LATITUDE") if long_form else IVGlobal.tr("TXT_LATITUDE_SHORT")
-	else: # PITCH_YAW
-		suffix = IVGlobal.tr("TXT_PITCH")
-	if lat_long_type != N_S_E_W or long_form: # don't lower case N, S
-		if case_type == CASE_LOWER:
-			suffix = suffix.to_lower()
-		elif case_type == CASE_UPPER:
-			suffix = suffix.to_upper()
-	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
-
-
-static func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
-		case_type := CASE_MIXED) -> String:
-	x = rad_to_deg(x)
-	var suffix: String
-	if lat_long_type == N_S_E_W:
-		x = wrapf(x, -180.0, 180.0)
-		if x > -0.0001 and x < 179.9999: # nearly 0 is E; nearly 180 is W
-			suffix = IVGlobal.tr("TXT_EAST") if long_form else IVGlobal.tr("TXT_EAST_SHORT")
-		else:
-			suffix = IVGlobal.tr("TXT_WEST") if long_form else IVGlobal.tr("TXT_WEST_SHORT")
-		x = abs(x)
-	elif lat_long_type == LAT_LONG:
-		x = wrapf(x, 0.0, 360.0)
-		suffix = IVGlobal.tr("TXT_LONGITUDE") if long_form else IVGlobal.tr("TXT_LONGITUDE_SHORT")
-	else: # PITCH_YAW
-		x = wrapf(x, -180.0, 180.0)
-		suffix = IVGlobal.tr("TXT_YAW")
-	if lat_long_type != N_S_E_W or long_form: # don't lower case E, W
-		if case_type == CASE_LOWER:
-			suffix = suffix.to_lower()
-		elif case_type == CASE_UPPER:
-			suffix = suffix.to_upper()
-	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
-
-
 static func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 	# precision <= 0 displays "as is" regardless of num_type. This will often
 	# show inappropriately large precision if there have been unit conversions.
@@ -413,6 +363,12 @@ static func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> S
 	elif case_type == CASE_UPPER:
 		lg_number_str = lg_number_str.to_upper()
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
+
+
+func prefixed_named_number(x: float, prefix: String, precision := 3, case_type := CASE_MIXED
+		) -> String:
+	# e.g., "$1.00 Billion"
+	return prefix + named_number(x, precision, case_type)
 
 
 static func fixed_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
@@ -487,4 +443,56 @@ static func prefixed_unit(x: float, unit: StringName, precision := -1, num_type 
 	return number_str + unit_str
 
 
+static func latitude_longitude(lat_long: Vector2, decimal_pl := 0, lat_long_type := N_S_E_W,
+		long_form := false, case_type := CASE_MIXED) -> String:
+	return latitude(lat_long[0], decimal_pl, lat_long_type, long_form, case_type) + " " \
+			+ longitude(lat_long[1], decimal_pl, lat_long_type, long_form, case_type)
+
+
+static func latitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	x = rad_to_deg(x)
+	x = wrapf(x, -180.0, 180.0)
+	var suffix: String
+	if lat_long_type == N_S_E_W:
+		if x > -0.0001: # prefer N if nearly 0 after conversion
+			suffix = IVGlobal.tr("TXT_NORTH") if long_form else IVGlobal.tr("TXT_NORTH_SHORT")
+		else:
+			suffix = IVGlobal.tr("TXT_SOUTH") if long_form else IVGlobal.tr("TXT_SOUTH_SHORT")
+		x = abs(x)
+	elif lat_long_type == LAT_LONG:
+		suffix = IVGlobal.tr("TXT_LATITUDE") if long_form else IVGlobal.tr("TXT_LATITUDE_SHORT")
+	else: # PITCH_YAW
+		suffix = IVGlobal.tr("TXT_PITCH")
+	if lat_long_type != N_S_E_W or long_form: # don't lower case N, S
+		if case_type == CASE_LOWER:
+			suffix = suffix.to_lower()
+		elif case_type == CASE_UPPER:
+			suffix = suffix.to_upper()
+	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
+
+
+static func longitude(x: float, decimal_pl := 0, lat_long_type := N_S_E_W, long_form := false,
+		case_type := CASE_MIXED) -> String:
+	x = rad_to_deg(x)
+	var suffix: String
+	if lat_long_type == N_S_E_W:
+		x = wrapf(x, -180.0, 180.0)
+		if x > -0.0001 and x < 179.9999: # nearly 0 is E; nearly 180 is W
+			suffix = IVGlobal.tr("TXT_EAST") if long_form else IVGlobal.tr("TXT_EAST_SHORT")
+		else:
+			suffix = IVGlobal.tr("TXT_WEST") if long_form else IVGlobal.tr("TXT_WEST_SHORT")
+		x = abs(x)
+	elif lat_long_type == LAT_LONG:
+		x = wrapf(x, 0.0, 360.0)
+		suffix = IVGlobal.tr("TXT_LONGITUDE") if long_form else IVGlobal.tr("TXT_LONGITUDE_SHORT")
+	else: # PITCH_YAW
+		x = wrapf(x, -180.0, 180.0)
+		suffix = IVGlobal.tr("TXT_YAW")
+	if lat_long_type != N_S_E_W or long_form: # don't lower case E, W
+		if case_type == CASE_LOWER:
+			suffix = suffix.to_lower()
+		elif case_type == CASE_UPPER:
+			suffix = suffix.to_upper()
+	return "%.*f\u00B0 %s" % [decimal_pl, x, suffix]
 
