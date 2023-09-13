@@ -64,7 +64,7 @@ var default_orbit_colors := {}
 func _project_init() -> void:
 	IVGlobal.simulator_exited.connect(_set_current_to_default)
 	IVGlobal.update_gui_requested.connect(_signal_all_changed)
-	for row in IVTableData.get_db_n_rows("visual_groups"):
+	for row in IVTableData.get_n_rows("visual_groups"):
 		var body_flag := IVTableData.get_db_int("visual_groups", "body_flag", row)
 		var name_visible := IVTableData.get_db_bool("visual_groups", "default_name_visible", row)
 		var symbol_visible := IVTableData.get_db_bool("visual_groups", "default_symbol_visible", row)

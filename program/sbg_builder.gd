@@ -42,7 +42,7 @@ func _project_init() -> void:
 
 func build_sbgs() -> void:
 	_asteroid_count = 0
-	var n_groups := IVTableData.get_db_n_rows("small_bodies_groups")
+	var n_groups := IVTableData.get_n_rows("small_bodies_groups")
 	for row in n_groups:
 		build_sbg(row)
 	print("Added orbital data for ", _asteroid_count, " small bodies (asteroids, etc.)")

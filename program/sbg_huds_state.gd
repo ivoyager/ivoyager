@@ -61,7 +61,7 @@ var default_orbits_colors := {}
 func _project_init() -> void:
 	IVGlobal.simulator_exited.connect(_set_current_to_default)
 	IVGlobal.update_gui_requested.connect(_signal_all_changed)
-	for row in IVTableData.get_db_n_rows("small_bodies_groups"):
+	for row in IVTableData.get_n_rows("small_bodies_groups"):
 		if IVTableData.get_db_bool("small_bodies_groups", "skip", row):
 			continue
 		var sbg_alias := IVTableData.get_db_string("small_bodies_groups", "sbg_alias", row)
