@@ -20,6 +20,9 @@
 class_name IVQFormat
 extends Object
 
+# TODO plugin: We can't make this a standalone static util because tr()
+# isn't accessible. In the core plugin reorg this will become a singleton.
+
 
 # Provides functions for formatting numbers or unit quantities. Requires static
 # class 'units.gd' in the same directory.
@@ -365,7 +368,7 @@ static func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> S
 	return number(x, precision, NUM_DYNAMIC) + " " + lg_number_str
 
 
-func prefixed_named_number(x: float, prefix: String, precision := 3, case_type := CASE_MIXED
+static func prefixed_named_number(x: float, prefix: String, precision := 3, case_type := CASE_MIXED
 		) -> String:
 	# e.g., "$1.00 Billion"
 	return prefix + named_number(x, precision, case_type)
