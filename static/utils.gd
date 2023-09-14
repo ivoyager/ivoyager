@@ -92,14 +92,28 @@ static func get_path_result(target: Variant, path: String, args := []): # untype
 
 # Arrays
 
-static func init_array(size: int, init_value = null) -> Array:
+static func init_array(size: int, fill_value: Variant = null) -> Array:
 	var array := []
 	array.resize(size)
-	if init_value == null:
+	if fill_value == null:
 		return array
 	var i := 0
 	while i < size:
-		array[i] = init_value
+		array[i] = fill_value
+		i += 1
+	return array
+
+
+static func init_typed_array(size: int, type: int, class_name_ := &"", script: Variant = null,
+		fill_value: Variant = null) -> Array:
+	# Will cause error if fill_value is wrong type; leave null to not fill.
+	var array := Array([], type, class_name_, script)
+	array.resize(size)
+	if fill_value == null:
+		return array
+	var i := 0
+	while i < size:
+		array[i] = fill_value
 		i += 1
 	return array
 
