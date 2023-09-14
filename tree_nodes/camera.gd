@@ -149,7 +149,7 @@ var _gui_range := NAN
 var _gui_latitude_longitude := Vector2(NAN, NAN)
 
 # settings
-var _transfer_time: float = _settings.camera_transfer_time
+var _transfer_time: float = _settings[&"camera_transfer_time"]
 
 
 # virtual functions
@@ -322,10 +322,10 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 	
 	# signals
 	if is_up_change:
-		emit_signal("up_lock_changed", flags, disabled_flags)
+		up_lock_changed.emit(flags, disabled_flags)
 	if is_track_change:
-		emit_signal("tracking_changed", flags, disabled_flags)
-	emit_signal("move_started", _to_spatial, is_camera_lock)
+		tracking_changed.emit(flags, disabled_flags)
+	move_started.emit(_to_spatial, is_camera_lock)
 
 
 func set_up_lock(is_locked: bool) -> void:
@@ -337,7 +337,7 @@ func set_up_lock(is_locked: bool) -> void:
 	else:
 		flags &= ~Flags.UP_LOCKED
 		flags |= Flags.UP_UNLOCKED
-		emit_signal("up_lock_changed", flags, disabled_flags)
+		up_lock_changed.emit(flags, disabled_flags)
 
 
 func increment_focal_length(increment: int) -> void:
@@ -355,13 +355,13 @@ func set_focal_length_index(new_fl_index, _suppress_move := false) -> void:
 	focal_length = focal_lengths[focal_length_index]
 	fov = math.get_fov_from_focal_length(focal_length)
 	_world_targeting[3] = fov
-	emit_signal("focal_length_changed", focal_length)
+	focal_length_changed.emit(focal_length)
 
 
 func change_camera_lock(new_lock: bool) -> void:
 	if is_camera_lock != new_lock:
 		is_camera_lock = new_lock
-		emit_signal("camera_lock_changed", new_lock)
+		camera_lock_changed.emit(new_lock)
 
 
 # private functions
@@ -435,7 +435,7 @@ func _do_handoff() -> void:
 	parent.remove_child(self)
 	_to_spatial.add_child(self)
 	parent = _to_spatial
-	emit_signal("parent_changed", parent)
+	parent_changed.emit(parent)
 
 
 func _interpolate_path(from_transform: Transform3D, to_transform: Transform3D, progress: float) -> void:
@@ -679,7 +679,7 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 	var dist := gui_translation.length()
 	if _gui_range != dist:
 		_gui_range = dist
-		emit_signal("range_changed", dist)
+		range_changed.emit(dist)
 		
 		# debug
 #		var radius := selection.get_perspective_radius()
@@ -697,14 +697,14 @@ func _signal_range_latitude_longitude(is_refresh := false) -> void:
 		lat_long = selection.get_latitude_longitude(gui_translation)
 	if _gui_latitude_longitude != lat_long:
 		_gui_latitude_longitude = lat_long
-		emit_signal("latitude_longitude_changed", lat_long, is_ecliptic, selection)
+		latitude_longitude_changed.emit(lat_long, is_ecliptic, selection)
 
 
 func _send_gui_refresh() -> void:
-	emit_signal("parent_changed", parent)
-	emit_signal("focal_length_changed", focal_length)
-	emit_signal("up_lock_changed", flags, disabled_flags)
-	emit_signal("tracking_changed", flags, disabled_flags)
+	parent_changed.emit(parent)
+	focal_length_changed.emit(focal_length)
+	up_lock_changed.emit(flags, disabled_flags)
+	tracking_changed.emit(flags, disabled_flags)
 	_signal_range_latitude_longitude(true)
 
 

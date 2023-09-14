@@ -30,12 +30,12 @@ extends Object
 # Tree utilities
 
 static func free_procedural_nodes(node: Node) -> void:
-	if node.get("PERSIST_MODE") == IVEnums.PERSIST_PROCEDURAL:
+	if node.get(&"PERSIST_MODE") == IVEnums.PERSIST_PROCEDURAL:
 		node.queue_free() # children will also be freed!
 		return
 	for child in node.get_children():
-		if "PERSIST_MODE" in child:
-			if child.get("PERSIST_MODE") != IVEnums.NO_PERSIST:
+		if &"PERSIST_MODE" in child:
+			if child.get(&"PERSIST_MODE") != IVEnums.NO_PERSIST:
 				free_procedural_nodes(child)
 
 
@@ -52,7 +52,7 @@ static func get_ancestor_spatial(spatial1: Node3D, spatial2: Node3D) -> Node3D:
 	return null
 
 
-static func get_deep(target, path: String): # untyped return
+static func get_deep(target: Variant, path: String) -> Variant:
 	# searches property/element path starting from target
 	if !path:
 		return target
@@ -67,7 +67,7 @@ static func get_deep(target, path: String): # untyped return
 	return target
 
 
-static func get_path_result(target: Variant, path: String, args := []): # untyped return
+static func get_path_result(target: Variant, path: String, args := []) -> Variant:
 	# as above but path could include methods
 	if !path:
 		return target
@@ -214,3 +214,4 @@ static func c_unescape_patch(text: String) -> String:
 		text = text.replace(esc_str, unicode_chr)
 		u_esc = text.find("\\u")
 	return text
+

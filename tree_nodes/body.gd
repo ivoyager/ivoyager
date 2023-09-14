@@ -717,7 +717,7 @@ func _on_time_altered(_previous_time: float) -> void:
 
 
 func _set_min_hud_dist() -> void:
-	if IVGlobal.settings.get("hide_hud_when_close", false):
+	if IVGlobal.settings.get(&"hide_hud_when_close", false):
 		_min_hud_dist = m_radius * min_hud_dist_radius_multiplier
 		if flags & IS_STAR:
 			_min_hud_dist *= min_hud_dist_star_multiplier # just the label

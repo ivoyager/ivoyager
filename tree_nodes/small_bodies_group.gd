@@ -51,7 +51,7 @@ const PERSIST_PROPERTIES := [
 
 # persisted
 
-var sbg_alias: String
+var sbg_alias: StringName
 var sbg_class: int # IVEnums.SBGClass
 var secondary_body: IVBody # e.g., Jupiter for Trojans; usually null
 var lp_integer := -1 # -1, 4 & 5 are currently supported
@@ -76,13 +76,13 @@ func get_number() -> int:
 	return names.size()
 
 
-func get_orbit_elements(index: int) -> Array:
+func get_orbit_elements(index: int) -> Array[float]:
 	# [a, e, i, Om, w, M0, n]
 	# WIP - Trojan elements a, M0 & n vary with libration. This is reflected in
 	# shader point calculations but not in elements here.
 	var e_i_Om_w_item := e_i_Om_w[index]
 	var a_M0_n_item := a_M0_n[index]
-	return [
+	return Array([
 		a_M0_n_item[0],
 		e_i_Om_w_item[0],
 		e_i_Om_w_item[1],
@@ -90,13 +90,13 @@ func get_orbit_elements(index: int) -> Array:
 		e_i_Om_w_item[3],
 		a_M0_n_item[1],
 		a_M0_n_item[2],
-	]
+	], TYPE_FLOAT, &"", null)
 
 
 # *****************************************************************************
 # ivoyager internal methods
 
-func init(name_: String, sbg_alias_: String, sbg_class_: int,
+func init(name_: StringName, sbg_alias_: StringName, sbg_class_: int,
 		lp_integer_ := -1, secondary_body_: IVBody = null) -> void:
 	# Last 2 args only if these are Lagrange point objects.
 	name = name_

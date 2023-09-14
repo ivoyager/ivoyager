@@ -95,7 +95,7 @@ static func rotate_basis_z(basis: Basis, new_z: Vector3) -> Basis:
 	return basis
 
 
-static func get_rotation_matrix(keplerian_elements: Array) -> Basis:
+static func get_rotation_matrix(keplerian_elements: Array[float]) -> Basis:
 	var i: float = keplerian_elements[2]
 	var Om: float = keplerian_elements[3]
 	var w: float = keplerian_elements[4]
@@ -270,7 +270,7 @@ static func get_fov_scaling_factor(fov: float) -> float:
 
 # Quadratic fit and transformation
 
-static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
+static func quadratic_fit(x_array: Array[float], y_array: Array[float]) -> Array[float]:
 	# Returns [a, b, c] where y = ax^2 + bx + c is least-squares fit,
 	# or [0.0, 0.0, 0.0] if indeterminant or nearly indeterminant.
 	var n := x_array.size()
@@ -307,14 +307,14 @@ static func quadratic_fit(x_array: Array, y_array: Array) -> Array:
 	var Sy2 := sum_x2y - sum_y * mean_x2
 	var divisor := S22 * S11 - S12 * S12
 	if is_zero_approx(divisor):
-		return [0.0, 0.0, 0.0]
+		return Array([0.0, 0.0, 0.0], TYPE_FLOAT, &"", null)
 	var b := (Sy1 * S22 - Sy2 * S12) / divisor
 	var a := (Sy2 * S11 - Sy1 * S12) / divisor
 	var c := mean_y - b * mean_x - a * mean_x2
-	return [a, b, c]
+	return Array([a, b, c], TYPE_FLOAT, &"", null)
 
 
-static func quadratic(x: float, coefficients: Array) -> float:
+static func quadratic(x: float, coefficients: Array[float]) -> float:
 	var a: float = coefficients[0]
 	var b: float = coefficients[1]
 	var c: float = coefficients[2]

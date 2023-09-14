@@ -54,7 +54,7 @@ func _ready() -> void:
 
 
 func _on_project_builder_finished() -> void:
-	if IVGlobal.themes.has("main"):
+	if IVGlobal.themes.has(&"main"):
 		theme = IVGlobal.themes.main
 
 

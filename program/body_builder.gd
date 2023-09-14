@@ -118,7 +118,7 @@ var _real_precisions := {}
 func _project_init() -> void:
 	_Body_ = IVGlobal.script_classes._Body_
 	_orbit_builder = IVGlobal.program.OrbitBuilder
-	_composition_builder = IVGlobal.program.get("CompositionBuilder")
+	_composition_builder = IVGlobal.program.get(&"CompositionBuilder")
 
 
 func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: # Main thread!
@@ -126,15 +126,15 @@ func build_from_table(table_name: String, row: int, parent: IVBody) -> IVBody: #
 	_row = row
 	@warning_ignore("unsafe_method_access") # possible replacement class
 	var body: IVBody = _Body_.new()
-	body.name = IVTableData.get_db_string(table_name, "name", row)
+	body.name = IVTableData.get_db_entity_name(table_name, row)
 	_set_flags_from_table(body, parent)
 	_set_orbit_from_table(body, parent)
 	_set_characteristics_from_table(body)
 	if _composition_builder:
 		_composition_builder.add_compositions_from_table(body, table_name, row)
 	if enable_precisions:
-		body.characteristics.real_precisions = _real_precisions
-		_real_precisions = {}
+		body.characteristics[&"real_precisions"] = _real_precisions
+		_real_precisions = {} # reset for next body
 	return body
 
 
@@ -179,7 +179,7 @@ func _set_orbit_from_table(body: IVBody, parent: IVBody) -> void:
 func _set_characteristics_from_table(body: IVBody) -> void:
 	var characteristics := body.characteristics
 	IVTableData.db_build_dictionary(characteristics, characteristics_fields, _table_name, _row)
-	assert(characteristics.has("m_radius"))
+	assert(characteristics.has(&"m_radius"))
 	if enable_precisions:
 		var precisions := IVTableData.get_db_float_precisions(characteristics_fields, _table_name, _row)
 		var n_fields := characteristics_fields.size()
@@ -187,68 +187,68 @@ func _set_characteristics_from_table(body: IVBody) -> void:
 		while i < n_fields:
 			var precision: int = precisions[i]
 			if precision != -1:
-				var field: String = characteristics_fields[i]
-				var index := "body/characteristics/" + field
+				var field: StringName = characteristics_fields[i]
+				var index := StringName("body/characteristics/" + field)
 				_real_precisions[index] = precision
 			i += 1
 	# Assign missing characteristics where we can
-	if characteristics.has("e_radius"):
-		characteristics.p_radius = 3.0 * characteristics.m_radius - 2.0 * characteristics.e_radius
+	if characteristics.has(&"e_radius"):
+		characteristics[&"p_radius"] = 3.0 * characteristics[&"m_radius"] - 2.0 * characteristics[&"e_radius"]
 		if enable_precisions:
-			var precision := IVTableData.get_db_least_float_precision(_table_name, ["m_radius", "e_radius"], _row)
-			_real_precisions["body/characteristics/p_radius"] = precision
+			var precision := IVTableData.get_db_least_float_precision(_table_name, [&"m_radius", &"e_radius"], _row)
+			_real_precisions[&"body/characteristics/p_radius"] = precision
 	else:
 		body.flags |= BodyFlags.DISPLAY_M_RADIUS
-	if !characteristics.has("mass"): # moons.tsv has GM but not mass
-		assert(IVTableData.db_has_float_value(_table_name, "GM", _row)) # table test
+	if !characteristics.has(&"mass"): # moons.tsv has GM but not mass
+		assert(IVTableData.db_has_float_value(_table_name, &"GM", _row)) # table test
 		# We could in principle calculate mass from GM, but small moon GM is poor
 		# estimator. Instead use mean_density if we have it; otherwise, assign INF
 		# for unknown mass.
-		if characteristics.has("mean_density"):
-			characteristics.mass = (PI * 4.0 / 3.0) * characteristics.mean_density * pow(characteristics.m_radius, 3.0)
+		if characteristics.has(&"mean_density"):
+			characteristics[&"mass"] = (PI * 4.0 / 3.0) * characteristics[&"mean_density"] * pow(characteristics[&"m_radius"], 3.0)
 			if enable_precisions:
-				var precision := IVTableData.get_db_least_float_precision(_table_name, ["m_radius", "mean_density"], _row)
-				_real_precisions["body/characteristics/mass"] = precision
+				var precision := IVTableData.get_db_least_float_precision(_table_name, [&"m_radius", &"mean_density"], _row)
+				_real_precisions[&"body/characteristics/mass"] = precision
 		else:
-			characteristics.mass = INF # displays "?"
-	if !characteristics.has("GM"): # planets.tsv has mass, not GM
-		assert(IVTableData.db_has_float_value(_table_name, "mass", _row))
-		characteristics.GM = G * characteristics.mass
+			characteristics[&"mass"] = INF # displays "?"
+	if !characteristics.has(&"GM"): # planets.tsv has mass, not GM
+		assert(IVTableData.db_has_float_value(_table_name, &"mass", _row))
+		characteristics[&"GM"] = G * characteristics[&"mass"]
 		if enable_precisions:
-			var precision := IVTableData.get_db_float_precision(_table_name, "mass", _row)
+			var precision := IVTableData.get_db_float_precision(_table_name, &"mass", _row)
 			if precision > 6:
 				precision = 6 # limited by G
-			_real_precisions["body/characteristics/GM"] = precision
+			_real_precisions[&"body/characteristics/GM"] = precision
 	
 	# Calculate some missing characteristics, but only if we have sufficient precisions
-	if enable_precisions and (!characteristics.has("esc_vel") or !characteristics.has("surface_gravity")):
-		if IVTableData.db_has_float_value(_table_name, "GM", _row):
+	if enable_precisions and (!characteristics.has(&"esc_vel") or !characteristics.has(&"surface_gravity")):
+		if IVTableData.db_has_float_value(_table_name, &"GM", _row):
 			# Use GM to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
-			var precision := IVTableData.get_db_least_float_precision(_table_name, ["GM", "m_radius"], _row)
+			var precision := IVTableData.get_db_least_float_precision(_table_name, [&"GM", &"m_radius"], _row)
 			if precision > 1:
-				if !characteristics.has("esc_vel"):
-					characteristics.esc_vel = sqrt(2.0 * characteristics.GM / characteristics.m_radius)
+				if !characteristics.has(&"esc_vel"):
+					characteristics[&"esc_vel"] = sqrt(2.0 * characteristics[&"GM"] / characteristics[&"m_radius"])
 					if enable_precisions:
-						_real_precisions["body/characteristics/esc_vel"] = precision
-				if !characteristics.has("surface_gravity"):
-					characteristics.surface_gravity = characteristics.GM / pow(characteristics.m_radius, 2.0)
+						_real_precisions[&"body/characteristics/esc_vel"] = precision
+				if !characteristics.has(&"surface_gravity"):
+					characteristics[&"surface_gravity"] = characteristics[&"GM"] / pow(characteristics[&"m_radius"], 2.0)
 					if enable_precisions:
-						_real_precisions["body/characteristics/surface_gravity"] = precision
+						_real_precisions[&"body/characteristics/surface_gravity"] = precision
 		
 		else: # planet w/ mass
 			# Use mass to calculate missing esc_vel & surface_gravity, but only
 			# if precision > 1.
-			var precision := IVTableData.get_db_least_float_precision(_table_name, ["mass", "m_radius"], _row)
+			var precision := IVTableData.get_db_least_float_precision(_table_name, [&"mass", &"m_radius"], _row)
 			if precision > 1:
 				if precision > 6:
 					precision = 6 # limited by G
-				if !characteristics.has("esc_vel"):
-					characteristics.esc_vel = sqrt(2.0 * G * characteristics.mass / characteristics.m_radius)
+				if !characteristics.has(&"esc_vel"):
+					characteristics[&"esc_vel"] = sqrt(2.0 * G * characteristics[&"mass"] / characteristics[&"m_radius"])
 					if enable_precisions:
-						_real_precisions["body/characteristics/esc_vel"] = precision
-				if !characteristics.has("surface_gravity"):
-					characteristics.surface_gravity = G * characteristics.mass / pow(characteristics.m_radius, 2.0)
+						_real_precisions[&"body/characteristics/esc_vel"] = precision
+				if !characteristics.has(&"surface_gravity"):
+					characteristics[&"surface_gravity"] = G * characteristics[&"mass"] / pow(characteristics[&"m_radius"], 2.0)
 					if enable_precisions:
-						_real_precisions["body/characteristics/surface_gravity"] = precision
+						_real_precisions[&"body/characteristics/surface_gravity"] = precision
 

@@ -67,7 +67,7 @@ var selection: IVSelection
 #var _root: Window = get_tree().get_root()
 #var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections: Dictionary = IVGlobal.selections
-var _history := [] # contains weakrefs
+var _history: Array[WeakRef] = []
 var _history_index := -1
 var _supress_history := false
 

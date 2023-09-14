@@ -28,7 +28,7 @@ const math := preload("res://ivoyager/static/math.gd")
 const FRAGMENT_SBG_ORBIT := IVFragmentIdentifier.FRAGMENT_SBG_ORBIT
 
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
-var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 
 var _group: IVSmallBodiesGroup
@@ -65,7 +65,7 @@ func _ready() -> void:
 		
 		var shader_material := ShaderMaterial.new()
 		shader_material.shader = IVGlobal.shared.orbits_shader
-		shader_material.set_shader_parameter("fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
+		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 		material_override = shader_material
 	else:
 		var standard_material := StandardMaterial3D.new()
@@ -83,8 +83,8 @@ func _process(_delta: float) -> void:
 		return
 	# TODO34: Make these global uniforms!
 	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter("mouse_coord", _fragment_targeting[0])
-	shader_material.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
+	shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
+	shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transforms_and_ids() -> void:
@@ -118,7 +118,7 @@ func _set_color() -> void:
 	_color = color
 	if _fragment_identifier:
 		var shader_material: ShaderMaterial = material_override
-		shader_material.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
+		shader_material.set_shader_parameter(&"color", Vector3(color.r, color.g, color.b))
 	else:
 		var standard_material: StandardMaterial3D = material_override
 		standard_material.albedo_color = color

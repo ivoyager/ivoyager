@@ -20,18 +20,22 @@
 class_name IVFiles
 extends Object
 
+
+# TODO34: Lot of migration work...
+
+
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
 # const files := preload("res://ivoyager/static/files.gd")
 
 
 static func make_object_or_scene(script: GDScript) -> Object:
-	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
+	if not &"SCENE" in script and not &"SCENE_OVERRIDE" in script:
 		return script.new()
 	# It's a scene if the script or an extended script has member "SCENE" or
 	# "SCENE_OVERRIDE". We create the scene and return the root node.
 	@warning_ignore("unsafe_property_access")
-	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
+	var scene_path: String = script.SCENE_OVERRIDE if &"SCENE_OVERRIDE" in script else script.SCENE
 	var pkd_scene: PackedScene = load(scene_path)
 	assert(pkd_scene, "Expected scene path at: " + scene_path)
 	var root_node: Node = pkd_scene.instantiate()
@@ -72,7 +76,8 @@ static func get_base_file_name(file_name : String) -> String:
 	return file_name
 
 
-static func get_save_path(save_dir: String, base_name: String, date_string := "", append_file_extension := false) -> String:
+static func get_save_path(save_dir: String, base_name: String, date_string := "",
+		append_file_extension := false) -> String:
 	var path := save_dir.path_join(base_name)
 	if date_string:
 		path += "." + date_string
@@ -232,3 +237,4 @@ static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")
 	return string
+

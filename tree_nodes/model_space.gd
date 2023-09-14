@@ -25,3 +25,4 @@ extends Node3D
 # the actual model Node3D is scaled and rotated.
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL # free & rebuild on load
+

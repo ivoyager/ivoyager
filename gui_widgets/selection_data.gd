@@ -552,9 +552,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 			value_wiki_key = result[1]
 	elif value_type == TYPE_OBJECT:
 		var result: Array = format_callable.call(value, prespace)
-		result.append(false)
-		result.append(false)
-		return result
+		return [result[0], result[1], false, false]
 	else: # String or StringName
 		var result: Array = format_callable.call(value)
 		value_txt = result[0]
