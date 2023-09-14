@@ -33,30 +33,30 @@ var _dynamic_orbits: bool = IVGlobal.dynamic_orbits
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _Orbit_: Script
 var _d := {
-	a = NAN,
-	e = NAN,
-	i = NAN,
-	Om = NAN,
-	w = NAN,
-	w_hat = NAN,
-	M0 = NAN,
-	L0 = NAN,
-	T0 = NAN,
-	n = NAN,
-	L_rate = NAN,
-	a_rate = NAN,
-	e_rate = NAN,
-	i_rate = NAN,
-	Om_rate = NAN,
-	w_rate = NAN,
-	M_adj_b = NAN,
-	M_adj_c = NAN,
-	M_adj_s = NAN,
-	M_adj_f = NAN,
-	Pw = NAN,
-	Pnode = NAN,
-	epoch_jd = NAN,
-	ref_plane = "",
+	&"a" : NAN,
+	&"e" : NAN,
+	&"i" : NAN,
+	&"Om" : NAN,
+	&"w" : NAN,
+	&"w_hat" : NAN,
+	&"M0" : NAN,
+	&"L0" : NAN,
+	&"T0" : NAN,
+	&"n" : NAN,
+	&"L_rate" : NAN,
+	&"a_rate" : NAN,
+	&"e_rate" : NAN,
+	&"i_rate" : NAN,
+	&"Om_rate" : NAN,
+	&"w_rate" : NAN,
+	&"M_adj_b" : NAN,
+	&"M_adj_c" : NAN,
+	&"M_adj_s" : NAN,
+	&"M_adj_f" : NAN,
+	&"Pw" : NAN,
+	&"Pnode" : NAN,
+	&"epoch_jd" : NAN,
+	&"ref_plane" : &"",
 }
 
 
@@ -188,16 +188,16 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 				orbit.m_modifiers = m_modifiers
 	
 	# reference plane (moons!)
-	if _d.ref_plane == "Equatorial":
+	if _d.ref_plane == &"Equatorial":
 		orbit.reference_normal = parent.get_positive_pole()
-	elif _d.ref_plane == "Laplace":
-		var orbit_ra: float = IVTableData.get_db_float(table_name, "orbit_RA", table_row)
-		var orbit_dec: float = IVTableData.get_db_float(table_name, "orbit_dec", table_row)
+	elif _d.ref_plane == &"Laplace":
+		var orbit_ra: float = IVTableData.get_db_float(table_name, &"orbit_RA", table_row)
+		var orbit_dec: float = IVTableData.get_db_float(table_name, &"orbit_dec", table_row)
 		orbit.reference_normal = math.convert_spherical2(orbit_ra, orbit_dec)
 		orbit.reference_normal = _ecliptic_rotation * orbit.reference_normal
 		orbit.reference_normal = orbit.reference_normal.normalized()
 	elif _d.ref_plane:
-		assert(_d.ref_plane == "Ecliptic")
+		assert(_d.ref_plane == &"Ecliptic")
 		
 	# reset for next orbit build
 	_reset_table_dict()
@@ -206,6 +206,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 
 func _reset_table_dict() -> void:
 	for field in _d:
-		if field != "ref_plane":
+		if field != &"ref_plane":
 			_d[field] = NAN
-	_d.ref_plane = ""
+	_d.ref_plane = &""
+

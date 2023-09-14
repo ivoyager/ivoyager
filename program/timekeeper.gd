@@ -57,7 +57,6 @@ enum { # date_format; first three are alwyas Year, Month, Day
 	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM, increasing month ticker = Y * 12 + (M - 1)
 }
 
-
 const SECOND := IVUnits.SECOND # sim_time conversion
 const MINUTE := IVUnits.MINUTE
 const HOUR := IVUnits.HOUR
@@ -121,8 +120,8 @@ var engine_time: float # accumulated delta
 var speed_multiplier: float # negative if is_reversed
 var show_clock := false
 var show_seconds := false
-var speed_name: String
-var speed_symbol: String
+var speed_name: StringName
+var speed_symbol: StringName
 var times: Array[float] = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
 var date: Array[int] = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
 var clock: Array[int] = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)

@@ -23,7 +23,7 @@ extends RefCounted
 # It takes a while to load the environment depending on starmap size and
 # system. On my low-end laptop, 8k is much more than twice as fast as 16k.
 
-var fallback_starmap := "starmap_8k" # IVGlobal.asset_paths index; must exist
+var fallback_starmap := &"starmap_8k" # IVGlobal.asset_paths index; must exist
 
 
 func _project_init() -> void:
@@ -44,7 +44,7 @@ func add_world_environment() -> void:
 func _io_callback(array: Array) -> void: # I/O thread!
 	var start_time := Time.get_ticks_msec()
 	var world_environment := WorldEnvironment.new()
-	world_environment.name = "WorldEnvironment"
+	world_environment.name = &"WorldEnvironment"
 	world_environment.environment = _get_environment()
 	array.append(world_environment)
 	array.append(start_time)

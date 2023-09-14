@@ -57,11 +57,11 @@ var _state: Dictionary = IVGlobal.state
 var _settings: Dictionary = IVGlobal.settings
 var _has_been_saved := false
 
-@onready var _io_manager: IVIOManager = IVGlobal.program.IOManager
-@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-@onready var _save_builder: IVSaveBuilder = IVGlobal.program.SaveBuilder
-@onready var _universe: Node3D = IVGlobal.program.Universe
+@onready var _io_manager: IVIOManager = IVGlobal.program[&"IOManager"]
+@onready var _state_manager: IVStateManager = IVGlobal.program[&"StateManager"]
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
+@onready var _save_builder: IVSaveBuilder = IVGlobal.program[&"SaveBuilder"]
+@onready var _universe: Node3D = IVGlobal.program[&"Universe"]
 
 
 func _ready() -> void:

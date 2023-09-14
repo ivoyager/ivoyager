@@ -28,8 +28,8 @@ var _SBGOrbits_: GDScript
 
 func _project_init() -> void:
 	IVGlobal.get_tree().node_added.connect(_on_node_added)
-	_SBGPoints_ = IVGlobal.script_classes._SBGPoints_
-	_SBGOrbits_ = IVGlobal.script_classes._SBGOrbits_
+	_SBGPoints_ = IVGlobal.script_classes[&"_SBGPoints_"]
+	_SBGOrbits_ = IVGlobal.script_classes[&"_SBGOrbits_"]
 
 
 func _on_node_added(node: Node) -> void:

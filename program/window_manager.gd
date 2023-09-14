@@ -33,15 +33,15 @@ var _test_countdown := 0
 
 @onready var _tree := get_tree()
 @onready var _viewport := get_viewport()
-@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
+@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program[&"MainMenuManager"]
 
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	if add_menu_button:
-		_main_menu_manager.make_button("BUTTON_FULL_SCREEN", button_priority, false, true, self,
+		_main_menu_manager.make_button(&"BUTTON_FULL_SCREEN", button_priority, false, true, self,
 				"_change_fullscreen")
-		_main_menu_manager.make_button("BUTTON_MINIMIZE", button_priority, false, true, self,
+		_main_menu_manager.make_button(&"BUTTON_MINIMIZE", button_priority, false, true, self,
 				"_change_fullscreen", [], _main_menu_manager.HIDDEN)
 		IVGlobal.update_gui_requested.connect(_update_buttons)
 		_viewport.size_changed.connect(_extended_test_for_screen_resize)
@@ -67,11 +67,11 @@ func _update_buttons() -> void:
 		return
 	_is_fullscreen = !_is_fullscreen
 	if _is_fullscreen:
-		_main_menu_manager.change_button_state("BUTTON_FULL_SCREEN", _main_menu_manager.HIDDEN)
-		_main_menu_manager.change_button_state("BUTTON_MINIMIZE", _main_menu_manager.ACTIVE)
+		_main_menu_manager.change_button_state(&"BUTTON_FULL_SCREEN", _main_menu_manager.HIDDEN)
+		_main_menu_manager.change_button_state(&"BUTTON_MINIMIZE", _main_menu_manager.ACTIVE)
 	else:
-		_main_menu_manager.change_button_state("BUTTON_FULL_SCREEN", _main_menu_manager.ACTIVE)
-		_main_menu_manager.change_button_state("BUTTON_MINIMIZE", _main_menu_manager.HIDDEN)
+		_main_menu_manager.change_button_state(&"BUTTON_FULL_SCREEN", _main_menu_manager.ACTIVE)
+		_main_menu_manager.change_button_state(&"BUTTON_MINIMIZE", _main_menu_manager.HIDDEN)
 
 
 func _extended_test_for_screen_resize() -> void:
@@ -86,3 +86,4 @@ func _extended_test_for_screen_resize() -> void:
 		await _tree.process_frame
 		_update_buttons()
 		_test_countdown -= 1
+

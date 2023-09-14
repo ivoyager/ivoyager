@@ -1,5 +1,5 @@
 	star	file_prefix	en.wiki	symbol	show_in_nav_panel	body_class	model_type	omni_light_type	omni_light_type_gles2	hydrostatic_equilibrium	n_kn_planets	n_kn_dwf_planets	n_kn_minor_planets	n_kn_comets	n_kn_nat_satellites	cel_RA	cel_dec	cel_dist	dist_galactic_core	galactic_period	galactic_orbital_speed	velocity_vs_cmb	velocity_vs_near_stars	rotation_period	right_ascension	declination	e_radius	m_radius	mass	mean_density	esc_vel	GM	stellar_classification	absolute_magnitude	luminosity	color_b_v	metallicity	age	temp_center	temp_photosphere	temp_corona	photosphere_composition
-Type	BOOL	STRING	STRING	STRING	BOOL	INT	INT	INT	INT	INT	INT	INT	INT	INT	INT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING
+Type	BOOL	STRING	STRING	STRING	BOOL	INT	INT	INT	INT	INT	INT	INT	INT	INT	INT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING_NAME	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT	STRING
 Default	TRUE				TRUE					CONFIDENCE_YES																																
 Unit																deg	deg	ly	km	yr	km/s	km/s	km/s	d	deg	deg	km	km	kg	g/cm^3	km/s	m^3/s^2			W			yr	K	K	K	
 Prefix/STAR_						BODY_CLASS_	MODEL_	OMNI_LIGHT_	OMNI_LIGHT_																																	

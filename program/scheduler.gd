@@ -31,7 +31,7 @@ var _signal_intervals := []
 var _available_signals := []
 var _is_reversed := false
 
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
 
 
 # *****************************************************************************

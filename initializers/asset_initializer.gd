@@ -47,7 +47,7 @@ func _on_init() -> void:
 
 
 func _project_init() -> void:
-	IVGlobal.program.erase("AssetInitializer") # frees self
+	IVGlobal.program.erase(&"AssetInitializer") # frees self
 
 
 func _modify_asset_paths() -> void:
@@ -72,3 +72,4 @@ func _load_assets() -> void:
 	for asset_name in _asset_paths_for_load:
 		var path: String = _asset_paths_for_load[asset_name]
 		_assets[asset_name] = load(path)
+

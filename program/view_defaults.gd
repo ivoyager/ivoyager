@@ -41,7 +41,7 @@ var _View_: GDScript
 
 func _project_init() -> void:
 	IVGlobal.about_to_start_simulator.connect(_on_about_to_start_simulator)
-	_View_ = IVGlobal.script_classes._View_
+	_View_ = IVGlobal.script_classes[&"_View_"]
 	
 	# visibilities & colors only
 	_hide_all()
@@ -63,14 +63,14 @@ func _project_init() -> void:
 
 # public API
 
-func set_view(view_name: String, is_camera_instant_move := false) -> void:
+func set_view(view_name: StringName, is_camera_instant_move := false) -> void:
 	if !views.has(view_name):
 		return
 	var view: IVView = views[view_name]
 	view.set_state(is_camera_instant_move)
 
 
-func has_view(view_name: String) -> bool:
+func has_view(view_name: StringName) -> bool:
 	return views.has(view_name)
 
 
@@ -78,7 +78,7 @@ func has_view(view_name: String) -> bool:
 
 func _on_about_to_start_simulator(is_new_game: bool) -> void:
 	if is_new_game and move_home_at_start:
-		set_view("Home", true)
+		set_view(&"Home", true)
 
 
 # visibilities & colors only
@@ -123,12 +123,12 @@ func _asteroids1() -> void:
 	# Set asteroid point visibilities from table.
 	var visible_points_groups := view.visible_points_groups
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
-	for row in IVTableData.get_n_rows("small_bodies_groups"):
-		if IVTableData.get_db_bool("small_bodies_groups", "skip", row):
+	for row in IVTableData.get_n_rows(&"small_bodies_groups"):
+		if IVTableData.get_db_bool(&"small_bodies_groups", &"skip", row):
 			continue
-		if IVTableData.get_db_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
+		if IVTableData.get_db_int(&"small_bodies_groups", &"sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue
-		var sbg_alias := IVTableData.get_db_string("small_bodies_groups", "sbg_alias", row)
+		var sbg_alias := IVTableData.get_db_string(&"small_bodies_groups", &"sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
 	
 	views.Asteroids1 = view
@@ -150,7 +150,7 @@ func _zoom() -> void:
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
 	view.view_position = Vector3(-INF, deg_to_rad(18.0), 3.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
-	views.Zoom = view
+	views[&"Zoom"] = view
 
 
 func _fortyfive() -> void:
@@ -160,7 +160,7 @@ func _fortyfive() -> void:
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
 	view.view_position = Vector3(-INF, deg_to_rad(45.0), 10.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
-	views.Fortyfive = view
+	views[&"Fortyfive"] = view
 
 
 func _top() -> void:
@@ -170,7 +170,7 @@ func _top() -> void:
 	view.camera_flags = CameraFlags.UP_LOCKED # | CameraFlags.TRACK_ORBIT
 	view.view_position = Vector3(-INF, deg_to_rad(85.0), 25.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
-	views.Top = view
+	views[&"Top"] = view
 
 
 # selection, camera, and more...
@@ -200,7 +200,7 @@ func _home() -> void:
 			| BodyFlags.IS_SPACECRAFT
 	)
 	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
-	views.Home = view
+	views[&"Home"] = view
 
 
 func _cislunar() -> void:
@@ -208,7 +208,7 @@ func _cislunar() -> void:
 	# Planets, moons & spacecraft visible.
 	var view: IVView = _View_.new()
 	view.flags = IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
-	view.selection_name = "PLANET_EARTH"
+	view.selection_name = &"PLANET_EARTH"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ORBIT
 	view.view_position = Vector3(deg_to_rad(180.0), deg_to_rad(15.0), 120.0) # z, radii dist when close
 	view.view_rotations = Vector3.ZERO
@@ -221,7 +221,7 @@ func _cislunar() -> void:
 			| BodyFlags.IS_SPACECRAFT
 	)
 	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
-	views.Cislunar = view
+	views[&"Cislunar"] = view
 
 
 func _system() -> void:
@@ -229,7 +229,7 @@ func _system() -> void:
 	# Planets & moons visible.
 	var view: IVView = _View_.new()
 	view.flags = IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
-	view.selection_name = "STAR_SUN"
+	view.selection_name = &"STAR_SUN"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ECLIPTIC
 	view.view_position = Vector3(deg_to_rad(-90.0), deg_to_rad(15.0), 70.0 * AU) # z, real dist when far
 	view.view_rotations = Vector3.ZERO
@@ -241,7 +241,7 @@ func _system() -> void:
 			| BodyFlags.IS_NON_PLANETARY_MASS_MOON
 	)
 	view.name_visible_flags = view.orbit_visible_flags | BodyFlags.IS_STAR
-	views.System = view
+	views[&"System"] = view
 
 
 func _asteroids() -> void:
@@ -251,7 +251,7 @@ func _asteroids() -> void:
 	# are set but not asteroid orbits (which are overwhelming).
 	var view: IVView = _View_.new()
 	view.flags =  IVView.ALL_CAMERA | IVView.HUDS_VISIBILITY
-	view.selection_name = "STAR_SUN"
+	view.selection_name = &"STAR_SUN"
 	view.camera_flags = CameraFlags.UP_LOCKED | CameraFlags.TRACK_ECLIPTIC
 	view.view_position = Vector3(deg_to_rad(-90.0), deg_to_rad(45.0), 15.0 * AU) # z, real dist when far
 	view.view_rotations = Vector3.ZERO
@@ -269,13 +269,13 @@ func _asteroids() -> void:
 	# Set asteroid point visibilities from table.
 	var visible_points_groups := view.visible_points_groups
 	var SBG_CLASS_ASTEROIDS: int = IVEnums.SBGClass.SBG_CLASS_ASTEROIDS
-	for row in IVTableData.get_n_rows("small_bodies_groups"):
-		if IVTableData.get_db_bool("small_bodies_groups", "skip", row):
+	for row in IVTableData.get_n_rows(&"small_bodies_groups"):
+		if IVTableData.get_db_bool(&"small_bodies_groups", &"skip", row):
 			continue
-		if IVTableData.get_db_int("small_bodies_groups", "sbg_class", row) != SBG_CLASS_ASTEROIDS:
+		if IVTableData.get_db_int(&"small_bodies_groups", &"sbg_class", row) != SBG_CLASS_ASTEROIDS:
 			continue
-		var sbg_alias := IVTableData.get_db_string("small_bodies_groups", "sbg_alias", row)
+		var sbg_alias := IVTableData.get_db_string(&"small_bodies_groups", &"sbg_alias", row)
 		visible_points_groups.append(sbg_alias)
 	
-	views.Asteroids = view
+	views[&"Asteroids"] = view
 

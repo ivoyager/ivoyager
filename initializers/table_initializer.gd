@@ -41,5 +41,5 @@ func _init() -> void:
 
 
 func _project_init() -> void:
-	IVGlobal.program.erase("TableInitializer") # frees self
+	IVGlobal.program.erase(&"TableInitializer") # frees self
 

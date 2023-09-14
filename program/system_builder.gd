@@ -33,8 +33,8 @@ var _sbg_builder: IVSBGBuilder
 
 func _project_init():
 	IVGlobal.state_manager_inited.connect(_on_state_manager_inited, CONNECT_ONE_SHOT)
-	_body_builder = IVGlobal.program.BodyBuilder
-	_sbg_builder = IVGlobal.program.SBGBuilder
+	_body_builder = IVGlobal.program[&"BodyBuilder"]
+	_sbg_builder = IVGlobal.program[&"SBGBuilder"]
 
 
 func _on_state_manager_inited() -> void:
@@ -62,7 +62,7 @@ func _add_bodies(table_name: String) -> void:
 	var row := 0
 	while row < n_rows:
 		var parent: IVBody
-		var parent_name := IVTableData.get_db_string(table_name, "parent", row) # "" top
+		var parent_name := IVTableData.get_db_string_name(table_name, &"parent", row) # "" top
 		if parent_name:
 			parent = IVGlobal.bodies[parent_name]
 		var body := _body_builder.build_from_table(table_name, row, parent)

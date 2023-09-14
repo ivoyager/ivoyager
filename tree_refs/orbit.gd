@@ -84,7 +84,7 @@ var current_elements: Array[float] = utils.init_array(7, 0.0, TYPE_FLOAT)
 
 # private
 var _times: Array[float] = IVGlobal.times
-var _scheduler: IVScheduler = IVGlobal.program.Scheduler
+var _scheduler: IVScheduler = IVGlobal.program[&"Scheduler"]
 var _update_interval := 0.0
 var _begin_current := INF
 var _end_current := -INF

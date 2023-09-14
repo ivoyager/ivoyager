@@ -51,3 +51,4 @@ func _open_wiki(wiki_title: String) -> void:
 
 func _open_internal_wiki(_wiki_title: String) -> void:
 	pass
+

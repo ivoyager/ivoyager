@@ -48,7 +48,7 @@ func _on_init() -> void: # subclass can override
 
 
 func _project_init() -> void:
-	_io_manager = IVGlobal.program.IOManager
+	_io_manager = IVGlobal.program["IOManager"]
 	var cache_dir: String = IVGlobal.cache_dir
 	_file_path = cache_dir.path_join(cache_file_name)
 	# TEST34
