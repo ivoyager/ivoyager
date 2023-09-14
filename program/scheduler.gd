@@ -50,10 +50,10 @@ func _clear() -> void:
 	_available_signals.clear()
 	var i := 0
 	while i < _counter:
-		var signal_str := str(i)
+		var signal_name := str(i)
 		_signal_intervals.append(0.0)
-		_available_signals.append(signal_str)
-		var connection_list := get_signal_connection_list(signal_str)
+		_available_signals.append(signal_name)
+		var connection_list := get_signal_connection_list(signal_name)
 		if connection_list:
 			assert(connection_list.size() == 1)
 			var dict: Dictionary = connection_list[0] # never >1
@@ -65,49 +65,48 @@ func _clear() -> void:
 
 # *****************************************************************************
 
-func interval_connect(interval: float, target: Object, method: String, binds := [],
-		flags := 0) -> void:
+func interval_connect(interval: float, callable: Callable, flags := 0) -> void:
 	# E.g., for 2-day repeating signal, use interval = 2.0 * IVUnits.DAY.
 	# Note: IVScheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	assert(interval > 0.0)
 	var one_shot := bool(flags & CONNECT_ONE_SHOT)
-	var signal_str := _make_interval_signal(interval, one_shot)
-	connect(signal_str, Callable(target, method).bind(binds), flags)
+	var signal_name := _make_interval_signal(interval, one_shot)
+	connect(signal_name, callable, flags)
 
 
-func interval_disconnect(interval: float, target: Object, method: String) -> void:
+func interval_disconnect(interval: float, callable: Callable) -> void:
 	# Note: IVScheduler will disconnet all interval signals on IVGlobal signal
 	# "about_to_free_procedural_nodes".
 	var i := 0
-	var signal_str := ""
+	var signal_name := &""
 	while i < _counter:
 		if interval == _signal_intervals[i]:
-			var test_signal_str = str(i)
-			var connection_list := get_signal_connection_list(test_signal_str)
+			var test_signal_name := StringName(str(i))
+			var connection_list := get_signal_connection_list(test_signal_name)
 			if connection_list:
 				var connection_dict: Dictionary = connection_list[0] # only one
-				if target == connection_dict.target and method == connection_dict.method:
-					signal_str = test_signal_str
-					disconnect(signal_str, Callable(target, method))
+				if callable == connection_dict.callable:
+					signal_name = test_signal_name
+					disconnect(signal_name, callable)
 					break
 		i += 1
-	if !signal_str: # doesn't exist; return w/out error
+	if !signal_name: # doesn't exist; return w/out error
 		return
-	_remove_active_interval_signal(signal_str)
+	_remove_active_interval_signal(signal_name)
 
 
 # *****************************************************************************
 
-func _make_interval_signal(interval: float, one_shot := false) -> String:
-	var signal_str: String
+func _make_interval_signal(interval: float, one_shot := false) -> StringName:
+	var signal_name: StringName
 	if _available_signals:
-		signal_str = _available_signals.pop_back()
-		_signal_intervals[int(signal_str)] = interval
+		signal_name = _available_signals.pop_back()
+		_signal_intervals[int(signal_name)] = interval
 	else:
-		signal_str = str(_counter)
+		signal_name = StringName(str(_counter))
 		_signal_intervals.append(interval)
-		add_user_signal(signal_str)
+		add_user_signal(signal_name)
 		_counter += 1
 	var signal_time: float = _times[0]
 	var index: int
@@ -117,19 +116,19 @@ func _make_interval_signal(interval: float, one_shot := false) -> String:
 	else:
 		signal_time -= interval
 		index = _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_reverse)
-	var signal_info := [signal_time, interval, signal_str, one_shot]
+	var signal_info := [signal_time, interval, signal_name, one_shot]
 	_ordered_signal_infos.insert(index, signal_info)
-	return signal_str
+	return signal_name
 
 
-func _remove_active_interval_signal(signal_str: String) -> void:
+func _remove_active_interval_signal(signal_name: StringName) -> void:
 	var ordered_size := _ordered_signal_infos.size()
 	var i := 0
 	while i < ordered_size:
-		if signal_str == _ordered_signal_infos[i][2]:
+		if signal_name == _ordered_signal_infos[i][2]:
 			_ordered_signal_infos.remove_at(i)
 			_signal_intervals[i] = 0.0
-			_available_signals.append(signal_str)
+			_available_signals.append(signal_name)
 			return
 		i += 1
 	assert(false, "Attept to remove non-active signal")
@@ -166,11 +165,11 @@ func _process(_delta: float) -> void:
 	if !_is_reversed:
 		while time > _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
-			var signal_str: String = signal_info[2]
+			var signal_name: StringName = signal_info[2]
 			var one_shot: bool = signal_info[3]
 			if one_shot:
-				_signal_intervals[int(signal_str)] = 0.0
-				_available_signals.append(signal_str)
+				_signal_intervals[int(signal_name)] = 0.0
+				_available_signals.append(signal_name)
 			else:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
@@ -181,17 +180,17 @@ func _process(_delta: float) -> void:
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_forward)
 				_ordered_signal_infos.insert(index, signal_info)
-			emit_signal(signal_str)
+			emit_signal(signal_name)
 			if !_ordered_signal_infos:
 				return
 	else:
 		while time < _ordered_signal_infos[-1][0]: # test last element
 			var signal_info: Array = _ordered_signal_infos.pop_back()
-			var signal_str: String = signal_info[2]
+			var signal_name: StringName = signal_info[2]
 			var one_shot: bool = signal_info[3]
 			if one_shot:
-				_signal_intervals[int(signal_str)] = 0.0
-				_available_signals.append(signal_str)
+				_signal_intervals[int(signal_name)] = 0.0
+				_available_signals.append(signal_name)
 			else:
 				var signal_time: float = signal_info[0]
 				var interval: float = signal_info[1]
@@ -202,7 +201,7 @@ func _process(_delta: float) -> void:
 				# high frequency will be near end, reducing insert cost
 				var index := _ordered_signal_infos.bsearch_custom(signal_time, _bsearch_reverse)
 				_ordered_signal_infos.insert(index, signal_info)
-			emit_signal(signal_str)
+			emit_signal(signal_name)
 			if !_ordered_signal_infos:
 				return
 
@@ -221,3 +220,4 @@ func _bsearch_reverse(signal_info: Array, signal_time: float) -> bool:
 
 func _sort_reverse(a: Array, b: Array) -> bool:
 	return a[0] < b[0] # latest signal_time will be on "top"
+

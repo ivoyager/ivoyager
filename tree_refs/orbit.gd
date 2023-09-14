@@ -467,7 +467,7 @@ static func get_elements_from_vectors(R: Vector3, V: Vector3, mu: float, time: f
 
 func disconnect_interval_update() -> void:
 	if _update_interval:
-		_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
+		_scheduler.interval_disconnect(_update_interval, _scheduler_update)
 
 
 func reset_elements_and_interval_update() -> void:
@@ -496,8 +496,8 @@ func reset_elements_and_interval_update() -> void:
 	_set_elements(time + interval / 2.0, current_elements)
 	if _update_interval != interval:
 		if _update_interval: # already has a Schedular connection
-			_scheduler.interval_disconnect(_update_interval, self, "_scheduler_update")
-		_scheduler.interval_connect(interval, self, "_scheduler_update")
+			_scheduler.interval_disconnect(_update_interval, _scheduler_update)
+		_scheduler.interval_connect(interval, _scheduler_update)
 		_update_interval = interval
 
 
