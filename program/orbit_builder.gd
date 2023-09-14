@@ -125,7 +125,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 		M0 += n * epoch_offset
 		M0 = wrapf(M0, 0.0, TAU)
 	
-	var elements := [a, e, i, Om, w, M0, n]
+	var elements := Array([a, e, i, Om, w, M0, n], TYPE_FLOAT, &"", null)
 	@warning_ignore("unsafe_method_access") # Possible replacement class
 	var orbit: IVOrbit = _Orbit_.new()
 	orbit.elements_at_epoch = elements
@@ -137,8 +137,8 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 		# corresponding to rotational period of Om & w, respectively [TODO: in
 		# asteroid data, these are g & s, I think...].
 		# Rate info (if given) must matches one or the other format.
-		var element_rates: Array # optional
-		var m_modifiers: Array # optional
+		var element_rates: Array[float] # optional
+		var m_modifiers: Array[float] # optional
 		
 		var a_rate: float = _d.a_rate
 		var e_rate: float = _d.e_rate
@@ -148,7 +148,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 		
 		if !is_nan(a_rate): # is planet w/ rates
 			assert(!is_nan(e_rate) and !is_nan(i_rate) and !is_nan(Om_rate) and !is_nan(w_rate))
-			element_rates = [a_rate, e_rate, i_rate, Om_rate, w_rate]
+			element_rates = Array([a_rate, e_rate, i_rate, Om_rate, w_rate], TYPE_FLOAT, &"", null)
 			
 			# M modifiers are additional modifiers for Jupiter to Pluto.
 			var M_adj_b: float = _d.M_adj_b
@@ -157,7 +157,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 				var M_adj_s: float = _d.M_adj_s
 				var M_adj_f: float = _d.M_adj_f
 				assert(!is_nan(M_adj_c) and !is_nan(M_adj_s) and !is_nan(M_adj_f))
-				m_modifiers = [M_adj_b, M_adj_c, M_adj_s, M_adj_f]
+				m_modifiers = Array([M_adj_b, M_adj_c, M_adj_s, M_adj_f], TYPE_FLOAT, &"", null)
 				
 		elif !is_nan(_d.Pw): # moon format
 			assert(!is_nan(_d.Pnode)) # both or neither
@@ -179,7 +179,7 @@ func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) ->
 			if _d.Pw != 0.0:
 				w_rate = orbit_sign * TAU / _d.Pw
 			if Om_rate or w_rate:
-				element_rates = [0.0, 0.0, 0.0, Om_rate, w_rate]
+				element_rates = Array([0.0, 0.0, 0.0, Om_rate, w_rate], TYPE_FLOAT, &"", null)
 		
 		# add orbit purturbations, if any
 		if element_rates:
