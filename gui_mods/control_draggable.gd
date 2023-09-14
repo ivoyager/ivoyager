@@ -348,7 +348,7 @@ func _get_default_size() -> Vector2:
 	return default_size
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "gui_size":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"gui_size":
 		resize_and_position_to_anchor()
 

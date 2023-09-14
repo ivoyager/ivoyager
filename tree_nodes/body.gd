@@ -107,7 +107,7 @@ var sleep := false
 
 
 # private
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 #var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _min_hud_dist: float
@@ -725,6 +725,7 @@ func _set_min_hud_dist() -> void:
 		_min_hud_dist = 0.0
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "hide_hud_when_close":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"hide_hud_when_close":
 		_set_min_hud_dist()
+

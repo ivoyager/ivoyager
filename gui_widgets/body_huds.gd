@@ -275,8 +275,8 @@ func _on_meta_clicked(_meta: String, row_name: String) -> void:
 	IVGlobal.open_wiki_requested.emit(wiki_title)
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "gui_size":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"gui_size":
 		if !column_master:
 			_resize_columns_to_en_width(1)
 

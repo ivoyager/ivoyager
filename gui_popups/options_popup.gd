@@ -222,8 +222,8 @@ func _on_cancel() -> void:
 			"LABEL_PLEASE_CONFIRM", "BUTTON_CANCEL_CHANGES", "BUTTON_BACK")
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "gui_size":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"gui_size":
 		var center := position + size / 2
 		await get_tree().process_frame
 		#child_controls_changed() # Godot ISSUE4.2.dev2: does not resize

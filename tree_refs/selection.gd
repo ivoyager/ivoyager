@@ -61,9 +61,6 @@ var body: IVBody # = spatial if is_body else null
 var texture_2d: Texture2D
 var texture_slice_2d: Texture2D # stars only
 
-# private
-#var _times: Array = IVGlobal.times
-
 
 func _init() -> void:
 	IVGlobal.connect("system_tree_ready", Callable(self, "_init_after_system").bind(), CONNECT_ONE_SHOT)

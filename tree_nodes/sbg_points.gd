@@ -46,7 +46,7 @@ const L4_L5_ARRAY_FLAGS = (
 		| Mesh.ARRAY_FORMAT_TEX_UV2
 )
 
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
@@ -155,7 +155,8 @@ func _set_color() -> void:
 	shader_material.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
 
 
-func _settings_listener(setting: String, value) -> void:
-	if setting == "point_size":
+func _settings_listener(setting: StringName, value: Variant) -> void:
+	if setting == &"point_size":
 		var shader_material: ShaderMaterial = material_override
 		shader_material.set_shader_parameter("point_size", float(value))
+

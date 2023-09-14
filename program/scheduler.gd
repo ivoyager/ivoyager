@@ -24,7 +24,7 @@ extends Node
 # once per frame if interval is very small and/or game speed is very fast.
 # There is no save/load persistence! Interval connections must be remade.
 
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _ordered_signal_infos := [] # array "top" is always the next signal
 var _counter := 0
 var _signal_intervals := []

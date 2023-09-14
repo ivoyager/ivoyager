@@ -123,9 +123,9 @@ var show_clock := false
 var show_seconds := false
 var speed_name: String
 var speed_symbol: String
-var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
-var date: Array = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
-var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
+var times: Array[float] = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
+var date: Array[int] = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
+var clock: Array[int] = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
 #var _state: Dictionary = IVGlobal.state

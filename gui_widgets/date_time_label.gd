@@ -29,8 +29,8 @@ var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
 var forward_color: Color = IVGlobal.colors.normal
 var reverse_color: Color = IVGlobal.colors.danger
 
-var _date: Array = IVGlobal.date
-var _clock: Array = IVGlobal.clock
+var _date: Array[int] = IVGlobal.date
+var _clock: Array[int] = IVGlobal.clock
 #var _is_paused := false
 var _show_clock := false
 var _show_seconds := false

@@ -56,13 +56,13 @@ func _project_init() -> void:
 	_fonts.hud_symbols.fixed_size = _settings.viewport_symbols_size
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: StringName, value: Variant) -> void:
 	match setting:
-		"viewport_names_size":
+		&"viewport_names_size":
 			_fonts.hud_names.fixed_size = value
-		"viewport_symbols_size":
+		&"viewport_symbols_size":
 			_fonts.hud_symbols.fixed_size = value
-		"gui_size":
+		&"gui_size":
 			_fonts.gui_main.fixed_size = gui_main_sizes[value]
 			_fonts.gui_medium.fixed_size = gui_medium_sizes[value]
 			_fonts.gui_large.fixed_size = gui_large_sizes[value]

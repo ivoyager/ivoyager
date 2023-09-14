@@ -36,7 +36,7 @@ var max_lazy_models := 40
 var model_too_far_radius_multiplier := 3e3
 var map_search_suffixes: Array[String] = [".albedo", ".emission"]
 
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _SpheroidModel_: Script
 var _io_manager: IVIOManager
 var _fallback_albedo_map: Texture2D

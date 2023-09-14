@@ -708,7 +708,8 @@ func _send_gui_refresh() -> void:
 	_signal_range_latitude_longitude(true)
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: StringName, value: Variant) -> void:
 	match setting:
-		"camera_transfer_time":
+		&"camera_transfer_time":
 			_transfer_time = value
+

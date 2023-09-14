@@ -296,21 +296,21 @@ func _on_mouse_wheel_turned(is_up: bool) -> void:
 	_mwheel_turning = _mouse_in_out_rate * (1.0 if is_up else -1.0)
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: StringName, value: Variant) -> void:
 	match setting:
-		"camera_mouse_in_out_rate":
+		&"camera_mouse_in_out_rate":
 			_mouse_in_out_rate = value * mouse_wheel_adj
-		"camera_mouse_move_rate":
+		&"camera_mouse_move_rate":
 			_mouse_move_rate = value * mouse_move_adj
-		"camera_mouse_pitch_yaw_rate":
+		&"camera_mouse_pitch_yaw_rate":
 			_mouse_pitch_yaw_rate = value * mouse_pitch_yaw_adj
-		"camera_mouse_roll_rate":
+		&"camera_mouse_roll_rate":
 			_mouse_roll_rate = value * mouse_roll_adj
-		"camera_key_in_out_rate":
+		&"camera_key_in_out_rate":
 			_key_in_out_rate = value * key_in_out_adj
-		"camera_key_move_rate":
+		&"camera_key_move_rate":
 			_key_move_rate = value * key_move_adj
-		"camera_key_pitch_yaw_rate":
+		&"camera_key_pitch_yaw_rate":
 			_key_pitch_yaw_rate = value * key_pitch_yaw_adj
-		"camera_key_roll_rate":
+		&"camera_key_roll_rate":
 			_key_roll_rate = value * key_roll_adj

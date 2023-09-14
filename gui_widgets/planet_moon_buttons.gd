@@ -178,12 +178,12 @@ func _on_nav_button_selected(selected: Button) -> void:
 			selected.grab_focus()
 
 
-func _settings_listener(setting: String, _value) -> void:
+func _settings_listener(setting: StringName, _value: Variant) -> void:
 	match setting:
-		"gui_size":
+		&"gui_size":
 			if IVGlobal.state.is_system_built:
 				_settings_resize()
-#		"mouse_only_gui_nav":
+#		&"mouse_only_gui_nav":
 #			_mouse_only_gui_nav = value
 #			if !_mouse_only_gui_nav and _currently_selected:
 #				await get_tree().process_frame # wait for _mouse_only_gui_nav.gd

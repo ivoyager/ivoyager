@@ -29,7 +29,7 @@ const FRAGMENT_BODY_ORBIT := IVFragmentIdentifier.FRAGMENT_BODY_ORBIT
 
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier") # opt
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 
 var _body: IVBody

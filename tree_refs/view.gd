@@ -147,7 +147,7 @@ func get_data_for_cache() -> Array:
 	return data
 
 
-func set_data_from_cache(data) -> bool:
+func set_data_from_cache(data: Variant) -> bool:
 	# Tests data integrity and returns false on failure.
 	if typeof(data) != TYPE_ARRAY:
 		return false
@@ -240,5 +240,4 @@ func _set_time_state() -> void:
 		_timekeeper.set_time_reversed(is_reversed)
 	elif flags & IS_NOW:
 		_timekeeper.set_now_from_operating_system()
-
 
