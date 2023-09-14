@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name SharedInitializer
+class_name IVSharedInitializer
 extends RefCounted
 
 # Adds constructed items to IVGlobal.shared.
