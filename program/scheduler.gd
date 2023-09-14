@@ -102,7 +102,7 @@ func _make_interval_signal(interval: float, one_shot := false) -> StringName:
 	var signal_name: StringName
 	if _available_signals:
 		signal_name = _available_signals.pop_back()
-		_signal_intervals[int(signal_name)] = interval
+		_signal_intervals[signal_name.to_int()] = interval
 	else:
 		signal_name = StringName(str(_counter))
 		_signal_intervals.append(interval)
