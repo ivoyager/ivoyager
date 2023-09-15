@@ -30,7 +30,7 @@ extends Button
 # This button is coded to mimic buttons in PlanetMoonButtons (that's why it's
 # not a TextureButton).
 
-var body_name := "STAR_SUN"
+var body_name := &"STAR_SUN"
 
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _body: IVBody

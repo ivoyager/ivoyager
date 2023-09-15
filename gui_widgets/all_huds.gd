@@ -26,12 +26,15 @@ extends VBoxContainer
 
 const BodyFlags: Dictionary = IVEnums.BodyFlags
 
-var default_view_name := "LABEL_CUSTOM1" # will increment if taken
-var set_name := "AH"
+var default_view_name := &"LABEL_CUSTOM1" # will increment if taken
+var set_name := &"AH"
 var is_cached := true
 var view_flags := IVView.ALL_HUDS
-var reserved_view_names: Array[String] = [tr("BUTTON_PLANETS1"), tr("BUTTON_ASTEROIDS1"),
-		tr("BUTTON_COLORS1")]
+var reserved_view_names: Array[StringName] = [
+	&"BUTTON_PLANETS1",
+	&"BUTTON_ASTEROIDS1",
+	&"BUTTON_COLORS1",
+]
 
 var _column_master: GridContainer
 
@@ -42,7 +45,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	var view_save_button: IVViewSaveButton = $"%ViewSaveButton"
-	view_save_button.tooltip_text = "HINT_SAVE_VISIBILITIES_AND_COLORS"
+	view_save_button.tooltip_text = &"HINT_SAVE_VISIBILITIES_AND_COLORS"
 	($ViewSaveFlow as IVViewSaveFlow).init(view_save_button, default_view_name, set_name,
 			is_cached, view_flags, view_flags, reserved_view_names)
 
@@ -58,35 +61,35 @@ func _on_child_entered_tree(control: Control) -> void:
 				body_huds.column0_en_width = 23
 				body_huds.columns_en_width = 6
 				body_huds.rows = [
-					["STAR_SUN", BodyFlags.IS_STAR, false],
+					[&"STAR_SUN", BodyFlags.IS_STAR, false],
 				]
 				body_huds.disable_orbits_rows.append(0) # no orbit for the Sun
 			&"PMOsHUDs":
 				body_huds.column_master = _column_master
 				body_huds.has_headers = false
 				body_huds.rows = [
-					["LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 causes all flags below to be set
-					["LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
-					["LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
-					["LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
+					[&"LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 causes all flags below to be set
+					[&"LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
+					[&"LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
+					[&"LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
 				]
 			&"NonPMOMoonsHUDs":
 				body_huds.column_master = _column_master
 				body_huds.has_headers = false
 				body_huds.rows = [
-					["LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON, false],
+					[&"LABEL_MOONS_NON_PMO", BodyFlags.IS_NON_PLANETARY_MASS_MOON, false],
 				]
 			&"VisitedAsteroidsHUDs":
 				body_huds.column_master = _column_master
 				body_huds.has_headers = false
 				body_huds.rows = [
-					["LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID, false], # TODO: IS_VISITED_ASTEROID flag
+					[&"LABEL_ASTEROIDS_VISITED", BodyFlags.IS_ASTEROID, false], # TODO: IS_VISITED_ASTEROID flag
 				]
 			&"SpacecraftHUDs":
 				body_huds.column_master = _column_master
 				body_huds.has_headers = false
 				body_huds.rows = [
-					["LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT, false],
+					[&"LABEL_SPACECRAFT", BodyFlags.IS_SPACECRAFT, false],
 				]
 		return
 	
@@ -96,16 +99,17 @@ func _on_child_entered_tree(control: Control) -> void:
 			&"AsteroidsHUDs":
 				sbg_huds.column_master = _column_master
 				sbg_huds.rows = [
-					["LABEL_ASTEROIDS", ["NE", "MC", "IMB", "MMB", "OMB", "HI", "JT4", "JT5",
-							"CE", "TN"] as Array[String], false],
-					["SBG_NEAR_EARTH", ["NE"] as Array[String], true],
-					["SBG_MARS_CROSSERS", ["MC"] as Array[String], true],
-					["SBG_INNER_MAIN_BELT", ["IMB"] as Array[String], true],
-					["SBG_MIDDLE_MAIN_BELT", ["MMB"] as Array[String], true],
-					["SBG_OUTER_MAIN_BELT", ["OMB"] as Array[String], true],
-					["SBG_HILDAS", ["HI"] as Array[String], true],
-					["LABEL_JUPITER_TROJANS", ["JT4", "JT5"] as Array[String], true],
-					["SBG_CENTAURS", ["CE"] as Array[String], true],
-					["SBG_TRANS_NEPTUNE", ["TN"] as Array[String], true],
+					[&"LABEL_ASTEROIDS", [&"NE", &"MC", &"IMB", &"MMB", &"OMB", &"HI",
+							&"JT4", &"JT5", &"CE", &"TN"] as Array[StringName], false],
+					[&"SBG_NEAR_EARTH", [&"NE"] as Array[StringName], true],
+					[&"SBG_MARS_CROSSERS", [&"MC"] as Array[StringName], true],
+					[&"SBG_INNER_MAIN_BELT", [&"IMB"] as Array[StringName], true],
+					[&"SBG_MIDDLE_MAIN_BELT", [&"MMB"] as Array[StringName], true],
+					[&"SBG_OUTER_MAIN_BELT", [&"OMB"] as Array[StringName], true],
+					[&"SBG_HILDAS", [&"HI"] as Array[StringName], true],
+					[&"LABEL_JUPITER_TROJANS", [&"JT4", &"JT5"] as Array[StringName],
+							true],
+					[&"SBG_CENTAURS", [&"CE"] as Array[StringName], true],
+					[&"SBG_TRANS_NEPTUNE", [&"TN"] as Array[StringName], true],
 				]
 

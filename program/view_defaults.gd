@@ -41,7 +41,7 @@ var _View_: GDScript
 
 func _project_init() -> void:
 	IVGlobal.about_to_start_simulator.connect(_on_about_to_start_simulator)
-	_View_ = IVGlobal.script_classes[&"_View_"]
+	_View_ = IVGlobal.procedural_classes[&"_View_"]
 	
 	# visibilities & colors only
 	_hide_all()

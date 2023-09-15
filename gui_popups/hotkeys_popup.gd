@@ -27,7 +27,7 @@ var key_box_min_size_x := 300
 
 var _hotkey_dialog: IVHotkeyDialog
 
-@onready var _input_map_manager: IVInputMapManager = IVGlobal.program.InputMapManager
+@onready var _input_map_manager: IVInputMapManager = IVGlobal.program[&"InputMapManager"]
 
 
 func _on_init():
@@ -35,88 +35,88 @@ func _on_init():
 	
 	var column1: Array[Dictionary] = [ # each dict is a subpanel
 		{
-			header = "LABEL_ADMIN",
-			toggle_fullscreen = "LABEL_TOGGLE_FULLSCREEN",
-			toggle_options = "LABEL_OPTIONS",
-			toggle_hotkeys = "LABEL_HOTKEYS",
-			load_game = "LABEL_LOAD_FILE",
-			quick_load = "LABEL_QUICK_LOAD",
-			save_as = "LABEL_SAVE_AS",
-			quick_save = "LABEL_QUICK_SAVE",
-			quit = "LABEL_QUIT",
-			save_quit = "LABEL_SAVE_AND_QUIT",
+			&"header" : &"LABEL_ADMIN",
+			&"toggle_fullscreen" : &"LABEL_TOGGLE_FULLSCREEN",
+			&"toggle_options" : &"LABEL_OPTIONS",
+			&"toggle_hotkeys" : &"LABEL_HOTKEYS",
+			&"load_game" : &"LABEL_LOAD_FILE",
+			&"quick_load" : &"LABEL_QUICK_LOAD",
+			&"save_as" : &"LABEL_SAVE_AS",
+			&"quick_save" : &"LABEL_QUICK_SAVE",
+			&"quit" : &"LABEL_QUIT",
+			&"save_quit" : &"LABEL_SAVE_AND_QUIT",
 		},
 		{
-			header = "LABEL_GUI",
-			toggle_all_gui = "LABEL_SHOW_HIDE_ALL_GUI",
-			toggle_orbits = "LABEL_SHOW_HIDE_ORBITS",
-			toggle_names = "LABEL_SHOW_HIDE_NAMES",
-			toggle_symbols = "LABEL_SHOW_HIDE_SYMBOLS",
+			&"header" : &"LABEL_GUI",
+			&"toggle_all_gui" : &"LABEL_SHOW_HIDE_ALL_GUI",
+			&"toggle_orbits" : &"LABEL_SHOW_HIDE_ORBITS",
+			&"toggle_names" : &"LABEL_SHOW_HIDE_NAMES",
+			&"toggle_symbols" : &"LABEL_SHOW_HIDE_SYMBOLS",
 			
 			# Below two should be added by extension add_item(), if used.
 			# See Planetarim project (planetarium/planetarium.gd).
-#				cycle_next_panel = "LABEL_CYCLE_NEXT_PANEL",
-#				cycle_prev_panel = "LABEL_CYCLE_LAST_PANEL",
+#				&"cycle_next_panel" : &"LABEL_CYCLE_NEXT_PANEL",
+#				&"cycle_prev_panel" : &"LABEL_CYCLE_LAST_PANEL",
 			
 			# Below UI controls have some engine hardcoding as of
 			# Godot 3.2.2, so can't be user defined.
-#				ui_up = "LABEL_GUI_UP",
-#				ui_down = "LABEL_GUI_DOWN",
-#				ui_left = "LABEL_GUI_LEFT",
-#				ui_right = "LABEL_GUI_RIGHT",
+#				&"ui_up" : &"LABEL_GUI_UP",
+#				&"ui_down" : &"LABEL_GUI_DOWN",
+#				&"ui_left" : &"LABEL_GUI_LEFT",
+#				&"ui_right" : &"LABEL_GUI_RIGHT",
 		},
 		{
-			header = "LABEL_TIME",
-			incr_speed = "LABEL_SPEED_UP",
-			decr_speed = "LABEL_SLOW_DOWN",
-			reverse_time = "LABEL_REVERSE_TIME",
-			toggle_pause = "LABEL_TOGGLE_PAUSE",
+			&"header" : &"LABEL_TIME",
+			&"incr_speed" : &"LABEL_SPEED_UP",
+			&"decr_speed" : &"LABEL_SLOW_DOWN",
+			&"reverse_time" : &"LABEL_REVERSE_TIME",
+			&"toggle_pause" : &"LABEL_TOGGLE_PAUSE",
 		},
 	]
 	
 	var column2: Array[Dictionary] = [
 		{
-			header = "LABEL_SELECTION",
-			select_up = "LABEL_UP",
-			select_down = "LABEL_DOWN",
-			select_left = "LABEL_LAST",
-			select_right = "LABEL_NEXT",
-			select_forward = "LABEL_FORWARD",
-			select_back = "LABEL_BACK",
-			next_star = "LABEL_SELECT_SUN",
-			next_planet = "LABEL_NEXT_PLANET",
-			previous_planet = "LABEL_LAST_PLANET",
-			next_nav_moon = "LABEL_NEXT_NAV_MOON",
-			previous_nav_moon = "LABEL_LAST_NAV_MOON",
-			next_moon = "LABEL_NEXT_ANY_MOON",
-			previous_moon = "LABEL_LAST_ANY_MOON",
+			&"header" : &"LABEL_SELECTION",
+			&"select_up" : &"LABEL_UP",
+			&"select_down" : &"LABEL_DOWN",
+			&"select_left" : &"LABEL_LAST",
+			&"select_right" : &"LABEL_NEXT",
+			&"select_forward" : &"LABEL_FORWARD",
+			&"select_back" : &"LABEL_BACK",
+			&"next_star" : &"LABEL_SELECT_SUN",
+			&"next_planet" : &"LABEL_NEXT_PLANET",
+			&"previous_planet" : &"LABEL_LAST_PLANET",
+			&"next_nav_moon" : &"LABEL_NEXT_NAV_MOON",
+			&"previous_nav_moon" : &"LABEL_LAST_NAV_MOON",
+			&"next_moon" : &"LABEL_NEXT_ANY_MOON",
+			&"previous_moon" : &"LABEL_LAST_ANY_MOON",
 			# Below waiting for new code features
-#			next_system = "Select System",
-#			next_asteroid = "Next Asteroid",
-#			previous_asteroid = "Last Asteroid",
-#			next_comet = "Next Comet",
-#			previous_comet = "Last Comet",
-#			next_spacecraft = "Next Spacecraft",
-#			previous_spacecraft = "Last Spacecraft",
+#			&"next_system" : &"Select System",
+#			&"next_asteroid" : &"Next Asteroid",
+#			&"previous_asteroid" : &"Last Asteroid",
+#			&"next_comet" : &"Next Comet",
+#			&"previous_comet" : &"Last Comet",
+#			&"next_spacecraft" : &"Next Spacecraft",
+#			&"previous_spacecraft" : &"Last Spacecraft",
 		},
 	]
 	
 	var column3: Array[Dictionary] = [
 		{
-			header = "LABEL_CAMERA",
-			camera_up = "LABEL_MOVE_UP",
-			camera_down = "LABEL_MOVE_DOWN",
-			camera_left = "LABEL_MOVE_LEFT",
-			camera_right = "LABEL_MOVE_RIGHT",
-			camera_in = "LABEL_MOVE_IN",
-			camera_out = "LABEL_MOVE_OUT",
-			recenter = "LABEL_RECENTER",
-			pitch_up = "LABEL_PITCH_UP",
-			pitch_down = "LABEL_PITCH_DOWN",
-			yaw_left = "LABEL_YAW_LEFT",
-			yaw_right = "LABEL_YAW_RIGHT",
-			roll_left = "LABEL_ROLL_LEFT",
-			roll_right = "LABEL_ROLL_RIGHT",
+			&"header" : &"LABEL_CAMERA",
+			&"camera_up" : &"LABEL_MOVE_UP",
+			&"camera_down" : &"LABEL_MOVE_DOWN",
+			&"camera_left" : &"LABEL_MOVE_LEFT",
+			&"camera_right" : &"LABEL_MOVE_RIGHT",
+			&"camera_in" : &"LABEL_MOVE_IN",
+			&"camera_out" : &"LABEL_MOVE_OUT",
+			&"recenter" : &"LABEL_RECENTER",
+			&"pitch_up" : &"LABEL_PITCH_UP",
+			&"pitch_down" : &"LABEL_PITCH_DOWN",
+			&"yaw_left" : &"LABEL_YAW_LEFT",
+			&"yaw_right" : &"LABEL_YAW_RIGHT",
+			&"roll_left" : &"LABEL_ROLL_LEFT",
+			&"roll_right" : &"LABEL_ROLL_RIGHT",
 		},
 	]
 	
@@ -127,22 +127,22 @@ func _project_init() -> void:
 	super._project_init()
 	IVGlobal.hotkeys_requested.connect(open)
 	if IVGlobal.disable_pause:
-		remove_item("toggle_pause")
+		remove_item(&"toggle_pause")
 	if !IVGlobal.allow_time_reversal:
-		remove_item("reverse_time")
+		remove_item(&"reverse_time")
 	if !IVGlobal.enable_save_load:
-		remove_item("load_game")
-		remove_item("quick_load")
-		remove_item("save_as")
-		remove_item("quick_save")
-		remove_item("save_quit")
+		remove_item(&"load_game")
+		remove_item(&"quick_load")
+		remove_item(&"save_as")
+		remove_item(&"quick_save")
+		remove_item(&"save_quit")
 	if IVGlobal.disable_quit:
-		remove_item("quit")
+		remove_item(&"quit")
 
 
 func _on_ready():
 	super._on_ready()
-	_header_label.text = "LABEL_HOTKEYS"
+	_header_label.text = &"LABEL_HOTKEYS"
 	_hotkey_dialog = IVFiles.make_object_or_scene(IVHotkeyDialog)
 	_hotkey_dialog.hotkey_confirmed.connect(_on_hotkey_confirmed)
 	add_child(_hotkey_dialog)
@@ -153,7 +153,7 @@ func _on_content_built() -> void:
 	_confirm_changes.disabled = _input_map_manager.is_cache_current()
 
 
-func _build_item(action: String, action_label_str: String) -> HBoxContainer:
+func _build_item(action: StringName, action_label_str: StringName) -> HBoxContainer:
 	var action_hbox := HBoxContainer.new()
 	action_hbox.custom_minimum_size.x = key_box_min_size_x
 	var action_label := Label.new()
@@ -182,7 +182,7 @@ func _build_item(action: String, action_label_str: String) -> HBoxContainer:
 	return action_hbox
 
 
-func _restore_default(action: String) -> void:
+func _restore_default(action: StringName) -> void:
 	_input_map_manager.restore_default(action, true)
 	_build_content.call_deferred()
 
@@ -193,7 +193,7 @@ func _cancel_changes() -> void:
 	hide()
 
 
-func _on_hotkey_confirmed(action: String, index: int, keycode: int,
+func _on_hotkey_confirmed(action: StringName, index: int, keycode: int,
 		control: bool, alt: bool, shift: bool, meta: bool) -> void:
 	
 	print("_on_hotkey_confirmed")
@@ -231,6 +231,6 @@ func _on_cancel() -> void:
 		_allow_close = true
 		hide()
 		return
-	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_HOTKEY_CHANGES", _cancel_changes, true,
-			"LABEL_PLEASE_CONFIRM", "BUTTON_CANCEL_CHANGES", "BUTTON_BACK")
+	IVGlobal.confirmation_requested.emit(&"LABEL_Q_CANCEL_HOTKEY_CHANGES", _cancel_changes, true,
+			&"LABEL_PLEASE_CONFIRM", &"BUTTON_CANCEL_CHANGES", &"BUTTON_BACK")
 

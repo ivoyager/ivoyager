@@ -33,7 +33,7 @@ var _Selection_: Script
 
 
 func _project_init() -> void:
-	_Selection_ = IVGlobal.script_classes[&"_Selection_"]
+	_Selection_ = IVGlobal.procedural_classes[&"_Selection_"]
 
 
 func build_body_selection(body: IVBody) -> IVSelection:

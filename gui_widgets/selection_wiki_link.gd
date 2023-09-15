@@ -30,7 +30,7 @@ extends RichTextLabel
 # Note 2: Set IVGlobal.enable_wiki = true
 
 var use_selection_as_text := true # otherwise, "Wikipedia"
-var fallback_text := "LABEL_WIKIPEDIA"
+var fallback_text := &"LABEL_WIKIPEDIA"
 
 var _wiki_titles: Dictionary = IVTableData.wiki_lookup
 var _selection_manager: IVSelectionManager
@@ -74,5 +74,5 @@ func _on_wiki_clicked(_meta: String) -> void:
 	if !_wiki_titles.has(object_name):
 		return
 	var wiki_title: String = _wiki_titles[object_name]
-	IVGlobal.emit_signal("open_wiki_requested", wiki_title)
+	IVGlobal.open_wiki_requested.emit(wiki_title)
 

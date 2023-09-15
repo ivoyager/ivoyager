@@ -73,7 +73,7 @@ func _build(_dummy := false) -> void:
 		return
 	_is_built = true
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
-	set("theme_override_constants/separation", column_separation)
+	set(&"theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size
 	var star: IVBody = IVGlobal.top_bodies[0]
 	var min_body_size := roundf(INIT_WIDTH * min_body_size_ratio)
@@ -146,7 +146,7 @@ func _clear() -> void:
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var button := IVNavigationButton.new(body, image_size, _selection_manager)
-	button.connect("selected", Callable(self, "_on_nav_button_selected").bind(button))
+	button.selected.connect(_on_nav_button_selected.bind(button))
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
@@ -164,7 +164,7 @@ func _resize() -> void:
 	# it is possible to shrink the widget before image resizing.
 	var widget_width := size.x
 	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-	set("theme_override_constants/separation", column_separation)
+	set(&"theme_override_constants/separation", column_separation)
 	for key in _resize_multipliers:
 		var control: Control = key
 		var multipliers: Vector2 = _resize_multipliers[control]

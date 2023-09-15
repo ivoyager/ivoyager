@@ -26,7 +26,7 @@ var _regex: RegEx
 
 
 func _project_init() -> void:
-	_Composition_ = IVGlobal.script_classes[&"_Composition_"]
+	_Composition_ = IVGlobal.procedural_classes[&"_Composition_"]
 	_regex = RegEx.new()
 	_regex.compile("(?:([~\\d\\.]+%|trace) )?(.+)")
 

@@ -40,8 +40,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		set_input_as_handled()
 
 
-func _on_confirmation_requested(text: String, confirm_action: Callable, stop_sim := true,
-		title_txt := "LABEL_PLEASE_CONFIRM", ok_txt := "BUTTON_OK", cancel_txt := "BUTTON_CANCEL"
+func _on_confirmation_requested(text: StringName, confirm_action: Callable, stop_sim := true,
+		title_txt := &"LABEL_PLEASE_CONFIRM", ok_txt := &"BUTTON_OK", cancel_txt := &"BUTTON_CANCEL"
 		) -> void:
 	# stop_sim can be overridden by IVGlobal.popops_can_stop_sim == false
 	_stop_sim = stop_sim and IVGlobal.popops_can_stop_sim

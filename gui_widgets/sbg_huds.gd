@@ -41,11 +41,11 @@ var indent := "  "
 
 var rows: Array[Array] = [
 	# [row_name, sbg_aliases, is_indent]
-	["LABEL_JUPITER_TROJANS", ["JT4", "JT5"] as Array[String], false], # example row
+	[&"LABEL_JUPITER_TROJANS", [&"JT4", &"JT5"] as Array[StringName], false], # example row
 ]
 
-var headers: Array[String] = ["LABEL_POINTS", "LABEL_ORBITS"]
-var header_hints: Array[String] = ["HINT_POINTS_CKBX_COLOR", "HINT_ORBITS_CKBX_COLOR"]
+var headers: Array[StringName] = [&"LABEL_POINTS", &"LABEL_ORBITS"]
+var header_hints: Array[StringName] = [&"HINT_POINTS_CKBX_COLOR", &"HINT_ORBITS_CKBX_COLOR"]
 
 
 var _wiki_titles: Dictionary = IVTableData.wiki_lookup
@@ -55,7 +55,7 @@ var _points_color_pkrs: Array[ColorPickerButton] = []
 var _orbits_color_pkrs: Array[ColorPickerButton] = []
 var _suppress_update := false
 
-@onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
+@onready var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program[&"SBGHUDsState"]
 @onready var _n_rows := rows.size()
 
 
@@ -81,8 +81,8 @@ func _ready() -> void:
 	
 	# grid content
 	for i in _n_rows:
-		var row_name: String = rows[i][0]
-		var groups: Array[String] = rows[i][1]
+		var row_name: StringName = rows[i][0]
+		var groups: Array[StringName] = rows[i][1]
 		var is_indent: bool = rows[i][2]
 		# row label
 		if enable_wiki and _wiki_titles.has(row_name):
@@ -97,7 +97,7 @@ func _ready() -> void:
 			add_child(rtlabel)
 		else:
 			var label := Label.new()
-			label.text = indent + tr(row_name) if is_indent else row_name
+			label.text = indent + tr(row_name) if is_indent else tr(row_name)
 			add_child(label)
 		# points
 		var hbox := HBoxContainer.new()
@@ -149,7 +149,7 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	button.custom_minimum_size.x = 15
 	button.custom_minimum_size.y = 15
 	button.size_flags_vertical = SIZE_SHRINK_CENTER
-	button.set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
+	button.set(&"theme_override_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
 	button.edit_alpha = false
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	var color_picker := button.get_picker()
@@ -157,7 +157,7 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	return button
 
 
-func _show_hide_points(ckbx: CheckBox, groups: Array[String]) -> void:
+func _show_hide_points(ckbx: CheckBox, groups: Array[StringName]) -> void:
 	_suppress_update = true
 	var pressed := ckbx.button_pressed
 	for group in groups:
@@ -166,7 +166,7 @@ func _show_hide_points(ckbx: CheckBox, groups: Array[String]) -> void:
 	_update_points_ckbxs()
 
 
-func _show_hide_orbits(ckbx: CheckBox, groups: Array[String]) -> void:
+func _show_hide_orbits(ckbx: CheckBox, groups: Array[StringName]) -> void:
 	_suppress_update = true
 	var pressed := ckbx.button_pressed
 	for group in groups:
@@ -175,7 +175,7 @@ func _show_hide_orbits(ckbx: CheckBox, groups: Array[String]) -> void:
 	_update_orbits_ckbxs()
 
 
-func _change_points_color(color: Color, groups: Array[String]) -> void:
+func _change_points_color(color: Color, groups: Array[StringName]) -> void:
 	if color == NULL_COLOR:
 		return
 	_suppress_update = true
@@ -185,7 +185,7 @@ func _change_points_color(color: Color, groups: Array[String]) -> void:
 	_update_points_color_buttons()
 
 
-func _change_orbits_color(color: Color, groups: Array[String]) -> void:
+func _change_orbits_color(color: Color, groups: Array[StringName]) -> void:
 	if color == NULL_COLOR:
 		return
 	_suppress_update = true
@@ -199,7 +199,7 @@ func _update_points_ckbxs() -> void:
 	if _suppress_update:
 		return
 	for i in _n_rows:
-		var groups: Array[String] = rows[i][1]
+		var groups: Array[StringName] = rows[i][1]
 		var is_points_visible := true
 		for group in groups:
 			if !_sbg_huds_state.is_points_visible(group):
@@ -212,7 +212,7 @@ func _update_orbits_ckbxs() -> void:
 	if _suppress_update:
 		return
 	for i in _n_rows:
-		var groups: Array[String] = rows[i][1]
+		var groups: Array[StringName] = rows[i][1]
 		var is_orbits_visible := true
 		for group in groups:
 			if !_sbg_huds_state.is_orbits_visible(group):
@@ -225,7 +225,7 @@ func _update_points_color_buttons() -> void:
 	if _suppress_update:
 		return
 	for i in _n_rows:
-		var groups: Array[String] = rows[i][1]
+		var groups: Array[StringName] = rows[i][1]
 		var color := _sbg_huds_state.get_consensus_points_color(groups)
 		_points_color_pkrs[i].color = color
 
@@ -234,7 +234,7 @@ func _update_orbits_color_buttons() -> void:
 	if _suppress_update:
 		return
 	for i in _n_rows:
-		var groups: Array[String] = rows[i][1]
+		var groups: Array[StringName] = rows[i][1]
 		var color := _sbg_huds_state.get_consensus_orbits_color(groups)
 		_orbits_color_pkrs[i].color = color
 
@@ -276,7 +276,7 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 	
 	
 	# FIXME34: Must be a better wat to get this
-	var font: FontFile = get_theme_font("normal", "Label")
+	var font: FontFile = get_theme_font(&"normal", &"Label")
 	var font_size := font.fixed_size
 	var en_width := font.get_char_size("\u2000".unicode_at(0), font_size).x
 	
@@ -291,7 +291,7 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 		child.size.x = min_width
 
 
-func _on_meta_clicked(_meta: String, row_name: String) -> void:
+func _on_meta_clicked(_meta: String, row_name: StringName) -> void:
 	var wiki_title: String = _wiki_titles[row_name]
 	IVGlobal.open_wiki_requested.emit(wiki_title)
 

@@ -26,7 +26,7 @@ var _huds_popup: PopupPanel
 
 
 func _ready() -> void:
-	var top_gui: Control = IVGlobal.program.TopGUI
+	var top_gui: Control = IVGlobal.program[&"TopGUI"]
 	_huds_popup = IVFiles.make_object_or_scene(IVHUDsPopup)
 	top_gui.add_child(_huds_popup)
 	toggled.connect(_on_toggled)

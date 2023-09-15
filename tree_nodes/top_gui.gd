@@ -60,7 +60,7 @@ func _on_project_builder_finished() -> void:
 
 func _on_system_tree_built_or_loaded(is_new_game: bool) -> void:
 	if is_new_game:
-		var _SelectionManager_: Script = IVGlobal.script_classes._SelectionManager_
+		var _SelectionManager_: Script = IVGlobal.procedural_classes._SelectionManager_
 		@warning_ignore("unsafe_method_access") # possible replacement class
 		selection_manager = _SelectionManager_.new()
 		add_child(selection_manager)

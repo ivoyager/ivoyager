@@ -61,7 +61,7 @@ var _d := {
 
 
 func _project_init() -> void:
-	_Orbit_ = IVGlobal.script_classes._Orbit_
+	_Orbit_ = IVGlobal.procedural_classes._Orbit_
 
 
 func make_orbit_from_data(table_name: String, table_row: int, parent: IVBody) -> IVOrbit:

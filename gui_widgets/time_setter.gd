@@ -34,7 +34,7 @@ signal time_set(is_close)
 @onready var _minute: SpinBox = $Minute
 @onready var _second: SpinBox = $Second
 
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
 
 
 func _ready() -> void:
@@ -47,8 +47,8 @@ func _ready() -> void:
 
 func set_current() -> void:
 	var date_time := _timekeeper.get_gregorian_date_time()
-	var date_array: Array = date_time[0]
-	var time_array: Array = date_time[1]
+	var date_array: Array[int] = date_time[0]
+	var time_array: Array[int] = date_time[1]
 	_year.value = date_array[0]
 	_month.value = date_array[1]
 	_day.value = date_array[2]

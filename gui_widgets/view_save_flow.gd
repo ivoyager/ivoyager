@@ -29,11 +29,11 @@ extends HFlowContainer
 # Call init() to populate the saved view buttons and to init IVViewSaveButton
 # and IVViewSaver.
 
-@onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+@onready var _view_manager: IVViewManager = IVGlobal.program[&"ViewManager"]
 
 
-var default_view_name := "LABEL_CUSTOM1" # will increment if taken
-var set_name := ""
+var default_view_name := &"LABEL_CUSTOM1" # will increment if taken
+var set_name := &""
 var is_cached := true
 var show_flags := IVView.ALL
 
@@ -43,10 +43,10 @@ func _ready() -> void:
 	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 
 
-func init(view_save_button: IVViewSaveButton, default_view_name_ := "LABEL_CUSTOM1",
-		set_name_ := "", is_cached_ := true,
+func init(view_save_button: IVViewSaveButton, default_view_name_ := &"LABEL_CUSTOM1",
+		set_name_ := &"", is_cached_ := true,
 		show_flags_ := IVView.ALL, init_flags := IVView.ALL,
-		reserved_names: Array[String] = []) -> void:
+		reserved_names: Array[StringName] = []) -> void:
 	# Call from containing scene.
 	# This method calls IVViewSaveButton.init() which calls IVViewSaver.init().
 	# Make 'set_name_' unique to not share views with other GUI instances. 

@@ -37,7 +37,7 @@ var _binary_dir: String
 
 
 func _project_init() -> void:
-	_SmallBodiesGroup_ = IVGlobal.script_classes[&"_SmallBodiesGroup_"]
+	_SmallBodiesGroup_ = IVGlobal.procedural_classes[&"_SmallBodiesGroup_"]
 
 
 func build_sbgs() -> void:

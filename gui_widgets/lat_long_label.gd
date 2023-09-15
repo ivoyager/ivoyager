@@ -64,7 +64,7 @@ func _on_latitude_longitude_changed(lat_long: Vector2, is_ecliptic: bool, select
 			lat_long_type = LAT_LONG
 	var new_text := qformat.latitude_longitude(lat_long, 1, lat_long_type) # , false, CASE_LOWER)
 	if is_ecliptic:
-		new_text += " (" + tr("TXT_ECLIPTIC") + ")"
+		new_text += " (" + tr(&"TXT_ECLIPTIC") + ")"
 	text = new_text
 
 

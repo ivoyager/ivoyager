@@ -67,9 +67,9 @@ func _project_init() -> void:
 	_model_manager = IVGlobal.program[&"ModelManager"]
 	_io_manager = IVGlobal.program[&"IOManager"]
 #	_main_prog_bar = IVGlobal.program.get(&"MainProgBar") # safe if doesn't exist
-	_BodyLabel_ = IVGlobal.script_classes[&"_BodyLabel_"]
-	_BodyOrbit_ = IVGlobal.script_classes[&"_BodyOrbit_"]
-	_Rings_ = IVGlobal.script_classes[&"_Rings_"]
+	_BodyLabel_ = IVGlobal.procedural_classes[&"_BodyLabel_"]
+	_BodyOrbit_ = IVGlobal.procedural_classes[&"_BodyOrbit_"]
+	_Rings_ = IVGlobal.procedural_classes[&"_Rings_"]
 	_fallback_body_2d = IVGlobal.assets[&"fallback_body_2d"]
 
 

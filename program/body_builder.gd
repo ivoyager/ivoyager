@@ -116,7 +116,7 @@ var _real_precisions := {}
 
 
 func _project_init() -> void:
-	_Body_ = IVGlobal.script_classes[&"_Body_"]
+	_Body_ = IVGlobal.procedural_classes[&"_Body_"]
 	_orbit_builder = IVGlobal.program[&"OrbitBuilder"]
 	_composition_builder = IVGlobal.program.get(&"CompositionBuilder")
 

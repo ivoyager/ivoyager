@@ -30,15 +30,15 @@ var setting_enums := {
 	starmap = IVEnums.StarmapSize,
 }
 var format_overrides := {
-	camera_transfer_time = {max_value = 10.0},
-	viewport_names_size = {min_value = 4.0, max_value = 50.0},
-	viewport_symbols_size = {min_value = 4.0, max_value = 50.0},
-	point_size = {min_value = 3, max_value = 20},
+	camera_transfer_time = {&"max_value" : 10.0},
+	viewport_names_size = {&"min_value" : 4.0, &"max_value" : 50.0},
+	viewport_symbols_size = {&"min_value" : 4.0, &"max_value" : 50.0},
+	point_size = {&"min_value" : 3, &"max_value" : 20},
 }
 
 var _settings: Dictionary = IVGlobal.settings
 
-@onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
+@onready var _settings_manager: IVSettingsManager = IVGlobal.program[&"SettingsManager"]
 
 
 func _on_init():
@@ -46,37 +46,37 @@ func _on_init():
 	
 	var column1: Array[Dictionary] = [ # each dict is a subpanel
 		{
-			header = "LABEL_SAVE_LOAD",
-			save_base_name = "LABEL_BASE_NAME",
-			append_date_to_save = "LABEL_APPEND_DATE",
-			pause_on_load = "LABEL_PAUSE_ON_LOAD",
+			&"header" : &"LABEL_SAVE_LOAD",
+			&"save_base_name" : &"LABEL_BASE_NAME",
+			&"append_date_to_save" : &"LABEL_APPEND_DATE",
+			&"pause_on_load" : &"LABEL_PAUSE_ON_LOAD",
 		},
 		{
-			header = "LABEL_CAMERA",
-			camera_transfer_time = "LABEL_TRANSFER_TIME",
-			camera_mouse_in_out_rate = "LABEL_MOUSE_RATE_IN_OUT",
-			camera_mouse_move_rate = "LABEL_MOUSE_RATE_TANGENTIAL",
-			camera_mouse_pitch_yaw_rate = "LABEL_MOUSE_RATE_PITCH_YAW",
-			camera_mouse_roll_rate = "LABEL_MOUSE_RATE_ROLL",
-			camera_key_in_out_rate = "LABEL_KEY_RATE_IN_OUT",
-			camera_key_move_rate = "LABEL_KEY_RATE_TANGENTIAL",
-			camera_key_pitch_yaw_rate = "LABEL_KEY_RATE_PITCH_YAW",
-			camera_key_roll_rate = "LABEL_KEY_RATE_ROLL",
+			&"header" : &"LABEL_CAMERA",
+			&"camera_transfer_time" : &"LABEL_TRANSFER_TIME",
+			&"camera_mouse_in_out_rate" : &"LABEL_MOUSE_RATE_IN_OUT",
+			&"camera_mouse_move_rate" : &"LABEL_MOUSE_RATE_TANGENTIAL",
+			&"camera_mouse_pitch_yaw_rate" : &"LABEL_MOUSE_RATE_PITCH_YAW",
+			&"camera_mouse_roll_rate" : &"LABEL_MOUSE_RATE_ROLL",
+			&"camera_key_in_out_rate" : &"LABEL_KEY_RATE_IN_OUT",
+			&"camera_key_move_rate" : &"LABEL_KEY_RATE_TANGENTIAL",
+			&"camera_key_pitch_yaw_rate" : &"LABEL_KEY_RATE_PITCH_YAW",
+			&"camera_key_roll_rate" : &"LABEL_KEY_RATE_ROLL",
 		},
 	]
 	
 	var column2: Array[Dictionary] = [
 		{
-			header = "LABEL_GUI_AND_HUD",
-			gui_size = "LABEL_GUI_SIZE",
-			viewport_names_size = "LABEL_NAMES_SIZE",
-			viewport_symbols_size = "LABEL_SYMBOLS_SIZE",
-			point_size = "LABEL_POINT_SIZE",
-			hide_hud_when_close = "LABEL_HIDE_HUDS_WHEN_CLOSE",
+			&"header" : &"LABEL_GUI_AND_HUD",
+			&"gui_size" : &"LABEL_GUI_SIZE",
+			&"viewport_names_size" : &"LABEL_NAMES_SIZE",
+			&"viewport_symbols_size" : &"LABEL_SYMBOLS_SIZE",
+			&"point_size" : &"LABEL_POINT_SIZE",
+			&"hide_hud_when_close" : &"LABEL_HIDE_HUDS_WHEN_CLOSE",
 		},
 		{
-			header = "LABEL_GRAPHICS_PERFORMANCE",
-			starmap = "LABEL_STARMAP",
+			&"header" : &"LABEL_GRAPHICS_PERFORMANCE",
+			&"starmap" : &"LABEL_STARMAP",
 		},
 	]
 	
@@ -88,15 +88,15 @@ func _project_init() -> void:
 	IVGlobal.options_requested.connect(open)
 	IVGlobal.setting_changed.connect(_settings_listener)
 	if !IVGlobal.enable_save_load:
-		remove_subpanel("LABEL_SAVE_LOAD")
+		remove_subpanel(&"LABEL_SAVE_LOAD")
 
 
 func _on_ready() -> void:
 	super._on_ready()
-	_header_label.text = "LABEL_OPTIONS"
+	_header_label.text = &"LABEL_OPTIONS"
 
 
-func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
+func _build_item(setting: StringName, setting_label_str: StringName) -> HBoxContainer:
 	var setting_hbox := HBoxContainer.new()
 	var setting_label := Label.new()
 	setting_hbox.add_child(setting_label)
@@ -169,7 +169,7 @@ func _build_item(setting: String, setting_label_str: String) -> HBoxContainer:
 	return setting_hbox
 
 
-func _set_overrides(control: Control, setting: String) -> void:
+func _set_overrides(control: Control, setting: StringName) -> void:
 	if format_overrides.has(setting):
 		var overrides: Dictionary = format_overrides[setting]
 		for override in overrides:
@@ -181,7 +181,7 @@ func _on_content_built() -> void:
 	_confirm_changes.disabled = _settings_manager.is_cache_current()
 
 
-func _restore_default(setting: String) -> void:
+func _restore_default(setting: StringName) -> void:
 	_settings_manager.restore_default(setting, true)
 	_build_content.call_deferred()
 
@@ -192,7 +192,8 @@ func _cancel_changes() -> void:
 	hide()
 
 
-func _on_change(value, setting: String, default_button: Button, convert_to_int := false) -> void:
+func _on_change(value, setting: StringName, default_button: Button, convert_to_int := false
+		) -> void:
 	if convert_to_int:
 		value = int(value)
 	assert(!DPRINT or IVDebug.dprint("Set " + setting + " = " + str(value)))
@@ -218,8 +219,8 @@ func _on_cancel() -> void:
 		_allow_close = true
 		hide()
 		return
-	IVGlobal.confirmation_requested.emit("LABEL_Q_CANCEL_OPTION_CHANGES", _cancel_changes, true,
-			"LABEL_PLEASE_CONFIRM", "BUTTON_CANCEL_CHANGES", "BUTTON_BACK")
+	IVGlobal.confirmation_requested.emit(&"LABEL_Q_CANCEL_OPTION_CHANGES", _cancel_changes, true,
+			&"LABEL_PLEASE_CONFIRM", &"BUTTON_CANCEL_CHANGES", &"BUTTON_BACK")
 
 
 func _settings_listener(setting: StringName, _value: Variant) -> void:

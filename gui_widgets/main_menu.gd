@@ -33,7 +33,7 @@ var is_splash_config := false # parent or someone else needs to set this
 var _state: Dictionary = IVGlobal.state
 var _is_project_built := false
 
-@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program.MainMenuManager
+@onready var _main_menu_manager: IVMainMenuManager = IVGlobal.program[&"MainMenuManager"]
 @onready var _button_infos := _main_menu_manager.button_infos
 
 

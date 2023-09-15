@@ -97,48 +97,48 @@ func set_default_visibilities() -> void:
 		orbits_visibility_changed.emit()
 
 
-func is_points_visible(group: String) -> bool:
+func is_points_visible(group: StringName) -> bool:
 	return points_visibilities.get(group, false)
 
 
-func change_points_visibility(group: String, is_show: bool) -> void:
+func change_points_visibility(group: StringName, is_show: bool) -> void:
 	points_visibilities[group] = is_show
 	points_visibility_changed.emit()
 
 
-func is_orbits_visible(group: String) -> bool:
+func is_orbits_visible(group: StringName) -> bool:
 	return orbits_visibilities.get(group, false)
 
 
-func change_orbits_visibility(group: String, is_show: bool) -> void:
+func change_orbits_visibility(group: StringName, is_show: bool) -> void:
 	orbits_visibilities[group] = is_show
 	orbits_visibility_changed.emit()
 
 
-func get_visible_points_groups() -> Array[String]:
-	var array: Array[String] = []
+func get_visible_points_groups() -> Array[StringName]:
+	var array: Array[StringName] = []
 	for key in points_visibilities:
 		if points_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func get_visible_orbits_groups() -> Array[String]:
-	var array: Array[String] = []
+func get_visible_orbits_groups() -> Array[StringName]:
+	var array: Array[StringName] = []
 	for key in orbits_visibilities:
 		if orbits_visibilities[key]:
 			array.append(key)
 	return array
 
 
-func set_visible_points_groups(array: Array[String]) -> void:
+func set_visible_points_groups(array: Array[StringName]) -> void:
 	points_visibilities.clear()
 	for key in array:
 		points_visibilities[key] = true
 	points_visibility_changed.emit()
 
 
-func set_visible_orbits_groups(array: Array[String]) -> void:
+func set_visible_orbits_groups(array: Array[StringName]) -> void:
 	orbits_visibilities.clear()
 	for key in array:
 		orbits_visibilities[key] = true
@@ -161,31 +161,31 @@ func set_default_colors() -> void:
 		orbits_color_changed.emit()
 
 
-func get_default_points_color(group: String) -> Color:
+func get_default_points_color(group: StringName) -> Color:
 	if default_points_colors.has(group):
 		return default_points_colors[group]
 	return fallback_points_color
 
 
-func get_default_orbits_color(group: String) -> Color:
+func get_default_orbits_color(group: StringName) -> Color:
 	if default_orbits_colors.has(group):
 		return default_orbits_colors[group]
 	return fallback_orbits_color
 
 
-func get_points_color(group: String) -> Color:
+func get_points_color(group: StringName) -> Color:
 	if points_colors.has(group):
 		return points_colors[group]
 	return fallback_points_color
 
 
-func get_orbits_color(group: String) -> Color:
+func get_orbits_color(group: StringName) -> Color:
 	if orbits_colors.has(group):
 		return orbits_colors[group]
 	return fallback_orbits_color
 
 
-func get_consensus_points_color(groups: Array[String], is_default := false) -> Color:
+func get_consensus_points_color(groups: Array[StringName], is_default := false) -> Color:
 	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
@@ -198,7 +198,7 @@ func get_consensus_points_color(groups: Array[String], is_default := false) -> C
 	return consensus_color
 
 
-func get_consensus_orbits_color(groups: Array[String], is_default := false) -> Color:
+func get_consensus_orbits_color(groups: Array[StringName], is_default := false) -> Color:
 	var has_theme_color := false
 	var consensus_color := NULL_COLOR
 	for group in groups:
@@ -211,7 +211,7 @@ func get_consensus_orbits_color(groups: Array[String], is_default := false) -> C
 	return consensus_color
 
 
-func set_points_color(group: String, color: Color) -> void:
+func set_points_color(group: StringName, color: Color) -> void:
 	if points_colors.has(group):
 		if color == points_colors[group]:
 			return
@@ -221,7 +221,7 @@ func set_points_color(group: String, color: Color) -> void:
 	points_color_changed.emit()
 
 
-func set_orbits_color(group: String, color: Color) -> void:
+func set_orbits_color(group: StringName, color: Color) -> void:
 	if orbits_colors.has(group):
 		if color == orbits_colors[group]:
 			return

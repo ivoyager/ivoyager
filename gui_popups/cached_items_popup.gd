@@ -104,13 +104,13 @@ func add_subpanel(subpanel_dict: Dictionary, to_column: int, to_row := 999) -> v
 	if to_column >= layout.size():
 		to_column = layout.size()
 		layout.append([])
-	var column_array: Array = layout[to_column]
+	var column_array: Array[Dictionary] = layout[to_column]
 	if to_row >= column_array.size():
 		to_row = column_array.size()
 	column_array.insert(to_row, subpanel_dict)
 
 
-func remove_subpanel(header: String) -> Dictionary:
+func remove_subpanel(header: StringName) -> Dictionary:
 	for column_array in layout:
 		var dict_index := 0
 		while dict_index < column_array.size():
@@ -123,14 +123,15 @@ func remove_subpanel(header: String) -> Dictionary:
 	return {}
 
 
-func move_subpanel(header: String, to_column: int, to_row: int) -> void:
+func move_subpanel(header: StringName, to_column: int, to_row: int) -> void:
 	# to_column and/or to_row can be arbitrarily big to move to end
 	var subpanel_dict := remove_subpanel(header)
 	if subpanel_dict:
 		add_subpanel(subpanel_dict, to_column, to_row)
 
 
-func add_item(item: String, setting_label_str: String, header: String, at_index := 999) -> void:
+func add_item(item: StringName, setting_label_str: StringName, header: StringName, at_index := 999
+		) -> void:
 	# use add_subpanel() instead if subpanel doesn't exist already.
 	assert(item != "header")
 	for column_array in layout:
@@ -155,7 +156,7 @@ func add_item(item: String, setting_label_str: String, header: String, at_index 
 	print("Could not find Options subpanel with header ", header)
 
 
-func remove_item(item: String) -> void:
+func remove_item(item: StringName) -> void:
 	assert(item != "header")
 	for column_array in layout:
 		var dict_index := 0
@@ -193,7 +194,7 @@ func _build_content() -> void:
 	_on_content_built()
 
 
-func _build_item(_item: String, _item_label_str: String) -> HBoxContainer:
+func _build_item(_item: StringName, _item_label_str: StringName) -> HBoxContainer:
 	# subclass must override!
 	return HBoxContainer.new()
 

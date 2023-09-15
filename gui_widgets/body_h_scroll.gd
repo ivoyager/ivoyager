@@ -32,7 +32,7 @@ var _currently_selected: Button
 var _body_tables: Array[String] = []
 var _button_size := 0.0 # scales with widget height
 
-@onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+@onready var _mouse_only_gui_nav: bool = IVGlobal.settings[&"mouse_only_gui_nav"]
 @onready var _hbox: HBoxContainer = $HBox
 
 

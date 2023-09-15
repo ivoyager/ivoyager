@@ -31,8 +31,8 @@ var add_quick_save_button := true
 var _settings: Dictionary = IVGlobal.settings
 var _blocking_windows: Array[Window] = IVGlobal.blocking_windows
 
-@onready var _settings_manager: IVSettingsManager = IVGlobal.program.SettingsManager
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _settings_manager: IVSettingsManager = IVGlobal.program[&"SettingsManager"]
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
 
 
 func _project_init() -> void:
@@ -65,10 +65,10 @@ func _open() -> void:
 	IVGlobal.sim_stop_required.emit(self)
 	popup_centered()
 	access = ACCESS_FILESYSTEM
-	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, _settings.save_dir)
+	var save_dir := files.get_save_dir_path(IVGlobal.is_modded, _settings[&"save_dir"])
 	var date_string: String = (_timekeeper.get_current_date_for_file()
-			if _settings.append_date_to_save else "")
-	current_path = files.get_save_path(save_dir, _settings.save_base_name, date_string, false)
+			if _settings[&"append_date_to_save"] else "")
+	current_path = files.get_save_path(save_dir, _settings[&"save_base_name"], date_string, false)
 	deselect_all()
 
 
@@ -80,11 +80,11 @@ func _close() -> void:
 func _save_file(path: String) -> void:
 	var cache_settings := false
 	var save_base_name := files.get_base_file_name(current_file)
-	if save_base_name != _settings.save_base_name:
-		_settings_manager.change_current("save_base_name", save_base_name, true)
+	if save_base_name != _settings[&"save_base_name"]:
+		_settings_manager.change_current(&"save_base_name", save_base_name, true)
 		cache_settings = true
-	if current_dir != _settings.save_dir:
-		_settings_manager.change_current("save_dir", current_dir, true)
+	if current_dir != _settings[&"save_dir"]:
+		_settings_manager.change_current(&"save_dir", current_dir, true)
 		cache_settings = true
 	if cache_settings:
 		_settings_manager.cache_now()

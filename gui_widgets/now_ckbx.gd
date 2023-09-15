@@ -28,7 +28,7 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
 
 
 func _ready() -> void:
