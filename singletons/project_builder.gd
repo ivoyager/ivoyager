@@ -78,6 +78,7 @@ var init_sequence: Array[Array] = [
 	[self, "_init_extensions", false],
 	[self, "_set_simulator_root", false],
 	[self, "_set_simulator_top_gui", false],
+	[self, "_instantiate_initializers", false],
 	[self, "_instantiate_and_index_program_objects", false],
 	[self, "_init_program_objects", true],
 	[self, "_add_program_nodes", true],
@@ -113,9 +114,9 @@ var add_top_gui_to_universe := true # happens in add_program_nodes()
 #   - A path to a scene (*.tscn, *.scn)
 
 var initializers := {
-#	# RefCounted classes. IVProjectBuilder instances these (first!) and adds to
-#	# dictionary IVGlobal.program. They may erase themselves from
-#	# IVGlobal.program when done (thereby freeing themselves).
+	# RefCounted classes. IVProjectBuilder instances these first. Everything
+	# must happen in the _init() call. They are de-referenced so free
+	# themselves after init.
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
 	_SharedResourceInitializer_ = IVSharedResourceInitializer,
@@ -366,11 +367,20 @@ func _set_simulator_top_gui() -> void:
 		top_gui = files.make_object_or_scene(IVTopGUI)
 
 
+func _instantiate_initializers() -> void:
+	for key in initializers:
+		if !initializers[key]:
+			continue
+		var _initializer: RefCounted = files.make_object_or_scene(initializers[key])
+		# initializer will free itself after _init() call
+	IVGlobal.initializers_inited.emit()
+
+
 func _instantiate_and_index_program_objects() -> void:
 	_program.Global = IVGlobal
 	_program.Universe = universe
 	_program.TopGUI = top_gui
-	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes]:
+	for dict in [program_refcounteds, program_nodes, gui_nodes]:
 		for key in dict:
 			var key_str: String = key
 			if !dict[key_str]:
@@ -382,7 +392,6 @@ func _instantiate_and_index_program_objects() -> void:
 			if object is Node:
 				@warning_ignore("unsafe_property_access")
 				object.name = object_key
-#	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes, procedural_objects]:
 	for key in procedural_objects:
 		if !procedural_objects[key]:
 			continue
@@ -392,17 +401,17 @@ func _instantiate_and_index_program_objects() -> void:
 
 
 func _init_program_objects() -> void:
-	for key in initializers:
-		var key_str: String = key
-		if !initializers[key_str]:
-			continue
-		var object_key: String = key_str.rstrip("_").lstrip("_")
-		if !_program.has(object_key): # might have removed itself already
-			continue
-		var object: Object = _program[object_key]
-		if object.has_method("_project_init"):
-			@warning_ignore("unsafe_method_access")
-			object._project_init()
+#	for key in initializers:
+#		var key_str: String = key
+#		if !initializers[key_str]:
+#			continue
+#		var object_key: String = key_str.rstrip("_").lstrip("_")
+#		if !_program.has(object_key): # might have removed itself already
+#			continue
+#		var object: Object = _program[object_key]
+#		if object.has_method("_project_init"):
+#			@warning_ignore("unsafe_method_access")
+#			object._project_init()
 	if universe.has_method("_project_init"):
 		@warning_ignore("unsafe_method_access")
 		universe._project_init()

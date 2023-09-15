@@ -25,10 +25,6 @@ extends RefCounted
 # Many loose ends after shift to Table Importer plugin...
 
 func _init() -> void:
-	_on_init()
-	
-	
-func _on_init() -> void:
 	if !IVGlobal.enable_wiki:
 		return
 	if IVGlobal.use_internal_wiki:
@@ -39,8 +35,4 @@ func _on_init() -> void:
 			IVGlobal.wiki = locale + ".wikipedia"
 		else:
 			IVGlobal.wiki = "en.wikipedia"
-
-
-func _project_init() -> void:
-	IVGlobal.program.erase(&"WikiInitializer") # frees self
 

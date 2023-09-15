@@ -33,10 +33,9 @@ var constructor_callables := {
 var _shared_resources: Dictionary = IVGlobal.shared_resources
 
 
-func _project_init() -> void:
+func _init() -> void:
 	_load_resource_paths()
 	_make_shared_resources()
-	IVGlobal.program.erase(&"SharedResourceInitializer") # frees self
 
 
 func _load_resource_paths() -> void:

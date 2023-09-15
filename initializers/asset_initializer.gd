@@ -38,16 +38,8 @@ var _asset_path_dicts: Array[Dictionary] = [
 
 
 func _init() -> void:
-	_on_init()
-
-
-func _on_init() -> void:
 	_modify_asset_paths()
 	_load_assets()
-
-
-func _project_init() -> void:
-	IVGlobal.program.erase(&"AssetInitializer") # frees self
 
 
 func _modify_asset_paths() -> void:

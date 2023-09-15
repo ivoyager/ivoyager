@@ -37,6 +37,7 @@ const IVOYAGER_YMD := 20230914
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
 signal translations_imported() # IVTranslationImporter; useful for boot screen
 signal data_tables_imported() # IVTableImporter
+signal initializers_inited()
 signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
 signal project_inited() # IVProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added

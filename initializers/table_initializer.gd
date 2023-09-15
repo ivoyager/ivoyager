@@ -39,7 +39,3 @@ func _init() -> void:
 	# signal done
 	IVGlobal.data_tables_imported.emit()
 
-
-func _project_init() -> void:
-	IVGlobal.program.erase(&"TableInitializer") # frees self
-

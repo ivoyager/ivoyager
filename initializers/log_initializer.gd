@@ -23,10 +23,6 @@ extends RefCounted
 # Inits a debug file specified in IVGlobal when in debug mode.
 
 func _init() -> void:
-	_on_init()
-
-
-func _on_init() -> void:
 	if !OS.is_debug_build() or !IVGlobal.debug_log_path:
 		return
 	# TEST34
@@ -39,8 +35,4 @@ func _on_init() -> void:
 #	var debug_log := File.new()
 #	if debug_log.open(IVGlobal.debug_log_path, File.WRITE) == OK:
 #		IVGlobal.debug_log = debug_log
-
-
-func _project_init() -> void:
-	IVGlobal.program.erase("LogInitializer") # frees self
 
