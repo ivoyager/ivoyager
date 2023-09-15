@@ -50,7 +50,7 @@ func _on_system_tree_ready(_dummy := false) -> void:
 		_add_bodies_from_table(table_name)
 
 
-func add_bodies_from_table(table_name: String) -> void:
+func add_bodies_from_table(table_name: StringName) -> void:
 	# e.g., 'spacecrafts'
 	if IVGlobal.state.is_system_ready:
 		_add_bodies_from_table(table_name)
