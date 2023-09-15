@@ -37,7 +37,7 @@ func _init():
 func _on_init() -> void:
 	_load_translations()
 	IVGlobal.translations_imported.emit()
-	IVGlobal.program.erase("TranslationImporter") # frees self
+	IVGlobal.program.erase(&"TranslationImporter") # frees self
 
 
 func _load_translations() -> void:
@@ -75,9 +75,10 @@ func _process_translation(translation: Translation, load_dict: Dictionary,
 			duplications.append(duplication)
 			continue
 		load_dict[txt_key] = translation
-		var text: String = translation.get_message(txt_key)
+		var text := translation.get_message(txt_key)
 		# TODO34: This is fixed now?
 		# Patch for Godot issue #38716 not understanding "\uXXXX".
 		var new_text := IVUtils.c_unescape_patch(text)
 		if new_text != text:
 			translation.add_message(txt_key, new_text)
+

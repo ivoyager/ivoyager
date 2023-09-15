@@ -27,13 +27,13 @@ extends VBoxContainer
 signal view_saved(view_name)
 
 
-var default_view_name := "LABEL_CUSTOM1" # will increment if taken
-var set_name := ""
+var default_view_name := &"LABEL_CUSTOM1" # will increment if taken
+var set_name := &""
 var is_cached := true
 var show_flags := IVView.ALL
-var reserved_names: Array[String] = []
+var reserved_names: Array[StringName] = []
 
-@onready var _view_manager: IVViewManager = IVGlobal.program.ViewManager
+@onready var _view_manager: IVViewManager = IVGlobal.program[&"ViewManager"]
 @onready var _selection_ckbx: CheckBox = $"%SelectionCkbx"
 @onready var _longitude_ckbx: CheckBox = $"%LongitudeCkbx"
 @onready var _orientation_ckbx: CheckBox = $"%OrientationCkbx"
@@ -50,11 +50,11 @@ func _ready() -> void:
 	($"%SaveButton" as Button).pressed.connect(_on_save)
 	_line_edit.text_submitted.connect(_on_save)
 	if !IVGlobal.allow_time_setting:
-		_time_ckbx.text = "CKBX_GAME_SPEED" # this is the only 'time' element that can be modified
+		_time_ckbx.text = &"CKBX_GAME_SPEED" # this is the only 'time' element that can be modified
 
 
-func init(default_view_name_ := "LABEL_CUSTOM1", set_name_ := "", is_cached_ := true,
-		show_flags_ := IVView.ALL, init_flags := IVView.ALL, reserved_names_: Array[String] = []
+func init(default_view_name_ := &"LABEL_CUSTOM1", set_name_ := &"", is_cached_ := true,
+		show_flags_ := IVView.ALL, init_flags := IVView.ALL, reserved_names_: Array[StringName] = []
 		) -> void:
 	# Called by IVViewSaveButton in standard setup.
 	# Make 'set_name_' unique to not share views with other GUI instances. 

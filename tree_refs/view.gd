@@ -80,8 +80,8 @@ var view_rotations := NULL_VECTOR3
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var orbit_visible_flags := 0
-var visible_points_groups: Array[String] = []
-var visible_orbits_groups: Array[String] = []
+var visible_points_groups: Array[StringName] = []
+var visible_orbits_groups: Array[StringName] = []
 var body_orbit_colors := {} # has non-default only
 var sbg_points_colors := {} # has non-default only
 var sbg_orbits_colors := {} # has non-default only
@@ -147,7 +147,7 @@ func get_data_for_cache() -> Array:
 	return data
 
 
-func set_data_from_cache(data) -> bool:
+func set_data_from_cache(data: Variant) -> bool:
 	# Tests data integrity and returns false on failure.
 	if typeof(data) != TYPE_ARRAY:
 		return false
@@ -240,5 +240,4 @@ func _set_time_state() -> void:
 		_timekeeper.set_time_reversed(is_reversed)
 	elif flags & IS_NOW:
 		_timekeeper.set_now_from_operating_system()
-
 

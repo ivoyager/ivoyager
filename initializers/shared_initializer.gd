@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name SharedInitializer
+class_name IVSharedInitializer
 extends RefCounted
 
 # Adds constructed items to IVGlobal.shared.
@@ -28,13 +28,13 @@ func _init() -> void:
 
 
 func _project_init() -> void:
-	IVGlobal.program.erase("SharedInitializer") # frees self
+	IVGlobal.program.erase(&"SharedInitializer") # frees self
 
 
 func _make_shared_resources() -> void:
-	IVGlobal.shared.sphere_mesh = _make_sphere_mesh()
-	IVGlobal.shared.circle_mesh = _make_circle_mesh(IVGlobal.vertecies_per_orbit)
-	IVGlobal.shared.circle_mesh_low_res = _make_circle_mesh(IVGlobal.vertecies_per_orbit_low_res)
+	IVGlobal.shared[&"sphere_mesh"] = _make_sphere_mesh()
+	IVGlobal.shared[&"circle_mesh"] = _make_circle_mesh(IVGlobal.vertecies_per_orbit)
+	IVGlobal.shared[&"circle_mesh_low_res"] = _make_circle_mesh(IVGlobal.vertecies_per_orbit_low_res)
 
 
 func _make_sphere_mesh() -> SphereMesh:

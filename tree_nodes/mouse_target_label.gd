@@ -35,12 +35,12 @@ func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	var world_controller: IVWorldController = IVGlobal.program.WorldController
 	world_controller.mouse_target_changed.connect(_on_mouse_target_changed)
-	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+	var fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
 	if fragment_identifier:
 		fragment_identifier.fragment_changed.connect(_on_fragment_changed)
 		_fragment_data = fragment_identifier.fragment_data
-	if IVGlobal.fonts.has("hud_names"):
-		set("theme_override_fonts/font", IVGlobal.fonts.hud_names)
+	if IVGlobal.fonts.has(&"hud_names"):
+		set(&"theme_override_fonts/font", IVGlobal.fonts.hud_names)
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	grow_horizontal = GROW_DIRECTION_BOTH
 	size_flags_horizontal = SIZE_SHRINK_CENTER

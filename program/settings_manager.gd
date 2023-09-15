@@ -34,41 +34,41 @@ func _on_init():
 	cache_file_version = 1
 	defaults = {
 		# save/load
-		save_base_name = "I Voyager",
-		append_date_to_save = true,
-		pause_on_load = false,
-	#	autosave = false,
-	#	autosave_number = 5,
-	#	autosave_minutes = 30,
+		&"save_base_name" : "I Voyager",
+		&"append_date_to_save" : true,
+		&"pause_on_load" : false,
+	#	&"autosave" : false,
+	#	&"autosave_number" : 5,
+	#	&"autosave_minutes" : 30,
 	
 		# camera
-		camera_transfer_time = 1.0,
-		camera_mouse_in_out_rate = 1.0,
-		camera_mouse_move_rate = 1.0,
-		camera_mouse_pitch_yaw_rate = 1.0,
-		camera_mouse_roll_rate = 1.0,
-		camera_key_in_out_rate = 1.0,
-		camera_key_move_rate = 1.0,
-		camera_key_pitch_yaw_rate = 1.0,
-		camera_key_roll_rate = 1.0,
+		&"camera_transfer_time" : 1.0,
+		&"camera_mouse_in_out_rate" : 1.0,
+		&"camera_mouse_move_rate" : 1.0,
+		&"camera_mouse_pitch_yaw_rate" : 1.0,
+		&"camera_mouse_roll_rate" : 1.0,
+		&"camera_key_in_out_rate" : 1.0,
+		&"camera_key_move_rate" : 1.0,
+		&"camera_key_pitch_yaw_rate" : 1.0,
+		&"camera_key_roll_rate" : 1.0,
 	
 		# UI & HUD display
-		gui_size = IVEnums.GUISize.GUI_MEDIUM,
-		viewport_names_size = 15,
-		viewport_symbols_size = 25,
-		point_size = 3,
-		hide_hud_when_close = true, # restart or load required
+		&"gui_size" : IVEnums.GUISize.GUI_MEDIUM,
+		&"viewport_names_size" : 15,
+		&"viewport_symbols_size" : 25,
+		&"point_size" : 3,
+		&"hide_hud_when_close" : true, # restart or load required
 	
 		# graphics/performance
-		starmap = IVEnums.StarmapSize.STARMAP_16K,
+		&"starmap" : IVEnums.StarmapSize.STARMAP_16K,
 	
 		# misc
-		mouse_action_releases_gui_focus = true,
+		&"mouse_action_releases_gui_focus" : true,
 	
 		# cached but not in IVOptionsPopup
-		save_dir = "",
-		pbd_splash_caption_open = false,
-		mouse_only_gui_nav = false,
+		&"save_dir" : "",
+		&"pbd_splash_caption_open" : false,
+		&"mouse_only_gui_nav" : false,
 	
 		}
 	
@@ -76,5 +76,6 @@ func _on_init():
 	current = IVGlobal.settings
 
 
-func _on_change_current(setting: String) -> void:
+func _on_change_current(setting: StringName) -> void:
 	IVGlobal.setting_changed.emit(setting, current[setting])
+

@@ -56,9 +56,9 @@ var enable_precisions := IVGlobal.enable_precisions
 var labels_stretch_ratio := 0.6
 var values_stretch_ratio := 0.4
 var interval := 0.0 # seconds; set 0.0 for no periodic updates
-var section_headers := ["LABEL_ORBITAL_CHARACTERISTICS", "LABEL_PHYSICAL_CHARACTERISTICS",
-	"LABEL_ATMOSPHERE", "LABEL_ATMOSPHERE_BY_VOLUME", "LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
-	"LABEL_PHOTOSPHERE_BY_WEIGHT"]
+var section_headers := [&"LABEL_ORBITAL_CHARACTERISTICS", &"LABEL_PHYSICAL_CHARACTERISTICS",
+	&"LABEL_ATMOSPHERE", &"LABEL_ATMOSPHERE_BY_VOLUME", &"LABEL_TRACE_ATMOSPHERE_BY_VOLUME",
+	&"LABEL_PHOTOSPHERE_BY_WEIGHT"]
 var subsection_of: Array[int] = [-1, -1, -1, 2, 2, -1]
 var section_open: Array[bool] = [true, true, true, true, true, true]
 
@@ -318,13 +318,13 @@ func object_labels_values_display(object: Object, prespace: String) -> Array:
 func mod_rotation_period(value_txt: String, value: float) -> String:
 	if _body:
 		if _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
-			value_txt += " (%s)" % tr("TXT_TIDALLY_LOCKED").to_lower()
+			value_txt += " (%s)" % tr(&"TXT_TIDALLY_LOCKED").to_lower()
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = "~%s d (%s)" % [round(value / IVUnits.DAY), tr("TXT_CHAOTIC").to_lower()]
-		elif _body.name == "PLANET_MERCURY":
-			value_txt += " (3:2 %s)" % tr("TXT_RESONANCE").to_lower()
+			value_txt = "~%s d (%s)" % [round(value / IVUnits.DAY), tr(&"TXT_CHAOTIC").to_lower()]
+		elif _body.name == &"PLANET_MERCURY":
+			value_txt += " (3:2 %s)" % tr(&"TXT_RESONANCE").to_lower()
 		elif _body.is_rotation_retrograde():
-			value_txt += " (%s)" % tr("TXT_RETROGRADE").to_lower()
+			value_txt += " (%s)" % tr(&"TXT_RETROGRADE").to_lower()
 	return value_txt
 
 
@@ -333,19 +333,19 @@ func mod_axial_tilt_to_orbit(value_txt: String, value: float) -> String:
 		if is_zero_approx(value) and _body.flags & BodyFlags.IS_TIDALLY_LOCKED:
 			value_txt = "~0\u00B0"
 		elif _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = tr("TXT_VARIABLE")
+			value_txt = tr(&"TXT_VARIABLE")
 	return value_txt
 
 
 func mod_axial_tilt_to_ecliptic(value_txt: String, _value: float) -> String:
 	if _body:
 		if _body.flags & BodyFlags.TUMBLES_CHAOTICALLY:
-			value_txt = tr("TXT_VARIABLE")
+			value_txt = tr(&"TXT_VARIABLE")
 	return value_txt
 
 
 func mod_n_kn_dwf_planets(value_txt: String, _value: float) -> String:
-	return "%s (%s)" % [value_txt, tr("TXT_POSSIBLE").to_lower()]
+	return "%s (%s)" % [value_txt, tr(&"TXT_POSSIBLE").to_lower()]
 
 
 # *****************************************************************************
@@ -376,7 +376,7 @@ func substitute_label(label_key: StringName, body: IVBody) -> StringName:
 func _configure(_dummy := false) -> void:
 	if _selection_manager:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_selection_manager.selection_changed.connect(_update_selection)
@@ -552,9 +552,7 @@ func _get_row_info(section: int, data_index: int, prespace: String) -> Array:
 			value_wiki_key = result[1]
 	elif value_type == TYPE_OBJECT:
 		var result: Array = format_callable.call(value, prespace)
-		result.append(false)
-		result.append(false)
-		return result
+		return [result[0], result[1], false, false]
 	else: # String or StringName
 		var result: Array = format_callable.call(value)
 		value_txt = result[0]

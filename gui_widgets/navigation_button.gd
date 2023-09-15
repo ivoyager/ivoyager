@@ -34,7 +34,7 @@ func _init(body: IVBody, image_size: float, selection_manager: IVSelectionManage
 	_body = body
 	_selection_manager = selection_manager
 	tooltip_text = body.name
-	set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
+	set(&"theme_override_fonts/font", IVGlobal.fonts.two_pt) # hack to allow smaller button height
 	custom_minimum_size = Vector2(image_size, image_size)
 	var texture_box := TextureRect.new()
 	texture_box.set_anchors_and_offsets_preset(PRESET_FULL_RECT, PRESET_MODE_KEEP_SIZE, 0)

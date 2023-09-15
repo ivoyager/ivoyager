@@ -67,7 +67,7 @@ var selection: IVSelection
 #var _root: Window = get_tree().get_root()
 #var _selection_builder: IVSelectionBuilder = IVGlobal.program.SelectionBuilder
 var _selections: Dictionary = IVGlobal.selections
-var _history := [] # contains weakrefs
+var _history: Array[WeakRef] = []
 var _history_index := -1
 var _supress_history := false
 
@@ -126,6 +126,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	else:
 		return # input NOT handled!
 	get_window().set_input_as_handled()
+
+
+static func get_selection_manager(control: Control) -> IVSelectionManager:
+	var ancestor: Node = control.get_parent()
+	while ancestor is Control:
+		if &"selection_manager" in ancestor:
+			var selection_manager: IVSelectionManager = ancestor.get(&"selection_manager")
+			if selection_manager:
+				return selection_manager
+		ancestor = ancestor.get_parent()
+	return null
 
 
 static func get_or_make_selection(selection_name: String) -> IVSelection:

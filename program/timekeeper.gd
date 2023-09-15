@@ -57,7 +57,6 @@ enum { # date_format; first three are alwyas Year, Month, Day
 	DATE_FORMAT_Y_M_D_Q_YQ_YM, # YM, increasing month ticker = Y * 12 + (M - 1)
 }
 
-
 const SECOND := IVUnits.SECOND # sim_time conversion
 const MINUTE := IVUnits.MINUTE
 const HOUR := IVUnits.HOUR
@@ -121,11 +120,11 @@ var engine_time: float # accumulated delta
 var speed_multiplier: float # negative if is_reversed
 var show_clock := false
 var show_seconds := false
-var speed_name: String
-var speed_symbol: String
-var times: Array = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
-var date: Array = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
-var clock: Array = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
+var speed_name: StringName
+var speed_symbol: StringName
+var times: Array[float] = IVGlobal.times # [0] time (s, J2000) [1] engine_time [2] UT1 (floats)
+var date: Array[int] = IVGlobal.date # Gregorian (ints); see DATE_FORMAT_ enums
+var clock: Array[int] = IVGlobal.clock # UT1 [0] hour [1] minute [2] second (ints)
 
 # private
 #var _state: Dictionary = IVGlobal.state
@@ -281,7 +280,7 @@ static func gregorian2jdn(Y: int, M: int, D: int) -> int:
 	return jdn
 
 
-static func set_gregorian_date_array(jdn: int, date_array: Array,
+static func set_gregorian_date_array(jdn: int, date_array: Array[int],
 		date_format_ := DATE_FORMAT_Y_M_D) -> void:
 	# Expects date_array to be correct size for date_format_
 	@warning_ignore("integer_division")
@@ -311,14 +310,14 @@ static func set_gregorian_date_array(jdn: int, date_array: Array,
 	date_array[5] = y * 12 + (m - 1) # ym, always increasing
 
 
-static func get_clock_elements(fractional_day: float) -> Array:
+static func get_clock_elements(fractional_day: float) -> Array[int]:
 	# returns [h, m, s]
-	var clock_array := [0, 0, 0]
+	var clock_array := [0, 0, 0] as Array[int]
 	set_clock_array(fractional_day, clock_array)
 	return clock_array
 
 
-static func set_clock_array(fractional_day: float, clock_array: Array) -> void:
+static func set_clock_array(fractional_day: float, clock_array: Array[int]) -> void:
 	# Expects clock_ of size 3. It's possible to have second > 59 if fractional
 	# day > 1.0 (which can happen when solar day > Julian Day).
 	var total_seconds := int(fractional_day * 86400.0)
@@ -331,7 +330,7 @@ static func set_clock_array(fractional_day: float, clock_array: Array) -> void:
 	clock_array[2] = total_seconds - h * 3600 - m * 60
 
 
-func get_gregorian_date(sim_time := NAN) -> Array:
+func get_gregorian_date(sim_time := NAN) -> Array[int]:
 	# returns [Y, M, D] (or more; see DATE_FORMAT_ enum)
 	if is_nan(sim_time):
 		sim_time = time
@@ -342,13 +341,13 @@ func get_gregorian_date(sim_time := NAN) -> Array:
 	return date_array
 
 
-func get_gregorian_date_time(sim_time := NAN) -> Array:
+func get_gregorian_date_time(sim_time := NAN) -> Array[Array]:
 	# returns [[Y, M, D], [h, m, s]], or larger [date]; see DATE_FORMAT_ enum
 	if is_nan(sim_time):
 		sim_time = time
 	var solar_day_ := get_solar_day(sim_time)
 	var jdn := get_jdn_for_solar_day(solar_day_)
-	var date_array := [0, 0, 0]
+	var date_array := [0, 0, 0] as Array[int]
 	set_gregorian_date_array(jdn, date_array, date_format)
 	var fractional_day := fposmod(solar_day_, 1.0)
 	var clock_array := get_clock_elements(fractional_day)
@@ -420,7 +419,7 @@ func set_now_from_operating_system() -> void:
 
 
 func set_time_reversed(new_is_reversed: bool) -> void:
-	if !_allow_time_setting or  !_allow_time_reversal or is_reversed == new_is_reversed:
+	if !_allow_time_setting or !_allow_time_reversal or is_reversed == new_is_reversed:
 		return
 	if _network_state == IS_CLIENT:
 		return

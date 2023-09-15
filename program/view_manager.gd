@@ -38,9 +38,10 @@ var _io_manager: IVIOManager
 var _missing_or_bad_cache_file := true
 
 
+
 func _project_init() -> void:
-	_View_ = IVGlobal.script_classes._View_
-	_io_manager = IVGlobal.program.IOManager
+	_View_ = IVGlobal.procedural_classes[&"_View_"]
+	_io_manager = IVGlobal.program[&"IOManager"]
 	files.make_dir_if_doesnt_exist(IVGlobal.cache_dir)
 	_read_cache()
 	if _missing_or_bad_cache_file:
@@ -49,7 +50,7 @@ func _project_init() -> void:
 
 # public
 
-func save_view(view_name: String, group_name: String, is_cached: bool, flags: int,
+func save_view(view_name: StringName, group_name: StringName, is_cached: bool, flags: int,
 		allow_threaded_cache_write := true) -> void:
 	var key := view_name + "." + group_name
 	var view := get_view_object(view_name, group_name, is_cached)
@@ -66,7 +67,7 @@ func save_view(view_name: String, group_name: String, is_cached: bool, flags: in
 		_gamesave_views[key] = view
 
 
-func set_view(view_name: String, group_name: String, is_cached: bool,
+func set_view(view_name: StringName, group_name: StringName, is_cached: bool,
 		is_camera_instant_move := false) -> void:
 	var key := view_name + "." + group_name
 	var view: IVView
@@ -79,7 +80,7 @@ func set_view(view_name: String, group_name: String, is_cached: bool,
 	view.set_state(is_camera_instant_move)
 
 
-func save_view_object(view: IVView, view_name: String, group_name: String, is_cached: bool,
+func save_view_object(view: IVView, view_name: StringName, group_name: StringName, is_cached: bool,
 		allow_threaded_cache_write := true) -> void:
 	var key := view_name + "." + group_name
 	if is_cached:
@@ -89,21 +90,21 @@ func save_view_object(view: IVView, view_name: String, group_name: String, is_ca
 		_gamesave_views[key] = view
 
 
-func get_view_object(view_name: String, group_name: String, is_cached: bool) -> IVView:
+func get_view_object(view_name: StringName, group_name: StringName, is_cached: bool) -> IVView:
 	var key := view_name + "." + group_name
 	if is_cached:
 		return _cached_views.get(key)
 	return _gamesave_views.get(key)
 
 
-func has_view(view_name: String, group_name: String, is_cached: bool) -> bool:
+func has_view(view_name: StringName, group_name: StringName, is_cached: bool) -> bool:
 	var key := view_name + "." + group_name
 	if is_cached:
 		return _cached_views.has(key)
 	return _gamesave_views.has(key)
 
 
-func remove_view(view_name: String, group_name: String, is_cached: bool) -> void:
+func remove_view(view_name: StringName, group_name: StringName, is_cached: bool) -> void:
 	var key := view_name + "." + group_name
 	if is_cached:
 		_cached_views.erase(key)
@@ -112,13 +113,13 @@ func remove_view(view_name: String, group_name: String, is_cached: bool) -> void
 		_gamesave_views.erase(key)
 	
 
-func get_view_names_in_group(group_name: String, is_cached: bool) -> Array[String]:
-	var group: Array[String] = []
+func get_view_names_in_group(group_name: StringName, is_cached: bool) -> Array[StringName]:
+	var group: Array[StringName] = []
 	var suffix := "." + group_name
 	var dict := _cached_views if is_cached else _gamesave_views
 	for key in dict:
 		@warning_ignore("unsafe_cast")
-		var key_str := key as String
+		var key_str := key as StringName
 		if key_str.ends_with(suffix):
 			group.append(key_str.trim_suffix(suffix))
 	return group

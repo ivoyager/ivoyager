@@ -56,7 +56,7 @@ var _job_count := 0
 # Init & app exit
 
 func _project_init() -> void:
-	_state_manager = IVGlobal.program.StateManager
+	_state_manager = IVGlobal.program[&"StateManager"]
 	if !_use_threads:
 		return
 	IVGlobal.about_to_stop_before_quit.connect(_block_quit_until_finished)

@@ -40,29 +40,30 @@ var _primary_font: FontFile
 
 func _project_init() -> void:
 	IVGlobal.setting_changed.connect(_settings_listener)
-	_primary_font = IVGlobal.assets.primary_font
+	_primary_font = IVGlobal.assets[&"primary_font"]
 	for key in fixed_sizes:
 		_fonts[key] = _primary_font.duplicate()
 		_fonts[key].fixed_size = fixed_sizes[key]
-	_fonts.gui_main = _primary_font.duplicate()
-	_fonts.gui_medium = _primary_font.duplicate()
-	_fonts.gui_large = _primary_font.duplicate()
-	_fonts.hud_names = _primary_font.duplicate()
-	_fonts.hud_symbols = _primary_font.duplicate()
-	_fonts.gui_main.fixed_size = gui_main_sizes[_settings.gui_size]
-	_fonts.gui_medium.fixed_size = gui_medium_sizes[_settings.gui_size]
-	_fonts.gui_large.fixed_size = gui_large_sizes[_settings.gui_size]
-	_fonts.hud_names.fixed_size = _settings.viewport_names_size
-	_fonts.hud_symbols.fixed_size = _settings.viewport_symbols_size
+	_fonts[&"gui_main"] = _primary_font.duplicate()
+	_fonts[&"gui_medium"] = _primary_font.duplicate()
+	_fonts[&"gui_large"] = _primary_font.duplicate()
+	_fonts[&"hud_names"] = _primary_font.duplicate()
+	_fonts[&"hud_symbols"] = _primary_font.duplicate()
+	_fonts[&"gui_main"].fixed_size = gui_main_sizes[_settings[&"gui_size"]]
+	_fonts[&"gui_medium"].fixed_size = gui_medium_sizes[_settings[&"gui_size"]]
+	_fonts[&"gui_large"].fixed_size = gui_large_sizes[_settings[&"gui_size"]]
+	_fonts[&"hud_names"].fixed_size = _settings[&"viewport_names_size"]
+	_fonts[&"hud_symbols"].fixed_size = _settings[&"viewport_symbols_size"]
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: StringName, value: Variant) -> void:
 	match setting:
-		"viewport_names_size":
-			_fonts.hud_names.fixed_size = value
-		"viewport_symbols_size":
-			_fonts.hud_symbols.fixed_size = value
-		"gui_size":
-			_fonts.gui_main.fixed_size = gui_main_sizes[value]
-			_fonts.gui_medium.fixed_size = gui_medium_sizes[value]
-			_fonts.gui_large.fixed_size = gui_large_sizes[value]
+		&"viewport_names_size":
+			_fonts[&"hud_names"].fixed_size = value
+		&"viewport_symbols_size":
+			_fonts[&"hud_symbols"].fixed_size = value
+		&"gui_size":
+			_fonts[&"gui_main"].fixed_size = gui_main_sizes[value]
+			_fonts[&"gui_medium"].fixed_size = gui_medium_sizes[value]
+			_fonts[&"gui_large"].fixed_size = gui_large_sizes[value]
+

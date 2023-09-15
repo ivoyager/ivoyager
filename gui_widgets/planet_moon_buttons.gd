@@ -68,12 +68,12 @@ func _build(_dummy := false) -> void:
 		return
 	if !IVGlobal.state.is_system_built:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_is_built = true
 	var column_separation := int(INIT_WIDTH * column_separation_ratio + 0.5)
-	set("theme_override_constants/separation", column_separation)
+	set(&"theme_override_constants/separation", column_separation)
 	# calculate star "slice" relative size
 	var star: IVBody = IVGlobal.top_bodies[0]
 	var min_body_size := roundf(INIT_WIDTH * min_body_size_ratio)
@@ -146,7 +146,7 @@ func _clear() -> void:
 
 func _add_nav_button(box_container: BoxContainer, body: IVBody, image_size: float) -> void:
 	var button := IVNavigationButton.new(body, image_size, _selection_manager)
-	button.connect("selected", Callable(self, "_on_nav_button_selected").bind(button))
+	button.selected.connect(_on_nav_button_selected.bind(button))
 	button.size_flags_horizontal = SIZE_FILL
 	box_container.add_child(button)
 	var size_multiplier := image_size / INIT_WIDTH
@@ -164,7 +164,7 @@ func _resize() -> void:
 	# it is possible to shrink the widget before image resizing.
 	var widget_width := size.x
 	var column_separation := int(widget_width * column_separation_ratio + 0.5)
-	set("theme_override_constants/separation", column_separation)
+	set(&"theme_override_constants/separation", column_separation)
 	for key in _resize_multipliers:
 		var control: Control = key
 		var multipliers: Vector2 = _resize_multipliers[control]
@@ -178,12 +178,12 @@ func _on_nav_button_selected(selected: Button) -> void:
 			selected.grab_focus()
 
 
-func _settings_listener(setting: String, _value) -> void:
+func _settings_listener(setting: StringName, _value: Variant) -> void:
 	match setting:
-		"gui_size":
+		&"gui_size":
 			if IVGlobal.state.is_system_built:
 				_settings_resize()
-#		"mouse_only_gui_nav":
+#		&"mouse_only_gui_nav":
 #			_mouse_only_gui_nav = value
 #			if !_mouse_only_gui_nav and _currently_selected:
 #				await get_tree().process_frame # wait for _mouse_only_gui_nav.gd

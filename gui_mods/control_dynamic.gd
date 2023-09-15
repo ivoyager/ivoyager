@@ -402,6 +402,7 @@ func _update_custom_size() -> void:
 		_custom_size.y = 0.0
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "gui_size":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"gui_size":
 		resize_and_position_to_anchor()
+

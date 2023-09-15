@@ -45,11 +45,11 @@ func _ready() -> void:
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
 	mesh = PlaneMesh.new()
 	_rings_material.shader = IVGlobal.shared.rings_shader
-	_rings_material.set_shader_parameter("rings_texture", _texture)
-	_rings_material.set_shader_parameter("inner_fraction", inner_fraction)
+	_rings_material.set_shader_parameter(&"rings_texture", _texture)
+	_rings_material.set_shader_parameter(&"inner_fraction", inner_fraction)
 	var width := float(_texture.get_width())
-	_rings_material.set_shader_parameter("pixel_number", width)
-	_rings_material.set_shader_parameter("pixel_size", 1.0 / width)
+	_rings_material.set_shader_parameter(&"pixel_number", width)
+	_rings_material.set_shader_parameter(&"pixel_size", 1.0 / width)
 	set_surface_override_material(0, _rings_material)
 	rotate_x(PI / 2.0)
 
@@ -59,6 +59,7 @@ func _process(_delta: float) -> void:
 	var is_sun_above := to_local(sun_global_translation).y > 0.0
 	if _is_sun_above != is_sun_above:
 		_is_sun_above = is_sun_above
-		_rings_material.set_shader_parameter("is_sun_above", is_sun_above)
+		_rings_material.set_shader_parameter(&"is_sun_above", is_sun_above)
 	# TODO4.0: Make below a global uniform.
-	_rings_material.set_shader_parameter("sun_translation", sun_global_translation)
+	_rings_material.set_shader_parameter(&"sun_translation", sun_global_translation)
+

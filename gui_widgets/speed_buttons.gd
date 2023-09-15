@@ -26,8 +26,8 @@ const IS_CLIENT := IVEnums.NetworkState.IS_CLIENT
 
 var _state: Dictionary = IVGlobal.state
 
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
+@onready var _state_manager: IVStateManager = IVGlobal.program[&"StateManager"]
 @onready var _minus: Button = $Minus
 @onready var _plus: Button = $Plus
 @onready var _pause: Button = $Pause

@@ -36,7 +36,7 @@ var max_lazy_models := 40
 var model_too_far_radius_multiplier := 3e3
 var map_search_suffixes: Array[String] = [".albedo", ".emission"]
 
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _SpheroidModel_: Script
 var _io_manager: IVIOManager
 var _fallback_albedo_map: Texture2D
@@ -51,9 +51,9 @@ var _cull_size: int
 func _project_init() -> void:
 	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	IVGlobal.about_to_stop_before_quit.connect(_clear)
-	_SpheroidModel_ = IVGlobal.script_classes._SpheroidModel_
-	_io_manager = IVGlobal.program.IOManager
-	_fallback_albedo_map = IVGlobal.assets.fallback_albedo_map
+	_SpheroidModel_ = IVGlobal.procedural_classes[&"_SpheroidModel_"]
+	_io_manager = IVGlobal.program[&"IOManager"]
+	_fallback_albedo_map = IVGlobal.assets[&"fallback_albedo_map"]
 	_cull_size = int(max_lazy_models * CULL_FRACTION)
 	_preregister_files()
 
@@ -185,7 +185,7 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		var model_scale := METER
 		var asset_row := IVTableData.get_row(path.get_file())
 		if asset_row != -1:
-			model_scale = IVTableData.get_db_float("asset_adjustments", "model_scale", asset_row)
+			model_scale = IVTableData.get_db_float(&"asset_adjustments", &"model_scale", asset_row)
 			model_scale *= METER
 		basis = basis.scaled(model_scale * Vector3.ONE)
 	else: # constructed ellipsoid model
@@ -200,8 +200,8 @@ func _get_model_basis(file_prefix: String, m_radius := NAN, e_radius := NAN) -> 
 		if path:
 			var asset_row := IVTableData.get_row(path.get_file())
 			if asset_row != -1:
-				var longitude_offset := IVTableData.get_db_float("asset_adjustments",
-						"longitude_offset", asset_row)
+				var longitude_offset := IVTableData.get_db_float(&"asset_adjustments",
+						&"longitude_offset", asset_row)
 				if !is_nan(longitude_offset):
 					basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -longitude_offset)
 	basis = basis.rotated(Vector3(0.0, 1.0, 0.0), -PI / 2.0) # adjust for centered prime meridian
@@ -215,10 +215,10 @@ func _preregister_files() -> void:
 	var models_search := IVGlobal.models_search
 	var maps_search := IVGlobal.maps_search
 	for table in IVGlobal.body_tables:
-		var n_rows := IVTableData.get_db_n_rows(table)
+		var n_rows := IVTableData.get_n_rows(table)
 		var row := 0
 		while row < n_rows:
-			var file_prefix := IVTableData.get_db_string(table, "file_prefix", row)
+			var file_prefix := IVTableData.get_db_string(table, &"file_prefix", row)
 			assert(file_prefix)
 			var path := files.find_resource_file(models_search, file_prefix)
 			if path:

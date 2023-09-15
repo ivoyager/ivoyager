@@ -26,7 +26,7 @@ var _time_set_popup: IVTimeSetPopup
 
 
 func _ready() -> void:
-	var top_gui: Control = IVGlobal.program.TopGUI
+	var top_gui: Control = IVGlobal.program[&"TopGUI"]
 	_time_set_popup = IVFiles.make_object_or_scene(IVTimeSetPopup)
 	top_gui.add_child(_time_set_popup)
 	toggled.connect(_on_toggled)

@@ -26,11 +26,11 @@ var show_pause := !IVGlobal.disable_pause
 var date_format := "%02d/%02d/%02d"
 var clock_hms_format := "  %02d:%02d:%02d" # to incl UT, "  %02d:%02d:%02d UT"
 var clock_hm_format := "  %02d:%02d" # to incl UT, "  %02d:%02d UT"
-var forward_color: Color = IVGlobal.colors.normal
-var reverse_color: Color = IVGlobal.colors.danger
+var forward_color: Color = IVGlobal.colors[&"normal"]
+var reverse_color: Color = IVGlobal.colors[&"danger"]
 
-var _date: Array = IVGlobal.date
-var _clock: Array = IVGlobal.clock
+var _date: Array[int] = IVGlobal.date
+var _clock: Array[int] = IVGlobal.clock
 #var _is_paused := false
 var _show_clock := false
 var _show_seconds := false
@@ -39,14 +39,14 @@ var _ymd: Array[int] = [0, 0, 0]
 var _hms: Array[int] = [0, 0, 0]
 var _hm: Array[int] = [0, 0]
 
-@onready var _timekeeper: IVTimekeeper = IVGlobal.program.Timekeeper
-@onready var _state_manager: IVStateManager = IVGlobal.program.StateManager
+@onready var _timekeeper: IVTimekeeper = IVGlobal.program[&"Timekeeper"]
+@onready var _state_manager: IVStateManager = IVGlobal.program[&"StateManager"]
 
 
 func _ready() -> void:
 	IVGlobal.update_gui_requested.connect(_update_display)
 	_timekeeper.speed_changed.connect(_update_display)
-	set("theme_override_colors/font_color", forward_color)
+	set(&"theme_override_colors/font_color", forward_color)
 	_update_display()
 
 
@@ -66,7 +66,7 @@ func _process(_delta: float) -> void:
 			_hm[1] = _clock[1]
 			new_text += clock_hm_format % _hm
 	if show_pause and _state_manager.is_user_paused:
-		new_text += " " + tr("LABEL_PAUSED")
+		new_text += " " + tr(&"LABEL_PAUSED")
 	text = new_text
 
 
@@ -75,5 +75,5 @@ func _update_display() -> void:
 	_show_seconds = _timekeeper.show_seconds
 	if _is_reversed != _timekeeper.is_reversed:
 		_is_reversed = !_is_reversed
-		set("theme_override_colors/font_color", reverse_color if _is_reversed else forward_color)
+		set(&"theme_override_colors/font_color", reverse_color if _is_reversed else forward_color)
 

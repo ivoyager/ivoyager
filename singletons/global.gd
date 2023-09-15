@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230909
+const IVOYAGER_YMD := 20230914
 
 
 # simulator state broadcasts
@@ -103,7 +103,7 @@ var times: Array[float] = [] # IVTimekeeper [time (s, J2000), engine_time (s), s
 var date: Array[int] = [] # IVTimekeeper; Gregorian [year, month, day]
 var clock: Array[int] = [] # IVTimekeeper; UT [hour, minute, second]
 var program := {} # IVProjectBuilder instantiated objects (base or override classes)
-var script_classes := {} # IVProjectBuilder defined script classes (base or override)
+var procedural_classes := {} # IVProjectBuilder defined script classes (base or override)
 var assets := {} # AssetsInitializer loads from dynamic paths specified below
 var settings := {} # IVSettingsManager
 var themes := {} # IVThemeManager

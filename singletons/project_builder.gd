@@ -23,12 +23,12 @@ extends Node
 #
 # This node builds the program (not the solar system!) and makes program
 # nodes, references, and class scripts availible in IVGlobal dictionaries. All
-# dictionaries here (except procedural_classes) define "small-s singletons";
+# dictionaries here (except procedural_objects) define "small-s singletons";
 # a single instance of each class is instantiated, and nodes are added to
 # either the top Node3D node (specified by 'universe') or the top Control node
 # (specified by 'top_gui'). All object instantiations can be accessed in
 # IVGlobal dictionary 'program' and all class scripts can be accessed in
-# IVGlobal dictionary 'script_classes'.
+# IVGlobal dictionary 'procedural_objects'.
 #
 # Only extension init files should access this node.
 # RUNTIME CLASS FILES SHOULD NOT ACCESS THIS NODE!
@@ -106,6 +106,11 @@ var add_top_gui_to_universe := true # happens in add_program_nodes()
 # replacement) for the original class. For objects instanced by IVProjectBuilder,
 # edge underscores are removed to form keys in the IVGlobal.program dictionary
 # and the 'name' property in the case of nodes.
+#
+# All dictionary values below can be any one of three things:
+#   - A GDScript class_name global
+#   - A path to a GDScript object (*.gd)
+#   - A path to a scene (*.tscn, *.scn)
 
 var initializers := {
 #	# RefCounted classes. IVProjectBuilder instances these (first!) and adds to
@@ -113,7 +118,7 @@ var initializers := {
 #	# IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
-	_SharedInitializer_ = SharedInitializer,
+	_SharedInitializer_ = IVSharedInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableInitializer_ = IVTableInitializer,
@@ -196,9 +201,9 @@ var gui_nodes := {
 	_MainProgBar_ = IVMainProgBar, # safe to replace or remove
 }
 
-var procedural_classes := {
+var procedural_objects := {
 	# Nodes and references NOT instantiated by IVProjectBuilder. These class
-	# scripts plus all above can be accessed from IVGlobal.script_classes (keys
+	# scripts plus all above can be accessed from IVGlobal.procedural_classes (keys
 	# have underscores). 
 	# tree_nodes
 	_Body_ = IVBody, # many dependencies, best to subclass
@@ -226,31 +231,31 @@ var procedural_classes := {
 
 var _project_extensions: Array[Object] = [] # we keep reference so they don't self-free
 var _program: Dictionary = IVGlobal.program
-var _script_classes: Dictionary = IVGlobal.script_classes
+var _procedural_classes: Dictionary = IVGlobal.procedural_classes
 
 
 # ****************************** PROJECT BUILD ********************************
 
 func _ready() -> void:
-	call_deferred("build_project") # after all other singletons _ready()
+	build_project.call_deferred() # after all other singletons _ready()
 
 
 # **************************** PUBLIC FUNCTIONS *******************************
 # These should be called only by extension init file!
 
-func reindex_universe_child(node_name: String, new_index: int) -> void:
+func reindex_universe_child(node_name: StringName, new_index: int) -> void:
 	# Call at 'project_nodes_added' signal.
 	var node: Node = _program[node_name]
 	universe.move_child(node, new_index)
 
 
-func reindex_top_gui_child(node_name: String, new_index: int) -> void:
+func reindex_top_gui_child(node_name: StringName, new_index: int) -> void:
 	# Call at 'project_nodes_added' signal.
 	var node: Node = _program[node_name]
 	top_gui.move_child(node, new_index)
 
 
-func move_universe_child_to_sibling(node_name: String, sibling_name: String,
+func move_universe_child_to_sibling(node_name: StringName, sibling_name: StringName,
 		is_before: bool) -> void:
 	# Call at 'project_nodes_added' signal.
 	var node: Node = _program[node_name]
@@ -259,7 +264,7 @@ func move_universe_child_to_sibling(node_name: String, sibling_name: String,
 	universe.move_child(node, sibling_index if is_before else sibling_index + 1)
 
 
-func move_top_gui_child_to_sibling(node_name: String, sibling_name: String,
+func move_top_gui_child_to_sibling(node_name: StringName, sibling_name: StringName,
 		is_before: bool) -> void:
 	# Call at 'project_nodes_added' signal.
 	var node: Node = _program[node_name]
@@ -377,12 +382,12 @@ func _instantiate_and_index_program_objects() -> void:
 			if object is Node:
 				@warning_ignore("unsafe_property_access")
 				object.name = object_key
-	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes, procedural_classes]:
-		for key in dict:
-			if !dict[key]:
-				continue
-			assert(!_script_classes.has(key))
-			_script_classes[key] = dict[key]
+#	for dict in [initializers, program_refcounteds, program_nodes, gui_nodes, procedural_objects]:
+	for key in procedural_objects:
+		if !procedural_objects[key]:
+			continue
+		assert(!_procedural_classes.has(key))
+		_procedural_classes[key] = procedural_objects[key]
 	IVGlobal.project_objects_instantiated.emit()
 
 

@@ -107,7 +107,7 @@ var sleep := false
 
 
 # private
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 #var _state: Dictionary = IVGlobal.state
 var _ecliptic_rotation: Basis = IVGlobal.ecliptic_rotation
 var _min_hud_dist: float
@@ -501,7 +501,7 @@ func set_model_parameters(reference_basis: Basis, max_dist: float) -> void:
 
 func add_child_to_model_space(spatial: Node3D) -> void:
 	if !model_space:
-		var _ModelSpace_: Script = IVGlobal.script_classes._ModelSpace_
+		var _ModelSpace_: Script = IVGlobal.procedural_classes._ModelSpace_
 		@warning_ignore("unsafe_method_access") # Replacement class possible
 		model_space = _ModelSpace_.new()
 		add_child(model_space)
@@ -680,7 +680,7 @@ func _add_rotating_space() -> void:
 	var mass_ratio := m1 / m2
 	var characteristic_length := orbit.get_semimajor_axis()
 	var characteristic_time := orbit.get_orbit_period()
-	var _RotatingSpace_: Script = IVGlobal.script_classes._RotatingSpace_
+	var _RotatingSpace_: Script = IVGlobal.procedural_classes._RotatingSpace_
 	@warning_ignore("unsafe_method_access") # possible replacement class
 	rotating_space = _RotatingSpace_.new()
 	rotating_space.init(mass_ratio, characteristic_length, characteristic_time)
@@ -717,7 +717,7 @@ func _on_time_altered(_previous_time: float) -> void:
 
 
 func _set_min_hud_dist() -> void:
-	if IVGlobal.settings.get("hide_hud_when_close", false):
+	if IVGlobal.settings.get(&"hide_hud_when_close", false):
 		_min_hud_dist = m_radius * min_hud_dist_radius_multiplier
 		if flags & IS_STAR:
 			_min_hud_dist *= min_hud_dist_star_multiplier # just the label
@@ -725,6 +725,7 @@ func _set_min_hud_dist() -> void:
 		_min_hud_dist = 0.0
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "hide_hud_when_close":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"hide_hud_when_close":
 		_set_min_hud_dist()
+

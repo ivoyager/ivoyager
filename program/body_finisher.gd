@@ -64,14 +64,13 @@ func _project_init() -> void:
 	IVGlobal.about_to_build_system_tree.connect(init_system_build)
 	IVGlobal.game_load_started.connect(init_system_build)
 	IVGlobal.get_tree().node_added.connect(_on_node_added)
-	_model_manager = IVGlobal.program.ModelManager
-	_io_manager = IVGlobal.program.IOManager
-#	_main_prog_bar = IVGlobal.program.get("MainProgBar") # safe if doesn't exist
-#	_ModelController_ = IVGlobal.script_classes._ModelController_
-	_BodyLabel_ = IVGlobal.script_classes._BodyLabel_
-	_BodyOrbit_ = IVGlobal.script_classes._BodyOrbit_
-	_Rings_ = IVGlobal.script_classes._Rings_
-	_fallback_body_2d = IVGlobal.assets.fallback_body_2d
+	_model_manager = IVGlobal.program[&"ModelManager"]
+	_io_manager = IVGlobal.program[&"IOManager"]
+#	_main_prog_bar = IVGlobal.program.get(&"MainProgBar") # safe if doesn't exist
+	_BodyLabel_ = IVGlobal.procedural_classes[&"_BodyLabel_"]
+	_BodyOrbit_ = IVGlobal.procedural_classes[&"_BodyOrbit_"]
+	_Rings_ = IVGlobal.procedural_classes[&"_Rings_"]
+	_fallback_body_2d = IVGlobal.assets[&"fallback_body_2d"]
 
 
 func init_system_build() -> void:
@@ -113,7 +112,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
 		var omni_light := OmniLight3D.new()
 		# set properties entirely from table
-		IVTableData.db_build_object_all_fields(omni_light, "omni_lights", omni_light_type)
+		IVTableData.db_build_object_all_fields(omni_light, &"omni_lights", omni_light_type)
 		body.add_child(omni_light)
 	if body.orbit:
 		@warning_ignore("unsafe_method_access") # possible replacement class

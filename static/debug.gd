@@ -93,3 +93,4 @@ static func no_nans(thing) -> bool:
 			if is_nan(thing[index]):
 				return false
 	return true
+

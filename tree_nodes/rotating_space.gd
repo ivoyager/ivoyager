@@ -80,12 +80,11 @@ func get_lagrange_point_node3d(lp_integer: int) -> IVLagrangePoint:
 	if !_LagrangePoints:
 		_LagrangePoints.resize(5)
 	if !_LagrangePoints[lp_integer]:
-		var _LagrangePoint_: GDScript = IVGlobal.script_classes._LagrangePoint_
+		var _LagrangePoint_: GDScript = IVGlobal.procedural_classes._LagrangePoint_
 		var lagrange_point: IVLagrangePoint = _LagrangePoint_.new()
 		lagrange_point.init(lp_integer)
 		lagrange_point.position = lagrange_point_vectors[lp_integer - 1]
 		_LagrangePoints[lp_integer] = lagrange_point
 		add_child(lagrange_point)
 	return _LagrangePoints[lp_integer]
-
 

@@ -48,7 +48,7 @@ func _on_init() -> void: # subclass can override
 
 
 func _project_init() -> void:
-	_io_manager = IVGlobal.program.IOManager
+	_io_manager = IVGlobal.program["IOManager"]
 	var cache_dir: String = IVGlobal.cache_dir
 	_file_path = cache_dir.path_join(cache_file_name)
 	# TEST34
@@ -72,7 +72,7 @@ func _project_init() -> void:
 
 # *****************************************************************************
 
-func change_current(key: String, value, suppress_caching := false) -> void:
+func change_current(key: StringName, value, suppress_caching := false) -> void:
 	# If suppress_caching = true, then be sure to call cache_now() later.
 	_about_to_change_current(key)
 	var type := typeof(value)
@@ -90,7 +90,7 @@ func cache_now() -> void:
 	_write_cache()
 
 
-func is_default(key: String) -> bool:
+func is_default(key: StringName) -> bool:
 	return current[key] == defaults[key]
 
 
@@ -103,14 +103,14 @@ func is_all_defaults() -> bool:
 #	return true
 
 
-func get_cached_value(key: String, cached_values: Dictionary): # unknown type
+func get_cached_value(key: StringName, cached_values: Dictionary): # unknown type
 	# If cache doesn't have it, we treat default as cached
 	if cached_values.has(key):
 		return cached_values[key]
 	return defaults[key]
 
 
-func is_cached(key: String, cached_values: Dictionary) -> bool:
+func is_cached(key: StringName, cached_values: Dictionary) -> bool:
 	if cached_values.has(key):
 		return current[key] == cached_values[key]
 	return current[key] == defaults[key]
@@ -120,7 +120,7 @@ func get_cached_values() -> Dictionary:
 	return _cached
 
 
-func restore_default(key: String, suppress_caching := false) -> void:
+func restore_default(key: StringName, suppress_caching := false) -> void:
 	if !is_default(key):
 		change_current(key, defaults[key], suppress_caching)
 
@@ -150,12 +150,12 @@ func restore_from_cache() -> void:
 
 # *****************************************************************************
 
-func _about_to_change_current(_item_name: String) -> void:
+func _about_to_change_current(_item_name: StringName) -> void:
 	# subclass logic
 	pass
 
 
-func _on_change_current(_item_name: String) -> void:
+func _on_change_current(_item_name: StringName) -> void:
 	# subclass logic
 	pass
 

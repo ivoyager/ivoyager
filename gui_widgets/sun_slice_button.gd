@@ -30,7 +30,7 @@ extends Button
 # This button is coded to mimic buttons in PlanetMoonButtons (that's why it's
 # not a TextureButton).
 
-var body_name := "STAR_SUN"
+var body_name := &"STAR_SUN"
 
 var _selection_manager: IVSelectionManager # get from ancestor selection_manager
 var _body: IVBody
@@ -59,7 +59,7 @@ func _build(_dummy := false) -> void:
 		return
 	if !IVGlobal.state.is_system_built:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_is_built = true

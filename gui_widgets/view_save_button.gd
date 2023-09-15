@@ -34,15 +34,16 @@ var _view_saver: IVViewSaver
 func _ready() -> void:
 	var top_gui: Control = IVGlobal.program.TopGUI
 	_view_save_popup = IVFiles.make_object_or_scene(IVViewSavePopup)
-	_view_saver = _view_save_popup.find_child("ViewSaver")
+	_view_saver = _view_save_popup.find_child(&"ViewSaver")
 	_view_saver.view_saved.connect(_on_view_saved)
 	top_gui.add_child(_view_save_popup)
 	toggled.connect(_on_toggled)
 	_view_save_popup.visibility_changed.connect(_on_visibility_changed)
 
 
-func init(default_view_name := "LABEL_CUSTOM1", group_name := "", is_cached := true,
-		show_flags := IVView.ALL, init_flags := IVView.ALL, reserved_names := []) -> void:
+func init(default_view_name := &"LABEL_CUSTOM1", group_name := &"", is_cached := true,
+		show_flags := IVView.ALL, init_flags := IVView.ALL, reserved_names: Array[StringName]= []
+		) -> void:
 	# Called by IVViewCollection in standard setup.
 	# Make 'group_name' unique to not share views with other GUI instances. 
 	_view_saver.init(default_view_name, group_name, is_cached, show_flags, init_flags,

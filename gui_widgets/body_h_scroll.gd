@@ -32,7 +32,7 @@ var _currently_selected: Button
 var _body_tables: Array[String] = []
 var _button_size := 0.0 # scales with widget height
 
-@onready var _mouse_only_gui_nav: bool = IVGlobal.settings.mouse_only_gui_nav
+@onready var _mouse_only_gui_nav: bool = IVGlobal.settings[&"mouse_only_gui_nav"]
 @onready var _hbox: HBoxContainer = $HBox
 
 
@@ -45,12 +45,12 @@ func _ready() -> void:
 
 
 func _on_system_tree_ready(_dummy := false) -> void:
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	for table_name in _body_tables:
 		_add_bodies_from_table(table_name)
 
 
-func add_bodies_from_table(table_name: String) -> void:
+func add_bodies_from_table(table_name: StringName) -> void:
 	# e.g., 'spacecrafts'
 	if IVGlobal.state.is_system_ready:
 		_add_bodies_from_table(table_name)

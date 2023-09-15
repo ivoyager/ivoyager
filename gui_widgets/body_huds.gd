@@ -45,16 +45,16 @@ var indent := "  "
 
 var rows: Array[Array] = [
 	# [row_name, flags, is_indent]
-	["LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 replaced by all flags from following rows
-	["LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
-	["LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
-	["LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
+	[&"LABEL_PLANETARY_MASS_OBJECTS", 0, false], # 0 replaced by all flags from following rows
+	[&"LABEL_PLANETS", BodyFlags.IS_TRUE_PLANET, true],
+	[&"LABEL_DWARF_PLANETS", BodyFlags.IS_DWARF_PLANET, true],
+	[&"LABEL_MOONS_WIKI_PMO", BodyFlags.IS_PLANETARY_MASS_MOON, true],
 ]
 
 var disable_orbits_rows: Array[int] = [] # e.g., no orbit for Sun
 
-var headers: Array[String] = ["LABEL_NAMES_SLASH_SYMBOLS_SHORT", "LABEL_ORBITS"]
-var header_hints: Array[String] = ["HINT_NAMES_SYMBOLS_CKBXS", "HINT_ORBITS_CKBX_COLOR"]
+var headers: Array[StringName] = [&"LABEL_NAMES_SLASH_SYMBOLS_SHORT", &"LABEL_ORBITS"]
+var header_hints: Array[StringName] = [&"HINT_NAMES_SYMBOLS_CKBXS", &"HINT_ORBITS_CKBX_COLOR"]
 
 
 var _wiki_titles: Dictionary = IVTableData.wiki_lookup
@@ -64,7 +64,7 @@ var _symbols_ckbxs: Array[CheckBox] = []
 var _orbits_ckbxs: Array[CheckBox] = []
 var _orbits_color_pkrs: Array[ColorPickerButton] = []
 
-@onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
+@onready var _body_huds_state: IVBodyHUDsState = IVGlobal.program[&"BodyHUDsState"]
 @onready var _n_rows := rows.size()
 
 
@@ -100,7 +100,7 @@ func _ready() -> void:
 			flags = _all_flags
 		
 		# row label
-		var row_name: String = rows[i][0]
+		var row_name: StringName = rows[i][0]
 		var is_indent: bool = rows[i][2]
 		if enable_wiki and _wiki_titles.has(row_name):
 			var rtlabel := RichTextLabel.new()
@@ -114,7 +114,7 @@ func _ready() -> void:
 			add_child(rtlabel)
 		else:
 			var label := Label.new()
-			label.text = indent + tr(row_name) if is_indent else row_name
+			label.text = indent + tr(row_name) if is_indent else tr(row_name)
 			add_child(label)
 		
 		# names/symbols
@@ -174,7 +174,7 @@ func _make_color_picker_button(default_color: Color) -> ColorPickerButton:
 	button.custom_minimum_size.x = 15
 	button.custom_minimum_size.y = 15
 	button.size_flags_vertical = SIZE_SHRINK_CENTER
-	button.set("theme_override_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
+	button.set(&"theme_override_fonts/font", IVGlobal.fonts.two_pt) # allow short button hack
 	button.edit_alpha = false
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	var color_picker := button.get_picker()
@@ -255,7 +255,7 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 		await get_tree().process_frame
 	
 	# FIXME34: Must be a better wat to get this
-	var font: FontFile = get_theme_font("normal", "Label")
+	var font: FontFile = get_theme_font(&"normal", &"Label")
 	var font_size := font.fixed_size
 	var en_width := font.get_char_size("\u2000".unicode_at(0), font_size).x
 	
@@ -270,13 +270,13 @@ func _resize_columns_to_en_width(delay_frames := 0) -> void:
 		child.size.x = min_width
 
 
-func _on_meta_clicked(_meta: String, row_name: String) -> void:
+func _on_meta_clicked(_meta: String, row_name: StringName) -> void:
 	var wiki_title: String = _wiki_titles[row_name]
 	IVGlobal.open_wiki_requested.emit(wiki_title)
 
 
-func _settings_listener(setting: String, _value) -> void:
-	if setting == "gui_size":
+func _settings_listener(setting: StringName, _value: Variant) -> void:
+	if setting == &"gui_size":
 		if !column_master:
 			_resize_columns_to_en_width(1)
 

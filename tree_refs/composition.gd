@@ -39,8 +39,8 @@ var type: int
 var components := {} # chemicals w/ amount string or null
 
 
-func get_labels_values_display(labels_prefix := "") -> Array:
-	var result := ["", ""] # label, value
+func get_labels_values_display(labels_prefix := "") -> Array[String]:
+	var result := IVUtils.init_array(2, "", TYPE_STRING) # label, value
 	for key in components:
 		var value = components[key]
 		var optn_newline := "\n" if result[0] else ""

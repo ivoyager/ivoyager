@@ -43,3 +43,4 @@ func _on_init() -> void:
 
 func _project_init() -> void:
 	IVGlobal.program.erase("LogInitializer") # frees self
+

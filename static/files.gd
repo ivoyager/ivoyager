@@ -20,24 +20,61 @@
 class_name IVFiles
 extends Object
 
+
+# TODO34: Lot of migration work...
+
+
 # Usage note: issue #37529 prevents localization of global class_name to const.
 # For now, use:
 # const files := preload("res://ivoyager/static/files.gd")
 
 
-static func make_object_or_scene(script: GDScript) -> Object:
-	if not "SCENE" in script and not "SCENE_OVERRIDE" in script:
+static func make_object_or_scene(script_or_path: Variant) -> Object:
+	# 'script_or_path' can be a GDScript object or path to a script ("*.gd") or
+	# path to a scene ("*.tscn," "*.scn").
+	var arg_type := typeof(script_or_path)
+	var script: GDScript
+	var scene_path: String
+	if arg_type == TYPE_OBJECT:
+		assert(script_or_path is GDScript, "Unknown object class")
+		script = script_or_path
+	else:
+		assert(arg_type == TYPE_STRING or arg_type == TYPE_STRING_NAME, "Unexpected argument type")
+		var path := script_or_path as String
+		if path.ends_with(".gd"):
+			script = load(path)
+			assert(script, "Failed to load GDScript at '%s'" % path)
+		else:
+			assert(path.ends_with(".tscn") or path.ends_with(".scn"),
+					"Unknown script or scene at '%s'" % path)
+			scene_path = path
+	if !scene_path:
+		if &"SCENE_OVERRIDE" in script:
+			scene_path = script.get("SCENE_OVERRIDE")
+		elif &"SCENE" in script:
+			scene_path = script.get("SCENE")
+	if !scene_path:
 		return script.new()
-	# It's a scene if the script or an extended script has member "SCENE" or
-	# "SCENE_OVERRIDE". We create the scene and return the root node.
-	@warning_ignore("unsafe_property_access")
-	var scene_path: String = script.SCENE_OVERRIDE if "SCENE_OVERRIDE" in script else script.SCENE
+	# It's a scene! Return the root node.
 	var pkd_scene: PackedScene = load(scene_path)
-	assert(pkd_scene, "Expected scene path at: " + scene_path)
+	assert(pkd_scene, "Failed to load scene at '%s'" % scene_path)
 	var root_node: Node = pkd_scene.instantiate()
 	if root_node.get_script() != script: # root_node.script may be parent class
 		root_node.set_script(script)
 	return root_node
+
+
+static func get_procedural_class(script_or_path: Variant) -> GDScript:
+	var arg_type := typeof(script_or_path)
+	if arg_type == TYPE_OBJECT:
+		assert(script_or_path is GDScript, "Unknown object class")
+		return script_or_path
+	assert(arg_type == TYPE_STRING or arg_type == TYPE_STRING_NAME, "Unexpected argument type")
+	var path := script_or_path as String
+	assert(path.ends_with(".gd"), "Unknown GDScript at '%s'" % path)
+	var script: GDScript = load(path)
+	assert(script, "Failed to load GDScript at '%s'" % path)
+	return script
 
 
 static func get_save_dir_path(is_modded: bool, override_dir: String = "") -> String:
@@ -72,7 +109,8 @@ static func get_base_file_name(file_name : String) -> String:
 	return file_name
 
 
-static func get_save_path(save_dir: String, base_name: String, date_string := "", append_file_extension := false) -> String:
+static func get_save_path(save_dir: String, base_name: String, date_string := "",
+		append_file_extension := false) -> String:
 	var path := save_dir.path_join(base_name)
 	if date_string:
 		path += "." + date_string
@@ -232,3 +270,4 @@ static func apply_escape_characters(string: String) -> String:
 	string = string.replace("\\n", "\n")
 	string = string.replace("\\t", "\t")
 	return string
+

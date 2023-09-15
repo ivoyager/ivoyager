@@ -65,16 +65,16 @@ var _mwheel_turning := 0.0
 var _move_pressed := Vector3.ZERO
 var _rotate_pressed := Vector3.ZERO
 
-@onready var _world_controller: IVWorldController = IVGlobal.program.WorldController
+@onready var _world_controller: IVWorldController = IVGlobal.program[&"WorldController"]
 @onready var _viewport := get_viewport()
-@onready var _mouse_in_out_rate: float = _settings.camera_mouse_in_out_rate * mouse_wheel_adj
-@onready var _mouse_move_rate: float = _settings.camera_mouse_move_rate * mouse_move_adj
-@onready var _mouse_pitch_yaw_rate: float = _settings.camera_mouse_pitch_yaw_rate * mouse_pitch_yaw_adj
-@onready var _mouse_roll_rate: float = _settings.camera_mouse_roll_rate * mouse_roll_adj
-@onready var _key_in_out_rate: float = _settings.camera_key_in_out_rate * key_in_out_adj
-@onready var _key_move_rate: float = _settings.camera_key_move_rate * key_move_adj
-@onready var _key_pitch_yaw_rate: float = _settings.camera_key_pitch_yaw_rate * key_pitch_yaw_adj
-@onready var _key_roll_rate: float = _settings.camera_key_roll_rate * key_roll_adj
+@onready var _mouse_in_out_rate: float = _settings[&"camera_mouse_in_out_rate"] * mouse_wheel_adj
+@onready var _mouse_move_rate: float = _settings[&"camera_mouse_move_rate"] * mouse_move_adj
+@onready var _mouse_pitch_yaw_rate: float = _settings[&"camera_mouse_pitch_yaw_rate"] * mouse_pitch_yaw_adj
+@onready var _mouse_roll_rate: float = _settings[&"camera_mouse_roll_rate"] * mouse_roll_adj
+@onready var _key_in_out_rate: float = _settings[&"camera_key_in_out_rate"] * key_in_out_adj
+@onready var _key_move_rate: float = _settings[&"camera_key_move_rate"] * key_move_adj
+@onready var _key_pitch_yaw_rate: float = _settings[&"camera_key_pitch_yaw_rate"] * key_pitch_yaw_adj
+@onready var _key_roll_rate: float = _settings[&"camera_key_roll_rate"] * key_roll_adj
 
 
 func _ready():
@@ -88,7 +88,7 @@ func _ready():
 
 
 func _on_system_tree_ready(_is_new_game: bool) -> void:
-	_selection_manager = IVGlobal.program.TopGUI.selection_manager
+	_selection_manager = IVGlobal.program[&"TopGUI"].selection_manager
 	_selection_manager.selection_changed.connect(_on_selection_changed)
 	_selection_manager.selection_reselected.connect(_on_selection_reselected)
 
@@ -205,7 +205,7 @@ func move_to(selection: IVSelection, camera_flags := 0, view_position := NULL_VE
 	_camera.move_to(selection, camera_flags, view_position, view_rotations, is_instant_move)
 
 
-func move_to_by_name(selection_name: String, camera_flags := 0, view_position := NULL_VECTOR3,
+func move_to_by_name(selection_name: StringName, camera_flags := 0, view_position := NULL_VECTOR3,
 		view_rotations := NULL_VECTOR3, is_instant_move := false) -> void:
 	# Null or null-equivilant args tell the camera to keep its current value.
 	# Some parameters override others.
@@ -296,21 +296,22 @@ func _on_mouse_wheel_turned(is_up: bool) -> void:
 	_mwheel_turning = _mouse_in_out_rate * (1.0 if is_up else -1.0)
 
 
-func _settings_listener(setting: String, value) -> void:
+func _settings_listener(setting: StringName, value: Variant) -> void:
 	match setting:
-		"camera_mouse_in_out_rate":
+		&"camera_mouse_in_out_rate":
 			_mouse_in_out_rate = value * mouse_wheel_adj
-		"camera_mouse_move_rate":
+		&"camera_mouse_move_rate":
 			_mouse_move_rate = value * mouse_move_adj
-		"camera_mouse_pitch_yaw_rate":
+		&"camera_mouse_pitch_yaw_rate":
 			_mouse_pitch_yaw_rate = value * mouse_pitch_yaw_adj
-		"camera_mouse_roll_rate":
+		&"camera_mouse_roll_rate":
 			_mouse_roll_rate = value * mouse_roll_adj
-		"camera_key_in_out_rate":
+		&"camera_key_in_out_rate":
 			_key_in_out_rate = value * key_in_out_adj
-		"camera_key_move_rate":
+		&"camera_key_move_rate":
 			_key_move_rate = value * key_move_adj
-		"camera_key_pitch_yaw_rate":
+		&"camera_key_pitch_yaw_rate":
 			_key_pitch_yaw_rate = value * key_pitch_yaw_adj
-		"camera_key_roll_rate":
+		&"camera_key_roll_rate":
 			_key_roll_rate = value * key_roll_adj
+

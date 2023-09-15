@@ -23,7 +23,7 @@ extends TextureRect
 # GUI widget. An ancestor Control node must have property 'selection_manager'
 # set to an IVSelectionManager before signal IVGlobal.about_to_start_simulator.
 
-var _hint_extension := "\n\n" + tr("HINT_SELECTION_IMAGE")
+var _hint_extension := "\n\n" + tr(&"HINT_SELECTION_IMAGE")
 var _selection_manager: IVSelectionManager
 
 
@@ -42,7 +42,7 @@ func _clear() -> void:
 func _connect_selection_manager(_dummy := false) -> void:
 	if _selection_manager:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_selection_manager.selection_changed.connect(_update_image)

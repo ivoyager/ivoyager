@@ -46,9 +46,9 @@ const L4_L5_ARRAY_FLAGS = (
 		| Mesh.ARRAY_FORMAT_TEX_UV2
 )
 
-var _times: Array = IVGlobal.times
+var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
-var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get("FragmentIdentifier")
+var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
 var _group: IVSmallBodiesGroup
 var _color: Color
@@ -114,13 +114,13 @@ func draw_points() -> void:
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
 	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter("point_size", float(IVGlobal.settings.point_size))
+	shader_material.set_shader_parameter(&"point_size", float(IVGlobal.settings.point_size))
 	if _fragment_identifier:
-		shader_material.set_shader_parameter("fragment_range", _fragment_targeting[1])
+		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
-		shader_material.set_shader_parameter("lp_integer", _lp_integer)
+		shader_material.set_shader_parameter(&"lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_semimajor_axis()
-		shader_material.set_shader_parameter("characteristic_length", characteristic_length)
+		shader_material.set_shader_parameter(&"characteristic_length", characteristic_length)
 	_set_visibility()
 	_set_color()
 
@@ -130,16 +130,16 @@ func _process(_delta: float) -> void:
 		return
 	# TODO34: Make these global uniforms!
 	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter("time", _times[0])
+	shader_material.set_shader_parameter(&"time", _times[0])
 	if _lp_integer == 4:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
-		shader_material.set_shader_parameter("lp_mean_longitude", lp_mean_longitude)
+		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
 	elif _lp_integer == 5:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
-		shader_material.set_shader_parameter("lp_mean_longitude", lp_mean_longitude)
+		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
 	if _fragment_identifier:
-		shader_material.set_shader_parameter("mouse_coord", _fragment_targeting[0])
-		shader_material.set_shader_parameter("fragment_cycler", _fragment_targeting[2])
+		shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
+		shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
 
 
 func _set_visibility() -> void:
@@ -152,10 +152,12 @@ func _set_color() -> void:
 		return
 	_color = color
 	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter("color", Vector3(color.r, color.g, color.b))
+	shader_material.set_shader_parameter(&"color", Vector3(color.r, color.g, color.b))
 
 
-func _settings_listener(setting: String, value) -> void:
-	if setting == "point_size":
+func _settings_listener(setting: StringName, value: Variant) -> void:
+	if setting == &"point_size":
 		var shader_material: ShaderMaterial = material_override
-		shader_material.set_shader_parameter("point_size", float(value))
+		# setting value is int; shader parameter is float
+		shader_material.set_shader_parameter(&"point_size", float(value))
+
