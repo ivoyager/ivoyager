@@ -109,7 +109,7 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
 		_model_manager.add_model(body, lazy_init)
 	if body.has_omni_light():
-		var omni_light_type := body.get_omni_light_type(IVGlobal.is_gles2)
+		var omni_light_type := body.get_omni_light_type()
 		var omni_light := OmniLight3D.new()
 		# set properties entirely from table
 		IVTableData.db_build_object_all_fields(omni_light, &"omni_lights", omni_light_type)

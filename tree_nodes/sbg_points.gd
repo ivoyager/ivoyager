@@ -49,7 +49,7 @@ const L4_L5_ARRAY_FLAGS = (
 var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
-var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program.SBGHUDsState
+var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program[&"SBGHUDsState"]
 var _group: IVSmallBodiesGroup
 var _color: Color
 var _vec3ids := PackedVector3Array() # point ids for FragmentIdentifier
@@ -65,10 +65,10 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	_lp_integer = _group.lp_integer
 	var shader_material := ShaderMaterial.new()
 	if _lp_integer == -1: # not trojans
-		shader_material.shader = IVGlobal.shared.points_shader
+		shader_material.shader = IVGlobal.shared_resources[&"points_shader"]
 	elif _lp_integer >= 4: # trojans
 		_secondary_orbit = _group.secondary_body.orbit
-		shader_material.shader = IVGlobal.shared.points_l4_l5_shader
+		shader_material.shader = IVGlobal.shared_resources[&"points_l4_l5_shader"]
 	else:
 		assert(false)
 	material_override = shader_material

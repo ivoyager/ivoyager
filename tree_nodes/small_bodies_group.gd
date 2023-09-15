@@ -21,11 +21,11 @@ class_name IVSmallBodiesGroup
 extends Node
 
 # Keeps compact data for large numbers of small bodies that we don't want to
-# instantiate as a full set - e.g., 10000s of asteroids.
+# instantiate as a full set, e.g., 10000s of asteroids.
 #
-# Packed arrays are used to constitute ArrayMesh's in IVSBGPoints, and act as
-# small body source data. Packed arrays are also very fast to read/write in the
-# game save file.
+# Packed arrays are used as source data in a form that is ready-to-use to
+# constitute ArrayMesh's in IVSBGPoints. Packed arrays are also very fast to
+# read/write in the game save file.
 
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
@@ -67,8 +67,6 @@ var da_D_f := PackedVector3Array() # Trojans: a amplitude, L amplitude, and libr
 var th0_de := PackedVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
 
 
-
-
 # *****************************************************************************
 # public API
 
@@ -79,7 +77,7 @@ func get_number() -> int:
 func get_orbit_elements(index: int) -> Array[float]:
 	# [a, e, i, Om, w, M0, n]
 	# WIP - Trojan elements a, M0 & n vary with libration. This is reflected in
-	# shader point calculations but not in elements here.
+	# shader point calculations but not in elements here (yet).
 	var e_i_Om_w_item := e_i_Om_w[index]
 	var a_M0_n_item := a_M0_n[index]
 	return Array([

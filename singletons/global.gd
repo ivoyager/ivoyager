@@ -30,13 +30,14 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230914
+const IVOYAGER_YMD := 20230915
 
 
 # simulator state broadcasts
 signal extentions_inited() # IVProjectBuilder; nothing else added yet
 signal translations_imported() # IVTranslationImporter; useful for boot screen
 signal data_tables_imported() # IVTableImporter
+signal initializers_inited()
 signal project_objects_instantiated() # IVProjectBuilder; IVGlobal.program populated
 signal project_inited() # IVProjectBuilder; after all _project_init() calls
 signal project_nodes_added() # IVProjectBuilder; prog_nodes & gui_nodes added
@@ -150,7 +151,7 @@ var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true
 #var multiplayer_min_speed := 1
 var allow_fullscreen_toggle := true
-var auto_exposure_enabled := true # no effect in GLES2
+var auto_exposure_enabled := true
 var vertecies_per_orbit: int = 500
 var vertecies_per_orbit_low_res: int = 100 # for small bodies like asteroids
 var max_camera_distance: float = 5e3 * IVUnits.AU
@@ -171,13 +172,16 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := {
+var shared_resources := {
+	# Values can be resource paths or preloaded resources. IVSharedInitializer
+	# loads any paths at project init.
+	
 	# shaders
-	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
-	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
-	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
-	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
-	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
+	&"points_shader" : preload("res://ivoyager/shaders/points.gdshader"),
+	&"points_l4_l5_shader" : preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
+	&"orbit_shader" : preload("res://ivoyager/shaders/orbit.gdshader"),
+	&"orbits_shader" : preload("res://ivoyager/shaders/orbits.gdshader"),
+	&"rings_shader" : preload("res://ivoyager/shaders/rings.gdshader"),
 	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 
@@ -245,7 +249,6 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 # *****************************************************************************
 
 # read-only!
-var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path

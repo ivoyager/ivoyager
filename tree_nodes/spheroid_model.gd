@@ -48,7 +48,7 @@ func _init(model_type: int, reference_basis: Basis, albedo_map: Texture2D,
 		emission_map: Texture2D) -> void:
 	_reference_basis = reference_basis
 	transform.basis = _reference_basis # z up, possibly oblate
-	mesh = IVGlobal.shared.sphere_mesh
+	mesh = IVGlobal.shared_resources[&"sphere_mesh"]
 	var surface := StandardMaterial3D.new()
 	set_surface_override_material(0, surface)
 	IVTableData.db_build_object(surface, MATERIAL_FIELDS, "models", model_type)

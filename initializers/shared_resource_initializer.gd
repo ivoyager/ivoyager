@@ -1,4 +1,4 @@
-# shared_initializer.gd
+# shared_resource_initializer.gd
 # This file is part of I, Voyager
 # https://ivoyager.dev
 # *****************************************************************************
@@ -17,27 +17,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-class_name IVSharedInitializer
+class_name IVSharedResourceInitializer
 extends RefCounted
 
-# Adds constructed items to IVGlobal.shared.
+# Adds resources to IVGlobal.shared_resources. Add more by adding to
+# 'constructor_callables' on 'project_objects_instantiated' signal.
+
+
+var constructor_callables := {
+	&"sphere_mesh" : _make_sphere_mesh,
+	&"circle_mesh" : _make_circle_mesh.bind(IVGlobal.vertecies_per_orbit),
+	&"circle_mesh_low_res" : _make_circle_mesh.bind(IVGlobal.vertecies_per_orbit_low_res),
+}
+
+var _shared_resources: Dictionary = IVGlobal.shared_resources
 
 
 func _init() -> void:
+	_load_resource_paths()
 	_make_shared_resources()
 
 
-func _project_init() -> void:
-	IVGlobal.program.erase(&"SharedInitializer") # frees self
+func _load_resource_paths() -> void:
+	for key in _shared_resources:
+		var path_or_resource: Variant = _shared_resources[key]
+		var type := typeof(path_or_resource)
+		if type == TYPE_OBJECT:
+			assert(path_or_resource is Resource, "Non-Resource object in shared_resources")
+			continue
+		assert(type == TYPE_STRING or type == TYPE_STRING_NAME, "Unknown type in shared_resources")
+		var resource: Resource = load(path_or_resource)
+		assert(resource, "Failed to load resource at " + path_or_resource)
+		_shared_resources[key] = resource
 
 
 func _make_shared_resources() -> void:
-	IVGlobal.shared[&"sphere_mesh"] = _make_sphere_mesh()
-	IVGlobal.shared[&"circle_mesh"] = _make_circle_mesh(IVGlobal.vertecies_per_orbit)
-	IVGlobal.shared[&"circle_mesh_low_res"] = _make_circle_mesh(IVGlobal.vertecies_per_orbit_low_res)
+	for key in constructor_callables:
+		var constructor: Callable = constructor_callables[key]
+		_shared_resources[key] = constructor.call()
 
+
+# constructor callables
 
 func _make_sphere_mesh() -> SphereMesh:
+	# Shared SphereMesh for stars, planets and moons. Model scale is used to
+	# create oblateness.
 	var sphere_mesh := SphereMesh.new()
 	sphere_mesh.radius = 1.0
 	sphere_mesh.height = 2.0
@@ -45,7 +69,8 @@ func _make_sphere_mesh() -> SphereMesh:
 
 
 func _make_circle_mesh(n_vertecies: int) -> ArrayMesh:
-	# All orbits (e < 1.0) are shared circle mesh with modified basis.
+	# All orbits (e < 1.0) use shared circle mesh with basis scaling to create
+	# the orbital ellipse.
 	var verteces := PackedVector3Array()
 	verteces.resize(n_vertecies + 1)
 	var angle_increment := TAU / n_vertecies

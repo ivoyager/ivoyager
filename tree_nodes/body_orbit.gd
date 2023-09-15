@@ -60,13 +60,13 @@ func _ready() -> void:
 	_body_huds_state.color_changed.connect(_set_color)
 	_body.huds_visibility_changed.connect(_on_body_huds_changed)
 	_body.visibility_changed.connect(_on_body_visibility_changed)
-	mesh = IVGlobal.shared.circle_mesh
+	mesh = IVGlobal.shared_resources[&"circle_mesh"]
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
 		var data := _body.get_fragment_data(FRAGMENT_BODY_ORBIT)
 		var fragment_id := _fragment_identifier.get_new_id_as_vec3(data)
 		var shader_material := ShaderMaterial.new()
-		shader_material.shader = IVGlobal.shared.orbit_shader
+		shader_material.shader = IVGlobal.shared_resources[&"orbit_shader"]
 		shader_material.set_shader_parameter(&"fragment_id", fragment_id)
 		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 		material_override = shader_material
