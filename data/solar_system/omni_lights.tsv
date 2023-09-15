@@ -1,6 +1,8 @@
-	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
-Type	BOOL	FLOAT	FLOAT	FLOAT	FLOAT
-Unit		au			
-Default	TRUE				
-Prefix/OMNI_LIGHT_					
-SUN		120	3.0	1.5	0.5
+	shadow_enabled	omni_range	omni_attenuation	light_energy	light_intensity_lumens	light_specular
+Type	BOOL	FLOAT	FLOAT	FLOAT	FLOAT	FLOAT
+Unit		au			lm	
+Default	TRUE					
+Prefix/OMNI_LIGHT_						
+SUN		120	1	2.5e11	3.75e28	0.5
+# light_intensity_lumens only matters if renderer uses physical lights; this is weird now...						
+# Otherwise, we use light_energy, which is entirely subjective...						

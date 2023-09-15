@@ -181,8 +181,7 @@ static var multipliers := {
 	&"GJ/d" : 1e9 * JOULE / DAY,
 	# luminous intensity / luminous flux
 	&"cd" : CANDELA,
-	&"cd sr" : CANDELA, # sr is dimentionless
-	&"lm" : CANDELA, # lumen
+	&"lm" : CANDELA, # 1 lm = 1 cd·sr, but sr is dimensionless
 	# luminance
 	&"cd/m^2" : CANDELA / (METER * METER),
 	# electric potential
