@@ -45,7 +45,7 @@ func _ready() -> void:
 
 
 func _on_system_tree_ready(_dummy := false) -> void:
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	for table_name in _body_tables:
 		_add_bodies_from_table(table_name)
 

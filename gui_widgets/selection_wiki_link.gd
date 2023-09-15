@@ -52,7 +52,7 @@ func _clear() -> void:
 func _connect_selection_manager(_dummy := false) -> void:
 	if _selection_manager:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	if use_selection_as_text:

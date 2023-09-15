@@ -68,7 +68,7 @@ func _build(_dummy := false) -> void:
 		return
 	if !IVGlobal.state.is_system_built:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_is_built = true

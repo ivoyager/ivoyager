@@ -40,7 +40,7 @@ func _clear() -> void:
 func _connect_selection_manager(_dummy := false) -> void:
 	if _selection_manager:
 		return
-	_selection_manager = IVWidgets.get_selection_manager(self)
+	_selection_manager = IVSelectionManager.get_selection_manager(self)
 	if !_selection_manager:
 		return
 	_selection_manager.selection_changed.connect(_update_selection)

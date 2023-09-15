@@ -128,6 +128,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_window().set_input_as_handled()
 
 
+static func get_selection_manager(control: Control) -> IVSelectionManager:
+	var ancestor: Node = control.get_parent()
+	while ancestor is Control:
+		if &"selection_manager" in ancestor:
+			var selection_manager: IVSelectionManager = ancestor.get(&"selection_manager")
+			if selection_manager:
+				return selection_manager
+		ancestor = ancestor.get_parent()
+	return null
+
+
 static func get_or_make_selection(selection_name: String) -> IVSelection:
 	# I, Voyager supports IVBody selection only! Override for others.
 	var selection_: IVSelection = IVGlobal.selections.get(selection_name)
