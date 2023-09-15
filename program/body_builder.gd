@@ -37,7 +37,6 @@ var characteristics_fields: Array[StringName] = [ # only added if exists
 	&"model_type",
 	&"light_type",
 	&"omni_light_type",
-	&"omni_light_type_gles2",
 	&"file_prefix",
 	&"rings_file_prefix",
 	&"rings_inner_radius",

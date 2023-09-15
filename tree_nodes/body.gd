@@ -289,14 +289,8 @@ func has_omni_light() -> bool:
 	return characteristics.get("omni_light_type", -1) != -1
 
 
-func get_omni_light_type(gles2 := false) -> int:
-	# Result is always consistent w/ has_omni_light(), whether gles2 is set
-	# or not.
-	var type: int = characteristics.get("omni_light_type", -1)
-	if !gles2 or type == -1:
-		return type
-	var type_gles2: int = characteristics.get("omni_light_type_gles2", -1)
-	return type_gles2 if type_gles2 != -1 else type
+func get_omni_light_type() -> int:
+	return characteristics.get("omni_light_type", -1)
 
 
 func get_file_prefix() -> String:

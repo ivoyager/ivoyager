@@ -150,7 +150,7 @@ var limit_stops_in_multiplayer := true # overrides most stops
 #var multiplayer_disables_pause := false # server can pause if false, no one if true
 #var multiplayer_min_speed := 1
 var allow_fullscreen_toggle := true
-var auto_exposure_enabled := true # no effect in GLES2
+var auto_exposure_enabled := true
 var vertecies_per_orbit: int = 500
 var vertecies_per_orbit_low_res: int = 100 # for small bodies like asteroids
 var max_camera_distance: float = 5e3 * IVUnits.AU
@@ -245,7 +245,6 @@ var debug_log_path := "user://logs/debug.log" # modify or set "" to disable
 # *****************************************************************************
 
 # read-only!
-var is_gles2: bool = ProjectSettings.get_setting("rendering/quality/driver/driver_name") == "GLES2"
 var is_html5: bool = OS.has_feature('JavaScript')
 var wiki: String # IVWikiInitializer sets; "wiki" (internal), "en.wikipedia", etc.
 var debug_log: FileAccess # IVLogInitializer sets if debug build and debug_log_path
