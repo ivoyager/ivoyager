@@ -118,7 +118,7 @@ var initializers := {
 #	# IVGlobal.program when done (thereby freeing themselves).
 	_LogInitializer_ = IVLogInitializer,
 	_AssetInitializer_ = IVAssetInitializer,
-	_SharedInitializer_ = IVSharedInitializer,
+	_SharedResourceInitializer_ = IVSharedResourceInitializer,
 	_WikiInitializer_ = IVWikiInitializer,
 	_TranslationImporter_ = IVTranslationImporter,
 	_TableInitializer_ = IVTableInitializer,

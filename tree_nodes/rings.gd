@@ -44,7 +44,7 @@ func _ready() -> void:
 	scale = Vector3(outer_radius, outer_radius, outer_radius)
 	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
 	mesh = PlaneMesh.new()
-	_rings_material.shader = IVGlobal.shared.rings_shader
+	_rings_material.shader = IVGlobal.shared_resources[&"rings_shader"]
 	_rings_material.set_shader_parameter(&"rings_texture", _texture)
 	_rings_material.set_shader_parameter(&"inner_fraction", inner_fraction)
 	var width := float(_texture.get_width())

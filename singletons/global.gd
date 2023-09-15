@@ -171,13 +171,16 @@ var colors := { # user settable colors in program_refs/settings_manager.gd
 	danger = Color(1.0, 0.5, 0.5), # "red" is hard to read
 }
 
-var shared := {
+var shared_resources := {
+	# Values can be resource paths or preloaded resources. IVSharedInitializer
+	# loads any paths at project init.
+	
 	# shaders
-	points_shader = preload("res://ivoyager/shaders/points.gdshader"),
-	points_l4_l5_shader = preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
-	orbit_shader = preload("res://ivoyager/shaders/orbit.gdshader"),
-	orbits_shader = preload("res://ivoyager/shaders/orbits.gdshader"),
-	rings_shader = preload("res://ivoyager/shaders/rings.gdshader"),
+	&"points_shader" : preload("res://ivoyager/shaders/points.gdshader"),
+	&"points_l4_l5_shader" : preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
+	&"orbit_shader" : preload("res://ivoyager/shaders/orbit.gdshader"),
+	&"orbits_shader" : preload("res://ivoyager/shaders/orbits.gdshader"),
+	&"rings_shader" : preload("res://ivoyager/shaders/rings.gdshader"),
 	# additional items are constructed & added by initializers/shared_initializer.gd
 }
 

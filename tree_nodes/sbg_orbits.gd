@@ -56,7 +56,7 @@ func _ready() -> void:
 	_sbg_huds_state.orbits_color_changed.connect(_set_color)
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = IVGlobal.shared.circle_mesh_low_res
+	multimesh.mesh = IVGlobal.shared_resources[&"circle_mesh_low_res"]
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 	if _fragment_identifier: # use self-identifying fragment shader
 		
@@ -64,7 +64,7 @@ func _ready() -> void:
 #		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
 		
 		var shader_material := ShaderMaterial.new()
-		shader_material.shader = IVGlobal.shared.orbits_shader
+		shader_material.shader = IVGlobal.shared_resources[&"orbits_shader"]
 		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 		material_override = shader_material
 	else:
