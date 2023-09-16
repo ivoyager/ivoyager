@@ -72,7 +72,7 @@ const PERSIST_PROPERTIES := [
 # persisted
 var flags := 0 # what state does this View have?
 
-var selection_name := ""
+var selection_name := &""
 var camera_flags := 0 # IVEnums.CameraFlags
 var view_position := NULL_VECTOR3
 var view_rotations := NULL_VECTOR3
@@ -80,8 +80,8 @@ var view_rotations := NULL_VECTOR3
 var name_visible_flags := 0 # exclusive w/ symbol_visible_flags
 var symbol_visible_flags := 0 # exclusive w/ name_visible_flags
 var orbit_visible_flags := 0
-var visible_points_groups: Array[StringName] = []
-var visible_orbits_groups: Array[StringName] = []
+var visible_points_groups := [] # untyped req for set from cache as of Godot 4.1.1
+var visible_orbits_groups := [] # untyped req for set from cache as of Godot 4.1.1
 var body_orbit_colors := {} # has non-default only
 var sbg_points_colors := {} # has non-default only
 var sbg_orbits_colors := {} # has non-default only
@@ -122,7 +122,7 @@ func set_state(is_camera_instant_move := false) -> void:
 func reset() -> void:
 	# back to init state
 	flags = 0
-	selection_name = ""
+	selection_name = &""
 	camera_flags = 0
 	view_position = NULL_VECTOR3
 	view_rotations = NULL_VECTOR3
@@ -209,8 +209,12 @@ func _set_huds_state() -> void:
 		_body_huds_state.set_name_visible_flags(name_visible_flags)
 		_body_huds_state.set_symbol_visible_flags(symbol_visible_flags)
 		_body_huds_state.set_orbit_visible_flags(orbit_visible_flags)
-		_sbg_huds_state.set_visible_points_groups(visible_points_groups)
-		_sbg_huds_state.set_visible_orbits_groups(visible_orbits_groups)
+		_sbg_huds_state.set_visible_points_groups(
+				Array(visible_points_groups, TYPE_STRING_NAME, &"", null)
+		)
+		_sbg_huds_state.set_visible_orbits_groups(
+				Array(visible_orbits_groups, TYPE_STRING_NAME, &"", null)
+		)
 	if flags & HUDS_COLOR:
 		_body_huds_state.set_all_orbit_colors(body_orbit_colors) # ref safe
 		_sbg_huds_state.set_all_points_colors(sbg_points_colors)
