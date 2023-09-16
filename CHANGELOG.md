@@ -24,8 +24,8 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 * [Migration] Many unlisted migration changes!
 
 ### Known Migration Regressions
-* ~The Sun is not illuminating anything. We only have ambient light.~ fixed
-* Asteroid points are broken. Trojans are in the right vicinity of L4 & 5, but wrongly distributed locally. All others are missing.
+* ~The Sun is not illuminating anything. We only have ambient light.~ fixed!
+* ~Asteroid points are broken. Trojans are in the right vicinity of L4 & 5, but wrongly distributed locally. All others are missing.~ fixed!
 * FragmentIdentifier system is currently disabled.
 * Saturn rings color is wrong. (The structure is ok so the shader is mostly working.)
 * [Reported elsewhere] Godot 4.1.1 has issues with HTML5 exports.
