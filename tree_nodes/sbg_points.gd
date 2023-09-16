@@ -55,7 +55,6 @@ const L4L5_ARRAY_FLAGS = (
 )
 
 
-var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program[&"SBGHUDsState"]
@@ -102,6 +101,22 @@ func _ready() -> void:
 	_draw_points()
 
 
+func _process(_delta: float) -> void:
+	if !visible :
+		return
+	# TODO34: Make these global uniforms!
+	var shader_material: ShaderMaterial = material_override
+	if _lp_integer == 4:
+		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
+		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
+	elif _lp_integer == 5:
+		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
+		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
+	if _fragment_identifier:
+		shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
+		shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
+
+
 func _draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
 	var arrays := [] # packed arrays
@@ -134,23 +149,6 @@ func _draw_points() -> void:
 		shader_material.set_shader_parameter(&"characteristic_length", characteristic_length)
 	_set_visibility()
 	_set_color()
-
-
-func _process(_delta: float) -> void:
-	if !visible :
-		return
-	# TODO34: Make these global uniforms!
-	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter(&"time", _times[0])
-	if _lp_integer == 4:
-		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3
-		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
-	elif _lp_integer == 5:
-		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
-		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
-	if _fragment_identifier:
-		shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
-		shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
 
 
 func _set_visibility() -> void:

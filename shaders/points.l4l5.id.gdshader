@@ -35,7 +35,7 @@ render_mode unshaded, cull_disabled, skip_vertex_transform;
 // TODO: Notwithstanding above, we could hack our ocillator functions to give
 // more 'tadpole'-shaped librations.
 
-uniform float time; // update per frame
+global uniform float time; // update per frame
 uniform float lp_mean_longitude; // update per frame
 uniform int lp_integer; // 4 or 5; not currently used but could be for better ocillators
 uniform float characteristic_length; // semi-major axis of the secondary body
@@ -82,17 +82,23 @@ void vertex() {
 	float th = th0 + f * time;
 	float a = characteristic_length + axis_ocillator(da, th);
 	float M = lp_mean_longitude - Om - w + longitude_ocillator(D, th);
-	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI;
+	M = mod(M + PI, TAU) - PI;
 
 // ****************************************************************************
 // Entire file below is an exact copy of points.shader!!!
 // TODO34: Use #include preprocessor for shared code!
 // ****************************************************************************
 
+
+	// Numerical approximation of eccentric anomaly.
+	// A while loop here breaks WebGL1 export. From empirical testing, the
+	// 2nd delta (-= dEA) is needed for the vast majority of points (hence,
+	// no 'if' test). A tiny minority make it to the 5th delta.
 	float EA = M + e * sin(M); // eccentric anomaly
 	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
 	EA -= dEA;
-	// A while loop here breaks WebGL1 export. 5 steps is enough.
+	dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
+	EA -= dEA;
 	if (abs(dEA) > 1e-5){
 		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
 		EA -= dEA;
@@ -102,13 +108,10 @@ void vertex() {
 			if (abs(dEA) > 1e-5){
 				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
 				EA -= dEA;
-				if (abs(dEA) > 1e-5){
-					dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-					EA -= dEA;
-				}
 			}
 		}
 	}
+	
 	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
 	float r = a * (1.0 - e * cos(EA));
 	float cos_i = cos(i);

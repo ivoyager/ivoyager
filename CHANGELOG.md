@@ -14,14 +14,16 @@ Currently under development using Godot 4.1.1.
 
 Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-08-14).
 
-### Changed
-* [Breaking] Added static class IVQFormat to replace previous IVQuantityFormatter (w/ similar but modified API).
-* [Breaking] The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
-* [Migration] Implement new Godot4 signal syntax using Signal and Callable objects.
-* [Migration] Type arrays where possible.
-* [Migration] Re-type String as StringName where appropriate.
-* [Migration] Implement lambdas in many classes.
-* [Migration] Many unlisted migration changes!
+### Changed (assume all are breaking during migration!)
+* Added static class IVQFormat to replace previous IVQuantityFormatter (w/ similar but modified API).
+* The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
+* Godot 4 migration:
+    * Implement shader global uniforms.
+    * Implement new Godot4 signal syntax using Signal and Callable objects.
+    * Type arrays where possible.
+    * Re-type String as StringName where appropriate.
+    * Implement lambdas in many classes.
+    * Many unlisted migration changes!
 
 ### Known Migration Regressions
 * ~The Sun is not illuminating anything. We only have ambient light.~ fixed!
