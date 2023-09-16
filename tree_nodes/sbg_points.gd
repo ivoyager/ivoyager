@@ -20,31 +20,40 @@
 class_name IVSBGPoints
 extends MeshInstance3D
 
-# Visual points for a SmallBodiesGroup instance. Uses points.shader or
-# points_l4_l5.shader. Shaders maintain vertex positions using their own
-# orbital math.
+# Visual points for a SmallBodiesGroup instance. Uses one of the 'points'
+# shaders ('points.x.x.gdshader', where x.x represents a shader variant).
+# Shaders maintain vertex positions using their own orbital math.
+#
+# Points shader variants:
+#    '.l4l5.' - for lagrange points L4 & L5.
+#    '.id.' - broadcasts identity for IVFragmentIdentifier.
+
 
 # TODO 4.0: Use shader CUSTOM channels rather than hacking COLOR, NORMAL, etc.:
 #  - CUSTOM0: e_i_Om_w
-#  - CUSTOM1: a_M0_n or da_D_f plus magnitude
-#  - CUSTOM2: s_g plus th0_de
+#  - CUSTOM1: a_M0_n (or da_D_f)
+#  - CUSTOM2: s_g (plus th0_de)
+#
+#  - CUSTOM3: magnitude (if VERTEX doesn't work for id, then id plus magnitude)
 
 
 const FRAGMENT_SBG_POINT := IVFragmentIdentifier.FRAGMENT_SBG_POINT
 const PI_DIV_3 := PI / 3.0 # 60 degrees
+
+
 const ARRAY_FLAGS = (
-		Mesh.ARRAY_FORMAT_VERTEX
-		| Mesh.ARRAY_FORMAT_COLOR
-		| Mesh.ARRAY_FORMAT_NORMAL
-		| Mesh.ARRAY_FORMAT_TEX_UV
+	Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
 )
-const L4_L5_ARRAY_FLAGS = (
-		Mesh.ARRAY_FORMAT_VERTEX
-		| Mesh.ARRAY_FORMAT_COLOR
-		| Mesh.ARRAY_FORMAT_NORMAL
-		| Mesh.ARRAY_FORMAT_TEX_UV
-		| Mesh.ARRAY_FORMAT_TEX_UV2
+
+
+const L4L5_ARRAY_FLAGS = (
+	Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
 )
+
 
 var _times: Array[float] = IVGlobal.times
 var _fragment_targeting: Array = IVGlobal.fragment_targeting
@@ -65,10 +74,10 @@ func _init(group: IVSmallBodiesGroup) -> void:
 	_lp_integer = _group.lp_integer
 	var shader_material := ShaderMaterial.new()
 	if _lp_integer == -1: # not trojans
-		shader_material.shader = IVGlobal.shared_resources[&"points_shader"]
+		shader_material.shader = IVGlobal.shared_resources[&"points_id_shader"]
 	elif _lp_integer >= 4: # trojans
 		_secondary_orbit = _group.secondary_body.orbit
-		shader_material.shader = IVGlobal.shared_resources[&"points_l4_l5_shader"]
+		shader_material.shader = IVGlobal.shared_resources[&"points_l4l5_id_shader"]
 	else:
 		assert(false)
 	material_override = shader_material
@@ -90,26 +99,28 @@ func _ready() -> void:
 	_sbg_huds_state.points_color_changed.connect(_set_color)
 	IVGlobal.setting_changed.connect(_settings_listener)
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
-	draw_points()
+	_draw_points()
 
 
-func draw_points() -> void:
+func _draw_points() -> void:
 	var points_mesh := ArrayMesh.new()
-	var arrays := [] # various packed array types
+	var arrays := [] # packed arrays
 	arrays.resize(Mesh.ARRAY_MAX)
+	
 	if _lp_integer == -1: # not trojans
 		arrays[Mesh.ARRAY_VERTEX] = _vec3ids
-		arrays[Mesh.ARRAY_COLOR] = _group.e_i_Om_w
-		arrays[Mesh.ARRAY_NORMAL] = _group.a_M0_n
-		arrays[Mesh.ARRAY_TEX_UV] = _group.s_g
+		arrays[Mesh.ARRAY_CUSTOM0] = _group.e_i_Om_w
+		arrays[Mesh.ARRAY_CUSTOM1] = _group.a_M0_n
+		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], {}, ARRAY_FLAGS)
+	
 	else: # trojans
 		arrays[Mesh.ARRAY_VERTEX] = _vec3ids
-		arrays[Mesh.ARRAY_COLOR] = _group.e_i_Om_w
-		arrays[Mesh.ARRAY_NORMAL] = _group.da_D_f
-		arrays[Mesh.ARRAY_TEX_UV] = _group.s_g
-		arrays[Mesh.ARRAY_TEX_UV2] = _group.th0_de
-		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], {}, L4_L5_ARRAY_FLAGS)
+		arrays[Mesh.ARRAY_CUSTOM0] = _group.e_i_Om_w
+		arrays[Mesh.ARRAY_CUSTOM1] = _group.da_D_f_th0
+		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag
+		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], {}, L4L5_ARRAY_FLAGS)
+	
 	var half_aabb = _group.max_apoapsis * Vector3.ONE
 	points_mesh.custom_aabb = AABB(-half_aabb, 2.0 * half_aabb)
 	mesh = points_mesh
