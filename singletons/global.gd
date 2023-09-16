@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230915
+const IVOYAGER_YMD := 20230916
 
 
 # simulator state broadcasts
@@ -177,8 +177,12 @@ var shared_resources := {
 	# loads any paths at project init.
 	
 	# shaders
-	&"points_shader" : preload("res://ivoyager/shaders/points.gdshader"),
-	&"points_l4_l5_shader" : preload("res://ivoyager/shaders/points_l4_l5.gdshader"),
+	
+	
+	&"points_id_shader" : preload("res://ivoyager/shaders/points.id.gdshader"),
+	&"points_l4l5_id_shader" : preload("res://ivoyager/shaders/points.l4l5.id.gdshader"),
+	
+	
 	&"orbit_shader" : preload("res://ivoyager/shaders/orbit.gdshader"),
 	&"orbits_shader" : preload("res://ivoyager/shaders/orbits.gdshader"),
 	&"rings_shader" : preload("res://ivoyager/shaders/rings.gdshader"),

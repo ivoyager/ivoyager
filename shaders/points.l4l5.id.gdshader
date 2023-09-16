@@ -1,4 +1,4 @@
-// points_l4_l5.shader
+// points.l4l5.id.gdshader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -63,20 +63,20 @@ float axis_ocillator(float da, float th){
 void vertex() {
 
 	// orbit elements
-	float e = COLOR[0]; // eccentricity
-	float i = COLOR[1]; // inclination
-	float Om = COLOR[2]; // longitude of the ascending node
-	float w = COLOR[3]; // argument of periapsis
-	
-	// orbit precessions
-	float s = UV[0]; // NOT IMPLEMENTED YET
-	float g = UV[1]; // NOT IMPLEMENTED YET
+	float e = CUSTOM0[0]; // eccentricity
+	float i = CUSTOM0[1]; // inclination
+	float Om = CUSTOM0[2]; // longitude of the ascending node
+	float w = CUSTOM0[3]; // argument of periapsis
 	
 	// lagrangian
-	float da = NORMAL[0]; // amplitude of axis ocillation
-	float D = NORMAL[1]; // amplitude of longitudinal ocillation
-	float f = NORMAL[2]; // frequency of ocillation
-	float th0 = UV2[0]; // ocillator at epoch
+	float da = CUSTOM1[0]; // amplitude of axis ocillation
+	float D = CUSTOM1[1]; // amplitude of longitudinal ocillation
+	float f = CUSTOM1[2]; // frequency of ocillation
+	float th0 = CUSTOM1[3]; // ocillator at epoch
+	
+	// orbit precessions
+//	float s = UV[0]; // NOT IMPLEMENTED YET
+//	float g = UV[1]; // NOT IMPLEMENTED YET
 	
 	// libration of a & M
 	float th = th0 + f * time;

@@ -1,4 +1,4 @@
-// points.shader
+// points.id.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -23,7 +23,6 @@
 // We are presently using VERTEX for id (that's weird!) and NORMAL, COLOR,
 // etc. for orbital elements. 
 //
-// TODO4.0: Use array chanels CUSTOM1, 2, 3, 4.
 // TODO4.0: Use global uniforms where appropriate.
 
 
@@ -40,17 +39,17 @@ uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 void vertex() {
 	// orbital elements
-	float a = NORMAL[0]; // semi-major axis
-	float e = COLOR[0]; // eccentricity
-	float i = COLOR[1]; // inclination
-	float Om = COLOR[2]; // longitude of the ascending node
-	float w = COLOR[3]; // argument of periapsis
-	float M0 = NORMAL[1]; // mean anomaly at epoch
-	float n = NORMAL[2]; // mean motion
+	float a = CUSTOM1[0]; // semi-major axis
+	float e = CUSTOM0[0]; // eccentricity
+	float i = CUSTOM0[1]; // inclination
+	float Om = CUSTOM0[2]; // longitude of the ascending node
+	float w = CUSTOM0[3]; // argument of periapsis
+	float M0 = CUSTOM1[1]; // mean anomaly at epoch
+	float n = CUSTOM1[2]; // mean motion
 	
 	// orbit precessions
-	float s = UV[0]; // NOT IMPLEMENTED YET
-	float g = UV[1]; // NOT IMPLEMENTED YET
+//	float s = UV[0]; // NOT IMPLEMENTED YET
+//	float g = UV[1]; // NOT IMPLEMENTED YET
 	
 	float M = M0 + n * time; // mean anomaly
 	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI
