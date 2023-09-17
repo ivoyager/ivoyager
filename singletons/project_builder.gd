@@ -166,7 +166,7 @@ var program_nodes := {
 	# Use PERSIST_MODE = PERSIST_PROPERTIES_ONLY if there is data to persist.
 	_Scheduler_ = IVScheduler,
 	_ViewManager_ = IVViewManager,
-#	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
+	_FragmentIdentifier_ = IVFragmentIdentifier, # safe to remove
 	
 	# Nodes below are ordered for input handling (last is first). We mainly
 	# need to intercept cntr-something actions (quit, full-screen, etc.) before

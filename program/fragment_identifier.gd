@@ -111,14 +111,15 @@ func _ready() -> void:
 	RenderingServer.frame_post_draw.connect(_on_frame_post_draw)
 	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
 	_init_rects_and_arrays()
-#	usage = USAGE_2D # DISABLE34
+	disable_3d = true
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
-	
+
 
 func _process(_delta: float) -> void:
 	_fragment_targeting[0].x = _world_targeting[0].x
-	_fragment_targeting[0].y = _world_targeting[1] - _world_targeting[0].y # flipped
+#	_fragment_targeting[0].y = _world_targeting[1] - _world_targeting[0].y # flipped
+	_fragment_targeting[0].y = _world_targeting[0].y
 	
 	# 'fragment_cycler' drives the calibration/value cycle of fragment shaders
 	# TODO4.0: fragment_cycler will become a global uniform
@@ -130,6 +131,7 @@ func _process(_delta: float) -> void:
 		fragment_cycler = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
 		fragment_cycler = float(_cycle_step - _n_calibration_steps + 1) # 1.0, 2.0, 3.0
+	
 	_fragment_targeting[2] = fragment_cycler
 
 
@@ -288,11 +290,7 @@ func _on_frame_post_draw() -> void:
 			_world_targeting[6] = -1
 			fragment_changed.emit(-1)
 		return
-	
-	
-	# FIXME34: method removed, what do we do now?
-#	_node2d.update() # force a draw signal; 
-	
+	_node2d.queue_redraw()
 	
 	if !_has_drawn:
 		return

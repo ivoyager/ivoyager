@@ -104,7 +104,6 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if !visible :
 		return
-	# TODO34: Make these global uniforms!
 	var shader_material: ShaderMaterial = material_override
 	if _lp_integer == 4:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() + PI_DIV_3

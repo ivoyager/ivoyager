@@ -63,6 +63,7 @@ func _ready() -> void:
 		# FIXME34: 64-bit is no longer an option? We may need to recode the fragment id system.
 #		multimesh.custom_data_format = MultiMesh.CUSTOM_DATA_FLOAT # orbit ids
 		
+		multimesh.use_custom_data = true
 		var shader_material := ShaderMaterial.new()
 		shader_material.shader = IVGlobal.shared_resources[&"orbits_shader"]
 		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
