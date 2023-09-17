@@ -23,7 +23,7 @@ render_mode unshaded, cull_disabled;
 // Used by IVBodyOrbit for identification of its single orbit line.
 
 uniform vec3 fragment_id; // single orbit has one id
-uniform vec3 color = vec3(0.0, 0.0, 1.0);
+uniform vec3 color : source_color = vec3(0.0, 0.0, 1.0);
 
 #include "_fragment_id.gdshaderinc"
 

@@ -23,7 +23,7 @@ render_mode unshaded, cull_disabled;
 // Used by IVSBGOrbits (a MultiMeshInstance3D) for identification of individual
 // orbit lines from many.
 
-uniform vec3 color = vec3(0.0, 0.0, 1.0);
+uniform vec3 color : source_color = vec3(0.0, 0.0, 1.0);
 
 varying flat vec3 fragment_id;
 

@@ -124,7 +124,7 @@ func _set_color() -> void:
 	_color = color
 	if _fragment_identifier:
 		var shader_material: ShaderMaterial = material_override
-		shader_material.set_shader_parameter(&"color", Vector3(color.r, color.g, color.b))
+		shader_material.set_shader_parameter(&"color", color)
 	else:
 		var standard_material: StandardMaterial3D = material_override
 		standard_material.albedo_color = color
