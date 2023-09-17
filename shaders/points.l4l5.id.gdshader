@@ -35,7 +35,7 @@ render_mode unshaded, cull_disabled, skip_vertex_transform;
 // TODO: Notwithstanding above, we could hack our ocillator functions to give
 // more 'tadpole'-shaped librations.
 
-global uniform float time; // update per frame
+global uniform float iv_time; // update per frame
 uniform float lp_mean_longitude; // update per frame
 uniform int lp_integer; // 4 or 5; not currently used but could be for better ocillators
 uniform float characteristic_length; // semi-major axis of the secondary body
@@ -79,7 +79,7 @@ void vertex() {
 //	float g = UV[1]; // NOT IMPLEMENTED YET
 	
 	// libration of a & M
-	float th = th0 + f * time;
+	float th = th0 + f * iv_time;
 	float a = characteristic_length + axis_ocillator(da, th);
 	float M = lp_mean_longitude - Om - w + longitude_ocillator(D, th);
 	M = mod(M + PI, TAU) - PI;
@@ -141,7 +141,7 @@ bool is_id_signaling_pixel(vec2 offset){
 	//
 	// Note that FRAGCOORD x and y are offset from pixel coordinate by either
 	// exaclty +0.5 (Windows) or close to but not exactly +0.5 (HTML5 export).
-	// Code below covers either case. Comment out the 'mod' filter to
+	// Code below covers either case. Comment out the 'mod3' filter to
 	// troubleshoot (the calibration region wlll be painfully obvious).
 	
 	offset -= vec2(0.5);
@@ -155,8 +155,8 @@ bool is_id_signaling_pixel(vec2 offset){
 		return false;
 	}
 	
-	vec2 mod_3 = mod(offset, 3.0);
-	if (mod_3.x > 0.5 || mod_3.y > 0.5) {
+	vec2 mod3 = mod(offset, 3.0);
+	if (mod3.x > 0.5 || mod3.y > 0.5) {
 		return false;
 	}
 
@@ -175,7 +175,7 @@ void fragment() {
 		} else {
 			int id_element;
 			// Note: There is *some* interpolation of VERTEX even though we are
-			// at the vertex point - hence VERTEX elements are no longer whole
+			// at the vertex point; hence VERTEX elements are no longer whole
 			// numbers. The +0.5 below fixes small interpolation bumps.
 			if (fragment_cycler == 1.0){
 				id_element = int(VERTEX.x + 0.5);
