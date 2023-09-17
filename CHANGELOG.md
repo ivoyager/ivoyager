@@ -19,7 +19,7 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 * The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
 * Godot 4 migration:
     * Implement shader global uniforms.
-    * Implement new Godot4 signal syntax using Signal and Callable objects.
+    * Convert signal connect syntax to use Signal and Callable objects.
     * Type arrays where possible.
     * Re-type String as StringName where appropriate.
     * Implement lambdas in many classes.
@@ -28,7 +28,7 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 ### Known Migration Regressions
 * ~The Sun is not illuminating anything. We only have ambient light.~ fixed!
 * ~Asteroid points are broken. Trojans are in the right vicinity of L4 & 5, but wrongly distributed locally. All others are missing.~ fixed!
-* FragmentIdentifier system is currently disabled.
+* ~FragmentIdentifier system is currently disabled.~ fixed!
 * Saturn rings color is wrong. (The structure is ok so the shader is mostly working.)
 * [Reported elsewhere] Godot 4.1.1 has issues with HTML5 exports.
 

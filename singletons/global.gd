@@ -30,7 +30,7 @@ extends Node
 const IVOYAGER_VERSION := "0.0.16"
 const IVOYAGER_BUILD := "" # hotfix or debug build
 const IVOYAGER_STATE := "dev" # 'dev', 'alpha', 'beta', 'rc', ''
-const IVOYAGER_YMD := 20230916
+const IVOYAGER_YMD := 20230917
 
 
 # simulator state broadcasts
@@ -111,7 +111,6 @@ var themes := {} # IVThemeManager
 var fonts := {} # IVFontManager
 var bodies := {} # IVBody instances add/remove themselves; indexed by name
 var world_targeting := [] # IVWorldControl & others; optimized data for 3D world selection
-var fragment_targeting := [] # IVFragmentIdentifier; optimized data for shader fragment id
 var top_bodies: Array[Node3D] = [] # IVBody instances add/remove themselves; just STAR_SUN for us
 var selections := {} # IVSelectionManager(s)
 var blocking_windows: Array[Window] = [] # add Windows that want & test for exclusivity
@@ -183,8 +182,8 @@ var shared_resources := {
 	&"points_l4l5_id_shader" : preload("res://ivoyager/shaders/points.l4l5.id.gdshader"),
 	
 	
-	&"orbit_shader" : preload("res://ivoyager/shaders/orbit.gdshader"),
-	&"orbits_shader" : preload("res://ivoyager/shaders/orbits.gdshader"),
+	&"orbit_id_shader" : preload("res://ivoyager/shaders/orbit.id.gdshader"),
+	&"orbits_id_shader" : preload("res://ivoyager/shaders/orbits.id.gdshader"),
 	&"rings_shader" : preload("res://ivoyager/shaders/rings.gdshader"),
 	# additional items are constructed & added by initializers/shared_initializer.gd
 }

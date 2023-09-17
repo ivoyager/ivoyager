@@ -22,20 +22,11 @@ extends MeshInstance3D
 
 # Visual points for a SmallBodiesGroup instance. Uses one of the 'points'
 # shaders ('points.x.x.gdshader', where x.x represents a shader variant).
-# Shaders maintain vertex positions using their own orbital math.
+# Point shaders maintain vertex positions using their own orbital math.
 #
 # Points shader variants:
 #    '.l4l5.' - for lagrange points L4 & L5.
 #    '.id.' - broadcasts identity for IVFragmentIdentifier.
-
-
-# TODO 4.0: Use shader CUSTOM channels rather than hacking COLOR, NORMAL, etc.:
-#  - CUSTOM0: e_i_Om_w
-#  - CUSTOM1: a_M0_n (or da_D_f)
-#  - CUSTOM2: s_g (plus th0_de)
-#
-#  - CUSTOM3: magnitude (if VERTEX doesn't work for id, then id plus magnitude)
-
 
 const FRAGMENT_SBG_POINT := IVFragmentIdentifier.FRAGMENT_SBG_POINT
 const PI_DIV_3 := PI / 3.0 # 60 degrees
@@ -55,7 +46,6 @@ const L4L5_ARRAY_FLAGS = (
 )
 
 
-var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier")
 var _sbg_huds_state: IVSBGHUDsState = IVGlobal.program[&"SBGHUDsState"]
 var _group: IVSmallBodiesGroup
@@ -111,9 +101,6 @@ func _process(_delta: float) -> void:
 	elif _lp_integer == 5:
 		var lp_mean_longitude := _secondary_orbit.get_mean_longitude() - PI_DIV_3
 		shader_material.set_shader_parameter(&"lp_mean_longitude", lp_mean_longitude)
-	if _fragment_identifier:
-		shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
-		shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
 
 
 func _draw_points() -> void:
@@ -140,8 +127,6 @@ func _draw_points() -> void:
 	mesh = points_mesh
 	var shader_material: ShaderMaterial = material_override
 	shader_material.set_shader_parameter(&"point_size", float(IVGlobal.settings.point_size))
-	if _fragment_identifier:
-		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1])
 	if _lp_integer >= 4: # trojans
 		shader_material.set_shader_parameter(&"lp_integer", _lp_integer)
 		var characteristic_length := _secondary_orbit.get_semimajor_axis()

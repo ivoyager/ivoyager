@@ -22,23 +22,18 @@ extends SubViewport
 
 # Remove from ProjectBuilder.gui_nodes if not used.
 #
-# Inits & maintains 'IVGlobal.fragment_targeting' array. HUD visual nodes send
-# these data to shaders for fragment identification.
-#  [0] mouse_coord - y-flipped mouse pos
-#  [1] fragment_range
-#  [2] fragment_cycler - calibration and id sequencing
+# Decodes id from a shader fragment (e.g., an orbit line or asteroid point)
+# that is displayed on the root viewport. We capture a tiny square around the
+# mouse so the texture.get_data() read from GPU is as cheap as possible.
 #
-# Decodes id from shader fragment displayed on the root viewport (e.g.,
-# asteroid points). We capture a tiny square around the mouse so the
-# texture.get_data() read from GPU is as cheap as possible.
+# Shader fragments broadcast every 3rd pixel in a grid pattern bounded by
+# fragment_range. This works well for orbit lines and points with
+# point_size >= 3.
 #
-# Shader fragments broadcast (and this node reads) every 3rd pixel in a grid
-# pattern bounded by fragment_range. This works with minimum point_size = 3.
-#
-# This system is moot if we could send id from GPU shaders to CPU in a more
-# sensible way. Godot 4.0 will allow custom GLSL "compute" shaders that could
-# do that. However, we need id from vertex shaders. We'll see if that can be
-# done. In any case, this works...
+# This system wouldn't be needed if we sent id from GPU shaders to CPU. We
+# could do that using custom compute shaders. However, I don't think it is yet
+# possible using Godot's gdshader language. In any case, this system works
+# surprisingly well even if it seems a little hacky...
 
 signal fragment_changed(id) # -1 on target loss; get data from 'fragment_data'
 
@@ -48,7 +43,7 @@ enum { # fragment_type
 	FRAGMENT_SBG_ORBIT,
 }
 
-const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75]
+const CALIBRATION := [0.25, 0.375, 0.5, 0.625, 0.75] # >=1.0 will break shader logic!
 const COLOR_HALF_STEP := Color(0.015625, 0.015625, 0.015625, 0.0)
 const NULL_MOUSE_COORD := Vector2(-100.0, -100.0)
 
@@ -65,7 +60,6 @@ var fragment_data := {} # arrays indexed by 36-bit id integer; [name, fragment_t
 
 # private
 var _node2d := Node2D.new()
-var _fragment_targeting: Array = IVGlobal.fragment_targeting
 var _world_targeting: Array = IVGlobal.world_targeting
 var _n_calibration_steps := CALIBRATION.size()
 var _n_pxls: int
@@ -95,13 +89,6 @@ var _adj_values := []
 @onready var _picker_texture: ViewportTexture = get_texture()
 
 
-func _project_init() -> void:
-	# Dictionary IVGlobal.fragment_targeting
-	_fragment_targeting.resize(3)
-	_fragment_targeting[0] = NULL_MOUSE_COORD
-	_fragment_targeting[1] = float(fragment_range)
-	_fragment_targeting[2] = 0.0
-	
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -114,25 +101,26 @@ func _ready() -> void:
 	disable_3d = true
 	render_target_update_mode = UPDATE_ALWAYS
 	size = _picker_rect.size
+	
+	
+	RenderingServer.global_shader_parameter_set("iv_fragment_id_range", float(fragment_range))
 
 
 func _process(_delta: float) -> void:
-	_fragment_targeting[0].x = _world_targeting[0].x
-#	_fragment_targeting[0].y = _world_targeting[1] - _world_targeting[0].y # flipped
-	_fragment_targeting[0].y = _world_targeting[0].y
-	
 	# 'fragment_cycler' drives the calibration/value cycle of fragment shaders
-	# TODO4.0: fragment_cycler will become a global uniform
 	_cycle_step += 1
 	if _cycle_step == _n_cycle_steps:
 		_cycle_step = 0
-	var fragment_cycler: float
+	var fragment_id_cycler: float
 	if _cycle_step < _n_calibration_steps:
-		fragment_cycler = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
+		fragment_id_cycler = CALIBRATION[_cycle_step] # calibration values (0.25..0.75)
 	else:
-		fragment_cycler = float(_cycle_step - _n_calibration_steps + 1) # 1.0, 2.0, 3.0
+		fragment_id_cycler = float(_cycle_step - _n_calibration_steps + 1) # 1.0, 2.0, 3.0
 	
-	_fragment_targeting[2] = fragment_cycler
+	RenderingServer.global_shader_parameter_set("iv_fragment_id_cycler", fragment_id_cycler)
+	RenderingServer.global_shader_parameter_set("iv_mouse_fragcoord",
+			_world_targeting[0] + Vector2(0.5, 0.5)) # see shader comment
+	
 
 
 # public
@@ -157,7 +145,7 @@ func remove_id(id: int) -> void:
 
 
 static func encode_color_channels(id: int) -> Array:
-	# Here for reference; part of color encode logic used by shaders.
+	# Here for reference; this is the color encode logic used by shaders.
 	# We only use 4 bits of info per 8-bit color channel. All colors are
 	# generated in the range 0.25-0.75 (losing 1 bit) and we ignore the least
 	# significant 3 bits. So we read 1/16 color steps from the midrange after
@@ -276,14 +264,14 @@ func _sort_pxl_offsets(a: Array, b: Array) -> bool:
 
 func _on_node2d_draw() -> void:
 	# Copy a tiny square of root viewport texture to this viewport.
-	_src_rect.position = _fragment_targeting[0] - _src_offset
+	_src_rect.position = _world_targeting[0] - _src_offset
 	_node2d.draw_texture_rect_region(_root_texture, _picker_rect, _src_rect)
 	_has_drawn = true
 
 
 func _on_frame_post_draw() -> void:
 	# Grab image from this viewport; scan pixels for shaders signaling id.
-	if _fragment_targeting[0].x < 0.0: # ie, WorldController.NULL_MOUSE_COORD
+	if _world_targeting[0].x < 0.0: # ie, WorldController.NULL_MOUSE_COORD
 		_has_drawn = false
 		if current_id != -1:
 			current_id = -1
@@ -308,14 +296,14 @@ func _on_frame_post_draw() -> void:
 			_world_targeting[6] = id
 			fragment_changed.emit(id)
 		_drop_frame_counter = 0
-		_drop_mouse_coord = _fragment_targeting[0]
+		_drop_mouse_coord = _world_targeting[0]
 		return
 	
 	if current_id == -1:
 		return
 	
 	if (_drop_frame_counter > drop_id_frames or
-			_drop_mouse_coord.distance_to(_fragment_targeting[0]) > drop_id_mouse_movement):
+			_drop_mouse_coord.distance_to(_world_targeting[0]) > drop_id_mouse_movement):
 		current_id = -1
 		_world_targeting[6] = -1
 		fragment_changed.emit(-1)

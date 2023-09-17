@@ -1,4 +1,4 @@
-// points.id.gdshader
+// orbit.shader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -18,87 +18,17 @@
 // limitations under the License.
 // *****************************************************************************
 shader_type spatial;
-render_mode unshaded, cull_disabled, skip_vertex_transform;
+render_mode unshaded, cull_disabled;
 
-// Duplicates orbital math in IVOrbits with some optimization of the numerical
-// approximation.
-//
-// VERTEX encodes the fragment_id (see IVFragmentIdentifier). We set POSITION
-// directly here so VERTEX value never changes.
-//
-// Orbital parameters are set via CUSTOMx channels (see IVSBGPoints).
+// Broadcasts id near mouse for FragmentIdentifier. 
 
-global uniform float iv_time;
+
 global uniform vec2 iv_mouse_fragcoord;
 global uniform float iv_fragment_id_range;
 global uniform float iv_fragment_id_cycler;
 
-uniform float point_size = 3.0;
-uniform vec3 color = vec3(0.0, 1.0, 0.0);
-
-varying flat vec3 fragment_id;
-
-
-void vertex() {
-	fragment_id = VERTEX;
-	
-	// orbital elements
-	float a = CUSTOM1[0]; // semi-major axis
-	float e = CUSTOM0[0]; // eccentricity
-	float i = CUSTOM0[1]; // inclination
-	float Om = CUSTOM0[2]; // longitude of the ascending node
-	float w = CUSTOM0[3]; // argument of periapsis
-	float M0 = CUSTOM1[1]; // mean anomaly at epoch
-	float n = CUSTOM1[2]; // mean motion
-	
-	// orbit precessions
-//	float s = UV[0]; // NOT IMPLEMENTED YET
-//	float g = UV[1]; // NOT IMPLEMENTED YET
-	
-	float M = M0 + n * iv_time; // mean anomaly
-	M = mod(M + PI, TAU) - PI;
-	
-	// Numerical approximation of eccentric anomaly.
-	// A while loop here breaks WebGL1 export. From empirical testing, the
-	// 2nd delta (-= dEA) is needed for the vast majority of points (hence,
-	// no 'if' test). A tiny minority make it to the 5th delta.
-	float EA = M + e * sin(M); // eccentric anomaly
-	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	if (abs(dEA) > 1e-5){
-		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-		EA -= dEA;
-		if (abs(dEA) > 1e-5){
-			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-			EA -= dEA;
-			if (abs(dEA) > 1e-5){
-				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-				EA -= dEA;
-			}
-		}
-	}
-	
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
-	float r = a * (1.0 - e * cos(EA));
-	float cos_i = cos(i);
-	float sin_Om = sin(Om);
-	float cos_Om = cos(Om);
-	float sin_w_nu = sin(w + nu);
-	float cos_w_nu = cos(w + nu);
-	float x = r * (cos_Om * cos_w_nu - sin_Om * sin_w_nu * cos_i);
-	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
-	float z = r * sin(i) * sin_w_nu;
-	
-	// We skip VERTEX which is used to encode point_id.
-	// But this is how we would get VERTEX and then POSITION...
-	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
-	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);	
-	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
-
-	POINT_SIZE = point_size;
-}
+uniform vec3 fragment_id; // single orbit has one id
+uniform vec3 color = vec3(0.0, 0.0, 1.0);
 
 
 bool is_self_identifying_fragment(vec2 offset){

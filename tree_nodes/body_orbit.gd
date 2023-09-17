@@ -30,7 +30,6 @@ const FRAGMENT_BODY_ORBIT := IVFragmentIdentifier.FRAGMENT_BODY_ORBIT
 var _fragment_identifier: IVFragmentIdentifier = IVGlobal.program.get(&"FragmentIdentifier") # opt
 var _body_huds_state: IVBodyHUDsState = IVGlobal.program.BodyHUDsState
 var _times: Array[float] = IVGlobal.times
-var _fragment_targeting: Array = IVGlobal.fragment_targeting
 
 var _body: IVBody
 var _orbit: IVOrbit
@@ -66,29 +65,17 @@ func _ready() -> void:
 		var data := _body.get_fragment_data(FRAGMENT_BODY_ORBIT)
 		var fragment_id := _fragment_identifier.get_new_id_as_vec3(data)
 		var shader_material := ShaderMaterial.new()
-		shader_material.shader = IVGlobal.shared_resources[&"orbit_shader"]
+		shader_material.shader = IVGlobal.shared_resources[&"orbit_id_shader"]
 		shader_material.set_shader_parameter(&"fragment_id", fragment_id)
-		shader_material.set_shader_parameter(&"fragment_range", _fragment_targeting[1]) # TODO4.0: global uniform
 		material_override = shader_material
 	else:
 		var standard_material := StandardMaterial3D.new()
 		standard_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		material_override = standard_material
-		set_process(false)
 	_set_color()
 	_body_huds_visible = _body.huds_visible
 	_body_visible = _body.visible
 	_on_global_huds_changed()
-
-
-func _process(_delta: float) -> void:
-	# Disabled unless we have FragmentIdentifier.
-	if !visible:
-		return
-	# TODO34: Make these global uniforms!
-	var shader_material: ShaderMaterial = material_override
-	shader_material.set_shader_parameter(&"mouse_coord", _fragment_targeting[0])
-	shader_material.set_shader_parameter(&"fragment_cycler", _fragment_targeting[2])
 
 
 func _set_transform_from_orbit(_is_scheduled := false) -> void:
