@@ -20,31 +20,36 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-// See comments in points.shader.
+// See comments in points.id.shader.
 //
 // For L4/L5 objects, a & M are determined by da, D, f & th0 together with
-// Lagrange point radius and longitude.
+// characteristic_length (semi-major axis of the secondary body) and mean
+// longitude (leading or lagging secondary body by 60 degrees).
 //
 // da: amplitude of axis ocillation
 // D: amplitude of longitudinal ocillation
 // f: frequency of ocillation (period = TAU / f)
+// th0: phase at epoch
 // e, i, s, g: same as non-lagrange-point orbits
+// de (not used): e ocillation, I think. If so, what is the frequency & phase?
 //
-// We're using a harmonic ocillator as a *very* rough approximation. There is
-// no closed-form solution so this will always be approximate.
-// TODO: Notwithstanding above, we could hack our ocillator functions to give
-// more 'tadpole'-shaped librations.
+// We're using a harmonic ocillator as a *very* rough approximation. There are
+// no closed-form solutions so we can only approximate L-point librations.
+// TODO: Notwithstanding above, we could improve our ocillator functions to
+// give more 'tadpole'-shaped librations.
 
-uniform float time; // update per frame
+global uniform float iv_time;
+
 uniform float lp_mean_longitude; // update per frame
-uniform int lp_integer; // 4 or 5; not currently used but could be for better ocillators
+uniform int lp_integer; // 4 or 5; not currently used but should be for better ocillators
 uniform float characteristic_length; // semi-major axis of the secondary body
 uniform float point_size = 3.0;
-uniform vec2 mouse_coord;
-uniform float fragment_range = 9.0;
-uniform float fragment_cycler = 0.0;
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
+varying flat vec3 fragment_id;
+
+#include "_fragment_id.gdshaderinc"
+#include "_orbit_math.gdshaderinc"
 
 
 float longitude_ocillator(float D, float th){
@@ -61,7 +66,8 @@ float axis_ocillator(float da, float th){
 
 
 void vertex() {
-
+	fragment_id = VERTEX;
+	
 	// orbit elements
 	float e = CUSTOM0[0]; // eccentricity
 	float i = CUSTOM0[1]; // inclination
@@ -74,130 +80,33 @@ void vertex() {
 	float f = CUSTOM1[2]; // frequency of ocillation
 	float th0 = CUSTOM1[3]; // ocillator at epoch
 	
-	// orbit precessions
-//	float s = UV[0]; // NOT IMPLEMENTED YET
-//	float g = UV[1]; // NOT IMPLEMENTED YET
+	// orbit precessions & magnitude
+//	float s = CUSTOM2[0]; // nodal precession; NOT IMPLEMENTED YET
+//	float g = CUSTOM2[1]; // apsidal precession; NOT IMPLEMENTED YET
+//	float mag = CUSTOM2[3]; // magnitude; NOT IMPLEMENTED YET
 	
 	// libration of a & M
-	float th = th0 + f * time;
+	float th = th0 + f * iv_time;
 	float a = characteristic_length + axis_ocillator(da, th);
 	float M = lp_mean_longitude - Om - w + longitude_ocillator(D, th);
-	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI;
-
-// ****************************************************************************
-// Entire file below is an exact copy of points.shader!!!
-// TODO34: Use #include preprocessor for shared code!
-// ****************************************************************************
-
-	float EA = M + e * sin(M); // eccentric anomaly
-	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	// A while loop here breaks WebGL1 export. 5 steps is enough.
-	if (abs(dEA) > 1e-5){
-		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-		EA -= dEA;
-		if (abs(dEA) > 1e-5){
-			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-			EA -= dEA;
-			if (abs(dEA) > 1e-5){
-				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-				EA -= dEA;
-				if (abs(dEA) > 1e-5){
-					dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-					EA -= dEA;
-				}
-			}
-		}
-	}
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
-	float r = a * (1.0 - e * cos(EA));
-	float cos_i = cos(i);
-	float sin_Om = sin(Om);
-	float cos_Om = cos(Om);
-	float sin_w_nu = sin(w + nu);
-	float cos_w_nu = cos(w + nu);
-	float x = r * (cos_Om * cos_w_nu - sin_Om * sin_w_nu * cos_i);
-	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
-	float z = r * sin(i) * sin_w_nu;
+	M = mod(M + PI, TAU) - PI;
 	
-	// We skip VERTEX which is used to encode point_id.
-	// But this is how we would get VERTEX and then POSITION...
+	vec3 position = get_orbit_position(a, e, i, Om, w, M);
+	
+	// We skip VERTEX here, but this is the 2-step version...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
-	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
+	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);	
+	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(position, 1.0));
 	
-	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
-
 	POINT_SIZE = point_size;
 }
 
 
-bool is_id_signaling_pixel(vec2 offset){
-	// Follows grid pattern near mouse described in FragmentIdentifier, which
-	// will capture any point in range area with POINT_SIZE >= 3 and generally
-	// captures orbit lines.
-	//
-	// Note that FRAGCOORD x and y are offset from pixel coordinate by either
-	// exaclty +0.5 (Windows) or close to but not exactly +0.5 (HTML5 export).
-	// Code below covers either case. Comment out the 'mod' filter to
-	// troubleshoot (the calibration region wlll be painfully obvious).
-	
-	offset -= vec2(0.5);
-	offset = abs(offset);
-	
-	if (offset.x > fragment_range) {
-		return false;
-	}
-	
-	if (offset.y > fragment_range) {
-		return false;
-	}
-	
-	vec2 mod_3 = mod(offset, 3.0);
-	if (mod_3.x > 0.5 || mod_3.y > 0.5) {
-		return false;
-	}
-
-	return true;
-}
-
-
 void fragment() {
-//	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
-	
-	// debug disable for now...
-	if (false) {
-		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
-		if (fragment_cycler < 1.0) {
-			ALBEDO = vec3(fragment_cycler); // calibration color
-		} else {
-			int id_element;
-			// Note: There is *some* interpolation of VERTEX even though we are
-			// at the vertex point - hence VERTEX elements are no longer whole
-			// numbers. The +0.5 below fixes small interpolation bumps.
-			if (fragment_cycler == 1.0){
-				id_element = int(VERTEX.x + 0.5);
-			} else {
-				if (fragment_cycler == 2.0){
-					id_element = int(VERTEX.y + 0.5);
-				} else {
-					id_element = int(VERTEX.z + 0.5);
-				}
-			}
-			
-			// Ouch! GLES2 doesn't allow bit operators! Can't use '<<' or '&'.
-			// TODO 4.0: recode w/ bit operators!
-			int bbits = id_element / 256;
-			int gbits = (id_element - bbits * 256) / 16;
-			int rbits = id_element - gbits * 16 - bbits * 256;
-			
-			float r = float(rbits) / 32.0 + 0.25;
-			float g = float(gbits) / 32.0 + 0.25;
-			float b = float(bbits) / 32.0 + 0.25;
-			
-			ALBEDO = vec3(r, g, b); // encodes id
-		}
-	
+	if (is_id_fragment(FRAGCOORD.xy)){
+		ALBEDO = get_id_fragment_color(fragment_id);
 	} else {
-		ALBEDO = color; // use this group's uniform
+		ALBEDO = color;
 	}
 }
+

@@ -27,10 +27,10 @@ extends Control
 #  [1] veiwport_height: float (this object sets)
 #  [2] camera: Camera (camera sets)
 #  [3] camera_fov: float (camera sets)
-#  [4] mouse_target: Object (potential targets set/unset themselves; e.g., IVBody)
-#  [5] mouse_target_dist: float (as above)
-#  [6] fragment_id: int (FragmentIdentifier sets)
-#  [7] cursor_type: int (this object sets)
+#  [4] current_mouse_target: Object (targets set/unset themselves; e.g., see IVBody)
+#  [5] current_mouse_target_dist: float (as above)
+#  [6] current_fragment_id: int (a shader target; IVFragmentIdentifier sets)
+#  [7] current_cursor_type: int (this object sets)
 #
 # TODO: Recode using Godot's built-in mouse drag functionality.
 
@@ -55,15 +55,16 @@ var _suppress_mouse_control := true # blocks signals EXCEPT 'mouse_target_change
 
 func _project_init() -> void:
 	IVGlobal.about_to_free_procedural_nodes.connect(_clear)
+	# see 'IVGlobal.world_targeting' comments above
 	_world_targeting.resize(8)
 	_world_targeting[0] = Vector2.ZERO
 	_world_targeting[1] = 0.0
-	_world_targeting[2] = null # Camera3D maintains
-	_world_targeting[3] = 50.0 # Camera3D maintains
-	_world_targeting[4] = null # potential targets maintain
-	_world_targeting[5] = INF # potential targets maintain
-	_world_targeting[6] = -1 # FragmentIdentifier maintains
-	_world_targeting[7] = CURSOR_ARROW
+	_world_targeting[2] = null
+	_world_targeting[3] = 50.0
+	_world_targeting[4] = null
+	_world_targeting[5] = INF
+	_world_targeting[6] = -1
+	_world_targeting[7] = CURSOR_ARROW # current mouse cursor
 
 
 func _ready() -> void:

@@ -44,6 +44,8 @@ extends Node
 #
 # FIXME: there is some old rpc (remote player call) code here that is not
 # currently maintained. This will be fixed and maintained again with Godot 4.0.
+#
+# Requires shader global 'time'.
 
 signal speed_changed()
 signal date_changed() # normal day rollover
@@ -200,6 +202,8 @@ func _on_process(delta: float) -> void: # subclass can override
 	set_clock_array(solar_day - whole_solar_day, clock)
 	times[0] = time
 	times[2] = solar_day
+	RenderingServer.global_shader_parameter_set("iv_time", time)
+	
 	# network sync
 #	if _network_state == IS_SERVER:
 #		rpc_unreliable("_time_sync", time, engine_time, speed_multiplier)
@@ -477,6 +481,7 @@ func _set_init_state() -> void:
 	engine_time = 0.0
 	times[0] = time
 	times[1] = engine_time
+	RenderingServer.global_shader_parameter_set("iv_time", time)
 	speed_index = start_speed
 
 
@@ -489,6 +494,7 @@ func _reset_time() -> void:
 	solar_day = get_solar_day(time)
 	times[0] = time
 	times[2] = solar_day
+	RenderingServer.global_shader_parameter_set("iv_time", time)
 	var jdn := get_jdn_for_solar_day(solar_day)
 	set_gregorian_date_array(jdn, date, date_format)
 	set_clock_array(fposmod(solar_day, 1.0), clock)

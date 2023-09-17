@@ -1,4 +1,4 @@
-// points.id.shader
+// points.id.gdshader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -17,27 +17,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-// Duplicates orbital math in system_refs/orbit.gd.
-//
-// There is much hackery here, some of which can be improved in Godot 4.0.
-// We are presently using VERTEX for id (that's weird!) and NORMAL, COLOR,
-// etc. for orbital elements. 
-//
-// TODO4.0: Use global uniforms where appropriate.
-
-
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-uniform float time;
+// VERTEX encodes the fragment_id (see IVFragmentIdentifier). 
+// We set POSITION directly here so VERTEX remains unchanged.
+//
+// Orbital parameters are set via CUSTOMx channels by IVSBGPoints.
+
+global uniform float iv_time;
+
 uniform float point_size = 3.0;
-uniform vec2 mouse_coord;
-uniform float fragment_range = 9.0;
-uniform float fragment_cycler = 0.0;
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
+
+varying flat vec3 fragment_id;
+
+#include "_fragment_id.gdshaderinc"
+#include "_orbit_math.gdshaderinc"
 
 
 void vertex() {
+	fragment_id = VERTEX; // constant id for each vertex
+	
 	// orbital elements
 	float a = CUSTOM1[0]; // semi-major axis
 	float e = CUSTOM0[0]; // eccentricity
@@ -47,121 +48,30 @@ void vertex() {
 	float M0 = CUSTOM1[1]; // mean anomaly at epoch
 	float n = CUSTOM1[2]; // mean motion
 	
-	// orbit precessions
-//	float s = UV[0]; // NOT IMPLEMENTED YET
-//	float g = UV[1]; // NOT IMPLEMENTED YET
+	// precessions & magnitude
+//	float s = CUSTOM2[0]; // nodal precession; NOT IMPLEMENTED YET
+//	float g = CUSTOM2[1]; // apsidal precession; NOT IMPLEMENTED YET
+//	float mag = CUSTOM2[3]; // magnitude; NOT IMPLEMENTED YET
 	
-	float M = M0 + n * time; // mean anomaly
-	M = mod(M + 3.141592654, 6.283185307) - 3.141592654; // -PI to PI
+	float M = M0 + n * iv_time; // mean anomaly
+	M = mod(M + PI, TAU) - PI;
 	
-	float EA = M + e * sin(M); // eccentric anomaly
-	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	// A while loop here breaks WebGL1 export. 5 steps is enough.
-	if (abs(dEA) > 1e-5){
-		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-		EA -= dEA;
-		if (abs(dEA) > 1e-5){
-			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-			EA -= dEA;
-			if (abs(dEA) > 1e-5){
-				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-				EA -= dEA;
-				if (abs(dEA) > 1e-5){
-					dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-					EA -= dEA;
-				}
-			}
-		}
-	}
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
-	float r = a * (1.0 - e * cos(EA));
-	float cos_i = cos(i);
-	float sin_Om = sin(Om);
-	float cos_Om = cos(Om);
-	float sin_w_nu = sin(w + nu);
-	float cos_w_nu = cos(w + nu);
-	float x = r * (cos_Om * cos_w_nu - sin_Om * sin_w_nu * cos_i);
-	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
-	float z = r * sin(i) * sin_w_nu;
+	vec3 position = get_orbit_position(a, e, i, Om, w, M);
 	
-	// We skip VERTEX which is used to encode point_id.
-	// But this is how we would get VERTEX and then POSITION...
+	// We skip VERTEX here, but this is the 2-step version...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
 	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);	
-	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
-
+	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(position, 1.0));
+	
 	POINT_SIZE = point_size;
 }
 
 
-bool is_id_signaling_pixel(vec2 offset){
-	// Follows grid pattern near mouse described in FragmentIdentifier, which
-	// will capture any point in range area with POINT_SIZE >= 3 and generally
-	// captures orbit lines.
-	//
-	// Note that FRAGCOORD x and y are offset from pixel coordinate by either
-	// exaclty +0.5 (Windows) or close to but not exactly +0.5 (HTML5 export).
-	// Code below covers either case. Comment out the 'mod' filter to
-	// troubleshoot (the calibration region wlll be painfully obvious).
-	
-	offset -= vec2(0.5);
-	offset = abs(offset);
-	
-	if (offset.x > fragment_range) {
-		return false;
-	}
-	
-	if (offset.y > fragment_range) {
-		return false;
-	}
-	
-	vec2 mod_3 = mod(offset, 3.0);
-	if (mod_3.x > 0.5 || mod_3.y > 0.5) {
-		return false;
-	}
-
-	return true;
-}
-
-
 void fragment() {
-//	if (is_id_signaling_pixel(FRAGCOORD.xy - mouse_coord)) {
-	
-	// debug disable for now...
-	if (false) {
-		// Broadcast callibration or id color. See tree_nodes/fragment_identifier.gd.
-		if (fragment_cycler < 1.0) {
-			ALBEDO = vec3(fragment_cycler); // calibration color
-		} else {
-			int id_element;
-			// Note: There is *some* interpolation of VERTEX even though we are
-			// at the vertex point - hence VERTEX elements are no longer whole
-			// numbers. The +0.5 below fixes small interpolation bumps.
-			if (fragment_cycler == 1.0){
-				id_element = int(VERTEX.x + 0.5);
-			} else {
-				if (fragment_cycler == 2.0){
-					id_element = int(VERTEX.y + 0.5);
-				} else {
-					id_element = int(VERTEX.z + 0.5);
-				}
-			}
-			
-			// Ouch! GLES2 doesn't allow bit operators! Can't use '<<' or '&'.
-			// TODO 4.0: recode w/ bit operators!
-			int bbits = id_element / 256;
-			int gbits = (id_element - bbits * 256) / 16;
-			int rbits = id_element - gbits * 16 - bbits * 256;
-			
-			float r = float(rbits) / 32.0 + 0.25;
-			float g = float(gbits) / 32.0 + 0.25;
-			float b = float(bbits) / 32.0 + 0.25;
-			
-			ALBEDO = vec3(r, g, b); // encodes id
-		}
-	
+	if (is_id_fragment(FRAGCOORD.xy)){
+		ALBEDO = get_id_fragment_color(fragment_id);
 	} else {
-		ALBEDO = color; // use this group's uniform
+		ALBEDO = color;
 	}
 }
+
