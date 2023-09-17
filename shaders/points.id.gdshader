@@ -20,27 +20,24 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, skip_vertex_transform;
 
-// Duplicates orbital math in IVOrbits with some optimization of the numerical
-// approximation.
+// VERTEX encodes the fragment_id (see IVFragmentIdentifier). 
+// We set POSITION directly here so VERTEX remains unchanged.
 //
-// VERTEX encodes the fragment_id (see IVFragmentIdentifier). We set POSITION
-// directly here so VERTEX value never changes.
-//
-// Orbital parameters are set via CUSTOMx channels (see IVSBGPoints).
+// Orbital parameters are set via CUSTOMx channels by IVSBGPoints.
 
 global uniform float iv_time;
-global uniform vec2 iv_mouse_fragcoord;
-global uniform float iv_fragment_id_range;
-global uniform float iv_fragment_id_cycler;
 
 uniform float point_size = 3.0;
 uniform vec3 color = vec3(0.0, 1.0, 0.0);
 
 varying flat vec3 fragment_id;
 
+#include "_fragment_id.gdshaderinc"
+#include "_orbit_math.gdshaderinc"
+
 
 void vertex() {
-	fragment_id = VERTEX;
+	fragment_id = VERTEX; // constant id for each vertex
 	
 	// orbital elements
 	float a = CUSTOM1[0]; // semi-major axis
@@ -51,127 +48,30 @@ void vertex() {
 	float M0 = CUSTOM1[1]; // mean anomaly at epoch
 	float n = CUSTOM1[2]; // mean motion
 	
-	// orbit precessions
-//	float s = UV[0]; // NOT IMPLEMENTED YET
-//	float g = UV[1]; // NOT IMPLEMENTED YET
+	// precessions & magnitude
+//	float s = CUSTOM2[0]; // nodal precession; NOT IMPLEMENTED YET
+//	float g = CUSTOM2[1]; // apsidal precession; NOT IMPLEMENTED YET
+//	float mag = CUSTOM2[3]; // magnitude; NOT IMPLEMENTED YET
 	
 	float M = M0 + n * iv_time; // mean anomaly
 	M = mod(M + PI, TAU) - PI;
 	
-	// Numerical approximation of eccentric anomaly.
-	// A while loop here breaks WebGL1 export. From empirical testing, the
-	// 2nd delta (-= dEA) is needed for the vast majority of points (hence,
-	// no 'if' test). A tiny minority make it to the 5th delta.
-	float EA = M + e * sin(M); // eccentric anomaly
-	float dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-	EA -= dEA;
-	if (abs(dEA) > 1e-5){
-		dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-		EA -= dEA;
-		if (abs(dEA) > 1e-5){
-			dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-			EA -= dEA;
-			if (abs(dEA) > 1e-5){
-				dEA = (EA - M - e * sin(EA)) / (1.0 - e * cos(EA));
-				EA -= dEA;
-			}
-		}
-	}
+	vec3 position = get_orbit_position(a, e, i, Om, w, M);
 	
-	float nu = 2.0 * atan(sqrt((1.0 + e) / (1.0 - e)) * tan(EA / 2.0));
-	float r = a * (1.0 - e * cos(EA));
-	float cos_i = cos(i);
-	float sin_Om = sin(Om);
-	float cos_Om = cos(Om);
-	float sin_w_nu = sin(w + nu);
-	float cos_w_nu = cos(w + nu);
-	float x = r * (cos_Om * cos_w_nu - sin_Om * sin_w_nu * cos_i);
-	float y = r * (sin_Om * cos_w_nu + cos_Om * sin_w_nu * cos_i);
-	float z = r * sin(i) * sin_w_nu;
-	
-	// We skip VERTEX which is used to encode point_id.
-	// But this is how we would get VERTEX and then POSITION...
+	// We skip VERTEX here, but this is the 2-step version...
 	// VERTEX = (MODELVIEW_MATRIX * vec4(x, y, z, 1.0)).xyz;
 	// POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);	
-	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(x, y, z, 1.0));
-
+	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(position, 1.0));
+	
 	POINT_SIZE = point_size;
 }
 
 
-bool is_self_identifying_fragment(vec2 offset){
-	// Follows grid pattern near mouse described in FragmentIdentifier, which
-	// will capture any point in range area with POINT_SIZE >= 3 and generally
-	// captures orbit lines.
-	//
-	// Note that FRAGCOORD x and y are offset from pixel coordinate by either
-	// exaclty +0.5 (Windows) or close to but not exactly +0.5 (HTML5 export)
-	// as of Godot 3.5.2. Perhaps this could change or vary on other platforms.
-	// To compensate, we set iv_mouse_fragcoord = mouse_pos + Vector2(0.5, 0.5)
-	// and we allow for non-whole numbers below.
-	//
-	// Comment out the 'mod3' filter to troubleshoot; the identifier region
-	// will be visually obvious in any region of dense fragment rendering.
-	
-	offset = abs(offset);
-	
-	if (offset.x > iv_fragment_id_range) {
-		return false;
-	}
-	
-	if (offset.y > iv_fragment_id_range) {
-		return false;
-	}
-	
-	vec2 mod3 = mod(offset, 3.0);
-	if (mod3.x > 0.5 || mod3.y > 0.5) {
-		return false;
-	}
-
-	return true;
-}
-
-
 void fragment() {
-	
-	if (!is_self_identifying_fragment(FRAGCOORD.xy - iv_mouse_fragcoord)) {
-		 // Use this group's uniform color.
-		ALBEDO = color;
-		
+	if (is_id_fragment(FRAGCOORD.xy)){
+		ALBEDO = get_id_fragment_color(fragment_id);
 	} else {
-		// Broadcast calibration color or fragment identifier at or very near
-		// the mouse position. See IVFragmentIdentifier.
-		
-		if (iv_fragment_id_cycler < 1.0) {
-			// Broadcast callibration color.
-			ALBEDO = vec3(iv_fragment_id_cycler);
-		
-		} else {
-			// Broadcast part of this fragment's identifier (1 of 3 parts).
-			// iv_fragment_id_cycler value is exactly 1.0, 2.0 or 3.0.
-			int id_element = int(fragment_id[int(iv_fragment_id_cycler) - 1]);
-			
-			int rbits = id_element & 15;
-			id_element >>= 4;
-			int gbits = id_element & 15;
-			id_element >>= 4;
-			int bbits = id_element & 15;
-			
-			// Godot 3.x GLES2 didn't allow bit operators.
-			// Keep this code here in case we need it (for HTML5 export?)...
-//			int bbits = id_element / 256;
-//			int gbits = (id_element - bbits * 256) / 16;
-//			int rbits = id_element - gbits * 16 - bbits * 256;
-			
-			// Use range 0.25-0.75 for each channel.
-			float r = float(rbits) / 32.0 + 0.25;
-			float g = float(gbits) / 32.0 + 0.25;
-			float b = float(bbits) / 32.0 + 0.25;
-			
-			ALBEDO = vec3(r, g, b);
-		}
+		ALBEDO = color;
 	}
 }
 

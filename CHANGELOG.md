@@ -18,6 +18,7 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
 * Added static class IVQFormat to replace previous IVQuantityFormatter (w/ similar but modified API).
 * The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
 * Godot 4 migration:
+    * Implement .gdshaderinc files to eliminate duplicated shader code.
     * Implement shader global uniforms.
     * Convert signal connect syntax to use Signal and Callable objects.
     * Type arrays where possible.
