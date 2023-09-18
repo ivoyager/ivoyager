@@ -132,7 +132,7 @@ func save_game(path := "") -> void:
 	assert(IVDebug.dlog("Tree status before save..."))
 	assert(IVDebug.dlog(_save_builder.debug_log(_universe)))
 	var gamesave := _save_builder.generate_gamesave(_universe)
-	_io_manager.store_var_to_file(gamesave, path, self, "_save_callback")
+	_io_manager.store_var_to_file(gamesave, path, _save_callback)
 	IVGlobal.game_save_finished.emit()
 	_has_been_saved = true
 	_state_manager.allow_run(self)
@@ -183,7 +183,7 @@ func load_game(path := "", network_gamesave := []) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if !network_gamesave:
-		_io_manager.get_var_from_file(path, self, "_load_callback")
+		_io_manager.get_var_from_file(path, _load_callback)
 	else:
 		_load_callback(network_gamesave, OK)
 
@@ -217,9 +217,9 @@ func _test_version() -> void:
 
 
 # *****************************************************************************
-# IVIOManager callbacks
+# IVIOManager callbacks on main thread
 
-func _save_callback(err: int) -> void: # Main thread
+func _save_callback(err: int) -> void:
 	if err != OK:
 		print("ERROR on Save; error code = ", err)
 

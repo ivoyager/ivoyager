@@ -38,21 +38,23 @@ func _check_starmap_availability() -> void:
 
 func add_world_environment() -> void:
 	var io_manager: IVIOManager = IVGlobal.program.IOManager
-	io_manager.callback(self, "_io_callback", "_io_finish")
+	io_manager.callback(_io_callback)
 
 
-func _io_callback(array: Array) -> void: # I/O thread!
+func _io_callback() -> void: # I/O thread!
 	var start_time := Time.get_ticks_msec()
 	var world_environment := WorldEnvironment.new()
 	world_environment.name = &"WorldEnvironment"
 	world_environment.environment = _get_environment()
-	array.append(world_environment)
-	array.append(start_time)
+#	data.append(world_environment)
+#	data.append(start_time)
+	var data := [world_environment, start_time]
+	_io_finish.call_deferred(data)
 
 
-func _io_finish(array: Array) -> void: # Main thread
-	var world_environment: WorldEnvironment = array[0]
-	var start_time: int = array[1]
+func _io_finish(data: Array) -> void: # Main thread
+	var world_environment: WorldEnvironment = data[0]
+	var start_time: int = data[1]
 	var universe: Node3D = IVGlobal.program.Universe
 	universe.add_child(world_environment) # this hangs a while!
 	var time := Time.get_ticks_msec() - start_time

@@ -80,7 +80,7 @@ func init_system_build() -> void:
 	_is_building_system = true
 	_system_build_count = 0
 	_system_finished_count = 0
-	_io_manager.callback(self, "_start_system_build_msec") # after existing I/O jobs
+	_io_manager.callback(_start_system_build_msec) # after existing I/O jobs
 #	if _main_prog_bar:
 #		_main_prog_bar.start(self)
 
@@ -101,9 +101,6 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	body.min_hud_dist_radius_multiplier = min_hud_dist_radius_multiplier
 	body.min_hud_dist_star_multiplier = min_hud_dist_star_multiplier
 	
-	# Note: many builders called here ask for IVIOManager.callback. These are
-	# processed in order, so the last callback at the end of this function will
-	# have the last "finish" callback.
 	if body.get_model_type() != -1:
 		var lazy_init: bool = body.flags & BodyFlags.IS_MOON  \
 				and not body.flags & BodyFlags.IS_NAVIGATOR_MOON
@@ -126,37 +123,30 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 	var rings_file_prefix := body.get_rings_file_prefix()
 	if _is_building_system:
 		_system_build_count += 1
-	var array := [body, file_prefix, is_star, rings_file_prefix]
-	_io_manager.callback(self, "_load_textures_on_io_thread", "_io_finish", array)
+	_io_manager.callback(_load_textures_on_io_thread.bind(body, file_prefix, is_star,
+			rings_file_prefix))
 
 
-func _load_textures_on_io_thread(array: Array) -> void: # I/O thread
-	var file_prefix: String = array[1]
-	var is_star: bool = array[2]
-	var rings_file_prefix: String = array[3]
+func _load_textures_on_io_thread(body: IVBody, file_prefix: String, is_star: bool,
+		rings_file_prefix: String) -> void: # I/O thread
 	var texture_2d: Texture2D = files.find_and_load_resource(_bodies_2d_search, file_prefix)
 	if !texture_2d:
 		texture_2d = _fallback_body_2d
-	array.append(texture_2d) # [4]
 	var texture_slice_2d: Texture2D
 	if is_star:
 		var slice_name = file_prefix + "_slice"
 		texture_slice_2d = files.find_and_load_resource(_bodies_2d_search, slice_name)
-	array.append(texture_slice_2d) # [5]
 	var rings_texture: Texture2D
 	if rings_file_prefix:
 		var rings_search: Array = IVGlobal.rings_search
 		rings_texture = files.find_and_load_resource(rings_search, rings_file_prefix)
 		if !rings_texture:
 			print("WARNING! Could not find rings texture prefix ", rings_file_prefix)
-	array.append(rings_texture) # [6]
+	_finish_on_main_thread.call_deferred(body, texture_2d, texture_slice_2d, rings_texture)
 
 
-func _io_finish(array: Array) -> void: # Main thread
-	var body: IVBody = array[0]
-	var texture_2d: Texture2D = array[4]
-	var texture_slice_2d: Texture2D = array[5]
-	var rings_texture: Texture2D = array[6]
+func _finish_on_main_thread(body: IVBody, texture_2d: Texture2D, texture_slice_2d: Texture2D,
+		rings_texture: Texture2D) -> void: # main thread
 	body.texture_2d = texture_2d
 	if texture_slice_2d:
 		body.texture_slice_2d = texture_slice_2d
@@ -173,7 +163,7 @@ func _io_finish(array: Array) -> void: # Main thread
 			_finish_system_build()
 
 
-func _start_system_build_msec(_array: Array) -> void: # I/O thread
+func _start_system_build_msec() -> void: # I/O thread
 	_system_build_start_msec = Time.get_ticks_msec()
 
 

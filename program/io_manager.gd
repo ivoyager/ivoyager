@@ -22,21 +22,23 @@ extends RefCounted
 
 # Manages a separate thread for I/O operations including resource loading.
 # Per Godot docs (3.x), loading a resource from multiple threads can crash.
-# Thus, you should not mix use of IVIOManager with resource loading on the Main
-# thread.
+# Thus, you should not mix use of IVIOManager with resource loading on the main
+# thread*.
 #
-# The "io_method" supplied in callback() is handy for doing "I/O-adjacent" work
+# The 'io_method' supplied in callback() is handy for doing I/O-adjacent work
 # such as processing resources or assembling parts of scene trees. However, all
-# interaction with the current scene tree MUST happen on the Main thread. To do
-# so, supply the "finish_method" callback.
+# interaction with the current scene tree MUST happen on the main thread*. To
+# do so, use call_deferred() at the end of your io_method.
 #
-# Work is processed in the order added on the I/O thread. Finish callbacks
-# on the Main thread will occur in future frames, but are guarantied to be in
-# the order added.
+# [* Godot 4.x edit: above statements may or may not be true anymore. Our code
+# still does all scene tree changes on the main thread.] 
 #
-# All methods will work on the Main thread if IVGlobal.use_threads == false.
+# All work is processed in the order added using the callback() method.
+#
+# If IVGlobal.use_threads == false, callback() will still work but the
+# callback will happen immediately on the main thread w/out queuing.
 
-signal finished() # emitted when all I/O jobs completed 
+signal finished() # emitted when all I/O jobs completed
 
 const DPRINT := false
 
@@ -45,11 +47,12 @@ var _state_manager: IVStateManager
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
-var _callback_queue := []
-var _process_stack := []
+var _callback_queue: Array[Callable] = []
+var _process_stack: Array[Callable] = []
 var _is_work := false
 var _stop_thread := false
 var _job_count := 0
+var _null_lambda := func(): return
 
 
 # *****************************************************************************
@@ -63,7 +66,7 @@ func _project_init() -> void:
 	_thread = Thread.new()
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
-	_thread.start(_run_thread.bind(0))
+	_thread.start(_run_thread)
 
 
 func _block_quit_until_finished() -> void:
@@ -80,108 +83,70 @@ func _block_quit_until_finished() -> void:
 # Public. These are NOT thread-safe! Call on Main thread.
 
 
-func callback(object: Object, io_method: String, finish_method := "", array := []) -> void:
-	# TODO34: Use Callable args
-	# Callback to io_method will happen on the I/O thread. Callback to optional
-	# finish_method will happen subsequently on the main thread. The array arg
-	# is optional here but is required in callback methods signatures.
-	# IVIOManager will emit "finished" on a later frame after all current
-	# callbacks have been processed. This is guaranteed to be delayed at least
-	# one frame.
+func callback(io_method: Callable) -> void:
+	# 'io_method' will be called on I/O thread if IVGlobal.use_threads == true.
+	# IVIOManager will emit 'finished' signal on main thread after all current
+	# callbacks have been processed.
 	_job_count += 1
-	var args := [object, io_method, finish_method, array]
 	if !_use_threads:
-		_process_callback(args)
+		_process_callback(io_method)
 		return
 	_mutex.lock()
-	_callback_queue.append(args)
+	_callback_queue.append(io_method)
 	_is_work = true
 	_mutex.unlock()
 	_semaphore.post()
 
 
-func store_var_to_file(value, file_path: String, err_object: Object = null, err_method := "") -> void:
-	# If err_object and err_method supplied, you WILL get a callback with
-	# single err argument (most likely, err = OK). If not, we print a simple
-	# "ERROR!..." message if there is a problem.
-	var array := [value, file_path]
-	var finish_method := ""
-	if err_object and err_method:
-		array.append(err_object)
-		array.append(err_method)
-		finish_method = "_store_var_to_file_finish"
-	callback(self, "_store_var_to_file", finish_method, array)
+func store_var_to_file(value: Variant, file_path: String, err_callback := _null_lambda) -> void:
+	# If err_callback supplied, you will get a callback with err argument. 
+	# Otherwise, we print a simple "ERROR!..." message if there is a problem.
+	callback(_store_var_to_file.bind(value, file_path, err_callback))
 
 
-func get_var_from_file(file_path: String, callback_object: Object, callback_method: String) -> void:
-	# Gets var from file on O/I thread; sends to callback_method on Main thread.
-	# Callback will receive 2 args: value, err. If err != OK, value = null.
-	var array := [file_path, callback_object, callback_method]
-	callback(self, "_get_var_from_file", "_get_var_from_file_finish", array)
+func get_var_from_file(file_path: String, result_callback: Callable) -> void:
+	# Gets var from file on O/I thread; sends to 'result_callback' on main
+	# thread. 'result_callback' will receive 2 args: 'value' and 'err'.
+	# (If err != OK, then value is null.)
+	callback(_get_var_from_file.bind(file_path, result_callback))
 
 
 # *****************************************************************************
 # specific function callbacks
 
-func _store_var_to_file(array: Array) -> void:
-	var value = array[0]
-	var file_path: String = array[1]
-	var user_callback := array.size() > 2
-	# TEST34
+func _store_var_to_file(value: Variant, file_path: String, err_callback: Callable) -> void:
+	var is_err_callback: bool = err_callback != _null_lambda
 	var file := FileAccess.open(file_path, FileAccess.WRITE)
 	var err := FileAccess.get_open_error()
-#	var file := File.new()
-#	var err := file.open(file_path, File.WRITE)
-	if user_callback:
-		array.append(err)
 	if err == OK:
 		file.store_var(value)
 		file.close() # file ready for another call before I/O thread proceeds
-		return
-	if !user_callback: # no err callback; just do simple error print
+	elif !is_err_callback: # no err callback; just do simple error print
 		prints("ERROR! Could not open for write:", file_path)
+	if is_err_callback and err_callback.is_valid():
+		err_callback.call_deferred(err)
 
 
-func _store_var_to_file_finish(array: Array) -> void:
-	# only here if user wanted err callback
-	var err_object: Object = array[2]
-	var err_method: String = array[3]
-	var err: int = array[4]
-	if is_instance_valid(err_object):
-		err_object.call(err_method, err)
-
-
-func _get_var_from_file(array: Array) -> void:
-	var file_path: String = array[0]
-	# TEST34
+func _get_var_from_file(file_path: String, result_callback: Callable) -> void:
 	var file := FileAccess.open(file_path, FileAccess.READ)
 	var err := FileAccess.get_open_error()
-#	var file := File.new()
-#	var err := file.open(file_path, File.READ)
-	array.append(err)
+	var value: Variant
 	if err == OK:
-		array.append(file.get_var())
+		value = file.get_var()
 		file.close()
-
-
-func _get_var_from_file_finish(array: Array) -> void:
-	var callback_object: Object = array[1]
-	var callback_method: String = array[2]
-	var err: int = array[3]
-	var value
-	if err == OK:
-		value = array[4]
-	if is_instance_valid(callback_object):
-		callback_object.call(callback_method, value, err)
+	if result_callback.is_valid():
+		result_callback.call_deferred(value, err)
 
 
 # *****************************************************************************
 # I/O processing
 
-func _run_thread(_dummy: int) -> void: # I/O thread
+func _run_thread() -> void: # I/O thread
 	print("Run I/O thread!")
 	while !_stop_thread:
 		if _is_work:
+			# We only lock while moving work items from _callback_queue to
+			# _process_stack!
 			_mutex.lock()
 			while _callback_queue:
 				_process_stack.append(_callback_queue.pop_back())
@@ -190,29 +155,21 @@ func _run_thread(_dummy: int) -> void: # I/O thread
 			# debug print only if something in _process_stack
 			assert(!DPRINT or (_process_stack and IVDebug.dprint("I/O batch: ", _process_stack.size()) or true))
 			while _process_stack:
-				var args: Array = _process_stack.pop_back()
-				_process_callback(args)
+				var io_method: Callable = _process_stack.pop_back()
+				_process_callback(io_method)
 		_semaphore.wait()
 	print("Stop I/O thread!")
 
 
-func _process_callback(args: Array) -> void: # I/O thread, or Main if !_use_threads
-	var object: Object = args[0]
-	var io_method: String = args[1]
-	var array: Array = args[3]
-	if is_instance_valid(object):
-		object.call(io_method, array)
-	_finish.call_deferred(args)
+func _process_callback(io_method: Callable) -> void: # I/O thread, or Main if !_use_threads
+	if io_method.is_valid():
+		io_method.call()
+	_finish.call_deferred()
 
 
-func _finish(args: Array) -> void: # Main thread
-	var finish_method: String = args[2]
-	if finish_method:
-		var object: Object = args[0]
-		var array: Array = args[3]
-		if is_instance_valid(object):
-			object.call(finish_method, array)
+func _finish() -> void: # Main thread
 	_job_count -= 1
 	if _job_count == 0:
 		assert(!DPRINT or IVDebug.dprint("I/O finished!"))
 		finished.emit()
+
