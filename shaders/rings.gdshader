@@ -1,4 +1,4 @@
-// rings.shader
+// rings.gdshader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
@@ -18,14 +18,10 @@
 // limitations under the License.
 // *****************************************************************************
 shader_type spatial;
-render_mode cull_disabled, unshaded;
+render_mode cull_disabled; //, unshaded;
 
 // Source data and expert guidance: https://bjj.mmedia.is/data/s_rings.
 //
-// FIXME: Existing problems:
-//  - Must be unshaded to work in GLES2 (which we need for planetarium). In any
-//    case, unshaded looks much better on the dark side. But we'll need to fix
-//    to have shadows.
 //
 // TODO: Possible improvements:
 //  - Should disappear w/ proximity. Adjust transparency?
@@ -35,7 +31,7 @@ render_mode cull_disabled, unshaded;
 
 uniform bool is_sun_above = false;
 uniform vec3 sun_translation;
-uniform sampler2D rings_texture;// : source_color;
+uniform sampler2D rings_texture; //source_color;
 uniform float inner_fraction = 0.5307358; // Saturn: 74510 km / 140390 km
 uniform float pixel_number = 13177.0; // saturn.rings: 13177.0
 uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1.0 / 13177.0
@@ -50,11 +46,9 @@ void fragment() {
 	float radius = sqrt(x * x + z * z);
 	if (radius > 1.0 || radius < inner_fraction) {
 		// out of ring boundary
+//		discard;
 		ALPHA = 0.0;
 	} else {
-		
-		
-		
 		
 		float ring_coord = (radius - inner_fraction) / (1.0 - inner_fraction); // 0.0 .. 1.0
 		
@@ -131,6 +125,11 @@ void fragment() {
 				}
 				phase -= min_phase; // 0.0 .. (1.0 - min_phase)
 				phase /= 1.0 - min_phase; // 0.0 .. 1.0
+				
+				// debug
+//				phase = 1.0;
+				
+				
 				float scatter = scatter_alpha_0.y * w1 + scatter_alpha_1.y * w2; // forward only
 				if (phase > 0.01) {
 					float backscatter = scatter_alpha_0.x * w1 + scatter_alpha_1.x * w2;
@@ -163,7 +162,7 @@ void fragment() {
 				ALBEDO = lit_color * scatter;
 				
 			}
-
+			
 			// This test blurs the sudden cull transition when camera is too near
 			float depth_fade = FRAGCOORD.z / 1.0;
 			if (depth_fade < alpha) {

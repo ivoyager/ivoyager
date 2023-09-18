@@ -1,4 +1,4 @@
-// orbit.id.shader
+// orbit.id.gdshader
 // This file is part of I, Voyager
 // https://ivoyager.dev
 // *****************************************************************************
