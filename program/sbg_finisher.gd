@@ -22,31 +22,71 @@ extends RefCounted
 
 # Adds SBGPoints and SBGOrbits for SmallBodiesGroup instances.
 
+signal system_build_finished()
+
+
 var _SBGPoints_: GDScript
 var _SBGOrbits_: GDScript
+
+var _io_manager: IVIOManager
+
+var _system_build_start_msec := 0
+var _is_building_system := false
+var _started_count := 0
+var _finished_count := 0
+var _sb_count := 0
 
 
 func _project_init() -> void:
 	IVGlobal.get_tree().node_added.connect(_on_node_added)
 	_SBGPoints_ = IVGlobal.procedural_classes[&"_SBGPoints_"]
 	_SBGOrbits_ = IVGlobal.procedural_classes[&"_SBGOrbits_"]
+	_io_manager = IVGlobal.program[&"IOManager"]
+
+
+func init_system_build() -> void:
+	# Called by IVSystemBuilder if this is system build for new or loaded game.
+	_is_building_system = true
+	_started_count = 0
+	_finished_count = 0
+	_sb_count = 0
 
 
 func _on_node_added(node: Node) -> void:
 	var sbg := node as IVSmallBodiesGroup
-	if sbg:
-		_init_hud_points(sbg)
-		_init_hud_orbits(sbg)
+	if !sbg:
+		return
+	if _is_building_system and _started_count == 0:
+		_system_build_start_msec = Time.get_ticks_msec()
+	_started_count += 2
+	_init_hud_points.call_deferred(sbg)
+	_init_hud_orbits.call_deferred(sbg)
 
 
 func _init_hud_points(sbg: IVSmallBodiesGroup) -> void:
 	var sbg_points: IVSBGPoints = _SBGPoints_.new(sbg)
 	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(sbg_points)
+	_finished_count += 1
+	_sb_count += sbg.get_number()
+	if _is_building_system and _finished_count == _started_count:
+		_finish_system_build()
 
 
 func _init_hud_orbits(sbg: IVSmallBodiesGroup) -> void:
 	var sbg_orbits: IVSBGOrbits = _SBGOrbits_.new(sbg)
 	var primary_body: IVBody = sbg.get_parent()
 	primary_body.add_child(sbg_orbits)
+	_finished_count += 1
+	if _is_building_system and _finished_count == _started_count:
+		_finish_system_build()
+
+
+func _finish_system_build() -> void: # main thread
+	_is_building_system = false
+	var msec :=  Time.get_ticks_msec() - _system_build_start_msec
+	@warning_ignore("integer_division")
+	print("Added %s small bodies in %s groups (IVSmallBodiesGroup) in %s msec"
+			% [_sb_count, _finished_count / 2, msec])
+	system_build_finished.emit()
 

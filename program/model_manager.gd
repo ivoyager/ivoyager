@@ -60,6 +60,8 @@ func _project_init() -> void:
 
 func _clear() -> void:
 	_lazy_tracker.clear()
+	_cull_times.clear()
+	_cull_models.clear()
 
 
 func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
@@ -78,8 +80,8 @@ func add_model(body: IVBody, lazy_init: bool) -> void: # Main thread
 		body.model_visibility_changed.connect(_add_lazy_model.bind(body), CONNECT_ONE_SHOT)
 		return
 	var model_type := body.get_model_type()
-	var array := [body, file_prefix, model_type, model_basis]
-	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_model", array)
+	_io_manager.callback(_get_model_on_io_thread.bind(body, file_prefix, model_type, model_basis,
+			false))
 
 
 func _add_lazy_model(is_visible: bool, body: IVBody) -> void: # Main thread
@@ -88,8 +90,8 @@ func _add_lazy_model(is_visible: bool, body: IVBody) -> void: # Main thread
 	var file_prefix := body.get_file_prefix()
 	var model_type := body.get_model_type()
 	var model_basis := body.model_reference_basis
-	var array := [body, file_prefix, model_type, model_basis]
-	_io_manager.callback(self, "_get_model_on_io_thread", "_finish_lazy_model", array)
+	_io_manager.callback(_get_model_on_io_thread.bind(body, file_prefix, model_type, model_basis,
+			true))
 
 
 func _remove_lazy_model(model: Node3D) -> void: # Main thread
@@ -103,9 +105,8 @@ func _remove_lazy_model(model: Node3D) -> void: # Main thread
 	_lazy_tracker.erase(model)
 
 
-func _get_model_on_io_thread(array: Array) -> void: # I/O thread
-	var file_prefix: String = array[1]
-	var model_basis: Basis = array[3]
+func _get_model_on_io_thread(body: IVBody, file_prefix: String, model_type: int,
+		model_basis: Basis, lazy_init: bool) -> void: # I/O thread
 	var model: Node3D
 	var path: String = _model_paths.get(file_prefix, "")
 	if path:
@@ -113,9 +114,8 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		var packed_scene: PackedScene = load(path)
 		model = packed_scene.instantiate()
 		model.transform.basis = model_basis
-		array[1] = model
+		_finish_model.call_deferred(body, model, lazy_init)
 		return
-	var model_type: int = array[2]
 	# TODO: We need a fallback asteroid-like model for non-ellipsoid
 	# fallthrough to constructed ellipsoid model
 	var emission_map: Texture2D
@@ -130,27 +130,18 @@ func _get_model_on_io_thread(array: Array) -> void: # I/O thread
 		albedo_map = _fallback_albedo_map
 	@warning_ignore("unsafe_method_access") # Possible replacement class
 	model = _SpheroidModel_.new(model_type, model_basis, albedo_map, emission_map)
-	array[1] = model
+	_finish_model.call_deferred(body, model, lazy_init)
 
 
-func _finish_model(array: Array) -> void: # Main thread
-	var body: IVBody = array[0]
-	var model: Node3D = array[1]
+func _finish_model(body: IVBody, model: Node3D, lazy_init: bool) -> void: # Main thread
 	body.add_child_to_model_space(model)
 	model.visible = body.model_visible
 	body.model_visibility_changed.connect(model.set_visible)
-
-
-func _finish_lazy_model(array: Array) -> void: # Main thread
-	var body: IVBody = array[0]
-	var model: Node3D = array[1]
-	body.add_child_to_model_space(model)
-	model.visible = body.model_visible
-	body.model_visibility_changed.connect(model.set_visible)
-	body.model_visibility_changed.connect(_record_visibility_event.bind(model))
-	if _lazy_tracker.size() > max_lazy_models:
-		_cull_lazy_models()
-	_lazy_tracker[model] = _times[1] # engine time
+	if lazy_init:
+		body.model_visibility_changed.connect(_record_visibility_event.bind(model))
+		if _lazy_tracker.size() > max_lazy_models:
+			_cull_lazy_models()
+		_lazy_tracker[model] = _times[1] # engine time
 
 
 func _cull_lazy_models() -> void: # Main thread

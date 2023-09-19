@@ -28,7 +28,7 @@ render_mode unshaded, cull_disabled, skip_vertex_transform;
 global uniform float iv_time;
 
 uniform float point_size = 3.0;
-uniform vec3 color = vec3(0.0, 1.0, 0.0);
+uniform vec3 color : source_color = vec3(0.0, 1.0, 0.0);
 
 varying flat vec3 fragment_id;
 

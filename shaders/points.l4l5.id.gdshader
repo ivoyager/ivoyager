@@ -44,7 +44,7 @@ uniform float lp_mean_longitude; // update per frame
 uniform int lp_integer; // 4 or 5; not currently used but should be for better ocillators
 uniform float characteristic_length; // semi-major axis of the secondary body
 uniform float point_size = 3.0;
-uniform vec3 color = vec3(0.0, 1.0, 0.0);
+uniform vec3 color : source_color = vec3(0.0, 1.0, 0.0);
 
 varying flat vec3 fragment_id;
 

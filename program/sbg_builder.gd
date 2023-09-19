@@ -32,7 +32,6 @@ const BINARY_FILE_MAGNITUDES := ["11.0", "11.5", "12.0", "12.5", "13.0", "13.5",
 
 var _sbg_mag_cutoff_override: float = IVGlobal.sbg_mag_cutoff_override
 var _SmallBodiesGroup_: Script
-var _asteroid_count := 0
 var _binary_dir: String
 
 
@@ -41,11 +40,9 @@ func _project_init() -> void:
 
 
 func build_sbgs() -> void:
-	_asteroid_count = 0
 	var n_groups := IVTableData.get_n_rows(&"small_bodies_groups")
 	for row in n_groups:
 		build_sbg(row)
-	print("Added orbital data for ", _asteroid_count, " small bodies (asteroids, etc.)")
 
 
 func build_sbg(row: int) -> void:
@@ -84,7 +81,6 @@ func build_sbg(row: int) -> void:
 			break
 		_load_group_binary(sbg, mag_str)
 	sbg.finish_binary_import()
-	_asteroid_count += sbg.get_number()
 	
 	# add to tree (SBGFinisher will add points and orbits HUDs)
 	primary.add_child(sbg)
