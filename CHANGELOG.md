@@ -8,14 +8,18 @@ See cloning and downloading instructions [here](https://www.ivoyager.dev/develop
 
 ## [v0.0.16] - Not Released
 
-**We're migrating to Godot 4!** The _master_ branch will have serious regressions (broken features) for a while yet. For a fully functional build, use release v0.0.15 developed for Godot 3.5.2.
+**We're migrating to Godot 4!**
 
 Currently under development using Godot 4.1.1.
 
-Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-08-14).
+Requires non-release (non-Git-tracked) **ivoyager_assets-2023-09-22-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-09-22).
+
+### Added
+* Anti-aliasing for Saturn Rings using shader LODs. The system can sample from many different LOD levels simultaneously when viewing rings up close at a steep angle, based on dF/dx & dF/dy of the rings radial postion (F = fragment, xy = screen pixels).
+* Saturn Rings intensity ramps up near phase-angle 0.0.
 
 ### Changed (assume all are breaking during migration!)
-* Added static class IVQFormat to replace previous IVQuantityFormatter (w/ similar but modified API).
+* Static class IVQFormat replaces previous IVQuantityFormatter (w/ similar but changed API).
 * The **entire table system** has been removed from 'ivoyager' submodule. It is now an editor plugin in repository [ivoyager_table_importer](https://github.com/ivoyager/ivoyager_table_importer/tree/master).
 * Godot 4 migration:
     * Implement .gdshaderinc files to eliminate duplicated shader code.
@@ -26,11 +30,15 @@ Requires non-release (non-Git-tracked) **ivoyager_assets-2023-08-14-godot4**; do
     * Implement lambdas in many classes.
     * Many unlisted migration changes!
 
+### Fixed
+* Shader bug preventing Saturn Rings from correctly sampling backscatter/forwardscatter/unlitside textures in v0.0.15.
+
+
 ### Known Migration Regressions
 * ~The Sun is not illuminating anything. We only have ambient light.~ fixed!
 * ~Asteroid points are broken. Trojans are in the right vicinity of L4 & 5, but wrongly distributed locally. All others are missing.~ fixed!
 * ~FragmentIdentifier system is currently disabled.~ fixed!
-* Saturn rings color is wrong. (The structure is ok so the shader is mostly working.)
+* ~Saturn rings color is wrong. (The structure is ok so the shader is mostly working.)~ fixed and better than before!
 * [Reported elsewhere] Godot 4.1.1 has issues with HTML5 exports.
 
 
