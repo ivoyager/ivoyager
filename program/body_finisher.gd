@@ -129,24 +129,31 @@ func _load_textures_on_io_thread(body: IVBody, file_prefix: String, is_star: boo
 	if is_star:
 		var slice_name = file_prefix + "_slice"
 		texture_slice_2d = files.find_and_load_resource(_bodies_2d_search, slice_name)
-	var rings_texture: Texture2D
+	var rings_images: Array[Image]
 	if rings_file_prefix:
 		var rings_search: Array = IVGlobal.rings_search
-		rings_texture = files.find_and_load_resource(rings_search, rings_file_prefix)
-		if !rings_texture:
-			print("WARNING! Could not find rings texture prefix ", rings_file_prefix)
-	_finish_on_main_thread.call_deferred(body, texture_2d, texture_slice_2d, rings_texture)
+		var backscatter: Texture2D = files.find_and_load_resource(rings_search,
+				rings_file_prefix + ".backscatter")
+		var forwardscatter: Texture2D = files.find_and_load_resource(rings_search,
+				rings_file_prefix + ".forwardscatter")
+		var unlitside: Texture2D = files.find_and_load_resource(rings_search,
+				rings_file_prefix + ".unlitside")
+		if !backscatter or !forwardscatter or !unlitside:
+			print("WARNING! Could not find all 3 rings textures for prefix ", rings_file_prefix)
+		else:
+			rings_images = [backscatter.get_image(), forwardscatter.get_image(), unlitside.get_image()]
+	_finish_on_main_thread.call_deferred(body, texture_2d, texture_slice_2d, rings_images)
 
 
 func _finish_on_main_thread(body: IVBody, texture_2d: Texture2D, texture_slice_2d: Texture2D,
-		rings_texture: Texture2D) -> void: # main thread
+		rings_images: Array[Image]) -> void: # main thread
 	body.texture_2d = texture_2d
 	if texture_slice_2d:
 		body.texture_slice_2d = texture_slice_2d
-	if rings_texture:
-		var main_light_source := body.get_parent_node_3d() # assumes no moon rings!
+	if rings_images:
+		var sunlight_source := body.get_parent_node_3d() # assumes no moon rings!
 		@warning_ignore("unsafe_method_access") # possible replacement class
-		var rings: Node3D = _Rings_.new(body, rings_texture, main_light_source)
+		var rings: Node3D = _Rings_.new(body, sunlight_source, rings_images)
 		body.add_child_to_model_space(rings)
 	_finished_count += 1
 	if _is_building_system:
