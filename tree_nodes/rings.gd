@@ -63,7 +63,11 @@ func _ready() -> void:
 	var outer_margin := (outer_radius + RENDER_MARGIN * ring_span) / outer_texture # render boundary
 	
 	scale = Vector3(outer_texture, outer_texture, outer_texture)
-	cast_shadow = SHADOW_CASTING_SETTING_ON # FIXME: No shadow!
+	
+	cast_shadow = SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	gi_mode = GI_MODE_DISABLED
+	
+	
 	mesh = PlaneMesh.new() # default 2x2
 	_rings_material.shader = IVGlobal.shared_resources[&"rings_shader"]
 	_rings_material.set_shader_parameter(&"textures", _rings_textures)

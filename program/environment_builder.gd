@@ -46,15 +46,10 @@ func _io_callback() -> void: # I/O thread!
 	var world_environment := WorldEnvironment.new()
 	world_environment.name = &"WorldEnvironment"
 	world_environment.environment = _get_environment()
-#	data.append(world_environment)
-#	data.append(start_time)
-	var data := [world_environment, start_time]
-	_io_finish.call_deferred(data)
+	_finish.call_deferred(world_environment, start_time)
 
 
-func _io_finish(data: Array) -> void: # Main thread
-	var world_environment: WorldEnvironment = data[0]
-	var start_time: int = data[1]
+func _finish(world_environment: WorldEnvironment, start_time: int) -> void: # Main thread
 	var universe: Node3D = IVGlobal.program.Universe
 	universe.add_child(world_environment) # this hangs a while!
 	var time := Time.get_ticks_msec() - start_time
@@ -85,33 +80,9 @@ func _get_environment() -> Environment: # I/O thread!
 	env.background_energy_multiplier = 1.0
 	env.ambient_light_color = Color.WHITE
 	env.ambient_light_sky_contribution = 0.0
-	env.ambient_light_energy = 0.03
-	env.glow_enabled = true
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
-	env.glow_intensity = 0.8
-	env.glow_bloom = 1.0
-	env.set_glow_level(0, false)
-	env.set_glow_level(1, true)
-	env.set_glow_level(2, false)
-	env.set_glow_level(3, true)
-	env.set_glow_level(4, false)
-	env.set_glow_level(5, true)
-	env.set_glow_level(6, true)
-	# FIXME34
-#	if IVGlobal.is_gles2: # GLES2 lighting is different than GLES3!
-#		env.ambient_light_energy = 0.15
-#		env.glow_hdr_threshold = 0.9
-#		env.glow_intensity = 0.8
-#		env.glow_bloom = 0.5
-#	elif IVGlobal.auto_exposure_enabled:
-#		env.auto_exposure_enabled = true
-#		env.auto_exposure_speed = 5.0
-#		env.auto_exposure_scale = 0.4
-#		env.auto_exposure_min_luma = 0.165 # 0.18 # bigger reduces overexposure blowout
-#		env.auto_exposure_max_luma = 8.0 # small values increase overexp blowout (no auto corr)
-#		env.glow_hdr_luminance_cap = 12.0 # can't see any effect
-#		env.glow_hdr_scale = 2.0 # can't see any effect
-##		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-#		env.tonemap_exposure = 0.4 # adjust w/ auto_exposure_scale
+	env.ambient_light_energy = 0.01
+	
+#	env.sdfgi_enabled = true
+	
 	return env
 
