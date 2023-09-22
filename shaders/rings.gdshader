@@ -18,159 +18,129 @@
 // limitations under the License.
 // *****************************************************************************
 shader_type spatial;
-render_mode cull_disabled; //, unshaded;
+render_mode cull_disabled;
 
-// Source data and expert guidance: https://bjj.mmedia.is/data/s_rings.
+// Source data and color/phase-angle tips: https://bjj.mmedia.is/data/s_rings.
+// See https://github.com/ivoyager/ivbinary_maker for conversion of source data
+// to the 3 png files. The 3 images have the same alpha channel.
 //
+// Adjusted to match https://bjj.mmedia.is/3dtest/saturn/saturn_montage.jpg
+// on the lit side. Those are rendered (not real) so we still need ground truth
+// comparisons to Cassini images (lit and unlit sides).
 //
-// TODO: Possible improvements:
-//  - Should disappear w/ proximity. Adjust transparency?
-//  - Per Bjorn, slight dimming and red shift with greater phase angle.
-//  - Aliasing is very bad on the dark side. Maybe blur the transparency?
+// The png files must be imported as Texture2D with mipmaps/generate = true.
+// I guess our n x 2 texture gets shrunk to n/2 x 1, n/4 x 1, n/8 x 1,
+// n/16 x 1, n/32 x 1, and so on. We always texelFetch with y=0. The LOD level
+// can vary hugely across the rings when close at a steep angle, from 0 to 5+
+// in the same view.
+//
+// ALBEDO is set with color values >> 1.0. It's necessary to get proper
+// brightness given the 'thinness' (i.e., transparency) of our material with
+// black space as background.
+// 
+// WARNING! For litside determination, FRONT_FACING is not reliable as of Godot
+// 4.2.2. It's sometimes wrong on my laptop (NVIDIA GeForce GTX 1650 Ti). For
+// this reason and to save shader computation, lit versus unlit side is
+// determined externally and set as uniform.
+// 
+
+// set by rings.gd once
+uniform sampler2DArray textures : source_color; // backscatter, forwardscatter, unlitside
+uniform float texture_width;
+uniform float texture_start; // from center
+uniform float inner_margin; // from center, includes padding (> texture_start)
+uniform float outer_margin; // from center, includes padding (< 1.0)
+
+// set by rings.gd each frame if changed
+uniform vec4 frame_data; // xyz, sun_position; w, +1.0 if litside else -1.0
+
+// visual settings
+uniform float dfdr_multiplier = 0.3; // for LOD; smaller for more detail & more aliasing
+uniform float phase_exponent = 6.0; // larger narrows the low phase-angle effect
+uniform float forwardscatter_redshift = 1.05;
+uniform float unlitside_boost = 3.0; // general brightening
+uniform float litside_phase_boost = 6.0; // low phase-angle brightening
+uniform float unlitside_phase_boost = 4.0;
 
 
-uniform bool is_sun_above = false;
-uniform vec3 sun_translation;
-uniform sampler2D rings_texture; //source_color;
-uniform float inner_fraction = 0.5307358; // Saturn: 74510 km / 140390 km
-uniform float pixel_number = 13177.0; // saturn.rings: 13177.0
-uniform float pixel_size = 7.5889808e-5; // saturn.rings: 1.0 / 13177.0
-uniform float min_phase = -0.75; // cos(139 degress), where we apply only forward scatter
-uniform vec3 unlit_color = vec3(1.0, 0.97075, 0.952);
-uniform float proximity_fade = 1.0;
+
+vec4 sample_color(int texel, float texel_fraction, int array_index, int lod) {
+	// Ring span is end-padded with fully transparent texels to avoid edge
+	// artifacts.
+	vec4 sample = texelFetch(textures, ivec3(texel, 0, array_index), lod);
+	texel += 1;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod);
+	texel += 1;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod);
+	texel += 1;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod) * texel_fraction;
+	texel -= 6;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod) * (1.0 - texel_fraction);
+	texel += 1;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod);
+	texel += 1;
+	sample += texelFetch(textures, ivec3(texel, 0, array_index), lod);
+	return sample / 6.0;
+}
 
 
 void fragment() {
+	// remap plane to a 2x2 square with 0,0 center
 	float x = UV.x * 2.0 - 1.0;
-	float z = UV.y * 2.0 - 1.0;
-	float radius = sqrt(x * x + z * z);
-	if (radius > 1.0 || radius < inner_fraction) {
-		// out of ring boundary
-//		discard;
-		ALPHA = 0.0;
+	float y = UV.y * 2.0 - 1.0;
+	float radius = sqrt(x * x + y * y);
+	
+	// dFdx() & dFdy() must be before the 'if' fork to avoid edge artifacts!
+	float texture_fraction = (radius - texture_start) / (1.0 - texture_start);
+	float texel_position = texture_fraction * texture_width;
+	float dfdx = dFdx(texel_position); // texels per horizontal screen pixel
+	float dfdy = dFdy(texel_position); // texels per vertical screen pixel
+	
+	if (radius < inner_margin || radius > outer_margin) {
+		// out of render area
+		discard;
+	
 	} else {
+	
+		// LOD for anti-aliasing
+		float dfdr = sqrt(dfdx * dfdx + dfdy * dfdy);
+		float lod_map = log2(dfdr * dfdr_multiplier);
+		lod_map = clamp(round(lod_map), 0.0, 8.0);
+		int lod = int(lod_map);
 		
-		float ring_coord = (radius - inner_fraction) / (1.0 - inner_fraction); // 0.0 .. 1.0
+		// position in the LOD texture
+		texel_position /= float(1 << lod);
+		int texel = int(texel_position);
+		float texel_fraction = fract(texel_position);
 		
-		// antialiasing sample coordinates & weights
-		float pixel_mod = mod(ring_coord, pixel_size);
-		float x1 = ring_coord - pixel_mod * pixel_size;
-		float x0 = x1 - pixel_size;
-		float x2 = x1 + pixel_size;
-		float x3 = x2 + pixel_size;
-		float offset0 = (x0 - ring_coord) * pixel_number;
-		float offset1 = (x1 - ring_coord) * pixel_number;
-		float offset2 = (x2 - ring_coord) * pixel_number;
-		float offset3 = (x3 - ring_coord) * pixel_number;
-		float w0 = exp(-(offset0 * offset0));
-		float w1 = exp(-(offset1 * offset1));
-		float w2 = exp(-(offset2 * offset2));
-		float w3 = exp(-(offset3 * offset3));
-		float sum_weights = w0 + w1 + w2 + w3;
-		w0 /= sum_weights;
-		w1 /= sum_weights;
-		w2 /= sum_weights;
-		w3 /= sum_weights;
-		float half_pixel = pixel_size * 0.5;
-		x0 += half_pixel;
-		x1 += half_pixel;
-		x2 += half_pixel;
-		x3 += half_pixel;
-		vec4 scatter_alpha_0;
-		if (x0 < 0.0) {
-			scatter_alpha_0 = vec4(0.0);
+		// phase effects (phase_mix = 1.0 corresponds to phase angle = 0.0)
+		vec3 sun_vector = (VIEW_MATRIX * vec4(frame_data.xyz, 1.0)).xyz;
+		float phase_mix = dot(normalize(sun_vector), VIEW) / 2.0 + 0.5;
+		phase_mix = pow(phase_mix, phase_exponent);
+		
+		vec4 color;
+		vec3 albedo;
+		
+		if (frame_data.w > 0.0) {
+			// lit side
+			vec4 backscatter = sample_color(texel, texel_fraction, 0, lod);
+			vec4 forwardscatter = sample_color(texel, texel_fraction, 1, lod);
+			forwardscatter.r *= forwardscatter_redshift;
+			color = mix(forwardscatter, backscatter, phase_mix);
+			albedo = color.rgb * (litside_phase_boost * phase_mix + 1.0);
 		} else {
-			scatter_alpha_0 = texture(rings_texture, vec2(x0, 0.0));
+			// unlit side
+			color = sample_color(texel, texel_fraction, 2, lod);
+			albedo = color.rgb * unlitside_boost;
+			albedo *= (unlitside_phase_boost * phase_mix + 1.0);
 		}
-		vec4 scatter_alpha_1 = texture(rings_texture, vec2(x1, 0.0));
-		vec4 scatter_alpha_2;
-		vec4 scatter_alpha_3;
-		if (x3 > 1.0) {
-			scatter_alpha_3 = vec4(0.0);
-			if (x2 > 1.0) {
-				scatter_alpha_2 = vec4(0.0);
-			} else {
-				scatter_alpha_2 = texture(rings_texture, vec2(x2, 0.0));
-			}
-		} else {
-			scatter_alpha_3 = texture(rings_texture, vec2(x3, 0.0));
-			scatter_alpha_2 = texture(rings_texture, vec2(x2, 0.0));
-		}
-		float alpha = (scatter_alpha_0.w * w1 + scatter_alpha_1.w * w2
-				+ scatter_alpha_2.w * w2 + scatter_alpha_3.w * w3);
-		if (alpha < 0.005) {
-			ALPHA = 0.0;
-		} else {
-			
-			if (FRONT_FACING != is_sun_above) {
-				
-				// unlit side
-				float unlit_scatter = scatter_alpha_0.z * w1 + scatter_alpha_1.z * w2;
-				ALBEDO = unlit_color * unlit_scatter;
-				
-			} else {
-				
-				// lit side
-				
-				// back-/forward-scatter mix
-				// We use 'phase' (=cos(phase_angle)), clipped for min_phase
-				// and scaled to 0.0 .. 1.0. Note that 'phase' +1.0 corresponds
-				// to phase angle 0 (100% backscatter). 
-				vec3 sun_vector = (VIEW_MATRIX * vec4(sun_translation.x, sun_translation.y,
-						sun_translation.z, 1.0)).xyz;
-				
-				float phase = dot(normalize(sun_vector), normalize(VIEW)); // cos(phase_angle)
-				if (phase < min_phase) { // only gets forward scatter
-					phase = min_phase;
-				}
-				phase -= min_phase; // 0.0 .. (1.0 - min_phase)
-				phase /= 1.0 - min_phase; // 0.0 .. 1.0
-				
-				// debug
-//				phase = 1.0;
-				
-				
-				float scatter = scatter_alpha_0.y * w1 + scatter_alpha_1.y * w2; // forward only
-				if (phase > 0.01) {
-					float backscatter = scatter_alpha_0.x * w1 + scatter_alpha_1.x * w2;
-					scatter = mix(scatter, backscatter, phase);
-				}
-				// lit color
-				vec3 lit_color_0;
-				if (x0 < 0.0) {
-					lit_color_0 = vec3(1.0);
-				} else {
-					lit_color_0 = texture(rings_texture, vec2(x0, 1.0)).rgb;
-				}
-				vec3 lit_color_1 = texture(rings_texture, vec2(x1, 1.0)).rgb;
-				vec3 lit_color_2;
-				vec3 lit_color_3;
-				if (x3 > 1.0) {
-					lit_color_3 = vec3(1.0);
-					if (x2 > 1.0) {
-						lit_color_2 = vec3(1.0);
-					} else {
-						lit_color_2 = texture(rings_texture, vec2(x2, 1.0)).rgb;
-					}
-				} else {
-					lit_color_3 = texture(rings_texture, vec2(x3, 1.0)).rgb;
-					lit_color_2 = texture(rings_texture, vec2(x2, 1.0)).rgb;
-				}
-				vec3 lit_color = ((lit_color_0 * w0) + (lit_color_1 * w2)
-						+ (lit_color_2 * w2) + (lit_color_3 * w3));
-				
-				ALBEDO = lit_color * scatter;
-				
-			}
-			
-			// This test blurs the sudden cull transition when camera is too near
-			float depth_fade = FRAGCOORD.z / 1.0;
-			if (depth_fade < alpha) {
-				ALPHA = depth_fade;
-			} else {
-				ALPHA = alpha;
-			}
-		}
+		
+		// debug lod mapping
+//		albedo = vec3(lod_map / 8.0, lod_map / 8.0, 1.0 - lod_map / 8.0);
+		
+		ALBEDO = albedo;
+		ALPHA = color.a;
+	
 	}
 }
 
