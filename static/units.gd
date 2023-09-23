@@ -213,6 +213,8 @@ static var multipliers := {
 	&"TB" : 8e12,
 	# misc
 	&"deg/Cy^2" : DEG / (CENTURY * CENTURY),
+	&"m^0.5" : METER ** 0.5,
+	&"m^0.4" : METER ** 0.4,
 }
 
 static var lambdas := {

@@ -78,6 +78,9 @@ func _ready() -> void:
 	
 	set_surface_override_material(0, _rings_material)
 	rotate_x(PI / 2.0)
+	
+	# debug sim scale
+	print(outer_radius)
 
 
 func _process(_delta: float) -> void:
