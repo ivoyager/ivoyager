@@ -1,8 +1,8 @@
-	shadow_enabled	omni_range	omni_attenuation	light_energy	light_specular
-Type	BOOL	FLOAT	FLOAT	FLOAT	FLOAT
-Unit		au			
-Default	TRUE				
+	omni_attenuation	omni_range	distance_fade_shadow	light_energy	shadow_enabled
+Type	FLOAT	FLOAT	FLOAT	FLOAT	BOOL
+Unit		au	au		
+Default					TRUE
 Prefix/OMNI_LIGHT_					
-SUN		120	0.4	5e4	0.5
+SUN	0.4	120	120	5e4	
 # Subjective energy & attenuation. We want a little blow-out					
 # at Mercury, but good light on Saturn and still some at Pluto.					

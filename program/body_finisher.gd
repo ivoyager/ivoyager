@@ -106,6 +106,18 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		# set properties entirely from table
 		IVTableData.db_build_object_all_fields(omni_light, &"omni_lights", omni_light_type)
 		body.add_child(omni_light)
+		
+		
+		# debug try: sdfgi_enabled 
+		
+		
+		omni_light.light_bake_mode = Light3D.BAKE_DISABLED
+		
+		prints("omni_range", omni_light.omni_range)
+		prints("distance_fade_shadow", omni_light.distance_fade_shadow)
+		
+		
+		
 	if body.orbit:
 		@warning_ignore("unsafe_method_access") # possible replacement class
 		var body_orbit: Node3D = _BodyOrbit_.new(body)
