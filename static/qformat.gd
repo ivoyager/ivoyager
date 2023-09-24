@@ -20,8 +20,9 @@
 class_name IVQFormat
 extends Object
 
-# TODO plugin: We can't make this a standalone static util because tr()
-# isn't accessible. In the core plugin reorg this will become a singleton.
+# TODO plugin: This shouldn't be a static util because it depends on a non-
+# static method ('tr') and plugin method (IVTableUtils unit conversions). In the
+# core plugin reorg this will become a singleton.
 
 
 # Provides functions for formatting numbers or unit quantities. Requires static
@@ -73,19 +74,17 @@ const LOG_OF_10 := log(10.0)
 
 
 # project vars
-static var multipliers := units.multipliers # same as table import, etc.
-static var lambdas := units.lambdas
 
-static var exponent_str := "e" # e.g., set to "E", "x10^" or " x 10^"
+static var exponent_str := "e" # likely alternatives: "E", "x10^" or " x 10^"
 
 # The next three vars MUST be updated together!
-static var prefix_names: Array[String] = [ # e-24, ..., e24
-	"yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
-	"", "kilo", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta"
+static var prefix_names: Array[String] = [ # e-30, ..., e30
+	"quecto", "ronto", "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli",
+	"", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta", "ronna", "quetta",
 ]
-static var prefix_symbols: Array[String] = [ # e-24, ..., e24
-	"y", "z", "a", "f", "p", "n", char(181), "m",
-	"", "k", "M", "G", "T", "P", "E", "Z", "Y"
+static var prefix_symbols: Array[String] = [ # e-30, ..., e30
+	"q", "r", "y", "z", "a", "f", "p", "n", char(181), "m",
+	"", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q",
 ]
 static var prefix_offset := prefix_symbols.find("") # UPDATE if prefix_symbols changed!
 
@@ -95,15 +94,14 @@ static var large_numbers: Array[StringName] = [
 	&"TXT_SEXTILLION", &"TXT_SEPTILLION", &"TXT_OCTILLION", &"TXT_NONILLION", &"TXT_DECILLION"
 ] # e6, ..., e33
 
-# Unit symbols in the three dictionaries below must be present in
-# multipliers or lambdas dictionaries. (The converse is not true.)
 
 static var long_forms := {
-	# If missing here, we fallback to 'short_forms', then the unit name itself.
+	# If missing here, we fallback to 'short_forms', then the unit StringName
+	# itself.
 	#
-	# Note that you can dynamically prefix any "base" unit (m, g, Hz, Wh, etc.)
+	# Note that you can dynamically prefix any base unit (m, g, Hz, Wh, etc.)
 	# using prefixed_unit(). We have commonly used already-prefixed here
-	# because it is common to want to display fixed units such as: "3.00e9 km".
+	# because it is common to want to display fixed units such as '3.00e9 km'.
 	
 	# time
 	&"s" : &"TXT_SECONDS",
@@ -199,8 +197,8 @@ static var long_forms := {
 }
 
 static var short_forms := {
-	# If missing here, we fallback to the unit name itself. (Usually we do want
-	# the unit name: 'km', 'km/s', etc.)
+	# If missing here, we fallback to the unit StringName itself (that's
+	# usually what we want: 'km', 'km/s', etc.).
 	&"deg" : &"TXT_DEG",
 	&"degC" : &"TXT_DEG_C",
 	&"degF" : &"TXT_DEG_F",
@@ -211,7 +209,7 @@ static var short_forms := {
 }
 
 static var skip_space := {
-	# No space before short form or raw symbol (e.g., degrees symbol).
+	# No space before short_forms or StringName (e.g., degrees symbol).
 	&"deg" : true,
 	&"degC" : true,
 	&"degF" : true,
@@ -349,7 +347,7 @@ static func number(x: float, precision := 3, num_type := NUM_DYNAMIC) -> String:
 
 
 static func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> String:
-	# returns integer string up to "999999", then "1.00 Million", etc.;
+	# Returns integer string up to '999999', then '1.00 Million', etc.
 	if abs(x) < 1e6:
 		return "%.f" % x
 	var exp_3s_index := int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
@@ -370,15 +368,15 @@ static func named_number(x: float, precision := 3, case_type := CASE_MIXED) -> S
 
 static func prefixed_named_number(x: float, prefix: String, precision := 3, case_type := CASE_MIXED
 		) -> String:
-	# e.g., "$1.00 Billion"
+	# Same as named_number() but prefixes the number, e.g., '$1.00 Billion'.
 	return prefix + named_number(x, precision, case_type)
 
 
 static func fixed_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
-	# unit must be in multipliers or lambdas dicts (by default these are
-	# multipliers and lambdas in ivoyager/static/units.gd)
-	x = units.convert_quantity(x, unit, false, multipliers, lambdas, false)
+	# Use for fixed unit irrespective of value, e.g., '5.97e24 kg'.
+	
+	x = IVTableUtils.convert_quantity(x, unit, false, false)
 	var number_str := number(x, precision, num_type)
 	
 	var unit_str: String
@@ -399,17 +397,18 @@ static func fixed_unit(x: float, unit: StringName, precision := 3, num_type := N
 	return number_str + unit_str
 
 
-static func prefixed_unit(x: float, unit: StringName, precision := -1, num_type := NUM_DYNAMIC,
+static func prefixed_unit(x: float, unit: StringName, precision := 3, num_type := NUM_DYNAMIC,
 		long_form := false, case_type := CASE_MIXED) -> String:
-	# Example results: "1.00 Gt" or "1.00 Gigatonnes" (w/ unit = "t" and
-	# long_form = false or true, respectively). You won't see scientific
-	# notation unless the internal value falls outside of the prefixes range.
-	# WARNING: Don't try to prefix an already-prefixed unit (eg, km) or any
-	# composite unit where the first unit has a power other than 1 (eg, m^3).
+	# Example results, '5.00 Gt' or '5.00 gigatonnes', with unit == 't' and
+	# long_form == false or true, respectively. You won't see scientific
+	# notation unless the value falls outside of the prefixes range.
+	# WARNING: Don't try to prefix an already-prefixed unit (e.g., 'km') or any
+	# composite unit where the first unit has a power other than 1 (eg, 'm^3').
 	# The result will look weird and/or be wrong (eg, 1000 m^3 -> 1.00 km^3).
-	# unit == &"" ok; otherwise, unit must be in multipliers or lamdas dicts.
+	# unit == &"" ok; otherwise, unit must be in multipliers or lamdas dicts
+	# in IVTableUtils.
 	if unit:
-		x = units.convert_quantity(x, unit, false, multipliers, lambdas, false)
+		x = IVTableUtils.convert_quantity(x, unit, false, false)
 	var exp_3s_index := 0
 	if x != 0.0:
 		exp_3s_index = int(floor(log(abs(x)) / (LOG_OF_10 * 3.0)))
