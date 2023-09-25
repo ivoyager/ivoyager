@@ -24,8 +24,10 @@ extends Node
 # instantiate as a full set, e.g., 10000s of asteroids.
 #
 # Packed arrays are used as source data in a form that is ready-to-use to
-# constitute ArrayMesh's in IVSBGPoints. Packed arrays are also very fast to
+# constitute ArrayMesh in IVSBGPoints. Packed arrays are also very fast to
 # read/write in the game save file.
+#
+# 'de' not implemented (amplitude of e libration in secular resonence).
 
 const units := preload("res://ivoyager/static/units.gd")
 const utils := preload("res://ivoyager/static/utils.gd")
@@ -43,9 +45,8 @@ const PERSIST_PROPERTIES := [
 	&"names",
 	&"e_i_Om_w",
 	&"a_M0_n",
-	&"s_g_mag",
+	&"s_g_mag_de",
 	&"da_D_f_th0",
-	&"de",
 ]
 
 # persisted
@@ -58,24 +59,11 @@ var max_apoapsis := 0.0
 
 # binary import data
 var names := PackedStringArray()
+var e_i_Om_w := PackedFloat32Array() # fixed & precessing (except e in sec res)
+var a_M0_n := PackedFloat32Array() # librating in l-point objects
+var s_g_mag_de := PackedFloat32Array() # orbit precessions, magnitude, & e amplitude (sec res only)
+var da_D_f_th0 := PackedFloat32Array() # Trojans only
 
-# new packed data
-var e_i_Om_w := PackedFloat32Array()
-var a_M0_n := PackedFloat32Array()
-var s_g_mag := PackedFloat32Array()
-
-# L4/L5
-var da_D_f_th0 := PackedFloat32Array()
-var de := PackedFloat32Array() # NOT USED
-
-
-# temp import vars until we rebuild ivbinary_maker
-var temp_e_i_Om_w := PackedColorArray() # fixed & precessing (e librates for secular resonance)
-var temp_a_M0_n := PackedVector3Array() # librating in l-point objects
-var temp_s_g := PackedVector2Array() # orbit precessions
-var temp_da_D_f := PackedVector3Array() # Trojans: a amplitude, L amplitude, and libration frequency
-var temp_th0_de := PackedVector2Array() # Trojans: libration at epoch [, & sec res: e amplitude]
-var temp_magnitudes := PackedFloat32Array()
 
 # *****************************************************************************
 # public API
@@ -100,20 +88,6 @@ func get_orbit_elements(index: int) -> Array[float]:
 	], TYPE_FLOAT, &"", null)
 
 
-
-#	var e_i_Om_w_item := temp_e_i_Om_w[index]
-#	var a_M0_n_item := temp_a_M0_n[index]
-#	return Array([
-#		a_M0_n_item[0],
-#		e_i_Om_w_item[0],
-#		e_i_Om_w_item[1],
-#		e_i_Om_w_item[2],
-#		e_i_Om_w_item[3],
-#		a_M0_n_item[1],
-#		a_M0_n_item[2],
-#	], TYPE_FLOAT, &"", null)
-
-
 # *****************************************************************************
 # ivoyager internal methods
 
@@ -130,13 +104,13 @@ func init(name_: StringName, sbg_alias_: StringName, sbg_class_: int,
 func read_binary(binary: FileAccess) -> void:
 	var binary_data: Array = binary.get_var()
 	names.append_array(binary_data[0])
-	temp_magnitudes.append_array(binary_data[1])
-	temp_e_i_Om_w.append_array(binary_data[2])
-	temp_a_M0_n.append_array(binary_data[3])
-	temp_s_g.append_array(binary_data[4])
+	
+	e_i_Om_w.append_array(binary_data[1])
+	a_M0_n.append_array(binary_data[2])
+	s_g_mag_de.append_array(binary_data[3])
+	
 	if lp_integer != -1:
-		temp_da_D_f.append_array(binary_data[5])
-		temp_th0_de.append_array(binary_data[6])
+		da_D_f_th0.append_array(binary_data[4])
 
 
 func finish_binary_import() -> void:
@@ -146,8 +120,8 @@ func finish_binary_import() -> void:
 	var index := 0
 	if lp_integer == -1:
 		while index < size:
-			var a: float = temp_a_M0_n[index][0]
-			var e: float = temp_e_i_Om_w[index][0]
+			var a: float = a_M0_n[index * 3]
+			var e: float = e_i_Om_w[index * 4]
 			var apoapsis := a * (1.0 + e)
 			if max_apoapsis < apoapsis:
 				max_apoapsis = apoapsis
@@ -155,59 +129,12 @@ func finish_binary_import() -> void:
 	else:
 		var characteristic_length := secondary_body.orbit.get_semimajor_axis()
 		while index < size:
-			var da: float = temp_da_D_f[index][0]
-			var e: float = temp_e_i_Om_w[index][0]
+			var da: float = da_D_f_th0[index * 4]
+			var e: float = e_i_Om_w[index * 4]
 			var apoapsis := (characteristic_length + da) * (1.0 + e)
 			if max_apoapsis < apoapsis:
 				max_apoapsis = apoapsis
 			index += 1
-	
-	# WIP - Convert to new packed arrays until we rebuild ivbinary_maker
-	index = 0
-	e_i_Om_w.resize(size * 4)
-	a_M0_n.resize(size * 3)
-	s_g_mag.resize(size * 3)
-	if lp_integer == -1:
-		while index < size:
-			e_i_Om_w[index * 4] = temp_e_i_Om_w[index][0]
-			e_i_Om_w[index * 4 + 1] = temp_e_i_Om_w[index][1]
-			e_i_Om_w[index * 4 + 2] = temp_e_i_Om_w[index][2]
-			e_i_Om_w[index * 4 + 3] = temp_e_i_Om_w[index][3]
-			a_M0_n[index * 3] = temp_a_M0_n[index][0]
-			a_M0_n[index * 3 + 1] = temp_a_M0_n[index][1]
-			a_M0_n[index * 3 + 2] = temp_a_M0_n[index][2]
-			s_g_mag[index * 3] = temp_s_g[index][0]
-			s_g_mag[index * 3 + 1] = temp_s_g[index][1]
-			s_g_mag[index * 3 + 2] = temp_magnitudes[index]
-			index += 1
-	else:
-		da_D_f_th0.resize(size * 4)
-		de.resize(size)
-		while index < size:
-			e_i_Om_w[index * 4] = temp_e_i_Om_w[index][0]
-			e_i_Om_w[index * 4 + 1] = temp_e_i_Om_w[index][1]
-			e_i_Om_w[index * 4 + 2] = temp_e_i_Om_w[index][2]
-			e_i_Om_w[index * 4 + 3] = temp_e_i_Om_w[index][3]
-			a_M0_n[index * 3] = temp_a_M0_n[index][0]
-			a_M0_n[index * 3 + 1] = temp_a_M0_n[index][1]
-			a_M0_n[index * 3 + 2] = temp_a_M0_n[index][2]
-			s_g_mag[index * 3] = temp_s_g[index][0]
-			s_g_mag[index * 3 + 1] = temp_s_g[index][1]
-			s_g_mag[index * 3 + 2] = temp_magnitudes[index]
-			da_D_f_th0[index * 4] = temp_da_D_f[index][0]
-			da_D_f_th0[index * 4 + 1] = temp_da_D_f[index][1]
-			da_D_f_th0[index * 4 + 2] = temp_da_D_f[index][2]
-			da_D_f_th0[index * 4 + 3] = temp_th0_de[index][0]
-			de[index] = temp_th0_de[index][1]
-			index += 1
-	
-	temp_e_i_Om_w.clear()
-	temp_a_M0_n.clear()
-	temp_s_g.clear()
-	temp_magnitudes.clear()
-	temp_da_D_f.clear()
-	temp_th0_de.clear()
-	
 	
 	# feedback
 	assert(!VPRINT or IVDebug.dprint("%s %s asteroids loaded from binaries"
