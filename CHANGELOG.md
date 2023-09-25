@@ -6,13 +6,14 @@ File format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 See cloning and downloading instructions [here](https://www.ivoyager.dev/developers/).
 
-## [v0.0.16] - Not Released
+## [v0.0.16] - 2023-09-25
 
-**We're migrating to Godot 4!**
+**We've migrated to Godot 4!**
 
-Currently under development using Godot 4.1.1.
+Developed for Godot 4.1.1.
 
-Requires non-release (non-Git-tracked) **ivoyager_assets-2023-09-22-godot4**; download [here](https://github.com/ivoyager/non_release_assets/releases/tag/2023-09-22).
+Requires non-Git-tracked **ivoyager_assets-0.0.16**; find in [ivoyager releases](https://github.com/ivoyager/ivoyager/releases).    
+Requires [ivoyager_table_reader](https://github.com/ivoyager/ivoyager_table_importer) v0.0.4.
 
 ### Added
 * Anti-aliasing for Saturn Rings using shader LODs. The system can sample from many different LOD levels simultaneously when viewing rings up close at a steep angle, based on dF/dx & dF/dy of the rings radial postion (F = fragment, xy = screen pixels).
@@ -512,7 +513,7 @@ Repository ivoyager_planetarium has a new branch "web-deployment". This branch i
 
 Initial alpha release!
 
-[v0.0.16]: https://github.com/ivoyager/ivoyager/compare/v0.0.15...HEAD
+[v0.0.16]: https://github.com/ivoyager/ivoyager/compare/v0.0.15...v0.0.16
 [v0.0.15]: https://github.com/ivoyager/ivoyager/compare/v0.0.14...v0.0.15
 [v0.0.14]: https://github.com/ivoyager/ivoyager/compare/v0.0.13...v0.0.14
 [v0.0.13]: https://github.com/ivoyager/ivoyager/compare/v0.0.12...v0.0.13
