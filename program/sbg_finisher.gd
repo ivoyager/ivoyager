@@ -86,7 +86,7 @@ func _finish_system_build() -> void: # main thread
 	_is_building_system = false
 	var msec :=  Time.get_ticks_msec() - _system_build_start_msec
 	@warning_ignore("integer_division")
-	print("Added %s small bodies in %s groups (IVSmallBodiesGroup) in %s msec"
+	print("Added %s small bodies in %s groups (IVSmallBodiesGroup instances) in %s msec"
 			% [_sb_count, _finished_count / 2, msec])
 	system_build_finished.emit()
 
