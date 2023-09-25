@@ -46,6 +46,9 @@ enum { # data_type
 	OBJECT_LABELS_VALUES,
 }
 
+const NumberType := IVQFormat.NumberType
+const DynamicUnitType := IVQFormat.DynamicUnitType
+
 const BodyFlags := IVEnums.BodyFlags
 const NULL_ARRAY := []
 
@@ -71,23 +74,23 @@ var section_content: Array[Array] = [
 	
 	[ # Orbital Characteristics
 		[&"LABEL_PERIAPSIS", "body/orbit/get_periapsis", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.LENGTH_KM_AU, true, 5)],
+			dynamic_unit.bind(DynamicUnitType.LENGTH_KM_AU, true, 5)],
 		[&"LABEL_APOAPSIS", "body/orbit/get_apoapsis", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.LENGTH_KM_AU, true, 5)],
+			dynamic_unit.bind(DynamicUnitType.LENGTH_KM_AU, true, 5)],
 		[&"LABEL_SEMI_MAJOR_AXIS", "body/orbit/get_semimajor_axis", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.LENGTH_KM_AU, true, 5)],
+			dynamic_unit.bind(DynamicUnitType.LENGTH_KM_AU, true, 5)],
 		[&"LABEL_ECCENTRICITY", "body/orbit/get_eccentricity", NULL_ARRAY,
 			as_float.bind(true, 5)],
 		[&"LABEL_ORBITAL_PERIOD", "body/orbit/get_orbital_perioid", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.TIME_D_Y, true, 5)],
+			dynamic_unit.bind(DynamicUnitType.TIME_D_Y, true, 5)],
 		[&"LABEL_AVERAGE_ORBITAL_SPEED", "body/orbit/get_average_orbital_speed", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.VELOCITY_MPS_KMPS, true, 5)],
+			dynamic_unit.bind(DynamicUnitType.VELOCITY_MPS_KMPS, true, 5)],
 		[&"LABEL_INCLINATION_TO_ECLIPTIC", "body/orbit/get_inclination_to_ecliptic", NULL_ARRAY,
-			fixed_unit.bind(&"deg", true, 3, IVQFormat.NUM_DECIMAL_PL)],
+			fixed_unit.bind(&"deg", true, 3, NumberType.DECIMAL_PLACES)],
 		[&"LABEL_INCLINATION_TO_EQUATOR", "body/get_orbit_inclination_to_equator", NULL_ARRAY,
-			fixed_unit.bind(&"deg", true, 3, IVQFormat.NUM_DECIMAL_PL)],
+			fixed_unit.bind(&"deg", true, 3, NumberType.DECIMAL_PLACES)],
 		[&"LABEL_DIST_GALACTIC_CORE", "body/characteristics/dist_galactic_core", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.LENGTH_KM_AU)],
+			dynamic_unit.bind(DynamicUnitType.LENGTH_KM_AU)],
 		[&"LABEL_GALACTIC_PERIOD", "body/characteristics/galactic_period", NULL_ARRAY,
 			fixed_unit.bind(&"yr")],
 		[&"LABEL_AVERAGE_ORBITAL_SPEED", "body/characteristics/galactic_orbital_speed", NULL_ARRAY,
@@ -130,7 +133,7 @@ var section_content: Array[Array] = [
 		[&"LABEL_SURFACE_GRAVITY", "body/characteristics/surface_gravity", NULL_ARRAY,
 			fixed_unit.bind(&"_g")],
 		[&"LABEL_ESCAPE_VELOCITY", "body/characteristics/esc_vel", NULL_ARRAY,
-			dynamic_unit.bind(IVQFormat.VELOCITY_MPS_KMPS)],
+			dynamic_unit.bind(DynamicUnitType.VELOCITY_MPS_KMPS)],
 		[&"LABEL_MEAN_DENSITY", "body/characteristics/mean_density", NULL_ARRAY,
 			fixed_unit.bind(&"g/cm^3")],
 		[&"LABEL_ALBEDO", "body/characteristics/albedo", NULL_ARRAY,
@@ -236,44 +239,44 @@ func _ready() -> void:
 
 func dynamic_unit(x: float, internal_precision: int, dynamic_unit_type: int,
 		override_internal_precision := false, precision := 3,
-		num_type := IVQFormat.NUM_DYNAMIC) -> String:
+		number_type := NumberType.DYNAMIC) -> String:
 	# args 0, 1 from loop code
 	# args 2, ... are binds from section_content
 	if is_inf(x):
 		return "?"
 	if !override_internal_precision and internal_precision != -1:
 		precision = internal_precision
-	return IVQFormat.dynamic_unit(x, dynamic_unit_type, precision, num_type)
+	return IVQFormat.dynamic_unit(x, dynamic_unit_type, precision, number_type)
 
 
 func fixed_unit(x: float, internal_precision: int, unit: StringName,
 		override_internal_precision := false, precision := 3,
-		num_type := IVQFormat.NUM_DYNAMIC) -> String:
+		number_type := NumberType.DYNAMIC) -> String:
 	if is_inf(x):
 		return "?"
 	if !override_internal_precision and internal_precision != -1:
 		precision = internal_precision
-	return IVQFormat.fixed_unit(x, unit, precision, num_type)
+	return IVQFormat.fixed_unit(x, unit, precision, number_type)
 
 
 func prefixed_unit(x: float, internal_precision: int, unit: StringName,
 		override_internal_precision := false, precision := 3,
-		num_type := IVQFormat.NUM_DYNAMIC) -> String:
+		number_type := NumberType.DYNAMIC) -> String:
 	if is_inf(x):
 		return "?"
 	if !override_internal_precision and internal_precision != -1:
 		precision = internal_precision
-	return IVQFormat.prefixed_unit(x, unit, precision, num_type)
+	return IVQFormat.prefixed_unit(x, unit, precision, number_type)
 
 
 func as_float(x: float, internal_precision: int,
 		override_internal_precision := false, precision := 3,
-		num_type := IVQFormat.NUM_DYNAMIC) -> String:
+		number_type := NumberType.DYNAMIC) -> String:
 	if is_inf(x):
 		return "?"
 	if !override_internal_precision and internal_precision != -1:
 		precision = internal_precision
-	return IVQFormat.number(x, precision, num_type)
+	return IVQFormat.number(x, precision, number_type)
 
 
 func as_text(text: String) -> Array[String]:
