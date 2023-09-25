@@ -142,7 +142,7 @@ func _get_var_from_file(file_path: String, result_callback: Callable) -> void:
 # I/O processing
 
 func _run_thread() -> void: # I/O thread
-	print("Run I/O thread!")
+	print("Run I/O thread")
 	while !_stop_thread:
 		if _is_work:
 			# We only lock while moving work items from _callback_queue to
@@ -158,7 +158,7 @@ func _run_thread() -> void: # I/O thread
 				var io_method: Callable = _process_stack.pop_back()
 				_process_callback(io_method)
 		_semaphore.wait()
-	print("Stop I/O thread!")
+	print("Stop I/O thread")
 
 
 func _process_callback(io_method: Callable) -> void: # I/O thread, or Main if !_use_threads

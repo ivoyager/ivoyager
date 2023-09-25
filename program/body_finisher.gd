@@ -106,18 +106,8 @@ func _build_unpersisted(body: IVBody) -> void: # Main thread
 		# set properties entirely from table
 		IVTableData.db_build_object_all_fields(omni_light, &"omni_lights", omni_light_type)
 		body.add_child(omni_light)
-		
-		
-		# debug try: sdfgi_enabled 
-		
-		
 		omni_light.light_bake_mode = Light3D.BAKE_DISABLED
-		
-		prints("omni_range", omni_light.omni_range)
-		prints("distance_fade_shadow", omni_light.distance_fade_shadow)
-		
-		
-		
+	
 	if body.orbit:
 		@warning_ignore("unsafe_method_access") # possible replacement class
 		var body_orbit: Node3D = _BodyOrbit_.new(body)
@@ -178,6 +168,6 @@ func _finish_on_main_thread(body: IVBody, texture_2d: Texture2D, texture_slice_2
 func _finish_system_build() -> void: # Main thread
 	_is_building_system = false
 	var msec :=  Time.get_ticks_msec() - _system_build_start_msec
-	print("Added %s solar system bodies (IVBody) in %s msec" % [_finished_count, msec])
+	print("Added %s solar system bodies (IVBody instances) in %s msec" % [_finished_count, msec])
 	system_build_finished.emit()
 
