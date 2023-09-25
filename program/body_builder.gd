@@ -23,7 +23,6 @@ extends RefCounted
 # Builds IVBody from data tables.
 
 
-const DPRINT := false
 const ECLIPTIC_Z := Vector3(0.0, 0.0, 1.0)
 const G := IVUnits.GRAVITATIONAL_CONSTANT
 const BodyFlags := IVEnums.BodyFlags

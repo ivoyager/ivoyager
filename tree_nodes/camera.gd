@@ -21,11 +21,20 @@ class_name IVCamera
 extends Camera3D
 
 # This camera works with the IVSelection object, which is a wrapper that can
-# potentially hold anything (in ivoyaber, IVBody and [TODO:] IVLagrangePoint
-# instances). IVCamera recieves most of its control input from IVCameraHandler.
+# potentially hold anything (in ivoyager, IVBody [and TODO: IVLagrangePoint)].
+# IVCamera recieves most of its control input from IVCameraHandler.
 #
 # Replacing this class should be possible but may be challenging. Very many
 # GUI widgets are built to use it.
+#
+# The camera uses a 'perspective distance' when moving from body to body at
+# close range. The distance is adjusted for body 'perspective_raduis' (usually
+# the same as m_radius) so that it appears the same size in the view. At far
+# distances there is no adjustment. (There is a transition between the two.)
+# Hence, distance vars with name '_radii_meters' that are on the order of
+# meters are adjusted to 'target radii'. Distance vars in units AU are what
+# they appear to be. In the transition distance they are intermediate.
+# This system *may* break for objects smaller than meters (not tested yet).
 
 signal move_started(to_spatial, is_camera_lock) # to_spatial is not parent yet
 signal parent_changed(spatial)
@@ -60,13 +69,11 @@ const UNIVERSE_SHIFTING := true # prevents "shakes" at high global position
 const NEAR_MULTIPLIER := 0.1
 const FAR_MULTIPLIER := 1e6 # see Note below
 const POLE_LIMITER := PI / 2.1
-const MIN_DIST_RADII := 1.5
+const MIN_DIST_RADII_METERS := 1.5 * METER # really target radii; see 'perspective distance'
 
-# Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
-# It used to be that ~10 orders of magnitude was allowed between near and far,
-# but perhaps that is now only 7.
-# As of Godot 3.5.2.rc2, we can bump up FAR_MULTIPLIER without losing near
-# items, but it doesn't seem to extend our far vision.
+# Note: As of Godot 3.2.3, we had to lower FAR_MULTIPLIER from 1e9 to 1e6.
+# It used to be that ~10 orders of magnitude was allowed between near and far.
+# As of Godot 4.1.1, still breaks above 1e6. 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
@@ -109,11 +116,11 @@ var gui_ecliptic_coordinates_dist := 1e6 * KM
 var action_immediacy := 10.0 # how fast we use up the accumulators
 var min_action := 0.002 # use all below this
 var size_ratio_exponent := 0.9 # 0.0, none; 1.0 moves to same visual size
-# 'perspective' settings; see comments above & asserts in _ready()
-var perspective_close_radii := 500.0 # full perspective adj inside this
-var perspective_far_dist := 1e9 * KM # no perspective adj outside this
-var max_perspective_radius := 1e6 * KM # >sun
-var min_perspective_radius := 2.0 * METER
+# 'perspective' settings
+var perspective_close_radii := 500.0 # full perspective adjustment inside this
+var perspective_far_dist := 1e9 * KM # no perspective adjustment outside this
+var max_perspective_radii_meters := 1e9 * METER # really target radii; see 'perspective distance'
+var min_perspective_radii_meters := 2.0 * METER # really target radii; see 'perspective distance'
 
 # public read-only
 var parent: Node3D # actual Node3D parent at this time
@@ -155,8 +162,6 @@ var _transfer_time: float = _settings[&"camera_transfer_time"]
 # virtual functions
 
 func _ready() -> void:
-	assert(perspective_far_dist > perspective_close_radii * max_perspective_radius)
-	assert(min_perspective_radius > IVUnits.METER)
 	name = &"IVCamera"
 	IVGlobal.system_tree_ready.connect(_on_system_tree_ready, CONNECT_ONE_SHOT)
 	IVGlobal.simulator_started.connect(_on_simulator_started, CONNECT_ONE_SHOT)
@@ -194,7 +199,7 @@ func _process(delta: float) -> void:
 	# far too high breaks near, making small objects invisible. Unfortunately,
 	# limiting far causes distant objects (e.g., orbit lines) to disappear when
 	# zoomed in to small objects. The allowed orders of magnitude between near
-	# and far has changed over Godot development, so experimentation is good.
+	# and far has changed over Godot development, so experimentation is needed.
 	var dist := position.length()
 	near = dist * NEAR_MULTIPLIER
 	far = dist * FAR_MULTIPLIER
@@ -303,7 +308,7 @@ func move_to(to_selection: IVSelection, to_flags := 0, to_view_position := NULL_
 			view_rotations.z = to_view_rotations.z
 	if flags & Flags.UP_LOCKED:
 		view_rotations.z = 0.0 # up lock overrides roll
-	view_position.z = clamp(view_position.z, MIN_DIST_RADII, _max_dist)
+	view_position.z = clamp(view_position.z, MIN_DIST_RADII_METERS, _max_dist)
 	
 	# initiate move
 	if is_instant_move:
@@ -535,7 +540,7 @@ func _process_motion(delta: float) -> void:
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
-				MIN_DIST_RADII, _max_dist)
+				MIN_DIST_RADII_METERS, _max_dist)
 		_transform = _get_view_transform(view_position, view_rotations, _reference_basis,
 				perspective_radius)
 		
@@ -549,7 +554,7 @@ func _process_motion(delta: float) -> void:
 		origin *= 1.0 + move_now.z
 		view_position = math.get_rotated_spherical3(origin, _reference_basis)
 		view_position.z = clamp(_get_perspective_dist(view_position.z, perspective_radius),
-				MIN_DIST_RADII, _max_dist)
+				MIN_DIST_RADII_METERS, _max_dist)
 		_transform = Transform3D(basis_, origin)
 		# back-calculate view_rotations
 		var unrotated_transform := Transform3D(IDENTITY_BASIS, origin).looking_at(
@@ -614,8 +619,11 @@ func _process_rotation(delta: float) -> void:
 func _get_view_transform(view_position_: Vector3, view_rotations_: Vector3,
 		reference_basis: Basis, perspective_radius_: float) -> Transform3D:
 	view_position_.z = clamp(_convert_perspective_dist(view_position_.z, perspective_radius_),
-			MIN_DIST_RADII, _max_dist)
+			MIN_DIST_RADII_METERS, _max_dist)
 	var view_translation := math.convert_rotated_spherical3(view_position_, reference_basis)
+	
+	# FIXME: Below line breaks when METER is set to low values (e.g., ~1e-9)
+	# due to Godot thinking origin == target.
 	var view_transform := Transform3D(IDENTITY_BASIS, view_translation).looking_at(
 			-view_translation, reference_basis.z)
 	view_transform.basis *= Basis.from_euler(view_rotations_) # TEST34: default order ok?
@@ -638,33 +646,35 @@ func _get_perspective_dist(dist: float, radius: float) -> float:
 	# When far, persp_dist = dist / 1 meter. (So radius doesn't matter.)
 	if dist >= perspective_far_dist:
 		return dist
-	if radius > max_perspective_radius:
-		radius = max_perspective_radius
-	elif radius < min_perspective_radius:
-		radius = min_perspective_radius
+	if radius > max_perspective_radii_meters:
+		radius = max_perspective_radii_meters
+	elif radius < min_perspective_radii_meters:
+		radius = min_perspective_radii_meters
 	var cr := perspective_close_radii * radius
 	if dist <= cr:
-		return dist / radius
+		return METER * dist / radius
 		
 	# Equation covers the transition zone (continuous but not smooth).
-	return ((dist - cr) * (perspective_far_dist / METER - perspective_close_radii)
-			/ (perspective_far_dist - cr)
-			+ perspective_close_radii)
+	return ((dist - cr) # [d]
+			* (perspective_far_dist - METER * perspective_close_radii) # [d]
+			/ (perspective_far_dist - cr) # [d]
+			+ METER * perspective_close_radii) # [d]
 
 
 func _convert_perspective_dist(persp_dist: float, radius: float) -> float:
 	# Inverse of _get_perspective_dist().
 	if persp_dist >= perspective_far_dist:
 		return persp_dist
-	if radius > max_perspective_radius:
-		radius = max_perspective_radius
-	if persp_dist <= perspective_close_radii:
-		return persp_dist * radius
+	if radius > max_perspective_radii_meters:
+		radius = max_perspective_radii_meters
+	if persp_dist <= METER * perspective_close_radii:
+		return persp_dist * radius / METER
 	
-	var cr := perspective_close_radii * radius
-	return ((persp_dist - perspective_close_radii) * (perspective_far_dist - cr)
-			/ (perspective_far_dist / METER - perspective_close_radii)
-			+ cr)
+	var cr := perspective_close_radii * radius # [d]
+	return ((persp_dist - METER * perspective_close_radii) # [d]
+			* (perspective_far_dist - cr) # [d]
+			/ (perspective_far_dist - METER * perspective_close_radii) # [d]
+			+ cr) # [d]
 
 
 func _signal_range_latitude_longitude(is_refresh := false) -> void:

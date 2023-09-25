@@ -5,7 +5,7 @@ Unit												km		deg	deg	deg	deg	deg/d	d	a	a		deg	deg			d	deg	deg	km^3/s^2	m	
 Prefix/SPACECRAFT_				SPACECRAFT_				BODY_CLASS_	MODEL_																									
 INTERNATIONAL_SPACE_STATION		ISS	International_Space_Station	INTERNATIONAL_SPACE_STATION_HUD		x	PLANET_EARTH			2022-Nov-06 00:00:00.0000 TDB	2459889.5	6788.3	0.0015164	51.609	353.726	69.013	187.104	5.5881e3				Equatorial					-365.256363				30			
 HUBBLE_SPACE_TELESCOPE		Hubble	Hubble_Space_Telescope	HUBBLE_SPACE_TELESCOPE_HUD		x	PLANET_EARTH			2022-Nov-06 00:00:00.0000 TDB	2459889.5	6914.9	0.0016184	28.374	310.402	117.409	20.487	5.4353e3				Equatorial					-365.256363				10			
-JUNO_SPACECRAFT		Juno	Juno_(spacecraft)	JUNO_SPACECRAFT_HUD			PLANET_JUPITER			2022-Nov-06 00:00:00.0000 TDB	2459889.5	3.2743e6	0.97775	103.0134	279.5030	117.2533	351.5101	9.4044				Equatorial					-4332.59				5			
+JUNO_SPACECRAFT		Juno	Juno_(spacecraft)	JUNO_SPACECRAFT_HUD		x	PLANET_JUPITER			2022-Nov-06 00:00:00.0000 TDB	2459889.5	3.2743e6	0.97775	103.0134	279.5030	117.2533	351.5101	9.4044				Equatorial					-4332.59				5			
 # https://ssd.jpl.nasa.gov/horizons																																		
 # https://www.heavens-above.com/																																		
 # FIXME: Calculate epoch																																		

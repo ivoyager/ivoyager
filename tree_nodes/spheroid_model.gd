@@ -58,10 +58,11 @@ func _init(model_type: int, reference_basis: Basis, albedo_map: Texture2D,
 		surface.emission_enabled = true
 		surface.emission_texture = emission_map
 	if IVTableData.get_db_bool("models", "starlight", model_type):
-		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		cast_shadow = SHADOW_CASTING_SETTING_OFF
 		is_dynamic_star = true
 	else:
-		cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		cast_shadow = SHADOW_CASTING_SETTING_ON
+		gi_mode = GI_MODE_DISABLED
 
 
 func _ready() -> void:

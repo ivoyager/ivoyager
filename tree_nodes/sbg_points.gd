@@ -35,14 +35,14 @@ const PI_DIV_3 := PI / 3.0 # 60 degrees
 const ARRAY_FLAGS = (
 	Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
 	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
-	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
 )
 
 
 const L4L5_ARRAY_FLAGS = (
 	Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
 	| Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT
-	| Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
+	| Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT
 )
 
 
@@ -112,14 +112,14 @@ func _draw_points() -> void:
 		arrays[Mesh.ARRAY_VERTEX] = _vec3ids
 		arrays[Mesh.ARRAY_CUSTOM0] = _group.e_i_Om_w
 		arrays[Mesh.ARRAY_CUSTOM1] = _group.a_M0_n
-		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag
+		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag_de
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], {}, ARRAY_FLAGS)
 	
 	else: # trojans
 		arrays[Mesh.ARRAY_VERTEX] = _vec3ids
 		arrays[Mesh.ARRAY_CUSTOM0] = _group.e_i_Om_w
 		arrays[Mesh.ARRAY_CUSTOM1] = _group.da_D_f_th0
-		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag
+		arrays[Mesh.ARRAY_CUSTOM2] = _group.s_g_mag_de
 		points_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays, [], {}, L4L5_ARRAY_FLAGS)
 	
 	var half_aabb = _group.max_apoapsis * Vector3.ONE

@@ -22,7 +22,7 @@ extends Label
 
 # GUI widget. Requires IVCamera.
 
-const LENGTH_M_KM_AU := IVQFormat.LENGTH_M_KM_AU
+const LENGTH_M_KM_AU := IVQFormat.DynamicUnitType.LENGTH_M_KM_AU
 
 var qformat := IVQFormat # TODO: Change to const when Godot allows
 
