@@ -71,11 +71,9 @@ const FAR_MULTIPLIER := 1e6 # see Note below
 const POLE_LIMITER := PI / 2.1
 const MIN_DIST_RADII_METERS := 1.5 * METER # really target radii; see 'perspective distance'
 
-# Note: As of Godot 3.2.3 we had to raise FAR_MULTIPLIER from 1e9 to 1e6.
-# It used to be that ~10 orders of magnitude was allowed between near and far,
-# but perhaps that is now only 7.
-# As of Godot 3.5.2.rc2, we can bump up FAR_MULTIPLIER without losing near
-# items, but it doesn't seem to extend our far vision.
+# Note: As of Godot 3.2.3, we had to lower FAR_MULTIPLIER from 1e9 to 1e6.
+# It used to be that ~10 orders of magnitude was allowed between near and far.
+# As of Godot 4.1.1, still breaks above 1e6. 
 
 const PERSIST_MODE := IVEnums.PERSIST_PROCEDURAL
 const PERSIST_PROPERTIES := [
