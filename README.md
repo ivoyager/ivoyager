@@ -1,5 +1,11 @@
 # I, Voyager (submodule)
 
+**DEPRECIATED**
+
+**This repository has been replaced by editor plugin repository [ivoyager_core](https://github.com/ivoyager/ivoyager_core) in I, Voyager projects v0.0.17 and after.**
+
+##
+
 [Homepage](https://www.ivoyager.dev)  
 [Forum](https://www.ivoyager.dev/forum)  
 [Issues](https://github.com/ivoyager/ivoyager/issues)
